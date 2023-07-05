@@ -1,0 +1,8 @@
+dynaconf==3.1.12
+fastapi==0.99.0
+PyGithub==1.58.2
+retry==0.9.2
+openai==0.27.8
+Jinja2==3.1.2
+tiktoken==0.4.0
+uvicorn==0.22.0

@@ -1,0 +1,15 @@
+[config]
+model="gpt-4-0613"
+git_provider="github"
+publish_review=true
+verbosity_level=0  # 0,1,2
+
+[pr_reviewer]
+require_minimal_and_focused_review=true
+require_tests_review=true
+require_security_review=true
+extended_code_suggestions=false
+num_code_suggestions=4
+
+
+[pr_questions]
