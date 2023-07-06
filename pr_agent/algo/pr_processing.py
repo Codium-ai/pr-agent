@@ -78,7 +78,7 @@ def pr_generate_extended_diff(pr_languages: list, token_handler: TokenHandler) -
     return patches_extended, total_tokens
 
 
-def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler) -> Tuple(list, list, list):
+def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler) -> Tuple[list, list, list]:
     # Apply Diff Minimization techniques to reduce the number of tokens:
     # 0. Start from the largest diff patch to smaller ones
     # 1. Don't use extend context lines around diff
@@ -87,8 +87,8 @@ def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler) ->
     # 4. Minimize all remaining files when you reach token limit
 
     patches = []
-    modified_files = []
-    deleted_files = []
+    modified_files_list = []
+    deleted_files_list = []
     # sort each one of the languages in top_langs by the number of tokens in the diff
     sorted_files = []
     for lang in top_langs:
@@ -107,27 +107,31 @@ def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler) ->
         patch = handle_patch_deletions(patch, original_file_content_str,
                                        new_file_content_str, file.filename)
         if patch is None:
-            if not deleted_files:
+            if not deleted_files_list:
                 total_tokens += token_handler.count_tokens(DELETED_FILES_)
-            deleted_files.append(file.filename)
+            deleted_files_list.append(file.filename)
             total_tokens += token_handler.count_tokens(file.filename) + 1
             continue
         new_patch_tokens = token_handler.count_tokens(patch)
 
+        # Hard Stop, no more tokens
         if total_tokens > token_handler.limit - OUTPUT_BUFFER_TOKENS // 2:
             logging.warning(f"File was fully skipped, no more tokens: {file.filename}.")
-            continue  # Hard Stop, no more tokens
+            continue
+
+        # If the patch is too large, just show the file name
         if total_tokens + new_patch_tokens > token_handler.limit - OUTPUT_BUFFER_TOKENS:
             # Current logic is to skip the patch if it's too large
             # TODO: Option for alternative logic to remove hunks from the patch to reduce the number of tokens
             #  until we meet the requirements
             if settings.config.verbosity_level >= 2:
                 logging.warning(f"Patch too large, minimizing it, {file.filename}")
-            patch = None
-            if not modified_files:
+            if not modified_files_list:
                 total_tokens += token_handler.count_tokens(MORE_MODIFIED_FILES_)
-            modified_files.append(file.filename)
+            modified_files_list.append(file.filename)
             total_tokens += token_handler.count_tokens(file.filename) + 1
+            continue
+
         if patch:
             patch_final = f"## {file.filename}\n\n{patch}\n"
             patches.append(patch_final)
@@ -135,7 +139,7 @@ def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler) ->
             if settings.config.verbosity_level >= 2:
                 logging.info(f"Tokens: {total_tokens}, last filename: {file.filename}")
 
-    return patches, modified_files, deleted_files
+    return patches, modified_files_list, deleted_files_list
 
 
 def load_large_diff(file, new_file_content_str: str, original_file_content_str: str, patch: str) -> str:

@@ -159,10 +159,11 @@ Here is a quick overview of the different sub-tools of PR Reviewer:
   - PR type classification
   - Is the PR covered by relevant tests
   - Is the PR minimal and focused
+  - Are there security concerns
 - PR Feedback
   - General PR suggestions
   - Code suggestions
-  - Security concerns
+
 
 This is how a typical output of the PR Reviewer looks like:
 
@@ -174,21 +175,23 @@ This is how a typical output of the PR Reviewer looks like:
 - 📌 **Type of PR:** Enhancement
 - 🧪 **Relevant tests added:** No
 - ✨ **Minimal and focused:** Yes, the PR is focused on adding two new handlers for language extension and token counting.
+- 🔒 **Security concerns:** No, the PR does not introduce possible security concerns or issues.
+
 #### PR Feedback
 
 - 💡 **General PR suggestions:** The PR is generally well-structured and the code is clean. However, it would be beneficial to add some tests to ensure the new handlers work as expected. Also, consider adding docstrings to the new functions and classes to improve code readability and maintainability.
 
 - 🤖 **Code suggestions:**
 
-- **suggestion 1:**
-  - **relevant file:** pr_agent/algo/language_handler.py
-  - **suggestion content:** Consider using a set instead of a list for 'bad_extensions' as checking membership in a set is faster than in a list. [medium]
 
-- **suggestion 2:**
   - **relevant file:** pr_agent/algo/language_handler.py
-  - **suggestion content:** In the 'filter_bad_extensions' function, you are splitting the filename on '.' and taking the last element to get the extension. This might not work as expected if the filename contains multiple '.' characters. Consider using 'os.path.splitext' to get the file extension more reliably. [important]
 
-- 🔒 **Security concerns:** No, the PR does not introduce possible security concerns or issues.
+    **suggestion content:** Consider using a set instead of a list for 'bad_extensions' as checking membership in a set is faster than in a list. [medium]
+
+
+  - **relevant file:** pr_agent/algo/language_handler.py
+   
+    **suggestion content:** In the 'filter_bad_extensions' function, you are splitting the filename on '.' and taking the last element to get the extension. This might not work as expected if the filename contains multiple '.' characters. Consider using 'os.path.splitext' to get the file extension more reliably. [important]
 
 ---
 
@@ -231,16 +234,12 @@ This is a comparison of the regular and extended code suggestions modes:
 ---
 Example for regular suggestion:
 
-
-- **suggestion 1:**
   - **relevant file:** sql.py
   - **suggestion content:** Remove hardcoded sensitive information like username and password. Use environment variables or a secure method to store these values. [important]
 ---
 
 Example for extended suggestion:
 
-
-- **suggestion 1:**
   - **relevant file:** sql.py
   - **suggestion content:** Remove hardcoded sensitive information (username and password) [important]
   - **why:** Hardcoding sensitive information is a security risk. It's better to use environment variables or a secure way to store these values.
