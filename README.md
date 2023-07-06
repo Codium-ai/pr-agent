@@ -286,7 +286,7 @@ Example for extended suggestion:
 ## How it works
   ![PR-Agent Tools](./pics/pr_agent_overview.png)
 
-Check out the [PR Compression strategy](./PR_COMPRESSION.md) page for more details on how pr-agent works.
+Check out the [PR Compression strategy](./PR_COMPRESSION.md) page for more details on how we convert a code diff to a manageable LLM prompt
 
 
 ## Roadmap
