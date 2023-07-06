@@ -309,3 +309,4 @@ Example for extended suggestion:
 - [Aider - GPT powered coding in your terminal](https://github.com/paul-gauthier/aider)
 - [GPT-Engineer](https://github.com/AntonOsika/gpt-engineer)
 - [CodeReview BOT](https://github.com/anc95/ChatGPT-CodeReview)
+- [AI-Maintainer](https://github.com/merwanehamadi/AI-Maintainer)
