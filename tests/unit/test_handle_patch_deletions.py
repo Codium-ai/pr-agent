@@ -62,7 +62,7 @@ class TestHandlePatchDeletions:
         new_file_content_str = ''
         file_name = 'file.py'
         assert handle_patch_deletions(patch, original_file_content_str, new_file_content_str,
-                                      file_name) == 'File was deleted\n'
+                                      file_name) is None
 
     # Tests that handle_patch_deletions returns the original patch when patch and patch_new are equal
     def test_handle_patch_deletions_edge_case_patch_and_patch_new_are_equal(self):

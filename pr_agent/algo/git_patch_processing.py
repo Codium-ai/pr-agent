@@ -96,7 +96,7 @@ def handle_patch_deletions(patch: str, original_file_content_str: str,
         # logic for handling deleted files - don't show patch, just show that the file was deleted
         if settings.config.verbosity_level > 0:
             logging.info(f"Processing file: {file_name}, minimizing deletion file")
-        patch = "File was deleted\n"
+        patch = None # file was deleted
     else:
         patch_lines = patch.splitlines()
         patch_new = omit_deletion_hunks(patch_lines)
