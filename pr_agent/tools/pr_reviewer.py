@@ -14,7 +14,7 @@ from pr_agent.git_providers import get_git_provider
 
 
 class PRReviewer:
-    def __init__(self, pr_url: str, installation_id: Optional[int] = None):
+    def __init__(self, pr_url: str, installation_id: Optional[int] = None, cli_mode=False):
 
         self.git_provider = get_git_provider()(pr_url, installation_id)
         self.main_language = self.git_provider.get_main_pr_language()
@@ -22,6 +22,7 @@ class PRReviewer:
         self.ai_handler = AiHandler()
         self.patches_diff = None
         self.prediction = None
+        self.cli_mode = cli_mode
         self.vars = {
             "title": self.git_provider.pr.title,
             "branch": self.git_provider.get_pr_branch(),
@@ -92,7 +93,9 @@ class PRReviewer:
         markdown_text = convert_to_markdown(data)
         user = self.git_provider.get_user_id()
         markdown_text += "\n### How to use\n"
-        if user and '[bot]' not in user:
+        if self.cli_mode:
+            pass
+        elif user and '[bot]' not in user:
             markdown_text += f"> Tag me in a comment '@{user}' to ask for a new review after you update the PR.\n"
             markdown_text += "> You can also tag me and ask any question, " \
                              f"for example '@{user} is the PR ready for merge?'"

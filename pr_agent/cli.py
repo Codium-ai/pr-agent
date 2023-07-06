@@ -15,11 +15,11 @@ def run():
     logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
     if args.question:
         print(f"Question: {args.question} about PR {args.pr_url}")
-        reviewer = PRQuestions(args.pr_url, args.question, None)
+        reviewer = PRQuestions(args.pr_url, args.question, installation_id=None)
         asyncio.run(reviewer.answer())
     else:
         print(f"Reviewing PR: {args.pr_url}")
-        reviewer = PRReviewer(args.pr_url, None)
+        reviewer = PRReviewer(args.pr_url, installation_id=None, cli_mode=True)
         asyncio.run(reviewer.review())
 
 
