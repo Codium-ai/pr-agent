@@ -1,6 +1,6 @@
 <div align="center">
 
-<div align="center">
+<div align="center" style="margin: 24px 0px">
 
 <img src="./pics/logo-dark.png#gh-dark-mode-only" width="250"/>
 <img src="./pics/logo-light.png#gh-light-mode-only" width="250"/>
