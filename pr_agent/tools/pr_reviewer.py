@@ -81,9 +81,18 @@ class PRReviewer:
         except json.decoder.JSONDecodeError:
             logging.error("Unable to decode JSON response from AI")
             data = {}
+
+        # reordering for nicer display
+        if 'PR Feedback' in data:
+            if 'Security concerns' in data['PR Feedback']:
+                val = data['PR Feedback']['Security concerns']
+                del data['PR Feedback']['Security concerns']
+                data['PR Analysis']['Security concerns'] = val
+
         markdown_text = convert_to_markdown(data)
-        markdown_text += "\nAdd a comment that says 'Please review' to ask for a new review after you update the PR.\n"
-        markdown_text += "Add a comment that says 'Please answer <QUESTION...>' to ask a question about this PR.\n"
+        markdown_text += "\n## How to use\n\n"
+        markdown_text += "```\nMention '@pr-agent' in a pr comment to get another review.\n"
+        markdown_text += "Mention '@pr-agent <QUESTION>' in a pr comment to ask a question about this PR.\n```\n"
         if settings.config.verbosity_level >= 2:
             logging.info(f"Markdown response:\n{markdown_text}")
         return markdown_text
