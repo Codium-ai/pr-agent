@@ -20,6 +20,7 @@ def now() -> str:
 
 
 async def polling_loop():
+    handled_ids = set()
     since = [now()]
     last_modified = [None]
     git_provider = get_git_provider()()
@@ -54,6 +55,9 @@ async def polling_loop():
                         since[0] = None
                     notifications = await response.json()
                     for notification in notifications:
+                        if 'id' in notification and notification['id'] in handled_ids:
+                            continue
+                        handled_ids.add(notification['id'])
                         if 'reason' in notification and notification['reason'] == 'mention':
                             if 'subject' in notification and notification['subject']['type'] == 'PullRequest':
                                 pr_url = notification['subject']['url']
