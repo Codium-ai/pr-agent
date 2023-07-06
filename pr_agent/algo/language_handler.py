@@ -58,7 +58,8 @@ bad_extensions = [
     'woff2',
     'xz',
     'zip',
-    'zst'
+    'zst',
+    'snap'
 ]
 
 
