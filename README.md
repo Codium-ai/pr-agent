@@ -9,7 +9,6 @@ It automatically analyzes the PR, and provides feedback and suggestions, and can
 It is powered by GPT-4, and is based on the [CodiumAI](https://github.com/Codium-ai/) platform.
 </div>
 
-TBD: Add screenshot of the PR Reviewer (could be gif)
 
 
 * [Quickstart](#Quickstart)
@@ -17,10 +16,7 @@ TBD: Add screenshot of the PR Reviewer (could be gif)
 * [Usage and Tools](#usage-and-tools)
 * [Roadmap](#roadmap)
 * [Similar projects](#similar-projects)
-* Additional files:
-  * CONTRIBUTION.md
-  * LICENSE
-  * 
+
 
 ## Quickstart
 

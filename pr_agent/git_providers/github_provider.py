@@ -39,8 +39,17 @@ class GithubProvider:
             diff_files.append(FilePatchInfo(original_file_content_str, new_file_content_str, file.patch, file.filename))
         return diff_files
 
-    def publish_comment(self, pr_comment: str):
-        self.pr.create_issue_comment(pr_comment)
+    def publish_comment(self, pr_comment: str, is_temporary: bool = False):
+        response = self.pr.create_issue_comment(pr_comment)
+        response.is_temporary = is_temporary
+        if not hasattr(self.pr, 'comments_list'):
+            self.pr.comments_list = []
+        self.pr.comments_list.append(response)
+
+    def remove_initial_comment(self):
+        for comment in self.pr.comments_list:
+            if comment.is_temporary:
+                comment.delete()
 
     def get_title(self):
         return self.pr.title
@@ -153,7 +162,9 @@ class GithubProvider:
             try:
                 token = settings.github.user_token
             except AttributeError as e:
-                raise ValueError("GitHub token is required when using user deployment") from e
+                raise ValueError(
+                    "GitHub token is required when using user deployment. See: "
+                    "https://github.com/Codium-ai/pr-agent#method-2-run-from-source") from e
             return Github(token)
 
     def _get_repo(self):

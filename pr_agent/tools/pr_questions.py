@@ -35,7 +35,8 @@ class PRQuestions:
 
     async def answer(self):
         logging.info('Answering a PR question...')
-        self.git_provider.publish_comment("Preparing answer...")
+        if settings.config.publish_review:
+            self.git_provider.publish_comment("Preparing answer...", is_temporary=True)
         logging.info('Getting PR diff...')
         self.patches_diff = get_pr_diff(self.git_provider, self.token_handler)
         logging.info('Getting AI prediction...')
@@ -45,6 +46,7 @@ class PRQuestions:
         if settings.config.publish_review:
             logging.info('Pushing answer...')
             self.git_provider.publish_comment(pr_comment)
+            self.git_provider.remove_initial_comment()
         return ""
 
     async def _get_prediction(self):
