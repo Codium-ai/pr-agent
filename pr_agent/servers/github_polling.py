@@ -37,50 +37,54 @@ async def polling_loop():
         raise ValueError("User token must be set to get notifications")
     async with aiohttp.ClientSession() as session:
         while True:
-            headers = {
-                "Accept": "application/vnd.github.v3+json",
-                "Authorization": f"Bearer {token}"
-            }
-            params = {
-                "participating": "true"
-            }
-            if since[0]:
-                params["since"] = since[0]
-            if last_modified[0]:
-                headers["If-Modified-Since"] = last_modified[0]
-            async with session.get(NOTIFICATION_URL, headers=headers, params=params) as response:
-                if response.status == 200:
-                    if 'Last-Modified' in response.headers:
-                        last_modified[0] = response.headers['Last-Modified']
-                        since[0] = None
-                    notifications = await response.json()
-                    for notification in notifications:
-                        if 'id' in notification and notification['id'] in handled_ids:
-                            continue
-                        handled_ids.add(notification['id'])
-                        if 'reason' in notification and notification['reason'] == 'mention':
-                            if 'subject' in notification and notification['subject']['type'] == 'PullRequest':
-                                pr_url = notification['subject']['url']
-                                latest_comment = notification['subject']['latest_comment_url']
-                                async with session.get(latest_comment, headers=headers) as comment_response:
-                                    if comment_response.status == 200:
-                                        comment = await comment_response.json()
-                                        if 'user' in comment and 'login' in comment['user']:
-                                            if comment['user']['login'] == user_id:
+            try:
+                headers = {
+                    "Accept": "application/vnd.github.v3+json",
+                    "Authorization": f"Bearer {token}"
+                }
+                params = {
+                    "participating": "true"
+                }
+                if since[0]:
+                    params["since"] = since[0]
+                if last_modified[0]:
+                    headers["If-Modified-Since"] = last_modified[0]
+                async with session.get(NOTIFICATION_URL, headers=headers, params=params) as response:
+                    if response.status == 200:
+                        if 'Last-Modified' in response.headers:
+                            last_modified[0] = response.headers['Last-Modified']
+                            since[0] = None
+                        notifications = await response.json()
+                        for notification in notifications:
+                            if 'id' in notification and notification['id'] in handled_ids:
+                                continue
+                            handled_ids.add(notification['id'])
+                            if 'reason' in notification and notification['reason'] == 'mention':
+                                if 'subject' in notification and notification['subject']['type'] == 'PullRequest':
+                                    pr_url = notification['subject']['url']
+                                    latest_comment = notification['subject']['latest_comment_url']
+                                    async with session.get(latest_comment, headers=headers) as comment_response:
+                                        if comment_response.status == 200:
+                                            comment = await comment_response.json()
+                                            if 'user' in comment and 'login' in comment['user']:
+                                                if comment['user']['login'] == user_id:
+                                                    continue
+                                            comment_body = comment['body'] if 'body' in comment else ''
+                                            commenter_github_user = comment['user']['login'] if 'user' in comment else ''
+                                            logging.info(f"Commenter: {commenter_github_user}\nComment: {comment_body}")
+                                            user_tag = "@" + user_id
+                                            if user_tag not in comment_body:
                                                 continue
-                                        comment_body = comment['body'] if 'body' in comment else ''
-                                        commenter_github_user = comment['user']['login'] if 'user' in comment else ''
-                                        logging.info(f"Commenter: {commenter_github_user}\nComment: {comment_body}")
-                                        user_tag = "@" + user_id
-                                        if user_tag not in comment_body:
-                                            continue
-                                        rest_of_comment = comment_body.split(user_tag)[1].strip()
-                                        agent = PRAgent()
-                                        await agent.handle_request(pr_url, rest_of_comment)
-                elif response.status != 304:
-                    print(f"Failed to fetch notifications. Status code: {response.status}")
+                                            rest_of_comment = comment_body.split(user_tag)[1].strip()
+                                            agent = PRAgent()
+                                            await agent.handle_request(pr_url, rest_of_comment)
+                    elif response.status != 304:
+                        print(f"Failed to fetch notifications. Status code: {response.status}")
 
-            await asyncio.sleep(5)
+                await asyncio.sleep(5)
+            except Exception as e:
+                logging.error(f"Exception during processing of a notification: {e}")
+                await asyncio.sleep(5)
 
 if __name__ == '__main__':
     asyncio.run(polling_loop())
