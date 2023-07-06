@@ -81,6 +81,14 @@ class PRReviewer:
         except json.decoder.JSONDecodeError:
             logging.error("Unable to decode JSON response from AI")
             data = {}
+
+        # reordering for nicer display
+        if 'PR Feedback' in data:
+            if 'Security concerns' in data['PR Feedback']:
+                val = data['PR Feedback']['Security concerns']
+                del data['PR Feedback']['Security concerns']
+                data['PR Analysis']['Security concerns'] = val
+
         markdown_text = convert_to_markdown(data)
         user = self.git_provider.get_user_id()
         markdown_text += "\n### How to use\n"

@@ -33,7 +33,7 @@ You must use the following JSON schema to format your answer:
 {%- if require_minimal_and_focused %}
     "Minimal and focused": {
       "type": "string",
-      "description": "is this PR as minimal and focused as possible, with all code changes centered around a single coherent theme, described in the PR description and title ?" explain your answer"
+      "description": "is this PR as minimal and focused as possible, with all code changes centered around a single coherent theme, described in the PR description and title ?" Make sure to explain your answer"
     }
   },
 {%- endif %}
@@ -107,7 +107,7 @@ Example output:
         "Relevant tests added": "No",
 {%- endif %}
 {%- if require_minimal_and_focused %}
-        "Minimal and focused": "No, because ..."
+        "Minimal and focused": "yes\\no, because ..."
 {%- endif %}
     },
     "PR Feedback":
