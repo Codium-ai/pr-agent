@@ -55,6 +55,8 @@ async def polling_loop():
                             last_modified[0] = response.headers['Last-Modified']
                             since[0] = None
                         notifications = await response.json()
+                        if not notifications:
+                            continue
                         for notification in notifications:
                             if 'id' in notification and notification['id'] in handled_ids:
                                 continue
