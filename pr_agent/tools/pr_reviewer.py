@@ -90,9 +90,18 @@ class PRReviewer:
                 data['PR Analysis']['Security concerns'] = val
 
         markdown_text = convert_to_markdown(data)
-        markdown_text += "\n## How to use\n\n"
-        markdown_text += "```\nMention '@pr-agent' in a pr comment to get another review.\n"
-        markdown_text += "Mention '@pr-agent <QUESTION>' in a pr comment to ask a question about this PR.\n```\n"
+        user = self.git_provider.get_user_id()
+        markdown_text += "\n### How to use\n"
+        if user and '[bot]' not in user:
+            markdown_text += f"> Tag me in a comment '@{user}' to ask for a new review after you update the PR.\n"
+            markdown_text += "> You can also tag me and ask any question, " \
+                             f"for example '@{user} is the PR ready for merge?'"
+        else:
+            markdown_text += "> Add a comment that says 'review' to ask for a new review " \
+                             "after you update the PR.\n"
+            markdown_text += "> You can also add a comment that says 'answer QUESTION', " \
+                             "for example 'answer is the PR ready for merge?'"
+
         if settings.config.verbosity_level >= 2:
             logging.info(f"Markdown response:\n{markdown_text}")
         return markdown_text
