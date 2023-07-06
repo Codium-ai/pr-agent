@@ -21,4 +21,4 @@ class TokenHandler:
         return system_prompt_tokens + user_prompt_tokens
 
     def count_tokens(self, patch: str) -> int:
-        return len(self.encoder.encode(patch))
+        return len(self.encoder.encode(patch, disallowed_special=()))
