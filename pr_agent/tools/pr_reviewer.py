@@ -92,18 +92,19 @@ class PRReviewer:
 
         markdown_text = convert_to_markdown(data)
         user = self.git_provider.get_user_id()
-        markdown_text += "\n### How to use\n"
-        if self.cli_mode:
-            pass
-        elif user and '[bot]' not in user:
-            markdown_text += f"> Tag me in a comment '@{user}' to ask for a new review after you update the PR.\n"
-            markdown_text += "> You can also tag me and ask any question, " \
-                             f"for example '@{user} is the PR ready for merge?'"
-        else:
-            markdown_text += "> Add a comment that says 'review' to ask for a new review " \
-                             "after you update the PR.\n"
-            markdown_text += "> You can also add a comment that says 'answer QUESTION', " \
-                             "for example 'answer is the PR ready for merge?'"
+
+        if not self.cli_mode:
+            markdown_text += "\n### How to use\n"
+            if user and '[bot]' not in user:
+                markdown_text += "\n### How to use\n"
+                markdown_text += f"> Tag me in a comment '@{user}' to ask for a new review after you update the PR.\n"
+                markdown_text += "> You can also tag me and ask any question, " \
+                                 f"for example '@{user} is the PR ready for merge?'"
+            else:
+                markdown_text += "> Add a comment that says 'review' to ask for a new review " \
+                                 "after you update the PR.\n"
+                markdown_text += "> You can also add a comment that says 'answer QUESTION', " \
+                                 "for example 'answer is the PR ready for merge?'"
 
         if settings.config.verbosity_level >= 2:
             logging.info(f"Markdown response:\n{markdown_text}")
