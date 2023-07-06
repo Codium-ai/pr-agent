@@ -26,7 +26,7 @@ class PRReviewer:
             "title": self.git_provider.pr.title,
             "branch": self.git_provider.get_pr_branch(),
             "description": self.git_provider.pr.body,
-            "language": self.git_provider.get_main_pr_language(),
+            "language": self.main_language,
             "diff": "",  # empty diff for initial calculation
             "require_tests": settings.pr_reviewer.require_tests_review,
             "require_security": settings.pr_reviewer.require_security_review,
