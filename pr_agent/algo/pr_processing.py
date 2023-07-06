@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import difflib
 import logging
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Tuple, Union
 
 from pr_agent.algo.git_patch_processing import extend_patch, handle_patch_deletions
 from pr_agent.algo.language_handler import sort_files_by_main_languages
@@ -18,7 +18,7 @@ OUTPUT_BUFFER_TOKENS = 800
 PATCH_EXTRA_LINES = 3
 
 
-def get_pr_diff(git_provider: [GithubProvider, Any], token_handler: TokenHandler) -> str:
+def get_pr_diff(git_provider: Union[GithubProvider, Any], token_handler: TokenHandler) -> str:
     """
     Returns a string with the diff of the PR.
     If needed, apply diff minimization techniques to reduce the number of tokens
@@ -78,7 +78,7 @@ def pr_generate_extended_diff(pr_languages: list, token_handler: TokenHandler) -
     return patches_extended, total_tokens
 
 
-def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler) -> (list, list, list):
+def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler) -> Tuple(list, list, list):
     # Apply Diff Minimization techniques to reduce the number of tokens:
     # 0. Start from the largest diff patch to smaller ones
     # 1. Don't use extend context lines around diff
