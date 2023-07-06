@@ -96,7 +96,6 @@ class PRReviewer:
         if not self.cli_mode:
             markdown_text += "\n### How to use\n"
             if user and '[bot]' not in user:
-                markdown_text += "\n### How to use\n"
                 markdown_text += f"> Tag me in a comment '@{user}' to ask for a new review after you update the PR.\n"
                 markdown_text += "> You can also tag me and ask any question, " \
                                  f"for example '@{user} is the PR ready for merge?'"
