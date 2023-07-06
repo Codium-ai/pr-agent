@@ -12,6 +12,8 @@ class AiHandler:
     def __init__(self):
         try:
             openai.api_key = settings.openai.key
+            if settings.get("OPENAI.ORG", None):
+                openai.organization = settings.openai.org
         except AttributeError as e:
             raise ValueError("OpenAI key is required") from e
 
