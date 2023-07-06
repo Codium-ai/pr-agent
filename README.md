@@ -12,14 +12,14 @@ CodiumAI `pr-agent` is an open-source tool is powered by GPT-4 aming to help dev
 </div>
 
 - [Quickstart](#Quickstart)
-- [Configuration](#Configuration)
 - [Usage and Tools](#usage-and-tools)
+- [Configuration](#Configuration)
 - [Roadmap](#roadmap)
 - [Similar projects](#similar-projects)
 
 ## Live demo
 
-Experience GPT-4 powered PR review on your public Github repository with our hosted pr-agent. To try it, mention @CodiumAI-Agent in a PR comment! The agent will generate the review response ([see details in the Usage section](https://github.com/Codium-ai/pr-agent#usage-and-tools)).
+Experience GPT-4 powered PR review on your public Github repository with our hosted pr-agent. To try it, mention @CodiumAI-Agent in a PR comment! The agent will generate the review in response ([see details in the Usage section](#usage-and-tools)).
 
 ![Review generation process](./pics/pr-agent-review-process1.gif)
 
@@ -218,8 +218,6 @@ This is how a typical output of the PR Reviewer looks like:
 
 This tool answers free-text questions about the PR. This is how a typical output of the PR Q&A looks like:
 
----
-
 **Question**: summarize for me the PR in 4 bullet points
 
 **Answer**:
@@ -262,12 +260,8 @@ extended_code_suggestions=false
 
 This is a comparison of the regular and extended code suggestions modes:
 
----
-
 - **relevant file:** sql.py
 - **suggestion content:** Remove hardcoded sensitive information like username and password. Use environment variables or a secure method to store these values. [important]
-
----
 
 Example for extended suggestion:
 
