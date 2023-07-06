@@ -7,9 +7,7 @@
 [![GitHub license](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/Codium-ai/pr-agent/blob/main/LICENSE)
 [![Discord](https://badgen.net/badge/icon/discord?icon=discord&label&color=purple)](https://discord.com/channels/1057273017547378788/1126104260430528613)
 
-CodiumAI `pr-agent` is an open-source tool that helps developers review PRs faster and more efficiently.
-It automatically analyzes the PR, and provides feedback and suggestions, and can answer questions.
-It is powered by GPT-4, and is based on the [CodiumAI](https://github.com/Codium-ai/) platform.
+CodiumAI `pr-agent` is an open-source tool is powered by GPT-4 aming to help developers review PRs faster and more efficiently. It automatically analyzes the PR, and provides feedback and suggestions, and can answer questions.
 
 </div>
 
