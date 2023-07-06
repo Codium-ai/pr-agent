@@ -14,6 +14,7 @@ It is powered by GPT-4, and is based on the [CodiumAI](https://github.com/Codium
 * [Quickstart](#Quickstart)
 * [Configuration](#Configuration)
 * [Usage and Tools](#usage-and-tools)
+* [How it works](#how-it-works)
 * [Roadmap](#roadmap)
 * [Similar projects](#similar-projects)
 
@@ -148,8 +149,6 @@ CodiumAI PR-Agent provides two types of interactions ("tools"): `"PR Reviewer"` 
 - The "PR Reviewer" tool automatically analyzes PRs, and provides different types of feedbacks.
 - The "PR Q&A" tool answers free-text questions about the PR.
 
-  ![PR-Agent Tools](./pics/pr_agent_overview.png)
-
 ### PR Reviewer
 Here is a quick overview of the different sub-tools of PR Reviewer:
 
@@ -255,6 +254,11 @@ Example for extended suggestion:
         password = os.getenv('DB_PASSWORD'),
         ```
 ---
+
+## How it works
+  ![PR-Agent Tools](./pics/pr_agent_overview.png)
+
+Check out the [PR Compression strategy](./PR_COMPRESSION.md) page for more details on how pr-agent works.
 
 
 ## Roadmap
