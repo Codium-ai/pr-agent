@@ -1,9 +1,9 @@
 <div align="center">
 
-<div style="width: 250px;">
+<div align="center">
 
-![logo pr-agent dark](./pics/logo-dark.png#gh-dark-mode-only)
-![logo pr-agent light](./pics/logo-light.png#gh-light-mode-only)
+<img src="./pics/logo-dark.png#gh-dark-mode-only" width="250"/>
+<img src="./pics/logo-light.png#gh-light-mode-only" width="250"/>
 
 </div>
 
@@ -24,8 +24,7 @@ CodiumAI `pr-agent` is an open-source tool aiming to help developers review PRs 
 
 ## Live demo
 
-Experience GPT-4 powered PR review on your public GitHub repository with our hosted pr-agent. To try it, just mention `@CodiumAI-Agent` in any PR comment! The agent will generate a PR review in response. 
-
+Experience GPT-4 powered PR review on your public GitHub repository with our hosted pr-agent. To try it, just mention `@CodiumAI-Agent` in any PR comment! The agent will generate a PR review in response.
 
 ![Review generation process](./pics/pr-agent-review-process1.gif)
 
