@@ -24,6 +24,7 @@ class GithubProvider:
         self.repo = None
         self.pr_num = None
         self.pr = None
+        self.github_user_id = None
         if pr_url:
             self.set_pr(pr_url)
 
@@ -42,6 +43,8 @@ class GithubProvider:
 
     def publish_comment(self, pr_comment: str, is_temporary: bool = False):
         response = self.pr.create_issue_comment(pr_comment)
+        if hasattr(response, "user") and hasattr(response.user, "login"):
+            self.github_user_id = response.user.login
         response.is_temporary = is_temporary
         if not hasattr(self.pr, 'comments_list'):
             self.pr.comments_list = []
@@ -108,6 +111,14 @@ class GithubProvider:
 
     def get_pr_branch(self):
         return self.pr.head.ref
+
+    def get_user_id(self):
+        if not self.github_user_id:
+            try:
+                self.github_user_id = self.github_client.get_user().login
+            except Exception as e:
+                logging.exception(f"Failed to get user id, error: {e}")
+        return self.github_user_id
 
     def get_notifications(self, since: datetime):
         deployment_type = settings.get("GITHUB.DEPLOYMENT_TYPE", "user")

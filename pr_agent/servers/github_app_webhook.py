@@ -40,7 +40,7 @@ async def handle_request(body):
         if "comment" not in body:
             return {}
         comment_body = body.get("comment", {}).get("body", None)
-        if "says 'Please" in comment_body:
+        if 'sender' in body and 'login' in body['sender'] and 'bot' in body['sender']['login']:
             return {}
         if "issue" not in body and "pull_request" not in body["issue"]:
             return {}

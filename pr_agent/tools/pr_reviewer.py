@@ -82,8 +82,18 @@ class PRReviewer:
             logging.error("Unable to decode JSON response from AI")
             data = {}
         markdown_text = convert_to_markdown(data)
-        markdown_text += "\nAdd a comment that says 'Please review' to ask for a new review after you update the PR.\n"
-        markdown_text += "Add a comment that says 'Please answer <QUESTION...>' to ask a question about this PR.\n"
+        user = self.git_provider.get_user_id()
+        markdown_text += "\n### How to use\n"
+        if user and '[bot]' not in user:
+            markdown_text += f"> Tag me in a comment '@{user}' to ask for a new review after you update the PR.\n"
+            markdown_text += "> You can also tag me and ask any question, " \
+                             f"for example '@{user} is the PR ready for merge?'"
+        else:
+            markdown_text += "> Add a comment that says 'review' to ask for a new review " \
+                             "after you update the PR.\n"
+            markdown_text += "> You can also add a comment that says 'answer QUESTION', " \
+                             "for example 'answer is the PR ready for merge?'"
+
         if settings.config.verbosity_level >= 2:
             logging.info(f"Markdown response:\n{markdown_text}")
         return markdown_text

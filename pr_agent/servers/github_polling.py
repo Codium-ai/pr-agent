@@ -7,6 +7,7 @@ import aiohttp
 
 from pr_agent.agent.pr_agent import PRAgent
 from pr_agent.config_loader import settings
+from pr_agent.git_providers import get_git_provider
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 NOTIFICATION_URL = "https://api.github.com/notifications"
@@ -21,6 +22,8 @@ def now() -> str:
 async def polling_loop():
     since = [now()]
     last_modified = [None]
+    git_provider = get_git_provider()()
+    user_id = git_provider.get_user_id()
     try:
         deployment_type = settings.github.deployment_type
         token = settings.github.user_token
@@ -58,12 +61,18 @@ async def polling_loop():
                                 async with session.get(latest_comment, headers=headers) as comment_response:
                                     if comment_response.status == 200:
                                         comment = await comment_response.json()
+                                        if hasattr(comment, 'user') and hasattr(comment['user'], 'login'):
+                                            if comment['user']['login'] == user_id:
+                                                continue
                                         comment_body = comment['body'] if 'body' in comment else ''
                                         commenter_github_user = comment['user']['login'] if 'user' in comment else ''
                                         logging.info(f"Commenter: {commenter_github_user}\nComment: {comment_body}")
-                                        if comment_body.strip().startswith("@"):
-                                            agent = PRAgent()
-                                            await agent.handle_request(pr_url, comment_body)
+                                        user_tag = "@" + user_id
+                                        if user_tag not in comment_body:
+                                            continue
+                                        rest_of_comment = comment_body.split(user_tag)[1].strip()
+                                        agent = PRAgent()
+                                        await agent.handle_request(pr_url, rest_of_comment)
                 elif response.status != 304:
                     print(f"Failed to fetch notifications. Status code: {response.status}")
 
