@@ -148,6 +148,8 @@ CodiumAI PR-Agent provides two types of interactions ("tools"): `"PR Reviewer"` 
 - The "PR Reviewer" tool automatically analyzes PRs, and provides different types of feedbacks.
 - The "PR Q&A" tool answers free-text questions about the PR.
 
+  ![PR-Agent Tools](./pics/pr_agent_overview.png)
+
 ### PR Reviewer
 Here is a quick overview of the different sub-tools of PR Reviewer:
 
