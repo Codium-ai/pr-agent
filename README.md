@@ -14,6 +14,7 @@ CodiumAI `pr-agent` is an open-source tool is powered by GPT-4 aming to help dev
 - [Quickstart](#Quickstart)
 - [Usage and Tools](#usage-and-tools)
 - [Configuration](#Configuration)
+- [How it works](#how-it-works)
 - [Roadmap](#roadmap)
 - [Similar projects](#similar-projects)
 
@@ -281,6 +282,12 @@ Example for extended suggestion:
     ```
 
 ---
+
+## How it works
+  ![PR-Agent Tools](./pics/pr_agent_overview.png)
+
+Check out the [PR Compression strategy](./PR_COMPRESSION.md) page for more details on how pr-agent works.
+
 
 ## Roadmap
 
