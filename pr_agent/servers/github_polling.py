@@ -61,7 +61,7 @@ async def polling_loop():
                                 async with session.get(latest_comment, headers=headers) as comment_response:
                                     if comment_response.status == 200:
                                         comment = await comment_response.json()
-                                        if hasattr(comment, 'user') and hasattr(comment['user'], 'login'):
+                                        if 'user' in comment and 'login' in comment['user']:
                                             if comment['user']['login'] == user_id:
                                                 continue
                                         comment_body = comment['body'] if 'body' in comment else ''
