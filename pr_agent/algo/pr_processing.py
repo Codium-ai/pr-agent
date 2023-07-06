@@ -35,7 +35,7 @@ def get_pr_diff(git_provider: [GithubProvider, Any], token_handler: TokenHandler
     patches_compressed, modified_file_names = pr_generate_compressed_diff(pr_languages, token_handler)
     final_diff = "\n".join(patches_compressed)
     if modified_file_names:
-        modified_list_str = "Modified files:\n" + "\n".join(modified_file_names)
+        modified_list_str = "More modified files:\n" + "\n".join(modified_file_names)
         final_diff = final_diff + "\n\n" + modified_list_str
     return final_diff
 
