@@ -65,7 +65,7 @@ class PRQuestions:
 
     def _prepare_pr_answer(self) -> str:
         answer_str = f"Question: {self.question_str}\n\n"
-        answer_str += f"Answer: {self.prediction.strip()}\n\n"
+        answer_str += f"Answer:\n{self.prediction.strip()}\n\n"
         if settings.config.verbosity_level >= 2:
             logging.info(f"answer_str:\n{answer_str}")
         return answer_str
