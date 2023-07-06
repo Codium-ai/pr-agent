@@ -1,8 +1,11 @@
 <div align="center">
 
-<img src="./pics/Icon-7.png" alt="pr-agent_icon" width="100"/>
+<div style="width: 250px;">
 
-# pr-agent
+![logo pr-agent dark](./pics/logo-dark.png#gh-dark-mode-only)
+![logo pr-agent light](./pics/logo-light.png#gh-light-mode-only)
+
+</div>
 
 [![GitHub license](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/Codium-ai/pr-agent/blob/main/LICENSE)
 [![Discord](https://badgen.net/badge/icon/discord?icon=discord&label&color=purple)](https://discord.com/channels/1057273017547378788/1126104260430528613)
@@ -284,10 +287,10 @@ Example for extended suggestion:
 ---
 
 ## How it works
-  ![PR-Agent Tools](./pics/pr_agent_overview.png)
+
+![PR-Agent Tools](./pics/pr_agent_overview.png)
 
 Check out the [PR Compression strategy](./PR_COMPRESSION.md) page for more details on how we convert a code diff to a manageable LLM prompt
-
 
 ## Roadmap
 
