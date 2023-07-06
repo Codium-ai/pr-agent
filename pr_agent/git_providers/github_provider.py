@@ -1,3 +1,4 @@
+import logging
 from collections import namedtuple
 from dataclasses import dataclass
 from datetime import datetime
@@ -47,9 +48,12 @@ class GithubProvider:
         self.pr.comments_list.append(response)
 
     def remove_initial_comment(self):
-        for comment in self.pr.comments_list:
-            if comment.is_temporary:
-                comment.delete()
+        try:
+            for comment in self.pr.comments_list:
+                if comment.is_temporary:
+                    comment.delete()
+        except Exception as e:
+            logging.exception(f"Failed to remove initial comment, error: {e}")
 
     def get_title(self):
         return self.pr.title
