@@ -10,12 +10,13 @@
 [![GitHub license](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/Codium-ai/pr-agent/blob/main/LICENSE)
 [![Discord](https://badgen.net/badge/icon/discord?icon=discord&label&color=purple)](https://discord.com/channels/1057273017547378788/1126104260430528613)
 
-CodiumAI `pr-agent` is an open-source tool is powered by GPT-4 aming to help developers review PRs faster and more efficiently. It automatically analyzes the PR, and provides feedback and suggestions, and can answer questions.
+CodiumAI `pr-agent` is an open-source tool aiming to help developers review PRs faster and more efficiently. It automatically analyzes the PR, provides feedback and suggestions, and can answer free-text questions.
 
 </div>
 
+- [Live demo](#live-demo)
 - [Quickstart](#Quickstart)
-- [Usage and Tools](#usage-and-tools)
+- [Usage and tools](#usage-and-tools)
 - [Configuration](#Configuration)
 - [How it works](#how-it-works)
 - [Roadmap](#roadmap)
@@ -23,9 +24,12 @@ CodiumAI `pr-agent` is an open-source tool is powered by GPT-4 aming to help dev
 
 ## Live demo
 
-Experience GPT-4 powered PR review on your public Github repository with our hosted pr-agent. To try it, mention @CodiumAI-Agent in a PR comment! The agent will generate the review in response ([see details in the Usage section](#usage-and-tools)).
+Experience GPT-4 powered PR review on your public GitHub repository with our hosted pr-agent. To try it, just mention `@CodiumAI-Agent` in any PR comment! The agent will generate a PR review in response. 
+
 
 ![Review generation process](./pics/pr-agent-review-process1.gif)
+
+To set up your own pr-agent, see the [Quickstart](#Quickstart) section
 
 ---
 
