@@ -58,8 +58,6 @@ async def polling_loop():
                         if not notifications:
                             continue
                         for notification in notifications:
-                            if 'id' in notification and notification['id'] in handled_ids:
-                                continue
                             handled_ids.add(notification['id'])
                             if 'reason' in notification and notification['reason'] == 'mention':
                                 if 'subject' in notification and notification['subject']['type'] == 'PullRequest':
@@ -68,6 +66,11 @@ async def polling_loop():
                                     async with session.get(latest_comment, headers=headers) as comment_response:
                                         if comment_response.status == 200:
                                             comment = await comment_response.json()
+                                            if 'id' in comment:
+                                                if comment['id'] in handled_ids:
+                                                    continue
+                                                else:
+                                                    handled_ids.add(comment['id'])
                                             if 'user' in comment and 'login' in comment['user']:
                                                 if comment['user']['login'] == user_id:
                                                     continue
