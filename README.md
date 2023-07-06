@@ -35,16 +35,14 @@ Python scripts from the scripts folder. Here's how:
 
 1. To request a review for a PR, run the following command:
 ```
-docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent \
-python pr_agent/scripts/review_pr_from_url.py --pr_url <pr url>
+docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent --pr_url <pr url>
 ```
 
 ---
 
 2. To ask a question about a PR, run the following command:
 ```
-docker run --rm -it -e OPENAI.KEY -e GITHUB.USER_TOKEN codiumai/pr-agent \
-python pr_agent/scripts/answer_pr_questions_from_url.py --pr_url <pr url> --question "<your question>"
+docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent --pr_url <pr url> --question "<your question>"
 ```
 
 Possible questions you can ask include:
@@ -76,8 +74,8 @@ cp pr_agent/settings/.secrets_template.toml pr_agent/settings/.secrets
 
 4. Run the appropriate Python scripts from the scripts folder:
 ```
-python pr_agent/scripts/review_pr_from_url.py --pr_url <pr url>
-python pr_agent/scripts/answer_pr_questions_from_url.py --pr_url <pr url> --question "<your question>"
+python pr_agent/cli.py --pr_url <pr url>
+python pr_agent/cli.py --pr_url <pr url> --question "<your question>"
 ```
 
 ---
