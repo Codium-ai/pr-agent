@@ -14,7 +14,9 @@ from pr_agent.git_providers import get_git_provider
 class PRQuestions:
     def __init__(self, pr_url: str, question_str: str, installation_id: Optional[int] = None):
         self.git_provider = get_git_provider()(pr_url, installation_id)
-        self.main_pr_language = self.git_provider.get_main_pr_language()
+        self.main_pr_language = self.git_provider.get_main_pr_language(
+            self.git_provider.get_languages(), self.git_provider.get_files()
+        )
         self.installation_id = installation_id
         self.ai_handler = AiHandler()
         self.question_str = question_str
@@ -22,7 +24,7 @@ class PRQuestions:
             "title": self.git_provider.pr.title,
             "branch": self.git_provider.get_pr_branch(),
             "description": self.git_provider.pr.body,
-            "language": self.git_provider.get_main_pr_language(),
+            "language": self.main_pr_language,
             "diff": "", # empty diff for initial calculation
             "questions": self.question_str,
         }

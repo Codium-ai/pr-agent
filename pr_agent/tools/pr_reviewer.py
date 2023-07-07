@@ -17,7 +17,10 @@ class PRReviewer:
     def __init__(self, pr_url: str, installation_id: Optional[int] = None, cli_mode=False):
 
         self.git_provider = get_git_provider()(pr_url)
-        self.main_language = self.git_provider.get_main_pr_language()
+        print(dir(self.git_provider.pr))
+        self.main_language = self.git_provider.get_main_pr_language(
+            self.git_provider.get_languages(), self.git_provider.get_files()
+        )
         self.ai_handler = AiHandler()
         self.patches_diff = None
         self.prediction = None
