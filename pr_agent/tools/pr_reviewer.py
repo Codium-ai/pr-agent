@@ -16,9 +16,8 @@ from pr_agent.git_providers import get_git_provider
 class PRReviewer:
     def __init__(self, pr_url: str, installation_id: Optional[int] = None, cli_mode=False):
 
-        self.git_provider = get_git_provider()(pr_url, installation_id)
+        self.git_provider = get_git_provider()(pr_url)
         self.main_language = self.git_provider.get_main_pr_language()
-        self.installation_id = installation_id
         self.ai_handler = AiHandler()
         self.patches_diff = None
         self.prediction = None
@@ -26,7 +25,7 @@ class PRReviewer:
         self.vars = {
             "title": self.git_provider.pr.title,
             "branch": self.git_provider.get_pr_branch(),
-            "description": self.git_provider.pr.body,
+            "description": self.git_provider.get_pr_description(),
             "language": self.main_language,
             "diff": "",  # empty diff for initial calculation
             "require_tests": settings.pr_reviewer.require_tests_review,

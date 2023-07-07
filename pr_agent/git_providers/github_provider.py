@@ -1,25 +1,17 @@
 import logging
-from collections import namedtuple
-from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional, Tuple
 from urllib.parse import urlparse
 
-from github import AppAuthentication, File, Github
+from github import AppAuthentication, Github
 
 from pr_agent.config_loader import settings
+from .git_provider import FilePatchInfo
 
-@dataclass
-class FilePatchInfo:
-    base_file: str
-    head_file: str
-    patch: str
-    filename: str
-    tokens: int = -1
 
 class GithubProvider:
-    def __init__(self, pr_url: Optional[str] = None, installation_id: Optional[int] = None):
-        self.installation_id = installation_id
+    def __init__(self, pr_url: Optional[str] = None):
+        self.installation_id = settings.get("GITHUB.INSTALLATION_ID")
         self.github_client = self._get_github_client()
         self.repo = None
         self.pr_num = None
@@ -65,7 +57,8 @@ class GithubProvider:
         return self.pr.body
 
     def get_languages(self):
-        return self._get_repo().get_languages()
+        languages = self._get_repo().get_languages()
+        return languages
 
     def get_main_pr_language(self) -> str:
         """
@@ -111,6 +104,9 @@ class GithubProvider:
 
     def get_pr_branch(self):
         return self.pr.head.ref
+
+    def get_pr_description(self):
+        return self.pr.body
 
     def get_user_id(self):
         if not self.github_user_id:
