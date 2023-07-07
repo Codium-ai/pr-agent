@@ -39,7 +39,6 @@ class GitLabProvider(GitProvider):
 
     def publish_comment(self, mr_comment: str, is_temporary: bool = False):
         comment = self.mr.notes.create({'body': mr_comment})
-        print(comment)
         if is_temporary:
             self.temp_comments.append(comment)
 
@@ -70,7 +69,6 @@ class GitLabProvider(GitProvider):
         parsed_url = urlparse(merge_request_url)
 
         path_parts = parsed_url.path.strip('/').split('/')
-        print(path_parts)
         if path_parts[-2] != 'merge_requests':
             raise ValueError("The provided URL does not appear to be a GitLab merge request URL")
 
