@@ -25,7 +25,7 @@ class PRQuestions:
             "branch": self.git_provider.get_pr_branch(),
             "description": self.git_provider.pr.body,
             "language": self.main_pr_language,
-            "diff": "", # empty diff for initial calculation
+            "diff": "",  # empty diff for initial calculation
             "questions": self.question_str,
         }
         self.token_handler = TokenHandler(self.git_provider.pr,
