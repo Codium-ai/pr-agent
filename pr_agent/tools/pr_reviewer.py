@@ -10,14 +10,15 @@ from pr_agent.algo.pr_processing import get_pr_diff
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.algo.utils import convert_to_markdown
 from pr_agent.config_loader import settings
-from pr_agent.git_providers import get_git_provider
+from pr_agent.git_providers import get_git_provider,
+from pr_agent.git_provider import get_main_pr_language
 
 
 class PRReviewer:
     def __init__(self, pr_url: str, installation_id: Optional[int] = None, cli_mode=False):
 
         self.git_provider = get_git_provider()(pr_url)
-        self.main_language = self.git_provider.get_main_pr_language(
+        self.main_language = get_main_pr_language(
             self.git_provider.get_languages(), self.git_provider.get_files()
         )
         self.ai_handler = AiHandler()

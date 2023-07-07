@@ -9,12 +9,13 @@ from pr_agent.algo.pr_processing import get_pr_diff
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.config_loader import settings
 from pr_agent.git_providers import get_git_provider
+from pr_agent.git_providers.git_provider import get_main_pr_language
 
 
 class PRQuestions:
     def __init__(self, pr_url: str, question_str: str, installation_id: Optional[int] = None):
         self.git_provider = get_git_provider()(pr_url, installation_id)
-        self.main_pr_language = self.git_provider.get_main_pr_language(
+        self.main_pr_language = get_main_pr_language(
             self.git_provider.get_languages(), self.git_provider.get_files()
         )
         self.installation_id = installation_id
