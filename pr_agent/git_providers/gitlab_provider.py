@@ -23,6 +23,7 @@ class GitLabProvider(GitProvider):
 
     @property
     def pr(self):
+        '''The GitLab terminology is merge request (MR) instead of pull request (PR)'''
         return self.mr
 
     def set_merge_request(self, merge_request_url: str):
