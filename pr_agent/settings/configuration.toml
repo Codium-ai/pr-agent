@@ -23,3 +23,6 @@ projects_to_monitor = [47494341]
 
 # Polling trigger
 magic_word = "MagicRound"
+
+# Polling interval
+polling_interval_seconds = 60

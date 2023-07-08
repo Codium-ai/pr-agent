@@ -57,7 +57,7 @@ def run():
 
     # Run the check every minute
     while True:
-        # time.sleep(60)
+        time.sleep(settings.get("GITLAB.POLLING_INTERVAL_SECONDS"))
         new_comments = check_comments()
         if new_comments:
             handle_new_comments(new_comments)
