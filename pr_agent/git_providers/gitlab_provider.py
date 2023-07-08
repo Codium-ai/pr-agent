@@ -78,21 +78,8 @@ class GitLabProvider(GitProvider):
         except ValueError as e:
             raise ValueError("Unable to convert merge request ID to integer") from e
 
-        # Either user or group
-        namespace, project_name = path_parts[:2]
-
-        # Workaround for gitlab API limitation
-        project_ids = [
-            project.get_id() for project in self.gl.projects.list(search=project_name, simple=True)
-            if project.path_with_namespace == f"{namespace}/{project_name}"
-        ]
-
-        if len(project_ids) == 0:
-            raise ValueError(f"Unable to find project with name {project_name}")
-        elif len(project_ids) > 1:
-            raise ValueError(f"Multiple projects found with name {namespace}/{project_name}")
-
-        return project_ids[0], mr_id
+        # Gitlab supports access by both project numeric ID as well as 'namespace/project_name'
+        return "/".join(path_parts[:2]), mr_id
 
     def _get_merge_request(self):
         mr = self.gl.projects.get(self.id_project).mergerequests.get(self.id_mr)
