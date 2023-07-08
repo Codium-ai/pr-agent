@@ -18,11 +18,11 @@ num_code_suggestions=4
 # URL to the gitlab service
 gitlab_url = "https://gitlab.com"
 
-# Polling
-projects_to_monitor = [47494341]
+# Polling (either proheheject id or namespace/project_name) syntax can be used
+projects_to_monitor = [47494341, 'my_user/my_project', 'my_group/my_project']
 
 # Polling trigger
-magic_word = "MagicRound"
+magic_word = "AutoReview"
 
 # Polling interval
 polling_interval_seconds = 60
