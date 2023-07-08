@@ -6,12 +6,12 @@ from pr_agent.tools.pr_reviewer import PRReviewer
 
 
 class PRAgent:
-    def __init__(self, installation_id: Optional[int] = None):
-        self.installation_id = installation_id
+    def __init__(self):
+        pass
 
     async def handle_request(self, pr_url, request):
         if 'please review' in request.lower() or 'review' == request.lower().strip() or len(request) == 0:
-            reviewer = PRReviewer(pr_url, self.installation_id)
+            reviewer = PRReviewer(pr_url)
             await reviewer.review()
 
         else:
@@ -21,5 +21,5 @@ class PRAgent:
                 question = re.split(r'(?i)answer', request)[1].strip()
             else:
                 question = request
-            answerer = PRQuestions(pr_url, question, self.installation_id)
+            answerer = PRQuestions(pr_url, question)
             await answerer.answer()

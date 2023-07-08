@@ -13,3 +13,13 @@ num_code_suggestions=4
 
 
 [pr_questions]
+
+[gitlab]
+# URL to the gitlab service
+gitlab_url = "https://gitlab.com"
+
+# Polling
+projects_to_monitor = [47494341]
+
+# Polling trigger
+magic_word = "MagicRound"

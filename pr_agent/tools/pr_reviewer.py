@@ -15,7 +15,7 @@ from pr_agent.git_providers.git_provider import get_main_pr_language
 
 
 class PRReviewer:
-    def __init__(self, pr_url: str, installation_id: Optional[int] = None, cli_mode=False):
+    def __init__(self, pr_url: str, cli_mode=False):
 
         self.git_provider = get_git_provider()(pr_url)
         self.main_language = get_main_pr_language(
