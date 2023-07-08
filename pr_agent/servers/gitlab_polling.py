@@ -16,7 +16,6 @@ gl = gitlab.Gitlab(
 projects_to_monitor = settings.get("GITLAB.PROJECTS_TO_MONITOR")
 magic_word = settings.get("GITLAB.MAGIC_WORD")
 
-print(projects_to_monitor, magic_word, settings.get("GITLAB.PERSONAL_ACCESS_TOKEN"))
 # Hold the previous seen comments
 previous_comments = set()
 
@@ -28,7 +27,7 @@ def check_comments():
         project = gl.projects.get(project)
         merge_requests = project.mergerequests.list(state='opened')
         for mr in merge_requests:
-            notes = mr.notes.list(iterator=True)
+            notes = mr.notes.list(get_all=True)
             for note in notes:
                 if note.id not in previous_comments and note.body.startswith(magic_word):
                     new_comments[note.id] = dict(
@@ -51,7 +50,7 @@ def handle_new_comments(new_comments):
 
 
 def run():
-
+    assert settings.get('CONFIG.GIT_PROVIDER') == 'gitlab', 'This script is only for GitLab'
     # Initial run to populate previous_comments
     check_comments()
 

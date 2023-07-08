@@ -19,10 +19,10 @@ num_code_suggestions=4
 gitlab_url = "https://gitlab.com"
 
 # Polling (either proheheject id or namespace/project_name) syntax can be used
-projects_to_monitor = [47494341, 'my_user/my_project', 'my_group/my_project']
+projects_to_monitor = ['nuclai/algo', 'nuclai/pr-agent-test']
 
 # Polling trigger
 magic_word = "AutoReview"
 
 # Polling interval
-polling_interval_seconds = 60
+polling_interval_seconds = 300
