@@ -7,10 +7,10 @@
 
 </div>
 
-[![GitHub license](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/Codium-ai/pr-agent/blob/main/LICENSE)
+[![GitHub license](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/Codium-ai/PR-Agent/blob/main/LICENSE)
 [![Discord](https://badgen.net/badge/icon/discord?icon=discord&label&color=purple)](https://discord.com/channels/1057273017547378788/1126104260430528613)
 
-CodiumAI `pr-agent` is an open-source tool aiming to help developers review PRs faster and more efficiently. It automatically analyzes the PR, provides feedback and suggestions, and can answer free-text questions.
+CodiumAI `PR-Agent` is an open-source tool aiming to help developers review PRs faster and more efficiently. It automatically analyzes the PR, provides feedback and suggestions, and can answer free-text questions.
 
 </div>
 
@@ -24,22 +24,22 @@ CodiumAI `pr-agent` is an open-source tool aiming to help developers review PRs 
 
 ## Live demo
 
-Experience GPT-4 powered PR review on your public GitHub repository with our hosted pr-agent. To try it, just mention `@CodiumAI-Agent` in any PR comment! The agent will generate a PR review in response.
+Experience GPT-4 powered PR review on your public GitHub repository with our hosted PR-Agent. To try it, just mention `@CodiumAI-Agent` in any PR comment! The agent will generate a PR review in response.
 
-![Review generation process](./pics/pr-agent-review-process1.gif)
+![Review generation process](./pics/PR-Agent-review-process1.gif)
 
-To set up your own pr-agent, see the [Quickstart](#Quickstart) section
+To set up your own PR-Agent, see the [Quickstart](#Quickstart) section
 
 ---
 
 ## Quickstart
 
-To get started with pr-agent quickly, you first need to acquire two tokens:
+To get started with PR-Agent quickly, you first need to acquire two tokens:
 
 1. An OpenAI key from [here](https://platform.openai.com/), with access to GPT-4.
 2. A GitHub personal access token (classic) with the repo scope.
 
-There are several ways to use pr-agent. Let's start with the simplest one:
+There are several ways to use PR-Agent. Let's start with the simplest one:
 
 ---
 
@@ -50,13 +50,13 @@ To request a review for a PR, or ask a question about a PR, you can run directly
 1. To request a review for a PR, run the following command:
 
 ```
-docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent --pr_url <pr url>
+docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/PR-Agent --pr_url <pr url>
 ```
 
 2. To ask a question about a PR, run the following command:
 
 ```
-docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent --pr_url <pr url> --question "<your question>"
+docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/PR-Agent --pr_url <pr url> --question "<your question>"
 ```
 
 Possible questions you can ask include:
@@ -74,7 +74,7 @@ Possible questions you can ask include:
 1. Clone this repository:
 
 ```
-git clone https://github.com/Codium-ai/pr-agent.git
+git clone https://github.com/codium-ai/pr-agent.git
 ```
 
 2. Install the requirements in your favorite virtual environment:
@@ -136,7 +136,7 @@ WEBHOOK_SECRET=$(python -c "import secrets; print(secrets.token_hex(10))")
 4. Clone this repository:
 
 ```
-git clone https://github.com/Codium-ai/pr-agent.git
+git clone https://github.com/codium-ai/pr-agent.git
 ```
 
 5. Copy the secrets template file and fill in the following:
@@ -154,8 +154,8 @@ cp pr_agent/settings/.secrets_template.toml pr_agent/settings/.secrets
 6. Build a Docker image for the app and optionally push it to a Docker repository. We'll use Dockerhub as an example:
 
 ```
-docker build . -t codiumai/pr-agent:github_app --target github_app -f docker/Dockerfile
-docker push codiumai/pr-agent:github_app  # Push to your Docker repository
+docker build . -t codiumai/PR-Agent:github_app --target github_app -f docker/Dockerfile
+docker push codiumai/PR-Agent:github_app  # Push to your Docker repository
 ```
 
 7. Host the app using a server, serverless function, or container environment. Alternatively, for development and
@@ -172,7 +172,7 @@ docker push codiumai/pr-agent:github_app  # Push to your Docker repository
 
 ## Usage and Tools
 
-CodiumAI pr-agent provides two types of interactions ("tools"): `"PR Reviewer"` and `"PR Q&A"`.
+CodiumAI PR-Agent provides two types of interactions ("tools"): `"PR Reviewer"` and `"PR Q&A"`.
 
 - The "PR Reviewer" tool automatically analyzes PRs, and provides different types of feedbacks.
 - The "PR Q&A" tool answers free-text questions about the PR.
@@ -238,7 +238,7 @@ This tool answers free-text questions about the PR. This is how a typical output
 
 ## Configuration
 
-The different tools and sub-tools used by CodiumAI pr-agent are easily configurable via the configuration file: `/settings/configuration.toml`.
+The different tools and sub-tools used by CodiumAI PR-Agent are easily configurable via the configuration file: `/settings/configuration.toml`.
 
 #### Enabling/disabling sub-tools:
 
