@@ -65,13 +65,14 @@ def parse_code_suggestion(code_suggestions: dict) -> str:
     return markdown_text
 
 
-def try_fix_json(review):
+def try_fix_json(review, max_iter=10):
     # Try to fix JSON if it is broken/incomplete: parse until the last valid code suggestion
     data = {}
     if review.rfind("'Code suggestions': [") > 0 or review.rfind('"Code suggestions": [') > 0:
         last_code_suggestion_ind = [m.end() for m in re.finditer(r"\}\s*,", review)][-1] - 1
         valid_json = False
-        while last_code_suggestion_ind > 0 and not valid_json:
+        iter_count = 0
+        while last_code_suggestion_ind > 0 and not valid_json and iter_count < max_iter:
             try:
                 data = json.loads(review[:last_code_suggestion_ind] + "]}}")
                 valid_json = True
@@ -80,6 +81,7 @@ def try_fix_json(review):
                 review = review[:last_code_suggestion_ind]
                 # Use regular expression to find the last occurrence of "}," with any number of whitespaces or newlines
                 last_code_suggestion_ind = [m.end() for m in re.finditer(r"\}\s*,", review)][-1] - 1
+                iter_count += 1
         if not valid_json:
             logging.error("Unable to decode JSON response from AI")
             data = {}
