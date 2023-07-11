@@ -86,8 +86,8 @@ pip install -r requirements.txt
 3. Copy the secrets template file and fill in your OpenAI key and your GitHub user token:
 
 ```
-cp pr_agent/settings/.secrets_template.toml pr_agent/settings/.secrets
-# Edit .secrets file
+cp pr_agent/settings/.secrets_template.toml pr_agent/settings/.secrets.toml
+# Edit .secrets.toml file
 ```
 
 4. Run the appropriate Python scripts from the scripts folder:
@@ -147,8 +147,8 @@ git clone https://github.com/Codium-ai/pr-agent.git
    - Copy your app's webhook secret to the webhook_secret field.
 
 ```
-cp pr_agent/settings/.secrets_template.toml pr_agent/settings/.secrets
-# Edit .secrets file
+cp pr_agent/settings/.secrets_template.toml pr_agent/settings/.secrets.toml
+# Edit .secrets.toml file
 ```
 
 6. Build a Docker image for the app and optionally push it to a Docker repository. We'll use Dockerhub as an example:
