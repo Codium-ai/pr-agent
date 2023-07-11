@@ -47,7 +47,7 @@ class TestParseCodeSuggestion:
             "Suggestion number": "one",
             "Description": "This is a suggestion"
         }
-        expected_output = "- **suggestion one:**\n  - **Description:** This is a suggestion\n\n"
+        expected_output = "   **Description:** This is a suggestion\n\n"
         assert parse_code_suggestion(input_data) == expected_output
 
     # Tests that function returns correct output when 'before' or 'after' key has a non-string value
@@ -70,7 +70,7 @@ class TestParseCodeSuggestion:
             'before': 'Before 1',
             'after': 'After 1'
         }
-        expected_output = "- **suggestion 1:**\n  - **suggestion:** Suggestion 1\n  - **description:** Description 1\n  - **before:** Before 1\n  - **after:** After 1\n\n"  # noqa: E501
+        expected_output = "   **suggestion:** Suggestion 1\n   **description:** Description 1\n   **before:** Before 1\n   **after:** After 1\n\n"
         assert parse_code_suggestion(code_suggestions) == expected_output
 
     # Tests that function returns correct output when input dictionary has 'code example' key
@@ -84,5 +84,5 @@ class TestParseCodeSuggestion:
                 'after': 'After 2'
             }
         }
-        expected_output = "- **suggestion 2:**\n  - **suggestion:** Suggestion 2\n  - **description:** Description 2\n  - **code example:**\n    - **before:**\n        ```\n        Before 2\n        ```\n    - **after:**\n        ```\n        After 2\n        ```\n\n"  # noqa: E501
+        expected_output = "   **suggestion:** Suggestion 2\n   **description:** Description 2\n  - **code example:**\n    - **before:**\n        ```\n        Before 2\n        ```\n    - **after:**\n        ```\n        After 2\n        ```\n\n"
         assert parse_code_suggestion(code_suggestions) == expected_output

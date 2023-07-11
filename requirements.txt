@@ -6,3 +6,4 @@ openai==0.27.8
 Jinja2==3.1.2
 tiktoken==0.4.0
 uvicorn==0.22.0
+pytest==7.4.0

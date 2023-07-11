@@ -30,10 +30,10 @@ You must use the following JSON schema to format your answer:
       "description": "yes\\no question: does this PR have relevant tests ?"
     },
 {%- endif %}
-{%- if require_minimal_and_focused %}
-    "Minimal and focused": {
+{%- if require_focused %}
+    "Focused PR": {
       "type": "string",
-      "description": "is this PR as minimal and focused as possible, with all code changes centered around a single coherent theme, described in the PR description and title ?" Make sure to explain your answer"
+      "description": "Is this a focused PR, in the sense that it has a clear and coherent title and description, and all PR code diff changes are properly derived from the title and description? Explain your response."
     }
   },
 {%- endif %}
@@ -106,8 +106,8 @@ Example output:
 {%- if require_tests %}
         "Relevant tests added": "No",
 {%- endif %}
-{%- if require_minimal_and_focused %}
-        "Minimal and focused": "yes\\no, because ..."
+{%- if require_focused %}
+        "Focused PR": "yes\\no, because ..."
 {%- endif %}
     },
     "PR Feedback":
