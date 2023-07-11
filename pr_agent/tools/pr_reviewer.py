@@ -31,7 +31,7 @@ class PRReviewer:
             "diff": "",  # empty diff for initial calculation
             "require_tests": settings.pr_reviewer.require_tests_review,
             "require_security": settings.pr_reviewer.require_security_review,
-            "require_minimal_and_focused": settings.pr_reviewer.require_minimal_and_focused_review,
+            "require_focused": settings.pr_reviewer.require_focused_review,
             'extended_code_suggestions': settings.pr_reviewer.extended_code_suggestions,
             'num_code_suggestions': settings.pr_reviewer.num_code_suggestions,
         }
