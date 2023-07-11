@@ -1,7 +1,6 @@
 import copy
 import json
 import logging
-from typing import Optional
 
 from jinja2 import Environment, StrictUndefined
 
@@ -11,14 +10,16 @@ from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.algo.utils import convert_to_markdown
 from pr_agent.config_loader import settings
 from pr_agent.git_providers import get_git_provider
+from pr_agent.git_providers.git_provider import get_main_pr_language
 
 
 class PRReviewer:
-    def __init__(self, pr_url: str, installation_id: Optional[int] = None, cli_mode=False):
+    def __init__(self, pr_url: str, cli_mode=False):
 
-        self.git_provider = get_git_provider()(pr_url, installation_id)
-        self.main_language = self.git_provider.get_main_pr_language()
-        self.installation_id = installation_id
+        self.git_provider = get_git_provider()(pr_url)
+        self.main_language = get_main_pr_language(
+            self.git_provider.get_languages(), self.git_provider.get_files()
+        )
         self.ai_handler = AiHandler()
         self.patches_diff = None
         self.prediction = None
@@ -26,12 +27,12 @@ class PRReviewer:
         self.vars = {
             "title": self.git_provider.pr.title,
             "branch": self.git_provider.get_pr_branch(),
-            "description": self.git_provider.pr.body,
+            "description": self.git_provider.get_pr_description(),
             "language": self.main_language,
             "diff": "",  # empty diff for initial calculation
             "require_tests": settings.pr_reviewer.require_tests_review,
             "require_security": settings.pr_reviewer.require_security_review,
-            "require_minimal_and_focused": settings.pr_reviewer.require_minimal_and_focused_review,
+            "require_focused": settings.pr_reviewer.require_focused_review,
             'extended_code_suggestions': settings.pr_reviewer.extended_code_suggestions,
             'num_code_suggestions': settings.pr_reviewer.num_code_suggestions,
         }

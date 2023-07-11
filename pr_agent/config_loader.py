@@ -5,6 +5,7 @@ from dynaconf import Dynaconf
 current_dir = dirname(abspath(__file__))
 settings = Dynaconf(
     envvar_prefix=False,
+    merge_enabled=True,
     settings_files=[join(current_dir, f) for f in [
          "settings/.secrets.toml",
          "settings/configuration.toml",

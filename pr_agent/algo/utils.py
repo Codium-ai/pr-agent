@@ -12,7 +12,7 @@ def convert_to_markdown(output_data: dict) -> str:
         "Type of PR": "📌",
         "Relevant tests added": "🧪",
         "Unrelated changes": "⚠️",
-        "Minimal and focused": "✨",
+        "Focused PR": "✨",
         "Security concerns": "🔒",
         "General PR suggestions": "💡",
         "Code suggestions": "🤖"

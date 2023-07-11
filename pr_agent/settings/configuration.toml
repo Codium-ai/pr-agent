@@ -5,11 +5,27 @@ publish_review=true
 verbosity_level=0  # 0,1,2
 
 [pr_reviewer]
-require_minimal_and_focused_review=true
+require_focused_review=true
 require_tests_review=true
 require_security_review=true
 extended_code_suggestions=false
 num_code_suggestions=4
 
-
 [pr_questions]
+
+[github]
+# The type of deployment to create. Valid values are 'app' or 'user'.
+deployment_type = "user"
+
+[gitlab]
+# URL to the gitlab service
+gitlab_url = "https://gitlab.com"
+
+# Polling (either project id or namespace/project_name) syntax can be used
+projects_to_monitor = ['org_name/repo_name']
+
+# Polling trigger
+magic_word = "AutoReview"
+
+# Polling interval
+polling_interval_seconds = 30
