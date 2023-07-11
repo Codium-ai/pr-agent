@@ -86,8 +86,8 @@ pip install -r requirements.txt
 3. Copy the secrets template file and fill in your OpenAI key and your GitHub user token:
 
 ```
-cp pr_agent/settings/.secrets_template.toml pr_agent/settings/.secrets
-# Edit .secrets file
+cp pr_agent/settings/.secrets_template.toml pr_agent/settings/.secrets.toml
+# Edit .secrets.toml file
 ```
 
 4. Run the appropriate Python scripts from the scripts folder:
@@ -147,8 +147,8 @@ git clone https://github.com/Codium-ai/pr-agent.git
    - Copy your app's webhook secret to the webhook_secret field.
 
 ```
-cp pr_agent/settings/.secrets_template.toml pr_agent/settings/.secrets
-# Edit .secrets file
+cp pr_agent/settings/.secrets_template.toml pr_agent/settings/.secrets.toml
+# Edit .secrets.toml file
 ```
 
 6. Build a Docker image for the app and optionally push it to a Docker repository. We'll use Dockerhub as an example:
@@ -186,7 +186,7 @@ Here is a quick overview of the different sub-tools of PR Reviewer:
   - PR description and title
   - PR type classification
   - Is the PR covered by relevant tests
-  - Is the PR minimal and focused
+  - Is this a focused PR
   - Are there security concerns
 - PR Feedback
   - General PR suggestions
@@ -202,7 +202,7 @@ This is how a typical output of the PR Reviewer looks like:
 - 🔍 **Description and title:** Yes
 - 📌 **Type of PR:** Enhancement
 - 🧪 **Relevant tests added:** No
-- ✨ **Minimal and focused:** Yes, the PR is focused on adding two new handlers for language extension and token counting.
+- ✨ **Focused PR:** Yes, the PR is focused on adding two new handlers for language extension and token counting.
 - 🔒 **Security concerns:** No, the PR does not introduce possible security concerns or issues.
 
 #### PR Feedback
@@ -245,7 +245,7 @@ The different tools and sub-tools used by CodiumAI pr-agent are easily configura
 You can enable/disable the different PR Reviewer sub-sections with the following flags:
 
 ```
-require_minimal_and_focused_review=true
+require_focused_review=true
 require_tests_review=true
 require_security_review=true
 ```

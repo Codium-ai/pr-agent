@@ -38,6 +38,7 @@ async def polling_loop():
     async with aiohttp.ClientSession() as session:
         while True:
             try:
+                await asyncio.sleep(5)
                 headers = {
                     "Accept": "application/vnd.github.v3+json",
                     "Authorization": f"Bearer {token}"
@@ -86,10 +87,8 @@ async def polling_loop():
                     elif response.status != 304:
                         print(f"Failed to fetch notifications. Status code: {response.status}")
 
-                await asyncio.sleep(5)
             except Exception as e:
                 logging.error(f"Exception during processing of a notification: {e}")
-                await asyncio.sleep(5)
 
 if __name__ == '__main__':
     asyncio.run(polling_loop())
