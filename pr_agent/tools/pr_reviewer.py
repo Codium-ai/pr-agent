@@ -7,7 +7,7 @@ from jinja2 import Environment, StrictUndefined
 from pr_agent.algo.ai_handler import AiHandler
 from pr_agent.algo.pr_processing import get_pr_diff
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import convert_to_markdown
+from pr_agent.algo.utils import convert_to_markdown, try_fix_json
 from pr_agent.config_loader import settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
@@ -69,11 +69,7 @@ class PRReviewer:
         model = settings.config.model
         response, finish_reason = await self.ai_handler.chat_completion(model=model, temperature=0.2,
                                                                         system=system_prompt, user=user_prompt)
-        try:
-            json.loads(response)
-        except json.decoder.JSONDecodeError:
-            logging.warning("Could not decode JSON")
-            response = {}
+
         return response
 
     def _prepare_pr_review(self) -> str:
@@ -81,8 +77,7 @@ class PRReviewer:
         try:
             data = json.loads(review)
         except json.decoder.JSONDecodeError:
-            logging.error("Unable to decode JSON response from AI")
-            data = {}
+            data = try_fix_json(review)
 
         # reordering for nicer display
         if 'PR Feedback' in data:
