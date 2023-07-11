@@ -7,7 +7,7 @@ from jinja2 import Environment, StrictUndefined
 from pr_agent.algo.ai_handler import AiHandler
 from pr_agent.algo.pr_processing import get_pr_diff
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import convert_to_markdown
+from pr_agent.algo.utils import convert_to_markdown, try_fix_json
 from pr_agent.config_loader import settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
@@ -77,22 +77,7 @@ class PRReviewer:
         try:
             data = json.loads(review)
         except json.decoder.JSONDecodeError:
-            # Try to fix JSON if it is broken/incomplete: parse until the last valid code suggestion
-            if review.rfind("'Code suggestions': [") > 0 or review.rfind('"Code suggestions": [') > 0:
-                last_code_suggestion_ind = review.rfind(",")
-                valid_json = False
-                data = {}
-                while last_code_suggestion_ind > 0 and not valid_json:
-                    try:
-                        data = json.loads(review[:last_code_suggestion_ind] + "]}}")
-                        valid_json = True
-                        review = review[:last_code_suggestion_ind] + "]}}"
-                    except json.decoder.JSONDecodeError:
-                        review = review[:last_code_suggestion_ind]
-                        last_code_suggestion_ind = review.rfind("},") + 1
-                if not valid_json:
-                    logging.error("Unable to decode JSON response from AI")
-                    data = {}
+            data = try_fix_json(review)
 
         # reordering for nicer display
         if 'PR Feedback' in data:
