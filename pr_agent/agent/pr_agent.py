@@ -1,5 +1,4 @@
 import re
-from typing import Optional
 
 from pr_agent.tools.pr_questions import PRQuestions
 from pr_agent.tools.pr_reviewer import PRReviewer

@@ -1,5 +1,4 @@
-
-from abc import ABC
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
 
@@ -13,26 +12,34 @@ class FilePatchInfo:
 
 
 class GitProvider(ABC):
+    @abstractmethod
     def get_diff_files(self) -> list[FilePatchInfo]:
         pass
 
+    @abstractmethod
     def publish_comment(self, pr_comment: str, is_temporary: bool = False):
         pass
 
+    @abstractmethod
     def remove_initial_comment(self):
         pass
 
+    @abstractmethod
     def get_languages(self):
         pass
 
+    @abstractmethod
     def get_pr_branch(self):
         pass
 
+    @abstractmethod
     def get_user_id(self):
         pass
 
+    @abstractmethod
     def get_pr_description(self):
         pass
+
 
 def get_main_pr_language(languages, files) -> str:
     """

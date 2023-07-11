@@ -1,11 +1,10 @@
 import asyncio
 import time
-from urllib.parse import urlparse
+
 import gitlab
+
 from pr_agent.agent.pr_agent import PRAgent
-
 from pr_agent.config_loader import settings
-
 
 gl = gitlab.Gitlab(
     settings.get("GITLAB.URL"),

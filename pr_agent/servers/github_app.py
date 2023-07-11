@@ -35,7 +35,8 @@ async def handle_github_webhooks(request: Request, response: Response):
 async def handle_request(body):
     action = body.get("action", None)
     installation_id = body.get("installation", {}).get("id", None)
-    agent = PRAgent(installation_id)
+    settings.set("GITHUB.INSTALLATION_ID", installation_id)
+    agent = PRAgent()
     if action == 'created':
         if "comment" not in body:
             return {}
@@ -66,8 +67,8 @@ async def root():
 
 
 def start():
-    if settings.get("GITHUB.DEPLOYMENT_TYPE", "user") != "app":
-        raise Exception("Please set deployment type to app in .secrets.toml file")
+    # Override the deployment type to app
+    settings.set("GITHUB.DEPLOYMENT_TYPE", "app")
     app = FastAPI()
     app.include_router(router)
 

@@ -1,6 +1,8 @@
-from urllib.parse import urlparse
-import gitlab
+import logging
 from typing import Optional, Tuple
+from urllib.parse import urlparse
+
+import gitlab
 
 from pr_agent.config_loader import settings
 
@@ -9,24 +11,28 @@ from .git_provider import FilePatchInfo, GitProvider
 
 class GitLabProvider(GitProvider):
     def __init__(self, merge_request_url: Optional[str] = None):
+        gitlab_url = settings.get("GITLAB.URL", None)
+        if not gitlab_url:
+            raise ValueError("GitLab URL is not set in the config file")
+        gitlab_access_token = settings.get("GITLAB.PERSONAL_ACCESS_TOKEN", None)
+        if not gitlab_access_token:
+            raise ValueError("GitLab personal access token is not set in the config file")
         self.gl = gitlab.Gitlab(
-            settings.get("GITLAB.URL"),
-            private_token=settings.get("GITLAB.PERSONAL_ACCESS_TOKEN")
+            gitlab_url,
+            gitlab_access_token
         )
-
         self.id_project = None
         self.id_mr = None
         self.mr = None
         self.temp_comments = []
-
-        self.set_merge_request(merge_request_url)
+        self._set_merge_request(merge_request_url)
 
     @property
     def pr(self):
         '''The GitLab terminology is merge request (MR) instead of pull request (PR)'''
         return self.mr
 
-    def set_merge_request(self, merge_request_url: str):
+    def _set_merge_request(self, merge_request_url: str):
         self.id_project, self.id_mr = self._parse_merge_request_url(merge_request_url)
         self.mr = self._get_merge_request()
 

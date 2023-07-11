@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 from github import AppAuthentication, Github
 
 from pr_agent.config_loader import settings
+
 from .git_provider import FilePatchInfo
 
 

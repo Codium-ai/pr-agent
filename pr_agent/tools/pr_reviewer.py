@@ -1,7 +1,6 @@
 import copy
 import json
 import logging
-from typing import Optional
 
 from jinja2 import Environment, StrictUndefined
 
