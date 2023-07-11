@@ -68,11 +68,7 @@ class PRReviewer:
         model = settings.config.model
         response, finish_reason = await self.ai_handler.chat_completion(model=model, temperature=0.2,
                                                                         system=system_prompt, user=user_prompt)
-        try:
-            json.loads(response)
-        except json.decoder.JSONDecodeError:
-            logging.warning("Could not decode JSON")
-            response = {}
+
         return response
 
     def _prepare_pr_review(self) -> str:
@@ -80,8 +76,22 @@ class PRReviewer:
         try:
             data = json.loads(review)
         except json.decoder.JSONDecodeError:
-            logging.error("Unable to decode JSON response from AI")
-            data = {}
+            # Try to fix JSON if it is broken/incomplete: parse until the last valid code suggestion
+            if review.rfind("'Code suggestions': [") > 0 or review.rfind('"Code suggestions": [') > 0:
+                last_code_suggestion_ind = review.rfind(",")
+                valid_json = False
+                data = {}
+                while last_code_suggestion_ind > 0 and not valid_json:
+                    try:
+                        data = json.loads(review[:last_code_suggestion_ind] + "]}}")
+                        valid_json = True
+                        review = review[:last_code_suggestion_ind] + "]}}"
+                    except json.decoder.JSONDecodeError:
+                        review = review[:last_code_suggestion_ind]
+                        last_code_suggestion_ind = review.rfind("},") + 1
+                if not valid_json:
+                    logging.error("Unable to decode JSON response from AI")
+                    data = {}
 
         # reordering for nicer display
         if 'PR Feedback' in data:
