@@ -19,7 +19,7 @@ deployment_type = "user"
 
 [gitlab]
 # URL to the gitlab service
-gitlab_url = "https://gitlab.com"
+url = "https://gitlab.com"
 
 # Polling (either project id or namespace/project_name) syntax can be used
 projects_to_monitor = ['org_name/repo_name']
