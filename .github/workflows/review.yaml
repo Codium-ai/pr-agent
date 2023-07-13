@@ -1,4 +1,4 @@
-on: [push, pull_request]
+on: [pull_request]
 
 jobs:
   pr_agent_job:
@@ -11,3 +11,5 @@ jobs:
         env:
           OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
           OPENAI_ORG: ${{ secrets.OPENAI_ORG }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
