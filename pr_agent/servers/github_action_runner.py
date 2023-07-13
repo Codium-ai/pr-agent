@@ -3,6 +3,7 @@ import json
 import os
 
 from pr_agent.config_loader import settings
+from pr_agent.tools.pr_questions import PRQuestions
 from pr_agent.tools.pr_reviewer import PRReviewer
 
 
@@ -28,9 +29,6 @@ async def run_action():
     if not GITHUB_TOKEN:
         print("GITHUB_TOKEN not set")
         return
-    ### DEBUG
-    print(event_payload)
-    print(GITHUB_EVENT_NAME)
     settings.set("OPENAI.KEY", OPENAI_KEY)
     if OPENAI_ORG:
         settings.set("OPENAI.ORG", OPENAI_ORG)
@@ -42,6 +40,18 @@ async def run_action():
             pr_url = event_payload.get("pull_request", {}).get("url", None)
             if pr_url:
                 await PRReviewer(pr_url).review()
+
+    elif GITHUB_EVENT_NAME == "issue_comment":
+        action = event_payload.get("action", None)
+        if action in ["created", "edited"]:
+            comment_body = event_payload.get("comment", {}).get("body", None)
+            if comment_body:
+                pr_url = event_payload.get("issue", {}).get("pull_request", {}).get("url", None)
+                if pr_url:
+                    if comment_body.strip().lower() == "review":
+                        await PRReviewer(pr_url).review()
+                    elif comment_body.lstrip().lower().startswith("answer"):
+                        await PRQuestions(pr_url, comment_body).answer()
 
 
 if __name__ == '__main__':
