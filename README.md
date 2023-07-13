@@ -250,45 +250,6 @@ require_tests_review=true
 require_security_review=true
 ```
 
-#### Code Suggestions configuration:
-
-There are also configuration options to control different aspects of the `code suggestions` feature.
-The number of suggestions provided can be controlled by adjusting the following parameter:
-
-```
-num_code_suggestions=4
-```
-
-You can also enable more verbose and informative mode of code suggestions:
-
-```
-extended_code_suggestions=false
-```
-
-This is a comparison of the regular and extended code suggestions modes:
-
-- **relevant file:** sql.py
-- **suggestion content:** Remove hardcoded sensitive information like username and password. Use environment variables or a secure method to store these values. [important]
-
-Example for extended suggestion:
-
-- **relevant file:** sql.py
-- **suggestion content:** Remove hardcoded sensitive information (username and password) [important]
-- **why:** Hardcoding sensitive information is a security risk. It's better to use environment variables or a secure way to store these values.
-- **code example:**
-  - **before code:**
-    ```
-    user = "root",
-    password = "Mysql@123",
-    ```
-  - **after code:**
-    ```
-    user = os.getenv('DB_USER'),
-    password = os.getenv('DB_PASSWORD'),
-    ```
-
----
-
 ## How it works
 
 ![PR-Agent Tools](./pics/pr_agent_overview.png)
