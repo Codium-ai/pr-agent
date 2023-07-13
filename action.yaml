@@ -1,10 +1,5 @@
 name: 'PR Agent'
 description: 'Summarize, review and suggest improvements for pull requests'
-inputs:
-  openai-key:  # id of input
-    description: 'OpenAI Key'
-    required: true
-    default: ''
 runs:
   using: 'docker'
   image: 'Dockerfile.github_action'
