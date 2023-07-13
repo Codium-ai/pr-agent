@@ -72,10 +72,10 @@ class PRDescription:
         #     markdown_text += f"{value}\n\n"
         for key, value in data.items():
             markdown_text += f"{key}:\n"
-            if 'walkthrough' not in key.lower():
-                markdown_text += f"**{value}**\n"
+            if 'walkthrough' in key.lower():
+                markdown_text += f"{value}\n"
             else:
-                markdown_text += f"{value}\n\n___\n"
+                markdown_text += f"**{value}**\n\n___\n"
         if settings.config.verbosity_level >= 2:
             logging.info(f"markdown_text:\n{markdown_text}")
         return markdown_text

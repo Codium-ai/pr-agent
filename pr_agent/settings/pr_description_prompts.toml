@@ -18,11 +18,13 @@ You must use the following JSON schema to format your answer:
       "type": "string",
       "description": "an informative and concise description of the PR"
   },
-  "PR Walkthrough": {
+  "PR Main Files Walkthrough": {
       "type": "string",
-      "description": "a walkthrough of the PR changes. Review file by file, in bullet points, and shortly describe the changes in each file. Format: -`filename`: description of changes\n..."
+      "description": "a walkthrough of the PR changes. Review main files, in bullet points, and shortly describe the changes in each file (up to 10 most important files). Format: -`filename`: description of changes\n..."
   }
 }
+
+Don't repeat the prompt in the answer, and avoid outputting the 'type' and 'description' fields.
 """
 
 user="""PR Info:
