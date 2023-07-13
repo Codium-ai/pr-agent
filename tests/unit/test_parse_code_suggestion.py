@@ -41,14 +41,6 @@ class TestParseCodeSuggestion:
         expected_output = "\n"  # modified to expect a newline character
         assert parse_code_suggestion(input_data) == expected_output
 
-    # Tests that function returns correct output when 'suggestion number' key has a non-integer value
-    def test_non_integer_suggestion_number(self):
-        input_data = {
-            "Suggestion number": "one",
-            "Description": "This is a suggestion"
-        }
-        expected_output = "   **Description:** This is a suggestion\n\n"
-        assert parse_code_suggestion(input_data) == expected_output
 
     # Tests that function returns correct output when 'before' or 'after' key has a non-string value
     def test_non_string_before_or_after(self):
@@ -64,7 +56,6 @@ class TestParseCodeSuggestion:
     # Tests that function returns correct output when input dictionary does not have 'code example' key
     def test_no_code_example_key(self):
         code_suggestions = {
-            'suggestion number': 1,
             'suggestion': 'Suggestion 1',
             'description': 'Description 1',
             'before': 'Before 1',
@@ -76,7 +67,6 @@ class TestParseCodeSuggestion:
     # Tests that function returns correct output when input dictionary has 'code example' key
     def test_with_code_example_key(self):
         code_suggestions = {
-            'suggestion number': 2,
             'suggestion': 'Suggestion 2',
             'description': 'Description 2',
             'code example': {

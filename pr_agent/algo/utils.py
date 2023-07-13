@@ -53,10 +53,7 @@ def parse_code_suggestion(code_suggestions: dict) -> str:
                 code_str_indented = textwrap.indent(code_str, '        ')
                 markdown_text += f"    - **{code_key}:**\n{code_str_indented}\n"
         else:
-            if "suggestion number" in sub_key.lower():
-                # markdown_text += f"- **suggestion {sub_value}:**\n"  # prettier formatting
-                pass
-            elif "relevant file" in sub_key.lower():
+            if "relevant file" in sub_key.lower():
                 markdown_text += f"\n  - **{sub_key}:** {sub_value}\n"
             else:
                 markdown_text += f"   **{sub_key}:** {sub_value}\n"

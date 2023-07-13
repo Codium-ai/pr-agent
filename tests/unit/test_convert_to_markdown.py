@@ -54,14 +54,12 @@ class TestConvertToMarkdown:
             'General PR suggestions': 'general suggestion...',
             'Code suggestions': [
                 {
-                    'Suggestion number': 1,
                     'Code example': {
                         'Before': 'Code before',
                         'After': 'Code after'
                     }
                 },
                 {
-                    'Suggestion number': 2,
                     'Code example': {
                         'Before': 'Code before 2',
                         'After': 'Code after 2'

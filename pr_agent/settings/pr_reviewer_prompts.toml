@@ -47,10 +47,6 @@ You must use the following JSON schema to format your answer:
       "maxItems": {{ num_code_suggestions }},
       "uniqueItems": true,
       "items": {
-        "suggestion number": {
-          "type": "int",
-          "description": "suggestion number, starting from 1"
-        },
         "relevant file": {
           "type": "string",
           "description": "the relevant file name"
@@ -115,7 +111,6 @@ Example output:
         "General PR suggestions": "..., `xxx`...",
         "Code suggestions": [
             {
-                "suggestion number": 1,
                 "relevant file": "xxx.py",
                 "suggestion content": "xxx [important]",
 {%- if extended_code_suggestions %}
