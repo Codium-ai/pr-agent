@@ -24,10 +24,10 @@ def get_pr_diff(git_provider: Union[GithubProvider, Any], token_handler: TokenHa
     Returns a string with the diff of the PR.
     If needed, apply diff minimization techniques to reduce the number of tokens
     """
-    files = list(git_provider.get_diff_files())
+    git_provider.pr.files = list(git_provider.get_diff_files())
 
     # get pr languages
-    pr_languages = sort_files_by_main_languages(git_provider.get_languages(), files)
+    pr_languages = sort_files_by_main_languages(git_provider.get_languages(), git_provider.pr.files)
 
     # generate a standard diff string, with patch extension
     patches_extended, total_tokens = pr_generate_extended_diff(pr_languages, token_handler)
