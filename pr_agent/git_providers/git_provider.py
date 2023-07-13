@@ -1,6 +1,13 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
+# enum EDIT_TYPE (ADDED, DELETED, MODIFIED, RENAMED)
+from enum import Enum
+class EDIT_TYPE(Enum):
+    ADDED = 1
+    DELETED = 2
+    MODIFIED = 3
+    RENAMED = 4
 
 @dataclass
 class FilePatchInfo:
@@ -9,6 +16,8 @@ class FilePatchInfo:
     patch: str
     filename: str
     tokens: int = -1
+    edit_type: EDIT_TYPE = EDIT_TYPE.MODIFIED
+    old_filename: str = None
 
 
 class GitProvider(ABC):
@@ -18,6 +27,10 @@ class GitProvider(ABC):
 
     @abstractmethod
     def publish_comment(self, pr_comment: str, is_temporary: bool = False):
+        pass
+
+    @abstractmethod
+    def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
         pass
 
     @abstractmethod
