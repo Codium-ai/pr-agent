@@ -18,7 +18,7 @@ class AiHandler:
             if settings.get("OPENAI.API_TYPE", None):
                 openai.api_type = settings.openai.api_type
             if settings.get("OPENAI.API_VERSION", None):
-                openai.engine = settings.openai.api_version
+                openai.api_version = settings.openai.api_version
             if settings.get("OPENAI.API_BASE", None):
                 openai.api_base = settings.openai.api_base
         except AttributeError as e:
