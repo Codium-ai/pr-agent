@@ -39,6 +39,10 @@ class GithubProvider:
             diff_files.append(FilePatchInfo(original_file_content_str, new_file_content_str, file.patch, file.filename))
         return diff_files
 
+    def publish_description(self, pr_title: str, pr_body: str):
+        self.pr.edit(title=pr_title, body=pr_body)
+        # self.pr.create_issue_comment(pr_comment)
+
     def publish_comment(self, pr_comment: str, is_temporary: bool = False):
         response = self.pr.create_issue_comment(pr_comment)
         if hasattr(response, "user") and hasattr(response.user, "login"):

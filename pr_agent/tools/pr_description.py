@@ -43,10 +43,10 @@ class PRDescription:
         logging.info('Getting AI prediction...')
         self.prediction = await self._get_prediction()
         logging.info('Preparing answer...')
-        pr_comment = self._prepare_pr_answer()
+        pr_title, pr_body = self._prepare_pr_answer()
         if settings.config.publish_review:
             logging.info('Pushing answer...')
-            self.git_provider.publish_comment(pr_comment)
+            self.git_provider.publish_description(pr_title, pr_body)
             self.git_provider.remove_initial_comment()
         return ""
 
@@ -64,18 +64,20 @@ class PRDescription:
                                                                         system=system_prompt, user=user_prompt)
         return response
 
-    def _prepare_pr_answer(self) -> str:
+    def _prepare_pr_answer(self):
         data = json.loads(self.prediction)
-        markdown_text = ""
+        pr_body = ""
         # for key, value in data.items():
         #     markdown_text += f"## {key}\n\n"
         #     markdown_text += f"{value}\n\n"
+        title = data['PR Title']
+        del data['PR Title']
         for key, value in data.items():
-            markdown_text += f"{key}:\n"
+            pr_body += f"{key}:\n"
             if 'walkthrough' in key.lower():
-                markdown_text += f"{value}\n"
+                pr_body += f"{value}\n"
             else:
-                markdown_text += f"**{value}**\n\n___\n"
+                pr_body += f"**{value}**\n\n___\n"
         if settings.config.verbosity_level >= 2:
-            logging.info(f"markdown_text:\n{markdown_text}")
-        return markdown_text
+            logging.info(f"title:\n{title}\n{pr_body}")
+        return title, pr_body
