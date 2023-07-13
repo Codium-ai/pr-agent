@@ -13,10 +13,6 @@ You must use the following JSON schema to format your answer:
       "type": "string",
       "description": "a short explanation of the PR"
     },
-    "Description and title": {
-      "type": "string",
-      "description": "yes\\no question: does this PR have a relevant description and title"
-    },
     "Type of PR": {
       "type": "string",
       "enum": ["Bug fix", "Tests", "Bug fix with tests", "Refactoring", "Enhancement", "Documentation", "Other"]
@@ -37,7 +33,7 @@ You must use the following JSON schema to format your answer:
   "PR Feedback": {
     "General PR suggestions": {
       "type": "string",
-      "description": "important suggestions for the contributors and maintainers of this PR, may include overall structure, primary purpose and best practices. consider using specific filenames, classes and functions names. explain yourself!"
+      "description": "General important suggestions for the contributors and maintainers of this PR. May include suggestions for overall structure, primary purpose, best practices, etc. consider using specific filenames, classes and functions names. explain yourself!"
     },
     "Code suggestions": {
       "type": "array",
@@ -75,7 +71,6 @@ Example output:
     "PR Analysis":
     {
         "Main theme": "xxx",
-        "Description and title": "Yes",
         "Type of PR": "Bug fix",
 {%- if require_tests %}
         "Relevant tests added": "No",
