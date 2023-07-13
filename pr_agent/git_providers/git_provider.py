@@ -17,6 +17,10 @@ class GitProvider(ABC):
         pass
 
     @abstractmethod
+    def publish_description(self, pr_title: str, pr_body: str):
+        pass
+
+    @abstractmethod
     def publish_comment(self, pr_comment: str, is_temporary: bool = False):
         pass
 
