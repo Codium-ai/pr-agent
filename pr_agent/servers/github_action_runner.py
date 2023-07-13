@@ -30,7 +30,7 @@ async def run_action():
         return
     ### DEBUG
     print(event_payload)
-
+    print(GITHUB_EVENT_NAME)
     settings.set("OPENAI.KEY", OPENAI_KEY)
     if OPENAI_ORG:
         settings.set("OPENAI.ORG", OPENAI_ORG)
