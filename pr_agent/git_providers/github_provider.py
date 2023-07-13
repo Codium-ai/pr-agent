@@ -26,8 +26,6 @@ class GithubProvider:
         self.pr = self._get_pr()
 
     def get_files(self):
-        if hasattr(self.pr, 'files'):
-            return self.pr.files
         return self.pr.get_files()
 
     def get_diff_files(self) -> list[FilePatchInfo]:

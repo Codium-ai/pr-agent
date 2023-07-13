@@ -122,22 +122,27 @@ class PRReviewer:
 
         pr = self.git_provider.pr
         last_commit_id = list(pr.get_commits())[-1]
-        files = list(self.git_provider.get_diff_files())
+        if hasattr(pr, 'diff_files'):  # prevent bringing all the files again
+            diff_files = pr.diff_files
+        else:
+            diff_files = list(self.git_provider.get_diff_files())
 
         for d in data['PR Feedback']['Code suggestions']:
             relevant_file = d['relevant file'].strip()
             relevant_line_in_file = d['relevant line in file'].strip()
             content = d['suggestion content']
             position = -1
-            for file in files:
+            for file in diff_files:
                 if file.filename.strip() == relevant_file:
                     patch = file.patch
                     patch_lines = patch.splitlines()
                     for i, line in enumerate(patch_lines):
                         if relevant_line_in_file in line:
                             position = i
+                            break
             if position == -1:
-                logging.info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
+                if settings.config.verbosity_level >= 2:
+                    logging.info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
             else:
                 body = content
                 path = relevant_file.strip()
