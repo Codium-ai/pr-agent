@@ -26,3 +26,7 @@ def run_action():
         print("RUNNER_DEBUG not set")
         return
     print(RUNNER_DEBUG)
+
+
+if __name__ == '__main__':
+    run_action()
