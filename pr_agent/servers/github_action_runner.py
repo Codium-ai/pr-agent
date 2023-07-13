@@ -19,7 +19,6 @@ def run_action():
     RUNNER_DEBUG = os.environ.get('RUNNER_DEBUG', None)
     if not RUNNER_DEBUG:
         print("RUNNER_DEBUG not set")
-        return
     ### DEBUG
     print(event_payload)
     print(GITHUB_REPOSITORY)
