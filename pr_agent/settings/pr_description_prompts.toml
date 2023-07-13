@@ -28,9 +28,7 @@ Don't repeat the prompt in the answer, and avoid outputting the 'type' and 'desc
 """
 
 user="""PR Info:
-Title: '{{title}}'
 Branch: '{{branch}}'
-Description: '{{description}}'
 {%- if language %}
 Main language: {{language}}
 {%- endif %}
