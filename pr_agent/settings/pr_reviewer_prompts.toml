@@ -33,7 +33,7 @@ You must use the following JSON schema to format your answer:
   "PR Feedback": {
     "General PR suggestions": {
       "type": "string",
-      "description": "General important suggestions for the contributors and maintainers of this PR. May include suggestions for overall structure, primary purpose, best practices, etc. consider using specific filenames, classes and functions names. explain yourself!"
+      "description": "General suggestions and feedback for the contributors and maintainers of this PR. May include important suggestions for the overall structure, primary purpose, best practices, critical bugs, and other aspects of the PR. Explain your suggestions."
     },
     "Code suggestions": {
       "type": "array",
