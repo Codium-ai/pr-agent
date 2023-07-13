@@ -1,3 +1,4 @@
+import asyncio
 import json
 import os
 
@@ -5,7 +6,7 @@ from pr_agent.config_loader import settings
 from pr_agent.tools.pr_reviewer import PRReviewer
 
 
-def run_action():
+async def run_action():
     GITHUB_EVENT_NAME = os.environ.get('GITHUB_EVENT_NAME', None)
     if not GITHUB_EVENT_NAME:
         print("GITHUB_EVENT_NAME not set")
@@ -40,8 +41,8 @@ def run_action():
         if action in ["opened", "reopened"]:
             pr_url = event_payload.get("pull_request", {}).get("url", None)
             if pr_url:
-                PRReviewer(pr_url).review()
+                await PRReviewer(pr_url).review()
 
 
 if __name__ == '__main__':
-    run_action()
+    asyncio.run(run_action())
