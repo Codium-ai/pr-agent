@@ -183,7 +183,6 @@ Here is a quick overview of the different sub-tools of PR Reviewer:
 
 - PR Analysis
   - Summarize main theme
-  - PR description and title
   - PR type classification
   - Is the PR covered by relevant tests
   - Is this a focused PR
@@ -199,7 +198,6 @@ This is how a typical output of the PR Reviewer looks like:
 #### PR Analysis
 
 - 🎯 **Main theme:** Adding language extension handler and token handler
-- 🔍 **Description and title:** Yes
 - 📌 **Type of PR:** Enhancement
 - 🧪 **Relevant tests added:** No
 - ✨ **Focused PR:** Yes, the PR is focused on adding two new handlers for language extension and token counting.
