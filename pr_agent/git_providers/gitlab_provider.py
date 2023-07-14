@@ -136,6 +136,8 @@ class GitLabProvider(GitProvider):
                         edit_type = self.get_edit_type(line)
                         break
                     elif relevant_line_in_file[0] == '+' and relevant_line_in_file[1:] in line:
+                        # The model often adds a '+' to the beginning of the relevant_line_in_file even if originally
+                        # it's a context line
                         found = True
                         edit_type = self.get_edit_type(line)
                         break

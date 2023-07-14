@@ -62,8 +62,14 @@ class GithubProvider:
                     if relevant_line_in_file in line:
                         position = i
                         break
+                    elif relevant_line_in_file[0] == '+' and relevant_line_in_file[1:] in line:
+                        # The model often adds a '+' to the beginning of the relevant_line_in_file even if originally
+                        # it's a context line
+                        position = i
+                        break
         if position == -1:
-            logging.info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
+            if settings.config.verbosity_level >= 2:
+                logging.info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
         else:
             path = relevant_file.strip()
             self.pr.create_review_comment(body=body, commit_id=self.last_commit_id, path=path, position=position)
