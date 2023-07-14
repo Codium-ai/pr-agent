@@ -11,7 +11,6 @@ def convert_to_markdown(output_data: dict) -> str:
 
     emojis = {
         "Main theme": "🎯",
-        "Description and title": "🔍",
         "Type of PR": "📌",
         "Relevant tests added": "🧪",
         "Unrelated changes": "⚠️",

@@ -28,8 +28,6 @@ class GithubProvider:
         self.pr = self._get_pr()
 
     def get_files(self):
-        if hasattr(self.pr, 'files'):
-            return self.pr.files
         return self.pr.get_files()
 
     def get_diff_files(self) -> list[FilePatchInfo]:
@@ -41,6 +39,10 @@ class GithubProvider:
             diff_files.append(FilePatchInfo(original_file_content_str, new_file_content_str, file.patch, file.filename))
         self.diff_files = diff_files
         return diff_files
+
+    def publish_description(self, pr_title: str, pr_body: str):
+        self.pr.edit(title=pr_title, body=pr_body)
+        # self.pr.create_issue_comment(pr_comment)
 
     def publish_comment(self, pr_comment: str, is_temporary: bool = False):
         response = self.pr.create_issue_comment(pr_comment)

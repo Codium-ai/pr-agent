@@ -71,6 +71,10 @@ class GitLabProvider(GitProvider):
     def get_files(self):
         return [change['new_path'] for change in self.mr.changes()['changes']]
 
+    def publish_description(self, pr_title: str, pr_body: str):
+        logging.exception("Not implemented yet")
+        pass
+
     def publish_comment(self, mr_comment: str, is_temporary: bool = False):
         comment = self.mr.notes.create({'body': mr_comment})
         if is_temporary:
