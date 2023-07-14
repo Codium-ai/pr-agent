@@ -13,6 +13,9 @@ def extend_patch(original_file_str, patch_str, num_lines) -> str:
     if not patch_str or num_lines == 0:
         return patch_str
 
+    if type(original_file_str) == bytes:
+        original_file_str = original_file_str.decode('utf-8')
+
     original_lines = original_file_str.splitlines()
     patch_lines = patch_str.splitlines()
     extended_patch_lines = []

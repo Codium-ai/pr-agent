@@ -18,8 +18,10 @@ class GithubProvider:
         self.pr_num = None
         self.pr = None
         self.github_user_id = None
+        self.diff_files = None
         if pr_url:
             self.set_pr(pr_url)
+            self.last_commit_id = list(self.pr.get_commits())[-1]
 
     def set_pr(self, pr_url: str):
         self.repo, self.pr_num = self._parse_pr_url(pr_url)
@@ -35,6 +37,7 @@ class GithubProvider:
             original_file_content_str = self._get_pr_file_content(file, self.pr.base.sha)
             new_file_content_str = self._get_pr_file_content(file, self.pr.head.sha)
             diff_files.append(FilePatchInfo(original_file_content_str, new_file_content_str, file.patch, file.filename))
+        self.diff_files = diff_files
         return diff_files
 
     def publish_description(self, pr_title: str, pr_body: str):
@@ -49,6 +52,29 @@ class GithubProvider:
         if not hasattr(self.pr, 'comments_list'):
             self.pr.comments_list = []
         self.pr.comments_list.append(response)
+
+    def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
+        self.diff_files = self.diff_files if self.diff_files else self.get_diff_files()
+        position = -1
+        for file in self.diff_files:
+            if file.filename.strip() == relevant_file:
+                patch = file.patch
+                patch_lines = patch.splitlines()
+                for i, line in enumerate(patch_lines):
+                    if relevant_line_in_file in line:
+                        position = i
+                        break
+                    elif relevant_line_in_file[0] == '+' and relevant_line_in_file[1:] in line:
+                        # The model often adds a '+' to the beginning of the relevant_line_in_file even if originally
+                        # it's a context line
+                        position = i
+                        break
+        if position == -1:
+            if settings.config.verbosity_level >= 2:
+                logging.info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
+        else:
+            path = relevant_file.strip()
+            self.pr.create_review_comment(body=body, commit_id=self.last_commit_id, path=path, position=position)
 
     def remove_initial_comment(self):
         try:
@@ -150,9 +176,9 @@ class GithubProvider:
     def _get_pr(self):
         return self._get_repo().get_pull(self.pr_num)
 
-    def _get_pr_file_content(self, file: FilePatchInfo, sha: str):
+    def _get_pr_file_content(self, file: FilePatchInfo, sha: str) -> str:
         try:
-            file_content_str = self._get_repo().get_contents(file.filename, ref=sha).decoded_content.decode()
+            file_content_str = str(self._get_repo().get_contents(file.filename, ref=sha).decoded_content.decode())
         except Exception:
             file_content_str = ""
         return file_content_str
