@@ -4,7 +4,8 @@ import difflib
 import logging
 from typing import Any, Tuple, Union
 
-from pr_agent.algo.git_patch_processing import extend_patch, handle_patch_deletions
+from pr_agent.algo.git_patch_processing import extend_patch, handle_patch_deletions, \
+    convert_to_hunks_with_lines_numbers
 from pr_agent.algo.language_handler import sort_files_by_main_languages
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.config_loader import settings
@@ -19,26 +20,33 @@ OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD = 600
 PATCH_EXTRA_LINES = 3
 
 
-def get_pr_diff(git_provider: Union[GithubProvider, Any], token_handler: TokenHandler) -> str:
+def get_pr_diff(git_provider: Union[GithubProvider, Any], token_handler: TokenHandler,
+                add_line_numbers_to_hunks: bool = False, disable_extra_lines: bool =False) -> str:
     """
     Returns a string with the diff of the PR.
     If needed, apply diff minimization techniques to reduce the number of tokens
     """
+    if disable_extra_lines:
+        global PATCH_EXTRA_LINES
+        PATCH_EXTRA_LINES = 0
+
     git_provider.pr.diff_files = list(git_provider.get_diff_files())
 
     # get pr languages
     pr_languages = sort_files_by_main_languages(git_provider.get_languages(), git_provider.pr.diff_files)
 
     # generate a standard diff string, with patch extension
-    patches_extended, total_tokens = pr_generate_extended_diff(pr_languages, token_handler)
+    patches_extended, total_tokens = pr_generate_extended_diff(pr_languages, token_handler,
+                                                               add_line_numbers_to_hunks)
 
     # if we are under the limit, return the full diff
     if total_tokens + OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD < token_handler.limit:
         return "\n".join(patches_extended)
 
     # if we are over the limit, start pruning
-    patches_compressed, modified_file_names, deleted_file_names = pr_generate_compressed_diff(pr_languages,
-                                                                                              token_handler)
+    patches_compressed, modified_file_names, deleted_file_names = \
+        pr_generate_compressed_diff(pr_languages, token_handler, add_line_numbers_to_hunks)
+
     final_diff = "\n".join(patches_compressed)
     if modified_file_names:
         modified_list_str = MORE_MODIFIED_FILES_ + "\n".join(modified_file_names)
@@ -49,7 +57,8 @@ def get_pr_diff(git_provider: Union[GithubProvider, Any], token_handler: TokenHa
     return final_diff
 
 
-def pr_generate_extended_diff(pr_languages: list, token_handler: TokenHandler) -> \
+def pr_generate_extended_diff(pr_languages: list, token_handler: TokenHandler,
+                              add_line_numbers_to_hunks: bool) -> \
         Tuple[list, int]:
     """
     Generate a standard diff string, with patch extension
@@ -72,6 +81,9 @@ def pr_generate_extended_diff(pr_languages: list, token_handler: TokenHandler) -
             extended_patch = extend_patch(original_file_content_str, patch, num_lines=PATCH_EXTRA_LINES)
             full_extended_patch = f"## {file.filename}\n\n{extended_patch}\n"
 
+            if add_line_numbers_to_hunks:
+                full_extended_patch = convert_to_hunks_with_lines_numbers(extended_patch, file)
+
             patch_tokens = token_handler.count_tokens(full_extended_patch)
             file.tokens = patch_tokens
             total_tokens += patch_tokens
@@ -80,7 +92,8 @@ def pr_generate_extended_diff(pr_languages: list, token_handler: TokenHandler) -
     return patches_extended, total_tokens
 
 
-def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler) -> Tuple[list, list, list]:
+def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler,
+                                convert_hunks_to_line_numbers: bool) -> Tuple[list, list, list]:
     # Apply Diff Minimization techniques to reduce the number of tokens:
     # 0. Start from the largest diff patch to smaller ones
     # 1. Don't use extend context lines around diff
@@ -114,6 +127,10 @@ def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler) ->
             deleted_files_list.append(file.filename)
             total_tokens += token_handler.count_tokens(file.filename) + 1
             continue
+
+        if convert_hunks_to_line_numbers:
+            patch = convert_to_hunks_with_lines_numbers(patch, file)
+
         new_patch_tokens = token_handler.count_tokens(patch)
 
         # Hard Stop, no more tokens
@@ -135,7 +152,10 @@ def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler) ->
             continue
 
         if patch:
-            patch_final = f"## {file.filename}\n\n{patch}\n"
+            if not convert_hunks_to_line_numbers:
+                patch_final = f"## {file.filename}\n\n{patch}\n"
+            else:
+                patch_final = patch
             patches.append(patch_final)
             total_tokens += token_handler.count_tokens(patch_final)
             if settings.config.verbosity_level >= 2:

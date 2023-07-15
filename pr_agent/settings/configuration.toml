@@ -8,10 +8,13 @@ verbosity_level=0 # 0,1,2
 require_focused_review=true
 require_tests_review=true
 require_security_review=true
-num_code_suggestions=4
+num_code_suggestions=3
 inline_code_comments = true
 
 [pr_questions]
+
+[pr_code_suggestions]
+num_code_suggestions=4
 
 [github]
 # The type of deployment to create. Valid values are 'app' or 'user'.

@@ -7,10 +7,10 @@ from github import AppAuthentication, Github
 
 from pr_agent.config_loader import settings
 
-from .git_provider import FilePatchInfo
+from .git_provider import FilePatchInfo, GitProvider
 
 
-class GithubProvider:
+class GithubProvider(GitProvider):
     def __init__(self, pr_url: Optional[str] = None):
         self.installation_id = settings.get("GITHUB.INSTALLATION_ID")
         self.github_client = self._get_github_client()
@@ -75,6 +75,53 @@ class GithubProvider:
         else:
             path = relevant_file.strip()
             self.pr.create_review_comment(body=body, commit_id=self.last_commit_id, path=path, position=position)
+
+    def publish_code_suggestion(self, body: str,
+                                relevant_file: str,
+                                relevant_lines_start: int,
+                                relevant_lines_end: int):
+        if not relevant_lines_start or relevant_lines_start == -1:
+            if settings.config.verbosity_level >= 2:
+                logging.exception(f"Failed to publish code suggestion, relevant_lines_start is {relevant_lines_start}")
+            return False
+
+        if relevant_lines_end<relevant_lines_start:
+            if settings.config.verbosity_level >= 2:
+                logging.exception(f"Failed to publish code suggestion, "
+                                  f"relevant_lines_end is {relevant_lines_end} and "
+                                  f"relevant_lines_start is {relevant_lines_start}")
+            return False
+
+        try:
+            import github.PullRequestComment
+            if relevant_lines_end > relevant_lines_start:
+                post_parameters = {
+                    "body": body,
+                    "commit_id": self.last_commit_id._identity,
+                    "path": relevant_file,
+                    "line": relevant_lines_end,
+                    "start_line": relevant_lines_start,
+                    "start_side": "RIGHT",
+                }
+            else:  # API is different for single line comments
+                post_parameters = {
+                    "body": body,
+                    "commit_id": self.last_commit_id._identity,
+                    "path": relevant_file,
+                    "line": relevant_lines_start,
+                    "side": "RIGHT",
+                }
+            headers, data = self.pr._requester.requestJsonAndCheck(
+                "POST", f"{self.pr.url}/comments", input=post_parameters
+            )
+            github.PullRequestComment.PullRequestComment(
+                self.pr._requester, headers, data, completed=True
+            )
+            return True
+        except Exception as e:
+            if settings.config.verbosity_level >= 2:
+                logging.error(f"Failed to publish code suggestion, error: {e}")
+            return False
 
     def remove_initial_comment(self):
         try:
