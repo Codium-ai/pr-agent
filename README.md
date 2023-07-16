@@ -56,7 +56,7 @@ docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> c
 2. To ask a question about a PR, run the following command:
 
 ```
-docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/PR-Agent --pr_url <pr url> --question "<your question>"
+docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent --pr_url <pr url> --question "<your question>"
 ```
 
 Possible questions you can ask include:
