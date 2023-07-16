@@ -26,7 +26,7 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review PRs 
 
 Experience GPT-4 powered PR review on your public GitHub repository with our hosted PR-Agent. To try it, just mention `@CodiumAI-Agent` in any PR comment! The agent will generate a PR review in response.
 
-![Review generation process](./pics/PR-Agent-review-process1.gif)
+![Review generation process](./pics/pr-agent-review-process1.gif)
 
 To set up your own PR-Agent, see the [Quickstart](#Quickstart) section
 
