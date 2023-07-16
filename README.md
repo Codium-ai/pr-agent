@@ -154,7 +154,7 @@ cp pr_agent/settings/.secrets_template.toml pr_agent/settings/.secrets
 6. Build a Docker image for the app and optionally push it to a Docker repository. We'll use Dockerhub as an example:
 
 ```
-docker build . -t codiumai/PR-Agent:github_app --target github_app -f docker/Dockerfile
+docker build . -t codiumai/pr-agent:github_app --target github_app -f docker/Dockerfile
 docker push codiumai/pr-agent:github_app  # Push to your Docker repository
 ```
 
