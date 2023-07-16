@@ -96,12 +96,12 @@ class PRReviewer:
 
         if not self.cli_mode:
             markdown_text += "\n### How to use\n"
-            commands_text = "> /review or /review_pr - Ask for a new review after your update the PR\n" \
-                            "> /describe or /describe_pr - Modify the PR title and description based " \
+            commands_text = "> /review - Ask for a new review after your update the PR\n" \
+                            "> /describe - Modify the PR title and description based " \
                             "on the PR's contents.\n" \
-                            "> /improve or /improve_code - Suggest improvements to the code in the PR as pull " \
+                            "> /improve - Suggest improvements to the code in the PR as pull " \
                             "request comments ready to commit.\n" \
-                            "> /ask /ask_question <QUESTION> - Ask a question about the PR.\n"
+                            "> /ask <QUESTION> - Ask a question about the PR.\n"
             if user and '[bot]' not in user:
                 markdown_text += f"> Tag me in a comment '@{user}' and add one of the following commands:\n" + \
                                  commands_text
