@@ -5,6 +5,7 @@ import os
 
 from pr_agent.tools.pr_code_suggestions import PRCodeSuggestions
 from pr_agent.tools.pr_description import PRDescription
+from pr_agent.tools.pr_information_from_user import PRInformationFromUser
 from pr_agent.tools.pr_questions import PRQuestions
 from pr_agent.tools.pr_reviewer import PRReviewer
 
@@ -28,7 +29,8 @@ improve / improve_code - Suggest improvements to the code in the PR as pull requ
     parser.add_argument('command', type=str, help='The', choices=['review', 'review_pr',
                                                                   'ask', 'ask_question',
                                                                   'describe', 'describe_pr',
-                                                                  'improve', 'improve_code'], default='review')
+                                                                  'improve', 'improve_code',
+                                                                  'user_questions'], default='review')
     parser.add_argument('rest', nargs=argparse.REMAINDER, default=[])
     args = parser.parse_args()
     logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
@@ -54,6 +56,10 @@ improve / improve_code - Suggest improvements to the code in the PR as pull requ
         print(f"Reviewing PR: {args.pr_url}")
         reviewer = PRReviewer(args.pr_url, cli_mode=True)
         asyncio.run(reviewer.review())
+    elif command in ['user_questions']:
+        print(f"Asking the PR author questions: {args.pr_url}")
+        reviewer = PRInformationFromUser(args.pr_url)
+        asyncio.run(reviewer.generate_questions())
     else:
         print(f"Unknown command: {command}")
         parser.print_help()
