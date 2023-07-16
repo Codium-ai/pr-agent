@@ -71,7 +71,7 @@ To set up your own PR-Agent, see the [Quickstart](#Quickstart) section
 ---
 ## Overview
 `PR-Agent` offers extensive pull request functionalities across various git providers:
-|       |                                             | Github | Gitlab | Bitbucket |
+|       |                                             | GitHub | Gitlab | Bitbucket |
 |-------|---------------------------------------------|--------|--------|-----------|
 | TOOLS | Review                                      | ✓      | ✓      | ✓         |
 |       | ⮑ Inline review                             | ✓     | ✓      |           |
@@ -95,7 +95,7 @@ Examples for invoking the different tools via the [CLI](#quickstart):
 
 "<pr_url>" is the url of the relevant PR (for example: https://github.com/Codium-ai/pr-agent/pull/50).
 
-In the [configuration](./CONFIGURATION.md) file you can select your git provider (Github, Gitlab, Bitbucket), and further configure the different tools.
+In the [configuration](./CONFIGURATION.md) file you can select your git provider (GitHub, Gitlab, Bitbucket), and further configure the different tools.
 
 ## Quickstart
 
@@ -111,11 +111,11 @@ There are several ways to use PR-Agent. Let's start with the simplest one:
 Here are several ways to install and run PR-Agent:
 
 - [Method 1: Use Docker image (no installation required)](INSTALL.md#method-1-use-docker-image-no-installation-required)
-- [Method 2: Run as a Github Action](INSTALL.md#method-2-run-as-a-github-action)
+- [Method 2: Run as a GitHub Action](INSTALL.md#method-2-run-as-a-github-action)
 - [Method 3: Run from source](INSTALL.md#method-3-run-from-source)
 - [Method 4: Run as a polling server](INSTALL.md#method-4-run-as-a-polling-server)
-  - Request reviews by tagging your Github user on a PR
-- [Method 5: Run as a Github App](INSTALL.md#method-5-run-as-a-github-app)
+  - Request reviews by tagging your GitHub user on a PR
+- [Method 5: Run as a GitHub App](INSTALL.md#method-5-run-as-a-github-app)
   - Allowing you to automate the review process on your private or public repositories
 
 ## Usage and Tools
