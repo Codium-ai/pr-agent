@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import re
 import sys
 from datetime import datetime, timezone
 
@@ -8,6 +9,11 @@ import aiohttp
 from pr_agent.agent.pr_agent import PRAgent
 from pr_agent.config_loader import settings
 from pr_agent.git_providers import get_git_provider
+from pr_agent.servers.help import bot_help_text
+from pr_agent.tools.pr_code_suggestions import PRCodeSuggestions
+from pr_agent.tools.pr_description import PRDescription
+from pr_agent.tools.pr_questions import PRQuestions
+from pr_agent.tools.pr_reviewer import PRReviewer
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 NOTIFICATION_URL = "https://api.github.com/notifications"
@@ -83,8 +89,24 @@ async def polling_loop():
                                             if user_tag not in comment_body:
                                                 continue
                                             rest_of_comment = comment_body.split(user_tag)[1].strip()
-                                            agent = PRAgent()
-                                            await agent.handle_request(pr_url, rest_of_comment)
+
+                                            if any(cmd in rest_of_comment for cmd in ["/review", "/review_pr"]):
+                                                await PRReviewer(pr_url).review()
+                                            elif any(cmd in rest_of_comment for cmd in ["/describe", "/describe_pr"]):
+                                                await PRDescription(pr_url).describe()
+                                            elif any(cmd in rest_of_comment for cmd in ["/improve", "/improve_code"]):
+                                                await PRCodeSuggestions(pr_url).suggest()
+                                            elif any(cmd in rest_of_comment for cmd in ["/ask", "/ask_question"]):
+                                                pattern = r'(/ask|/ask_question)\s*(.*)'
+                                                matches = re.findall(pattern, rest_of_comment, re.IGNORECASE)
+                                                if matches:
+                                                    question = matches[0][1]
+                                                    await PRQuestions(pr_url, question).answer()
+                                            else:
+                                                git_provider.set_pr(pr_url)
+                                                git_provider.publish_comment("### How to user PR-Agent\n" +
+                                                                             bot_help_text(user_id))
+
                     elif response.status != 304:
                         print(f"Failed to fetch notifications. Status code: {response.status}")
 

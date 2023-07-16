@@ -11,6 +11,7 @@ from pr_agent.algo.utils import convert_to_markdown, try_fix_json
 from pr_agent.config_loader import settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
+from pr_agent.servers.help import bot_help_text, actions_help_text
 
 
 class PRReviewer:
@@ -43,7 +44,7 @@ class PRReviewer:
     async def review(self):
         logging.info('Reviewing PR...')
         if settings.config.publish_review:
-            self.git_provider.publish_comment("Preparing review...", is_temporary=True)
+                self.git_provider.publish_comment("Preparing review...", is_temporary=True)
         logging.info('Getting PR diff...')
         self.patches_diff = get_pr_diff(self.git_provider, self.token_handler)
         logging.info('Getting AI prediction...')
@@ -96,18 +97,10 @@ class PRReviewer:
 
         if not self.cli_mode:
             markdown_text += "\n### How to use\n"
-            commands_text = "> /review - Ask for a new review after your update the PR\n" \
-                            "> /describe - Modify the PR title and description based " \
-                            "on the PR's contents.\n" \
-                            "> /improve - Suggest improvements to the code in the PR as pull " \
-                            "request comments ready to commit.\n" \
-                            "> /ask <QUESTION> - Ask a question about the PR.\n"
             if user and '[bot]' not in user:
-                markdown_text += f"> Tag me in a comment '@{user}' and add one of the following commands:\n" + \
-                                 commands_text
+                markdown_text += bot_help_text(user)
             else:
-                markdown_text += "> Add a comment to to invoke PR-Agent, use one of the following commands:\n" + \
-                                 commands_text
+                markdown_text += actions_help_text
 
         if settings.config.verbosity_level >= 2:
             logging.info(f"Markdown response:\n{markdown_text}")
