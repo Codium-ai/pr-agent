@@ -38,7 +38,7 @@ Example results:
 - [Overview](#overview)
 - [Quickstart](#quickstart)
 - [Usage and tools](#usage-and-tools)
-- [Configuration](#configuration)
+- [Configuration](./CONFIGURATION.md)
 - [How it works](#how-it-works)
 - [Roadmap](#roadmap)
 - [Similar projects](#similar-projects)
@@ -71,7 +71,15 @@ To set up your own pr-agent, see the [Quickstart](#Quickstart) section
 |       | Repo language prioritization                | ✓      | ✓      | ✓         |
 |       | Adaptive and token-aware<br />file patch fitting | ✓      | ✓      | ✓         |
 
+Examples for invoking the different tools via the [CLI](#quickstart):
+- **Review**:       python cli.py --pr-url=<pr_url>  review
+- **Describe**:     python cli.py --pr-url=<pr_url>  describe
+- **Improve**:      python cli.py --pr-url=<pr_url>  improve
+- **Ask**:          python cli.py --pr-url=<pr_url>  ask "Write me a poem about this PR"
 
+"<pr_url>" is the url of the relevant PR (for example: https://github.com/Codium-ai/pr-agent/pull/50).
+
+In the [configuration](./CONFIGURATION.md) file you can select your git provider (Github, Gitlab, Bitbucket), and further configure the different tools.
 
 ## Quickstart
 
@@ -91,13 +99,13 @@ To request a review for a PR, or ask a question about a PR, you can run directly
 1. To request a review for a PR, run the following command:
 
 ```
-docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent --pr_url <pr url>
+docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent --pr_url <pr_url> review
 ```
 
 2. To ask a question about a PR, run the following command:
 
 ```
-docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent --pr_url <pr url> --question "<your question>"
+docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent --pr_url <pr_url> ask "<your question>"
 ```
 
 Possible questions you can ask include:
@@ -134,8 +142,10 @@ cp pr_agent/settings/.secrets_template.toml pr_agent/settings/.secrets.toml
 4. Run the appropriate Python scripts from the scripts folder:
 
 ```
-python pr_agent/cli.py --pr_url <pr url>
-python pr_agent/cli.py --pr_url <pr url> --question "<your question>"
+python pr_agent/cli.py --pr_url <pr_url> review
+python pr_agent/cli.py --pr_url <pr_url> ask <your question>
+python pr_agent/cli.py --pr_url <pr_url> describe
+python pr_agent/cli.py --pr_url <pr_url> improve
 ```
 
 ---
@@ -213,81 +223,13 @@ docker push codiumai/pr-agent:github_app  # Push to your Docker repository
 
 ## Usage and Tools
 
-CodiumAI pr-agent provides two types of interactions ("tools"): `"PR Reviewer"` and `"PR Q&A"`.
+**pr-agent** provides four types of interactions ("tools"): `"PR Reviewer"`, `"PR Q&A"`, `"PR Description"` and `"PR Code Sueggestions"`.
 
 - The "PR Reviewer" tool automatically analyzes PRs, and provides different types of feedbacks.
-- The "PR Q&A" tool answers free-text questions about the PR.
+- The "PR Ask" tool answers free-text questions about the PR.
+- The "PR Description" tool automatically sets the PR Title and body.
+- The "PR Code Suggestion" tool provide inline code suggestions for the PR, that can be applied and committed.
 
-### PR Reviewer
-
-Here is a quick overview of the different sub-tools of PR Reviewer:
-
-- PR Analysis
-  - Summarize main theme
-  - PR type classification
-  - Is the PR covered by relevant tests
-  - Is this a focused PR
-  - Are there security concerns
-- PR Feedback
-  - General PR suggestions
-  - Code suggestions
-
-This is how a typical output of the PR Reviewer looks like:
-
----
-
-#### PR Analysis
-
-- 🎯 **Main theme:** Adding language extension handler and token handler
-- 📌 **Type of PR:** Enhancement
-- 🧪 **Relevant tests added:** No
-- ✨ **Focused PR:** Yes, the PR is focused on adding two new handlers for language extension and token counting.
-- 🔒 **Security concerns:** No, the PR does not introduce possible security concerns or issues.
-
-#### PR Feedback
-
-- 💡 **General PR suggestions:** The PR is generally well-structured and the code is clean. However, it would be beneficial to add some tests to ensure the new handlers work as expected. Also, consider adding docstrings to the new functions and classes to improve code readability and maintainability.
-
-- 🤖 **Code suggestions:**
-
-  - **relevant file:** pr_agent/algo/language_handler.py
-
-    **suggestion content:** Consider using a set instead of a list for 'bad_extensions' as checking membership in a set is faster than in a list. [medium]
-
-  - **relevant file:** pr_agent/algo/language_handler.py
-
-    **suggestion content:** In the 'filter_bad_extensions' function, you are splitting the filename on '.' and taking the last element to get the extension. This might not work as expected if the filename contains multiple '.' characters. Consider using 'os.path.splitext' to get the file extension more reliably. [important]
-
----
-
-### PR Q&A
-
-This tool answers free-text questions about the PR. This is how a typical output of the PR Q&A looks like:
-
-**Question**: summarize for me the PR in 4 bullet points
-
-**Answer**:
-
-- The PR introduces a new feature to sort files by their main languages. It uses a mapping of programming languages to their file extensions to achieve this.
-- It also introduces a filter to exclude files with certain extensions, deemed as 'bad extensions', from the sorting process.
-- The PR modifies the `get_pr_diff` function in `pr_processing.py` to use the new sorting function. It also refactors the code to move the PR pruning logic into a separate function.
-- A new `TokenHandler` class is introduced in `token_handler.py` to handle token counting operations. This class is initialized with a PR, variables, system, and user, and provides methods to get system and user tokens and to count tokens in a patch.
-
----
-
-## Configuration
-
-The different tools and sub-tools used by CodiumAI pr-agent are easily configurable via the configuration file: `/settings/configuration.toml`.
-
-#### Enabling/disabling sub-tools:
-
-You can enable/disable the different PR Reviewer sub-sections with the following flags:
-
-```
-require_focused_review=true
-require_tests_review=true
-require_security_review=true
-```
 
 ## How it works
 
@@ -297,14 +239,15 @@ Check out the [PR Compression strategy](./PR_COMPRESSION.md) page for more detai
 
 ## Roadmap
 
-- [ ] Support open-source models, as a replacement for openai models. Note that a minimal requirement for each open-source model is to have 8k+ context, and good support for generating json as an output
-- [ ] Support other Git providers, such as Gitlab and Bitbucket.
+- [ ] Support open-source models, as a replacement for openai models. (Note - a minimal requirement for each open-source model is to have 8k+ context, and good support for generating json as an output)
+- [x] Support other Git providers, such as Gitlab and Bitbucket.
 - [ ] Develop additional logics for handling large PRs, and compressing git patches
 - [ ] Dedicated tools and sub-tools for specific programming languages (Python, Javascript, Java, C++, etc)
 - [ ] Add additional context to the prompt. For example, repo (or relevant files) summarization, with tools such a [ctags](https://github.com/universal-ctags/ctags)
 - [ ] Adding more tools. Possible directions:
-  - [ ] Code Quality
-  - [ ] Coding Style
+  - [x] PR description
+  - [x] Inline code suggestions
+  - [ ] Enforcing CONTRIBUTING.md guidelines
   - [ ] Performance (are there any performance issues)
   - [ ] Documentation (is the PR properly documented)
   - [ ] Rank the PR importance
@@ -314,6 +257,6 @@ Check out the [PR Compression strategy](./PR_COMPRESSION.md) page for more detai
 
 - [CodiumAI - Meaningful tests for busy devs](https://github.com/Codium-ai/codiumai-vscode-release)
 - [Aider - GPT powered coding in your terminal](https://github.com/paul-gauthier/aider)
-- [GPT-Engineer](https://github.com/AntonOsika/gpt-engineer)
+- [openai-pr-reviewer](https://github.com/coderabbitai/openai-pr-reviewer)
 - [CodeReview BOT](https://github.com/anc95/ChatGPT-CodeReview)
 - [AI-Maintainer](https://github.com/merwanehamadi/AI-Maintainer)
