@@ -155,7 +155,7 @@ cp pr_agent/settings/.secrets_template.toml pr_agent/settings/.secrets
 
 ```
 docker build . -t codiumai/PR-Agent:github_app --target github_app -f docker/Dockerfile
-docker push codiumai/PR-Agent:github_app  # Push to your Docker repository
+docker push codiumai/pr-agent:github_app  # Push to your Docker repository
 ```
 
 7. Host the app using a server, serverless function, or container environment. Alternatively, for development and
