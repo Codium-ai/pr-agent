@@ -9,10 +9,30 @@
 
 [![GitHub license](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/Codium-ai/pr-agent/blob/main/LICENSE)
 [![Discord](https://badgen.net/badge/icon/discord?icon=discord&label&color=purple)](https://discord.com/channels/1057273017547378788/1126104260430528613)
-
-CodiumAI `pr-agent` is an open-source tool aiming to help developers review PRs faster and more efficiently. It automatically analyzes the PR, provides feedback and suggestions, and can answer free-text questions.
-
 </div>
+<div align="left">
+
+CodiumAI `pr-agent` is an open-source tool aiming to help developers review PRs faster and more efficiently. It automatically analyzes the PR and can provide several types of feedback:
+
+**Auto-Description**: Automatically generating PR description - name, type, summary, and code walkthrough.
+\
+**PR Review**: Feedback about the PR main theme, type, relevant tests, security issues, focused, and various suggestions for the PR content.
+\
+**Question Answering**: Answering free-text questions about the PR.
+\
+**Code Suggestion**: Committable code suggestions for improving the PR.
+
+Example results:
+</div>
+<div align="center">
+<p float="center">
+<img src="./pics/pr_reviewer_1.png" width="800">
+</p>
+<p float="center">
+<img src="./pics/pr_code_suggestions.png" width="800">
+</p>
+</div>
+<div align="left">
 
 - [Live demo](#live-demo)
 - [Quickstart](#Quickstart)
@@ -21,6 +41,7 @@ CodiumAI `pr-agent` is an open-source tool aiming to help developers review PRs 
 - [How it works](#how-it-works)
 - [Roadmap](#roadmap)
 - [Similar projects](#similar-projects)
+</div>
 
 ## Live demo
 
