@@ -1,0 +1,5 @@
+name: 'PR Agent'
+description: 'Summarize, review and suggest improvements for pull requests'
+runs:
+  using: 'docker'
+  image: 'Dockerfile.github_action_dockerhub'

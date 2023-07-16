@@ -2,14 +2,33 @@
 model="gpt-4-0613"
 git_provider="github"
 publish_review=true
-verbosity_level=0  # 0,1,2
+verbosity_level=0 # 0,1,2
 
 [pr_reviewer]
-require_minimal_and_focused_review=true
+require_focused_review=true
 require_tests_review=true
 require_security_review=true
-extended_code_suggestions=false
-num_code_suggestions=4
-
+num_code_suggestions=3
+inline_code_comments = true
 
 [pr_questions]
+
+[pr_code_suggestions]
+num_code_suggestions=4
+
+[github]
+# The type of deployment to create. Valid values are 'app' or 'user'.
+deployment_type = "user"
+
+[gitlab]
+# URL to the gitlab service
+url = "https://gitlab.com"
+
+# Polling (either project id or namespace/project_name) syntax can be used
+projects_to_monitor = ['org_name/repo_name']
+
+# Polling trigger
+magic_word = "AutoReview"
+
+# Polling interval
+polling_interval_seconds = 30

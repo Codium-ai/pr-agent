@@ -1,36 +1,34 @@
 import logging
-from collections import namedtuple
-from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional, Tuple
 from urllib.parse import urlparse
 
-from github import AppAuthentication, File, Github
+from github import AppAuthentication, Github
 
 from pr_agent.config_loader import settings
 
-@dataclass
-class FilePatchInfo:
-    base_file: str
-    head_file: str
-    patch: str
-    filename: str
-    tokens: int = -1
+from .git_provider import FilePatchInfo, GitProvider
 
-class GithubProvider:
-    def __init__(self, pr_url: Optional[str] = None, installation_id: Optional[int] = None):
-        self.installation_id = installation_id
+
+class GithubProvider(GitProvider):
+    def __init__(self, pr_url: Optional[str] = None):
+        self.installation_id = settings.get("GITHUB.INSTALLATION_ID")
         self.github_client = self._get_github_client()
         self.repo = None
         self.pr_num = None
         self.pr = None
         self.github_user_id = None
+        self.diff_files = None
         if pr_url:
             self.set_pr(pr_url)
+            self.last_commit_id = list(self.pr.get_commits())[-1]
 
     def set_pr(self, pr_url: str):
         self.repo, self.pr_num = self._parse_pr_url(pr_url)
         self.pr = self._get_pr()
+
+    def get_files(self):
+        return self.pr.get_files()
 
     def get_diff_files(self) -> list[FilePatchInfo]:
         files = self.pr.get_files()
@@ -39,7 +37,12 @@ class GithubProvider:
             original_file_content_str = self._get_pr_file_content(file, self.pr.base.sha)
             new_file_content_str = self._get_pr_file_content(file, self.pr.head.sha)
             diff_files.append(FilePatchInfo(original_file_content_str, new_file_content_str, file.patch, file.filename))
+        self.diff_files = diff_files
         return diff_files
+
+    def publish_description(self, pr_title: str, pr_body: str):
+        self.pr.edit(title=pr_title, body=pr_body)
+        # self.pr.create_issue_comment(pr_comment)
 
     def publish_comment(self, pr_comment: str, is_temporary: bool = False):
         response = self.pr.create_issue_comment(pr_comment)
@@ -49,6 +52,76 @@ class GithubProvider:
         if not hasattr(self.pr, 'comments_list'):
             self.pr.comments_list = []
         self.pr.comments_list.append(response)
+
+    def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
+        self.diff_files = self.diff_files if self.diff_files else self.get_diff_files()
+        position = -1
+        for file in self.diff_files:
+            if file.filename.strip() == relevant_file:
+                patch = file.patch
+                patch_lines = patch.splitlines()
+                for i, line in enumerate(patch_lines):
+                    if relevant_line_in_file in line:
+                        position = i
+                        break
+                    elif relevant_line_in_file[0] == '+' and relevant_line_in_file[1:] in line:
+                        # The model often adds a '+' to the beginning of the relevant_line_in_file even if originally
+                        # it's a context line
+                        position = i
+                        break
+        if position == -1:
+            if settings.config.verbosity_level >= 2:
+                logging.info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
+        else:
+            path = relevant_file.strip()
+            self.pr.create_review_comment(body=body, commit_id=self.last_commit_id, path=path, position=position)
+
+    def publish_code_suggestion(self, body: str,
+                                relevant_file: str,
+                                relevant_lines_start: int,
+                                relevant_lines_end: int):
+        if not relevant_lines_start or relevant_lines_start == -1:
+            if settings.config.verbosity_level >= 2:
+                logging.exception(f"Failed to publish code suggestion, relevant_lines_start is {relevant_lines_start}")
+            return False
+
+        if relevant_lines_end<relevant_lines_start:
+            if settings.config.verbosity_level >= 2:
+                logging.exception(f"Failed to publish code suggestion, "
+                                  f"relevant_lines_end is {relevant_lines_end} and "
+                                  f"relevant_lines_start is {relevant_lines_start}")
+            return False
+
+        try:
+            import github.PullRequestComment
+            if relevant_lines_end > relevant_lines_start:
+                post_parameters = {
+                    "body": body,
+                    "commit_id": self.last_commit_id._identity,
+                    "path": relevant_file,
+                    "line": relevant_lines_end,
+                    "start_line": relevant_lines_start,
+                    "start_side": "RIGHT",
+                }
+            else:  # API is different for single line comments
+                post_parameters = {
+                    "body": body,
+                    "commit_id": self.last_commit_id._identity,
+                    "path": relevant_file,
+                    "line": relevant_lines_start,
+                    "side": "RIGHT",
+                }
+            headers, data = self.pr._requester.requestJsonAndCheck(
+                "POST", f"{self.pr.url}/comments", input=post_parameters
+            )
+            github.PullRequestComment.PullRequestComment(
+                self.pr._requester, headers, data, completed=True
+            )
+            return True
+        except Exception as e:
+            if settings.config.verbosity_level >= 2:
+                logging.error(f"Failed to publish code suggestion, error: {e}")
+            return False
 
     def remove_initial_comment(self):
         try:
@@ -65,52 +138,14 @@ class GithubProvider:
         return self.pr.body
 
     def get_languages(self):
-        return self._get_repo().get_languages()
-
-    def get_main_pr_language(self) -> str:
-        """
-        Get the main language of the commit. Return an empty string if cannot determine.
-        """
-        main_language_str = ""
-        try:
-            languages = self.get_languages()
-            top_language = max(languages, key=languages.get).lower()
-
-            # validate that the specific commit uses the main language
-            extension_list = []
-            files = self.pr.get_files()
-            for file in files:
-                extension_list.append(file.filename.rsplit('.')[-1])
-
-            # get the most common extension
-            most_common_extension = max(set(extension_list), key=extension_list.count)
-
-            # look for a match. TBD: add more languages, do this systematically
-            if most_common_extension == 'py' and top_language == 'python' or \
-                    most_common_extension == 'js' and top_language == 'javascript' or \
-                    most_common_extension == 'ts' and top_language == 'typescript' or \
-                    most_common_extension == 'go' and top_language == 'go' or \
-                    most_common_extension == 'java' and top_language == 'java' or \
-                    most_common_extension == 'c' and top_language == 'c' or \
-                    most_common_extension == 'cpp' and top_language == 'c++' or \
-                    most_common_extension == 'cs' and top_language == 'c#' or \
-                    most_common_extension == 'swift' and top_language == 'swift' or \
-                    most_common_extension == 'php' and top_language == 'php' or \
-                    most_common_extension == 'rb' and top_language == 'ruby' or \
-                    most_common_extension == 'rs' and top_language == 'rust' or \
-                    most_common_extension == 'scala' and top_language == 'scala' or \
-                    most_common_extension == 'kt' and top_language == 'kotlin' or \
-                    most_common_extension == 'pl' and top_language == 'perl' or \
-                    most_common_extension == 'swift' and top_language == 'swift':
-                main_language_str = top_language
-
-        except Exception:
-            pass
-
-        return main_language_str
+        languages = self._get_repo().get_languages()
+        return languages
 
     def get_pr_branch(self):
         return self.pr.head.ref
+
+    def get_pr_description(self):
+        return self.pr.body
 
     def get_user_id(self):
         if not self.github_user_id:
@@ -188,9 +223,9 @@ class GithubProvider:
     def _get_pr(self):
         return self._get_repo().get_pull(self.pr_num)
 
-    def _get_pr_file_content(self, file: FilePatchInfo, sha: str):
+    def _get_pr_file_content(self, file: FilePatchInfo, sha: str) -> str:
         try:
-            file_content_str = self._get_repo().get_contents(file.filename, ref=sha).decoded_content.decode()
+            file_content_str = str(self._get_repo().get_contents(file.filename, ref=sha).decoded_content.decode())
         except Exception:
             file_content_str = ""
         return file_content_str

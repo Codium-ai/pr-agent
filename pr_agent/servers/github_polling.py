@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import re
 import sys
 from datetime import datetime, timezone
 
@@ -8,6 +9,11 @@ import aiohttp
 from pr_agent.agent.pr_agent import PRAgent
 from pr_agent.config_loader import settings
 from pr_agent.git_providers import get_git_provider
+from pr_agent.servers.help import bot_help_text
+from pr_agent.tools.pr_code_suggestions import PRCodeSuggestions
+from pr_agent.tools.pr_description import PRDescription
+from pr_agent.tools.pr_questions import PRQuestions
+from pr_agent.tools.pr_reviewer import PRReviewer
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 NOTIFICATION_URL = "https://api.github.com/notifications"
@@ -25,6 +31,7 @@ async def polling_loop():
     last_modified = [None]
     git_provider = get_git_provider()()
     user_id = git_provider.get_user_id()
+    agent = PRAgent()
     try:
         deployment_type = settings.github.deployment_type
         token = settings.github.user_token
@@ -38,6 +45,7 @@ async def polling_loop():
     async with aiohttp.ClientSession() as session:
         while True:
             try:
+                await asyncio.sleep(5)
                 headers = {
                     "Accept": "application/vnd.github.v3+json",
                     "Authorization": f"Bearer {token}"
@@ -75,21 +83,25 @@ async def polling_loop():
                                                 if comment['user']['login'] == user_id:
                                                     continue
                                             comment_body = comment['body'] if 'body' in comment else ''
-                                            commenter_github_user = comment['user']['login'] if 'user' in comment else ''
+                                            commenter_github_user = comment['user']['login'] \
+                                                if 'user' in comment else ''
                                             logging.info(f"Commenter: {commenter_github_user}\nComment: {comment_body}")
                                             user_tag = "@" + user_id
                                             if user_tag not in comment_body:
                                                 continue
                                             rest_of_comment = comment_body.split(user_tag)[1].strip()
-                                            agent = PRAgent()
-                                            await agent.handle_request(pr_url, rest_of_comment)
+
+                                            success = await agent.handle_request(pr_url, rest_of_comment)
+                                            if not success:
+                                                git_provider.set_pr(pr_url)
+                                                git_provider.publish_comment("### How to user PR-Agent\n" +
+                                                                             bot_help_text(user_id))
+
                     elif response.status != 304:
                         print(f"Failed to fetch notifications. Status code: {response.status}")
 
-                await asyncio.sleep(5)
             except Exception as e:
                 logging.error(f"Exception during processing of a notification: {e}")
-                await asyncio.sleep(5)
 
 if __name__ == '__main__':
     asyncio.run(polling_loop())

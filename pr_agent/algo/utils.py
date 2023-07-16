@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import json
+import logging
+import re
 import textwrap
 
 
@@ -8,11 +11,10 @@ def convert_to_markdown(output_data: dict) -> str:
 
     emojis = {
         "Main theme": "🎯",
-        "Description and title": "🔍",
         "Type of PR": "📌",
         "Relevant tests added": "🧪",
         "Unrelated changes": "⚠️",
-        "Minimal and focused": "✨",
+        "Focused PR": "✨",
         "Security concerns": "🔒",
         "General PR suggestions": "💡",
         "Code suggestions": "🤖"
@@ -50,10 +52,7 @@ def parse_code_suggestion(code_suggestions: dict) -> str:
                 code_str_indented = textwrap.indent(code_str, '        ')
                 markdown_text += f"    - **{code_key}:**\n{code_str_indented}\n"
         else:
-            if "suggestion number" in sub_key.lower():
-                # markdown_text += f"- **suggestion {sub_value}:**\n"  # prettier formatting
-                pass
-            elif "relevant file" in sub_key.lower():
+            if "relevant file" in sub_key.lower():
                 markdown_text += f"\n  - **{sub_key}:** {sub_value}\n"
             else:
                 markdown_text += f"   **{sub_key}:** {sub_value}\n"
@@ -61,3 +60,25 @@ def parse_code_suggestion(code_suggestions: dict) -> str:
     markdown_text += "\n"
     return markdown_text
 
+
+def try_fix_json(review, max_iter=10):
+    # Try to fix JSON if it is broken/incomplete: parse until the last valid code suggestion
+    data = {}
+    if review.rfind("'Code suggestions': [") > 0 or review.rfind('"Code suggestions": [') > 0:
+        last_code_suggestion_ind = [m.end() for m in re.finditer(r"\}\s*,", review)][-1] - 1
+        valid_json = False
+        iter_count = 0
+        while last_code_suggestion_ind > 0 and not valid_json and iter_count < max_iter:
+            try:
+                data = json.loads(review[:last_code_suggestion_ind] + "]}}")
+                valid_json = True
+                review = review[:last_code_suggestion_ind].strip() + "]}}"
+            except json.decoder.JSONDecodeError:
+                review = review[:last_code_suggestion_ind]
+                # Use regular expression to find the last occurrence of "}," with any number of whitespaces or newlines
+                last_code_suggestion_ind = [m.end() for m in re.finditer(r"\}\s*,", review)][-1] - 1
+                iter_count += 1
+        if not valid_json:
+            logging.error("Unable to decode JSON response from AI")
+            data = {}
+    return data

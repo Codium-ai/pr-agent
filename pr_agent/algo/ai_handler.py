@@ -14,6 +14,13 @@ class AiHandler:
             openai.api_key = settings.openai.key
             if settings.get("OPENAI.ORG", None):
                 openai.organization = settings.openai.org
+            self.deployment_id = settings.get("OPENAI.DEPLOYMENT_ID", None)
+            if settings.get("OPENAI.API_TYPE", None):
+                openai.api_type = settings.openai.api_type
+            if settings.get("OPENAI.API_VERSION", None):
+                openai.api_version = settings.openai.api_version
+            if settings.get("OPENAI.API_BASE", None):
+                openai.api_base = settings.openai.api_base
         except AttributeError as e:
             raise ValueError("OpenAI key is required") from e
 
@@ -23,6 +30,7 @@ class AiHandler:
         try:
             response = await openai.ChatCompletion.acreate(
                             model=model,
+                            deployment_id=self.deployment_id,
                             messages=[
                                 {"role": "system", "content": system},
                                 {"role": "user", "content": user}

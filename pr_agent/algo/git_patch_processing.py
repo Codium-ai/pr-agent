@@ -13,6 +13,9 @@ def extend_patch(original_file_str, patch_str, num_lines) -> str:
     if not patch_str or num_lines == 0:
         return patch_str
 
+    if type(original_file_str) == bytes:
+        original_file_str = original_file_str.decode('utf-8')
+
     original_lines = original_file_str.splitlines()
     patch_lines = patch_str.splitlines()
     extended_patch_lines = []
@@ -105,3 +108,78 @@ def handle_patch_deletions(patch: str, original_file_content_str: str,
                 logging.info(f"Processing file: {file_name}, hunks were deleted")
             patch = patch_new
     return patch
+
+
+def convert_to_hunks_with_lines_numbers(patch: str, file) -> str:
+    # toDO: (maybe remove '-' and '+' from the beginning of the line)
+    """
+    ## src/file.ts
+--new hunk--
+881        line1
+882        line2
+883        line3
+884        line4
+885        line6
+886        line7
+887 +      line8
+888 +      line9
+889        line10
+890        line11
+...
+--old hunk--
+        line1
+        line2
+-       line3
+-       line4
+        line5
+        line6
+           ...
+
+    """
+    patch_with_lines_str = f"## {file.filename}\n"
+    import re
+    patch_lines = patch.splitlines()
+    RE_HUNK_HEADER = re.compile(
+        r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@[ ]?(.*)")
+    new_content_lines = []
+    old_content_lines = []
+    match = None
+    start1, size1, start2, size2 = -1, -1, -1, -1
+    for line in patch_lines:
+        if 'no newline at end of file' in line.lower():
+            continue
+
+        if line.startswith('@@'):
+            match = RE_HUNK_HEADER.match(line)
+            if match and new_content_lines:  # found a new hunk, split the previous lines
+                if new_content_lines:
+                    patch_with_lines_str += '\n--new hunk--\n'
+                    for i, line_new in enumerate(new_content_lines):
+                        patch_with_lines_str += f"{start2 + i} {line_new}\n"
+                if old_content_lines:
+                    patch_with_lines_str += '--old hunk--\n'
+                    for i, line_old in enumerate(old_content_lines):
+                        patch_with_lines_str += f"{line_old}\n"
+                new_content_lines = []
+                old_content_lines = []
+            start1, size1, start2, size2 = map(int, match.groups()[:4])
+        elif line.startswith('+'):
+            new_content_lines.append(line)
+        elif line.startswith('-'):
+            old_content_lines.append(line)
+        else:
+            new_content_lines.append(line)
+            old_content_lines.append(line)
+
+    # finishing last hunk
+    if match and new_content_lines:
+        if new_content_lines:
+            patch_with_lines_str += '\n--new hunk--\n'
+            for i, line_new in enumerate(new_content_lines):
+                patch_with_lines_str += f"{start2 + i} {line_new}\n"
+        if old_content_lines:
+            patch_with_lines_str += '\n--old hunk--\n'
+            for i, line_old in enumerate(old_content_lines):
+                patch_with_lines_str += f"{line_old}\n"
+
+    return patch_with_lines_str.strip()
