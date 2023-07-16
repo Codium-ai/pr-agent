@@ -100,7 +100,7 @@ To get started with PR-Agent quickly, you first need to acquire two tokens:
 
 There are several ways to use PR-Agent. Let's start with the simplest one:
 
----
+
 ## Install
 Here are several ways to install and run PR-Agent:
 
@@ -111,7 +111,7 @@ Here are several ways to install and run PR-Agent:
   - Request reviews by tagging your Github user on a PR
 - [Method 5: Run as a Github App](INSTALL.md#method-5-run-as-a-github-app)
   - Allowing you to automate the review process on your private or public repositories
----
+
 
 ## Usage and Tools
 
