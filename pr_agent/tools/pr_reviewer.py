@@ -96,15 +96,18 @@ class PRReviewer:
 
         if not self.cli_mode:
             markdown_text += "\n### How to use\n"
+            commands_text = "> /review or /review_pr - Ask for a new review after your update the PR\n" \
+                            "> /describe or /describe_pr - Modify the PR title and description based " \
+                            "on the PR's contents.\n" \
+                            "> /improve or /improve_code - Suggest improvements to the code in the PR as pull " \
+                            "request comments ready to commit.\n" \
+                            "> /ask /ask_question <QUESTION> - Ask a question about the PR.\n"
             if user and '[bot]' not in user:
-                markdown_text += f"> Tag me in a comment '@{user}' to ask for a new review after you update the PR.\n"
-                markdown_text += "> You can also tag me and ask any question, " \
-                                 f"for example '@{user} is the PR ready for merge?'"
+                markdown_text += f"> Tag me in a comment '@{user}' and add one of the following commands:\n" + \
+                                 commands_text
             else:
-                markdown_text += "> Add a comment that says 'review' to ask for a new review " \
-                                 "after you update the PR.\n"
-                markdown_text += "> You can also add a comment that says 'answer QUESTION', " \
-                                 "for example 'answer is the PR ready for merge?'"
+                markdown_text += "> Add a comment to to invoke PR-Agent, use one of the following commands:\n" + \
+                                 commands_text
 
         if settings.config.verbosity_level >= 2:
             logging.info(f"Markdown response:\n{markdown_text}")
