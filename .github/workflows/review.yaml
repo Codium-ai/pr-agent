@@ -11,6 +11,6 @@ jobs:
         uses: Codium-ai/pr-agent@main
         env:
           OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
-          OPENAI_ORG: ${{ secrets.OPENAI_ORG }}
+          OPENAI_ORG: ${{ secrets.OPENAI_ORG }} # optional
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

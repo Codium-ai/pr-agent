@@ -12,6 +12,11 @@ from pr_agent.tools.pr_reviewer import PRReviewer
 def run():
     parser = argparse.ArgumentParser(description='AI based pull request analyzer', usage="""\
 Usage: cli.py --pr-url <URL on supported git hosting service> <command> [<args>].
+For example:
+- cli.py --pr-url xxx review
+- cli.py --pr-url xxx describe
+- cli.py --pr-url xxx improve
+- cli.py --pr-url xxx ask "write me a poem about this PR"
 
 Supported commands:
 review / review_pr - Add a review that includes a summary of the PR and specific suggestions for improvement.
