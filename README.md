@@ -45,7 +45,7 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review PRs 
 <h4>Improve:</h4>
 <div align="center">
 <p float="center">
-<img src="./pics/pr_code_suggestions.png" width="800">
+<img src="./pics/improve.gif" width="800">
 </p>
 </div>
 <div align="left">
