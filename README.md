@@ -35,9 +35,10 @@ Example results:
 <div align="left">
 
 - [Live demo](#live-demo)
-- [Quickstart](#Quickstart)
+- [Overview](#overview)
+- [Quickstart](#quickstart)
 - [Usage and tools](#usage-and-tools)
-- [Configuration](#Configuration)
+- [Configuration](#configuration)
 - [How it works](#how-it-works)
 - [Roadmap](#roadmap)
 - [Similar projects](#similar-projects)
@@ -52,6 +53,25 @@ Experience GPT-4 powered PR review on your public GitHub repository with our hos
 To set up your own pr-agent, see the [Quickstart](#Quickstart) section
 
 ---
+## Overview
+`pr-agent` offers extensive pull request functionalities across various git providers:
+|       |                                             | Github | Gitlab | Bitbucket |
+|-------|---------------------------------------------|--------|--------|-----------|
+| TOOLS | Review                                      | ✓      | ✓      | ✓         |
+|       | ⮑ Inline review                             | ✓     | ✓      |           |
+|       | Ask                                         | ✓      | ✓      |           |
+|       | Auto-Description                            | ✓      |        |           |
+|       | Improve Code                                | ✓      |        |           |
+|       |                                             |        |        |           |
+| USAGE | CLI                                         | ✓      | ✓      | ✓         |
+|       | Tagging bot                                 | ✓      | ✓      |           |
+|       | Actions                                     | ✓      |        |           |
+|       |                                             |        |        |           |
+| CORE  | PR compression                              | ✓      | ✓      | ✓         |
+|       | Repo language prioritization                | ✓      | ✓      | ✓         |
+|       | Adaptive and token-aware<br />file patch fitting | ✓      | ✓      | ✓         |
+
+
 
 ## Quickstart
 
