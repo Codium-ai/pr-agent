@@ -77,7 +77,7 @@ To set up your own PR-Agent, see the [Quickstart](#Quickstart) section
 |       | ⮑ Inline review                             | ✓     | ✓      |           |
 |       | Ask                                         | ✓      | ✓      |           |
 |       | Auto-Description                            | ✓      |        |           |
-|       | Improve Code                                | ✓      |        |           |
+|       | Improve Code                                | ✓      | ✓      |           |
 |       |                                             |        |        |           |
 | USAGE | CLI                                         | ✓      | ✓      | ✓         |
 |       | Tagging bot                                 | ✓      | ✓      |           |
