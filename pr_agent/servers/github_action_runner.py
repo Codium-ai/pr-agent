@@ -19,10 +19,11 @@ async def run_action():
     if not GITHUB_EVENT_PATH:
         print("GITHUB_EVENT_PATH not set")
         return
-    event_payload = json.load(open(GITHUB_EVENT_PATH, 'r'))
-    RUNNER_DEBUG = os.environ.get('RUNNER_DEBUG', None)
-    if not RUNNER_DEBUG:
-        print("RUNNER_DEBUG not set")
+    try:
+        event_payload = json.load(open(GITHUB_EVENT_PATH, 'r'))
+    except json.decoder.JSONDecodeError as e:
+        print(f"Failed to parse JSON: {e}")
+        return
     OPENAI_KEY = os.environ.get('OPENAI_KEY', None)
     if not OPENAI_KEY:
         print("OPENAI_KEY not set")
@@ -64,6 +65,8 @@ async def run_action():
                         if matches:
                             question = matches[0][1]
                             await PRQuestions(pr_url, question).answer()
+                    else:
+                        print(f"Unknown command: {body}")
 
 
 if __name__ == '__main__':
