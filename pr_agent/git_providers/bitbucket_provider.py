@@ -61,9 +61,6 @@ class BitbucketProvider:
     def get_title(self):
         return self.pr.title
 
-    def get_description(self):
-        return self.pr.body
-
     def get_languages(self):
         languages = {self._get_repo().get_data('language'): 0}
         return languages
