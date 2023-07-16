@@ -46,11 +46,11 @@ Example results:
 
 ## Live demo
 
-Experience GPT-4 powered PR review on your public GitHub repository with our hosted pr-agent. To try it, just mention `@CodiumAI-Agent` in any PR comment! The agent will generate a PR review in response.
+Experience GPT-4 powered PR review on your public GitHub repository with our hosted PR-Agent. To try it, just mention `@CodiumAI-Agent` in any PR comment! The agent will generate a PR review in response.
 
 ![Review generation process](./pics/pr-agent-review-process1.gif)
 
-To set up your own pr-agent, see the [Quickstart](#Quickstart) section
+To set up your own PR-Agent, see the [Quickstart](#Quickstart) section
 
 ---
 ## Overview
@@ -83,12 +83,12 @@ In the [configuration](./CONFIGURATION.md) file you can select your git provider
 
 ## Quickstart
 
-To get started with pr-agent quickly, you first need to acquire two tokens:
+To get started with PR-Agent quickly, you first need to acquire two tokens:
 
 1. An OpenAI key from [here](https://platform.openai.com/), with access to GPT-4.
 2. A GitHub personal access token (classic) with the repo scope.
 
-There are several ways to use pr-agent. Let's start with the simplest one:
+There are several ways to use PR-Agent. Let's start with the simplest one:
 
 ---
 
@@ -223,13 +223,12 @@ docker push codiumai/pr-agent:github_app  # Push to your Docker repository
 
 ## Usage and Tools
 
-**pr-agent** provides four types of interactions ("tools"): `"PR Reviewer"`, `"PR Q&A"`, `"PR Description"` and `"PR Code Sueggestions"`.
+**PR-Agent** provides four types of interactions ("tools"): `"PR Reviewer"`, `"PR Q&A"`, `"PR Description"` and `"PR Code Sueggestions"`.
 
 - The "PR Reviewer" tool automatically analyzes PRs, and provides different types of feedbacks.
 - The "PR Ask" tool answers free-text questions about the PR.
 - The "PR Description" tool automatically sets the PR Title and body.
 - The "PR Code Suggestion" tool provide inline code suggestions for the PR, that can be applied and committed.
-
 
 ## How it works
 
