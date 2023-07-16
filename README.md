@@ -50,7 +50,7 @@ To request a review for a PR, or ask a question about a PR, you can run directly
 1. To request a review for a PR, run the following command:
 
 ```
-docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/PR-Agent --pr_url <pr url>
+docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent --pr_url <pr url>
 ```
 
 2. To ask a question about a PR, run the following command:
