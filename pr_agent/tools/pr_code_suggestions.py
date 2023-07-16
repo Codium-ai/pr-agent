@@ -10,7 +10,7 @@ from pr_agent.algo.pr_processing import get_pr_diff
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.algo.utils import convert_to_markdown, try_fix_json
 from pr_agent.config_loader import settings
-from pr_agent.git_providers import get_git_provider, GithubProvider
+from pr_agent.git_providers import get_git_provider, BitbucketProvider
 from pr_agent.git_providers.git_provider import get_main_pr_language
 
 
@@ -39,7 +39,7 @@ class PRCodeSuggestions:
                                           settings.pr_code_suggestions_prompt.user)
 
     async def suggest(self):
-        assert type(self.git_provider) == GithubProvider, "Only Github is supported for now"
+        assert type(self.git_provider) != BitbucketProvider, "Bitbucket is not supported for now"
 
         logging.info('Generating code suggestions for PR...')
         if settings.config.publish_review:
@@ -86,7 +86,7 @@ class PRCodeSuggestions:
         except json.decoder.JSONDecodeError:
             if settings.config.verbosity_level >= 2:
                 logging.info(f"Could not parse json response: {review}")
-            data = try_fix_json(review)
+            data = try_fix_json(review, code_suggestions=True)
         return data
 
     def push_inline_code_suggestions(self, data):
