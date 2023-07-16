@@ -12,6 +12,7 @@ settings = Dynaconf(
          "settings/pr_reviewer_prompts.toml",
          "settings/pr_questions_prompts.toml",
          "settings/pr_description_prompts.toml",
+         "settings/pr_code_suggestions_prompts.toml",
          "settings_prod/.secrets.toml"
         ]]
 )

@@ -38,6 +38,11 @@ class GitProvider(ABC):
         pass
 
     @abstractmethod
+    def publish_code_suggestion(self, body: str, relevant_file: str,
+                                relevant_lines_start: int, relevant_lines_end: int):
+        pass
+
+    @abstractmethod
     def remove_initial_comment(self):
         pass
 

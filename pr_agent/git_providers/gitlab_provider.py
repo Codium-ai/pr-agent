@@ -106,6 +106,12 @@ class GitLabProvider(GitProvider):
             self.mr.discussions.create({'body': body,
                                         'position': pos_obj})
 
+    def publish_code_suggestion(self, body: str,
+                                relevant_file: str,
+                                relevant_lines_start: int,
+                                relevant_lines_end: int):
+        raise "not implemented yet for gitlab"
+
     def search_line(self, relevant_file, relevant_line_in_file):
         RE_HUNK_HEADER = re.compile(
             r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@[ ]?(.*)")
