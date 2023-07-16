@@ -94,7 +94,7 @@ async def polling_loop():
                                             success = await agent.handle_request(pr_url, rest_of_comment)
                                             if not success:
                                                 git_provider.set_pr(pr_url)
-                                                git_provider.publish_comment("### How to user PR-Agent\n" +
+                                                git_provider.publish_comment("### How to use PR-Agent\n" +
                                                                              bot_help_text(user_id))
 
                     elif response.status != 304:

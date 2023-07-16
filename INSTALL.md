@@ -25,11 +25,11 @@ Possible questions you can ask include:
 - Is the PR ready for merge?
 - What are the main changes in this PR?
 - Should this PR be split into smaller parts?
-- Can you compose a rhymed song about this PR.
+- Can you compose a rhymed song about this PR?
 
 ---
 
-#### Method 2: Run as a Github Action
+#### Method 2: Run as a GitHub Action
 
 You can use our pre-built Github Action Docker image to run PR-Agent as a Github Action. 
 
@@ -58,12 +58,12 @@ jobs:
 OPENAI_KEY: <your key>
 ```
 
-The GITHUB_TOKEN secret is automatically created by Github.
+The GITHUB_TOKEN secret is automatically created by GitHub.
 
 3. Merge this change to your main branch. 
 When you open your next PR, you should see a comment from `github-actions` bot with a review of your PR, and instructions on how to use the rest of the tools.
 
-4. You may configure PR-Agent by adding environment variables under the env section that corresponds to any configurable property in the [configuration](./CONFIGURATION.md) file. Some examples:
+4. You may configure PR-Agent by adding environment variables under the env section corresponding to any configurable property in the [configuration](./CONFIGURATION.md) file. Some examples:
 ```yaml
       env:
         # ... previous environment values
@@ -107,7 +107,7 @@ python pr_agent/cli.py --pr_url <pr_url> improve
 ---
 
 #### Method 4: Run as a polling server
-Request reviews by tagging your Github user on a PR.
+Request reviews by tagging your Github user on a PR
 
 Follow steps 1-3 of method 2.
 Run the following command to start the server:
@@ -118,7 +118,7 @@ python pr_agent/servers/github_polling.py
 
 ---
 
-#### Method 5: Run as a Github App
+#### Method 5: Run as a GitHub App
 Allowing you to automate the review process on your private or public repositories.
 
 1. Create a GitHub App from the [Github Developer Portal](https://docs.github.com/en/developers/apps/creating-a-github-app).
@@ -139,7 +139,7 @@ WEBHOOK_SECRET=$(python -c "import secrets; print(secrets.token_hex(10))")
 
 3. Acquire the following pieces of information from your app's settings page:
 
-   - App private key (click "Generate a private key", and save the file)
+   - App private key (click "Generate a private key" and save the file)
    - App ID
 
 4. Clone this repository:
@@ -170,11 +170,11 @@ docker push codiumai/pr-agent:github_app  # Push to your Docker repository
 7. Host the app using a server, serverless function, or container environment. Alternatively, for development and
    debugging, you may use tools like smee.io to forward webhooks to your local machine.
 
-8. Go back to your app's settings, set the following:
+8. Go back to your app's settings, and set the following:
 
-   - Webhook URL: The URL of your app's server, or the URL of the smee.io channel.
+   - Webhook URL: The URL of your app's server or the URL of the smee.io channel.
    - Webhook secret: The secret you generated earlier.
 
-9. Install the app by navigating to the "Install App" tab, and selecting your desired repositories.
+9. Install the app by navigating to the "Install App" tab and selecting your desired repositories.
 
 ---
