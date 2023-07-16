@@ -208,9 +208,6 @@ class GitLabProvider(GitProvider):
     def get_title(self):
         return self.mr.title
 
-    def get_description(self):
-        return self.mr.description
-
     def get_languages(self):
         languages = self.gl.projects.get(self.id_project).languages()
         return languages
