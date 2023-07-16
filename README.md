@@ -136,7 +136,7 @@ WEBHOOK_SECRET=$(python -c "import secrets; print(secrets.token_hex(10))")
 4. Clone this repository:
 
 ```
-git clone https://github.com/codium-ai/pr-agent.git
+git clone https://github.com/Codium-ai/pr-agent.git
 ```
 
 5. Copy the secrets template file and fill in the following:
