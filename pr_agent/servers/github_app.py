@@ -56,7 +56,7 @@ async def handle_request(body):
         api_url = pull_request.get("url", None)
         if api_url is None:
             return {}
-        await agent.handle_request(api_url, "please review")
+        await agent.handle_request(api_url, "/review")
     else:
         return {}
 
