@@ -1,10 +1,12 @@
 from pr_agent.config_loader import settings
 from pr_agent.git_providers.github_provider import GithubProvider
 from pr_agent.git_providers.gitlab_provider import GitLabProvider
+from pr_agent.git_providers.bitbucket_provider import BitbucketProvider
 
 _GIT_PROVIDERS = {
     'github': GithubProvider,
     'gitlab': GitLabProvider,
+    'bitbucket': BitbucketProvider,
 }
 
 def get_git_provider():
