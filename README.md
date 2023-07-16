@@ -12,7 +12,7 @@
 </div>
 <div style="text-align:left;">
 
-CodiumAI `pr-agent` is an open-source tool aiming to help developers review PRs faster and more efficiently. It automatically analyzes the PR and can provide several types of feedback:
+CodiumAI `PR-Agent` is an open-source tool aiming to help developers review PRs faster and more efficiently. It automatically analyzes the PR and can provide several types of feedback:
 
 **Auto-Description**: Automatically generating PR description - name, type, summary, and code walkthrough.
 \
@@ -54,7 +54,7 @@ To set up your own PR-Agent, see the [Quickstart](#Quickstart) section
 
 ---
 ## Overview
-`pr-agent` offers extensive pull request functionalities across various git providers:
+`PR-Agent` offers extensive pull request functionalities across various git providers:
 |       |                                             | Github | Gitlab | Bitbucket |
 |-------|---------------------------------------------|--------|--------|-----------|
 | TOOLS | Review                                      | ✓      | ✓      | ✓         |
@@ -118,7 +118,52 @@ Possible questions you can ask include:
 
 ---
 
-#### Method 2: Run from source
+#### Method 2: Run as a Github Action
+
+You can use our pre-built Github Action Docker image to run PR-Agent as a Github Action. 
+
+1. Add the following file to your repository under `.github/workflows/pr_agent.yml`:
+
+```yaml
+on:
+  pull_request:
+  issue_comment:
+jobs:
+  pr_agent_job:
+    runs-on: ubuntu-latest
+    name: Run pr agent on every pull request, respond to user comments
+    steps:
+      - name: PR Agent action step
+        id: pragent
+        uses: Codium-ai/pr-agent@main
+        env:
+          OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+2. Add the following secret to your repository under `Settings > Secrets`:
+
+```
+OPENAI_KEY: <your key>
+```
+
+The GITHUB_TOKEN secret is automatically created by Github.
+
+3. Merge this change to your main branch. 
+When you open your next PR, you should see a comment from `github-actions` bot with a review of your PR, and instructions on how to use the rest of the tools.
+
+4. You may configure PR-Agent by adding environment variables under the env section that corresponds to any configurable property in the [configuration](./CONFIGURATION.md) file. Some examples:
+```yaml
+      env:
+        # ... previous environment values
+        OPENAI.ORG: "<Your organization name under your OpenAI account>"
+        PR_REVIEWER.REQUIRE_TESTS_REVIEW: "false" # Disable tests review
+        PR_CODE_SUGGESTIONS.NUM_CODE_SUGGESTIONS: 6 # Increase number of code suggestions
+```
+
+---
+
+#### Method 3: Run from source
 
 1. Clone this repository:
 
@@ -150,7 +195,7 @@ python pr_agent/cli.py --pr_url <pr_url> improve
 
 ---
 
-#### Method 3: Method 3: Run as a polling server; request reviews by tagging your Github user on a PR
+#### Method 4: Run as a polling server; request reviews by tagging your Github user on a PR
 
 Follow steps 1-3 of method 2.
 Run the following command to start the server:
@@ -161,7 +206,7 @@ python pr_agent/servers/github_polling.py
 
 ---
 
-#### Method 4: Run as a Github App, allowing you to automate the review process on your private or public repositories.
+#### Method 5: Run as a Github App, allowing you to automate the review process on your private or public repositories.
 
 1. Create a GitHub App from the [Github Developer Portal](https://docs.github.com/en/developers/apps/creating-a-github-app).
 
