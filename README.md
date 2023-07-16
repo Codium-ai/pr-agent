@@ -22,21 +22,21 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review PRs 
 \
 **Code Suggestion**: Committable code suggestions for improving the PR.
 
-Example results:
+<h3>Example results:</h2>
 </div>
-<h>Describe:</h>
+<h4>Describe:</h4>
 <div align="center">
 <p float="center">
 <img src="./pics/describe.gif" width="800">
 </p>
 </div>
-<h>Ask:</h>
+<h4>Ask:</h4>
 <div align="center">
 <p float="center">
 <img src="./pics/ask.gif" width="800">
 </p>
 </div>
-<h>Code Suggestion:</h>
+<h4>Code Suggestion:</h4>
 <div align="center">
 <p float="center">
 <img src="./pics/pr_code_suggestions.png" width="800">
