@@ -25,11 +25,11 @@ Possible questions you can ask include:
 - Is the PR ready for merge?
 - What are the main changes in this PR?
 - Should this PR be split into smaller parts?
-- Can you compose a rhymed song about this PR.
+- Can you compose a rhymed song about this PR?
 
 ---
 
-#### Method 2: Run as a Github Action
+#### Method 2: Run as a GitHub Action
 
 You can use our pre-built Github Action Docker image to run PR-Agent as a Github Action. 
 
@@ -58,12 +58,12 @@ jobs:
 OPENAI_KEY: <your key>
 ```
 
-The GITHUB_TOKEN secret is automatically created by Github.
+The GITHUB_TOKEN secret is automatically created by GitHub.
 
 3. Merge this change to your main branch. 
 When you open your next PR, you should see a comment from `github-actions` bot with a review of your PR, and instructions on how to use the rest of the tools.
 
-4. You may configure PR-Agent by adding environment variables under the env section that corresponds to any configurable property in the [configuration](./CONFIGURATION.md) file. Some examples:
+4. You may configure PR-Agent by adding environment variables under the env section corresponding to any configurable property in the [configuration](./CONFIGURATION.md) file. Some examples:
 ```yaml
       env:
         # ... previous environment values
@@ -107,7 +107,7 @@ python pr_agent/cli.py --pr_url <pr_url> improve
 ---
 
 #### Method 4: Run as a polling server
-Request reviews by tagging your Github user on a PR.
+Request reviews by tagging your Github user on a PR
 
 Follow steps 1-3 of method 2.
 Run the following command to start the server:
