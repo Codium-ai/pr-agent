@@ -74,7 +74,7 @@ Possible questions you can ask include:
 1. Clone this repository:
 
 ```
-git clone https://github.com/codium-ai/pr-agent.git
+git clone https://github.com/Codium-ai/pr-agent.git
 ```
 
 2. Install the requirements in your favorite virtual environment:
