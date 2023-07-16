@@ -118,7 +118,7 @@ python pr_agent/servers/github_polling.py
 
 ---
 
-#### Method 5: Run as a Github App
+#### Method 5: Run as a GitHub App
 Allowing you to automate the review process on your private or public repositories.
 
 1. Create a GitHub App from the [Github Developer Portal](https://docs.github.com/en/developers/apps/creating-a-github-app).
@@ -139,7 +139,7 @@ WEBHOOK_SECRET=$(python -c "import secrets; print(secrets.token_hex(10))")
 
 3. Acquire the following pieces of information from your app's settings page:
 
-   - App private key (click "Generate a private key", and save the file)
+   - App private key (click "Generate a private key" and save the file)
    - App ID
 
 4. Clone this repository:
@@ -170,11 +170,11 @@ docker push codiumai/pr-agent:github_app  # Push to your Docker repository
 7. Host the app using a server, serverless function, or container environment. Alternatively, for development and
    debugging, you may use tools like smee.io to forward webhooks to your local machine.
 
-8. Go back to your app's settings, set the following:
+8. Go back to your app's settings, and set the following:
 
-   - Webhook URL: The URL of your app's server, or the URL of the smee.io channel.
+   - Webhook URL: The URL of your app's server or the URL of the smee.io channel.
    - Webhook secret: The secret you generated earlier.
 
-9. Install the app by navigating to the "Install App" tab, and selecting your desired repositories.
+9. Install the app by navigating to the "Install App" tab and selecting your desired repositories.
 
 ---
