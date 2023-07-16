@@ -16,30 +16,36 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review PRs 
 
 **Auto-Description**: Automatically generating PR description - name, type, summary, and code walkthrough.
 \
-**PR Review**: Feedback about the PR main theme, type, relevant tests, security issues, focused, and various suggestions for the PR content.
+**PR Review**: Feedback about the PR main theme, type, relevant tests, security issues, focused PR, and various suggestions for the PR content.
 \
 **Question Answering**: Answering free-text questions about the PR.
 \
 **Code Suggestion**: Committable code suggestions for improving the PR.
 
-Example results:
+<h3>Example results:</h2>
 </div>
-<h>Describe:</h>
+<h4>Describe:</h4>
 <div align="center">
 <p float="center">
 <img src="./pics/describe.gif" width="800">
 </p>
 </div>
-<h>Ask:</h>
+<h4>Review:</h4>
+<div align="center">
+<p float="center">
+<img src="./pics/review.gif" width="800">
+</p>
+</div>
+<h4>Ask:</h4>
 <div align="center">
 <p float="center">
 <img src="./pics/ask.gif" width="800">
 </p>
 </div>
-<h>Code Suggestion:</h>
+<h4>Improve:</h4>
 <div align="center">
 <p float="center">
-<img src="./pics/pr_code_suggestions.png" width="800">
+<img src="./pics/improve.gif" width="800">
 </p>
 </div>
 <div align="left">
@@ -117,10 +123,10 @@ Here are several ways to install and run PR-Agent:
 
 **PR-Agent** provides four types of interactions ("tools"): `"PR Reviewer"`, `"PR Q&A"`, `"PR Description"` and `"PR Code Sueggestions"`.
 
-- The "PR Reviewer" tool automatically analyzes PRs, and provides different types of feedbacks.
+- The "PR Reviewer" tool automatically analyzes PRs, and provides different types of feedback.
 - The "PR Ask" tool answers free-text questions about the PR.
 - The "PR Description" tool automatically sets the PR Title and body.
-- The "PR Code Suggestion" tool provide inline code suggestions for the PR, that can be applied and committed.
+- The "PR Code Suggestion" tool provide inline code suggestions for the PR that can be applied and committed.
 
 ## How it works
 
