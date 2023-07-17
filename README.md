@@ -27,25 +27,25 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review PRs 
 <h4>Describe:</h4>
 <div align="center">
 <p float="center">
-<img src="https://codium.ai/imagesdescribe.gif" width="800">
+<img src="https://codium.ai/images/describe.gif" width="800">
 </p>
 </div>
 <h4>Review:</h4>
 <div align="center">
 <p float="center">
-<img src="https://codium.ai/imagesreview.gif" width="800">
+<img src="https://codium.ai/images/review.gif" width="800">
 </p>
 </div>
 <h4>Ask:</h4>
 <div align="center">
 <p float="center">
-<img src="https://codium.ai/imagesask.gif" width="800">
+<img src="https://codium.ai/images/ask.gif" width="800">
 </p>
 </div>
 <h4>Improve:</h4>
 <div align="center">
 <p float="center">
-<img src="https://codium.ai/imagesimprove.gif" width="800">
+<img src="https://codium.ai/images/improve.gif" width="800">
 </p>
 </div>
 <div align="left">
@@ -64,7 +64,7 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review PRs 
 
 Experience GPT-4 powered PR review on your public GitHub repository with our hosted PR-Agent. To try it, just mention `@CodiumAI-Agent` and add the desired command in any PR comment! The agent will generate a response based on your command.
 
-![Review generation process](https://codium.ai/imagesdemo.gif)
+![Review generation process](https://codium.ai/images/demo.gif)
 
 To set up your own PR-Agent, see the [Quickstart](#Quickstart) section
 
@@ -129,7 +129,7 @@ Here are several ways to install and run PR-Agent:
 
 ## How it works
 
-![PR-Agent Tools](https://codium.ai/imagespr_agent_overview.png)
+![PR-Agent Tools](https://codium.ai/images/pr_agent_overview.png)
 
 Check out the [PR Compression strategy](./PR_COMPRESSION.md) page for more details on how we convert a code diff to a manageable LLM prompt
 
