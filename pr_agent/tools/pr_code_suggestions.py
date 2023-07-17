@@ -42,7 +42,7 @@ class PRCodeSuggestions:
         assert type(self.git_provider) != BitbucketProvider, "Bitbucket is not supported for now"
 
         logging.info('Generating code suggestions for PR...')
-        if settings.config.publish_review:
+        if settings.config.publish_output:
             self.git_provider.publish_comment("Preparing review...", is_temporary=True)
         logging.info('Getting PR diff...')
 
@@ -56,7 +56,7 @@ class PRCodeSuggestions:
         self.prediction = await self._get_prediction()
         logging.info('Preparing PR review...')
         data = self._prepare_pr_code_suggestions()
-        if settings.config.publish_review:
+        if settings.config.publish_output:
             logging.info('Pushing PR review...')
             self.git_provider.remove_initial_comment()
             logging.info('Pushing inline code comments...')

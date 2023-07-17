@@ -36,17 +36,20 @@ class PRDescription:
 
     async def describe(self):
         logging.info('Generating a PR description...')
-        if settings.config.publish_review:
+        if settings.config.publish_output:
             self.git_provider.publish_comment("Preparing pr description...", is_temporary=True)
         logging.info('Getting PR diff...')
         self.patches_diff = get_pr_diff(self.git_provider, self.token_handler)
         logging.info('Getting AI prediction...')
         self.prediction = await self._get_prediction()
         logging.info('Preparing answer...')
-        pr_title, pr_body = self._prepare_pr_answer()
-        if settings.config.publish_review:
+        pr_title, pr_body, markdown_text = self._prepare_pr_answer()
+        if settings.config.publish_output:
             logging.info('Pushing answer...')
-            self.git_provider.publish_description(pr_title, pr_body)
+            if settings.pr_description.publish_description_as_comment:
+                self.git_provider.publish_comment(markdown_text)
+            else:
+                self.git_provider.publish_description(pr_title, pr_body)
             self.git_provider.remove_initial_comment()
         return ""
 
@@ -66,10 +69,11 @@ class PRDescription:
 
     def _prepare_pr_answer(self):
         data = json.loads(self.prediction)
+        markdown_text = ""
+        for key, value in data.items():
+            markdown_text += f"## {key}\n\n"
+            markdown_text += f"{value}\n\n"
         pr_body = ""
-        # for key, value in data.items():
-        #     markdown_text += f"## {key}\n\n"
-        #     markdown_text += f"{value}\n\n"
         title = data['PR Title']
         del data['PR Title']
         for key, value in data.items():
@@ -80,4 +84,4 @@ class PRDescription:
                 pr_body += f"**{value}**\n\n___\n"
         if settings.config.verbosity_level >= 2:
             logging.info(f"title:\n{title}\n{pr_body}")
-        return title, pr_body
+        return title, pr_body, markdown_text

@@ -72,20 +72,20 @@ To set up your own PR-Agent, see the [Quickstart](#Quickstart) section
 ## Overview
 `PR-Agent` offers extensive pull request functionalities across various git providers:
 |       |                                             | GitHub | Gitlab | Bitbucket |
-|-------|---------------------------------------------|--------|--------|-----------|
-| TOOLS | Review                                      | ✓      | ✓      | ✓         |
-|       | ⮑ Inline review                             | ✓     | ✓      |           |
-|       | Ask                                         | ✓      | ✓      |           |
-|       | Auto-Description                            | ✓      |        |           |
-|       | Improve Code                                | ✓      | ✓      |           |
+|-------|---------------------------------------------|:------:|:------:|:---------:|
+| TOOLS | Review                                      |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |
+|       | ⮑ Inline review                             |   :white_check_mark:    |   :white_check_mark:    |           |
+|       | Ask                                         |   :white_check_mark:    |   :white_check_mark:    |           |
+|       | Auto-Description                            |   :white_check_mark:    |        |           |
+|       | Improve Code                                |   :white_check_mark:    |   :white_check_mark:    |           |
 |       |                                             |        |        |           |
-| USAGE | CLI                                         | ✓      | ✓      | ✓         |
-|       | Tagging bot                                 | ✓      | ✓      |           |
-|       | Actions                                     | ✓      |        |           |
+| USAGE | CLI                                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |
+|       | Tagging bot                                 |   :white_check_mark:    |   :white_check_mark:    |           |
+|       | Actions                                     |   :white_check_mark:    |        |           |
 |       |                                             |        |        |           |
-| CORE  | PR compression                              | ✓      | ✓      | ✓         |
-|       | Repo language prioritization                | ✓      | ✓      | ✓         |
-|       | Adaptive and token-aware<br />file patch fitting | ✓      | ✓      | ✓         |
+| CORE  | PR compression                              |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |
+|       | Repo language prioritization                |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |
+|       | Adaptive and token-aware<br />file patch fitting |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |
 
 Examples for invoking the different tools via the [CLI](#quickstart):
 - **Review**:       python cli.py --pr-url=<pr_url>  review
@@ -122,8 +122,8 @@ Here are several ways to install and run PR-Agent:
 
 **PR-Agent** provides four types of interactions ("tools"): `"PR Reviewer"`, `"PR Q&A"`, `"PR Description"` and `"PR Code Sueggestions"`.
 
-- The "PR Reviewer" tool automatically analyzes PRs, and provides different types of feedback.
-- The "PR Ask" tool answers free-text questions about the PR.
+- The "PR Reviewer" tool automatically analyzes PRs, and provides various types of feedback.
+- The "PR Q&A" tool answers free-text questions about the PR.
 - The "PR Description" tool automatically sets the PR Title and body.
 - The "PR Code Suggestion" tool provide inline code suggestions for the PR that can be applied and committed.
 
