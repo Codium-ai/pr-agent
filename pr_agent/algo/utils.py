@@ -61,18 +61,24 @@ def parse_code_suggestion(code_suggestions: dict) -> str:
     return markdown_text
 
 
-def try_fix_json(review, max_iter=10):
+def try_fix_json(review, max_iter=10, code_suggestions=False):
+    if review.endswith("}"):
+        return fix_json_escape_char(review)
     # Try to fix JSON if it is broken/incomplete: parse until the last valid code suggestion
     data = {}
+    if code_suggestions:
+        closing_bracket = "]}"
+    else:
+        closing_bracket = "]}}"
     if review.rfind("'Code suggestions': [") > 0 or review.rfind('"Code suggestions": [') > 0:
         last_code_suggestion_ind = [m.end() for m in re.finditer(r"\}\s*,", review)][-1] - 1
         valid_json = False
         iter_count = 0
         while last_code_suggestion_ind > 0 and not valid_json and iter_count < max_iter:
             try:
-                data = json.loads(review[:last_code_suggestion_ind] + "]}}")
+                data = json.loads(review[:last_code_suggestion_ind] + closing_bracket)
                 valid_json = True
-                review = review[:last_code_suggestion_ind].strip() + "]}}"
+                review = review[:last_code_suggestion_ind].strip() + closing_bracket
             except json.decoder.JSONDecodeError:
                 review = review[:last_code_suggestion_ind]
                 # Use regular expression to find the last occurrence of "}," with any number of whitespaces or newlines
@@ -82,3 +88,17 @@ def try_fix_json(review, max_iter=10):
             logging.error("Unable to decode JSON response from AI")
             data = {}
     return data
+
+def fix_json_escape_char(json_message=None):
+    result = None
+    try:
+        result = json.loads(json_message)
+    except Exception as e:
+        # Find the offending character index:
+        idx_to_replace = int(str(e).split(' ')[-1].replace(')', ''))
+        # Remove the offending character:
+        json_message = list(json_message)
+        json_message[idx_to_replace] = ' '
+        new_message = ''.join(json_message)
+        return fix_JSON(json_message=new_message)
+    return result
