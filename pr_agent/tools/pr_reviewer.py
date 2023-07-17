@@ -92,7 +92,13 @@ class PRReviewer:
         if settings.config.git_provider == 'github' and \
                 settings.pr_reviewer.inline_code_comments and \
                 'Code suggestions' in data['PR Feedback']:
-            del data['PR Feedback']['Code suggestions']
+            # keeping only code suggestions that can't be submitted as inline comments
+            data['PR Feedback']['Code suggestions'] = [
+                d for d in data['PR Feedback']['Code suggestions']
+                if any(key not in d for key in ('relevant file', 'relevant line in file', 'suggestion content'))
+            ]
+            if not data['PR Feedback']['Code suggestions']:
+                del data['PR Feedback']['Code suggestions']
 
         markdown_text = convert_to_markdown(data)
         user = self.git_provider.get_user_id()
@@ -118,9 +124,21 @@ class PRReviewer:
         except json.decoder.JSONDecodeError:
             data = try_fix_json(review)
 
+        comments = []
         for d in data['PR Feedback']['Code suggestions']:
-            relevant_file = d['relevant file'].strip()
-            relevant_line_in_file = d['relevant line in file'].strip()
-            content = d['suggestion content']
+            relevant_file = d.get('relevant file', '').strip()
+            relevant_line_in_file = d.get('relevant line in file', '').strip()
+            content = d.get('suggestion content', '')
+            if not relevant_file or not relevant_line_in_file or not content:
+                logging.info("Skipping inline comment with missing file/line/content")
+                continue
 
-            self.git_provider.publish_inline_comment(content, relevant_file, relevant_line_in_file)
+            if settings.config.git_provider == 'github':
+                comment = self.git_provider.create_inline_comment(content, relevant_file, relevant_line_in_file)
+                if comment:
+                    comments.append(comment)
+            else:
+                self.git_provider.publish_inline_comment(content, relevant_file, relevant_line_in_file)
+
+        if comments:
+            self.git_provider.publish_inline_comments(comments)
