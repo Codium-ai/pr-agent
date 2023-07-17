@@ -108,6 +108,16 @@ Description: '{{description}}'
 Main language: {{language}}
 {%- endif %}
 
+{%- if question_str %}
+######
+Here are questions to better understand the PR. Use the answers to provide better feedback.
+
+{{question_str|trim}}
+
+User answers:
+{{answer_str|trim}}
+######
+{%- endif %}
 
 The PR Git Diff:
 ```

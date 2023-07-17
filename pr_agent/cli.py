@@ -30,7 +30,8 @@ improve / improve_code - Suggest improvements to the code in the PR as pull requ
                                                                   'ask', 'ask_question',
                                                                   'describe', 'describe_pr',
                                                                   'improve', 'improve_code',
-                                                                  'user_questions'], default='review')
+                                                                  'user_questions', 'user_answers'],
+                                                                  default='review')
     parser.add_argument('rest', nargs=argparse.REMAINDER, default=[])
     args = parser.parse_args()
     logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
@@ -60,6 +61,10 @@ improve / improve_code - Suggest improvements to the code in the PR as pull requ
         print(f"Asking the PR author questions: {args.pr_url}")
         reviewer = PRInformationFromUser(args.pr_url)
         asyncio.run(reviewer.generate_questions())
+    elif command in ['user_answers']:
+        print(f"Processing author answers and sending review: {args.pr_url}")
+        reviewer = PRReviewer(args.pr_url, cli_mode=True, is_answer=True)
+        asyncio.run(reviewer.review())
     else:
         print(f"Unknown command: {command}")
         parser.print_help()

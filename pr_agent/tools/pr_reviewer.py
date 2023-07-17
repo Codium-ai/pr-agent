@@ -15,12 +15,14 @@ from pr_agent.servers.help import bot_help_text, actions_help_text
 
 
 class PRReviewer:
-    def __init__(self, pr_url: str, cli_mode=False):
+    def __init__(self, pr_url: str, cli_mode=False, is_answer: bool = False):
 
         self.git_provider = get_git_provider()(pr_url)
         self.main_language = get_main_pr_language(
             self.git_provider.get_languages(), self.git_provider.get_files()
         )
+        self.is_answer = is_answer
+        answer_str = question_str = self._get_user_answers()
         self.ai_handler = AiHandler()
         self.patches_diff = None
         self.prediction = None
@@ -35,6 +37,9 @@ class PRReviewer:
             "require_security": settings.pr_reviewer.require_security_review,
             "require_focused": settings.pr_reviewer.require_focused_review,
             'num_code_suggestions': settings.pr_reviewer.num_code_suggestions,
+            #
+            'question_str': question_str,
+            'answer_str': answer_str,
         }
         self.token_handler = TokenHandler(self.git_provider.pr,
                                           self.vars,
@@ -119,3 +124,16 @@ class PRReviewer:
             content = d['suggestion content']
 
             self.git_provider.publish_inline_comment(content, relevant_file, relevant_line_in_file)
+
+    def _get_user_answers(self):
+        answer_str = question_str = ""
+        if self.is_answer:
+            discussion_messages = self.git_provider.pr.get_issue_comments()
+            for message in discussion_messages.reversed:
+                if "Questions to better understand the PR:" in message.body:
+                    question_str = message.body
+                elif '/answer' in message.body:
+                    answer_str = message.body
+                if answer_str and question_str:
+                    break
+        return question_str, answer_str

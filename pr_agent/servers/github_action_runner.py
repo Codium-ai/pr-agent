@@ -6,6 +6,7 @@ import re
 from pr_agent.config_loader import settings
 from pr_agent.tools.pr_code_suggestions import PRCodeSuggestions
 from pr_agent.tools.pr_description import PRDescription
+from pr_agent.tools.pr_information_from_user import PRInformationFromUser
 from pr_agent.tools.pr_questions import PRQuestions
 from pr_agent.tools.pr_reviewer import PRReviewer
 
@@ -53,8 +54,13 @@ async def run_action():
                 pr_url = event_payload.get("issue", {}).get("pull_request", {}).get("url", None)
                 if pr_url:
                     body = comment_body.strip().lower()
-                    if any(cmd in body for cmd in ["/review", "/review_pr"]):
-                        await PRReviewer(pr_url).review()
+                    if any(cmd in body for cmd in ["/answer"]):
+                        await PRReviewer(pr_url, is_answer=True).review()
+                    elif any(cmd in body for cmd in ["/review", "/review_pr", "/answer"]):
+                        if settings.pr_reviewer.ask_and_reflect:
+                            await PRInformationFromUser(pr_url).generate_questions()
+                        else:
+                            await PRReviewer(pr_url).review()
                     elif any(cmd in body for cmd in ["/describe", "/describe_pr"]):
                         await PRDescription(pr_url).describe()
                     elif any(cmd in body for cmd in ["/improve", "/improve_code"]):
