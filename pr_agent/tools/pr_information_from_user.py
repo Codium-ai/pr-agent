@@ -66,6 +66,6 @@ class PRInformationFromUser:
         model_output = self.prediction.strip()
         if settings.config.verbosity_level >= 2:
             logging.info(f"answer_str:\n{model_output}")
-        answer_str = f"{model_output}\n\n Please respond to the question above in the following format:\n\n" + \
-                     f"/answer <question_id> <answer>\n\n" + f"Example:\n'\n/answer\n1. Yes, because ...\n2. No, because ...\n'"
+        answer_str = f"{model_output}\n\n Please respond to the questions above in the following format:\n\n" +\
+                     f"\n>/answer\n>1) ...\n>2) ...\n>...\n"
         return answer_str
