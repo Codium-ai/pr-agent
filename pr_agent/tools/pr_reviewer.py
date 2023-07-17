@@ -43,7 +43,7 @@ class PRReviewer:
 
     async def review(self):
         logging.info('Reviewing PR...')
-        if settings.config.publish_review:
+        if settings.config.publish_output:
                 self.git_provider.publish_comment("Preparing review...", is_temporary=True)
         logging.info('Getting PR diff...')
         self.patches_diff = get_pr_diff(self.git_provider, self.token_handler)
@@ -51,7 +51,7 @@ class PRReviewer:
         self.prediction = await self._get_prediction()
         logging.info('Preparing PR review...')
         pr_comment = self._prepare_pr_review()
-        if settings.config.publish_review:
+        if settings.config.publish_output:
             logging.info('Pushing PR review...')
             self.git_provider.publish_comment(pr_comment)
             self.git_provider.remove_initial_comment()
@@ -89,7 +89,9 @@ class PRReviewer:
                 del data['PR Feedback']['Security concerns']
                 data['PR Analysis']['Security concerns'] = val
 
-        if settings.config.git_provider == 'github' and settings.pr_reviewer.inline_code_comments:
+        if settings.config.git_provider == 'github' and \
+                settings.pr_reviewer.inline_code_comments and \
+                'Code suggestions' in data['PR Feedback']:
             del data['PR Feedback']['Code suggestions']
 
         markdown_text = convert_to_markdown(data)
@@ -107,6 +109,9 @@ class PRReviewer:
         return markdown_text
 
     def _publish_inline_code_comments(self):
+        if settings.pr_reviewer.num_code_suggestions == 0:
+            return
+
         review = self.prediction.strip()
         try:
             data = json.loads(review)
