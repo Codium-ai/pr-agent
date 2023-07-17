@@ -118,12 +118,16 @@ class PRReviewer:
         except json.decoder.JSONDecodeError:
             data = try_fix_json(review)
 
-        for d in data['PR Feedback']['Code suggestions']:
-            relevant_file = d['relevant file'].strip()
-            relevant_line_in_file = d['relevant line in file'].strip()
-            content = d['suggestion content']
+        if settings.config.pr_reviewer > 0:
+            try:
+                for d in data['PR Feedback']['Code suggestions']:
+                    relevant_file = d['relevant file'].strip()
+                    relevant_line_in_file = d['relevant line in file'].strip()
+                    content = d['suggestion content']
 
-            self.git_provider.publish_inline_comment(content, relevant_file, relevant_line_in_file)
+                    self.git_provider.publish_inline_comment(content, relevant_file, relevant_line_in_file)
+            except KeyError:
+                pass
 
     def _get_user_answers(self):
         answer_str = question_str = ""

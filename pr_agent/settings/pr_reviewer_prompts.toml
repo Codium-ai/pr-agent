@@ -24,7 +24,7 @@ You must use the following JSON schema to format your answer:
     },
 {%- endif %}
 {%- if question_str %}
-    "Insights from user's answers": {
+    "Insights from user's answer": {
       "type": "string",
       "description": "shortly summarize the insights you gained from the user's answers to the questions"
     },
