@@ -62,7 +62,7 @@ improve / improve_code - Suggest improvements to the code in the PR as pull requ
         reviewer = PRInformationFromUser(args.pr_url)
         asyncio.run(reviewer.generate_questions())
     elif command in ['user_answers']:
-        print(f"Processing author answers and sending review: {args.pr_url}")
+        print(f"Processing author's answers and sending review: {args.pr_url}")
         reviewer = PRReviewer(args.pr_url, cli_mode=True, is_answer=True)
         asyncio.run(reviewer.review())
     else:
