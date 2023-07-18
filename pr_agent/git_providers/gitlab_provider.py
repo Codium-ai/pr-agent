@@ -87,9 +87,12 @@ class GitLabProvider(GitProvider):
         return [change['new_path'] for change in self.mr.changes()['changes']]
 
     def publish_description(self, pr_title: str, pr_body: str):
-        self.mr.title = pr_title
-        self.mr.description = pr_body
-        self.mr.save()
+        try:
+            self.mr.title = pr_title
+            self.mr.description = pr_body
+            self.mr.save()
+        except Exception as e:
+            logging.exception(f"Could not update merge request {self.id_mr} description: {e}")
 
     def publish_comment(self, mr_comment: str, is_temporary: bool = False):
         comment = self.mr.notes.create({'body': mr_comment})
