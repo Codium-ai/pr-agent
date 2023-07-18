@@ -6,6 +6,7 @@ verbosity_level=0 # 0,1,2
 
 [pr_reviewer]
 require_focused_review=true
+require_score_review=true
 require_tests_review=true
 require_security_review=true
 num_code_suggestions=3
