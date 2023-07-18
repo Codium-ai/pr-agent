@@ -4,6 +4,7 @@ from typing import Optional, Tuple
 from urllib.parse import urlparse
 
 import gitlab
+from gitlab import GitlabGetError
 
 from pr_agent.config_loader import settings
 
@@ -42,7 +43,11 @@ class GitLabProvider(GitProvider):
         self.last_diff = self.mr.diffs.list()[-1]
 
     def _get_pr_file_content(self, file_path: str, branch: str) -> str:
-        return self.gl.projects.get(self.id_project).files.get(file_path, branch).decode()
+        try:
+            return self.gl.projects.get(self.id_project).files.get(file_path, branch).decode()
+        except GitlabGetError:
+            # In case of file creation the method returns GitlabGetError (404 file not found). In this case we return an empty string for the diff.
+            return ''
 
     def get_diff_files(self) -> list[FilePatchInfo]:
         diffs = self.mr.changes()['changes']
@@ -58,8 +63,10 @@ class GitLabProvider(GitProvider):
             elif diff['renamed_file']:
                 edit_type = EDIT_TYPE.RENAMED
             try:
-                original_file_content_str = bytes.decode(original_file_content_str, 'utf-8')
-                new_file_content_str = bytes.decode(new_file_content_str, 'utf-8')
+                if isinstance(original_file_content_str, bytes):
+                    original_file_content_str = bytes.decode(original_file_content_str, 'utf-8')
+                if isinstance(new_file_content_str, bytes):
+                    new_file_content_str = bytes.decode(new_file_content_str, 'utf-8')
             except UnicodeDecodeError:
                 logging.warning(
                     f"Cannot decode file {diff['old_path']} or {diff['new_path']} in merge request {self.id_mr}")
