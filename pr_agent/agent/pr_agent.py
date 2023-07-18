@@ -1,11 +1,11 @@
 import re
 
+from pr_agent.config_loader import settings
 from pr_agent.tools.pr_code_suggestions import PRCodeSuggestions
 from pr_agent.tools.pr_description import PRDescription
 from pr_agent.tools.pr_information_from_user import PRInformationFromUser
 from pr_agent.tools.pr_questions import PRQuestions
 from pr_agent.tools.pr_reviewer import PRReviewer
-from pr_agent.config_loader import settings
 
 
 class PRAgent:
