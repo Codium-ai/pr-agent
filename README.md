@@ -132,7 +132,7 @@ Here are several ways to install and run PR-Agent:
 
 ## How it works
 
-![PR-Agent Tools](https://codium.ai/images/pr_agent_overview.png)
+![PR-Agent Tools](https://www.codium.ai/wp-content/uploads/2023/07/pr-agent-schema-updated.png)
 
 Check out the [PR Compression strategy](./PR_COMPRESSION.md) page for more details on how we convert a code diff to a manageable LLM prompt
 
