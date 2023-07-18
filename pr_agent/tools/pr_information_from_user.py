@@ -35,7 +35,7 @@ class PRInformationFromUser:
     async def generate_questions(self):
         logging.info('Generating question to the user...')
         if settings.config.publish_output:
-            self.git_provider.publish_comment("Preparing answer...", is_temporary=True)
+            self.git_provider.publish_comment("Preparing questions...", is_temporary=True)
         logging.info('Getting PR diff...')
         self.patches_diff = get_pr_diff(self.git_provider, self.token_handler)
         logging.info('Getting AI prediction...')

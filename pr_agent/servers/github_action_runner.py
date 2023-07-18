@@ -56,8 +56,9 @@ async def run_action():
                     body = comment_body.strip().lower()
                     if any(cmd in body for cmd in ["/answer"]):
                         await PRReviewer(pr_url, is_answer=True).review()
-                    elif any(cmd in body for cmd in ["/review", "/review_pr", "/answer"]):
-                        if settings.pr_reviewer.ask_and_reflect:
+                    elif any(cmd in body for cmd in ["/review", "/review_pr", "/reflect_and_review"]):
+                        if settings.pr_reviewer.ask_and_reflect or \
+                                any(cmd in body for cmd in ["/reflect_and_review"]):
                             await PRInformationFromUser(pr_url).generate_questions()
                         else:
                             await PRReviewer(pr_url).review()
