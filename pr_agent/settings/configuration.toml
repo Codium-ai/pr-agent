@@ -33,6 +33,7 @@ url = "https://gitlab.com"
 [local]
 # Path to the local git repository. Will be overwritten by configuration_local.toml if present.
 path = "/path/to/local/repo"
+output = "./review.md"
 
 [polling]
 # Polling (either project id or namespace/project_name) syntax can be used
