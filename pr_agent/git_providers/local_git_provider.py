@@ -1,4 +1,5 @@
-from typing import Optional
+import logging
+from typing import List
 
 from git import Repo
 from github.PullRequest import PullRequest
@@ -6,12 +7,15 @@ from github.PullRequest import PullRequest
 from pr_agent.config_loader import settings
 from pr_agent.git_providers.git_provider import GitProvider, FilePatchInfo
 
-class PullRequestMimic(PullRequest):
+
+class PullRequestMimic():
     '''
     This class mimics the PullRequest class from the PyGithub library.
     It only implements methods used by the GitHubProvider class.
     '''
-    pass
+
+    def __init__(self, title):
+        self.title = title
 
 
 class LocalGitProvider(GitProvider):
@@ -22,13 +26,11 @@ class LocalGitProvider(GitProvider):
     For the MVP it only supports the /review capability.
     '''
 
-    def __init__(self, branch_name: Optional[str] = None):
+    def __init__(self, branch_name):
         self.repo = Repo(settings.get("local.path"))
-        compare_with = self.repo.head.commit
-        if branch_name is not None:
-            compare_with = self.repo.heads[branch_name].commit
+        self.branch_name = branch_name
         self.diff_files = None
-
+        self.pr = PullRequestMimic(self.get_pr_title())
 
     def is_supported(self, capability: str) -> bool:
         # TODO implement
@@ -38,14 +40,27 @@ class LocalGitProvider(GitProvider):
         # TODO implement
         pass
 
-    def get_files(self):
-        return [change['new_path'] for change in self.mr.changes()['changes']]
+    def get_files(self) -> List[str]:
+        '''
+        Returns a list of files with changes in the diff.
+        '''
+        # Assert existence of specific branch
+        branch_names = [ref.name for ref in self.repo.branches]
+        if self.branch_name not in branch_names:
+            raise KeyError(f"Branch: {self.branch_name} does not exist")
+        branch = self.repo.branches[self.branch_name]
+        # Compare the two branches
+        diff_index = self.repo.head.commit.diff(branch.commit)
+        # Get the list of changed files
+        # TODO Why only a.side is being returned? What in case of a rename? Should we zip a-b side by side to compare them later in case of different names?
+        diff_files = [item.a_path for item in diff_index]
+        return diff_files
 
     def publish_description(self, pr_title: str, pr_body: str):
         raise NotImplementedError('Publishing descriptions is not implemented for the local git provider')
 
     def publish_comment(self, pr_comment: str, is_temporary: bool = False):
-        raise NotImplementedError('Publishing comments is not implemented for the local git provider')
+        logging.info(pr_comment)
 
     def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
         raise NotImplementedError('Publishing inline comments is not implemented for the local git provider')
@@ -67,14 +82,21 @@ class LocalGitProvider(GitProvider):
         pass
 
     def get_pr_branch(self):
-        raise NotImplementedError('Getting PR branch is not implemented for the local git provider')
+        return self.repo.head
 
     def get_user_id(self):
         raise NotImplementedError('Getting user id is not implemented for the local git provider')
 
     def get_pr_description(self):
-        # TODO concat an artificial PR description based on commit messages
-        pass
+        commits_diff = list(self.repo.iter_commits(self.branch_name + '..HEAD'))
+        # Get the commit messages and concatenate
+        commit_messages = " ".join([commit.message for commit in commits_diff])
+        # TODO Handle the description better - maybe use gpt-3.5 summarisation here?
+        return commit_messages[:200]  # Use max 200 characters
+
+    def get_pr_title(self):
+        # TODO Handle the title better - perhaps ask the user to provide it?
+        return self.get_pr_description()[:50]
 
     def get_issue_comments(self):
         raise NotImplementedError('Getting issue comments is not implemented for the local git provider')
