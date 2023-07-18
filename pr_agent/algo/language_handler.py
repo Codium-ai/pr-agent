@@ -64,7 +64,11 @@ bad_extensions = [
 
 
 def filter_bad_extensions(files):
-    return [f for f in files if f.filename.split('.')[-1] not in bad_extensions]
+    return [f for f in files if is_valid_file(f.filename)]
+
+
+def is_valid_file(filename):
+    return filename.split('.')[-1] not in bad_extensions
 
 
 def sort_files_by_main_languages(languages: Dict, files: list):
