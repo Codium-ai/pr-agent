@@ -36,7 +36,7 @@ class PRDescription:
 
     async def describe(self):
         logging.info('Generating a PR description...')
-        if settings.config.publish_review:
+        if settings.config.publish_output:
             self.git_provider.publish_comment("Preparing pr description...", is_temporary=True)
         logging.info('Getting PR diff...')
         self.patches_diff = get_pr_diff(self.git_provider, self.token_handler)
@@ -44,7 +44,7 @@ class PRDescription:
         self.prediction = await self._get_prediction()
         logging.info('Preparing answer...')
         pr_title, pr_body = self._prepare_pr_answer()
-        if settings.config.publish_review:
+        if settings.config.publish_output:
             logging.info('Pushing answer...')
             self.git_provider.publish_description(pr_title, pr_body)
             self.git_provider.remove_initial_comment()
