@@ -1,0 +1,12 @@
+FROM public.ecr.aws/lambda/python:3.10
+
+RUN yum update -y && \
+    yum install -y gcc python3-devel && \
+    yum clean all
+
+ADD requirements.txt .
+RUN pip install -r requirements.txt && rm requirements.txt
+RUN pip install mangum
+COPY pr_agent/ ${LAMBDA_TASK_ROOT}/pr_agent/
+
+CMD ["pr_agent.servers.serverless.serverless"]
