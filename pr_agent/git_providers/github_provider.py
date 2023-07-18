@@ -8,6 +8,7 @@ from github import AppAuthentication, Github
 from pr_agent.config_loader import settings
 
 from .git_provider import FilePatchInfo, GitProvider
+from ..algo.language_handler import is_valid_file
 
 
 class GithubProvider(GitProvider):
@@ -37,9 +38,10 @@ class GithubProvider(GitProvider):
         files = self.pr.get_files()
         diff_files = []
         for file in files:
-            original_file_content_str = self._get_pr_file_content(file, self.pr.base.sha)
-            new_file_content_str = self._get_pr_file_content(file, self.pr.head.sha)
-            diff_files.append(FilePatchInfo(original_file_content_str, new_file_content_str, file.patch, file.filename))
+            if is_valid_file(file.filename):
+                original_file_content_str = self._get_pr_file_content(file, self.pr.base.sha)
+                new_file_content_str = self._get_pr_file_content(file, self.pr.head.sha)
+                diff_files.append(FilePatchInfo(original_file_content_str, new_file_content_str, file.patch, file.filename))
         self.diff_files = diff_files
         return diff_files
 

@@ -9,6 +9,7 @@ from gitlab import GitlabGetError
 from pr_agent.config_loader import settings
 
 from .git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
+from ..algo.language_handler import is_valid_file
 
 
 class GitLabProvider(GitProvider):
@@ -59,27 +60,28 @@ class GitLabProvider(GitProvider):
         diffs = self.mr.changes()['changes']
         diff_files = []
         for diff in diffs:
-            original_file_content_str = self._get_pr_file_content(diff['old_path'], self.mr.target_branch)
-            new_file_content_str = self._get_pr_file_content(diff['new_path'], self.mr.source_branch)
-            edit_type = EDIT_TYPE.MODIFIED
-            if diff['new_file']:
-                edit_type = EDIT_TYPE.ADDED
-            elif diff['deleted_file']:
-                edit_type = EDIT_TYPE.DELETED
-            elif diff['renamed_file']:
-                edit_type = EDIT_TYPE.RENAMED
-            try:
-                if isinstance(original_file_content_str, bytes):
-                    original_file_content_str = bytes.decode(original_file_content_str, 'utf-8')
-                if isinstance(new_file_content_str, bytes):
-                    new_file_content_str = bytes.decode(new_file_content_str, 'utf-8')
-            except UnicodeDecodeError:
-                logging.warning(
-                    f"Cannot decode file {diff['old_path']} or {diff['new_path']} in merge request {self.id_mr}")
-            diff_files.append(
-                FilePatchInfo(original_file_content_str, new_file_content_str, diff['diff'], diff['new_path'],
-                              edit_type=edit_type,
-                              old_filename=None if diff['old_path'] == diff['new_path'] else diff['old_path']))
+            if is_valid_file(diff['new_path']):
+                original_file_content_str = self._get_pr_file_content(diff['old_path'], self.mr.target_branch)
+                new_file_content_str = self._get_pr_file_content(diff['new_path'], self.mr.source_branch)
+                edit_type = EDIT_TYPE.MODIFIED
+                if diff['new_file']:
+                    edit_type = EDIT_TYPE.ADDED
+                elif diff['deleted_file']:
+                    edit_type = EDIT_TYPE.DELETED
+                elif diff['renamed_file']:
+                    edit_type = EDIT_TYPE.RENAMED
+                try:
+                    if isinstance(original_file_content_str, bytes):
+                        original_file_content_str = bytes.decode(original_file_content_str, 'utf-8')
+                    if isinstance(new_file_content_str, bytes):
+                        new_file_content_str = bytes.decode(new_file_content_str, 'utf-8')
+                except UnicodeDecodeError:
+                    logging.warning(
+                        f"Cannot decode file {diff['old_path']} or {diff['new_path']} in merge request {self.id_mr}")
+                diff_files.append(
+                    FilePatchInfo(original_file_content_str, new_file_content_str, diff['diff'], diff['new_path'],
+                                  edit_type=edit_type,
+                                  old_filename=None if diff['old_path'] == diff['new_path'] else diff['old_path']))
         self.diff_files = diff_files
         return diff_files
 
