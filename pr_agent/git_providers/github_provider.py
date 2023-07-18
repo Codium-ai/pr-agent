@@ -67,7 +67,7 @@ class GithubProvider(GitProvider):
                     if relevant_line_in_file in line:
                         position = i
                         break
-                    elif relevant_line_in_file[0] == '+' and relevant_line_in_file[1:] in line:
+                    elif relevant_line_in_file[0] == '+' and relevant_line_in_file[1:].lstrip() in line:
                         # The model often adds a '+' to the beginning of the relevant_line_in_file even if originally
                         # it's a context line
                         position = i
