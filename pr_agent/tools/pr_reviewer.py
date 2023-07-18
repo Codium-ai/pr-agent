@@ -125,7 +125,7 @@ class PRReviewer:
         except json.decoder.JSONDecodeError:
             data = try_fix_json(review)
 
-        if settings.config.pr_reviewer > 0:
+        if settings.pr_reviewer.num_code_suggestions > 0:
             try:
                 for d in data['PR Feedback']['Code suggestions']:
                     relevant_file = d['relevant file'].strip()
