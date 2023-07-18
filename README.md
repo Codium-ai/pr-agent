@@ -27,25 +27,25 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review PRs 
 <h4>Describe:</h4>
 <div align="center">
 <p float="center">
-<img src="./pics/describe.gif" width="800">
+<img src="https://codium.ai/images/describe.gif" width="800">
 </p>
 </div>
 <h4>Review:</h4>
 <div align="center">
 <p float="center">
-<img src="./pics/review.gif" width="800">
+<img src="https://codium.ai/images/review.gif" width="800">
 </p>
 </div>
 <h4>Ask:</h4>
 <div align="center">
 <p float="center">
-<img src="./pics/ask.gif" width="800">
+<img src="https://codium.ai/images/ask.gif" width="800">
 </p>
 </div>
 <h4>Improve:</h4>
 <div align="center">
 <p float="center">
-<img src="./pics/improve.gif" width="800">
+<img src="https://codium.ai/images/improve.gif" width="800">
 </p>
 </div>
 <div align="left">
@@ -64,7 +64,7 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review PRs 
 
 Experience GPT-4 powered PR review on your public GitHub repository with our hosted PR-Agent. To try it, just mention `@CodiumAI-Agent` and add the desired command in any PR comment! The agent will generate a response based on your command.
 
-![Review generation process](./pics/demo.gif)
+![Review generation process](https://codium.ai/images/demo.gif)
 
 To set up your own PR-Agent, see the [Quickstart](#Quickstart) section
 
@@ -72,20 +72,20 @@ To set up your own PR-Agent, see the [Quickstart](#Quickstart) section
 ## Overview
 `PR-Agent` offers extensive pull request functionalities across various git providers:
 |       |                                             | GitHub | Gitlab | Bitbucket |
-|-------|---------------------------------------------|--------|--------|-----------|
-| TOOLS | Review                                      | ✓      | ✓      | ✓         |
-|       | ⮑ Inline review                             | ✓     | ✓      |           |
-|       | Ask                                         | ✓      | ✓      |           |
-|       | Auto-Description                            | ✓      |        |           |
-|       | Improve Code                                | ✓      | ✓      |           |
+|-------|---------------------------------------------|:------:|:------:|:---------:|
+| TOOLS | Review                                      |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |
+|       | ⮑ Inline review                             |   :white_check_mark:    |   :white_check_mark:    |           |
+|       | Ask                                         |   :white_check_mark:    |   :white_check_mark:    |           |
+|       | Auto-Description                            |   :white_check_mark:    |        |           |
+|       | Improve Code                                |   :white_check_mark:    |   :white_check_mark:    |           |
 |       |                                             |        |        |           |
-| USAGE | CLI                                         | ✓      | ✓      | ✓         |
-|       | Tagging bot                                 | ✓      | ✓      |           |
-|       | Actions                                     | ✓      |        |           |
+| USAGE | CLI                                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |
+|       | Tagging bot                                 |   :white_check_mark:    |   :white_check_mark:    |           |
+|       | Actions                                     |   :white_check_mark:    |        |           |
 |       |                                             |        |        |           |
-| CORE  | PR compression                              | ✓      | ✓      | ✓         |
-|       | Repo language prioritization                | ✓      | ✓      | ✓         |
-|       | Adaptive and token-aware<br />file patch fitting | ✓      | ✓      | ✓         |
+| CORE  | PR compression                              |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |
+|       | Repo language prioritization                |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |
+|       | Adaptive and token-aware<br />file patch fitting |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |
 
 Examples for invoking the different tools via the [CLI](#quickstart):
 - **Review**:       python cli.py --pr-url=<pr_url>  review
@@ -122,14 +122,14 @@ Here are several ways to install and run PR-Agent:
 
 **PR-Agent** provides four types of interactions ("tools"): `"PR Reviewer"`, `"PR Q&A"`, `"PR Description"` and `"PR Code Sueggestions"`.
 
-- The "PR Reviewer" tool automatically analyzes PRs, and provides different types of feedback.
-- The "PR Ask" tool answers free-text questions about the PR.
+- The "PR Reviewer" tool automatically analyzes PRs, and provides various types of feedback.
+- The "PR Q&A" tool answers free-text questions about the PR.
 - The "PR Description" tool automatically sets the PR Title and body.
 - The "PR Code Suggestion" tool provide inline code suggestions for the PR that can be applied and committed.
 
 ## How it works
 
-![PR-Agent Tools](./pics/pr_agent_overview.png)
+![PR-Agent Tools](https://codium.ai/images/pr_agent_overview.png)
 
 Check out the [PR Compression strategy](./PR_COMPRESSION.md) page for more details on how we convert a code diff to a manageable LLM prompt
 

@@ -34,7 +34,7 @@ class PRInformationFromUser:
 
     async def generate_questions(self):
         logging.info('Generating question to the user...')
-        if settings.config.publish_review:
+        if settings.config.publish_output:
             self.git_provider.publish_comment("Preparing answer...", is_temporary=True)
         logging.info('Getting PR diff...')
         self.patches_diff = get_pr_diff(self.git_provider, self.token_handler)
@@ -42,7 +42,7 @@ class PRInformationFromUser:
         self.prediction = await self._get_prediction()
         logging.info('Preparing questions...')
         pr_comment = self._prepare_pr_answer()
-        if settings.config.publish_review:
+        if settings.config.publish_output:
             logging.info('Pushing questions...')
             self.git_provider.publish_comment(pr_comment)
             self.git_provider.remove_initial_comment()
