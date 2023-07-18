@@ -1,6 +1,7 @@
 import copy
 import json
 import logging
+from collections import OrderedDict
 
 from jinja2 import Environment, StrictUndefined
 
@@ -21,7 +22,9 @@ class PRReviewer:
         self.main_language = get_main_pr_language(
             self.git_provider.get_languages(), self.git_provider.get_files()
         )
+        self.pr_url = pr_url
         self.is_answer = is_answer
+        self.is_incremental = is_incremental
         if self.is_answer and not self.git_provider.is_supported("get_issue_comments"):
             raise Exception(f"Answer mode is not supported for {settings.config.git_provider} for now")
         answer_str, question_str = self._get_user_answers()
@@ -106,6 +109,13 @@ class PRReviewer:
             ]
             if not data['PR Feedback']['Code suggestions']:
                 del data['PR Feedback']['Code suggestions']
+
+        if self.is_incremental:
+            # Rename title when incremental review - Add to the beginning of the dict
+            last_commit_url = f"{self.pr_url}/commits/{self.git_provider.first_new_commit_sha}"
+            data = OrderedDict(data)
+            data.update({'Incremental PR Review': {"Review for commits since previous PR-Agent review": f"Starting from commit {last_commit_url}"}})
+            data.move_to_end('Incremental PR Review', last=False)
 
         markdown_text = convert_to_markdown(data)
         user = self.git_provider.get_user_id()
