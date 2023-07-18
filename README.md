@@ -128,7 +128,7 @@ Here are several ways to install and run PR-Agent:
 - The "PR Q&A" tool answers free-text questions about the PR.
 - The "PR Description" tool automatically sets the PR Title and body.
 - The "PR Code Suggestion" tool provide inline code suggestions for the PR that can be applied and committed.
-- The "PR Reflect and Review" tool first dialog with the user and asks him to reflect on the PR, and then provides a review.
+- The "PR Reflect and Review" tool first initiates a dialog with the user and asks them to reflect on the PR, and then provides a review.
 
 ## How it works
 
