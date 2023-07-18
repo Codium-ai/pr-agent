@@ -50,6 +50,9 @@ class GithubProvider(GitProvider):
         # self.pr.create_issue_comment(pr_comment)
 
     def publish_comment(self, pr_comment: str, is_temporary: bool = False):
+        if is_temporary and not settings.config.publish_output_progress:
+            logging.debug(f"Skipping publish_comment for temporary comment: {pr_comment}")
+            return
         response = self.pr.create_issue_comment(pr_comment)
         if hasattr(response, "user") and hasattr(response.user, "login"):
             self.github_user_id = response.user.login
@@ -140,7 +143,7 @@ class GithubProvider(GitProvider):
 
     def remove_initial_comment(self):
         try:
-            for comment in self.pr.comments_list:
+            for comment in getattr(self.pr, 'comments_list', []):
                 if comment.is_temporary:
                     comment.delete()
         except Exception as e:
