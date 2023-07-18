@@ -13,7 +13,7 @@ from ..algo.language_handler import is_valid_file
 
 
 class GitLabProvider(GitProvider):
-    def __init__(self, merge_request_url: Optional[str] = None):
+    def __init__(self, merge_request_url: Optional[str] = None, incremental: Optional[bool] = False):
         gitlab_url = settings.get("GITLAB.URL", None)
         if not gitlab_url:
             raise ValueError("GitLab URL is not set in the config file")
@@ -32,6 +32,7 @@ class GitLabProvider(GitProvider):
         self._set_merge_request(merge_request_url)
         self.RE_HUNK_HEADER = re.compile(
             r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@[ ]?(.*)")
+        self.incremental = incremental
 
     def is_supported(self, capability: str) -> bool:
         if capability == 'get_issue_comments':

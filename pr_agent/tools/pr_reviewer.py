@@ -15,9 +15,9 @@ from pr_agent.servers.help import actions_help_text, bot_help_text
 
 
 class PRReviewer:
-    def __init__(self, pr_url: str, cli_mode=False, is_answer: bool = False):
+    def __init__(self, pr_url: str, cli_mode=False, is_answer: bool = False, is_incremental: bool = False):
 
-        self.git_provider = get_git_provider()(pr_url)
+        self.git_provider = get_git_provider()(pr_url, incremental=is_incremental)
         self.main_language = get_main_pr_language(
             self.git_provider.get_languages(), self.git_provider.get_files()
         )
