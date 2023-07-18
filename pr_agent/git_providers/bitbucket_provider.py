@@ -27,7 +27,7 @@ class BitbucketProvider:
             self.set_pr(pr_url)
 
     def is_supported(self, capability: str) -> bool:
-        if capability == 'get_issue_comments':
+        if capability in ['get_issue_comments', 'create_inline_comment', 'publish_inline_comments']:
             return False
         return True
 
@@ -64,6 +64,12 @@ class BitbucketProvider:
 
     def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
         pass
+
+    def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
+        raise NotImplementedError("Bitbucket provider does not support creating inline comments yet")
+
+    def publish_inline_comments(self, comments: list[dict]):
+        raise NotImplementedError("Bitbucket provider does not support publishing inline comments yet")
 
     def get_title(self):
         return self.pr.title

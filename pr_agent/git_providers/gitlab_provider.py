@@ -35,7 +35,7 @@ class GitLabProvider(GitProvider):
         self.incremental = incremental
 
     def is_supported(self, capability: str) -> bool:
-        if capability == 'get_issue_comments':
+        if capability in ['get_issue_comments', 'create_inline_comment', 'publish_inline_comments']:
             return False
         return True
 
@@ -108,6 +108,12 @@ class GitLabProvider(GitProvider):
                                                                                          relevant_line_in_file)
         self.send_inline_comment(body, edit_type, found, relevant_file, relevant_line_in_file, source_line_no,
                                  target_file, target_line_no)
+
+    def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
+        raise NotImplementedError("Gitlab provider does not support creating inline comments yet")
+
+    def create_inline_comment(self, comments: list[dict]):
+        raise NotImplementedError("Gitlab provider does not support publishing inline comments yet")
 
     def send_inline_comment(self, body, edit_type, found, relevant_file, relevant_line_in_file, source_line_no,
                             target_file, target_line_no):

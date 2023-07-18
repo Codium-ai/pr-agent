@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional, Tuple
 from urllib.parse import urlparse
 
-from github import AppAuthentication, Github
+from github import AppAuthentication, Github, Auth
 
 from pr_agent.config_loader import settings
 
@@ -103,6 +103,9 @@ class GithubProvider(GitProvider):
         self.pr.comments_list.append(response)
 
     def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
+        self.publish_inline_comments([self.create_inline_comment(body, relevant_file, relevant_line_in_file)])
+
+    def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
         self.diff_files = self.diff_files if self.diff_files else self.get_diff_files()
         position = -1
         for file in self.diff_files:
@@ -121,9 +124,16 @@ class GithubProvider(GitProvider):
         if position == -1:
             if settings.config.verbosity_level >= 2:
                 logging.info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
+            subject_type = "FILE"
         else:
-            path = relevant_file.strip()
-            self.pr.create_review_comment(body=body, commit_id=self.last_commit_id, path=path, position=position)
+            subject_type = "LINE"
+        path = relevant_file.strip()
+        # placeholder for future API support (already supported in single inline comment)
+        # return dict(body=body, path=path, position=position, subject_type=subject_type)
+        return dict(body=body, path=path, position=position) if subject_type == "LINE" else {}
+
+    def publish_inline_comments(self, comments: list[dict]):
+        self.pr.create_review(commit=self.last_commit_id, comments=comments)
 
     def publish_code_suggestion(self, body: str,
                                 relevant_file: str,
@@ -264,7 +274,7 @@ class GithubProvider(GitProvider):
                 raise ValueError(
                     "GitHub token is required when using user deployment. See: "
                     "https://github.com/Codium-ai/pr-agent#method-2-run-from-source") from e
-            return Github(token)
+            return Github(auth=Auth.Token(token))
 
     def _get_repo(self):
         return self.github_client.get_repo(self.repo)

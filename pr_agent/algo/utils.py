@@ -21,6 +21,7 @@ def convert_to_markdown(output_data: dict) -> str:
         "Focused PR": "✨",
         "Security concerns": "🔒",
         "General PR suggestions": "💡",
+        "Insights from user's answers": "📝",
         "Code suggestions": "🤖"
     }
 
