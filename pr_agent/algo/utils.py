@@ -17,7 +17,8 @@ def convert_to_markdown(output_data: dict) -> str:
         "Focused PR": "✨",
         "Security concerns": "🔒",
         "General PR suggestions": "💡",
-        "Code suggestions": "🤖"
+        "Code suggestions": "🤖",
+        "Insights from user's answer": "🔎",
     }
 
     for key, value in output_data.items():
