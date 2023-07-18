@@ -44,12 +44,12 @@ class LocalGitProvider(GitProvider):
         diffs = self.repo.head.commit.diff(self.repo.branches[self.branch_name].commit, create_patch=True)
         diff_files = []
         for diff_item in diffs:
-            if diff_item.a_blob is not None:
-                original_file_content_str = diff_item.a_blob.data_stream.read().decode('utf-8')
+            if diff_item.b_blob is not None:
+                original_file_content_str = diff_item.b_blob.data_stream.read().decode('utf-8')
             else:
                 original_file_content_str = ""  # empty file
-            if diff_item.b_blob is not None:
-                new_file_content_str = diff_item.b_blob.data_stream.read().decode('utf-8')
+            if diff_item.a_blob is not None:
+                new_file_content_str = diff_item.a_blob.data_stream.read().decode('utf-8')
             else:
                 new_file_content_str = ""  # empty file
             edit_type = EDIT_TYPE.MODIFIED
@@ -78,7 +78,6 @@ class LocalGitProvider(GitProvider):
         # Compare the two branches
         diff_index = self.repo.head.commit.diff(branch.commit)
         # Get the list of changed files
-        # TODO Why only a.side is being returned? What in case of a rename? Should we zip a-b side by side to compare them later in case of different names?
         diff_files = [item.a_path for item in diff_index]
         return diff_files
 
