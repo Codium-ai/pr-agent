@@ -8,8 +8,9 @@ settings = Dynaconf(
     merge_enabled=True,
     settings_files=[join(current_dir, f) for f in [
          "settings/.secrets.toml",
-         "settings/configuration.toml",
-         "settings/pr_reviewer_prompts.toml",
+        "settings/configuration.toml",
+        "settings/configuration_local.toml",
+        "settings/pr_reviewer_prompts.toml",
          "settings/pr_questions_prompts.toml",
          "settings/pr_description_prompts.toml",
          "settings/pr_code_suggestions_prompts.toml",
@@ -17,3 +18,4 @@ settings = Dynaconf(
          "settings_prod/.secrets.toml"
         ]]
 )
+

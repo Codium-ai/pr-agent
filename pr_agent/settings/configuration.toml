@@ -30,6 +30,11 @@ deployment_type = "user"
 # URL to the gitlab service
 url = "https://gitlab.com"
 
+[local]
+# Path to the local git repository. Will be overwritten by configuration_local.toml if present.
+path = "/path/to/local/repo"
+
+[polling]
 # Polling (either project id or namespace/project_name) syntax can be used
 projects_to_monitor = ['org_name/repo_name']
 

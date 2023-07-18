@@ -2,3 +2,4 @@
 venv/
 pr_agent/settings/.secrets.toml
 __pycache__
+/pr_agent/settings/configuration_local.toml
