@@ -11,7 +11,7 @@ from pr_agent.algo.utils import convert_to_markdown, try_fix_json
 from pr_agent.config_loader import settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
-from pr_agent.servers.help import bot_help_text, actions_help_text
+from pr_agent.servers.help import actions_help_text, bot_help_text
 
 
 class PRReviewer:

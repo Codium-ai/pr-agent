@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime
 from typing import Optional, Tuple
 from urllib.parse import urlparse
 
@@ -9,6 +8,7 @@ from atlassian.bitbucket import Cloud
 from pr_agent.config_loader import settings
 
 from .git_provider import FilePatchInfo
+
 
 class BitbucketProvider:
     def __init__(self, pr_url: Optional[str] = None):
@@ -45,7 +45,8 @@ class BitbucketProvider:
         for index, diff in enumerate(diffs):
             original_file_content_str = self._get_pr_file_content(diff.old.get_data('links'))
             new_file_content_str = self._get_pr_file_content(diff.new.get_data('links'))
-            diff_files.append(FilePatchInfo(original_file_content_str, new_file_content_str, diff_split[index], diff.new.path))
+            diff_files.append(FilePatchInfo(original_file_content_str, new_file_content_str,
+                                            diff_split[index], diff.new.path))
         return diff_files
 
     def publish_comment(self, pr_comment: str, is_temporary: bool = False):

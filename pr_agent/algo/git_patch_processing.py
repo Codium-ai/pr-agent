@@ -158,7 +158,7 @@ def convert_to_hunks_with_lines_numbers(patch: str, file) -> str:
                         patch_with_lines_str += f"{start2 + i} {line_new}\n"
                 if old_content_lines:
                     patch_with_lines_str += '--old hunk--\n'
-                    for i, line_old in enumerate(old_content_lines):
+                    for line_old in old_content_lines:
                         patch_with_lines_str += f"{line_old}\n"
                 new_content_lines = []
                 old_content_lines = []
@@ -179,7 +179,7 @@ def convert_to_hunks_with_lines_numbers(patch: str, file) -> str:
                 patch_with_lines_str += f"{start2 + i} {line_new}\n"
         if old_content_lines:
             patch_with_lines_str += '\n--old hunk--\n'
-            for i, line_old in enumerate(old_content_lines):
+            for line_old in old_content_lines:
                 patch_with_lines_str += f"{line_old}\n"
 
     return patch_with_lines_str.strip()

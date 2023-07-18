@@ -3,11 +3,14 @@ from dataclasses import dataclass
 
 # enum EDIT_TYPE (ADDED, DELETED, MODIFIED, RENAMED)
 from enum import Enum
+
+
 class EDIT_TYPE(Enum):
     ADDED = 1
     DELETED = 2
     MODIFIED = 3
     RENAMED = 4
+
 
 @dataclass
 class FilePatchInfo:

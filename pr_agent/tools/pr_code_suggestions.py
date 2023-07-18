@@ -8,9 +8,9 @@ from jinja2 import Environment, StrictUndefined
 from pr_agent.algo.ai_handler import AiHandler
 from pr_agent.algo.pr_processing import get_pr_diff
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import convert_to_markdown, try_fix_json
+from pr_agent.algo.utils import try_fix_json
 from pr_agent.config_loader import settings
-from pr_agent.git_providers import get_git_provider, BitbucketProvider
+from pr_agent.git_providers import BitbucketProvider, get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
 
 
@@ -62,7 +62,6 @@ class PRCodeSuggestions:
             logging.info('Pushing inline code comments...')
             self.push_inline_code_suggestions(data)
 
-
     async def _get_prediction(self):
         variables = copy.deepcopy(self.vars)
         variables["diff"] = self.patches_diff  # update diff
@@ -98,12 +97,12 @@ class PRCodeSuggestions:
             relevant_lines_start = int(relevant_lines_str.split('-')[0])  # absolute position
             relevant_lines_end = int(relevant_lines_str.split('-')[-1])
             content = d['suggestion content']
-            existing_code_snippet = d['existing code']
             new_code_snippet = d['improved code']
 
             if new_code_snippet:
                 try:  # dedent code snippet
-                    self.diff_files = self.git_provider.diff_files if self.git_provider.diff_files else self.git_provider.get_diff_files()
+                    self.diff_files = self.git_provider.diff_files if self.git_provider.diff_files \
+                        else self.git_provider.get_diff_files()
                     original_initial_line = None
                     for file in self.diff_files:
                         if file.filename.strip() == relevant_file:
@@ -121,7 +120,7 @@ class PRCodeSuggestions:
                         logging.info(f"Could not dedent code snippet for file {relevant_file}, error: {e}")
 
             body = f"**Suggestion:** {content}\n```suggestion\n" + new_code_snippet + "\n```"
-            success = self.git_provider.publish_code_suggestion(body=body,
+            self.git_provider.publish_code_suggestion(body=body,
                                                       relevant_file=relevant_file,
                                                       relevant_lines_start=relevant_lines_start,
                                                       relevant_lines_end=relevant_lines_end)

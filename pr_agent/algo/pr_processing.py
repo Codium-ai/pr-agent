@@ -4,8 +4,7 @@ import difflib
 import logging
 from typing import Any, Tuple, Union
 
-from pr_agent.algo.git_patch_processing import extend_patch, handle_patch_deletions, \
-    convert_to_hunks_with_lines_numbers
+from pr_agent.algo.git_patch_processing import convert_to_hunks_with_lines_numbers, extend_patch, handle_patch_deletions
 from pr_agent.algo.language_handler import sort_files_by_main_languages
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.config_loader import settings

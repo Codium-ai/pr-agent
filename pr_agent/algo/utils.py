@@ -89,8 +89,8 @@ def try_fix_json(review, max_iter=10, code_suggestions=False):
             data = {}
     return data
 
+
 def fix_json_escape_char(json_message=None):
-    result = None
     try:
         result = json.loads(json_message)
     except Exception as e:
@@ -100,5 +100,5 @@ def fix_json_escape_char(json_message=None):
         json_message = list(json_message)
         json_message[idx_to_replace] = ' '
         new_message = ''.join(json_message)
-        return fix_JSON(json_message=new_message)
+        return fix_json_escape_char(json_message=new_message)
     return result

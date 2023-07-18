@@ -8,7 +8,7 @@ from gitlab import GitlabGetError
 
 from pr_agent.config_loader import settings
 
-from .git_provider import FilePatchInfo, GitProvider, EDIT_TYPE
+from .git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
 
 
 class GitLabProvider(GitProvider):
@@ -51,7 +51,8 @@ class GitLabProvider(GitProvider):
         try:
             return self.gl.projects.get(self.id_project).files.get(file_path, branch).decode()
         except GitlabGetError:
-            # In case of file creation the method returns GitlabGetError (404 file not found). In this case we return an empty string for the diff.
+            # In case of file creation the method returns GitlabGetError (404 file not found).
+            # In this case we return an empty string for the diff.
             return ''
 
     def get_diff_files(self) -> list[FilePatchInfo]:
@@ -137,7 +138,8 @@ class GitLabProvider(GitProvider):
 
         lines = target_file.head_file.splitlines()
         relevant_line_in_file = lines[relevant_lines_start - 1]
-        edit_type, found, source_line_no, target_file, target_line_no = self.find_in_file(target_file, relevant_line_in_file)
+        edit_type, found, source_line_no, target_file, target_line_no = self.find_in_file(target_file,
+                                                                                          relevant_line_in_file)
         self.send_inline_comment(body, edit_type, found, relevant_file, relevant_line_in_file, source_line_no,
                                  target_file, target_line_no)
 
@@ -159,7 +161,7 @@ class GitLabProvider(GitProvider):
         target_file = file
         patch = file.patch
         patch_lines = patch.splitlines()
-        for i, line in enumerate(patch_lines):
+        for line in patch_lines:
             if line.startswith('@@'):
                 match = self.RE_HUNK_HEADER.match(line)
                 if not match:

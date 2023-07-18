@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import re
 import sys
 from datetime import datetime, timezone
 
@@ -10,10 +9,6 @@ from pr_agent.agent.pr_agent import PRAgent
 from pr_agent.config_loader import settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.servers.help import bot_help_text
-from pr_agent.tools.pr_code_suggestions import PRCodeSuggestions
-from pr_agent.tools.pr_description import PRDescription
-from pr_agent.tools.pr_questions import PRQuestions
-from pr_agent.tools.pr_reviewer import PRReviewer
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 NOTIFICATION_URL = "https://api.github.com/notifications"
@@ -102,6 +97,7 @@ async def polling_loop():
 
             except Exception as e:
                 logging.error(f"Exception during processing of a notification: {e}")
+
 
 if __name__ == '__main__':
     asyncio.run(polling_loop())
