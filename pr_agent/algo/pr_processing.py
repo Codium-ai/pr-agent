@@ -29,10 +29,10 @@ def get_pr_diff(git_provider: Union[GithubProvider, Any], token_handler: TokenHa
         global PATCH_EXTRA_LINES
         PATCH_EXTRA_LINES = 0
 
-    git_provider.pr.diff_files = list(git_provider.get_diff_files())
+    diff_files = list(git_provider.get_diff_files())
 
     # get pr languages
-    pr_languages = sort_files_by_main_languages(git_provider.get_languages(), git_provider.pr.diff_files)
+    pr_languages = sort_files_by_main_languages(git_provider.get_languages(), diff_files)
 
     # generate a standard diff string, with patch extension
     patches_extended, total_tokens = pr_generate_extended_diff(pr_languages, token_handler,

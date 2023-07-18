@@ -96,7 +96,7 @@ class PRReviewer:
                 del data['PR Feedback']['Security concerns']
                 data['PR Analysis']['Security concerns'] = val
 
-        if settings.config.git_provider == 'github' and \
+        if settings.config.git_provider != 'bitbucket' and \
                 settings.pr_reviewer.inline_code_comments and \
                 'Code suggestions' in data['PR Feedback']:
             # keeping only code suggestions that can't be submitted as inline comments

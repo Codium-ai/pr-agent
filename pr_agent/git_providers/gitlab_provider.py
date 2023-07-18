@@ -87,8 +87,12 @@ class GitLabProvider(GitProvider):
         return [change['new_path'] for change in self.mr.changes()['changes']]
 
     def publish_description(self, pr_title: str, pr_body: str):
-        logging.exception("Not implemented yet")
-        pass
+        try:
+            self.mr.title = pr_title
+            self.mr.description = pr_body
+            self.mr.save()
+        except Exception as e:
+            logging.exception(f"Could not update merge request {self.id_mr} description: {e}")
 
     def publish_comment(self, mr_comment: str, is_temporary: bool = False):
         comment = self.mr.notes.create({'body': mr_comment})
@@ -187,7 +191,7 @@ class GitLabProvider(GitProvider):
                 found = True
                 edit_type = self.get_edit_type(line)
                 break
-            elif relevant_line_in_file[0] == '+' and relevant_line_in_file[1:] in line:
+            elif relevant_line_in_file[0] == '+' and relevant_line_in_file[1:].lstrip() in line:
                 # The model often adds a '+' to the beginning of the relevant_line_in_file even if originally
                 # it's a context line
                 found = True
