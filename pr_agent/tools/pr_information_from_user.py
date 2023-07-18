@@ -21,7 +21,7 @@ class PRInformationFromUser:
         self.vars = {
             "title": self.git_provider.pr.title,
             "branch": self.git_provider.get_pr_branch(),
-            "description": self.git_provider.get_description(),
+            "description": self.git_provider.get_pr_description(),
             "language": self.main_pr_language,
             "diff": "",  # empty diff for initial calculation
         }
@@ -35,7 +35,7 @@ class PRInformationFromUser:
     async def generate_questions(self):
         logging.info('Generating question to the user...')
         if settings.config.publish_output:
-            self.git_provider.publish_comment("Preparing answer...", is_temporary=True)
+            self.git_provider.publish_comment("Preparing questions...", is_temporary=True)
         logging.info('Getting PR diff...')
         self.patches_diff = get_pr_diff(self.git_provider, self.token_handler)
         logging.info('Getting AI prediction...')
@@ -66,6 +66,6 @@ class PRInformationFromUser:
         model_output = self.prediction.strip()
         if settings.config.verbosity_level >= 2:
             logging.info(f"answer_str:\n{model_output}")
-        answer_str = f"{model_output}\n\n Please respond to the question above in the following format:\n\n" + \
-                     f"/answer <question_id> <answer>\n\n" + f"Example:\n'\n/answer\n1. Yes, because ...\n2. No, because ...\n'"
+        answer_str = f"{model_output}\n\n Please respond to the questions above in the following format:\n\n" +\
+                     f"\n>/answer\n>1) ...\n>2) ...\n>...\n"
         return answer_str

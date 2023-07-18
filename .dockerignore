@@ -1,2 +1,3 @@
 venv/
 pr_agent/settings/.secrets.toml
+pics/

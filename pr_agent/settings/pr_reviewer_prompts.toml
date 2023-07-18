@@ -26,6 +26,12 @@ You must use the following JSON schema to format your answer:
       "description": "yes\\no question: does this PR have relevant tests ?"
     },
 {%- endif %}
+{%- if question_str %}
+    "Insights from user's answer": {
+      "type": "string",
+      "description": "shortly summarize the insights you gained from the user's answers to the questions"
+    },
+{%- endif %}
 {%- if require_focused %}
     "Focused PR": {
       "type": "string",
@@ -115,6 +121,16 @@ Description: '{{description}}'
 Main language: {{language}}
 {%- endif %}
 
+{%- if question_str %}
+######
+Here are questions to better understand the PR. Use the answers to provide better feedback.
+
+{{question_str|trim}}
+
+User answers:
+{{answer_str|trim}}
+######
+{%- endif %}
 
 The PR Git Diff:
 ```

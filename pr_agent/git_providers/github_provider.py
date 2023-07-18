@@ -23,6 +23,9 @@ class GithubProvider(GitProvider):
             self.set_pr(pr_url)
             self.last_commit_id = list(self.pr.get_commits())[-1]
 
+    def is_supported(self, capability: str) -> bool:
+        return True
+
     def set_pr(self, pr_url: str):
         self.repo, self.pr_num = self._parse_pr_url(pr_url)
         self.pr = self._get_pr()
@@ -171,6 +174,9 @@ class GithubProvider(GitProvider):
 
         notifications = self.github_client.get_user().get_notifications(since=since)
         return notifications
+
+    def get_issue_comments(self):
+        return self.pr.get_issue_comments()
 
     @staticmethod
     def _parse_pr_url(pr_url: str) -> Tuple[str, int]:

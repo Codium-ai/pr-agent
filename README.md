@@ -27,25 +27,25 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review PRs 
 <h4>Describe:</h4>
 <div align="center">
 <p float="center">
-<img src="./pics/describe.gif" width="800">
+<img src="https://codium.ai/images/describe.gif" width="800">
 </p>
 </div>
 <h4>Review:</h4>
 <div align="center">
 <p float="center">
-<img src="./pics/review.gif" width="800">
+<img src="https://codium.ai/images/review.gif" width="800">
 </p>
 </div>
 <h4>Ask:</h4>
 <div align="center">
 <p float="center">
-<img src="./pics/ask.gif" width="800">
+<img src="https://codium.ai/images/ask.gif" width="800">
 </p>
 </div>
 <h4>Improve:</h4>
 <div align="center">
 <p float="center">
-<img src="./pics/improve.gif" width="800">
+<img src="https://codium.ai/images/improve.gif" width="800">
 </p>
 </div>
 <div align="left">
@@ -64,7 +64,7 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review PRs 
 
 Experience GPT-4 powered PR review on your public GitHub repository with our hosted PR-Agent. To try it, just mention `@CodiumAI-Agent` and add the desired command in any PR comment! The agent will generate a response based on your command.
 
-![Review generation process](./pics/demo.gif)
+![Review generation process](https://codium.ai/images/demo.gif)
 
 To set up your own PR-Agent, see the [Quickstart](#Quickstart) section
 
@@ -78,6 +78,7 @@ To set up your own PR-Agent, see the [Quickstart](#Quickstart) section
 |       | Ask                                         |   :white_check_mark:    |   :white_check_mark:    |           |
 |       | Auto-Description                            |   :white_check_mark:    |        |           |
 |       | Improve Code                                |   :white_check_mark:    |   :white_check_mark:    |           |
+|       | Reflect and Review                          |   :white_check_mark:    |                         |           |
 |       |                                             |        |        |           |
 | USAGE | CLI                                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |
 |       | Tagging bot                                 |   :white_check_mark:    |   :white_check_mark:    |           |
@@ -92,6 +93,7 @@ Examples for invoking the different tools via the [CLI](#quickstart):
 - **Describe**:     python cli.py --pr-url=<pr_url>  describe
 - **Improve**:      python cli.py --pr-url=<pr_url>  improve
 - **Ask**:          python cli.py --pr-url=<pr_url>  ask "Write me a poem about this PR"
+- **Reflect**:      python cli.py --pr-url=<pr_url>  reflect
 
 "<pr_url>" is the url of the relevant PR (for example: https://github.com/Codium-ai/pr-agent/pull/50).
 
@@ -120,16 +122,17 @@ Here are several ways to install and run PR-Agent:
 
 ## Usage and Tools
 
-**PR-Agent** provides four types of interactions ("tools"): `"PR Reviewer"`, `"PR Q&A"`, `"PR Description"` and `"PR Code Sueggestions"`.
+**PR-Agent** provides five types of interactions ("tools"): `"PR Reviewer"`, `"PR Q&A"`, `"PR Description"`, `"PR Code Sueggestions"` and `"PR Reflect and Review"`.
 
 - The "PR Reviewer" tool automatically analyzes PRs, and provides various types of feedback.
 - The "PR Q&A" tool answers free-text questions about the PR.
 - The "PR Description" tool automatically sets the PR Title and body.
 - The "PR Code Suggestion" tool provide inline code suggestions for the PR that can be applied and committed.
+- The "PR Reflect and Review" tool first initiates a dialog with the user and asks them to reflect on the PR, and then provides a review.
 
 ## How it works
 
-![PR-Agent Tools](./pics/pr_agent_overview.png)
+![PR-Agent Tools](https://codium.ai/images/pr_agent_overview.png)
 
 Check out the [PR Compression strategy](./PR_COMPRESSION.md) page for more details on how we convert a code diff to a manageable LLM prompt
 
@@ -138,11 +141,11 @@ Check out the [PR Compression strategy](./PR_COMPRESSION.md) page for more detai
 - [ ] Support open-source models, as a replacement for openai models. (Note - a minimal requirement for each open-source model is to have 8k+ context, and good support for generating json as an output)
 - [x] Support other Git providers, such as Gitlab and Bitbucket.
 - [ ] Develop additional logics for handling large PRs, and compressing git patches
-- [ ] Dedicated tools and sub-tools for specific programming languages (Python, Javascript, Java, C++, etc)
 - [ ] Add additional context to the prompt. For example, repo (or relevant files) summarization, with tools such a [ctags](https://github.com/universal-ctags/ctags)
 - [ ] Adding more tools. Possible directions:
   - [x] PR description
   - [x] Inline code suggestions
+  - [x] Reflect and review
   - [ ] Enforcing CONTRIBUTING.md guidelines
   - [ ] Performance (are there any performance issues)
   - [ ] Documentation (is the PR properly documented)
