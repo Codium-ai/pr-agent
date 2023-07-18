@@ -22,6 +22,10 @@ class FilePatchInfo:
 
 class GitProvider(ABC):
     @abstractmethod
+    def is_supported(self, capability: str) -> bool:
+        pass
+
+    @abstractmethod
     def get_diff_files(self) -> list[FilePatchInfo]:
         pass
 
@@ -60,6 +64,10 @@ class GitProvider(ABC):
 
     @abstractmethod
     def get_pr_description(self):
+        pass
+
+    @abstractmethod
+    def get_issue_comments(self):
         pass
 
 

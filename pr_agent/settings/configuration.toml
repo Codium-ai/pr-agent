@@ -10,6 +10,7 @@ require_tests_review=true
 require_security_review=true
 num_code_suggestions=3
 inline_code_comments = true
+ask_and_reflect=false
 
 [pr_description]
 publish_description_as_comment=false

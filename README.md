@@ -78,6 +78,7 @@ To set up your own PR-Agent, see the [Quickstart](#Quickstart) section
 |       | Ask                                         |   :white_check_mark:    |   :white_check_mark:    |           |
 |       | Auto-Description                            |   :white_check_mark:    |        |           |
 |       | Improve Code                                |   :white_check_mark:    |   :white_check_mark:    |           |
+|       | Reflect and Review                          |   :white_check_mark:    |                         |           |
 |       |                                             |        |        |           |
 | USAGE | CLI                                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |
 |       | Tagging bot                                 |   :white_check_mark:    |   :white_check_mark:    |           |
@@ -92,6 +93,7 @@ Examples for invoking the different tools via the [CLI](#quickstart):
 - **Describe**:     python cli.py --pr-url=<pr_url>  describe
 - **Improve**:      python cli.py --pr-url=<pr_url>  improve
 - **Ask**:          python cli.py --pr-url=<pr_url>  ask "Write me a poem about this PR"
+- **Reflect**:      python cli.py --pr-url=<pr_url>  reflect
 
 "<pr_url>" is the url of the relevant PR (for example: https://github.com/Codium-ai/pr-agent/pull/50).
 
@@ -120,12 +122,13 @@ Here are several ways to install and run PR-Agent:
 
 ## Usage and Tools
 
-**PR-Agent** provides four types of interactions ("tools"): `"PR Reviewer"`, `"PR Q&A"`, `"PR Description"` and `"PR Code Sueggestions"`.
+**PR-Agent** provides five types of interactions ("tools"): `"PR Reviewer"`, `"PR Q&A"`, `"PR Description"`, `"PR Code Sueggestions"` and `"PR Reflect and Review"`.
 
 - The "PR Reviewer" tool automatically analyzes PRs, and provides various types of feedback.
 - The "PR Q&A" tool answers free-text questions about the PR.
 - The "PR Description" tool automatically sets the PR Title and body.
 - The "PR Code Suggestion" tool provide inline code suggestions for the PR that can be applied and committed.
+- The "PR Reflect and Review" tool first initiates a dialog with the user and asks them to reflect on the PR, and then provides a review.
 
 ## How it works
 
@@ -138,11 +141,11 @@ Check out the [PR Compression strategy](./PR_COMPRESSION.md) page for more detai
 - [ ] Support open-source models, as a replacement for openai models. (Note - a minimal requirement for each open-source model is to have 8k+ context, and good support for generating json as an output)
 - [x] Support other Git providers, such as Gitlab and Bitbucket.
 - [ ] Develop additional logics for handling large PRs, and compressing git patches
-- [ ] Dedicated tools and sub-tools for specific programming languages (Python, Javascript, Java, C++, etc)
 - [ ] Add additional context to the prompt. For example, repo (or relevant files) summarization, with tools such a [ctags](https://github.com/universal-ctags/ctags)
 - [ ] Adding more tools. Possible directions:
   - [x] PR description
   - [x] Inline code suggestions
+  - [x] Reflect and review
   - [ ] Enforcing CONTRIBUTING.md guidelines
   - [ ] Performance (are there any performance issues)
   - [ ] Documentation (is the PR properly documented)

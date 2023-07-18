@@ -32,6 +32,11 @@ class GitLabProvider(GitProvider):
         self.RE_HUNK_HEADER = re.compile(
             r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@[ ]?(.*)")
 
+    def is_supported(self, capability: str) -> bool:
+        if capability == 'get_issue_comments':
+            return False
+        return True
+
     @property
     def pr(self):
         '''The GitLab terminology is merge request (MR) instead of pull request (PR)'''
@@ -209,6 +214,9 @@ class GitLabProvider(GitProvider):
 
     def get_pr_description(self):
         return self.mr.description
+
+    def get_issue_comments(self):
+        raise NotImplementedError("GitLab provider does not support issue comments yet")
 
     def _parse_merge_request_url(self, merge_request_url: str) -> Tuple[int, int]:
         parsed_url = urlparse(merge_request_url)
