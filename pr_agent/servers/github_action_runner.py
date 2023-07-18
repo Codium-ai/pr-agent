@@ -3,6 +3,7 @@ import json
 import os
 import re
 
+from pr_agent.agent.pr_agent import PRAgent
 from pr_agent.config_loader import settings
 from pr_agent.tools.pr_code_suggestions import PRCodeSuggestions
 from pr_agent.tools.pr_description import PRDescription
@@ -54,26 +55,7 @@ async def run_action():
                 pr_url = event_payload.get("issue", {}).get("pull_request", {}).get("url", None)
                 if pr_url:
                     body = comment_body.strip().lower()
-                    if any(cmd in body for cmd in ["/answer"]):
-                        await PRReviewer(pr_url, is_answer=True).review()
-                    elif any(cmd in body for cmd in ["/review", "/review_pr", "/reflect_and_review"]):
-                        if settings.pr_reviewer.ask_and_reflect or \
-                                any(cmd in body for cmd in ["/reflect_and_review"]):
-                            await PRInformationFromUser(pr_url).generate_questions()
-                        else:
-                            await PRReviewer(pr_url).review()
-                    elif any(cmd in body for cmd in ["/describe", "/describe_pr"]):
-                        await PRDescription(pr_url).describe()
-                    elif any(cmd in body for cmd in ["/improve", "/improve_code"]):
-                        await PRCodeSuggestions(pr_url).suggest()
-                    elif any(cmd in body for cmd in ["/ask", "/ask_question"]):
-                        pattern = r'(/ask|/ask_question)\s*(.*)'
-                        matches = re.findall(pattern, comment_body, re.IGNORECASE)
-                        if matches:
-                            question = matches[0][1]
-                            await PRQuestions(pr_url, question).answer()
-                    else:
-                        print(f"Unknown command: {body}")
+                    await PRAgent().handle_request(pr_url, body)
 
 
 if __name__ == '__main__':
