@@ -25,6 +25,11 @@ class BitbucketProvider:
         if pr_url:
             self.set_pr(pr_url)
 
+    def is_supported(self, capability: str) -> bool:
+        if capability == 'get_issue_comments':
+            return False
+        return True
+
     def set_pr(self, pr_url: str):
         self.workspace_slug, self.repo_slug, self.pr_num = self._parse_pr_url(pr_url)
         self.pr = self._get_pr()
@@ -73,6 +78,9 @@ class BitbucketProvider:
 
     def get_user_id(self):
         return 0
+
+    def get_issue_comments(self):
+        raise NotImplementedError("Bitbucket provider does not support issue comments yet")
 
     @staticmethod
     def _parse_pr_url(pr_url: str) -> Tuple[str, int]:

@@ -9,7 +9,7 @@ from pr_agent.algo.pr_processing import get_pr_diff
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.algo.utils import convert_to_markdown, try_fix_json
 from pr_agent.config_loader import settings
-from pr_agent.git_providers import get_git_provider, GithubProvider
+from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
 from pr_agent.servers.help import bot_help_text, actions_help_text
 
@@ -22,8 +22,8 @@ class PRReviewer:
             self.git_provider.get_languages(), self.git_provider.get_files()
         )
         self.is_answer = is_answer
-        if self.is_answer and type(self.git_provider) != GithubProvider:
-            raise Exception("Answer mode is only supported for Github for now")
+        if self.is_answer and not self.git_provider.is_supported("get_issue_comments"):
+            raise Exception(f"Answer mode is not supported for {settings.config.git_provider} for now")
         answer_str = question_str = self._get_user_answers()
         self.ai_handler = AiHandler()
         self.patches_diff = None
@@ -139,7 +139,7 @@ class PRReviewer:
     def _get_user_answers(self):
         answer_str = question_str = ""
         if self.is_answer:
-            discussion_messages = self.git_provider.pr.get_issue_comments()
+            discussion_messages = self.git_provider.get_issue_comments()
             for message in discussion_messages.reversed:
                 if "Questions to better understand the PR:" in message.body:
                     question_str = message.body

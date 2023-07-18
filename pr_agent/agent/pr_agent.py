@@ -16,7 +16,7 @@ class PRAgent:
         if any(cmd in request for cmd in ["/answer"]):
             await PRReviewer(pr_url, is_answer=True).review()
         elif any(cmd in request for cmd in ["/review", "/review_pr", "/reflect_and_review"]):
-            if settings.pr_reviewer.ask_and_reflect or any(cmd in request for cmd in ["/reflect_and_review"]):
+            if settings.pr_reviewer.ask_and_reflect or "/reflect_and_review" in request:
                 await PRInformationFromUser(pr_url).generate_questions()
             else:
                 await PRReviewer(pr_url).review()
