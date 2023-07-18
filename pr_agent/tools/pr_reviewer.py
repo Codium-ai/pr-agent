@@ -94,7 +94,9 @@ class PRReviewer:
                 del data['PR Feedback']['Security concerns']
                 data['PR Analysis']['Security concerns'] = val
 
-        if settings.config.git_provider == 'github' and settings.pr_reviewer.inline_code_comments:
+        if settings.config.git_provider == 'github' and \
+                settings.pr_reviewer.inline_code_comments and \
+                'Code suggestions' in data['PR Feedback']:
             del data['PR Feedback']['Code suggestions']
 
         markdown_text = convert_to_markdown(data)
@@ -112,6 +114,9 @@ class PRReviewer:
         return markdown_text
 
     def _publish_inline_code_comments(self):
+        if settings.pr_reviewer.num_code_suggestions == 0:
+            return
+
         review = self.prediction.strip()
         try:
             data = json.loads(review)

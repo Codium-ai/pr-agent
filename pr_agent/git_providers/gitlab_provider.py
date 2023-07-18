@@ -123,26 +123,11 @@ class GitLabProvider(GitProvider):
         range = relevant_lines_end - relevant_lines_start + 1
         body = body.replace('```suggestion', f'```suggestion:-0+{range}')
 
-        d = self.last_diff
-        #
-        # pos_obj = {'position_type': 'text',
-        #            'new_path': target_file.filename,
-        #            'old_path': target_file.old_filename if target_file.old_filename else target_file.filename,
-        #            'base_sha': d.base_commit_sha, 'start_sha': d.start_commit_sha, 'head_sha': d.head_commit_sha}
         lines = target_file.head_file.splitlines()
         relevant_line_in_file = lines[relevant_lines_start - 1]
         edit_type, found, source_line_no, target_file, target_line_no = self.find_in_file(target_file, relevant_line_in_file)
         self.send_inline_comment(body, edit_type, found, relevant_file, relevant_line_in_file, source_line_no,
                                  target_file, target_line_no)
-        # if lines[relevant_lines_start][0] == '-':
-        #     pos_obj['old_line'] = relevant_lines_start
-        # elif lines[relevant_lines_start][0] == '+':
-        #     pos_obj['new_line'] = relevant_lines_start
-        # else:
-        #     pos_obj['new_line'] = relevant_lines_start
-        #     pos_obj['old_line'] = relevant_lines_start
-        # self.mr.discussions.create({'body': body,
-        #                             'position': pos_obj})
 
     def search_line(self, relevant_file, relevant_line_in_file):
         target_file = None
