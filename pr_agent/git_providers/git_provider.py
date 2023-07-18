@@ -42,6 +42,14 @@ class GitProvider(ABC):
         pass
 
     @abstractmethod
+    def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
+        pass
+
+    @abstractmethod
+    def publish_inline_comments(self, comments: list[dict]):
+        pass
+
+    @abstractmethod
     def publish_code_suggestion(self, body: str, relevant_file: str,
                                 relevant_lines_start: int, relevant_lines_end: int):
         pass

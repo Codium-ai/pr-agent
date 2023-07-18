@@ -140,7 +140,7 @@ class PRReviewer:
                 logging.info("Skipping inline comment with missing file/line/content")
                 continue
 
-            if settings.config.git_provider == 'github':
+            if self.git_provider.is_supported("create_inline_comment"):
                 comment = self.git_provider.create_inline_comment(content, relevant_file, relevant_line_in_file)
                 if comment:
                     comments.append(comment)

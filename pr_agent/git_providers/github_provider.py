@@ -57,7 +57,6 @@ class GithubProvider(GitProvider):
         self.pr.comments_list.append(response)
 
     def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
-        logging.warning("Using deprecated `publish_inline_comment` - use `publish_inline_comments` instead")
         self.publish_inline_comments([self.create_inline_comment(body, relevant_file, relevant_line_in_file)])
 
     def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
