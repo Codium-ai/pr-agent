@@ -10,6 +10,7 @@ from pr_agent.git_providers.git_provider import GitProvider, FilePatchInfo, EDIT
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
+
 class PullRequestMimic():
     '''
     This class mimics the PullRequest class from the PyGithub library.
@@ -30,13 +31,14 @@ class LocalGitProvider(GitProvider):
     '''
 
     def __init__(self, branch_name):
-        self.repo = Repo(settings.get("local.path"))
+        self.repo = Repo(settings.get("local.repo_path"))
         self.head_branch_name = self.repo.head.ref.name
         self.branch_name = branch_name
         self.tmp_branch_name = settings.get("local.tmp_branch_name")
         self.diff_files = None
         self.pr = PullRequestMimic(self.get_pr_title(), self.get_diff_files())
-        self.output_file_path = settings.get("local.output")
+        self.review_file_path = settings.get("local.review_file_path")
+        self.description_file_path = settings.get("local.description_file_path")
         self.prepare_repo()
         # inline code comments are not supported for local git repositories
         settings.pr_reviewer.inline_code_comments = False
@@ -57,7 +59,7 @@ class LocalGitProvider(GitProvider):
         logger.debug('Preparing repository for PR-mimic generation...')
         if self.repo.is_dirty():
             raise ValueError('The repository is not in a clean state. Please check in all files.')
-        if 'pr-agent-tmp-branch' in self.repo.heads:
+        if self.tmp_branch_name in self.repo.heads:
             self.repo.delete_head(self.tmp_branch_name, force=True)
         self.repo.git.checkout('HEAD', b=self.tmp_branch_name)
 
@@ -113,10 +115,12 @@ class LocalGitProvider(GitProvider):
         return diff_files
 
     def publish_description(self, pr_title: str, pr_body: str):
-        raise NotImplementedError('Publishing descriptions is not implemented for the local git provider')
+        with open(self.description_file_path, "w") as file:
+            # Write the string to the file
+            file.write(pr_title + '\n' + pr_body)
 
     def publish_comment(self, pr_comment: str, is_temporary: bool = False):
-        with open(self.output_file_path, "w") as file:
+        with open(self.review_file_path, "w") as file:
             # Write the string to the file
             file.write(pr_comment)
 

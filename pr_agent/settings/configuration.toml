@@ -33,8 +33,9 @@ url = "https://gitlab.com"
 
 [local]
 # Path to the local git repository. Will be overwritten by configuration_local.toml if present.
-path = "/path/to/local/repo"
-output = "./review.md"
+repo_path = "/path/to/local/repo"
+review_file_path = "./review.md"
+description_file_path = "./description.md"
 tmp_branch_name = 'pr-agent-tmp-branch'
 
 [polling]

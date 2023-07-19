@@ -14,7 +14,6 @@ from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language, IncrementalPR
 from pr_agent.servers.help import actions_help_text, bot_help_text
 
-
 class PRReviewer:
     def __init__(self, pr_url: str, cli_mode=False, is_answer: bool = False, args=None):
         self.parse_args(args)
@@ -66,6 +65,8 @@ class PRReviewer:
             self.git_provider.publish_comment("Preparing review...", is_temporary=True)
         logging.info('Getting PR diff...')
         self.patches_diff = get_pr_diff(self.git_provider, self.token_handler)
+        logging.info('Exiting...')
+        sys.exit(0)
         logging.info('Getting AI prediction...')
         self.prediction = await self._get_prediction()
         logging.info('Preparing PR review...')
