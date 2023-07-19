@@ -6,7 +6,7 @@ RUN yum update -y && \
 
 ADD requirements.txt .
 RUN pip install -r requirements.txt && rm requirements.txt
-RUN pip install mangum
+RUN pip install mangum==16.0.0
 COPY pr_agent/ ${LAMBDA_TASK_ROOT}/pr_agent/
 
 CMD ["pr_agent.servers.serverless.serverless"]
