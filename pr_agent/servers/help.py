@@ -3,7 +3,7 @@ commands_text = "> /review [-i]: Request a review of your Pull Request. For an i
                 "> /describe: Modify the PR title and description based on the contents of the PR.\n" \
                 "> /improve: Suggest improvements to the code in the PR. " \
                 "These will be provided as pull request comments, ready to commit.\n" \
-                "> /ask <QUESTION>: Pose a question about the PR.\n"
+                "> /ask \\<QUESTION\\>: Pose a question about the PR.\n"
 
 
 def bot_help_text(user: str):
