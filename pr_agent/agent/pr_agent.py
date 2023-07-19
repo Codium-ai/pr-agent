@@ -13,7 +13,7 @@ class PRAgent:
         pass
 
     async def handle_request(self, pr_url, request) -> bool:
-        action, *args = request.split(" ")
+        action, *args = request.strip().split()
         if any(cmd == action for cmd in ["/answer"]):
             await PRReviewer(pr_url, is_answer=True).review()
         elif any(cmd == action for cmd in ["/review", "/review_pr", "/reflect_and_review"]):
