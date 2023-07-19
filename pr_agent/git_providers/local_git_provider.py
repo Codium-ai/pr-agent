@@ -1,11 +1,14 @@
+import logging
 import os
 from typing import List
 
-from git import Repo
+from git import Repo, GitCommandError
 
 from pr_agent.config_loader import settings
 from pr_agent.git_providers.git_provider import GitProvider, FilePatchInfo, EDIT_TYPE
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 class PullRequestMimic():
     '''
@@ -28,12 +31,41 @@ class LocalGitProvider(GitProvider):
 
     def __init__(self, branch_name):
         self.repo = Repo(settings.get("local.path"))
+        self.head_branch_name = self.repo.head.ref.name
         self.branch_name = branch_name
+        self.tmp_branch_name = settings.get("local.tmp_branch_name")
         self.diff_files = None
         self.pr = PullRequestMimic(self.get_pr_title(), self.get_diff_files())
         self.output_file_path = settings.get("local.output")
-        # TODO Implement inline code comments for local git provider
+        self.prepare_repo()
+        # inline code comments are not supported for local git repositories
         settings.pr_reviewer.inline_code_comments = False
+
+    def __del__(self):
+        logger.debug('Deleting temporary branch...')
+        self.repo.git.checkout(self.head_branch_name)  # switch back to the original branch
+        # delete the temporary branch
+        try:
+            self.repo.delete_head(self.tmp_branch_name, force=True)
+        except GitCommandError as e:
+            raise ValueError('Error while trying to delete the temporary branch. Ensure the branch exists.') from e
+
+    def prepare_repo(self):
+        """
+        Prepare the repository for PR-mimic generation.
+        """
+        logger.debug('Preparing repository for PR-mimic generation...')
+        if self.repo.is_dirty():
+            raise ValueError('The repository is not in a clean state. Please check in all files.')
+        if 'pr-agent-tmp-branch' in self.repo.heads:
+            self.repo.delete_head(self.tmp_branch_name, force=True)
+        self.repo.git.checkout('HEAD', b=self.tmp_branch_name)
+
+        try:
+            logger.debug('Rebasing the temporary branch on the main branch...')
+            self.repo.git.rebase('main')
+        except GitCommandError as e:
+            raise ValueError('Error while rebasing. Resolve conflicts before retrying.') from e
 
     def is_supported(self, capability: str) -> bool:
         # TODO implement

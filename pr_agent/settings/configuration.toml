@@ -35,6 +35,7 @@ url = "https://gitlab.com"
 # Path to the local git repository. Will be overwritten by configuration_local.toml if present.
 path = "/path/to/local/repo"
 output = "./review.md"
+tmp_branch_name = 'pr-agent-tmp-branch'
 
 [polling]
 # Polling (either project id or namespace/project_name) syntax can be used
