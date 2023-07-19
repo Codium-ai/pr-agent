@@ -53,8 +53,11 @@ class GitProvider(ABC):
         pass
 
     @abstractmethod
-    def publish_code_suggestion(self, body: str, relevant_file: str,
-                                relevant_lines_start: int, relevant_lines_end: int):
+    def publish_code_suggestions(self, code_suggestions: list):
+        pass
+
+    @abstractmethod
+    def publish_labels(self, labels):
         pass
 
     @abstractmethod

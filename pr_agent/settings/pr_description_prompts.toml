@@ -10,9 +10,9 @@ You must use the following JSON schema to format your answer:
       "type": "string",
       "description": "an informative title for the PR, describing its main theme"
   },
-  "Type of PR": {
+  "PR Type": {
       "type": "string",
-      "enum": ["Bug fix", "Tests", "Bug fix with tests", "Refactoring", "Enhancement", "Documentation", "Other"]
+      "description": possible values are: ["Bug fix", "Tests", "Bug fix with tests", "Refactoring", "Enhancement", "Documentation", "Other"]
     },
   "PR Description": {
       "type": "string",

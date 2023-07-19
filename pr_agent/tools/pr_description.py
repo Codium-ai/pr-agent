@@ -42,13 +42,14 @@ class PRDescription:
         logging.info('Getting AI prediction...')
         self.prediction = await self._get_prediction()
         logging.info('Preparing answer...')
-        pr_title, pr_body, markdown_text = self._prepare_pr_answer()
+        pr_title, pr_body, pr_types, markdown_text = self._prepare_pr_answer()
         if settings.config.publish_output:
             logging.info('Pushing answer...')
             if settings.pr_description.publish_description_as_comment:
                 self.git_provider.publish_comment(markdown_text)
             else:
                 self.git_provider.publish_description(pr_title, pr_body)
+                self.git_provider.publish_labels(pr_types)
             self.git_provider.remove_initial_comment()
         return ""
 
@@ -73,6 +74,9 @@ class PRDescription:
             markdown_text += f"## {key}\n\n"
             markdown_text += f"{value}\n\n"
         pr_body = ""
+        pr_types = []
+        if 'PR Type' in data:
+            pr_types = data['PR Type'].split(',')
         title = data['PR Title']
         del data['PR Title']
         for key, value in data.items():
@@ -83,4 +87,4 @@ class PRDescription:
                 pr_body += f"**{value}**\n\n___\n"
         if settings.config.verbosity_level >= 2:
             logging.info(f"title:\n{title}\n{pr_body}")
-        return title, pr_body, markdown_text
+        return title, pr_body, pr_types, markdown_text
