@@ -103,8 +103,8 @@ Example output:
             ...
         ]
 {%- endif %}
-{%- if require_security %},
-       "Security concerns": "No, because ..."
+{%- if require_security %}
+        "Security concerns": "No, because ..."
 {%- endif %}
     }
 }
