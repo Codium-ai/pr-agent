@@ -160,6 +160,26 @@ cp pr_agent/settings/.secrets_template.toml pr_agent/settings/.secrets.toml
 # Edit .secrets.toml file
 ```
 
+> The .secrets.toml file is not copied to the Docker image by default, and is only used for local development. 
+> If you want to use the .secrets.toml file in your Docker image, you can add remove it from the .dockerignore file.
+> In most production environments, you would inject the secrets file as environment variables or as mounted volumes. 
+> For example, in order to inject a secrets file as a volume in a Kubernetes environment you can update your pod spec to include the following,
+> assuming you have a secret named `pr-agent-settings` with a key named `.secrets.toml`:
+``` 
+       volumes:
+        - name: settings-volume
+          secret:
+            secretName: pr-agent-settings
+// ...
+       containers:
+// ...
+          volumeMounts:
+            - mountPath: /app/pr_agent/settings_prod
+              name: settings-volume
+```
+
+> Another option is to set the secrets as environment variables in your deployment environment, for example `OPENAI.KEY` and `GITHUB.USER_TOKEN`.
+
 6. Build a Docker image for the app and optionally push it to a Docker repository. We'll use Dockerhub as an example:
 
 ```
