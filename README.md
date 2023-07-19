@@ -80,6 +80,7 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review PRs 
 | CORE  | PR compression                              |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |
 |       | Repo language prioritization                |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |
 |       | Adaptive and token-aware<br />file patch fitting |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |
+|       | Incremental PR Review |   :white_check_mark:    |      |         |
 
 Examples for invoking the different tools via the [CLI](#quickstart):
 - **Review**:       python cli.py --pr-url=<pr_url>  review
