@@ -9,6 +9,7 @@ You can select your git_provider with the flag `git_provider` in the `config` se
 You can enable/disable the different PR Reviewer abilities with the following flags (`pr_reviewer` section):
 ```
 require_focused_review=true
+require_score_review=true
 require_tests_review=true
 require_security_review=true
 ```

@@ -38,6 +38,7 @@ class PRReviewer:
             "description": self.git_provider.get_pr_description(),
             "language": self.main_language,
             "diff": "",  # empty diff for initial calculation
+            "require_score": settings.pr_reviewer.require_score_review,
             "require_tests": settings.pr_reviewer.require_tests_review,
             "require_security": settings.pr_reviewer.require_security_review,
             "require_focused": settings.pr_reviewer.require_focused_review,

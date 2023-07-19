@@ -20,6 +20,12 @@ You must use the following JSON schema to format your answer:
       "type": "string",
       "enum": ["Bug fix", "Tests", "Bug fix with tests", "Refactoring", "Enhancement", "Documentation", "Other"]
     },
+{%- if require_score %}
+    "Score": {
+      "type": "int",
+      "description": "Rate this PR on a scale of 0-100 (inclusive), where 0 means the worst possible PR code, and 100 means PR code of the highest quality, without any bugs or performance issues, that is ready to be merged immediately and run in production at scale."
+    },
+{%- endif %}
 {%- if require_tests %}
     "Relevant tests added": {
       "type": "string",
@@ -83,6 +89,9 @@ Example output:
     {
         "Main theme": "xxx",
         "Type of PR": "Bug fix",
+{%- if require_score %}
+        "Score": 89,
+{%- endif %}
 {%- if require_tests %}
         "Relevant tests added": "No",
 {%- endif %}
