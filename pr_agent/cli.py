@@ -10,7 +10,7 @@ from pr_agent.tools.pr_questions import PRQuestions
 from pr_agent.tools.pr_reviewer import PRReviewer
 
 
-def run():
+def run(args=None):
     parser = argparse.ArgumentParser(description='AI based pull request analyzer', usage="""\
 Usage: cli.py --pr-url <URL on supported git hosting service> <command> [<args>].
 For example:
@@ -35,7 +35,7 @@ reflect - Ask the PR author questions about the PR.
                                                                   'reflect', 'review_after_reflect'],
                         default='review')
     parser.add_argument('rest', nargs=argparse.REMAINDER, default=[])
-    args = parser.parse_args()
+    args = parser.parse_args(args)
     logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
     command = args.command.lower()
     if command in ['ask', 'ask_question']:
