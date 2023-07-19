@@ -149,16 +149,15 @@ git clone https://github.com/Codium-ai/pr-agent.git
 ```
 
 5. Copy the secrets template file and fill in the following:
+    ```
+    cp pr_agent/settings/.secrets_template.toml pr_agent/settings/.secrets.toml
+    # Edit .secrets.toml file
+    ```
    - Your OpenAI key.
-   - Set deployment_type to 'app'
    - Copy your app's private key to the private_key field.
    - Copy your app's ID to the app_id field.
    - Copy your app's webhook secret to the webhook_secret field.
-
-```
-cp pr_agent/settings/.secrets_template.toml pr_agent/settings/.secrets.toml
-# Edit .secrets.toml file
-```
+   - Set deployment_type to 'app' in [configuration.toml](./pr_agent/settings/configuration.toml)
 
 > The .secrets.toml file is not copied to the Docker image by default, and is only used for local development. 
 > If you want to use the .secrets.toml file in your Docker image, you can add remove it from the .dockerignore file.
@@ -189,6 +188,7 @@ docker push codiumai/pr-agent:github_app  # Push to your Docker repository
 
 7. Host the app using a server, serverless function, or container environment. Alternatively, for development and
    debugging, you may use tools like smee.io to forward webhooks to your local machine.
+    You can check [Deploy as a Lambda Function](#deploy-as-a-lambda-function)
 
 8. Go back to your app's settings, and set the following:
 
@@ -198,3 +198,20 @@ docker push codiumai/pr-agent:github_app  # Push to your Docker repository
 9. Install the app by navigating to the "Install App" tab and selecting your desired repositories.
 
 ---
+
+####  Deploy as a Lambda Function
+
+1. Follow steps 1-5 of [Method 5](#method-5-run-as-a-github-app).
+2. Build a docker image that can be used as a lambda function
+    ```shell
+    docker buildx build --platform=linux/amd64 . -t codiumai/pr-agent:serverless -f docker/Dockerfile.lambda
+   ```
+3. Push image to ECR
+    ```shell
+	docker tag codiumai/pr-agent:serverless <AWS_ACCOUNT>.dkr.ecr.<AWS_REGION>.amazonaws.com/codiumai/pr-agent:serverless
+	docker push <AWS_ACCOUNT>.dkr.ecr.<AWS_REGION>.amazonaws.com/codiumai/pr-agent:serverless
+    ```
+4. Create a lambda function that uses the uploaded image. Set the lambda timeout to be at least 3m.
+5. Configure the lambda function to have a Function URL.
+6. Go back to steps 8-9 of [Method 5](#method-5-run-as-a-github-app) with the function url as your Webhook URL.
+    The Webhook URL would look like `https://<LAMBDA_FUNCTION_URL>/api/v1/github_webhooks`
