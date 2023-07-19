@@ -7,13 +7,13 @@ from github import AppAuthentication, Github, Auth
 
 from pr_agent.config_loader import settings
 
-from .git_provider import FilePatchInfo, GitProvider
+from .git_provider import FilePatchInfo, GitProvider, IncrementalPR
 from ..algo.language_handler import is_valid_file
 from ..algo.utils import load_large_diff
 
 
 class GithubProvider(GitProvider):
-    def __init__(self, pr_url: Optional[str] = None, incremental: Optional[bool] = False):
+    def __init__(self, pr_url: Optional[str] = None, incremental: Optional[IncrementalPR] = False):
         self.installation_id = settings.get("GITHUB.INSTALLATION_ID")
         self.github_client = self._get_github_client()
         self.repo = None
@@ -32,38 +32,42 @@ class GithubProvider(GitProvider):
     def set_pr(self, pr_url: str):
         self.repo, self.pr_num = self._parse_pr_url(pr_url)
         self.pr = self._get_pr()
-        if self.incremental:
-            self.commits = list(self.pr.get_commits())
-            self.comments = list(self.pr.get_issue_comments())
-            self.previous_review = None
-            self.first_new_commit_sha = None
-            self.incremental_files = None
+        if self.incremental.is_incremental:
+            self.get_incremental_commits()
 
-            for index in range(len(self.comments) - 1, -1, -1):
-                if self.comments[index].user.login == "github-actions[bot]" or \
-                        self.comments[index].user.login == "CodiumAI-Agent" and \
-                        self.comments[index].body.startswith("## PR Analysis"):
-                            self.previous_review = self.comments[index]
-                            break
-            if self.previous_review:
-                last_review_time = self.previous_review.created_at
-                first_new_commit_index = 0
-                self.last_seen_commit_sha = None
-                for index in range(len(self.commits) - 1, -1, -1):
-                    if self.commits[index].commit.author.date > last_review_time:
-                        self.first_new_commit_sha = self.commits[index].sha
-                        first_new_commit_index = index
-                    else:
-                        self.last_seen_commit_sha = self.commits[index].sha
-                        break
+    def get_incremental_commits(self):
+        self.commits = list(self.pr.get_commits())
 
-                self.commits = self.commits[first_new_commit_index:]
-                self.file_set = dict()
-                for commit in self.commits:
-                    self.file_set.update({file.filename: file for file in commit.files})
+        self.get_previous_review()
+        if self.previous_review:
+            self.incremental.commits_range = self.get_commit_range()
+            # Get all files changed during the commit range
+            self.file_set = dict()
+            for commit in self.incremental.commits_range:
+                self.file_set.update({file.filename: file for file in commit.files})
+
+    def get_commit_range(self):
+        last_review_time = self.previous_review.created_at
+        first_new_commit_index = 0
+        for index in range(len(self.commits) - 1, -1, -1):
+            if self.commits[index].commit.author.date > last_review_time:
+                self.incremental.first_new_commit_sha = self.commits[index].sha
+                first_new_commit_index = index
+            else:
+                self.incremental.last_seen_commit_sha = self.commits[index].sha
+                break
+        return self.commits[first_new_commit_index:]
+
+    def get_previous_review(self):
+        self.previous_review = None
+        self.comments = list(self.pr.get_issue_comments())
+        for index in range(len(self.comments) - 1, -1, -1):
+            if self.comments[index].body.startswith("## PR Analysis"):
+                self.previous_review = self.comments[index]
+                break
 
     def get_files(self):
-        if self.incremental and self.file_set:
+        if self.incremental.is_incremental and self.file_set:
             return self.file_set.values()
         return self.pr.get_files()
 
@@ -74,8 +78,8 @@ class GithubProvider(GitProvider):
             if is_valid_file(file.filename):
                 new_file_content_str = self._get_pr_file_content(file, self.pr.head.sha)
                 patch = file.patch
-                if self.incremental and self.file_set:
-                    original_file_content_str = self._get_pr_file_content(file, self.last_seen_commit_sha)
+                if self.incremental.is_incremental and self.file_set:
+                    original_file_content_str = self._get_pr_file_content(file, self.incremental.last_seen_commit_sha)
                     patch = load_large_diff(file,
                                             new_file_content_str,
                                             original_file_content_str,

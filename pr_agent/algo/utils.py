@@ -23,7 +23,6 @@ def convert_to_markdown(output_data: dict) -> str:
         "General PR suggestions": "💡",
         "Insights from user's answers": "📝",
         "Code suggestions": "🤖",
-        "Review for commits since previous PR-Agent review": "⏮️",
     }
 
     for key, value in output_data.items():
