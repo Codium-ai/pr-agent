@@ -8,7 +8,7 @@ verbosity_level=0 # 0,1,2
 require_focused_review=true
 require_tests_review=true
 require_security_review=true
-num_code_suggestions=3
+num_code_suggestions=0
 inline_code_comments = true
 ask_and_reflect=false
 
