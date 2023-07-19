@@ -89,6 +89,9 @@ Example output:
     {
         "Main theme": "xxx",
         "Type of PR": "Bug fix",
+{%- if require_score %}
+        "Score": 85.2,
+{%- endif %}
 {%- if require_tests %}
         "Relevant tests added": "No",
 {%- endif %}
