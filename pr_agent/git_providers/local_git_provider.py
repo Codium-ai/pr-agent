@@ -93,7 +93,7 @@ class LocalGitProvider(GitProvider):
             elif diff_item.renamed_file:
                 edit_type = EDIT_TYPE.RENAMED
             diff_files.append(
-                FilePatchInfo(original_file_content_str, new_file_content_str, diff_item.diff, diff_item.b_path,
+                FilePatchInfo(original_file_content_str, new_file_content_str, diff_item.diff.decode('utf-8'), diff_item.b_path,
                               edit_type=edit_type,
                               old_filename=None if diff_item.a_path == diff_item.b_path else diff_item.a_path))
         self.diff_files = diff_files
