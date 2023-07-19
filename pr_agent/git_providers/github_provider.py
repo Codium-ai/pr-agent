@@ -13,7 +13,7 @@ from ..algo.utils import load_large_diff
 
 
 class GithubProvider(GitProvider):
-    def __init__(self, pr_url: Optional[str] = None, incremental: Optional[IncrementalPR] = False):
+    def __init__(self, pr_url: Optional[str] = None, incremental: Optional[IncrementalPR] = None):
         self.repo_obj = None
         self.installation_id = settings.get("GITHUB.INSTALLATION_ID")
         self.github_client = self._get_github_client()
@@ -36,7 +36,7 @@ class GithubProvider(GitProvider):
     def set_pr(self, pr_url: str):
         self.repo, self.pr_num = self._parse_pr_url(pr_url)
         self.pr = self._get_pr()
-        if self.incremental.is_incremental:
+        if self.incremental and self.incremental.is_incremental:
             self.get_incremental_commits()
 
     def get_incremental_commits(self):
@@ -74,7 +74,7 @@ class GithubProvider(GitProvider):
                 break
 
     def get_files(self):
-        if self.incremental.is_incremental and self.file_set:
+        if self.incremental and self.incremental.is_incremental and self.file_set:
             return self.file_set.values()
         return self.pr.get_files()
 
@@ -85,7 +85,7 @@ class GithubProvider(GitProvider):
             if is_valid_file(file.filename):
                 new_file_content_str = self._get_pr_file_content(file, self.pr.head.sha)
                 patch = file.patch
-                if self.incremental.is_incremental and self.file_set:
+                if self.incremental and self.incremental.is_incremental and self.file_set:
                     original_file_content_str = self._get_pr_file_content(file, self.incremental.last_seen_commit_sha)
                     patch = load_large_diff(file,
                                             new_file_content_str,
