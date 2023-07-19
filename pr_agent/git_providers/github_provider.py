@@ -74,7 +74,7 @@ class GithubProvider(GitProvider):
                 break
 
     def get_files(self):
-        if self.incremental and self.incremental.is_incremental and self.file_set:
+        if self.file_set:
             return self.file_set.values()
         return self.pr.get_files()
 
