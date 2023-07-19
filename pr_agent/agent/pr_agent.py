@@ -17,21 +17,16 @@ class PRAgent:
         if any(cmd == action for cmd in ["/answer"]):
             await PRReviewer(pr_url, is_answer=True).review()
         elif any(cmd == action for cmd in ["/review", "/review_pr", "/reflect_and_review"]):
-            incremental_review = await self.parse_args(request)
             if settings.pr_reviewer.ask_and_reflect or "/reflect_and_review" in request:
                 await PRInformationFromUser(pr_url).generate_questions()
             else:
-                await PRReviewer(pr_url, is_incremental=incremental_review).review()
+                await PRReviewer(pr_url, args=args).review()
         elif any(cmd == action for cmd in ["/describe", "/describe_pr"]):
             await PRDescription(pr_url).describe()
         elif any(cmd == action for cmd in ["/improve", "/improve_code"]):
             await PRCodeSuggestions(pr_url).suggest()
         elif any(cmd == action for cmd in ["/ask", "/ask_question"]):
-            pattern = r'(/ask|/ask_question)\s*(.*)'
-            matches = re.findall(pattern, request, re.IGNORECASE)
-            if matches:
-                question = matches[0][1]
-                await PRQuestions(pr_url, question).answer()
+            await PRQuestions(pr_url, args).answer()
         else:
             return False
 

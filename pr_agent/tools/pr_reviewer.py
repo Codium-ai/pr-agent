@@ -120,7 +120,7 @@ class PRReviewer:
 
         if self.incremental.is_incremental:
             # Rename title when incremental review - Add to the beginning of the dict
-            last_commit_url = f"{self.pr_url}/commits/{self.git_provider.incremental.first_new_commit_sha}"
+            last_commit_url = f"{self.git_provider.get_pr_url()}/commits/{self.git_provider.incremental.first_new_commit_sha}"
             data = OrderedDict(data)
             data.update({'Incremental PR Review': {
                 "⏮️ Review for commits since previous PR-Agent review": f"Starting from commit {last_commit_url}"}})

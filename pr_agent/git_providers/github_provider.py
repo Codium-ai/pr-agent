@@ -30,6 +30,9 @@ class GithubProvider(GitProvider):
     def is_supported(self, capability: str) -> bool:
         return True
 
+    def get_pr_url(self) -> str:
+        return f"https://github.com/{self.repo}/pull/{self.pr_num}"
+
     def set_pr(self, pr_url: str):
         self.repo, self.pr_num = self._parse_pr_url(pr_url)
         self.pr = self._get_pr()
