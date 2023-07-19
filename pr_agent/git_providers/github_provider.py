@@ -14,6 +14,7 @@ from ..algo.utils import load_large_diff
 
 class GithubProvider(GitProvider):
     def __init__(self, pr_url: Optional[str] = None, incremental: Optional[IncrementalPR] = False):
+        self.repo_obj = None
         self.installation_id = settings.get("GITHUB.INSTALLATION_ID")
         self.github_client = self._get_github_client()
         self.repo = None
@@ -44,6 +45,9 @@ class GithubProvider(GitProvider):
             # Get all files changed during the commit range
             self.file_set = dict()
             for commit in self.incremental.commits_range:
+                if commit.commit.message.startswith(f"Merge branch '{self._get_repo().default_branch}'"):
+                    logging.info(f"Skipping merge commit {commit.commit.message}")
+                    continue
                 self.file_set.update({file.filename: file for file in commit.files})
 
     def get_commit_range(self):
@@ -281,7 +285,14 @@ class GithubProvider(GitProvider):
             return Github(auth=Auth.Token(token))
 
     def _get_repo(self):
-        return self.github_client.get_repo(self.repo)
+        if hasattr(self, 'repo_obj') and \
+                hasattr(self.repo_obj, 'full_name') and \
+                self.repo_obj.full_name == self.repo:
+            return self.repo_obj
+        else:
+            self.repo_obj = self.github_client.get_repo(self.repo)
+            return self.repo_obj
+
 
     def _get_pr(self):
         return self._get_repo().get_pull(self.pr_num)
