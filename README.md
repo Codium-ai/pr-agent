@@ -50,9 +50,10 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review PRs 
 </div>
 <div align="left">
 
-- [Live demo](#live-demo)
+
 - [Overview](#overview)
-- [Quickstart](#quickstart)
+- [Try it now](#try-it-now)
+- [Installation](#installation)
 - [Usage and tools](#usage-and-tools)
 - [Configuration](./CONFIGURATION.md)
 - [How it works](#how-it-works)
@@ -60,15 +61,7 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review PRs 
 - [Similar projects](#similar-projects)
 </div>
 
-## Live demo
 
-Experience GPT-4 powered PR review on your public GitHub repository with our hosted PR-Agent. To try it, just mention `@CodiumAI-Agent` and add the desired command in any PR comment! The agent will generate a response based on your command.
-
-![Review generation process](https://codium.ai/images/demo.gif)
-
-To set up your own PR-Agent, see the [Quickstart](#Quickstart) section
-
----
 ## Overview
 `PR-Agent` offers extensive pull request functionalities across various git providers:
 |       |                                             | GitHub | Gitlab | Bitbucket |
@@ -99,18 +92,24 @@ Examples for invoking the different tools via the [CLI](#quickstart):
 
 In the [configuration](./CONFIGURATION.md) file you can select your git provider (GitHub, Gitlab, Bitbucket), and further configure the different tools.
 
-## Quickstart
+## Try it now
+
+Try GPT-4 powered PR-Agent on your public GitHub repository for free. Just mention `@CodiumAI-Agent` and add the desired command in any PR comment! The agent will generate a response based on your command.
+
+![Review generation process](https://codium.ai/images/demo.gif)
+
+To set up your own PR-Agent, see the [Quickstart](#Quickstart) section
+
+---
+
+## Installation
 
 To get started with PR-Agent quickly, you first need to acquire two tokens:
 
 1. An OpenAI key from [here](https://platform.openai.com/), with access to GPT-4.
 2. A GitHub personal access token (classic) with the repo scope.
 
-There are several ways to use PR-Agent. Let's start with the simplest one:
-
-
-## Install
-Here are several ways to install and run PR-Agent:
+There are several ways to use PR-Agent:
 
 - [Method 1: Use Docker image (no installation required)](INSTALL.md#method-1-use-docker-image-no-installation-required)
 - [Method 2: Run as a GitHub Action](INSTALL.md#method-2-run-as-a-github-action)
