@@ -1,6 +1,7 @@
 import copy
 import json
 import logging
+from collections import OrderedDict
 
 from jinja2 import Environment, StrictUndefined
 
@@ -10,17 +11,19 @@ from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.algo.utils import convert_to_markdown, try_fix_json
 from pr_agent.config_loader import settings
 from pr_agent.git_providers import get_git_provider
-from pr_agent.git_providers.git_provider import get_main_pr_language
+from pr_agent.git_providers.git_provider import get_main_pr_language, IncrementalPR
 from pr_agent.servers.help import actions_help_text, bot_help_text
 
 
 class PRReviewer:
-    def __init__(self, pr_url: str, cli_mode=False, is_answer: bool = False):
+    def __init__(self, pr_url: str, cli_mode=False, is_answer: bool = False, args=None):
+        self.parse_args(args)
 
-        self.git_provider = get_git_provider()(pr_url)
+        self.git_provider = get_git_provider()(pr_url, incremental=self.incremental)
         self.main_language = get_main_pr_language(
             self.git_provider.get_languages(), self.git_provider.get_files()
         )
+        self.pr_url = pr_url
         self.is_answer = is_answer
         if self.is_answer and not self.git_provider.is_supported("get_issue_comments"):
             raise Exception(f"Answer mode is not supported for {settings.config.git_provider} for now")
@@ -47,6 +50,14 @@ class PRReviewer:
                                           self.vars,
                                           settings.pr_review_prompt.system,
                                           settings.pr_review_prompt.user)
+
+    def parse_args(self, args):
+        is_incremental = False
+        if len(args) >= 1:
+            arg = args[0]
+            if arg == "-i":
+                is_incremental = True
+        self.incremental = IncrementalPR(is_incremental)
 
     async def review(self):
         logging.info('Reviewing PR...')
@@ -106,6 +117,14 @@ class PRReviewer:
             ]
             if not data['PR Feedback']['Code suggestions']:
                 del data['PR Feedback']['Code suggestions']
+
+        if self.incremental.is_incremental:
+            # Rename title when incremental review - Add to the beginning of the dict
+            last_commit_url = f"{self.git_provider.get_pr_url()}/commits/{self.git_provider.incremental.first_new_commit_sha}"
+            data = OrderedDict(data)
+            data.update({'Incremental PR Review': {
+                "⏮️ Review for commits since previous PR-Agent review": f"Starting from commit {last_commit_url}"}})
+            data.move_to_end('Incremental PR Review', last=False)
 
         markdown_text = convert_to_markdown(data)
         user = self.git_provider.get_user_id()

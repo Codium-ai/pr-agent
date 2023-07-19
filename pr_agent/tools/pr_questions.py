@@ -12,7 +12,8 @@ from pr_agent.git_providers.git_provider import get_main_pr_language
 
 
 class PRQuestions:
-    def __init__(self, pr_url: str, question_str: str):
+    def __init__(self, pr_url: str, args=None):
+        question_str = self.parse_args(args)
         self.git_provider = get_git_provider()(pr_url)
         self.main_pr_language = get_main_pr_language(
             self.git_provider.get_languages(), self.git_provider.get_files()
@@ -33,6 +34,13 @@ class PRQuestions:
                                           settings.pr_questions_prompt.user)
         self.patches_diff = None
         self.prediction = None
+
+    def parse_args(self, args):
+        if args and len(args) > 0:
+            question_str = " ".join(args)
+        else:
+            question_str = ""
+        return question_str
 
     async def answer(self):
         logging.info('Answering a PR question...')

@@ -11,7 +11,7 @@ from .git_provider import FilePatchInfo
 
 
 class BitbucketProvider:
-    def __init__(self, pr_url: Optional[str] = None):
+    def __init__(self, pr_url: Optional[str] = None, incremental: Optional[bool] = False):
         s = requests.Session()
         s.headers['Authorization'] = f'Bearer {settings.get("BITBUCKET.BEARER_TOKEN", None)}'
         self.bitbucket_client = Cloud(session=s)
@@ -22,6 +22,7 @@ class BitbucketProvider:
         self.pr_num = None
         self.pr = None
         self.temp_comments = []
+        self.incremental = incremental
         if pr_url:
             self.set_pr(pr_url)
 

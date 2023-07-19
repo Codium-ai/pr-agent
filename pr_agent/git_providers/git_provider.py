@@ -121,3 +121,11 @@ def get_main_pr_language(languages, files) -> str:
         pass
 
     return main_language_str
+
+
+class IncrementalPR:
+    def __init__(self, is_incremental: bool = False):
+        self.is_incremental = is_incremental
+        self.commits_range = None
+        self.first_new_commit_sha = None
+        self.last_seen_commit_sha = None

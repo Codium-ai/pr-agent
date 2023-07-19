@@ -57,7 +57,7 @@ reflect - Ask the PR author questions about the PR.
         asyncio.run(reviewer.suggest())
     elif command in ['review', 'review_pr']:
         print(f"Reviewing PR: {args.pr_url}")
-        reviewer = PRReviewer(args.pr_url, cli_mode=True)
+        reviewer = PRReviewer(args.pr_url, cli_mode=True, args=args.rest)
         asyncio.run(reviewer.review())
     elif command in ['reflect']:
         print(f"Asking the PR author questions: {args.pr_url}")

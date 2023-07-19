@@ -1,14 +1,15 @@
 from __future__ import annotations
 
-import difflib
 import logging
-from typing import Any, Tuple, Union
+from typing import Tuple, Union
 
 from pr_agent.algo.git_patch_processing import convert_to_hunks_with_lines_numbers, extend_patch, handle_patch_deletions
 from pr_agent.algo.language_handler import sort_files_by_main_languages
 from pr_agent.algo.token_handler import TokenHandler
+from pr_agent.algo.utils import load_large_diff
 from pr_agent.config_loader import settings
-from pr_agent.git_providers import GithubProvider
+from pr_agent.git_providers.git_provider import GitProvider
+
 
 DELETED_FILES_ = "Deleted files:\n"
 
@@ -19,7 +20,7 @@ OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD = 600
 PATCH_EXTRA_LINES = 3
 
 
-def get_pr_diff(git_provider: Union[GithubProvider, Any], token_handler: TokenHandler,
+def get_pr_diff(git_provider: Union[GitProvider], token_handler: TokenHandler,
                 add_line_numbers_to_hunks: bool = False, disable_extra_lines: bool =False) -> str:
     """
     Returns a string with the diff of the PR.
@@ -163,14 +164,3 @@ def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler,
     return patches, modified_files_list, deleted_files_list
 
 
-def load_large_diff(file, new_file_content_str: str, original_file_content_str: str, patch: str) -> str:
-    if not patch:  # to Do - also add condition for file extension
-        try:
-            diff = difflib.unified_diff(original_file_content_str.splitlines(keepends=True),
-                                        new_file_content_str.splitlines(keepends=True))
-            if settings.config.verbosity_level >= 2:
-                logging.warning(f"File was modified, but no patch was found. Manually creating patch: {file.filename}.")
-            patch = ''.join(diff)
-        except Exception:
-            pass
-    return patch

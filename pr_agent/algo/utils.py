@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import difflib
+from datetime import datetime
 import json
 import logging
 import re
 import textwrap
+
+from pr_agent.config_loader import settings
 
 
 def convert_to_markdown(output_data: dict) -> str:
@@ -18,7 +22,7 @@ def convert_to_markdown(output_data: dict) -> str:
         "Security concerns": "🔒",
         "General PR suggestions": "💡",
         "Insights from user's answers": "📝",
-        "Code suggestions": "🤖"
+        "Code suggestions": "🤖",
     }
 
     for key, value in output_data.items():
@@ -103,3 +107,21 @@ def fix_json_escape_char(json_message=None):
         new_message = ''.join(json_message)
         return fix_json_escape_char(json_message=new_message)
     return result
+
+
+def convert_str_to_datetime(date_str):
+    datetime_format = '%a, %d %b %Y %H:%M:%S %Z'
+    return datetime.strptime(date_str, datetime_format)
+
+
+def load_large_diff(file, new_file_content_str: str, original_file_content_str: str, patch: str) -> str:
+    if not patch:  # to Do - also add condition for file extension
+        try:
+            diff = difflib.unified_diff(original_file_content_str.splitlines(keepends=True),
+                                        new_file_content_str.splitlines(keepends=True))
+            if settings.config.verbosity_level >= 2:
+                logging.warning(f"File was modified, but no patch was found. Manually creating patch: {file.filename}.")
+            patch = ''.join(diff)
+        except Exception:
+            pass
+    return patch
