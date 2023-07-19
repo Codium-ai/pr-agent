@@ -135,26 +135,29 @@ class GitLabProvider(GitProvider):
             self.mr.discussions.create({'body': body,
                                         'position': pos_obj})
 
-    def publish_code_suggestion(self, body: str,
-                                relevant_file: str,
-                                relevant_lines_start: int,
-                                relevant_lines_end: int):
-        self.diff_files = self.diff_files if self.diff_files else self.get_diff_files()
-        target_file = None
-        for file in self.diff_files:
-            if file.filename == relevant_file:
-                if file.filename == relevant_file:
-                    target_file = file
-                    break
-        range = relevant_lines_end - relevant_lines_start + 1
-        body = body.replace('```suggestion', f'```suggestion:-0+{range}')
+    def publish_code_suggestions(self, code_suggestions: list):
+        for suggestion in code_suggestions:
+            body = suggestion['body']
+            relevant_file = suggestion['relevant_file']
+            relevant_lines_start = suggestion['relevant_lines_start']
+            relevant_lines_end = suggestion['relevant_lines_end']
 
-        lines = target_file.head_file.splitlines()
-        relevant_line_in_file = lines[relevant_lines_start - 1]
-        edit_type, found, source_line_no, target_file, target_line_no = self.find_in_file(target_file,
-                                                                                          relevant_line_in_file)
-        self.send_inline_comment(body, edit_type, found, relevant_file, relevant_line_in_file, source_line_no,
-                                 target_file, target_line_no)
+            self.diff_files = self.diff_files if self.diff_files else self.get_diff_files()
+            target_file = None
+            for file in self.diff_files:
+                if file.filename == relevant_file:
+                    if file.filename == relevant_file:
+                        target_file = file
+                        break
+            range = relevant_lines_end - relevant_lines_start + 1
+            body = body.replace('```suggestion', f'```suggestion:-0+{range}')
+
+            lines = target_file.head_file.splitlines()
+            relevant_line_in_file = lines[relevant_lines_start - 1]
+            edit_type, found, source_line_no, target_file, target_line_no = self.find_in_file(target_file,
+                                                                                              relevant_line_in_file)
+            self.send_inline_comment(body, edit_type, found, relevant_file, relevant_line_in_file, source_line_no,
+                                     target_file, target_line_no)
 
     def search_line(self, relevant_file, relevant_line_in_file):
         target_file = None

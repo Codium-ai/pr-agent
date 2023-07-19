@@ -79,7 +79,6 @@ class PRCodeSuggestions:
 
     def _prepare_pr_code_suggestions(self) -> str:
         review = self.prediction.strip()
-        data = None
         try:
             data = json.loads(review)
         except json.decoder.JSONDecodeError:
@@ -89,6 +88,7 @@ class PRCodeSuggestions:
         return data
 
     def push_inline_code_suggestions(self, data):
+        code_suggestions = []
         for d in data['Code suggestions']:
             if settings.config.verbosity_level >= 2:
                 logging.info(f"suggestion: {d}")
@@ -100,27 +100,33 @@ class PRCodeSuggestions:
             new_code_snippet = d['improved code']
 
             if new_code_snippet:
-                try:  # dedent code snippet
-                    self.diff_files = self.git_provider.diff_files if self.git_provider.diff_files \
-                        else self.git_provider.get_diff_files()
-                    original_initial_line = None
-                    for file in self.diff_files:
-                        if file.filename.strip() == relevant_file:
-                            original_initial_line = file.head_file.splitlines()[relevant_lines_start - 1]
-                            break
-                    if original_initial_line:
-                        suggested_initial_line = new_code_snippet.splitlines()[0]
-                        original_initial_spaces = len(original_initial_line) - len(original_initial_line.lstrip())
-                        suggested_initial_spaces = len(suggested_initial_line) - len(suggested_initial_line.lstrip())
-                        delta_spaces = original_initial_spaces - suggested_initial_spaces
-                        if delta_spaces > 0:
-                            new_code_snippet = textwrap.indent(new_code_snippet, delta_spaces * " ").rstrip('\n')
-                except Exception as e:
-                    if settings.config.verbosity_level >= 2:
-                        logging.info(f"Could not dedent code snippet for file {relevant_file}, error: {e}")
+                new_code_snippet = self.dedent_code(relevant_file, relevant_lines_start, new_code_snippet)
 
             body = f"**Suggestion:** {content}\n```suggestion\n" + new_code_snippet + "\n```"
-            self.git_provider.publish_code_suggestion(body=body,
-                                                      relevant_file=relevant_file,
-                                                      relevant_lines_start=relevant_lines_start,
-                                                      relevant_lines_end=relevant_lines_end)
+            code_suggestions.append({'body': body,'relevant_file': relevant_file,
+                                     'relevant_lines_start': relevant_lines_start,
+                                     'relevant_lines_end': relevant_lines_end})
+
+        self.git_provider.publish_code_suggestions(code_suggestions)
+
+    def dedent_code(self, relevant_file, relevant_lines_start, new_code_snippet):
+        try:  # dedent code snippet
+            self.diff_files = self.git_provider.diff_files if self.git_provider.diff_files \
+                else self.git_provider.get_diff_files()
+            original_initial_line = None
+            for file in self.diff_files:
+                if file.filename.strip() == relevant_file:
+                    original_initial_line = file.head_file.splitlines()[relevant_lines_start - 1]
+                    break
+            if original_initial_line:
+                suggested_initial_line = new_code_snippet.splitlines()[0]
+                original_initial_spaces = len(original_initial_line) - len(original_initial_line.lstrip())
+                suggested_initial_spaces = len(suggested_initial_line) - len(suggested_initial_line.lstrip())
+                delta_spaces = original_initial_spaces - suggested_initial_spaces
+                if delta_spaces > 0:
+                    new_code_snippet = textwrap.indent(new_code_snippet, delta_spaces * " ").rstrip('\n')
+        except Exception as e:
+            if settings.config.verbosity_level >= 2:
+                logging.info(f"Could not dedent code snippet for file {relevant_file}, error: {e}")
+
+        return new_code_snippet

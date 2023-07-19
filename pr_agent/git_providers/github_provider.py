@@ -146,24 +146,32 @@ class GithubProvider(GitProvider):
     def publish_inline_comments(self, comments: list[dict]):
         self.pr.create_review(commit=self.last_commit_id, comments=comments)
 
-    def publish_code_suggestion(self, body: str,
-                                relevant_file: str,
-                                relevant_lines_start: int,
-                                relevant_lines_end: int):
-        if not relevant_lines_start or relevant_lines_start == -1:
-            if settings.config.verbosity_level >= 2:
-                logging.exception(f"Failed to publish code suggestion, relevant_lines_start is {relevant_lines_start}")
-            return False
+    def publish_code_suggestions(self, code_suggestions: list):
+        """
+        Publishes code suggestions as comments on the PR.
+        In practice current APU enables to send only one code suggestion per comment. Might change in the future.
+        """
+        post_parameters_list = []
+        import github.PullRequestComment
+        for suggestion in code_suggestions:
+            body = suggestion['body']
+            relevant_file = suggestion['relevant_file']
+            relevant_lines_start = suggestion['relevant_lines_start']
+            relevant_lines_end = suggestion['relevant_lines_end']
 
-        if relevant_lines_end < relevant_lines_start:
-            if settings.config.verbosity_level >= 2:
-                logging.exception(f"Failed to publish code suggestion, "
-                                  f"relevant_lines_end is {relevant_lines_end} and "
-                                  f"relevant_lines_start is {relevant_lines_start}")
-            return False
+            if not relevant_lines_start or relevant_lines_start == -1:
+                if settings.config.verbosity_level >= 2:
+                    logging.exception(
+                        f"Failed to publish code suggestion, relevant_lines_start is {relevant_lines_start}")
+                continue
 
-        try:
-            import github.PullRequestComment
+            if relevant_lines_end < relevant_lines_start:
+                if settings.config.verbosity_level >= 2:
+                    logging.exception(f"Failed to publish code suggestion, "
+                                      f"relevant_lines_end is {relevant_lines_end} and "
+                                      f"relevant_lines_start is {relevant_lines_start}")
+                continue
+
             if relevant_lines_end > relevant_lines_start:
                 post_parameters = {
                     "body": body,
@@ -181,17 +189,19 @@ class GithubProvider(GitProvider):
                     "line": relevant_lines_start,
                     "side": "RIGHT",
                 }
-            headers, data = self.pr._requester.requestJsonAndCheck(
-                "POST", f"{self.pr.url}/comments", input=post_parameters
-            )
-            github.PullRequestComment.PullRequestComment(
-                self.pr._requester, headers, data, completed=True
-            )
-            return True
-        except Exception as e:
-            if settings.config.verbosity_level >= 2:
-                logging.error(f"Failed to publish code suggestion, error: {e}")
-            return False
+
+            try:
+                headers, data = self.pr._requester.requestJsonAndCheck(
+                    "POST", f"{self.pr.url}/comments", input=post_parameters
+                )
+                github.PullRequestComment.PullRequestComment(
+                    self.pr._requester, headers, data, completed=True
+                )
+                return True
+            except Exception as e:
+                if settings.config.verbosity_level >= 2:
+                    logging.error(f"Failed to publish code suggestion, error: {e}")
+                return False
 
     def remove_initial_comment(self):
         try:
@@ -314,7 +324,6 @@ class GithubProvider(GitProvider):
             for p in pr_types:
                 color = label_color_map.get(p, "d1bcf9")  # default to "Other" color
                 post_parameters.append({"name": p, "color": color})
-                post_parameters.append({"name": p, "color": colors[ind]})
             headers, data = self.pr._requester.requestJsonAndCheck(
                 "PUT", f"{self.pr.issue_url}/labels", input=post_parameters
             )
