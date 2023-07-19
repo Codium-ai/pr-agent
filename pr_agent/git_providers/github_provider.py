@@ -13,7 +13,7 @@ from ..algo.utils import load_large_diff
 
 
 class GithubProvider(GitProvider):
-    def __init__(self, pr_url: Optional[str] = None, incremental: Optional[IncrementalPR] = False):
+    def __init__(self, pr_url: Optional[str] = None, incremental=IncrementalPR(False)):
         self.repo_obj = None
         self.installation_id = settings.get("GITHUB.INSTALLATION_ID")
         self.github_client = self._get_github_client()
@@ -306,3 +306,21 @@ class GithubProvider(GitProvider):
         except Exception:
             file_content_str = ""
         return file_content_str
+
+    def publish_labels(self, pr_types):
+        try:
+            if type(pr_types) is not list:
+                pr_types = [pr_types]
+            colors = ["1d76db", "e99695", "c5def5", "bfdadc", "bfd4f2", "d4c5f9", "d1bcf9"]
+            labels = ["Bug fix", "Tests", "Bug fix with tests", "Refactoring", "Enhancement", "Documentation", "Other"]
+            post_parameters = []
+            for p in pr_types:
+                ind = 0
+                if p in labels:
+                    ind = labels.index(p)
+                post_parameters.append({"name": p, "color": colors[ind]})
+            headers, data = self.pr._requester.requestJsonAndCheck(
+                "PUT", f"{self.pr.issue_url}/labels", input=post_parameters
+            )
+        except:
+            logging.exception("Failed to publish labels")

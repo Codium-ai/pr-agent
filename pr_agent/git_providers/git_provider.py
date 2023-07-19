@@ -58,6 +58,10 @@ class GitProvider(ABC):
         pass
 
     @abstractmethod
+    def publish_labels(self, labels):
+        pass
+
+    @abstractmethod
     def remove_initial_comment(self):
         pass
 
