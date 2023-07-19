@@ -309,15 +309,11 @@ class GithubProvider(GitProvider):
 
     def publish_labels(self, pr_types):
         try:
-            if type(pr_types) is not list:
-                pr_types = [pr_types]
-            colors = ["1d76db", "e99695", "c5def5", "bfdadc", "bfd4f2", "d4c5f9", "d1bcf9"]
-            labels = ["Bug fix", "Tests", "Bug fix with tests", "Refactoring", "Enhancement", "Documentation", "Other"]
+            label_color_map = {"Bug fix": "1d76db", "Tests": "e99695", "Bug fix with tests": "c5def5", "Refactoring": "bfdadc", "Enhancement": "bfd4f2", "Documentation": "d4c5f9", "Other": "d1bcf9"}
             post_parameters = []
             for p in pr_types:
-                ind = 0
-                if p in labels:
-                    ind = labels.index(p)
+                color = label_color_map.get(p, "d1bcf9")  # default to "Other" color
+                post_parameters.append({"name": p, "color": color})
                 post_parameters.append({"name": p, "color": colors[ind]})
             headers, data = self.pr._requester.requestJsonAndCheck(
                 "PUT", f"{self.pr.issue_url}/labels", input=post_parameters
