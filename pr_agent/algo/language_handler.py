@@ -15,9 +15,7 @@ if settings.config.use_extra_bed_extensions:
 def filter_bad_extensions(files):
     files_filtered = []
     for f in files:
-        if f.filename is None:
-            continue
-        if f.filename.split('.')[-1] not in bad_extensions:
+        if (f.filename is not None) and is_valid_file(f.filename):
             files_filtered.append(f)
     return files_filtered
 

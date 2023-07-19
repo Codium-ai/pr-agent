@@ -1,4 +1,3 @@
-import logging
 import os
 from typing import List
 
@@ -103,9 +102,10 @@ class LocalGitProvider(GitProvider):
         raise NotImplementedError('Publishing code suggestions is not implemented for the local git provider')
 
     def remove_initial_comment(self):
-        pass # Not applicable to local git provider, but required by the interface
+        pass  # Not applicable to the local git provider, but required by the interface
 
     def get_languages(self):
+        "Calculate percentage of languages in repository. Used for hunk prioritisation."
         # Get all files in repository
         files = [item.path for item in self.repo.tree().traverse() if item.type == 'blob']
         # Identify language by file extension and count
@@ -124,7 +124,7 @@ class LocalGitProvider(GitProvider):
         return self.repo.head
 
     def get_user_id(self):
-        return -1 # Not used anywhere for local provider, but required by the interface
+        return -1  # Not used anywhere for the local provider, but required by the interface
 
     def get_pr_description(self):
         commits_diff = list(self.repo.iter_commits(self.branch_name + '..HEAD'))
@@ -139,3 +139,13 @@ class LocalGitProvider(GitProvider):
 
     def get_issue_comments(self):
         raise NotImplementedError('Getting issue comments is not implemented for the local git provider')
+
+# TODO
+# Prepare the repository before running:
+# Check if all the changes are commited (is_dirty)
+# Check if the branch is caught up to main
+## Create new tmp-branch
+## rebase main
+### Raise error if rebase requires intervention
+## Run script
+## delete tmp-branch
