@@ -54,7 +54,7 @@ class PRReviewer:
 
     def parse_args(self, args):
         is_incremental = False
-        if len(args) >= 1:
+        if args and len(args) >= 1:
             arg = args[0]
             if arg == "-i":
                 is_incremental = True
