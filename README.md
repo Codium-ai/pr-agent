@@ -82,7 +82,7 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review PRs 
 |       | Adaptive and token-aware<br />file patch fitting |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |
 |       | Incremental PR Review |   :white_check_mark:    |      |         |
 
-Examples for invoking the different tools via the [CLI](#quickstart):
+Examples for invoking the different tools via the CLI:
 - **Review**:       python cli.py --pr-url=<pr_url>  review
 - **Describe**:     python cli.py --pr-url=<pr_url>  describe
 - **Improve**:      python cli.py --pr-url=<pr_url>  improve
@@ -99,7 +99,7 @@ Try GPT-4 powered PR-Agent on your public GitHub repository for free. Just menti
 
 ![Review generation process](https://codium.ai/images/demo.gif)
 
-To set up your own PR-Agent, see the [Quickstart](#Quickstart) section
+To set up your own PR-Agent, see the [Installation](#installation) section
 
 ---
 
