@@ -30,8 +30,7 @@ def convert_to_markdown(output_data: dict) -> str:
         elif isinstance(value, list):
             if key.lower() == 'code suggestions':
                 markdown_text += "\n"  # just looks nicer with additional line breaks
-            # emoji = emojis.get(key, "‣")  # Use a dash if no emoji is found for the key
-            emoji = ""
+            emoji = emojis.get(key, "")
             markdown_text += f"- {emoji} **{key}:**\n\n"
             for item in value:
                 if isinstance(item, dict) and key.lower() == 'code suggestions':
@@ -39,8 +38,7 @@ def convert_to_markdown(output_data: dict) -> str:
                 elif item:
                     markdown_text += f"  - {item}\n"
         elif value != 'n/a':
-            # emoji = emojis.get(key, "‣")  # Use a dash if no emoji is found for the key
-            emoji = ""
+            emoji = emojis.get(key, "")
             markdown_text += f"- {emoji} **{key}:** {value}\n"
     return markdown_text
 
