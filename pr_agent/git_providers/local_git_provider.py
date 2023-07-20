@@ -41,15 +41,15 @@ class LocalGitProvider(GitProvider):
         pass
 
     def get_diff_files(self) -> list[FilePatchInfo]:
-        diffs = self.repo.head.commit.diff(self.repo.branches[self.branch_name].commit, create_patch=True)
+        diffs = self.repo.head.commit.diff(self.repo.branches[self.branch_name].commit, create_patch=True, R=True)
         diff_files = []
         for diff_item in diffs:
-            if diff_item.b_blob is not None:
-                original_file_content_str = diff_item.b_blob.data_stream.read().decode('utf-8')
+            if diff_item.a_blob is not None:
+                original_file_content_str = diff_item.a_blob.data_stream.read().decode('utf-8')
             else:
                 original_file_content_str = ""  # empty file
-            if diff_item.a_blob is not None:
-                new_file_content_str = diff_item.a_blob.data_stream.read().decode('utf-8')
+            if diff_item.b_blob is not None:
+                new_file_content_str = diff_item.b_blob.data_stream.read().decode('utf-8')
             else:
                 new_file_content_str = ""  # empty file
             edit_type = EDIT_TYPE.MODIFIED
@@ -60,9 +60,9 @@ class LocalGitProvider(GitProvider):
             elif diff_item.renamed_file:
                 edit_type = EDIT_TYPE.RENAMED
             diff_files.append(
-                FilePatchInfo(original_file_content_str, new_file_content_str, diff_item.diff, diff_item.a_path,
+                FilePatchInfo(original_file_content_str, new_file_content_str, diff_item.diff, diff_item.b_path,
                               edit_type=edit_type,
-                              old_filename=None if diff_item.b_path == diff_item.a_path else diff_item.b_path))
+                              old_filename=None if diff_item.a_path == diff_item.b_path else diff_item.a_path))
         self.diff_files = diff_files
         return diff_files
 
