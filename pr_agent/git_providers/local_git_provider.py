@@ -13,8 +13,7 @@ logger.setLevel(logging.DEBUG)
 
 class PullRequestMimic():
     '''
-    This class mimics the PullRequest class from the PyGithub library.
-    It only implements methods used by the GitHubProvider class.
+    This class mimics the PullRequest class from the PyGithub library for the LocalGitProvider.
     '''
 
     def __init__(self, title: str, diff_files: List[FilePatchInfo]):
@@ -27,7 +26,7 @@ class LocalGitProvider(GitProvider):
     This class implements the GitProvider interface for local git repositories.
     It mimics the PR functionality of the GitProvider interface, but does not require a hosted git repository.
     Instead of providing a PR url, the user provides a local branch path to generate a diff-patch.
-    For the MVP it only supports the /review capability.
+    For the MVP it only supports the /review and /describe capabilities.
     '''
 
     def __init__(self, branch_name):
@@ -93,7 +92,8 @@ class LocalGitProvider(GitProvider):
             elif diff_item.renamed_file:
                 edit_type = EDIT_TYPE.RENAMED
             diff_files.append(
-                FilePatchInfo(original_file_content_str, new_file_content_str, diff_item.diff.decode('utf-8'), diff_item.b_path,
+                FilePatchInfo(original_file_content_str, new_file_content_str, diff_item.diff.decode('utf-8'),
+                              diff_item.b_path,
                               edit_type=edit_type,
                               old_filename=None if diff_item.a_path == diff_item.b_path else diff_item.a_path))
         self.diff_files = diff_files
@@ -137,6 +137,12 @@ class LocalGitProvider(GitProvider):
                                 relevant_lines_start: int, relevant_lines_end: int):
         raise NotImplementedError('Publishing code suggestions is not implemented for the local git provider')
 
+    def publish_code_suggestions(self, code_suggestions: list):
+        raise NotImplementedError('Publishing code suggestions is not implemented for the local git provider')
+
+    def publish_labels(self, labels):
+        raise NotImplementedError('Publishing labels is not implemented for the local git provider')
+
     def remove_initial_comment(self):
         pass  # Not applicable to the local git provider, but required by the interface
 
@@ -175,13 +181,3 @@ class LocalGitProvider(GitProvider):
 
     def get_issue_comments(self):
         raise NotImplementedError('Getting issue comments is not implemented for the local git provider')
-
-# TODO
-# Prepare the repository before running:
-# Check if all the changes are commited (is_dirty)
-# Check if the branch is caught up to main
-## Create new tmp-branch
-## rebase main
-### Raise error if rebase requires intervention
-## Run script
-## delete tmp-branch
