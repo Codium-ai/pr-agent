@@ -3,7 +3,7 @@ from typing import Dict
 
 from pr_agent.config_loader import settings
 
-language_extension_map_org = settings.language_extensions.language_extension_map_org
+language_extension_map_org = settings.language_extension_map_org
 language_extension_map = {k.lower(): v for k, v in language_extension_map_org.items()}
 
 # Bad Extensions, source: https://github.com/EleutherAI/github-downloader/blob/345e7c4cbb9e0dc8a0615fd995a08bf9d73b3fe6/download_repo_text.py  # noqa: E501
