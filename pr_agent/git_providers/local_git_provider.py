@@ -12,9 +12,9 @@ logger.setLevel(logging.DEBUG)
 
 
 class PullRequestMimic():
-    '''
+     """
     This class mimics the PullRequest class from the PyGithub library for the LocalGitProvider.
-    '''
+     """
 
     def __init__(self, title: str, diff_files: List[FilePatchInfo]):
         self.title = title
@@ -22,12 +22,12 @@ class PullRequestMimic():
 
 
 class LocalGitProvider(GitProvider):
-    '''
+     """
     This class implements the GitProvider interface for local git repositories.
     It mimics the PR functionality of the GitProvider interface, but does not require a hosted git repository.
     Instead of providing a PR url, the user provides a local branch path to generate a diff-patch.
     For the MVP it only supports the /review and /describe capabilities.
-    '''
+     """
 
     def __init__(self, branch_name):
         self.repo = Repo(settings.get("local.repo_path"))
@@ -100,9 +100,9 @@ class LocalGitProvider(GitProvider):
         return diff_files
 
     def get_files(self) -> List[str]:
-        '''
+         """
         Returns a list of files with changes in the diff.
-        '''
+         """
         # Assert existence of specific branch
         branch_names = [ref.name for ref in self.repo.branches]
         if self.branch_name not in branch_names:
