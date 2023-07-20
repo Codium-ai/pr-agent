@@ -3,8 +3,8 @@
 <div align="center">
 
 <img src="./pics/logo-dark.png#gh-dark-mode-only" width="330"/>
-<img src="./pics/logo-light.png#gh-light-mode-only" width="330"/>
-
+<img src="./pics/logo-light.png#gh-light-mode-only" width="330"/><br/>
+Making pull-requests less painful with an AI agent
 </div>
 
 [![GitHub license](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/Codium-ai/pr-agent/blob/main/LICENSE)
