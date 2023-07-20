@@ -2,6 +2,7 @@
 model="gpt-4-0613"
 git_provider="github"
 publish_output=true
+publish_output_progress=true
 verbosity_level=0 # 0,1,2
 
 [pr_reviewer]
