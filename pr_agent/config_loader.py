@@ -9,6 +9,7 @@ settings = Dynaconf(
     settings_files=[join(current_dir, f) for f in [
          "settings/.secrets.toml",
          "settings/configuration.toml",
+         "settings/language_extensions.toml",
          "settings/pr_reviewer_prompts.toml",
          "settings/pr_questions_prompts.toml",
          "settings/pr_description_prompts.toml",
