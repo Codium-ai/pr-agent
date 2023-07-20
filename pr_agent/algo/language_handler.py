@@ -20,6 +20,10 @@ def filter_bad_extensions(files):
     return files_filtered
 
 
+def is_valid_file(filename):
+    return filename.split('.')[-1] not in bad_extensions
+
+
 def sort_files_by_main_languages(languages: Dict, files: list):
     """
     Sort files by their main language, put the files that are in the main language first and the rest files after
