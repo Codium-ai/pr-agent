@@ -20,12 +20,21 @@ OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD = 600
 PATCH_EXTRA_LINES = 3
 
 
-def get_pr_diff(git_provider: Union[GitProvider], token_handler: TokenHandler,
+def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler,
                 add_line_numbers_to_hunks: bool = False, disable_extra_lines: bool =False) -> str:
     """
-    Returns a string with the diff of the PR.
-    If needed, apply diff minimization techniques to reduce the number of tokens
+    Returns a string with the diff of the pull request, applying diff minimization techniques if needed.
+
+    Args:
+        git_provider (GitProvider): An object of the GitProvider class representing the Git provider used for the pull request.
+        token_handler (TokenHandler): An object of the TokenHandler class used for handling tokens in the context of the pull request.
+        add_line_numbers_to_hunks (bool, optional): A boolean indicating whether to add line numbers to the hunks in the diff. Defaults to False.
+        disable_extra_lines (bool, optional): A boolean indicating whether to disable the extension of each patch with extra lines of context. Defaults to False.
+
+    Returns:
+        str: A string with the diff of the pull request, applying diff minimization techniques if needed.
     """
+
     if disable_extra_lines:
         global PATCH_EXTRA_LINES
         PATCH_EXTRA_LINES = 0
@@ -61,7 +70,16 @@ def pr_generate_extended_diff(pr_languages: list, token_handler: TokenHandler,
                               add_line_numbers_to_hunks: bool) -> \
         Tuple[list, int]:
     """
-    Generate a standard diff string, with patch extension
+    Generate a standard diff string with patch extension, while counting the number of tokens used and applying diff minimization techniques if needed.
+
+    Args:
+    - pr_languages: A list of dictionaries representing the languages used in the pull request and their corresponding files.
+    - token_handler: An object of the TokenHandler class used for handling tokens in the context of the pull request.
+    - add_line_numbers_to_hunks: A boolean indicating whether to add line numbers to the hunks in the diff.
+
+    Returns:
+    - patches_extended: A list of extended patches for each file in the pull request.
+    - total_tokens: The total number of tokens used in the extended patches.
     """
     total_tokens = token_handler.prompt_tokens  # initial tokens
     patches_extended = []
@@ -94,12 +112,26 @@ def pr_generate_extended_diff(pr_languages: list, token_handler: TokenHandler,
 
 def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler,
                                 convert_hunks_to_line_numbers: bool) -> Tuple[list, list, list]:
-    # Apply Diff Minimization techniques to reduce the number of tokens:
-    # 0. Start from the largest diff patch to smaller ones
-    # 1. Don't use extend context lines around diff
-    # 2. Minimize deleted files
-    # 3. Minimize deleted hunks
-    # 4. Minimize all remaining files when you reach token limit
+    """
+    Generate a compressed diff string for a pull request, using diff minimization techniques to reduce the number of tokens used.
+    Args:
+        top_langs (list): A list of dictionaries representing the languages used in the pull request and their corresponding files.
+        token_handler (TokenHandler): An object of the TokenHandler class used for handling tokens in the context of the pull request.
+        convert_hunks_to_line_numbers (bool): A boolean indicating whether to convert hunks to line numbers in the diff.
+    Returns:
+        Tuple[list, list, list]: A tuple containing the following lists:
+            - patches: A list of compressed diff patches for each file in the pull request.
+            - modified_files_list: A list of file names that were skipped due to large patch size.
+            - deleted_files_list: A list of file names that were deleted in the pull request.
+
+    Minimization techniques to reduce the number of tokens:
+    0. Start from the largest diff patch to smaller ones
+    1. Don't use extend context lines around diff
+    2. Minimize deleted files
+    3. Minimize deleted hunks
+    4. Minimize all remaining files when you reach token limit
+    """
+    
 
     patches = []
     modified_files_list = []

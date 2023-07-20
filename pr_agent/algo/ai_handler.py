@@ -9,7 +9,17 @@ from pr_agent.config_loader import settings
 OPENAI_RETRIES=2
 
 class AiHandler:
+    """
+    This class handles interactions with the OpenAI API for chat completions.
+    It initializes the API key and other settings from a configuration file,
+    and provides a method for performing chat completions using the OpenAI ChatCompletion API.
+    """
+
     def __init__(self):
+        """
+        Initializes the OpenAI API key and other settings from a configuration file.
+        Raises a ValueError if the OpenAI key is missing.
+        """
         try:
             openai.api_key = settings.openai.key
             if settings.get("OPENAI.ORG", None):
@@ -27,6 +37,25 @@ class AiHandler:
     @retry(exceptions=(APIError, Timeout, TryAgain, AttributeError),
            tries=OPENAI_RETRIES, delay=2, backoff=2, jitter=(1, 3))
     async def chat_completion(self, model: str, temperature: float, system: str, user: str):
+        """
+        Performs a chat completion using the OpenAI ChatCompletion API.
+        Retries in case of API errors or timeouts.
+        
+        Args:
+            model (str): The model to use for chat completion.
+            temperature (float): The temperature parameter for chat completion.
+            system (str): The system message for chat completion.
+            user (str): The user message for chat completion.
+        
+        Returns:
+            tuple: A tuple containing the response and finish reason from the API.
+        
+        Raises:
+            TryAgain: If the API response is empty or there are no choices in the response.
+            APIError: If there is an error during OpenAI inference.
+            Timeout: If there is a timeout during OpenAI inference.
+            TryAgain: If there is an attribute error during OpenAI inference.
+        """
         try:
             response = await openai.ChatCompletion.acreate(
                             model=model,
