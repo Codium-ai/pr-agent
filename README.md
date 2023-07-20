@@ -12,7 +12,7 @@
 </div>
 <div style="text-align:left;">
 
-CodiumAI `PR-Agent` is an open-source tool aiming to help developers review PRs faster and more efficiently. It automatically analyzes the PR and can provide several types of feedback:
+CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull-requests faster and more efficiently. It automatically analyzes the pull-request and can provide several types of feedback:
 
 **Auto-Description**: Automatically generating PR description - name, type, summary, and code walkthrough.
 \
