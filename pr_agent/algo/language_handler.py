@@ -13,11 +13,7 @@ if settings.config.use_extra_bad_extensions:
 
 
 def filter_bad_extensions(files):
-    files_filtered = []
-    for f in files:
-        if (f.filename is not None) and is_valid_file(f.filename):
-            files_filtered.append(f)
-    return files_filtered
+    return [f for f in files if f.filename is not None and is_valid_file(f.filename)]
 
 
 def is_valid_file(filename):
