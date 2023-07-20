@@ -4,7 +4,7 @@
 
 <img src="./pics/logo-dark.png#gh-dark-mode-only" width="330"/>
 <img src="./pics/logo-light.png#gh-light-mode-only" width="330"/><br/>
-Making pull-requests less painful with an AI agent
+Making pull requests less painful with an AI agent
 </div>
 
 [![GitHub license](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/Codium-ai/pr-agent/blob/main/LICENSE)
@@ -12,7 +12,7 @@ Making pull-requests less painful with an AI agent
 </div>
 <div style="text-align:left;">
 
-CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull-requests faster and more efficiently. It automatically analyzes the pull-request and can provide several types of feedback:
+CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull requests faster and more efficiently. It automatically analyzes the pull request and can provide several types of feedback:
 
 **Auto-Description**: Automatically generating PR description - title, type, summary, code walkthrough and PR labels.
 \
