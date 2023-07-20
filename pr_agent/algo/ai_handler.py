@@ -72,6 +72,9 @@ class AiHandler:
         except (RateLimitError) as e:
             logging.error("Rate limit error during OpenAI inference: ", e)
             raise
+        except (Exception) as e:
+            logging.error("Unknown error during OpenAI inference: ", e)
+            raise TryAgain from e
         if response is None or len(response.choices) == 0:
             raise TryAgain
         resp = response.choices[0]['message']['content']
