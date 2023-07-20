@@ -8,7 +8,15 @@ from pr_agent.config_loader import settings
 
 def extend_patch(original_file_str, patch_str, num_lines) -> str:
     """
-    Extends the patch to include 'num_lines' more surrounding lines
+    Extends the given patch to include a specified number of surrounding lines.
+    
+    Args:
+        original_file_str (str): The original file to which the patch will be applied.
+        patch_str (str): The patch to be applied to the original file.
+        num_lines (int): The number of surrounding lines to include in the extended patch.
+        
+    Returns:
+        str: The extended patch string.
     """
     if not patch_str or num_lines == 0:
         return patch_str
@@ -61,6 +69,14 @@ def extend_patch(original_file_str, patch_str, num_lines) -> str:
 
 
 def omit_deletion_hunks(patch_lines) -> str:
+    """
+    Omit deletion hunks from the patch and return the modified patch.
+    Args:
+    - patch_lines: a list of strings representing the lines of the patch
+    Returns:
+    - A string representing the modified patch with deletion hunks omitted
+    """
+
     temp_hunk = []
     added_patched = []
     add_hunk = False
@@ -93,7 +109,20 @@ def omit_deletion_hunks(patch_lines) -> str:
 def handle_patch_deletions(patch: str, original_file_content_str: str,
                            new_file_content_str: str, file_name: str) -> str:
     """
-    Handle entire file or deletion patches
+    Handle entire file or deletion patches.
+
+    This function takes a patch, original file content, new file content, and file name as input.
+    It handles entire file or deletion patches and returns the modified patch with deletion hunks omitted.
+
+    Args:
+        patch (str): The patch to be handled.
+        original_file_content_str (str): The original content of the file.
+        new_file_content_str (str): The new content of the file.
+        file_name (str): The name of the file.
+
+    Returns:
+        str: The modified patch with deletion hunks omitted.
+
     """
     if not new_file_content_str:
         # logic for handling deleted files - don't show patch, just show that the file was deleted
@@ -111,20 +140,26 @@ def handle_patch_deletions(patch: str, original_file_content_str: str,
 
 
 def convert_to_hunks_with_lines_numbers(patch: str, file) -> str:
-    # toDO: (maybe remove '-' and '+' from the beginning of the line)
     """
-    ## src/file.ts
+    Convert a given patch string into a string with line numbers for each hunk, indicating the new and old content of the file.
+
+    Args:
+        patch (str): The patch string to be converted.
+        file: An object containing the filename of the file being patched.
+
+    Returns:
+        str: A string with line numbers for each hunk, indicating the new and old content of the file.
+
+    example output:
+## src/file.ts
 --new hunk--
 881        line1
 882        line2
 883        line3
-884        line4
-885        line6
-886        line7
-887 +      line8
-888 +      line9
-889        line10
-890        line11
+887 +      line4
+888 +      line5
+889        line6
+890        line7
 ...
 --old hunk--
         line1
@@ -134,8 +169,8 @@ def convert_to_hunks_with_lines_numbers(patch: str, file) -> str:
         line5
         line6
            ...
-
     """
+    
     patch_with_lines_str = f"## {file.filename}\n"
     import re
     patch_lines = patch.splitlines()
