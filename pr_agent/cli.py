@@ -39,13 +39,12 @@ reflect - Ask the PR author questions about the PR.
     logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
     command = args.command.lower()
     if command in ['ask', 'ask_question']:
-        question = ' '.join(args.rest).strip()
-        if len(question) == 0:
+        if len(args.rest) == 0:
             print("Please specify a question")
             parser.print_help()
             return
-        print(f"Question: {question} about PR {args.pr_url}")
-        reviewer = PRQuestions(args.pr_url, question)
+        print(f"Question: {' '.join(args.rest)} about PR {args.pr_url}")
+        reviewer = PRQuestions(args.pr_url, args.rest)
         asyncio.run(reviewer.answer())
     elif command in ['describe', 'describe_pr']:
         print(f"PR description: {args.pr_url}")
