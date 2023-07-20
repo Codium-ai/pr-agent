@@ -2,8 +2,8 @@
 
 <div align="center">
 
-<img src="./pics/logo-dark-cropped.png#gh-dark-mode-only" width="330"/>
-<img src="./pics/logo-light-cropped.png#gh-light-mode-only" width="330"/><br/>
+<img src="./pics/logo-dark.png#gh-dark-mode-only" width="330"/>
+<img src="./pics/logo-light.png#gh-light-mode-only" width="330"/><br/>
 Making pull-requests less painful with an AI agent
 </div>
 
