@@ -8,7 +8,7 @@ language_extension_map = {k.lower(): v for k, v in language_extension_map_org.it
 
 # Bad Extensions, source: https://github.com/EleutherAI/github-downloader/blob/345e7c4cbb9e0dc8a0615fd995a08bf9d73b3fe6/download_repo_text.py  # noqa: E501
 bad_extensions = settings.bad_extensions.default
-if settings.config.use_extra_bed_extensions:
+if settings.config.use_extra_bad_extensions:
     bad_extensions += settings.bad_extensions.extra
 
 
