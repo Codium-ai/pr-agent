@@ -10,12 +10,12 @@ settings = Dynaconf(
         "settings/.secrets.toml",
         "settings/configuration.toml",
         "settings/configuration_local.toml",
+        "settings/language_extensions.toml",
         "settings/pr_reviewer_prompts.toml",
         "settings/pr_questions_prompts.toml",
         "settings/pr_description_prompts.toml",
         "settings/pr_code_suggestions_prompts.toml",
         "settings/pr_information_from_user_prompts.toml",
-        "settings_prod/.secrets.toml",
-        "settings_prod/language_extensions.toml",
+        "settings_prod/.secrets.toml"
     ]]
 )
