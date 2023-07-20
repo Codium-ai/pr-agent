@@ -1,12 +1,12 @@
 import logging
 
 import openai
-from openai.error import APIError, Timeout, TryAgain
+from openai.error import APIError, Timeout, TryAgain, RateLimitError
 from retry import retry
 
 from pr_agent.config_loader import settings
 
-OPENAI_RETRIES=2
+OPENAI_RETRIES=5
 
 class AiHandler:
     """
@@ -34,7 +34,7 @@ class AiHandler:
         except AttributeError as e:
             raise ValueError("OpenAI key is required") from e
 
-    @retry(exceptions=(APIError, Timeout, TryAgain, AttributeError),
+    @retry(exceptions=(APIError, Timeout, TryAgain, AttributeError, RateLimitError),
            tries=OPENAI_RETRIES, delay=2, backoff=2, jitter=(1, 3))
     async def chat_completion(self, model: str, temperature: float, system: str, user: str):
         """
@@ -68,6 +68,9 @@ class AiHandler:
                         )
         except (APIError, Timeout, TryAgain) as e:
             logging.error("Error during OpenAI inference: ", e)
+            raise
+        except (RateLimitError) as e:
+            logging.error("Rate limit error during OpenAI inference: ", e)
             raise
         if response is None or len(response.choices) == 0:
             raise TryAgain
