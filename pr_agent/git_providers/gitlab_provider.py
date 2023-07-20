@@ -260,3 +260,6 @@ class GitLabProvider(GitProvider):
 
     def publish_labels(self, labels):
         pass
+
+    def publish_inline_comments(self, comments: list[dict]):
+        pass
