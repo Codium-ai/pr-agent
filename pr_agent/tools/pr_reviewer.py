@@ -65,8 +65,6 @@ class PRReviewer:
             self.git_provider.publish_comment("Preparing review...", is_temporary=True)
         logging.info('Getting PR diff...')
         self.patches_diff = get_pr_diff(self.git_provider, self.token_handler)
-        logging.info('Exiting...')
-        sys.exit(0)
         logging.info('Getting AI prediction...')
         self.prediction = await self._get_prediction()
         logging.info('Preparing PR review...')
