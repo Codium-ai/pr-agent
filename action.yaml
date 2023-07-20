@@ -1,4 +1,4 @@
-name: 'PR Agent'
+name: 'Codium PR Agent'
 description: 'Summarize, review and suggest improvements for pull requests'
 runs:
   using: 'docker'
