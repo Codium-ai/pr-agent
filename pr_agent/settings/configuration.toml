@@ -4,6 +4,7 @@ git_provider="github"
 publish_output=true
 publish_output_progress=true
 verbosity_level=0 # 0,1,2
+use_extra_bad_extensions=false
 
 [pr_reviewer]
 require_focused_review=true
