@@ -8,8 +8,8 @@ from gitlab import GitlabGetError
 
 from pr_agent.config_loader import settings
 
-from .git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
 from ..algo.language_handler import is_valid_file
+from .git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
 
 
 class GitLabProvider(GitProvider):
@@ -41,7 +41,7 @@ class GitLabProvider(GitProvider):
 
     @property
     def pr(self):
-         """The GitLab terminology is merge request (MR) instead of pull request (PR) """
+        '''The GitLab terminology is merge request (MR) instead of pull request (PR)'''
         return self.mr
 
     def _set_merge_request(self, merge_request_url: str):

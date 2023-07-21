@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 from typing import List
 
 from git import GitCommandError, Repo
@@ -152,7 +153,7 @@ class LocalGitProvider(GitProvider):
         raise NotImplementedError('Publishing code suggestions is not implemented for the local git provider')
 
     def publish_labels(self, labels):
-        raise NotImplementedError('Publishing labels is not implemented for the local git provider')
+        pass  # Not applicable to the local git provider, but required by the interface
 
     def remove_initial_comment(self):
         pass  # Not applicable to the local git provider, but required by the interface
@@ -162,7 +163,7 @@ class LocalGitProvider(GitProvider):
         Calculate percentage of languages in repository. Used for hunk prioritisation.
         """
         # Get all files in repository
-        filepaths = [item.path for item in self.repo.tree().traverse() if item.type == 'blob']
+        filepaths = [Path(item.path) for item in self.repo.tree().traverse() if item.type == 'blob']
         # Identify language by file extension and count
         lang_count = {}
         for filepath in filepaths:
