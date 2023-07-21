@@ -1,20 +1,19 @@
 import logging
-import os
 from typing import List
 
-from git import Repo, GitCommandError
+from git import GitCommandError, Repo
 
 from pr_agent.config_loader import settings
-from pr_agent.git_providers.git_provider import GitProvider, FilePatchInfo, EDIT_TYPE
+from pr_agent.git_providers.git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-class PullRequestMimic():
-     """
+class PullRequestMimic:
+    """
     This class mimics the PullRequest class from the PyGithub library for the LocalGitProvider.
-     """
+    """
 
     def __init__(self, title: str, diff_files: List[FilePatchInfo]):
         self.title = title
@@ -22,12 +21,13 @@ class PullRequestMimic():
 
 
 class LocalGitProvider(GitProvider):
-     """
+    """
     This class implements the GitProvider interface for local git repositories.
-    It mimics the PR functionality of the GitProvider interface, but does not require a hosted git repository.
+    It mimics the PR functionality of the GitProvider interface,
+    but does not require a hosted git repository.
     Instead of providing a PR url, the user provides a local branch path to generate a diff-patch.
     For the MVP it only supports the /review and /describe capabilities.
-     """
+    """
 
     def __init__(self, branch_name):
         self.repo = Repo(settings.get("local.repo_path"))
@@ -49,7 +49,10 @@ class LocalGitProvider(GitProvider):
         try:
             self.repo.delete_head(self.tmp_branch_name, force=True)
         except GitCommandError as e:
-            raise ValueError('Error while trying to delete the temporary branch. Ensure the branch exists.') from e
+            raise ValueError(
+                'Error while trying to delete the temporary branch.'
+                'Ensure the branch exists.'
+            ) from e
 
     def prepare_repo(self):
         """
@@ -73,7 +76,11 @@ class LocalGitProvider(GitProvider):
         pass
 
     def get_diff_files(self) -> list[FilePatchInfo]:
-        diffs = self.repo.head.commit.diff(self.repo.branches[self.branch_name].commit, create_patch=True, R=True)
+        diffs = self.repo.head.commit.diff(
+            self.repo.branches[self.branch_name].commit,
+            create_patch=True,
+            R=True
+        )
         diff_files = []
         for diff_item in diffs:
             if diff_item.a_blob is not None:
@@ -92,17 +99,21 @@ class LocalGitProvider(GitProvider):
             elif diff_item.renamed_file:
                 edit_type = EDIT_TYPE.RENAMED
             diff_files.append(
-                FilePatchInfo(original_file_content_str, new_file_content_str, diff_item.diff.decode('utf-8'),
+                FilePatchInfo(original_file_content_str,
+                              new_file_content_str,
+                              diff_item.diff.decode('utf-8'),
                               diff_item.b_path,
                               edit_type=edit_type,
-                              old_filename=None if diff_item.a_path == diff_item.b_path else diff_item.a_path))
+                              old_filename=None if diff_item.a_path == diff_item.b_path else diff_item.a_path
+                              )
+            )
         self.diff_files = diff_files
         return diff_files
 
     def get_files(self) -> List[str]:
-         """
+        """
         Returns a list of files with changes in the diff.
-         """
+        """
         # Assert existence of specific branch
         branch_names = [ref.name for ref in self.repo.branches]
         if self.branch_name not in branch_names:
@@ -147,19 +158,19 @@ class LocalGitProvider(GitProvider):
         pass  # Not applicable to the local git provider, but required by the interface
 
     def get_languages(self):
-        "Calculate percentage of languages in repository. Used for hunk prioritisation."
+        """
+        Calculate percentage of languages in repository. Used for hunk prioritisation.
+        """
         # Get all files in repository
-        files = [item.path for item in self.repo.tree().traverse() if item.type == 'blob']
+        filepaths = [item.path for item in self.repo.tree().traverse() if item.type == 'blob']
         # Identify language by file extension and count
         lang_count = {}
-        total_files = 0
-        for filepath in files:
-            ext = os.path.splitext(filepath)[1]
-            lang = ext.lstrip('.').lower()  # Remove the dot and convert to lowercase
+        for filepath in filepaths:
+            ext = filepath.suffix.lower()  # Get the file extension
+            lang = ext.lstrip('.')  # Remove the dot
             lang_count[lang] = lang_count.get(lang, 0) + 1
-            total_files += 1
         # Convert counts to percentages
-        lang_percentage = {lang: count / total_files * 100 for lang, count in lang_count.items()}
+        lang_percentage = {lang: count / len(filepaths) * 100 for lang, count in lang_count.items()}
         return lang_percentage
 
     def get_pr_branch(self):
@@ -176,8 +187,10 @@ class LocalGitProvider(GitProvider):
         return commit_messages[:200]  # Use max 200 characters
 
     def get_pr_title(self):
-        # TODO Handle the title better - perhaps ask the user to provide it?
-        return self.get_pr_description()[:50]
+        """
+        Substitutes the branch-name as the PR-mimic title.
+        """
+        return self.branch_name
 
     def get_issue_comments(self):
         raise NotImplementedError('Getting issue comments is not implemented for the local git provider')
