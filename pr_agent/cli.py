@@ -11,7 +11,8 @@ from pr_agent.tools.pr_reviewer import PRReviewer
 
 
 def run(args=None):
-    parser = argparse.ArgumentParser(description='AI based pull request analyzer', usage="""\
+    parser = argparse.ArgumentParser(description='AI based pull request analyzer', usage=
+"""\
 Usage: cli.py --pr-url <URL on supported git hosting service> <command> [<args>].
 For example:
 - cli.py --pr-url=... review
@@ -33,42 +34,67 @@ reflect - Ask the PR author questions about the PR.
                                                                   'describe', 'describe_pr',
                                                                   'improve', 'improve_code',
                                                                   'reflect', 'review_after_reflect'],
-                        default='review')
+                                                                   default='review')
     parser.add_argument('rest', nargs=argparse.REMAINDER, default=[])
     args = parser.parse_args(args)
     logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
     command = args.command.lower()
-    if command in ['ask', 'ask_question']:
-        if len(args.rest) == 0:
-            print("Please specify a question")
-            parser.print_help()
-            return
-        print(f"Question: {' '.join(args.rest)} about PR {args.pr_url}")
-        reviewer = PRQuestions(args.pr_url, args.rest)
-        asyncio.run(reviewer.answer())
-    elif command in ['describe', 'describe_pr']:
-        print(f"PR description: {args.pr_url}")
-        reviewer = PRDescription(args.pr_url)
-        asyncio.run(reviewer.describe())
-    elif command in ['improve', 'improve_code']:
-        print(f"PR code suggestions: {args.pr_url}")
-        reviewer = PRCodeSuggestions(args.pr_url)
-        asyncio.run(reviewer.suggest())
-    elif command in ['review', 'review_pr']:
-        print(f"Reviewing PR: {args.pr_url}")
-        reviewer = PRReviewer(args.pr_url, cli_mode=True, args=args.rest)
-        asyncio.run(reviewer.review())
-    elif command in ['reflect']:
-        print(f"Asking the PR author questions: {args.pr_url}")
-        reviewer = PRInformationFromUser(args.pr_url)
-        asyncio.run(reviewer.generate_questions())
-    elif command in ['review_after_reflect']:
-        print(f"Processing author's answers and sending review: {args.pr_url}")
-        reviewer = PRReviewer(args.pr_url, cli_mode=True, is_answer=True)
-        asyncio.run(reviewer.review())
+    commands = {
+        'ask': _handle_ask_command,
+        'ask_question': _handle_ask_command,
+        'describe': _handle_describe_command,
+        'describe_pr': _handle_describe_command,
+        'improve': _handle_improve_command,
+        'improve_code': _handle_improve_command,
+        'review': _handle_review_command,
+        'review_pr': _handle_review_command,
+        'reflect': _handle_reflect_command,
+        'review_after_reflect': _handle_review_after_reflect_command
+    }
+    if command in commands:
+        commands[command](args.pr_url, args.rest)
     else:
         print(f"Unknown command: {command}")
         parser.print_help()
+
+
+def _handle_ask_command(pr_url: str, rest: list):
+    if len(rest) == 0:
+        print("Please specify a question")
+        return
+    print(f"Question: {' '.join(rest)} about PR {pr_url}")
+    reviewer = PRQuestions(pr_url, rest)
+    asyncio.run(reviewer.answer())
+
+
+def _handle_describe_command(pr_url: str, rest: list):
+    print(f"PR description: {pr_url}")
+    reviewer = PRDescription(pr_url)
+    asyncio.run(reviewer.describe())
+
+
+def _handle_improve_command(pr_url: str, rest: list):
+    print(f"PR code suggestions: {pr_url}")
+    reviewer = PRCodeSuggestions(pr_url)
+    asyncio.run(reviewer.suggest())
+
+
+def _handle_review_command(pr_url: str, rest: list):
+    print(f"Reviewing PR: {pr_url}")
+    reviewer = PRReviewer(pr_url, cli_mode=True, args=rest)
+    asyncio.run(reviewer.review())
+
+
+def _handle_reflect_command(pr_url: str, rest: list):
+    print(f"Asking the PR author questions: {pr_url}")
+    reviewer = PRInformationFromUser(pr_url)
+    asyncio.run(reviewer.generate_questions())
+
+
+def _handle_review_after_reflect_command(pr_url: str, rest: list):
+    print(f"Processing author's answers and sending review: {pr_url}")
+    reviewer = PRReviewer(pr_url, cli_mode=True, is_answer=True)
+    asyncio.run(reviewer.review())
 
 
 if __name__ == '__main__':
