@@ -4,7 +4,7 @@ import logging
 from jinja2 import Environment, StrictUndefined
 
 from pr_agent.algo.ai_handler import AiHandler
-from pr_agent.algo.pr_processing import get_pr_diff
+from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.config_loader import settings
 from pr_agent.git_providers import get_git_provider
@@ -46,10 +46,7 @@ class PRQuestions:
         logging.info('Answering a PR question...')
         if settings.config.publish_output:
             self.git_provider.publish_comment("Preparing answer...", is_temporary=True)
-        logging.info('Getting PR diff...')
-        self.patches_diff = get_pr_diff(self.git_provider, self.token_handler)
-        logging.info('Getting AI prediction...')
-        self.prediction = await self._get_prediction()
+        await retry_with_fallback_models(self._prepare_prediction)
         logging.info('Preparing answer...')
         pr_comment = self._prepare_pr_answer()
         if settings.config.publish_output:
@@ -58,7 +55,13 @@ class PRQuestions:
             self.git_provider.remove_initial_comment()
         return ""
 
-    async def _get_prediction(self):
+    async def _prepare_prediction(self, model: str):
+        logging.info('Getting PR diff...')
+        self.patches_diff = get_pr_diff(self.git_provider, self.token_handler, model)
+        logging.info('Getting AI prediction...')
+        self.prediction = await self._get_prediction(model)
+
+    async def _get_prediction(self, model: str):
         variables = copy.deepcopy(self.vars)
         variables["diff"] = self.patches_diff  # update diff
         environment = Environment(undefined=StrictUndefined)
@@ -67,7 +70,6 @@ class PRQuestions:
         if settings.config.verbosity_level >= 2:
             logging.info(f"\nSystem prompt:\n{system_prompt}")
             logging.info(f"\nUser prompt:\n{user_prompt}")
-        model = settings.config.model
         response, finish_reason = await self.ai_handler.chat_completion(model=model, temperature=0.2,
                                                                         system=system_prompt, user=user_prompt)
         return response
