@@ -30,7 +30,7 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 <h4>/describe:</h4>
 <div align="center">
 <p float="center">
-<img src=״https://www.codium.ai/wp-content/uploads/2023/07/describe-1.gif״ width="800">
+<img src="https://www.codium.ai/wp-content/uploads/2023/07/describe.gif" width="800">
 </p>
 </div>
 <h4>/review:</h4>
