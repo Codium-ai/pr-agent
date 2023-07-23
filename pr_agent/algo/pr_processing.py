@@ -55,7 +55,7 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler, model: s
 
     # if we are over the limit, start pruning
     patches_compressed, modified_file_names, deleted_file_names = \
-        pr_generate_compressed_diff(pr_languages, token_handler, add_line_numbers_to_hunks)
+        pr_generate_compressed_diff(pr_languages, token_handler, model, add_line_numbers_to_hunks)
 
     final_diff = "\n".join(patches_compressed)
     if modified_file_names:
