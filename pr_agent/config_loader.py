@@ -1,6 +1,11 @@
 from os.path import abspath, dirname, join
+from pathlib import Path
+from typing import Union
 
 from dynaconf import Dynaconf
+
+PYPROJECT_NAME = Path("pyproject.toml")
+PR_AGENT_TOML_KEY = 'pr-agent'
 
 current_dir = dirname(abspath(__file__))
 settings = Dynaconf(
@@ -19,3 +24,26 @@ settings = Dynaconf(
          "settings_prod/.secrets.toml"
         ]]
 )
+
+
+# Add local configuration from pyproject.toml of the project being reviewed
+def _find_pyproject() -> Union[Path, None]:
+    """
+    Search for file pyproject.toml in the parent directories recursively.
+    """
+    current_dir = Path.cwd().resolve()
+    is_root = False
+    while not is_root:
+        if (current_dir / PYPROJECT_NAME).is_file():
+            return current_dir / PYPROJECT_NAME
+        is_root = (
+                current_dir == current_dir.parent
+                or (current_dir / ".git").is_dir()
+        )
+        current_dir = current_dir.parent
+    return None
+
+
+pyproject_path = _find_pyproject()
+if pyproject_path is not None:
+    settings.load_file(pyproject_path, env=f'tool.{PR_AGENT_TOML_KEY}')

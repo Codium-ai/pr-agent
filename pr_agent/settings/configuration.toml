@@ -4,7 +4,6 @@ git_provider="github"
 publish_output=true
 publish_output_progress=true
 verbosity_level=0 # 0,1,2
-use_extra_bad_extensions=false
 
 [pr_reviewer]
 require_focused_review=true
@@ -31,14 +30,6 @@ deployment_type = "user"
 # URL to the gitlab service
 url = "https://gitlab.com"
 
-[local]
-# Path to the local git repository. Will be overwritten by configuration_local.toml if present.
-repo_path = "/path/to/local/repo"
-review_file_path = "./review.md"
-description_file_path = "./description.md"
-tmp_branch_name = 'pr-agent-tmp-branch'
-
-[polling]
 # Polling (either project id or namespace/project_name) syntax can be used
 projects_to_monitor = ['org_name/repo_name']
 
@@ -47,3 +38,8 @@ magic_word = "AutoReview"
 
 # Polling interval
 polling_interval_seconds = 30
+
+[local]
+# LocalGitProvider settings - uncomment to use paths other than default
+# description_path= "path/to/description.md"
+# review_path= "path/to/review.md"

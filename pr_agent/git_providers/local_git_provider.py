@@ -1,4 +1,5 @@
 import logging
+import uuid
 from pathlib import Path
 from typing import List
 
@@ -6,9 +7,6 @@ from git import GitCommandError, Repo
 
 from pr_agent.config_loader import settings
 from pr_agent.git_providers.git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 class PullRequestMimic:
@@ -21,6 +19,20 @@ class PullRequestMimic:
         self.diff_files = diff_files
 
 
+def _find_repository_root() -> Path:
+    """
+    Identify project root directory by recursively searching for the .git directory in the parent directories.
+    """
+    cwd = Path.cwd().resolve()
+    no_way_up = False
+    while not no_way_up:
+        no_way_up = cwd == cwd.parent
+        if (cwd / ".git").is_dir():
+            return cwd
+        cwd = cwd.parent
+    raise FileNotFoundError("Could not find the repository root directory")
+
+
 class LocalGitProvider(GitProvider):
     """
     This class implements the GitProvider interface for local git repositories.
@@ -30,21 +42,24 @@ class LocalGitProvider(GitProvider):
     For the MVP it only supports the /review and /describe capabilities.
     """
 
-    def __init__(self, branch_name):
-        self.repo = Repo(settings.get("local.repo_path"))
+    def __init__(self, branch_name, incremental=False):
+        self.repo_path = _find_repository_root()
+        self.repo = Repo(self.repo_path)
         self.head_branch_name = self.repo.head.ref.name
         self.branch_name = branch_name
-        self.tmp_branch_name = settings.get("local.tmp_branch_name")
+        self.tmp_branch_name = uuid.uuid1()
+        self.prepare_repo()
         self.diff_files = None
         self.pr = PullRequestMimic(self.get_pr_title(), self.get_diff_files())
-        self.review_file_path = settings.get("local.review_file_path")
-        self.description_file_path = settings.get("local.description_file_path")
-        self.prepare_repo()
+        self.description_path = settings.get('local.description_path') \
+            if settings.get('local.description_path') is not None else self.repo_path / 'description.md'
+        self.review_path = settings.get('local.review_path') \
+            if settings.get('local.review_path') is not None else self.repo_path / 'review_path.md'
         # inline code comments are not supported for local git repositories
         settings.pr_reviewer.inline_code_comments = False
 
     def __del__(self):
-        logger.debug('Deleting temporary branch...')
+        logging.debug('Deleting temporary branch...')
         self.repo.git.checkout(self.head_branch_name)  # switch back to the original branch
         # delete the temporary branch
         try:
@@ -59,7 +74,7 @@ class LocalGitProvider(GitProvider):
         """
         Prepare the repository for PR-mimic generation.
         """
-        logger.debug('Preparing repository for PR-mimic generation...')
+        logging.debug('Preparing repository for PR-mimic generation...')
         if self.repo.is_dirty():
             raise ValueError('The repository is not in a clean state. Please check in all files.')
         if self.tmp_branch_name in self.repo.heads:
@@ -67,7 +82,7 @@ class LocalGitProvider(GitProvider):
         self.repo.git.checkout('HEAD', b=self.tmp_branch_name)
 
         try:
-            logger.debug('Rebasing the temporary branch on the main branch...')
+            logging.debug('Rebasing the temporary branch on the main branch...')
             self.repo.git.rebase('main')
         except GitCommandError as e:
             raise ValueError('Error while rebasing. Resolve conflicts before retrying.') from e
@@ -127,12 +142,12 @@ class LocalGitProvider(GitProvider):
         return diff_files
 
     def publish_description(self, pr_title: str, pr_body: str):
-        with open(self.description_file_path, "w") as file:
+        with open(self.description_path, "w") as file:
             # Write the string to the file
             file.write(pr_title + '\n' + pr_body)
 
     def publish_comment(self, pr_comment: str, is_temporary: bool = False):
-        with open(self.review_file_path, "w") as file:
+        with open(self.review_path, "w") as file:
             # Write the string to the file
             file.write(pr_comment)
 
