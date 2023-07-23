@@ -26,7 +26,6 @@ class TokenHandler:
         - user: The user string.
         """
         self.encoder = encoding_for_model(settings.config.model)
-        self.limit = MAX_TOKENS[settings.config.model]
         self.prompt_tokens = self._get_system_user_tokens(pr, self.encoder, vars, system, user)
 
     def _get_system_user_tokens(self, pr, encoder, vars: dict, system, user):
