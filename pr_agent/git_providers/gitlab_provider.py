@@ -8,8 +8,8 @@ from gitlab import GitlabGetError
 
 from pr_agent.config_loader import settings
 
-from ..algo.language_handler import is_valid_file
 from .git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
+from ..algo.language_handler import is_valid_file
 
 
 class GitLabProvider(GitProvider):
