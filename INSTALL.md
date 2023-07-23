@@ -98,7 +98,7 @@ cp pr_agent/settings/.secrets_template.toml pr_agent/settings/.secrets.toml
 4. Add the pr_agent folder to your PYTHONPATH, then run the cli.py script:
 
 ```
-export PYTHONPATH=$PYTHONPATH:<PATH to pr_agent folder>
+export PYTHONPATH=[$PYTHONPATH:]<PATH to pr_agent folder>
 python pr_agent/cli.py --pr_url <pr_url> review
 python pr_agent/cli.py --pr_url <pr_url> ask <your question>
 python pr_agent/cli.py --pr_url <pr_url> describe
