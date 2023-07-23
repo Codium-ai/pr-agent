@@ -30,25 +30,31 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 <h4>/describe:</h4>
 <div align="center">
 <p float="center">
-<img src="https://codium.ai/images/describe.gif" width="800">
+<img src="https://www.codium.ai/images/describe-2.gif" width="800">
 </p>
 </div>
 <h4>/review:</h4>
 <div align="center">
 <p float="center">
-<img src="https://codium.ai/images/review.gif" width="800">
+<img src="https://www.codium.ai/images/review-2.gif" width="800">
+</p>
+</div>
+<h4>/reflect_and_review:</h4>
+<div align="center">
+<p float="center">
+<img src="https://www.codium.ai/images/reflect_and_review.gif" width="800">
 </p>
 </div>
 <h4>/ask:</h4>
 <div align="center">
 <p float="center">
-<img src="https://codium.ai/images/ask.gif" width="800">
+<img src="https://www.codium.ai/images/ask-2.gif" width="800">
 </p>
 </div>
 <h4>/improve:</h4>
 <div align="center">
 <p float="center">
-<img src="https://codium.ai/images/improve.gif" width="800">
+<img src="https://www.codium.ai/images/improve-2.gif" width="800">
 </p>
 </div>
 <div align="left">
@@ -77,7 +83,7 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 |       | Reflect and Review                          |   :white_check_mark:    |                         |           |
 |       |                                             |        |        |           |
 | USAGE | CLI                                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |
-|       | Tagging bot                                 |   :white_check_mark:    |   :white_check_mark:    |           |
+|       | Tagging bot                                 |   :white_check_mark:    |        |           |
 |       | Actions                                     |   :white_check_mark:    |        |           |
 |       |                                             |        |        |           |
 | CORE  | PR compression                              |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |
@@ -100,7 +106,7 @@ In the [configuration](./CONFIGURATION.md) file you can select your git provider
 
 Try GPT-4 powered PR-Agent on your public GitHub repository for free. Just mention `@CodiumAI-Agent` and add the desired command in any PR comment! The agent will generate a response based on your command.
 
-![Review generation process](https://codium.ai/images/demo.gif)
+![Review generation process](https://www.codium.ai/images/demo-2.gif)
 
 To set up your own PR-Agent, see the [Installation](#installation) section
 
