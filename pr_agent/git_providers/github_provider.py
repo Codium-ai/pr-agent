@@ -152,10 +152,8 @@ class GithubProvider(GitProvider):
     def publish_code_suggestions(self, code_suggestions: list):
         """
         Publishes code suggestions as comments on the PR.
-        In practice current APU enables to send only one code suggestion per comment. Might change in the future.
         """
         post_parameters_list = []
-        import github.PullRequestComment
         for suggestion in code_suggestions:
             body = suggestion['body']
             relevant_file = suggestion['relevant_file']
@@ -178,7 +176,6 @@ class GithubProvider(GitProvider):
             if relevant_lines_end > relevant_lines_start:
                 post_parameters = {
                     "body": body,
-                    "commit_id": self.last_commit_id._identity,
                     "path": relevant_file,
                     "line": relevant_lines_end,
                     "start_line": relevant_lines_start,
@@ -187,24 +184,19 @@ class GithubProvider(GitProvider):
             else:  # API is different for single line comments
                 post_parameters = {
                     "body": body,
-                    "commit_id": self.last_commit_id._identity,
                     "path": relevant_file,
                     "line": relevant_lines_start,
                     "side": "RIGHT",
                 }
+            post_parameters_list.append(post_parameters)
 
-            try:
-                headers, data = self.pr._requester.requestJsonAndCheck(
-                    "POST", f"{self.pr.url}/comments", input=post_parameters
-                )
-                github.PullRequestComment.PullRequestComment(
-                    self.pr._requester, headers, data, completed=True
-                )
-                return True
-            except Exception as e:
-                if settings.config.verbosity_level >= 2:
-                    logging.error(f"Failed to publish code suggestion, error: {e}")
-                return False
+        try:
+            self.pr.create_review(commit=self.last_commit_id, comments=post_parameters_list)
+            return True
+        except Exception as e:
+            if settings.config.verbosity_level >= 2:
+                logging.error(f"Failed to publish code suggestion, error: {e}")
+            return False
 
     def remove_initial_comment(self):
         try:
