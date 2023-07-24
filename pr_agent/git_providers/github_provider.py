@@ -322,5 +322,12 @@ class GithubProvider(GitProvider):
             headers, data = self.pr._requester.requestJsonAndCheck(
                 "PUT", f"{self.pr.issue_url}/labels", input=post_parameters
             )
-        except:
-            logging.exception("Failed to publish labels")
+        except Exception as e:
+            logging.exception(f"Failed to publish labels, error: {e}")
+
+    def get_labels(self):
+        try:
+            return [label.name for label in self.pr.labels]
+        except Exception as e:
+            logging.exception(f"Failed to get labels, error: {e}")
+            return []
