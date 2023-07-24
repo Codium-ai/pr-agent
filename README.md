@@ -83,6 +83,7 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 |       | Reflect and Review                          |   :white_check_mark:    |                         |           |
 |       |                                             |        |        |           |
 | USAGE | CLI                                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |
+|       | App / webhook                               |   :white_check_mark:    |   :white_check_mark:    |           |
 |       | Tagging bot                                 |   :white_check_mark:    |        |           |
 |       | Actions                                     |   :white_check_mark:    |        |           |
 |       |                                             |        |        |           |

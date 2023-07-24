@@ -72,6 +72,8 @@ class PRDescription:
                 self.git_provider.publish_description(pr_title, pr_body)
                 if self.git_provider.is_supported("get_labels"):
                     current_labels = self.git_provider.get_labels()
+                    if current_labels is None:
+                        current_labels = []
                     self.git_provider.publish_labels(pr_types + current_labels)
             self.git_provider.remove_initial_comment()
         

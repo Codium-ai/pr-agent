@@ -8,11 +8,13 @@ from gitlab import GitlabGetError
 
 from pr_agent.config_loader import settings
 
-from .git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
 from ..algo.language_handler import is_valid_file
+from .git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
 
 
 class GitLabProvider(GitProvider):
+
+
     def __init__(self, merge_request_url: Optional[str] = None, incremental: Optional[bool] = False):
         gitlab_url = settings.get("GITLAB.URL", None)
         if not gitlab_url:
@@ -35,7 +37,7 @@ class GitLabProvider(GitProvider):
         self.incremental = incremental
 
     def is_supported(self, capability: str) -> bool:
-        if capability in ['get_issue_comments', 'create_inline_comment', 'publish_inline_comments', 'get_labels']:
+        if capability in ['get_issue_comments', 'create_inline_comment', 'publish_inline_comments']:
             return False
         return True
 
@@ -112,7 +114,7 @@ class GitLabProvider(GitProvider):
     def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
         raise NotImplementedError("Gitlab provider does not support creating inline comments yet")
 
-    def create_inline_comment(self, comments: list[dict]):
+    def create_inline_comments(self, comments: list[dict]):
         raise NotImplementedError("Gitlab provider does not support publishing inline comments yet")
 
     def send_inline_comment(self, body, edit_type, found, relevant_file, relevant_line_in_file, source_line_no,
@@ -258,8 +260,15 @@ class GitLabProvider(GitProvider):
     def get_user_id(self):
         return None
 
-    def publish_labels(self, labels):
-        pass
+    def publish_labels(self, pr_types):
+        try:
+            self.mr.labels = list(set(pr_types))
+            self.mr.save()
+        except Exception as e:
+            logging.exception(f"Failed to publish labels, error: {e}")
 
     def publish_inline_comments(self, comments: list[dict]):
         pass
+
+    def get_labels(self):
+        return self.mr.labels
