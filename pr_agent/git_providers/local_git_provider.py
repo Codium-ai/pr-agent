@@ -72,7 +72,7 @@ class LocalGitProvider(GitProvider):
 
         try:
             logging.debug('Rebasing the temporary branch on the main branch...')
-            self.repo.git.rebase('main')
+            self.repo.git.rebase(self.branch_name)
         except GitCommandError as e:
             raise ValueError('Error while rebasing. Resolve conflicts before retrying.') from e
 
