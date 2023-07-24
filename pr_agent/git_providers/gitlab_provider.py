@@ -37,7 +37,7 @@ class GitLabProvider(GitProvider):
         self.incremental = incremental
 
     def is_supported(self, capability: str) -> bool:
-        if capability in ['get_issue_comments', 'create_inline_comment', 'publish_inline_comments', 'get_labels']:
+        if capability in ['get_issue_comments', 'create_inline_comment', 'publish_inline_comments']:
             return False
         return True
 
@@ -260,11 +260,15 @@ class GitLabProvider(GitProvider):
     def get_user_id(self):
         return None
 
-    def publish_labels(self, labels):
-        pass
+    def publish_labels(self, pr_types):
+        try:
+            self.mr.labels = list(set(pr_types))
+            self.mr.save()
+        except Exception as e:
+            logging.exception(f"Failed to publish labels, error: {e}")
 
     def publish_inline_comments(self, comments: list[dict]):
         pass
 
     def get_labels(self):
-        pass
+        return self.mr.labels
