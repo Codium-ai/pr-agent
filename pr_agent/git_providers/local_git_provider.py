@@ -59,7 +59,7 @@ class LocalGitProvider(GitProvider):
                 'Ensure the branch exists.'
             ) from e
 
-    def prepare_repo(self):
+    def _prepare_repo(self):
         """
         Prepare the repository for PR-mimic generation.
         """
