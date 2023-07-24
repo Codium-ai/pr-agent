@@ -20,11 +20,17 @@ class PRDescription:
         Args:
             pr_url (str): The URL of the pull request.
         """
+        
+        # Initialize the git provider and main PR language
         self.git_provider = get_git_provider()(pr_url)
         self.main_pr_language = get_main_pr_language(
             self.git_provider.get_languages(), self.git_provider.get_files()
         )
+    
+        # Initialize the AI handler
         self.ai_handler = AiHandler()
+    
+        # Initialize the variables dictionary
         self.vars = {
             "title": self.git_provider.pr.title,
             "branch": self.git_provider.get_pr_branch(),
@@ -32,12 +38,16 @@ class PRDescription:
             "language": self.main_pr_language,
             "diff": "",  # empty diff for initial calculation
         }
+    
+        # Initialize the token handler
         self.token_handler = TokenHandler(
             self.git_provider.pr,
             self.vars,
             settings.pr_description_prompt.system,
             settings.pr_description_prompt.user,
         )
+    
+        # Initialize patches_diff and prediction attributes
         self.patches_diff = None
         self.prediction = None
 
