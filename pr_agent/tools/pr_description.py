@@ -1,6 +1,7 @@
 import copy
 import json
 import logging
+from typing import Tuple, List
 
 from jinja2 import Environment, StrictUndefined
 
@@ -69,24 +70,45 @@ class PRDescription:
                                                                         system=system_prompt, user=user_prompt)
         return response
 
-    def _prepare_pr_answer(self):
+    def _prepare_pr_answer(self) -> Tuple[str, str, List[str], str]:
+        """
+        Prepare the PR description based on the AI prediction data.
+
+        Returns:
+        - title: a string containing the PR title.
+        - pr_body: a string containing the PR body in a markdown format.
+        - pr_types: a list of strings containing the PR types.
+        - markdown_text: a string containing the AI prediction data in a markdown format.
+        """
+        # Load the AI prediction data into a dictionary
         data = json.loads(self.prediction)
-        markdown_text = ""
+
+        # Initialization
+        markdown_text = pr_body = ""
+        pr_types = []
+
+        # Iterate over the dictionary items and append the key and value to 'markdown_text' in a markdown format
         for key, value in data.items():
             markdown_text += f"## {key}\n\n"
             markdown_text += f"{value}\n\n"
-        pr_body = ""
-        pr_types = []
+
+        # If the 'PR Type' key is present in the dictionary, split its value by comma and assign it to 'pr_types'
         if 'PR Type' in data:
             pr_types = data['PR Type'].split(',')
-        title = data['PR Title']
-        del data['PR Title']
+
+        # Assign the value of the 'PR Title' key to 'title' variable and remove it from the dictionary
+        title = data.pop('PR Title')
+
+        # Iterate over the remaining dictionary items and append the key and value to 'pr_body' in a markdown format,
+        # except for the items containing the word 'walkthrough'
         for key, value in data.items():
             pr_body += f"{key}:\n"
             if 'walkthrough' in key.lower():
                 pr_body += f"{value}\n"
             else:
                 pr_body += f"**{value}**\n\n___\n"
+
         if settings.config.verbosity_level >= 2:
             logging.info(f"title:\n{title}\n{pr_body}")
+
         return title, pr_body, pr_types, markdown_text
