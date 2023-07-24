@@ -8,11 +8,13 @@ from gitlab import GitlabGetError
 
 from pr_agent.config_loader import settings
 
-from .git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
 from ..algo.language_handler import is_valid_file
+from .git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
 
 
 class GitLabProvider(GitProvider):
+
+
     def __init__(self, merge_request_url: Optional[str] = None, incremental: Optional[bool] = False):
         gitlab_url = settings.get("GITLAB.URL", None)
         if not gitlab_url:
@@ -112,7 +114,7 @@ class GitLabProvider(GitProvider):
     def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
         raise NotImplementedError("Gitlab provider does not support creating inline comments yet")
 
-    def create_inline_comment(self, comments: list[dict]):
+    def create_inline_comments(self, comments: list[dict]):
         raise NotImplementedError("Gitlab provider does not support publishing inline comments yet")
 
     def send_inline_comment(self, body, edit_type, found, relevant_file, relevant_line_in_file, source_line_no,
@@ -262,4 +264,7 @@ class GitLabProvider(GitProvider):
         pass
 
     def publish_inline_comments(self, comments: list[dict]):
+        pass
+
+    def get_labels(self):
         pass
