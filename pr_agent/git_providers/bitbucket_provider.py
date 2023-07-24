@@ -27,7 +27,7 @@ class BitbucketProvider:
             self.set_pr(pr_url)
 
     def is_supported(self, capability: str) -> bool:
-        if capability in ['get_issue_comments', 'create_inline_comment', 'publish_inline_comments']:
+        if capability in ['get_issue_comments', 'create_inline_comment', 'publish_inline_comments', 'get_labels']:
             return False
         return True
 
