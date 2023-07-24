@@ -15,6 +15,11 @@ from pr_agent.git_providers.git_provider import get_main_pr_language
 
 class PRDescription:
     def __init__(self, pr_url: str):
+        """
+        Initialize the PRDescription object with the necessary attributes and objects for generating a PR description using an AI model.
+        Args:
+            pr_url (str): The URL of the pull request.
+        """
         self.git_provider = get_git_provider()(pr_url)
         self.main_pr_language = get_main_pr_language(
             self.git_provider.get_languages(), self.git_provider.get_files()
@@ -27,20 +32,28 @@ class PRDescription:
             "language": self.main_pr_language,
             "diff": "",  # empty diff for initial calculation
         }
-        self.token_handler = TokenHandler(self.git_provider.pr,
-                                          self.vars,
-                                          settings.pr_description_prompt.system,
-                                          settings.pr_description_prompt.user)
+        self.token_handler = TokenHandler(
+            self.git_provider.pr,
+            self.vars,
+            settings.pr_description_prompt.system,
+            settings.pr_description_prompt.user,
+        )
         self.patches_diff = None
         self.prediction = None
 
     async def describe(self):
+        """
+        Generates a PR description using an AI model and publishes it to the PR.
+        """
         logging.info('Generating a PR description...')
         if settings.config.publish_output:
             self.git_provider.publish_comment("Preparing pr description...", is_temporary=True)
+        
         await retry_with_fallback_models(self._prepare_prediction)
+        
         logging.info('Preparing answer...')
         pr_title, pr_body, pr_types, markdown_text = self._prepare_pr_answer()
+        
         if settings.config.publish_output:
             logging.info('Pushing answer...')
             if settings.pr_description.publish_description_as_comment:
@@ -49,9 +62,23 @@ class PRDescription:
                 self.git_provider.publish_description(pr_title, pr_body)
                 self.git_provider.publish_labels(pr_types)
             self.git_provider.remove_initial_comment()
+        
         return ""
 
-    async def _prepare_prediction(self, model: str):
+    async def _prepare_prediction(self, model: str) -> None:
+        """
+        Prepare the AI prediction for the PR description based on the provided model.
+
+        Args:
+            model (str): The name of the model to be used for generating the prediction.
+
+        Returns:
+            None
+
+        Raises:
+            Any exceptions raised by the 'get_pr_diff' and '_get_prediction' functions.
+
+        """
         logging.info('Getting PR diff...')
         self.patches_diff = get_pr_diff(self.git_provider, self.token_handler, model)
         logging.info('Getting AI prediction...')
