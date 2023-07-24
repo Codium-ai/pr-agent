@@ -4,8 +4,6 @@ from typing import Optional
 
 from dynaconf import Dynaconf
 
-from pr_agent.git_providers.local_git_provider import _find_repository_root
-
 PR_AGENT_TOML_KEY = 'pr-agent'
 
 current_dir = dirname(abspath(__file__))
@@ -22,11 +20,25 @@ settings = Dynaconf(
          "settings/pr_code_suggestions_prompts.toml",
          "settings/pr_information_from_user_prompts.toml",
          "settings_prod/.secrets.toml"
-        ]]
+    ]]
 )
 
 
 # Add local configuration from pyproject.toml of the project being reviewed
+def _find_repository_root() -> Path:
+    """
+    Identify project root directory by recursively searching for the .git directory in the parent directories.
+    """
+    cwd = Path.cwd().resolve()
+    no_way_up = False
+    while not no_way_up:
+        no_way_up = cwd == cwd.parent
+        if (cwd / ".git").is_dir():
+            return cwd
+        cwd = cwd.parent
+    raise FileNotFoundError("Could not find the repository root directory")
+
+
 def _find_pyproject() -> Optional[Path]:
     """
     Search for file pyproject.toml in the repository root.

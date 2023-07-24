@@ -6,7 +6,7 @@ from typing import List
 
 from git import GitCommandError, Repo
 
-from pr_agent.config_loader import settings
+from pr_agent.config_loader import _find_repository_root, settings
 from pr_agent.git_providers.git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
 
 
@@ -18,20 +18,6 @@ class PullRequestMimic:
     def __init__(self, title: str, diff_files: List[FilePatchInfo]):
         self.title = title
         self.diff_files = diff_files
-
-
-def _find_repository_root() -> Path:
-    """
-    Identify project root directory by recursively searching for the .git directory in the parent directories.
-    """
-    cwd = Path.cwd().resolve()
-    no_way_up = False
-    while not no_way_up:
-        no_way_up = cwd == cwd.parent
-        if (cwd / ".git").is_dir():
-            return cwd
-        cwd = cwd.parent
-    raise FileNotFoundError("Could not find the repository root directory")
 
 
 class LocalGitProvider(GitProvider):
@@ -63,6 +49,8 @@ class LocalGitProvider(GitProvider):
         logging.debug('Deleting temporary branch...')
         self.repo.git.checkout(self.head_branch_name)  # switch back to the original branch
         # delete the temporary branch
+        if self.tmp_branch_name not in self.repo.heads:
+            return
         try:
             self.repo.delete_head(self.tmp_branch_name, force=True)
         except GitCommandError as e:
