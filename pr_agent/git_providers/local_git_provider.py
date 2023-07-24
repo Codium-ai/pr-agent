@@ -41,7 +41,7 @@ class LocalGitProvider(GitProvider):
         self.description_path = settings.get('local.description_path') \
             if settings.get('local.description_path') is not None else self.repo_path / 'description.md'
         self.review_path = settings.get('local.review_path') \
-            if settings.get('local.review_path') is not None else self.repo_path / 'review_path.md'
+            if settings.get('local.review_path') is not None else self.repo_path / 'review.md'
         # inline code comments are not supported for local git repositories
         settings.pr_reviewer.inline_code_comments = False
 
