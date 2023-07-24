@@ -1,10 +1,11 @@
 from os.path import abspath, dirname, join
 from pathlib import Path
-from typing import Union
+from typing import Optional
 
 from dynaconf import Dynaconf
 
-PYPROJECT_NAME = Path("pyproject.toml")
+from pr_agent.git_providers.local_git_provider import _find_repository_root
+
 PR_AGENT_TOML_KEY = 'pr-agent'
 
 current_dir = dirname(abspath(__file__))
@@ -26,21 +27,12 @@ settings = Dynaconf(
 
 
 # Add local configuration from pyproject.toml of the project being reviewed
-def _find_pyproject() -> Union[Path, None]:
+def _find_pyproject() -> Optional[Path]:
     """
-    Search for file pyproject.toml in the parent directories recursively.
+    Search for file pyproject.toml in the repository root.
     """
-    current_dir = Path.cwd().resolve()
-    is_root = False
-    while not is_root:
-        if (current_dir / PYPROJECT_NAME).is_file():
-            return current_dir / PYPROJECT_NAME
-        is_root = (
-                current_dir == current_dir.parent
-                or (current_dir / ".git").is_dir()
-        )
-        current_dir = current_dir.parent
-    return None
+    pyproject = _find_repository_root() / "pyproject.toml"
+    return pyproject if pyproject.is_file() else None
 
 
 pyproject_path = _find_pyproject()

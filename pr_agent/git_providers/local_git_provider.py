@@ -1,5 +1,6 @@
 import logging
 import uuid
+from collections import Counter
 from pathlib import Path
 from typing import List
 
@@ -47,7 +48,7 @@ class LocalGitProvider(GitProvider):
         self.repo = Repo(self.repo_path)
         self.head_branch_name = self.repo.head.ref.name
         self.branch_name = branch_name
-        self.tmp_branch_name = uuid.uuid1()
+        self.tmp_branch_name = f'pr_agent_{uuid.uuid4()}'
         self.prepare_repo()
         self.diff_files = None
         self.pr = PullRequestMimic(self.get_pr_title(), self.get_diff_files())
@@ -180,13 +181,10 @@ class LocalGitProvider(GitProvider):
         # Get all files in repository
         filepaths = [Path(item.path) for item in self.repo.tree().traverse() if item.type == 'blob']
         # Identify language by file extension and count
-        lang_count = {}
-        for filepath in filepaths:
-            ext = filepath.suffix.lower()  # Get the file extension
-            lang = ext.lstrip('.')  # Remove the dot
-            lang_count[lang] = lang_count.get(lang, 0) + 1
+        lang_count = Counter(ext.lstrip('.') for filepath in filepaths for ext in [filepath.suffix.lower()])
         # Convert counts to percentages
-        lang_percentage = {lang: count / len(filepaths) * 100 for lang, count in lang_count.items()}
+        total_files = len(filepaths)
+        lang_percentage = {lang: count / total_files * 100 for lang, count in lang_count.items()}
         return lang_percentage
 
     def get_pr_branch(self):
