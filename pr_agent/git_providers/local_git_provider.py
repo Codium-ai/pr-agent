@@ -35,7 +35,7 @@ class LocalGitProvider(GitProvider):
         self.head_branch_name = self.repo.head.ref.name
         self.branch_name = branch_name
         self.tmp_branch_name = f'pr_agent_{uuid.uuid4()}'
-        self.prepare_repo()
+        self._prepare_repo()
         self.diff_files = None
         self.pr = PullRequestMimic(self.get_pr_title(), self.get_diff_files())
         self.description_path = settings.get('local.description_path') \
