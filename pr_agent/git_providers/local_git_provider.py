@@ -65,7 +65,7 @@ class LocalGitProvider(GitProvider):
         """
         logging.debug('Preparing repository for PR-mimic generation...')
         if self.repo.is_dirty():
-            raise ValueError('The repository is not in a clean state. Please check in all files.')
+            raise ValueError('The repository is not in a clean state. Please commit or stash pending changes.')
         if self.tmp_branch_name in self.repo.heads:
             self.repo.delete_head(self.tmp_branch_name, force=True)
         self.repo.git.checkout('HEAD', b=self.tmp_branch_name)
