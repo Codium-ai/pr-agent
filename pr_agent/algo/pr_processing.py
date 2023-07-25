@@ -10,6 +10,7 @@ from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.algo.utils import load_large_diff
 from pr_agent.config_loader import settings
 from pr_agent.git_providers.git_provider import GitProvider
+from github import GithubException
 
 DELETED_FILES_ = "Deleted files:\n"
 
@@ -40,7 +41,10 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler, model: s
         global PATCH_EXTRA_LINES
         PATCH_EXTRA_LINES = 0
 
-    diff_files = list(git_provider.get_diff_files())
+    try:
+        diff_files = list(git_provider.get_diff_files())
+    except GithubException.RateLimitExceededException as e:
+        logging.warning("Rate limit exceeded for GitHub API.")
 
     # get pr languages
     pr_languages = sort_files_by_main_languages(git_provider.get_languages(), diff_files)
