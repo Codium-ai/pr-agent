@@ -14,7 +14,6 @@ from .git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
 
 class GitLabProvider(GitProvider):
 
-
     def __init__(self, merge_request_url: Optional[str] = None, incremental: Optional[bool] = False):
         gitlab_url = settings.get("GITLAB.URL", None)
         if not gitlab_url:
@@ -23,8 +22,8 @@ class GitLabProvider(GitProvider):
         if not gitlab_access_token:
             raise ValueError("GitLab personal access token is not set in the config file")
         self.gl = gitlab.Gitlab(
-            gitlab_url,
-            gitlab_access_token
+            url=gitlab_url,
+            oauth_token=gitlab_access_token
         )
         self.id_project = None
         self.id_mr = None
