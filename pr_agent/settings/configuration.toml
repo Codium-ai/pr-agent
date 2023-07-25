@@ -40,3 +40,8 @@ magic_word = "AutoReview"
 
 # Polling interval
 polling_interval_seconds = 30
+
+[local]
+# LocalGitProvider settings - uncomment to use paths other than default
+# description_path= "path/to/description.md"
+# review_path= "path/to/review.md"
