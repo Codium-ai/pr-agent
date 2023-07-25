@@ -36,8 +36,7 @@ def _find_repository_root() -> Path:
         if (cwd / ".git").is_dir():
             return cwd
         cwd = cwd.parent
-    raise FileNotFoundError("Could not find the repository root directory")
-
+    return None
 
 def _find_pyproject() -> Optional[Path]:
     """
