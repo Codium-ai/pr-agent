@@ -4,6 +4,7 @@ from typing import Optional, Tuple
 from urllib.parse import urlparse
 
 from github import AppAuthentication, Github, Auth, GithubException
+from git_provider import RateLimitExceeded
 
 from pr_agent.config_loader import settings
 
@@ -81,26 +82,31 @@ class GithubProvider(GitProvider):
     @retry(exceptions=(GithubException.RateLimitExceededException),
            tries=settings.github.ratelimit_retries, delay=2, backoff=2, jitter=(1, 3))
     def get_diff_files(self) -> list[FilePatchInfo]:
-        files = self.get_files()
-        diff_files = []
-        for file in files:
-            if is_valid_file(file.filename):
-                new_file_content_str = self._get_pr_file_content(file, self.pr.head.sha)
-                patch = file.patch
-                if self.incremental.is_incremental and self.file_set:
-                    original_file_content_str = self._get_pr_file_content(file, self.incremental.last_seen_commit_sha)
-                    patch = load_large_diff(file,
-                                            new_file_content_str,
-                                            original_file_content_str,
-                                             None)
-                    self.file_set[file.filename] = patch
-                else:
-                    original_file_content_str = self._get_pr_file_content(file, self.pr.base.sha)
+        try:
+            files = self.get_files()
+            diff_files = []
+            for file in files:
+                if is_valid_file(file.filename):
+                    new_file_content_str = self._get_pr_file_content(file, self.pr.head.sha)
+                    patch = file.patch
+                    if self.incremental.is_incremental and self.file_set:
+                        original_file_content_str = self._get_pr_file_content(file,
+                                                                              self.incremental.last_seen_commit_sha)
+                        patch = load_large_diff(file,
+                                                new_file_content_str,
+                                                original_file_content_str,
+                                                None)
+                        self.file_set[file.filename] = patch
+                    else:
+                        original_file_content_str = self._get_pr_file_content(file, self.pr.base.sha)
 
-                diff_files.append(
-                    FilePatchInfo(original_file_content_str, new_file_content_str, patch, file.filename))
-        self.diff_files = diff_files
-        return diff_files
+                    diff_files.append(
+                        FilePatchInfo(original_file_content_str, new_file_content_str, patch, file.filename))
+            self.diff_files = diff_files
+            return diff_files
+        except GithubException.RateLimitExceededException as e:
+            logging.error(f"Rate limit exceeded for GitHub API. Original message: {e}")
+            raise RateLimitExceeded("Rate limit exceeded for GitHub API.") from e
 
     def publish_description(self, pr_title: str, pr_body: str):
         self.pr.edit(title=pr_title, body=pr_body)
