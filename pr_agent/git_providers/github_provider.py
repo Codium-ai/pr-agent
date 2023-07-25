@@ -3,14 +3,14 @@ from datetime import datetime
 from typing import Optional, Tuple
 from urllib.parse import urlparse
 
-from github import AppAuthentication, Github, Auth
+from github import AppAuthentication, Github, Auth, GithubException
 
 from pr_agent.config_loader import settings
 
 from .git_provider import FilePatchInfo, GitProvider, IncrementalPR
 from ..algo.language_handler import is_valid_file
 from ..algo.utils import load_large_diff
-
+from retry import retry
 
 class GithubProvider(GitProvider):
     def __init__(self, pr_url: Optional[str] = None, incremental=IncrementalPR(False)):
@@ -78,6 +78,8 @@ class GithubProvider(GitProvider):
             return self.file_set.values()
         return self.pr.get_files()
 
+    @retry(exceptions=(GithubException.RateLimitExceededException),
+           tries=settings.github.ratelimit_retries, delay=2, backoff=2, jitter=(1, 3))
     def get_diff_files(self) -> list[FilePatchInfo]:
         files = self.get_files()
         diff_files = []
