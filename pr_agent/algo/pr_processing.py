@@ -44,7 +44,7 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler, model: s
     try:
         diff_files = list(git_provider.get_diff_files())
     except GithubException.RateLimitExceededException as e:
-        logging.warning("Rate limit exceeded for GitHub API.")
+        logging.error(f"Rate limit exceeded for GitHub API. original message {e}")
 
     # get pr languages
     pr_languages = sort_files_by_main_languages(git_provider.get_languages(), diff_files)
