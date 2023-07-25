@@ -42,9 +42,11 @@ def _find_pyproject() -> Optional[Path]:
     """
     Search for file pyproject.toml in the repository root.
     """
-    pyproject = _find_repository_root() / "pyproject.toml"
-    return pyproject if pyproject.is_file() else None
-
+    repo_root = _find_repository_root()
+    if repo_root:
+        pyproject = _find_repository_root() / "pyproject.toml"
+        return pyproject if pyproject.is_file() else None
+    return None
 
 pyproject_path = _find_pyproject()
 if pyproject_path is not None:
