@@ -10,6 +10,7 @@ from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.algo.utils import load_large_diff
 from pr_agent.config_loader import settings
 from pr_agent.git_providers.git_provider import GitProvider
+from github import GithubException
 
 
 DELETED_FILES_ = "Deleted files:\n"
