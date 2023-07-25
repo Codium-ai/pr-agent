@@ -77,8 +77,9 @@ class LocalGitProvider(GitProvider):
             raise ValueError('Error while rebasing. Resolve conflicts before retrying.') from e
 
     def is_supported(self, capability: str) -> bool:
-        # TODO implement
-        pass
+        if capability in ['get_issue_comments', 'create_inline_comment', 'publish_inline_comments', 'get_labels']:
+            return False
+        return True
 
     def get_diff_files(self) -> list[FilePatchInfo]:
         diffs = self.repo.head.commit.diff(
