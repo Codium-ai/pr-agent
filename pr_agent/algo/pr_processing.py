@@ -3,6 +3,8 @@ from __future__ import annotations
 import logging
 from typing import Tuple, Union, Callable, List
 
+from github import RateLimitExceededException
+
 from pr_agent.algo import MAX_TOKENS
 from pr_agent.algo.git_patch_processing import convert_to_hunks_with_lines_numbers, extend_patch, handle_patch_deletions
 from pr_agent.algo.language_handler import sort_files_by_main_languages
@@ -10,7 +12,6 @@ from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.algo.utils import load_large_diff
 from pr_agent.config_loader import settings
 from pr_agent.git_providers.git_provider import GitProvider
-from git_provider import RateLimitExceeded
 
 DELETED_FILES_ = "Deleted files:\n"
 
