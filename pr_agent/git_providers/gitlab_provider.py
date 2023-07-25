@@ -237,20 +237,30 @@ class GitLabProvider(GitProvider):
     def get_issue_comments(self):
         raise NotImplementedError("GitLab provider does not support issue comments yet")
 
-    def _parse_merge_request_url(self, merge_request_url: str) -> Tuple[int, int]:
+    def _parse_merge_request_url(self, merge_request_url: str) -> Tuple[str, int]:
         parsed_url = urlparse(merge_request_url)
 
         path_parts = parsed_url.path.strip('/').split('/')
-        if path_parts[-2] != 'merge_requests':
+        if 'merge_requests' not in path_parts:
             raise ValueError("The provided URL does not appear to be a GitLab merge request URL")
 
+        mr_index = path_parts.index('merge_requests')
+        # Ensure there is an ID after 'merge_requests'
+        if len(path_parts) <= mr_index + 1:
+            raise ValueError("The provided URL does not contain a merge request ID")
+
         try:
-            mr_id = int(path_parts[-1])
+            mr_id = int(path_parts[mr_index + 1])
         except ValueError as e:
             raise ValueError("Unable to convert merge request ID to integer") from e
 
-        # Gitlab supports access by both project numeric ID as well as 'namespace/project_name'
-        return "/".join(path_parts[:2]), mr_id
+        # Handle special delimiter (-)
+        project_path = "/".join(path_parts[:mr_index])
+        if project_path.endswith('/-'):
+            project_path = project_path[:-2]
+
+        # Return the path before 'merge_requests' and the ID
+        return project_path, mr_id
 
     def _get_merge_request(self):
         mr = self.gl.projects.get(self.id_project).mergerequests.get(self.id_mr)
