@@ -167,7 +167,7 @@ class LocalGitProvider(GitProvider):
         """
         Substitutes the branch-name as the PR-mimic title.
         """
-        return self.target_branch_name
+        return self.head_branch_name
 
     def get_issue_comments(self):
         raise NotImplementedError('Getting issue comments is not implemented for the local git provider')
