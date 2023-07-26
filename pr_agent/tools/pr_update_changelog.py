@@ -30,14 +30,15 @@ class PRUpdateChangelog:
             changelog_file_lines = changelog_file_lines[:CHANGELOG_LINES]
             self.changelog_file_str = "\n".join(changelog_file_lines)
         except:
-            if settings.pr_update_changelog.push_changelog_changes:
+            self.changelog_file_str = ""
+            if settings.config.publish_output and settings.pr_update_changelog.push_changelog_changes:
                 logging.info("No CHANGELOG.md file found in the repository. Creating one...")
                 changelog_file = self.git_provider.repo_obj.create_file(path="CHANGELOG.md",
                                                                              message='add CHANGELOG.md',
                                                                              content="",
                                                                              branch=self.git_provider.get_pr_branch())
                 self.changelog_file = changelog_file['content']
-                self.changelog_file_str = ""
+
         if not self.changelog_file_str:
             self.changelog_file_str = self._get_default_changelog()
 
@@ -84,12 +85,7 @@ class PRUpdateChangelog:
 
     async def _prepare_prediction(self, model: str):
         logging.info('Getting PR diff...')
-        # we are using extended hunk with line numbers for code suggestions
-        self.patches_diff = get_pr_diff(self.git_provider,
-                                        self.token_handler,
-                                        model,
-                                        add_line_numbers_to_hunks=True,
-                                        disable_extra_lines=True)
+        self.patches_diff = get_pr_diff(self.git_provider, self.token_handler, model)
         logging.info('Getting AI prediction...')
         self.prediction = await self._get_prediction(model)
 
@@ -109,7 +105,10 @@ class PRUpdateChangelog:
 
     def _prepare_changelog_update(self) -> Tuple[str, str]:
         answer = self.prediction.strip().strip("```").strip()
-        existing_content = self.changelog_file.decoded_content.decode()
+        if hasattr(self, "changelog_file"):
+            existing_content = self.changelog_file.decoded_content.decode()
+        else:
+            existing_content = ""
         if existing_content:
             new_file_content = answer + "\n\n" + self.changelog_file.decoded_content.decode()
         else:
