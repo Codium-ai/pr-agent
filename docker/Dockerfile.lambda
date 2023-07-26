@@ -4,9 +4,9 @@ RUN yum update -y && \
     yum install -y gcc python3-devel && \
     yum clean all
 
-ADD requirements.txt .
-RUN pip install -r requirements.txt && rm requirements.txt
-RUN pip install mangum==16.0.0
+ADD pyproject.toml .
+RUN pip install . && rm pyproject.toml
+RUN pip install mangum==0.17.0
 COPY pr_agent/ ${LAMBDA_TASK_ROOT}/pr_agent/
 
 CMD ["pr_agent.servers.serverless.serverless"]
