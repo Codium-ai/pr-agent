@@ -2,6 +2,7 @@ import copy
 import json
 import logging
 import textwrap
+from datetime import date
 from typing import Tuple
 
 from jinja2 import Environment, StrictUndefined
@@ -13,6 +14,8 @@ from pr_agent.config_loader import settings
 from pr_agent.git_providers import get_git_provider, GithubProvider
 from pr_agent.git_providers.git_provider import get_main_pr_language
 
+CHANGELOG_LINES = 50
+
 
 class PRUpdateChangelog:
     def __init__(self, pr_url: str, cli_mode=False):
@@ -21,14 +24,17 @@ class PRUpdateChangelog:
         self.main_language = get_main_pr_language(
             self.git_provider.get_languages(), self.git_provider.get_files()
         )
-        max_lines=50
         try:
-            self.changelog_file = self.git_provider.repo_obj.get_contents("CHANGELOG.md", ref=self.git_provider.get_pr_branch())
+            self.changelog_file = self.git_provider.repo_obj.get_contents("CHANGELOG.md",
+                                                                          ref=self.git_provider.get_pr_branch())
             changelog_file_lines = self.changelog_file.decoded_content.decode().splitlines()
-            changelog_file_lines = changelog_file_lines[:max_lines]
+            changelog_file_lines = changelog_file_lines[:CHANGELOG_LINES]
             self.changelog_file_str = "\n".join(changelog_file_lines)
         except:
             raise Exception("No CHANGELOG.md file found in the repository")
+
+        today = date.today()
+        print("Today's date:", today)
 
         self.ai_handler = AiHandler()
         self.patches_diff = None
@@ -41,6 +47,7 @@ class PRUpdateChangelog:
             "language": self.main_language,
             "diff": "",  # empty diff for initial calculation
             "changelog_file": self.changelog_file_str,
+            "today": today,
         }
         self.token_handler = TokenHandler(self.git_provider.pr,
                                           self.vars,
@@ -56,11 +63,11 @@ class PRUpdateChangelog:
         await retry_with_fallback_models(self._prepare_prediction)
         logging.info('Preparing PR changelog updates...')
         new_file_content, answer = self._prepare_changelog_update()
-        if settings.config.publish_output or True:
+        if settings.config.publish_output:
             self.git_provider.remove_initial_comment()
             logging.info('publishing changelog updates...')
             self.git_provider.publish_comment(f"**Changelog updates:**\n\n{answer}")
-            if settings.pr_update_changelog_prompt.push_changelog_changes:
+            if settings.pr_update_changelog.push_changelog_changes:
                 logging.info('Pushing PR changelog updates...')
                 self.push_changelog_update(new_file_content)
 
@@ -89,10 +96,11 @@ class PRUpdateChangelog:
 
         return response
 
-    def _prepare_changelog_update(self) -> Tuple[str,str]:
+    def _prepare_changelog_update(self) -> Tuple[str, str]:
         answer = self.prediction.strip().strip("```").strip()
-        new_file_content = answer.strip().strip("```").strip() + "\n\n" + self.changelog_file.decoded_content.decode()
-
+        new_file_content = answer + "\n\n" + self.changelog_file.decoded_content.decode()
+        if settings.config.verbosity_level >= 2:
+            logging.info(f"answer:\n{answer}")
         return new_file_content, answer
 
     def push_changelog_update(self, new_file_content):
