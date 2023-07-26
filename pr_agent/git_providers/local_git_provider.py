@@ -30,6 +30,8 @@ class LocalGitProvider(GitProvider):
 
     def __init__(self, target_branch_name, incremental=False):
         self.repo_path = _find_repository_root()
+        if self.repo_path is None:
+            raise ValueError('Could not find repository root')
         self.repo = Repo(self.repo_path)
         self.head_branch_name = self.repo.head.ref.name
         self.target_branch_name = target_branch_name
