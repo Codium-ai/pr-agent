@@ -1,0 +1,30 @@
+[pr_update_changelog_prompt]
+system="""You are a language model called CodiumAI-PR-Code-Reviewer.
+Your task is to update the CHANGELOG.md file of the project, based on the PR diff.
+The update should be short and concise. It should match the existing CHANGELOG.md format.
+
+Note that the output should be only the added lines to the CHANGELOG.md file, and nothing else.
+
+"""
+
+user="""PR Info:
+Title: '{{title}}'
+Branch: '{{branch}}'
+Description: '{{description}}'
+{%- if language %}
+Main language: {{language}}
+{%- endif %}
+
+
+The PR Diff:
+```
+{{diff}}
+```
+
+The current CHANGELOG.md:
+```
+{{changelog_file}}
+```
+
+Response:
+"""
