@@ -81,6 +81,7 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 |       | Auto-Description                            |   :white_check_mark:    |  :white_check_mark:      |           |
 |       | Improve Code                                |   :white_check_mark:    |   :white_check_mark:    |           |
 |       | Reflect and Review                          |   :white_check_mark:    |                         |           |
+|       | Update CHANGELOG.md                         |   :white_check_mark:    |                         |           |
 |       |                                             |        |        |           |
 | USAGE | CLI                                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |
 |       | App / webhook                               |   :white_check_mark:    |   :white_check_mark:    |           |
@@ -98,6 +99,7 @@ Examples for invoking the different tools via the CLI:
 - **Improve**:      python cli.py --pr-url=<pr_url>  improve
 - **Ask**:          python cli.py --pr-url=<pr_url>  ask "Write me a poem about this PR"
 - **Reflect**:      python cli.py --pr-url=<pr_url>  reflect
+- **Update changelog**:      python cli.py --pr-url=<pr_url>  update_changelog
 
 "<pr_url>" is the url of the relevant PR (for example: https://github.com/Codium-ai/pr-agent/pull/50).
 
