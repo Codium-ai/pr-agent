@@ -30,7 +30,7 @@ Current date:
 
 The current CHANGELOG.md:
 ```
-{{changelog_file}}
+{{changelog_file_str}}
 ```
 
 Response:

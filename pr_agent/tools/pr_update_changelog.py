@@ -1,8 +1,7 @@
 import copy
-import json
 import logging
-import textwrap
 from datetime import date
+from time import sleep
 from typing import Tuple
 
 from jinja2 import Environment, StrictUndefined
@@ -31,7 +30,17 @@ class PRUpdateChangelog:
             changelog_file_lines = changelog_file_lines[:CHANGELOG_LINES]
             self.changelog_file_str = "\n".join(changelog_file_lines)
         except:
-            raise Exception("No CHANGELOG.md file found in the repository")
+            if settings.pr_update_changelog.push_changelog_changes:
+                logging.info("No CHANGELOG.md file found in the repository. Creating one...")
+                changelog_file = self.git_provider.repo_obj.create_file(path="CHANGELOG.md",
+                                                                             message='add CHANGELOG.md',
+                                                                             content="",
+                                                                             branch=self.git_provider.get_pr_branch())
+                self.changelog_file = changelog_file['content']
+                self.changelog_file_str = ""
+        if not self.changelog_file_str:
+            self.changelog_file_str = self._get_default_changelog()
+
 
         today = date.today()
         print("Today's date:", today)
@@ -46,7 +55,7 @@ class PRUpdateChangelog:
             "description": self.git_provider.get_pr_description(),
             "language": self.main_language,
             "diff": "",  # empty diff for initial calculation
-            "changelog_file": self.changelog_file_str,
+            "changelog_file_str": self.changelog_file_str,
             "today": today,
         }
         self.token_handler = TokenHandler(self.git_provider.pr,
@@ -65,11 +74,13 @@ class PRUpdateChangelog:
         new_file_content, answer = self._prepare_changelog_update()
         if settings.config.publish_output:
             self.git_provider.remove_initial_comment()
-            logging.info('publishing changelog updates...')
-            self.git_provider.publish_comment(f"**Changelog updates:**\n\n{answer}")
+            logging.info('Publishing changelog updates...')
             if settings.pr_update_changelog.push_changelog_changes:
-                logging.info('Pushing PR changelog updates...')
-                self.push_changelog_update(new_file_content)
+                logging.info('Pushing PR changelog updates to repo...')
+                self._push_changelog_update(new_file_content, answer)
+            else:
+                logging.info('Publishing PR changelog as comment...')
+                self.git_provider.publish_comment(f"**Changelog updates:**\n\n{answer}")
 
     async def _prepare_prediction(self, model: str):
         logging.info('Getting PR diff...')
@@ -98,14 +109,46 @@ class PRUpdateChangelog:
 
     def _prepare_changelog_update(self) -> Tuple[str, str]:
         answer = self.prediction.strip().strip("```").strip()
-        new_file_content = answer + "\n\n" + self.changelog_file.decoded_content.decode()
+        existing_content = self.changelog_file.decoded_content.decode()
+        if existing_content:
+            new_file_content = answer + "\n\n" + self.changelog_file.decoded_content.decode()
+        else:
+            new_file_content = answer
         if settings.config.verbosity_level >= 2:
             logging.info(f"answer:\n{answer}")
         return new_file_content, answer
 
-    def push_changelog_update(self, new_file_content):
+    def _push_changelog_update(self, new_file_content, answer):
         self.git_provider.repo_obj.update_file(path=self.changelog_file.path,
                                                message="Update CHANGELOG.md",
                                                content=new_file_content,
                                                sha=self.changelog_file.sha,
                                                branch=self.git_provider.get_pr_branch())
+        d = dict(body="CHANGELOG.md update",
+                 path=self.changelog_file.path,
+                 line=max(2, len(answer.splitlines())),
+                 start_line=1)
+
+        sleep(5)  # wait for the file to be updated
+        last_commit_id = list(self.git_provider.pr.get_commits())[-1]
+        try:
+            self.git_provider.pr.create_review(commit=last_commit_id, comments=[d])
+        except:
+            # we can't create a review for some reason, let's just publish a comment
+            self.git_provider.publish_comment(f"**Changelog updates:**\n\n{answer}")
+
+
+    def _get_default_changelog(self):
+        example_changelog = \
+"""
+Example:
+## <current_date>
+
+### Added
+...
+### Changed
+...
+### Fixed
+...
+"""
+        return example_changelog
