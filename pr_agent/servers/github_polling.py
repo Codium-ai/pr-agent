@@ -15,28 +15,40 @@ NOTIFICATION_URL = "https://api.github.com/notifications"
 
 
 def now() -> str:
+    """
+    Get the current UTC time in ISO 8601 format.
+    
+    Returns:
+        str: The current UTC time in ISO 8601 format.
+    """
     now_utc = datetime.now(timezone.utc).isoformat()
     now_utc = now_utc.replace("+00:00", "Z")
     return now_utc
 
 
 async def polling_loop():
+    """
+    Polls for notifications and handles them accordingly.
+    """
     handled_ids = set()
     since = [now()]
     last_modified = [None]
     git_provider = get_git_provider()()
     user_id = git_provider.get_user_id()
     agent = PRAgent()
+
     try:
         deployment_type = settings.github.deployment_type
         token = settings.github.user_token
     except AttributeError:
         deployment_type = 'none'
         token = None
+
     if deployment_type != 'user':
         raise ValueError("Deployment mode must be set to 'user' to get notifications")
     if not token:
         raise ValueError("User token must be set to get notifications")
+
     async with aiohttp.ClientSession() as session:
         while True:
             try:
@@ -52,6 +64,7 @@ async def polling_loop():
                     params["since"] = since[0]
                 if last_modified[0]:
                     headers["If-Modified-Since"] = last_modified[0]
+
                 async with session.get(NOTIFICATION_URL, headers=headers, params=params) as response:
                     if response.status == 200:
                         if 'Last-Modified' in response.headers:
