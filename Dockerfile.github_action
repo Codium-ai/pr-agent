@@ -1,8 +1,8 @@
 FROM python:3.10 as base
 
 WORKDIR /app
-ADD requirements.txt .
-RUN pip install -r requirements.txt && rm requirements.txt
+ADD pyproject.toml .
+RUN pip install . && rm pyproject.toml
 ENV PYTHONPATH=/app
 ADD pr_agent pr_agent
 ADD github_action/entrypoint.sh /
