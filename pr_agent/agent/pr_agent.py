@@ -23,7 +23,7 @@ class PRAgent:
             else:
                 await PRReviewer(pr_url, args=args).review()
         elif any(cmd == action for cmd in ["/describe", "/describe_pr"]):
-            await PRDescription(pr_url).describe()
+            await PRDescription(pr_url, args=args).describe()
         elif any(cmd == action for cmd in ["/improve", "/improve_code"]):
             await PRCodeSuggestions(pr_url).suggest()
         elif any(cmd == action for cmd in ["/ask", "/ask_question"]):

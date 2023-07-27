@@ -14,12 +14,14 @@ from pr_agent.git_providers.git_provider import get_main_pr_language
 
 
 class PRDescription:
-    def __init__(self, pr_url: str):
+    def __init__(self, pr_url: str, args: list = None):
         """
         Initialize the PRDescription object with the necessary attributes and objects for generating a PR description using an AI model.
         Args:
             pr_url (str): The URL of the pull request.
+            args (list, optional): List of arguments passed to the PRDescription class. Defaults to None.
         """
+        self.parse_args(args)
         
         # Initialize the git provider and main PR language
         self.git_provider = get_git_provider()(pr_url)
@@ -51,6 +53,22 @@ class PRDescription:
         self.patches_diff = None
         self.prediction = None
 
+    def parse_args(self, args: List[str]) -> None:
+        """
+        Parse the arguments passed to the PRDescription class and set the 'publish_description_as_comment' attribute accordingly.
+
+        Args:
+            args: A list of arguments passed to the PRReviewer class.
+
+        Returns:
+            None
+        """
+        self.publish_description_as_comment = settings.pr_description.publish_description_as_comment
+        if args and len(args) >= 1:
+            arg = args[0]
+            if arg == "-c":
+                self.publish_description_as_comment = True
+
     async def describe(self):
         """
         Generates a PR description using an AI model and publishes it to the PR.
@@ -66,7 +84,7 @@ class PRDescription:
         
         if settings.config.publish_output:
             logging.info('Pushing answer...')
-            if settings.pr_description.publish_description_as_comment:
+            if self.publish_description_as_comment:
                 self.git_provider.publish_comment(markdown_text)
             else:
                 self.git_provider.publish_description(pr_title, pr_body)

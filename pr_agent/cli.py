@@ -73,7 +73,7 @@ def _handle_ask_command(pr_url: str, rest: list):
 
 def _handle_describe_command(pr_url: str, rest: list):
     print(f"PR description: {pr_url}")
-    reviewer = PRDescription(pr_url)
+    reviewer = PRDescription(pr_url, args=rest)
     asyncio.run(reviewer.describe())
 
 
