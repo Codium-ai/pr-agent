@@ -6,16 +6,18 @@ build-backend = "setuptools.build_meta"
 name = "pr_agent"
 version = "0.0.1"
 
-# FIXME: add authors/maintainers
 authors = [
-  {name = "Ori Kotek", email = "ori.k@codium.ai"},
+  {name = "Itamar Friedman", email = "itamar.f@codium.ai"},
 ]
 maintainers = [
   {name = "Ori Kotek", email = "ori.k@codium.ai"},
+  {name = "Tal Ridnik", email = "tal.r@codium.ai"},
+  {name = "Hussam Lawen", email = "hussam.l@codium.ai"},
+  {name = "Sagi Medina", email = "sagi.m@codium.ai"}
 ]
 description = "CodiumAI PR-Agent is an open-source tool to automatically analyze a pull request and provide several types of feedback"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 keywords = ["ai", "tool", "developer", "review", "agent"]
 license = {file = "LICENSE", name = "Apache 2.0 License"}
 classifiers = [
