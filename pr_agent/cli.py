@@ -102,7 +102,7 @@ def _handle_review_after_reflect_command(pr_url: str, rest: list):
 
 def _handle_update_changelog(pr_url: str, rest: list):
     print(f"Updating changlog for: {pr_url}")
-    reviewer = PRUpdateChangelog(pr_url, cli_mode=True)
+    reviewer = PRUpdateChangelog(pr_url, cli_mode=True, args=rest)
     asyncio.run(reviewer.update_changelog())
 
 if __name__ == '__main__':
