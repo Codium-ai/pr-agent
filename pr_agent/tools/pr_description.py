@@ -160,11 +160,11 @@ class PRDescription:
         # Iterate over the remaining dictionary items and append the key and value to 'pr_body' in a markdown format,
         # except for the items containing the word 'walkthrough'
         for key, value in data.items():
-            pr_body += f"{key}:\n"
+            pr_body += f"## {key}:\n"
             if 'walkthrough' in key.lower():
                 pr_body += f"{value}\n"
             else:
-                pr_body += f"**{value}**\n\n___\n"
+                pr_body += f"{value}\n\n___\n"
 
         if settings.config.verbosity_level >= 2:
             logging.info(f"title:\n{title}\n{pr_body}")
