@@ -8,6 +8,7 @@ from pr_agent.tools.pr_description import PRDescription
 from pr_agent.tools.pr_information_from_user import PRInformationFromUser
 from pr_agent.tools.pr_questions import PRQuestions
 from pr_agent.tools.pr_reviewer import PRReviewer
+from pr_agent.tools.pr_update_changelog import PRUpdateChangelog
 
 
 def run(args=None):
@@ -27,13 +28,15 @@ ask / ask_question [question] - Ask a question about the PR.
 describe / describe_pr - Modify the PR title and description based on the PR's contents.
 improve / improve_code - Suggest improvements to the code in the PR as pull request comments ready to commit.
 reflect - Ask the PR author questions about the PR.
+update_changelog - Update the changelog based on the PR's contents.
 """)
     parser.add_argument('--pr_url', type=str, help='The URL of the PR to review', required=True)
     parser.add_argument('command', type=str, help='The', choices=['review', 'review_pr',
                                                                   'ask', 'ask_question',
                                                                   'describe', 'describe_pr',
                                                                   'improve', 'improve_code',
-                                                                  'reflect', 'review_after_reflect'],
+                                                                  'reflect', 'review_after_reflect',
+                                                                   'update_changelog'],
                                                                    default='review')
     parser.add_argument('rest', nargs=argparse.REMAINDER, default=[])
     args = parser.parse_args(args)
@@ -49,7 +52,8 @@ reflect - Ask the PR author questions about the PR.
         'review': _handle_review_command,
         'review_pr': _handle_review_command,
         'reflect': _handle_reflect_command,
-        'review_after_reflect': _handle_review_after_reflect_command
+        'review_after_reflect': _handle_review_after_reflect_command,
+        'update_changelog': _handle_update_changelog,
     }
     if command in commands:
         commands[command](args.pr_url, args.rest)
@@ -96,6 +100,10 @@ def _handle_review_after_reflect_command(pr_url: str, rest: list):
     reviewer = PRReviewer(pr_url, cli_mode=True, is_answer=True)
     asyncio.run(reviewer.review())
 
+def _handle_update_changelog(pr_url: str, rest: list):
+    print(f"Updating changlog for: {pr_url}")
+    reviewer = PRUpdateChangelog(pr_url, cli_mode=True, args=rest)
+    asyncio.run(reviewer.update_changelog())
 
 if __name__ == '__main__':
     run()

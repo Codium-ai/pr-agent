@@ -1,6 +1,6 @@
 [config]
 model="gpt-4"
-fallback-models=["gpt-3.5-turbo-16k", "gpt-3.5-turbo"]
+fallback_models=["gpt-3.5-turbo-16k"]
 git_provider="github"
 publish_output=true
 publish_output_progress=true
@@ -23,6 +23,9 @@ publish_description_as_comment=false
 
 [pr_code_suggestions]
 num_code_suggestions=4
+
+[pr_update_changelog]
+push_changelog_changes=false
 
 [github]
 # The type of deployment to create. Valid values are 'app' or 'user'.

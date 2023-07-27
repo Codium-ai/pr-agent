@@ -6,6 +6,7 @@ from pr_agent.tools.pr_description import PRDescription
 from pr_agent.tools.pr_information_from_user import PRInformationFromUser
 from pr_agent.tools.pr_questions import PRQuestions
 from pr_agent.tools.pr_reviewer import PRReviewer
+from pr_agent.tools.pr_update_changelog import PRUpdateChangelog
 
 
 class PRAgent:
@@ -26,7 +27,9 @@ class PRAgent:
         elif any(cmd == action for cmd in ["/improve", "/improve_code"]):
             await PRCodeSuggestions(pr_url).suggest()
         elif any(cmd == action for cmd in ["/ask", "/ask_question"]):
-            await PRQuestions(pr_url, args).answer()
+            await PRQuestions(pr_url, args=args).answer()
+        elif any(cmd == action for cmd in ["/update_changelog"]):
+            await PRUpdateChangelog(pr_url, args=args).update_changelog()
         else:
             return False
 
