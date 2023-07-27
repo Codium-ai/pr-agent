@@ -93,8 +93,8 @@ class PRUpdateChangelog:
         else:
             new_file_content = answer
 
-        if not self.cli_mode and self.commit_changelog:
-            answer += "\n\n\n>to commit the new contnet to the CHANGELOG.md file, please type:" \
+        if not self.commit_changelog:
+            answer += "\n\n\n>to commit the new content to the CHANGELOG.md file, please type:" \
                       "\n>'/update_changelog -commit'\n"
 
         if settings.config.verbosity_level >= 2:
