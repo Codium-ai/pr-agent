@@ -66,6 +66,7 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 - [Usage and tools](#usage-and-tools)
 - [Configuration](./CONFIGURATION.md)
 - [How it works](#how-it-works)
+- [Why use PR-Agent](#why-use-pr-agent)
 - [Roadmap](#roadmap)
 - [Similar projects](#similar-projects)
 </div>
@@ -145,6 +146,19 @@ There are several ways to use PR-Agent:
 ![PR-Agent Tools](https://www.codium.ai/wp-content/uploads/2023/07/codiumai-diagram-v4.jpg)
 
 Check out the [PR Compression strategy](./PR_COMPRESSION.md) page for more details on how we convert a code diff to a manageable LLM prompt
+
+## Why use PR-Agent?
+
+A reasonable question that can be asked is: `"Why use PR-Agent? What make it stand out from existing tools?"`
+
+Here are some of the reasons why:
+
+- We emphasize **real-life practical usage**. Each tool (review, improve, ask, ...) has a single GPT-4 call, no more. We feel that this is critical for realistic team usage - obtaining an answer quickly (~30 seconds) and affordably.
+- Our [PR Compression strategy](./PR_COMPRESSION.md)  is a core ability that enables to effectively tackle both short and long PRs.
+- Our JSON prompting strategy enables to have **modular, customizable tools**. For example, the '/review' tool categories can be controlled via the configuration file. Adding additional categories is easy and accessible.
+- We support **multiple git providers** (GitHub, Gitlab, Bitbucket), and multiple ways to use the tool (CLI, GitHub Action, Docker, ...).
+- We are open-source, and welcome contributions from the community.
+
 
 ## Roadmap
 
