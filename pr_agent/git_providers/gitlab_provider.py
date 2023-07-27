@@ -49,7 +49,7 @@ class GitLabProvider(GitProvider):
     def _set_merge_request(self, merge_request_url: str):
         self.id_project, self.id_mr = self._parse_merge_request_url(merge_request_url)
         self.mr = self._get_merge_request()
-        self.last_diff = self.mr.diffs.list()[-1]
+        self.last_diff = self.mr.diffs.list(all=True)[-1]
 
     def _get_pr_file_content(self, file_path: str, branch: str) -> str:
         try:
