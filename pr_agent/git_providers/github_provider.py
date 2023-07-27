@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 
 from github import AppAuthentication, Auth, Github, GithubException
 from retry import retry
+from starlette_context import context
 
 from pr_agent.config_loader import settings
 
@@ -17,7 +18,7 @@ from ..servers.utils import RateLimitExceeded
 class GithubProvider(GitProvider):
     def __init__(self, pr_url: Optional[str] = None, incremental=IncrementalPR(False)):
         self.repo_obj = None
-        self.installation_id = settings.get("GITHUB.INSTALLATION_ID")
+        self.installation_id = context.get("installation_id", None)
         self.github_client = self._get_github_client()
         self.repo = None
         self.pr_num = None

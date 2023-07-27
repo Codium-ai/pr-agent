@@ -4,6 +4,9 @@ import sys
 
 import uvicorn
 from fastapi import APIRouter, FastAPI, HTTPException, Request, Response
+from starlette.middleware import Middleware
+from starlette_context import context
+from starlette_context.middleware import RawContextMiddleware
 
 from pr_agent.agent.pr_agent import PRAgent
 from pr_agent.config_loader import settings
@@ -36,7 +39,9 @@ async def handle_github_webhooks(request: Request, response: Response):
         verify_signature(body_bytes, webhook_secret, signature_header)
     
     logging.debug(f'Request body:\n{body}')
-    
+    installation_id = body.get("installation", {}).get("id")
+    context["installation_id"] = installation_id
+
     return await handle_request(body)
 
 
@@ -48,8 +53,6 @@ async def handle_request(body: Dict[str, Any]):
         body: The request body.
     """
     action = body.get("action")
-    installation_id = body.get("installation", {}).get("id")
-    settings.set("GITHUB.INSTALLATION_ID", installation_id)
     agent = PRAgent()
 
     if action == 'created':
@@ -85,7 +88,8 @@ async def root():
 def start():
     # Override the deployment type to app
     settings.set("GITHUB.DEPLOYMENT_TYPE", "app")
-    app = FastAPI()
+    middleware = [Middleware(RawContextMiddleware)]
+    app = FastAPI(middleware=middleware)
     app.include_router(router)
 
     uvicorn.run(app, host="0.0.0.0", port=3000)
