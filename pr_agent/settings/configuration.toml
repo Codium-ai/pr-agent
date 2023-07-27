@@ -30,6 +30,7 @@ push_changelog_changes=false
 [github]
 # The type of deployment to create. Valid values are 'app' or 'user'.
 deployment_type = "user"
+ratelimit_retries = 5
 
 [gitlab]
 # URL to the gitlab service
