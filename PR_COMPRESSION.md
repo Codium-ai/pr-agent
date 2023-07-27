@@ -31,7 +31,7 @@ We prioritize additions over deletions:
  - File patches are a list of hunks, remove all hunks of type deletion-only from the hunks in the file patch
 ####  Adaptive and token-aware file patch fitting
 We use [tiktoken](https://github.com/openai/tiktoken) to tokenize the patches after the modifications described above, and we use the following strategy to fit the patches into the prompt:
-1. Withing each language we sort the files by the number of tokens in the file (in descending order):
+1. Within each language we sort the files by the number of tokens in the file (in descending order):
    * ```[[file2.py, file.py],[file4.jsx, file3.js],[readme.md]]```
 2. Iterate through the patches in the order described above
 2. Add the patches to the prompt until the prompt reaches a certain buffer from the max token length
