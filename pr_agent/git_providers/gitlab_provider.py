@@ -11,6 +11,8 @@ from pr_agent.config_loader import settings
 from ..algo.language_handler import is_valid_file
 from .git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
 
+logger = logging.getLogger()
+
 
 class GitLabProvider(GitProvider):
 
@@ -48,7 +50,12 @@ class GitLabProvider(GitProvider):
     def _set_merge_request(self, merge_request_url: str):
         self.id_project, self.id_mr = self._parse_merge_request_url(merge_request_url)
         self.mr = self._get_merge_request()
-        self.last_diff = self.mr.diffs.list()[-1]
+        try:
+            self.last_diff = self.mr.diffs.list(get_all=True)[-1]
+        except IndexError as e:
+            logger.error(f"Could not get diff for merge request {self.id_mr}")
+            raise ValueError(f"Could not get diff for merge request {self.id_mr}") from e
+
 
     def _get_pr_file_content(self, file_path: str, branch: str) -> str:
         try:
