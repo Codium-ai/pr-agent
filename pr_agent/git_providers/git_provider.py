@@ -136,3 +136,4 @@ class IncrementalPR:
         self.commits_range = None
         self.first_new_commit_sha = None
         self.last_seen_commit_sha = None
+

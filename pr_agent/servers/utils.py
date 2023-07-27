@@ -21,3 +21,7 @@ def verify_signature(payload_body, secret_token, signature_header):
     if not hmac.compare_digest(expected_signature, signature_header):
         raise HTTPException(status_code=403, detail="Request signatures didn't match!")
 
+
+class RateLimitExceeded(Exception):
+    """Raised when the git provider API rate limit has been exceeded."""
+    pass

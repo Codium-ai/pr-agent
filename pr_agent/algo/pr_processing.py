@@ -3,6 +3,8 @@ from __future__ import annotations
 import logging
 from typing import Tuple, Union, Callable, List
 
+from github import RateLimitExceededException
+
 from pr_agent.algo import MAX_TOKENS
 from pr_agent.algo.git_patch_processing import convert_to_hunks_with_lines_numbers, extend_patch, handle_patch_deletions
 from pr_agent.algo.language_handler import sort_files_by_main_languages
@@ -18,7 +20,6 @@ MORE_MODIFIED_FILES_ = "More modified files:\n"
 OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD = 1000
 OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD = 600
 PATCH_EXTRA_LINES = 3
-
 
 def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler, model: str,
                 add_line_numbers_to_hunks: bool = False, disable_extra_lines: bool = False) -> str:
@@ -40,7 +41,11 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler, model: s
         global PATCH_EXTRA_LINES
         PATCH_EXTRA_LINES = 0
 
-    diff_files = list(git_provider.get_diff_files())
+    try:
+        diff_files = list(git_provider.get_diff_files())
+    except RateLimitExceededException as e:
+        logging.error(f"Rate limit exceeded for git provider API. original message {e}")
+        raise
 
     # get pr languages
     pr_languages = sort_files_by_main_languages(git_provider.get_languages(), diff_files)
