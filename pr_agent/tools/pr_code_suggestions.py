@@ -91,22 +91,28 @@ class PRCodeSuggestions:
     def push_inline_code_suggestions(self, data):
         code_suggestions = []
         for d in data['Code suggestions']:
-            if settings.config.verbosity_level >= 2:
-                logging.info(f"suggestion: {d}")
-            relevant_file = d['relevant file'].strip()
-            relevant_lines_str = d['relevant lines'].strip()
-            relevant_lines_start = int(relevant_lines_str.split('-')[0])  # absolute position
-            relevant_lines_end = int(relevant_lines_str.split('-')[-1])
-            content = d['suggestion content']
-            new_code_snippet = d['improved code']
+            try:
+                if settings.config.verbosity_level >= 2:
+                    logging.info(f"suggestion: {d}")
+                relevant_file = d['relevant file'].strip()
+                relevant_lines_str = d['relevant lines'].strip()
+                if ',' in relevant_lines_str:  # handling 'relevant lines': '181, 190' or '178-184, 188-194'
+                    relevant_lines_str = relevant_lines_str.split(',')[0]
+                relevant_lines_start = int(relevant_lines_str.split('-')[0])  # absolute position
+                relevant_lines_end = int(relevant_lines_str.split('-')[-1])
+                content = d['suggestion content']
+                new_code_snippet = d['improved code']
 
-            if new_code_snippet:
-                new_code_snippet = self.dedent_code(relevant_file, relevant_lines_start, new_code_snippet)
+                if new_code_snippet:
+                    new_code_snippet = self.dedent_code(relevant_file, relevant_lines_start, new_code_snippet)
 
-            body = f"**Suggestion:** {content}\n```suggestion\n" + new_code_snippet + "\n```"
-            code_suggestions.append({'body': body,'relevant_file': relevant_file,
-                                     'relevant_lines_start': relevant_lines_start,
-                                     'relevant_lines_end': relevant_lines_end})
+                body = f"**Suggestion:** {content}\n```suggestion\n" + new_code_snippet + "\n```"
+                code_suggestions.append({'body': body, 'relevant_file': relevant_file,
+                                         'relevant_lines_start': relevant_lines_start,
+                                         'relevant_lines_end': relevant_lines_end})
+            except:
+                if settings.config.verbosity_level >= 2:
+                    logging.info(f"Could not parse suggestion: {d}")
 
         self.git_provider.publish_code_suggestions(code_suggestions)
 
