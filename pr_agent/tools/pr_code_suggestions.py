@@ -96,8 +96,8 @@ class PRCodeSuggestions:
                     logging.info(f"suggestion: {d}")
                 relevant_file = d['relevant file'].strip()
                 relevant_lines_str = d['relevant lines'].strip()
-                if ',' in relevant_lines_str: #  'relevant lines': '181, 190'
-                    relevant_lines_str = int(relevant_lines_str.split(',')[0])
+                if ',' in relevant_lines_str:  # handling 'relevant lines': '181, 190' or '178-184, 188-194'
+                    relevant_lines_str = relevant_lines_str.split(',')[0]
                 relevant_lines_start = int(relevant_lines_str.split('-')[0])  # absolute position
                 relevant_lines_end = int(relevant_lines_str.split('-')[-1])
                 content = d['suggestion content']
