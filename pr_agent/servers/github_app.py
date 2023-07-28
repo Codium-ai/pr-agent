@@ -23,26 +23,35 @@ async def handle_github_webhooks(request: Request, response: Response):
     Verifies the request signature, parses the request body, and passes it to the handle_request function for further processing.
     """
     logging.debug("Received a GitHub webhook")
-    
-    try:
-        body = await request.json()
-    except Exception as e:
-        logging.error("Error parsing request body", e)
-        raise HTTPException(status_code=400, detail="Error parsing request body") from e
-    
-    body_bytes = await request.body()
-    signature_header = request.headers.get('x-hub-signature-256', None)
-    
-    webhook_secret = getattr(settings.github, 'webhook_secret', None)
-    
-    if webhook_secret:
-        verify_signature(body_bytes, webhook_secret, signature_header)
-    
+
+    body = await get_body(request)
+
     logging.debug(f'Request body:\n{body}')
     installation_id = body.get("installation", {}).get("id")
     context["installation_id"] = installation_id
 
     return await handle_request(body)
+
+
+@router.post("/api/v1/marketplace_webhooks")
+async def handle_marketplace_webhooks(request: Request, response: Response):
+    body = await get_body(request)
+    logging.info(f'Request body:\n{body}')
+
+async def get_body(request):
+    try:
+        body = await request.json()
+    except Exception as e:
+        logging.error("Error parsing request body", e)
+        raise HTTPException(status_code=400, detail="Error parsing request body") from e
+    body_bytes = await request.body()
+    signature_header = request.headers.get('x-hub-signature-256', None)
+    webhook_secret = getattr(settings.github, 'webhook_secret', None)
+    if webhook_secret:
+        verify_signature(body_bytes, webhook_secret, signature_header)
+    return body
+
+
 
 
 async def handle_request(body: Dict[str, Any]):
