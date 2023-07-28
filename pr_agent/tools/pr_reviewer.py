@@ -250,7 +250,7 @@ class PRReviewer:
         if self.is_answer:
             discussion_messages = self.git_provider.get_issue_comments()
 
-            for message in reversed(discussion_messages):
+            for message in discussion_messages.reversed:
                 if "Questions to better understand the PR:" in message.body:
                     question_str = message.body
                 elif '/answer' in message.body:
