@@ -18,7 +18,10 @@ from ..servers.utils import RateLimitExceeded
 class GithubProvider(GitProvider):
     def __init__(self, pr_url: Optional[str] = None, incremental=IncrementalPR(False)):
         self.repo_obj = None
-        self.installation_id = context.get("installation_id", None)
+        try:
+            self.installation_id = context.get("installation_id", None)
+        except Exception:
+            self.installation_id = None
         self.github_client = self._get_github_client()
         self.repo = None
         self.pr_num = None
