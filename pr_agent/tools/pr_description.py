@@ -8,6 +8,7 @@ from jinja2 import Environment, StrictUndefined
 from pr_agent.algo.ai_handler import AiHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
+from pr_agent.algo.utils import update_settings_from_args
 from pr_agent.config_loader import settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
@@ -21,8 +22,8 @@ class PRDescription:
             pr_url (str): The URL of the pull request.
             args (list, optional): List of arguments passed to the PRDescription class. Defaults to None.
         """
-        self.parse_args(args)
-        
+        update_settings_from_args(args)
+
         # Initialize the git provider and main PR language
         self.git_provider = get_git_provider()(pr_url)
         self.main_pr_language = get_main_pr_language(
@@ -39,6 +40,7 @@ class PRDescription:
             "description": self.git_provider.get_pr_description(),
             "language": self.main_pr_language,
             "diff": "",  # empty diff for initial calculation
+            "extra_instructions": settings.pr_description.extra_instructions,
         }
     
         # Initialize the token handler
@@ -52,22 +54,6 @@ class PRDescription:
         # Initialize patches_diff and prediction attributes
         self.patches_diff = None
         self.prediction = None
-
-    def parse_args(self, args: List[str]) -> None:
-        """
-        Parse the arguments passed to the PRDescription class and set the 'publish_description_as_comment' attribute accordingly.
-
-        Args:
-            args: A list of arguments passed to the PRReviewer class.
-
-        Returns:
-            None
-        """
-        self.publish_description_as_comment = settings.pr_description.publish_description_as_comment
-        if args and len(args) >= 1:
-            arg = args[0]
-            if arg == "-c":
-                self.publish_description_as_comment = True
 
     async def describe(self):
         """
@@ -84,7 +70,7 @@ class PRDescription:
         
         if settings.config.publish_output:
             logging.info('Pushing answer...')
-            if self.publish_description_as_comment:
+            if settings.pr_description.publish_description_as_comment:
                 self.git_provider.publish_comment(markdown_text)
             else:
                 self.git_provider.publish_description(pr_title, pr_body)

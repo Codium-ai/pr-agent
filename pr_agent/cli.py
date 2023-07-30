@@ -29,6 +29,9 @@ describe / describe_pr - Modify the PR title and description based on the PR's c
 improve / improve_code - Suggest improvements to the code in the PR as pull request comments ready to commit.
 reflect - Ask the PR author questions about the PR.
 update_changelog - Update the changelog based on the PR's contents.
+
+To edit any configuration parameter from 'configuration.toml', just add -config_path=<value>.
+For example: '- cli.py --pr-url=... review --pr_reviewer.extra_instructions="focus on the file: ..."'
 """)
     parser.add_argument('--pr_url', type=str, help='The URL of the PR to review', required=True)
     parser.add_argument('command', type=str, help='The', choices=['review', 'review_pr',
@@ -79,7 +82,7 @@ def _handle_describe_command(pr_url: str, rest: list):
 
 def _handle_improve_command(pr_url: str, rest: list):
     print(f"PR code suggestions: {pr_url}")
-    reviewer = PRCodeSuggestions(pr_url)
+    reviewer = PRCodeSuggestions(pr_url, args=rest)
     asyncio.run(reviewer.suggest())
 
 
@@ -97,7 +100,7 @@ def _handle_reflect_command(pr_url: str, rest: list):
 
 def _handle_review_after_reflect_command(pr_url: str, rest: list):
     print(f"Processing author's answers and sending review: {pr_url}")
-    reviewer = PRReviewer(pr_url, cli_mode=True, is_answer=True)
+    reviewer = PRReviewer(pr_url, cli_mode=True, is_answer=True, args=rest)
     asyncio.run(reviewer.review())
 
 def _handle_update_changelog(pr_url: str, rest: list):

@@ -10,6 +10,7 @@ from pr_agent.algo.ai_handler import AiHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.config_loader import settings
+from pr_agent.algo.utils import update_settings_from_args
 from pr_agent.git_providers import get_git_provider, GithubProvider
 from pr_agent.git_providers.git_provider import get_main_pr_language
 
@@ -23,7 +24,8 @@ class PRUpdateChangelog:
         self.main_language = get_main_pr_language(
             self.git_provider.get_languages(), self.git_provider.get_files()
         )
-        self.commit_changelog = self._parse_args(args, settings)
+        update_settings_from_args(args)
+        self.commit_changelog = settings.pr_update_changelog.push_changelog_changes
         self._get_changlog_file()  # self.changelog_file_str
         self.ai_handler = AiHandler()
         self.patches_diff = None
@@ -37,6 +39,7 @@ class PRUpdateChangelog:
             "diff": "",  # empty diff for initial calculation
             "changelog_file_str": self.changelog_file_str,
             "today": date.today(),
+            "extra_instructions": settings.pr_update_changelog.extra_instructions,
         }
         self.token_handler = TokenHandler(self.git_provider.pr,
                                           self.vars,
@@ -95,7 +98,7 @@ class PRUpdateChangelog:
 
         if not self.commit_changelog:
             answer += "\n\n\n>to commit the new content to the CHANGELOG.md file, please type:" \
-                      "\n>'/update_changelog -commit'\n"
+                      "\n>'/update_changelog --pr_update_changelog.push_changelog_changes=true'\n"
 
         if settings.config.verbosity_level >= 2:
             logging.info(f"answer:\n{answer}")
@@ -136,19 +139,6 @@ Example:
 ...
 """
         return example_changelog
-
-    def _parse_args(self, args, setting):
-        commit_changelog = False
-        if args and len(args) >= 1:
-            try:
-                if args[0] == "-commit":
-                    commit_changelog = True
-            except:
-                pass
-        else:
-            commit_changelog = setting.pr_update_changelog.push_changelog_changes
-
-        return commit_changelog
 
     def _get_changlog_file(self):
         try:

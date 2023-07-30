@@ -16,16 +16,16 @@ class PRAgent:
     async def handle_request(self, pr_url, request) -> bool:
         action, *args = request.strip().split()
         if any(cmd == action for cmd in ["/answer"]):
-            await PRReviewer(pr_url, is_answer=True).review()
+            await PRReviewer(pr_url, is_answer=True, args=args).review()
         elif any(cmd == action for cmd in ["/review", "/review_pr", "/reflect_and_review"]):
             if settings.pr_reviewer.ask_and_reflect or "/reflect_and_review" in request:
-                await PRInformationFromUser(pr_url).generate_questions()
+                await PRInformationFromUser(pr_url, args=args).generate_questions()
             else:
                 await PRReviewer(pr_url, args=args).review()
         elif any(cmd == action for cmd in ["/describe", "/describe_pr"]):
             await PRDescription(pr_url, args=args).describe()
         elif any(cmd == action for cmd in ["/improve", "/improve_code"]):
-            await PRCodeSuggestions(pr_url).suggest()
+            await PRCodeSuggestions(pr_url, args=args).suggest()
         elif any(cmd == action for cmd in ["/ask", "/ask_question"]):
             await PRQuestions(pr_url, args=args).answer()
         elif any(cmd == action for cmd in ["/update_changelog"]):

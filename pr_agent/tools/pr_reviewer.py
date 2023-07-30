@@ -9,7 +9,7 @@ from jinja2 import Environment, StrictUndefined
 from pr_agent.algo.ai_handler import AiHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import convert_to_markdown, try_fix_json
+from pr_agent.algo.utils import convert_to_markdown, try_fix_json, update_settings_from_args
 from pr_agent.config_loader import settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language, IncrementalPR
@@ -30,7 +30,8 @@ class PRReviewer:
             is_answer (bool, optional): Indicates whether the review is being done in answer mode. Defaults to False.
             args (list, optional): List of arguments passed to the PRReviewer class. Defaults to None.
         """
-        self.parse_args(args)
+        update_settings_from_args(args)
+        self.parse_args(args) # -i command
 
         self.git_provider = get_git_provider()(pr_url, incremental=self.incremental)
         self.main_language = get_main_pr_language(
@@ -60,6 +61,7 @@ class PRReviewer:
             'num_code_suggestions': settings.pr_reviewer.num_code_suggestions,
             'question_str': question_str,
             'answer_str': answer_str,
+            "extra_instructions": settings.pr_reviewer.extra_instructions,
         }
 
         self.token_handler = TokenHandler(

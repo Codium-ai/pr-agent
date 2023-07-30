@@ -8,19 +8,21 @@ from jinja2 import Environment, StrictUndefined
 from pr_agent.algo.ai_handler import AiHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import try_fix_json
+from pr_agent.algo.utils import try_fix_json, update_settings_from_args
 from pr_agent.config_loader import settings
 from pr_agent.git_providers import BitbucketProvider, get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
 
 
 class PRCodeSuggestions:
-    def __init__(self, pr_url: str, cli_mode=False):
+    def __init__(self, pr_url: str, cli_mode=False, args: list = None):
 
         self.git_provider = get_git_provider()(pr_url)
         self.main_language = get_main_pr_language(
             self.git_provider.get_languages(), self.git_provider.get_files()
         )
+        update_settings_from_args(args)
+
         self.ai_handler = AiHandler()
         self.patches_diff = None
         self.prediction = None
@@ -31,7 +33,8 @@ class PRCodeSuggestions:
             "description": self.git_provider.get_pr_description(),
             "language": self.main_language,
             "diff": "",  # empty diff for initial calculation
-            'num_code_suggestions': settings.pr_code_suggestions.num_code_suggestions,
+            "num_code_suggestions": settings.pr_code_suggestions.num_code_suggestions,
+            "extra_instructions": settings.pr_code_suggestions.extra_instructions,
         }
         self.token_handler = TokenHandler(self.git_provider.pr,
                                           self.vars,
@@ -137,3 +140,4 @@ class PRCodeSuggestions:
                 logging.info(f"Could not dedent code snippet for file {relevant_file}, error: {e}")
 
         return new_code_snippet
+

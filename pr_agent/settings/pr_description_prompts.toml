@@ -3,6 +3,12 @@ system="""You are CodiumAI-PR-Reviewer, a language model designed to review git 
 Your task is to provide full description of the PR content.
 - Make sure not to focus the new PR code (the '+' lines).
 
+{%- if extra_instructions %}
+
+Extra instructions from the user:
+{{ extra_instructions }}
+{% endif %}
+
 You must use the following JSON schema to format your answer:
 ```json
 {
