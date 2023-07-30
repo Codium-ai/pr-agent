@@ -1,3 +1,10 @@
+## 2023-07-30
+
+### Enhanced
+- Added the ability to modify any configuration parameter from 'configuration.toml' on-the-fly.
+- Updated the command line interface and bot commands to accept configuration changes as arguments.
+- Improved the PR agent to handle additional arguments for each action.
+
 ## 2023-07-28
 
 ### Improved
