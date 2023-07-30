@@ -211,3 +211,21 @@ def load_large_diff(file, new_file_content_str: str, original_file_content_str: 
         except Exception:
             pass
     return patch
+
+
+def update_settings_from_args(args):
+    if args and len(args) >= 1:
+        for arg in args:
+            try:
+                arg = arg.strip('-').strip()
+                vals = arg.replace('=', '.').replace('=', '.').split('.')
+                d = settings
+                for i, v in enumerate(vals[:-1]):
+                    if i == len(vals) - 2:
+                        d[v] = vals[-1]
+                        logging.info(f'Updated setting {vals[:-1]} to: "{vals[-1]}"')
+                        break
+                    else:
+                        d = d[v]
+            except Exception as e:
+                logging.error(f'Failed to parse argument {arg}: {e}')

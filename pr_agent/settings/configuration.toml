@@ -7,7 +7,7 @@ publish_output_progress=true
 verbosity_level=0 # 0,1,2
 use_extra_bad_extensions=false
 
-[pr_reviewer]
+[pr_reviewer] # /review #
 require_focused_review=true
 require_score_review=false
 require_tests_review=true
@@ -15,17 +15,21 @@ require_security_review=true
 num_code_suggestions=0
 inline_code_comments = true
 ask_and_reflect=false
+extra_instructions = ""
 
-[pr_description]
+[pr_description] # /describe #
 publish_description_as_comment=false
+extra_instructions = ""
 
-[pr_questions]
+[pr_questions] # /ask #
 
-[pr_code_suggestions]
+[pr_code_suggestions] # /improve #
 num_code_suggestions=4
+extra_instructions = ""
 
-[pr_update_changelog]
+[pr_update_changelog] # /update_changelog #
 push_changelog_changes=false
+extra_instructions = ""
 
 [github]
 # The type of deployment to create. Valid values are 'app' or 'user'.

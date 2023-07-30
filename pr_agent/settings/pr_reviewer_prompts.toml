@@ -8,6 +8,12 @@ Your task is to provide constructive and concise feedback for the PR, and also p
 - Make sure not to provide suggestions repeating modifications already implemented in the new PR code (the '+' lines).
 {%- endif %}
 
+{%- if extra_instructions %}
+
+Extra instructions from the user:
+{{ extra_instructions }}
+{% endif %}
+
 You must use the following JSON schema to format your answer:
 ```json
 {

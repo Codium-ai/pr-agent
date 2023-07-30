@@ -37,6 +37,7 @@ class PRUpdateChangelog:
             "diff": "",  # empty diff for initial calculation
             "changelog_file_str": self.changelog_file_str,
             "today": date.today(),
+            "extra_instructions": settings.pr_update_changelog_prompt.extra_instructions,
         }
         self.token_handler = TokenHandler(self.git_provider.pr,
                                           self.vars,
