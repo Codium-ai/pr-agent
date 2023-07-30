@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import List
 
 import difflib
 from datetime import datetime
@@ -213,25 +214,42 @@ def load_large_diff(file, new_file_content_str: str, original_file_content_str: 
     return patch
 
 
-def update_settings_from_args(args):
-    if args and len(args) >= 1:
+def update_settings_from_args(args: List[str]) -> None:
+    """
+    Update the settings of the Dynaconf object based on the arguments passed to the function.
+
+    Args:
+        args: A list of arguments passed to the function.
+
+    Returns:
+        None
+
+    Raises:
+        ValueError: If the argument is not in the correct format.
+
+    """
+    if args:
         for arg in args:
             try:
                 arg = arg.strip('-').strip()
-                vals = arg.replace('=', '.').replace('=', '.').split('.')
+                vals = arg.split('=')
+                if len(vals) != 2:
+                    raise ValueError(f'Invalid argument format: {arg}')
+                key, value = vals
+                keys = key.split('.')
                 d = settings
-                for i, v in enumerate(vals[:-1]):
-                    if i == len(vals) - 2:
-                        if v in d:
-                            if type(d[v]) == bool:
-                                d[v] = vals[-1].lower() in ("yes", "true", "t", "1")
-                            else:
-                                d[v] = type(d[v])(vals[-1])
-                            logging.info(f'Updated setting {vals[:-1]} to: "{vals[-1]}"')
-                            break
-                        else:
-                            logging.error(f'Invalid setting {vals[:-1]}')
-                    else:
-                        d = d[v]
+                for i, k in enumerate(keys[:-1]):
+                    if k not in d:
+                        raise ValueError(f'Invalid setting: {key}')
+                    d = d[k]
+                if keys[-1] not in d:
+                    raise ValueError(f'Invalid setting: {key}')
+                if isinstance(d[keys[-1]], bool):
+                    d[keys[-1]] = value.lower() in ("yes", "true", "t", "1")
+                else:
+                    d[keys[-1]] = type(d[keys[-1]])(value)
+                logging.info(f'Updated setting {key} to: "{value}"')
+            except ValueError as e:
+                logging.error(str(e))
             except Exception as e:
                 logging.error(f'Failed to parse argument {arg}: {e}')
