@@ -3,7 +3,7 @@
 
 ---
 
-#### Method 1: Use Docker image (no installation required)
+#### Method 1: Use Docker image (no installation required)sdf
 
 To request a review for a PR, or ask a question about a PR, you can run directly from the Docker image. Here's how:
 
