@@ -23,7 +23,7 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 \
 **Question Answering**: Answering free-text questions about the PR.
 \
-**Code Suggestion**: Committable code suggestions for improving the PR.
+**Code Suggestions**: Committable code suggestions for improving the PR.
 \
 **Update Changelog**: Automatically updating the CHANGELOG.md file with the PR changes.
 
