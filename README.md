@@ -25,6 +25,8 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 \
 **Code Suggestion**: Committable code suggestions for improving the PR.
 
+**Update Changelog**: Automatically updating the CHANGELOG.md file with the PR changes.
+
 <h3>Example results:</h2>
 </div>
 <h4>/describe:</h4>
@@ -135,13 +137,14 @@ There are several ways to use PR-Agent:
 
 ## Usage and Tools
 
-**PR-Agent** provides five types of interactions ("tools"): `"PR Reviewer"`, `"PR Q&A"`, `"PR Description"`, `"PR Code Sueggestions"` and `"PR Reflect and Review"`.
+**PR-Agent** provides six types of interactions ("tools"): `"PR Reviewer"`, `"PR Q&A"`, `"PR Description"`, `"PR Code Sueggestions"`, `"PR Reflect and Review"` and `"PR Update Changlog"`.
 
 - The "PR Reviewer" tool automatically analyzes PRs, and provides various types of feedback.
 - The "PR Q&A" tool answers free-text questions about the PR.
 - The "PR Description" tool automatically sets the PR Title and body.
 - The "PR Code Suggestion" tool provide inline code suggestions for the PR that can be applied and committed.
 - The "PR Reflect and Review" tool initiates a dialog with the user, asks them to reflect on the PR, and then provides a more focused review.
+- The "PR Update Changelog" tool automatically updates the CHANGELOG.md file with the PR changes.
 
 ## How it works
 
@@ -158,7 +161,7 @@ Here are some of the reasons why:
 - We emphasize **real-life practical usage**. Each tool (review, improve, ask, ...) has a single GPT-4 call, no more. We feel that this is critical for realistic team usage - obtaining an answer quickly (~30 seconds) and affordably.
 - Our [PR Compression strategy](./PR_COMPRESSION.md)  is a core ability that enables to effectively tackle both short and long PRs.
 - Our JSON prompting strategy enables to have **modular, customizable tools**. For example, the '/review' tool categories can be controlled via the configuration file. Adding additional categories is easy and accessible.
-- We support **multiple git providers** (GitHub, Gitlab, Bitbucket), and multiple ways to use the tool (CLI, GitHub Action, Docker, ...).
+- We support **multiple git providers** (GitHub, Gitlab, Bitbucket), and multiple ways to use the tool (CLI, GitHub Action, GitHub App, Docker, ...).
 - We are open-source, and welcome contributions from the community.
 
 
