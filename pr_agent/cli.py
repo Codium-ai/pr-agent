@@ -31,7 +31,7 @@ reflect - Ask the PR author questions about the PR.
 update_changelog - Update the changelog based on the PR's contents.
 
 To edit any configuration parameter from 'configuration.toml', just add -config_path=<value>.
-For example: '- cli.py --pr-url=... review --pr_reviewer.extra_instructions="focus on the file: ...'
+For example: '- cli.py --pr-url=... review --pr_reviewer.extra_instructions="focus on the file: ..."'
 """)
     parser.add_argument('--pr_url', type=str, help='The URL of the PR to review', required=True)
     parser.add_argument('command', type=str, help='The', choices=['review', 'review_pr',

@@ -222,9 +222,15 @@ def update_settings_from_args(args):
                 d = settings
                 for i, v in enumerate(vals[:-1]):
                     if i == len(vals) - 2:
-                        d[v] = vals[-1]
-                        logging.info(f'Updated setting {vals[:-1]} to: "{vals[-1]}"')
-                        break
+                        if v in d:
+                            if type(d[v]) == bool:
+                                d[v] = vals[-1].lower() in ("yes", "true", "t", "1")
+                            else:
+                                d[v] = type(d[v])(vals[-1])
+                            logging.info(f'Updated setting {vals[:-1]} to: "{vals[-1]}"')
+                            break
+                        else:
+                            logging.error(f'Invalid setting {vals[:-1]}')
                     else:
                         d = d[v]
             except Exception as e:

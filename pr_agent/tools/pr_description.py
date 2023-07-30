@@ -55,22 +55,6 @@ class PRDescription:
         self.patches_diff = None
         self.prediction = None
 
-    def parse_args(self, args: List[str]) -> None:
-        """
-        Parse the arguments passed to the PRDescription class and set the 'publish_description_as_comment' attribute accordingly.
-
-        Args:
-            args: A list of arguments passed to the PRReviewer class.
-
-        Returns:
-            None
-        """
-        self.publish_description_as_comment = settings.pr_description.publish_description_as_comment
-        if args and len(args) >= 1:
-            arg = args[0]
-            if arg == "-c":
-                self.publish_description_as_comment = True
-
     async def describe(self):
         """
         Generates a PR description using an AI model and publishes it to the PR.
@@ -86,7 +70,7 @@ class PRDescription:
         
         if settings.config.publish_output:
             logging.info('Pushing answer...')
-            if self.publish_description_as_comment:
+            if settings.pr_description.publish_description_as_comment:
                 self.git_provider.publish_comment(markdown_text)
             else:
                 self.git_provider.publish_description(pr_title, pr_body)
