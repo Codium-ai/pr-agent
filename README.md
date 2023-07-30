@@ -24,7 +24,7 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 **Question Answering**: Answering free-text questions about the PR.
 \
 **Code Suggestion**: Committable code suggestions for improving the PR.
-
+\
 **Update Changelog**: Automatically updating the CHANGELOG.md file with the PR changes.
 
 <h3>Example results:</h2>
@@ -102,7 +102,7 @@ Examples for invoking the different tools via the CLI:
 - **Improve**:      python cli.py --pr-url=<pr_url>  improve
 - **Ask**:          python cli.py --pr-url=<pr_url>  ask "Write me a poem about this PR"
 - **Reflect**:      python cli.py --pr-url=<pr_url>  reflect
-- **Update changelog**:      python cli.py --pr-url=<pr_url>  update_changelog
+- **Update Changelog**:      python cli.py --pr-url=<pr_url>  update_changelog
 
 "<pr_url>" is the url of the relevant PR (for example: https://github.com/Codium-ai/pr-agent/pull/50).
 

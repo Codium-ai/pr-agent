@@ -8,5 +8,5 @@ For example if you want to edit online the `pr_reviewer` configurations, you can
 /review --pr_reviewer.extra_instructions="focus on the file xyz" --require_score_review=false ...
 ```
 
-Any configuration section in `configuration.toml` file can be similarly edited.
+Any configuration value in `configuration.toml` file can be similarly edited.
 
