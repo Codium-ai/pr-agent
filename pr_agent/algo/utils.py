@@ -230,6 +230,10 @@ def update_settings_from_args(args: List[str]) -> None:
         ValueError: If the argument is not in the correct format.
 
     """
+    from copy import deepcopy
+    from pr_agent.config_loader import _settings_context_var
+    settings_copy = deepcopy(_settings_context_var.get())
+
     if args:
         for arg in args:
             try:
@@ -239,7 +243,7 @@ def update_settings_from_args(args: List[str]) -> None:
                     raise ValueError(f'Invalid argument format: {arg}')
                 key, value = vals
                 keys = key.split('.')
-                d = settings
+                d = settings_copy
                 for i, k in enumerate(keys[:-1]):
                     if k not in d:
                         raise ValueError(f'Invalid setting: {key}')
@@ -255,3 +259,6 @@ def update_settings_from_args(args: List[str]) -> None:
                 logging.error(str(e))
             except Exception as e:
                 logging.error(f'Failed to parse argument {arg}: {e}')
+
+    # whichever settings were changed - update the global settings for the current context
+    _settings_context_var.set(settings_copy)

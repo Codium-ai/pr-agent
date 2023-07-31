@@ -3,11 +3,13 @@ from pathlib import Path
 from typing import Optional
 
 from dynaconf import Dynaconf
+from objproxies import CallbackProxy
+from contextvars import ContextVar
 
 PR_AGENT_TOML_KEY = 'pr-agent'
 
 current_dir = dirname(abspath(__file__))
-settings = Dynaconf(
+_settings = Dynaconf(
     envvar_prefix=False,
     merge_enabled=True,
     settings_files=[join(current_dir, f) for f in [
@@ -23,6 +25,8 @@ settings = Dynaconf(
          "settings_prod/.secrets.toml"
         ]]
 )
+_settings_context_var = ContextVar('settings', default=_settings)
+settings = CallbackProxy(lambda: _settings_context_var.get())
 
 
 # Add local configuration from pyproject.toml of the project being reviewed
