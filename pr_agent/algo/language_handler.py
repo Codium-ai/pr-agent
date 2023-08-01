@@ -1,15 +1,15 @@
 # Language Selection, source: https://github.com/bigcode-project/bigcode-dataset/blob/main/language_selection/programming-languages-to-file-extensions.json  # noqa E501
 from typing import Dict
 
-from pr_agent.config_loader import settings
+from pr_agent.config_loader import get_settings
 
-language_extension_map_org = settings.language_extension_map_org
+language_extension_map_org = get_settings().language_extension_map_org
 language_extension_map = {k.lower(): v for k, v in language_extension_map_org.items()}
 
 # Bad Extensions, source: https://github.com/EleutherAI/github-downloader/blob/345e7c4cbb9e0dc8a0615fd995a08bf9d73b3fe6/download_repo_text.py  # noqa: E501
-bad_extensions = settings.bad_extensions.default
-if settings.config.use_extra_bad_extensions:
-    bad_extensions += settings.bad_extensions.extra
+bad_extensions = get_settings().bad_extensions.default
+if get_settings().config.use_extra_bad_extensions:
+    bad_extensions += get_settings().bad_extensions.extra
 
 
 def filter_bad_extensions(files):

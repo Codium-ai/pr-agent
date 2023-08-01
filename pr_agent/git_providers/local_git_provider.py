@@ -5,7 +5,7 @@ from typing import List
 
 from git import Repo
 
-from pr_agent.config_loader import _find_repository_root, settings
+from pr_agent.config_loader import _find_repository_root, get_settings
 from pr_agent.git_providers.git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
 
 
@@ -38,12 +38,12 @@ class LocalGitProvider(GitProvider):
         self._prepare_repo()
         self.diff_files = None
         self.pr = PullRequestMimic(self.get_pr_title(), self.get_diff_files())
-        self.description_path = settings.get('local.description_path') \
-            if settings.get('local.description_path') is not None else self.repo_path / 'description.md'
-        self.review_path = settings.get('local.review_path') \
-            if settings.get('local.review_path') is not None else self.repo_path / 'review.md'
+        self.description_path = get_settings().get('local.description_path') \
+            if get_settings().get('local.description_path') is not None else self.repo_path / 'description.md'
+        self.review_path = get_settings().get('local.review_path') \
+            if get_settings().get('local.review_path') is not None else self.repo_path / 'review.md'
         # inline code comments are not supported for local git repositories
-        settings.pr_reviewer.inline_code_comments = False
+        get_settings().pr_reviewer.inline_code_comments = False
 
     def _prepare_repo(self):
         """

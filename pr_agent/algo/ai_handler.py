@@ -1,10 +1,10 @@
 import logging
 
 import openai
-from openai.error import APIError, Timeout, TryAgain, RateLimitError
+from openai.error import APIError, RateLimitError, Timeout, TryAgain
 from retry import retry
 
-from pr_agent.config_loader import settings
+from pr_agent.config_loader import get_settings
 
 OPENAI_RETRIES=5
 
@@ -21,16 +21,16 @@ class AiHandler:
         Raises a ValueError if the OpenAI key is missing.
         """
         try:
-            openai.api_key = settings.openai.key
-            if settings.get("OPENAI.ORG", None):
-                openai.organization = settings.openai.org
-            self.deployment_id = settings.get("OPENAI.DEPLOYMENT_ID", None)
-            if settings.get("OPENAI.API_TYPE", None):
-                openai.api_type = settings.openai.api_type
-            if settings.get("OPENAI.API_VERSION", None):
-                openai.api_version = settings.openai.api_version
-            if settings.get("OPENAI.API_BASE", None):
-                openai.api_base = settings.openai.api_base
+            openai.api_key = get_settings().openai.key
+            if get_settings().get("OPENAI.ORG", None):
+                openai.organization = get_settings().openai.org
+            self.deployment_id = get_settings().get("OPENAI.DEPLOYMENT_ID", None)
+            if get_settings().get("OPENAI.API_TYPE", None):
+                openai.api_type = get_settings().openai.api_type
+            if get_settings().get("OPENAI.API_VERSION", None):
+                openai.api_version = get_settings().openai.api_version
+            if get_settings().get("OPENAI.API_BASE", None):
+                openai.api_base = get_settings().openai.api_base
         except AttributeError as e:
             raise ValueError("OpenAI key is required") from e
 

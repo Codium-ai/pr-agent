@@ -6,9 +6,8 @@ from urllib.parse import urlparse
 import gitlab
 from gitlab import GitlabGetError
 
-from pr_agent.config_loader import settings
-
 from ..algo.language_handler import is_valid_file
+from ..config_loader import get_settings
 from .git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
 
 logger = logging.getLogger()
@@ -17,10 +16,10 @@ logger = logging.getLogger()
 class GitLabProvider(GitProvider):
 
     def __init__(self, merge_request_url: Optional[str] = None, incremental: Optional[bool] = False):
-        gitlab_url = settings.get("GITLAB.URL", None)
+        gitlab_url = get_settings().get("GITLAB.URL", None)
         if not gitlab_url:
             raise ValueError("GitLab URL is not set in the config file")
-        gitlab_access_token = settings.get("GITLAB.PERSONAL_ACCESS_TOKEN", None)
+        gitlab_access_token = get_settings().get("GITLAB.PERSONAL_ACCESS_TOKEN", None)
         if not gitlab_access_token:
             raise ValueError("GitLab personal access token is not set in the config file")
         self.gl = gitlab.Gitlab(

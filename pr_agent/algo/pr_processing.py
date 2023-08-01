@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Tuple, Union, Callable, List
+from typing import Callable, Tuple
 
 from github import RateLimitExceededException
 
@@ -10,7 +10,7 @@ from pr_agent.algo.git_patch_processing import convert_to_hunks_with_lines_numbe
 from pr_agent.algo.language_handler import sort_files_by_main_languages
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.algo.utils import load_large_diff
-from pr_agent.config_loader import settings
+from pr_agent.config_loader import get_settings
 from pr_agent.git_providers.git_provider import GitProvider
 
 DELETED_FILES_ = "Deleted files:\n"
@@ -27,11 +27,15 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler, model: s
     Returns a string with the diff of the pull request, applying diff minimization techniques if needed.
 
     Args:
-        git_provider (GitProvider): An object of the GitProvider class representing the Git provider used for the pull request.
-        token_handler (TokenHandler): An object of the TokenHandler class used for handling tokens in the context of the pull request.
+        git_provider (GitProvider): An object of the GitProvider class representing the Git provider used for the pull
+        request.
+        token_handler (TokenHandler): An object of the TokenHandler class used for handling tokens in the context of the
+        pull request.
         model (str): The name of the model used for tokenization.
-        add_line_numbers_to_hunks (bool, optional): A boolean indicating whether to add line numbers to the hunks in the diff. Defaults to False.
-        disable_extra_lines (bool, optional): A boolean indicating whether to disable the extension of each patch with extra lines of context. Defaults to False.
+        add_line_numbers_to_hunks (bool, optional): A boolean indicating whether to add line numbers to the hunks in the
+        diff. Defaults to False.
+        disable_extra_lines (bool, optional): A boolean indicating whether to disable the extension of each patch with
+        extra lines of context. Defaults to False.
 
     Returns:
         str: A string with the diff of the pull request, applying diff minimization techniques if needed.
@@ -76,10 +80,12 @@ def pr_generate_extended_diff(pr_languages: list, token_handler: TokenHandler,
                               add_line_numbers_to_hunks: bool) -> \
         Tuple[list, int]:
     """
-    Generate a standard diff string with patch extension, while counting the number of tokens used and applying diff minimization techniques if needed.
+    Generate a standard diff string with patch extension, while counting the number of tokens used and applying diff
+    minimization techniques if needed.
 
     Args:
-    - pr_languages: A list of dictionaries representing the languages used in the pull request and their corresponding files.
+    - pr_languages: A list of dictionaries representing the languages used in the pull request and their corresponding
+      files.
     - token_handler: An object of the TokenHandler class used for handling tokens in the context of the pull request.
     - add_line_numbers_to_hunks: A boolean indicating whether to add line numbers to the hunks in the diff.
 
@@ -119,10 +125,13 @@ def pr_generate_extended_diff(pr_languages: list, token_handler: TokenHandler,
 def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler, model: str,
                                 convert_hunks_to_line_numbers: bool) -> Tuple[list, list, list]:
     """
-    Generate a compressed diff string for a pull request, using diff minimization techniques to reduce the number of tokens used.
+    Generate a compressed diff string for a pull request, using diff minimization techniques to reduce the number of
+    tokens used.
     Args:
-        top_langs (list): A list of dictionaries representing the languages used in the pull request and their corresponding files.
-        token_handler (TokenHandler): An object of the TokenHandler class used for handling tokens in the context of the pull request.
+        top_langs (list): A list of dictionaries representing the languages used in the pull request and their
+        corresponding files.
+        token_handler (TokenHandler): An object of the TokenHandler class used for handling tokens in the context of the
+        pull request.
         model (str): The model used for tokenization.
         convert_hunks_to_line_numbers (bool): A boolean indicating whether to convert hunks to line numbers in the diff.
     Returns:
@@ -181,7 +190,7 @@ def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler, mo
             # Current logic is to skip the patch if it's too large
             # TODO: Option for alternative logic to remove hunks from the patch to reduce the number of tokens
             #  until we meet the requirements
-            if settings.config.verbosity_level >= 2:
+            if get_settings().config.verbosity_level >= 2:
                 logging.warning(f"Patch too large, minimizing it, {file.filename}")
             if not modified_files_list:
                 total_tokens += token_handler.count_tokens(MORE_MODIFIED_FILES_)
@@ -196,15 +205,15 @@ def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler, mo
                 patch_final = patch
             patches.append(patch_final)
             total_tokens += token_handler.count_tokens(patch_final)
-            if settings.config.verbosity_level >= 2:
+            if get_settings().config.verbosity_level >= 2:
                 logging.info(f"Tokens: {total_tokens}, last filename: {file.filename}")
 
     return patches, modified_files_list, deleted_files_list
 
 
 async def retry_with_fallback_models(f: Callable):
-    model = settings.config.model
-    fallback_models = settings.config.fallback_models
+    model = get_settings().config.model
+    fallback_models = get_settings().config.fallback_models
     if not isinstance(fallback_models, list):
         fallback_models = [fallback_models]
     all_models = [model] + fallback_models

@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from starlette.background import BackgroundTasks
 
 from pr_agent.agent.pr_agent import PRAgent
-from pr_agent.config_loader import settings
+from pr_agent.config_loader import get_settings
 
 app = FastAPI()
 router = APIRouter()
@@ -29,13 +29,13 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
     return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
 
 def start():
-    gitlab_url = settings.get("GITLAB.URL", None)
+    gitlab_url = get_settings().get("GITLAB.URL", None)
     if not gitlab_url:
         raise ValueError("GITLAB.URL is not set")
-    gitlab_token = settings.get("GITLAB.PERSONAL_ACCESS_TOKEN", None)
+    gitlab_token = get_settings().get("GITLAB.PERSONAL_ACCESS_TOKEN", None)
     if not gitlab_token:
         raise ValueError("GITLAB.PERSONAL_ACCESS_TOKEN is not set")
-    settings.config.git_provider = "gitlab"
+    get_settings().config.git_provider = "gitlab"
 
     app = FastAPI()
     app.include_router(router)

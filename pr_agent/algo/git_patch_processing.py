@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import re
 
-from pr_agent.config_loader import settings
+from pr_agent.config_loader import get_settings
 
 
 def extend_patch(original_file_str, patch_str, num_lines) -> str:
@@ -55,7 +55,7 @@ def extend_patch(original_file_str, patch_str, num_lines) -> str:
                     continue
             extended_patch_lines.append(line)
     except Exception as e:
-        if settings.config.verbosity_level >= 2:
+        if get_settings().config.verbosity_level >= 2:
             logging.error(f"Failed to extend patch: {e}")
         return patch_str
 
@@ -126,14 +126,14 @@ def handle_patch_deletions(patch: str, original_file_content_str: str,
     """
     if not new_file_content_str:
         # logic for handling deleted files - don't show patch, just show that the file was deleted
-        if settings.config.verbosity_level > 0:
+        if get_settings().config.verbosity_level > 0:
             logging.info(f"Processing file: {file_name}, minimizing deletion file")
         patch = None # file was deleted
     else:
         patch_lines = patch.splitlines()
         patch_new = omit_deletion_hunks(patch_lines)
         if patch != patch_new:
-            if settings.config.verbosity_level > 0:
+            if get_settings().config.verbosity_level > 0:
                 logging.info(f"Processing file: {file_name}, hunks were deleted")
             patch = patch_new
     return patch
@@ -141,7 +141,8 @@ def handle_patch_deletions(patch: str, original_file_content_str: str,
 
 def convert_to_hunks_with_lines_numbers(patch: str, file) -> str:
     """
-    Convert a given patch string into a string with line numbers for each hunk, indicating the new and old content of the file.
+    Convert a given patch string into a string with line numbers for each hunk, indicating the new and old content of
+    the file.
 
     Args:
         patch (str): The patch string to be converted.

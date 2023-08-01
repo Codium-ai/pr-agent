@@ -9,9 +9,8 @@ from jinja2 import Environment, StrictUndefined
 from pr_agent.algo.ai_handler import AiHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.config_loader import settings
-from pr_agent.algo.utils import update_settings_from_args
-from pr_agent.git_providers import get_git_provider, GithubProvider
+from pr_agent.config_loader import get_settings
+from pr_agent.git_providers import GithubProvider, get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
 
 CHANGELOG_LINES = 50
@@ -24,8 +23,7 @@ class PRUpdateChangelog:
         self.main_language = get_main_pr_language(
             self.git_provider.get_languages(), self.git_provider.get_files()
         )
-        update_settings_from_args(args)
-        self.commit_changelog = settings.pr_update_changelog.push_changelog_changes
+        self.commit_changelog = get_settings().pr_update_changelog.push_changelog_changes
         self._get_changlog_file()  # self.changelog_file_str
         self.ai_handler = AiHandler()
         self.patches_diff = None
@@ -39,23 +37,23 @@ class PRUpdateChangelog:
             "diff": "",  # empty diff for initial calculation
             "changelog_file_str": self.changelog_file_str,
             "today": date.today(),
-            "extra_instructions": settings.pr_update_changelog.extra_instructions,
+            "extra_instructions": get_settings().pr_update_changelog.extra_instructions,
         }
         self.token_handler = TokenHandler(self.git_provider.pr,
                                           self.vars,
-                                          settings.pr_update_changelog_prompt.system,
-                                          settings.pr_update_changelog_prompt.user)
+                                          get_settings().pr_update_changelog_prompt.system,
+                                          get_settings().pr_update_changelog_prompt.user)
 
-    async def update_changelog(self):
+    async def run(self):
         assert type(self.git_provider) == GithubProvider, "Currently only Github is supported"
 
         logging.info('Updating the changelog...')
-        if settings.config.publish_output:
+        if get_settings().config.publish_output:
             self.git_provider.publish_comment("Preparing changelog updates...", is_temporary=True)
         await retry_with_fallback_models(self._prepare_prediction)
         logging.info('Preparing PR changelog updates...')
         new_file_content, answer = self._prepare_changelog_update()
-        if settings.config.publish_output:
+        if get_settings().config.publish_output:
             self.git_provider.remove_initial_comment()
             logging.info('Publishing changelog updates...')
             if self.commit_changelog:
@@ -75,9 +73,9 @@ class PRUpdateChangelog:
         variables = copy.deepcopy(self.vars)
         variables["diff"] = self.patches_diff  # update diff
         environment = Environment(undefined=StrictUndefined)
-        system_prompt = environment.from_string(settings.pr_update_changelog_prompt.system).render(variables)
-        user_prompt = environment.from_string(settings.pr_update_changelog_prompt.user).render(variables)
-        if settings.config.verbosity_level >= 2:
+        system_prompt = environment.from_string(get_settings().pr_update_changelog_prompt.system).render(variables)
+        user_prompt = environment.from_string(get_settings().pr_update_changelog_prompt.user).render(variables)
+        if get_settings().config.verbosity_level >= 2:
             logging.info(f"\nSystem prompt:\n{system_prompt}")
             logging.info(f"\nUser prompt:\n{user_prompt}")
         response, finish_reason = await self.ai_handler.chat_completion(model=model, temperature=0.2,
@@ -86,7 +84,7 @@ class PRUpdateChangelog:
         return response
 
     def _prepare_changelog_update(self) -> Tuple[str, str]:
-        answer = self.prediction.strip().strip("```").strip()
+        answer = self.prediction.strip().strip("```").strip()  # noqa B005
         if hasattr(self, "changelog_file"):
             existing_content = self.changelog_file.decoded_content.decode()
         else:
@@ -100,7 +98,7 @@ class PRUpdateChangelog:
             answer += "\n\n\n>to commit the new content to the CHANGELOG.md file, please type:" \
                       "\n>'/update_changelog --pr_update_changelog.push_changelog_changes=true'\n"
 
-        if settings.config.verbosity_level >= 2:
+        if get_settings().config.verbosity_level >= 2:
             logging.info(f"answer:\n{answer}")
 
         return new_file_content, answer
@@ -120,7 +118,7 @@ class PRUpdateChangelog:
         last_commit_id = list(self.git_provider.pr.get_commits())[-1]
         try:
             self.git_provider.pr.create_review(commit=last_commit_id, comments=[d])
-        except:
+        except Exception:
             # we can't create a review for some reason, let's just publish a comment
             self.git_provider.publish_comment(f"**Changelog updates:**\n\n{answer}")
 
@@ -147,7 +145,7 @@ Example:
             changelog_file_lines = self.changelog_file.decoded_content.decode().splitlines()
             changelog_file_lines = changelog_file_lines[:CHANGELOG_LINES]
             self.changelog_file_str = "\n".join(changelog_file_lines)
-        except:
+        except Exception:
             self.changelog_file_str = ""
             if self.commit_changelog:
                 logging.info("No CHANGELOG.md file found in the repository. Creating one...")

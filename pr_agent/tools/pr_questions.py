@@ -6,7 +6,7 @@ from jinja2 import Environment, StrictUndefined
 from pr_agent.algo.ai_handler import AiHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.config_loader import settings
+from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
 
@@ -30,8 +30,8 @@ class PRQuestions:
         }
         self.token_handler = TokenHandler(self.git_provider.pr,
                                           self.vars,
-                                          settings.pr_questions_prompt.system,
-                                          settings.pr_questions_prompt.user)
+                                          get_settings().pr_questions_prompt.system,
+                                          get_settings().pr_questions_prompt.user)
         self.patches_diff = None
         self.prediction = None
 
@@ -42,14 +42,14 @@ class PRQuestions:
             question_str = ""
         return question_str
 
-    async def answer(self):
+    async def run(self):
         logging.info('Answering a PR question...')
-        if settings.config.publish_output:
+        if get_settings().config.publish_output:
             self.git_provider.publish_comment("Preparing answer...", is_temporary=True)
         await retry_with_fallback_models(self._prepare_prediction)
         logging.info('Preparing answer...')
         pr_comment = self._prepare_pr_answer()
-        if settings.config.publish_output:
+        if get_settings().config.publish_output:
             logging.info('Pushing answer...')
             self.git_provider.publish_comment(pr_comment)
             self.git_provider.remove_initial_comment()
@@ -65,9 +65,9 @@ class PRQuestions:
         variables = copy.deepcopy(self.vars)
         variables["diff"] = self.patches_diff  # update diff
         environment = Environment(undefined=StrictUndefined)
-        system_prompt = environment.from_string(settings.pr_questions_prompt.system).render(variables)
-        user_prompt = environment.from_string(settings.pr_questions_prompt.user).render(variables)
-        if settings.config.verbosity_level >= 2:
+        system_prompt = environment.from_string(get_settings().pr_questions_prompt.system).render(variables)
+        user_prompt = environment.from_string(get_settings().pr_questions_prompt.user).render(variables)
+        if get_settings().config.verbosity_level >= 2:
             logging.info(f"\nSystem prompt:\n{system_prompt}")
             logging.info(f"\nUser prompt:\n{user_prompt}")
         response, finish_reason = await self.ai_handler.chat_completion(model=model, temperature=0.2,
@@ -77,6 +77,6 @@ class PRQuestions:
     def _prepare_pr_answer(self) -> str:
         answer_str = f"Question: {self.question_str}\n\n"
         answer_str += f"Answer:\n{self.prediction.strip()}\n\n"
-        if settings.config.verbosity_level >= 2:
+        if get_settings().config.verbosity_level >= 2:
             logging.info(f"answer_str:\n{answer_str}")
         return answer_str
