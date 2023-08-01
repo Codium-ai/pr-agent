@@ -353,7 +353,7 @@ class GithubProvider(GitProvider):
             str: A string containing the commit messages of the pull request.
         """
         try:
-            commit_list = list(self.pr.get_commits())
+            commit_list = self.pr.get_commits()
             commit_messages = [commit.commit.message for commit in commit_list]
             commit_messages_str = "\n".join([f"{i + 1}. {message}" for i, message in enumerate(commit_messages)])
         except:

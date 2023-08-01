@@ -299,5 +299,16 @@ class GitLabProvider(GitProvider):
     def get_labels(self):
         return self.mr.labels
 
-    def get_commit_messages(self):
-        return "" # not implemented yet
+    def get_commit_messages(self) -> str:
+        """
+        Retrieves the commit messages of a pull request.
+
+        Returns:
+            str: A string containing the commit messages of the pull request.
+        """
+        try:
+            commit_messages_list = [commit['message'] for commit in self.mr.commits()._list]
+            commit_messages_str = "\n".join([f"{i + 1}. {message}" for i, message in enumerate(commit_messages_list)])
+        except:
+            commit_messages_str = ""
+        return commit_messages_str
