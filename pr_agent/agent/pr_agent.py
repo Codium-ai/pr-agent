@@ -1,3 +1,4 @@
+import logging
 import os
 import shlex
 import tempfile
@@ -47,7 +48,10 @@ class PRAgent:
                     get_settings().load_file(repo_settings_file)
             finally:
                 if repo_settings_file:
-                    os.remove(repo_settings_file)
+                    try:
+                        os.remove(repo_settings_file)
+                    except Exception as e:
+                        logging.error(f"Failed to remove temporary settings file {repo_settings_file}", e)
 
         # Then, apply user specific settings if exists
         request = request.replace("'", "\\'")
