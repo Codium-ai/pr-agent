@@ -345,3 +345,18 @@ class GithubProvider(GitProvider):
         except Exception as e:
             logging.exception(f"Failed to get labels, error: {e}")
             return []
+
+    def get_commit_messages(self) -> str:
+        """
+        Retrieves the commit messages of a pull request.
+
+        Returns:
+            str: A string containing the commit messages of the pull request.
+        """
+        try:
+            commit_list = self.pr.get_commits()
+            commit_messages = [commit.commit.message for commit in commit_list]
+            commit_messages_str = "\n".join([f"{i + 1}. {message}" for i, message in enumerate(commit_messages)])
+        except:
+            commit_messages_str = ""
+        return commit_messages_str

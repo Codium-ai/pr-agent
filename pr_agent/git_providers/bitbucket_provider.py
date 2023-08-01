@@ -120,3 +120,6 @@ class BitbucketProvider:
 
     def _get_pr_file_content(self, remote_link: str):
         return ""
+
+    def get_commit_messages(self):
+        return ""  # not implemented yet
