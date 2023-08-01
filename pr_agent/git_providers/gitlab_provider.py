@@ -253,6 +253,13 @@ class GitLabProvider(GitProvider):
     def get_issue_comments(self):
         raise NotImplementedError("GitLab provider does not support issue comments yet")
 
+    def get_repo_settings(self):
+        try:
+            contents = self.gl.projects.get(self.id_project).files.get(file_path='.pr_agent.toml', ref=self.mr.source_branch)
+            return contents
+        except Exception:
+            return ""
+
     def _parse_merge_request_url(self, merge_request_url: str) -> Tuple[str, int]:
         parsed_url = urlparse(merge_request_url)
 

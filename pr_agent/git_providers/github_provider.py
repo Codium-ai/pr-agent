@@ -7,11 +7,11 @@ from github import AppAuthentication, Auth, Github, GithubException
 from retry import retry
 from starlette_context import context
 
+from .git_provider import FilePatchInfo, GitProvider, IncrementalPR
 from ..algo.language_handler import is_valid_file
 from ..algo.utils import load_large_diff
 from ..config_loader import get_settings
 from ..servers.utils import RateLimitExceeded
-from .git_provider import FilePatchInfo, GitProvider, IncrementalPR
 
 
 class GithubProvider(GitProvider):
@@ -250,6 +250,13 @@ class GithubProvider(GitProvider):
 
     def get_issue_comments(self):
         return self.pr.get_issue_comments()
+
+    def get_repo_settings(self):
+        try:
+            contents = self.repo_obj.get_contents(".pr_agent.toml", ref=self.pr.head.sha).decoded_content
+            return contents
+        except Exception:
+            return ""
 
     @staticmethod
     def _parse_pr_url(pr_url: str) -> Tuple[str, int]:
