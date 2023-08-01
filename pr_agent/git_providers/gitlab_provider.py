@@ -298,3 +298,6 @@ class GitLabProvider(GitProvider):
 
     def get_labels(self):
         return self.mr.labels
+
+    def get_commit_messages(self):
+        return "" # not implemented yet
