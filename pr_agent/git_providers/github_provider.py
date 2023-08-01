@@ -1,4 +1,6 @@
 import logging
+import os
+import tempfile
 from datetime import datetime
 from typing import Optional, Tuple
 from urllib.parse import urlparse
@@ -31,6 +33,17 @@ class GithubProvider(GitProvider):
         if pr_url:
             self.set_pr(pr_url)
             self.last_commit_id = list(self.pr.get_commits())[-1]
+        if get_settings().config.use_repo_settings_file:
+            repo_settings = self.get_repo_settings()
+            if repo_settings:
+                repo_settings_file = None
+                try:
+                    fd, repo_settings_file = tempfile.mkstemp(suffix='.toml')
+                    os.write(fd, repo_settings)
+                    get_settings().load_file(repo_settings_file)
+                finally:
+                    if repo_settings_file:
+                        os.remove(repo_settings_file)
 
     def is_supported(self, capability: str) -> bool:
         return True
@@ -250,6 +263,13 @@ class GithubProvider(GitProvider):
 
     def get_issue_comments(self):
         return self.pr.get_issue_comments()
+
+    def get_repo_settings(self):
+        try:
+            contents = self.repo_obj.get_contents(".pr_agent.yaml", ref=self.pr.head.sha).decoded_content
+            return contents
+        except Exception:
+            return ""
 
     @staticmethod
     def _parse_pr_url(pr_url: str) -> Tuple[str, int]:

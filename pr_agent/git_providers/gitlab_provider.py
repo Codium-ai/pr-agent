@@ -1,5 +1,7 @@
 import logging
+import os
 import re
+import tempfile
 from typing import Optional, Tuple
 from urllib.parse import urlparse
 
@@ -35,6 +37,17 @@ class GitLabProvider(GitProvider):
         self.RE_HUNK_HEADER = re.compile(
             r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@[ ]?(.*)")
         self.incremental = incremental
+        if get_settings().config.use_repo_settings_file:
+            repo_settings = self.get_repo_settings()
+            if repo_settings:
+                repo_settings_file = None
+                try:
+                    fd, repo_settings_file = tempfile.mkstemp(suffix='.yaml')
+                    os.write(fd, repo_settings.encode())
+                    get_settings().load_file(repo_settings_file)
+                finally:
+                    if repo_settings_file:
+                        os.remove(repo_settings_file)
 
     def is_supported(self, capability: str) -> bool:
         if capability in ['get_issue_comments', 'create_inline_comment', 'publish_inline_comments']:
@@ -252,6 +265,13 @@ class GitLabProvider(GitProvider):
 
     def get_issue_comments(self):
         raise NotImplementedError("GitLab provider does not support issue comments yet")
+
+    def get_repo_settings(self):
+        try:
+            contents = self.gl.projects.get(self.id_project).files.get(file_path='.pr_agent.yaml', ref=self.mr.source_branch).decode()
+            return contents
+        except Exception:
+            return ""
 
     def _parse_merge_request_url(self, merge_request_url: str) -> Tuple[str, int]:
         parsed_url = urlparse(merge_request_url)
