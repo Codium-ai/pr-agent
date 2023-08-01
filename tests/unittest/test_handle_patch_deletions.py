@@ -2,7 +2,7 @@
 import logging
 
 from pr_agent.algo.git_patch_processing import handle_patch_deletions
-from pr_agent.config_loader import settings
+from pr_agent.config_loader import get_settings
 
 """
 Code Analysis
@@ -49,7 +49,7 @@ class TestHandlePatchDeletions:
         original_file_content_str = 'foo\nbar\n'
         new_file_content_str = ''
         file_name = 'file.py'
-        settings.config.verbosity_level = 1
+        get_settings().config.verbosity_level = 1
 
         with caplog.at_level(logging.INFO):
             handle_patch_deletions(patch, original_file_content_str, new_file_content_str, file_name)

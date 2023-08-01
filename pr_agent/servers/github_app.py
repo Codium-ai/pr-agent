@@ -1,6 +1,7 @@
-from typing import Dict, Any
+import copy
 import logging
 import sys
+from typing import Any, Dict
 
 import uvicorn
 from fastapi import APIRouter, FastAPI, HTTPException, Request, Response
@@ -9,7 +10,7 @@ from starlette_context import context
 from starlette_context.middleware import RawContextMiddleware
 
 from pr_agent.agent.pr_agent import PRAgent
-from pr_agent.config_loader import settings
+from pr_agent.config_loader import get_settings, global_settings
 from pr_agent.servers.utils import verify_signature
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
@@ -20,7 +21,8 @@ router = APIRouter()
 async def handle_github_webhooks(request: Request, response: Response):
     """
     Receives and processes incoming GitHub webhook requests.
-    Verifies the request signature, parses the request body, and passes it to the handle_request function for further processing.
+    Verifies the request signature, parses the request body, and passes it to the handle_request function for further
+    processing.
     """
     logging.debug("Received a GitHub webhook")
 
@@ -29,6 +31,7 @@ async def handle_github_webhooks(request: Request, response: Response):
     logging.debug(f'Request body:\n{body}')
     installation_id = body.get("installation", {}).get("id")
     context["installation_id"] = installation_id
+    context["settings"] = copy.deepcopy(global_settings)
 
     return await handle_request(body)
 
@@ -46,7 +49,7 @@ async def get_body(request):
         raise HTTPException(status_code=400, detail="Error parsing request body") from e
     body_bytes = await request.body()
     signature_header = request.headers.get('x-hub-signature-256', None)
-    webhook_secret = getattr(settings.github, 'webhook_secret', None)
+    webhook_secret = getattr(get_settings().github, 'webhook_secret', None)
     if webhook_secret:
         verify_signature(body_bytes, webhook_secret, signature_header)
     return body
@@ -62,6 +65,8 @@ async def handle_request(body: Dict[str, Any]):
         body: The request body.
     """
     action = body.get("action")
+    if not action:
+        return {}
     agent = PRAgent()
 
     if action == 'created':
@@ -77,7 +82,7 @@ async def handle_request(body: Dict[str, Any]):
         api_url = pull_request.get("url")
         await agent.handle_request(api_url, comment_body)
 
-    elif action in ["opened"] or 'reopened' in action:
+    elif action == "opened" or 'reopened' in action:
         pull_request = body.get("pull_request")
         if not pull_request:
             return {}
@@ -96,7 +101,7 @@ async def root():
 
 def start():
     # Override the deployment type to app
-    settings.set("GITHUB.DEPLOYMENT_TYPE", "app")
+    get_settings().set("GITHUB.DEPLOYMENT_TYPE", "app")
     middleware = [Middleware(RawContextMiddleware)]
     app = FastAPI(middleware=middleware)
     app.include_router(router)

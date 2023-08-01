@@ -2,17 +2,17 @@ import copy
 import json
 import logging
 from collections import OrderedDict
-from typing import Tuple, List
+from typing import List, Tuple
 
 from jinja2 import Environment, StrictUndefined
 
 from pr_agent.algo.ai_handler import AiHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import convert_to_markdown, try_fix_json, update_settings_from_args
-from pr_agent.config_loader import settings
+from pr_agent.algo.utils import convert_to_markdown, try_fix_json
+from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
-from pr_agent.git_providers.git_provider import get_main_pr_language, IncrementalPR
+from pr_agent.git_providers.git_provider import IncrementalPR, get_main_pr_language
 from pr_agent.servers.help import actions_help_text, bot_help_text
 
 
@@ -20,17 +20,15 @@ class PRReviewer:
     """
     The PRReviewer class is responsible for reviewing a pull request and generating feedback using an AI model.
     """
-    def __init__(self, pr_url: str, cli_mode: bool = False, is_answer: bool = False, args: list = None):
+    def __init__(self, pr_url: str, is_answer: bool = False, args: list = None):
         """
         Initialize the PRReviewer object with the necessary attributes and objects to review a pull request.
 
         Args:
             pr_url (str): The URL of the pull request to be reviewed.
-            cli_mode (bool, optional): Indicates whether the review is being done in command-line interface mode. Defaults to False.
             is_answer (bool, optional): Indicates whether the review is being done in answer mode. Defaults to False.
             args (list, optional): List of arguments passed to the PRReviewer class. Defaults to None.
         """
-        update_settings_from_args(args)
         self.parse_args(args) # -i command
 
         self.git_provider = get_git_provider()(pr_url, incremental=self.incremental)
@@ -41,11 +39,10 @@ class PRReviewer:
         self.is_answer = is_answer
 
         if self.is_answer and not self.git_provider.is_supported("get_issue_comments"):
-            raise Exception(f"Answer mode is not supported for {settings.config.git_provider} for now")
+            raise Exception(f"Answer mode is not supported for {get_settings().config.git_provider} for now")
         self.ai_handler = AiHandler()
         self.patches_diff = None
         self.prediction = None
-        self.cli_mode = cli_mode
 
         answer_str, question_str = self._get_user_answers()
         self.vars = {
@@ -54,21 +51,21 @@ class PRReviewer:
             "description": self.git_provider.get_pr_description(),
             "language": self.main_language,
             "diff": "",  # empty diff for initial calculation
-            "require_score": settings.pr_reviewer.require_score_review,
-            "require_tests": settings.pr_reviewer.require_tests_review,
-            "require_security": settings.pr_reviewer.require_security_review,
-            "require_focused": settings.pr_reviewer.require_focused_review,
-            'num_code_suggestions': settings.pr_reviewer.num_code_suggestions,
+            "require_score": get_settings().pr_reviewer.require_score_review,
+            "require_tests": get_settings().pr_reviewer.require_tests_review,
+            "require_security": get_settings().pr_reviewer.require_security_review,
+            "require_focused": get_settings().pr_reviewer.require_focused_review,
+            'num_code_suggestions': get_settings().pr_reviewer.num_code_suggestions,
             'question_str': question_str,
             'answer_str': answer_str,
-            "extra_instructions": settings.pr_reviewer.extra_instructions,
+            "extra_instructions": get_settings().pr_reviewer.extra_instructions,
         }
 
         self.token_handler = TokenHandler(
             self.git_provider.pr,
             self.vars,
-            settings.pr_review_prompt.system,
-            settings.pr_review_prompt.user
+            get_settings().pr_review_prompt.system,
+            get_settings().pr_review_prompt.user
         )
 
     def parse_args(self, args: List[str]) -> None:
@@ -88,13 +85,13 @@ class PRReviewer:
                 is_incremental = True
         self.incremental = IncrementalPR(is_incremental)
 
-    async def review(self) -> None:
+    async def run(self) -> None:
         """
         Review the pull request and generate feedback.
         """
         logging.info('Reviewing PR...')
     
-        if settings.config.publish_output:
+        if get_settings().config.publish_output:
             self.git_provider.publish_comment("Preparing review...", is_temporary=True)
     
         await retry_with_fallback_models(self._prepare_prediction)
@@ -102,12 +99,12 @@ class PRReviewer:
         logging.info('Preparing PR review...')
         pr_comment = self._prepare_pr_review()
     
-        if settings.config.publish_output:
+        if get_settings().config.publish_output:
             logging.info('Pushing PR review...')
             self.git_provider.publish_comment(pr_comment)
             self.git_provider.remove_initial_comment()
         
-            if settings.pr_reviewer.inline_code_comments:
+            if get_settings().pr_reviewer.inline_code_comments:
                 logging.info('Pushing inline code comments...')
                 self._publish_inline_code_comments()
 
@@ -140,10 +137,10 @@ class PRReviewer:
         variables["diff"] = self.patches_diff  # update diff
 
         environment = Environment(undefined=StrictUndefined)
-        system_prompt = environment.from_string(settings.pr_review_prompt.system).render(variables)
-        user_prompt = environment.from_string(settings.pr_review_prompt.user).render(variables)
+        system_prompt = environment.from_string(get_settings().pr_review_prompt.system).render(variables)
+        user_prompt = environment.from_string(get_settings().pr_review_prompt.user).render(variables)
 
-        if settings.config.verbosity_level >= 2:
+        if get_settings().config.verbosity_level >= 2:
             logging.info(f"\nSystem prompt:\n{system_prompt}")
             logging.info(f"\nUser prompt:\n{user_prompt}")
 
@@ -158,7 +155,8 @@ class PRReviewer:
 
     def _prepare_pr_review(self) -> str:
         """
-        Prepare the PR review by processing the AI prediction and generating a markdown-formatted text that summarizes the feedback.
+        Prepare the PR review by processing the AI prediction and generating a markdown-formatted text that summarizes
+        the feedback.
         """
         review = self.prediction.strip()
     
@@ -174,7 +172,8 @@ class PRReviewer:
             data['PR Analysis']['Security concerns'] = val
 
         # Filter out code suggestions that can be submitted as inline comments
-        if settings.config.git_provider != 'bitbucket' and settings.pr_reviewer.inline_code_comments and 'Code suggestions' in data['PR Feedback']:
+        if get_settings().config.git_provider != 'bitbucket' and get_settings().pr_reviewer.inline_code_comments \
+                and 'Code suggestions' in data['PR Feedback']:
             data['PR Feedback']['Code suggestions'] = [
                 d for d in data['PR Feedback']['Code suggestions']
                 if any(key not in d for key in ('relevant file', 'relevant line in file', 'suggestion content'))
@@ -184,7 +183,8 @@ class PRReviewer:
 
         # Add incremental review section
         if self.incremental.is_incremental:
-            last_commit_url = f"{self.git_provider.get_pr_url()}/commits/{self.git_provider.incremental.first_new_commit_sha}"
+            last_commit_url = f"{self.git_provider.get_pr_url()}/commits/" \
+                              f"{self.git_provider.incremental.first_new_commit_sha}"
             data = OrderedDict(data)
             data.update({'Incremental PR Review': {
                 "⏮️ Review for commits since previous PR-Agent review": f"Starting from commit {last_commit_url}"}})
@@ -194,7 +194,7 @@ class PRReviewer:
         user = self.git_provider.get_user_id()
 
         # Add help text if not in CLI mode
-        if not self.cli_mode:
+        if not get_settings().get("CONFIG.CLI_MODE", False):
             markdown_text += "\n### How to use\n"
             if user and '[bot]' not in user:
                 markdown_text += bot_help_text(user)
@@ -202,7 +202,7 @@ class PRReviewer:
                 markdown_text += actions_help_text
 
         # Log markdown response if verbosity level is high
-        if settings.config.verbosity_level >= 2:
+        if get_settings().config.verbosity_level >= 2:
             logging.info(f"Markdown response:\n{markdown_text}")
     
         return markdown_text
@@ -211,7 +211,7 @@ class PRReviewer:
         """
         Publishes inline comments on a pull request with code suggestions generated by the AI model.
         """
-        if settings.pr_reviewer.num_code_suggestions == 0:
+        if get_settings().pr_reviewer.num_code_suggestions == 0:
             return
 
         review = self.prediction.strip()

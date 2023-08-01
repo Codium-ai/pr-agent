@@ -5,15 +5,14 @@ from urllib.parse import urlparse
 import requests
 from atlassian.bitbucket import Cloud
 
-from pr_agent.config_loader import settings
-
+from ..config_loader import get_settings
 from .git_provider import FilePatchInfo
 
 
 class BitbucketProvider:
     def __init__(self, pr_url: Optional[str] = None, incremental: Optional[bool] = False):
         s = requests.Session()
-        s.headers['Authorization'] = f'Bearer {settings.get("BITBUCKET.BEARER_TOKEN", None)}'
+        s.headers['Authorization'] = f'Bearer {get_settings().get("BITBUCKET.BEARER_TOKEN", None)}'
         self.bitbucket_client = Cloud(session=s)
 
         self.workspace_slug = None

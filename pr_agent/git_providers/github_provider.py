@@ -7,12 +7,11 @@ from github import AppAuthentication, Auth, Github, GithubException
 from retry import retry
 from starlette_context import context
 
-from pr_agent.config_loader import settings
-
 from ..algo.language_handler import is_valid_file
 from ..algo.utils import load_large_diff
-from .git_provider import FilePatchInfo, GitProvider, IncrementalPR
+from ..config_loader import get_settings
 from ..servers.utils import RateLimitExceeded
+from .git_provider import FilePatchInfo, GitProvider, IncrementalPR
 
 
 class GithubProvider(GitProvider):
@@ -85,7 +84,7 @@ class GithubProvider(GitProvider):
         return self.pr.get_files()
 
     @retry(exceptions=RateLimitExceeded,
-           tries=settings.github.ratelimit_retries, delay=2, backoff=2, jitter=(1, 3))
+           tries=get_settings().github.ratelimit_retries, delay=2, backoff=2, jitter=(1, 3))
     def get_diff_files(self) -> list[FilePatchInfo]:
         try:
             files = self.get_files()
@@ -118,7 +117,7 @@ class GithubProvider(GitProvider):
         # self.pr.create_issue_comment(pr_comment)
 
     def publish_comment(self, pr_comment: str, is_temporary: bool = False):
-        if is_temporary and not settings.config.publish_output_progress:
+        if is_temporary and not get_settings().config.publish_output_progress:
             logging.debug(f"Skipping publish_comment for temporary comment: {pr_comment}")
             return
         response = self.pr.create_issue_comment(pr_comment)
@@ -149,7 +148,7 @@ class GithubProvider(GitProvider):
                         position = i
                         break
         if position == -1:
-            if settings.config.verbosity_level >= 2:
+            if get_settings().config.verbosity_level >= 2:
                 logging.info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
             subject_type = "FILE"
         else:
@@ -174,13 +173,13 @@ class GithubProvider(GitProvider):
             relevant_lines_end = suggestion['relevant_lines_end']
 
             if not relevant_lines_start or relevant_lines_start == -1:
-                if settings.config.verbosity_level >= 2:
+                if get_settings().config.verbosity_level >= 2:
                     logging.exception(
                         f"Failed to publish code suggestion, relevant_lines_start is {relevant_lines_start}")
                 continue
 
             if relevant_lines_end < relevant_lines_start:
-                if settings.config.verbosity_level >= 2:
+                if get_settings().config.verbosity_level >= 2:
                     logging.exception(f"Failed to publish code suggestion, "
                                       f"relevant_lines_end is {relevant_lines_end} and "
                                       f"relevant_lines_start is {relevant_lines_start}")
@@ -207,7 +206,7 @@ class GithubProvider(GitProvider):
             self.pr.create_review(commit=self.last_commit_id, comments=post_parameters_list)
             return True
         except Exception as e:
-            if settings.config.verbosity_level >= 2:
+            if get_settings().config.verbosity_level >= 2:
                 logging.error(f"Failed to publish code suggestion, error: {e}")
             return False
 
@@ -241,7 +240,7 @@ class GithubProvider(GitProvider):
         return self.github_user_id
 
     def get_notifications(self, since: datetime):
-        deployment_type = settings.get("GITHUB.DEPLOYMENT_TYPE", "user")
+        deployment_type = get_settings().get("GITHUB.DEPLOYMENT_TYPE", "user")
 
         if deployment_type != 'user':
             raise ValueError("Deployment mode must be set to 'user' to get notifications")
@@ -282,12 +281,12 @@ class GithubProvider(GitProvider):
         return repo_name, pr_number
 
     def _get_github_client(self):
-        deployment_type = settings.get("GITHUB.DEPLOYMENT_TYPE", "user")
+        deployment_type = get_settings().get("GITHUB.DEPLOYMENT_TYPE", "user")
 
         if deployment_type == 'app':
             try:
-                private_key = settings.github.private_key
-                app_id = settings.github.app_id
+                private_key = get_settings().github.private_key
+                app_id = get_settings().github.app_id
             except AttributeError as e:
                 raise ValueError("GitHub app ID and private key are required when using GitHub app deployment") from e
             if not self.installation_id:
@@ -298,7 +297,7 @@ class GithubProvider(GitProvider):
 
         if deployment_type == 'user':
             try:
-                token = settings.github.user_token
+                token = get_settings().github.user_token
             except AttributeError as e:
                 raise ValueError(
                     "GitHub token is required when using user deployment. See: "
@@ -327,7 +326,9 @@ class GithubProvider(GitProvider):
 
     def publish_labels(self, pr_types):
         try:
-            label_color_map = {"Bug fix": "1d76db", "Tests": "e99695", "Bug fix with tests": "c5def5", "Refactoring": "bfdadc", "Enhancement": "bfd4f2", "Documentation": "d4c5f9", "Other": "d1bcf9"}
+            label_color_map = {"Bug fix": "1d76db", "Tests": "e99695", "Bug fix with tests": "c5def5",
+                               "Refactoring": "bfdadc", "Enhancement": "bfd4f2", "Documentation": "d4c5f9",
+                               "Other": "d1bcf9"}
             post_parameters = []
             for p in pr_types:
                 color = label_color_map.get(p, "d1bcf9")  # default to "Other" color

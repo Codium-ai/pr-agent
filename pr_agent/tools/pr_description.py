@@ -1,15 +1,14 @@
 import copy
 import json
 import logging
-from typing import Tuple, List
+from typing import List, Tuple
 
 from jinja2 import Environment, StrictUndefined
 
 from pr_agent.algo.ai_handler import AiHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import update_settings_from_args
-from pr_agent.config_loader import settings
+from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
 
@@ -17,13 +16,12 @@ from pr_agent.git_providers.git_provider import get_main_pr_language
 class PRDescription:
     def __init__(self, pr_url: str, args: list = None):
         """
-        Initialize the PRDescription object with the necessary attributes and objects for generating a PR description using an AI model.
+        Initialize the PRDescription object with the necessary attributes and objects for generating a PR description
+        using an AI model.
         Args:
             pr_url (str): The URL of the pull request.
             args (list, optional): List of arguments passed to the PRDescription class. Defaults to None.
         """
-        update_settings_from_args(args)
-
         # Initialize the git provider and main PR language
         self.git_provider = get_git_provider()(pr_url)
         self.main_pr_language = get_main_pr_language(
@@ -41,28 +39,28 @@ class PRDescription:
             "description": self.git_provider.get_pr_description(),
             "language": self.main_pr_language,
             "diff": "",  # empty diff for initial calculation
-            "extra_instructions": settings.pr_description.extra_instructions,
-            "commit_messages_str": commit_messages_str,
+            "extra_instructions": get_settings().pr_description.extra_instructions,
+            "commit_messages_str": commit_messages_str
         }
     
         # Initialize the token handler
         self.token_handler = TokenHandler(
             self.git_provider.pr,
             self.vars,
-            settings.pr_description_prompt.system,
-            settings.pr_description_prompt.user,
+            get_settings().pr_description_prompt.system,
+            get_settings().pr_description_prompt.user,
         )
     
         # Initialize patches_diff and prediction attributes
         self.patches_diff = None
         self.prediction = None
 
-    async def describe(self):
+    async def run(self):
         """
         Generates a PR description using an AI model and publishes it to the PR.
         """
         logging.info('Generating a PR description...')
-        if settings.config.publish_output:
+        if get_settings().config.publish_output:
             self.git_provider.publish_comment("Preparing pr description...", is_temporary=True)
         
         await retry_with_fallback_models(self._prepare_prediction)
@@ -70,9 +68,9 @@ class PRDescription:
         logging.info('Preparing answer...')
         pr_title, pr_body, pr_types, markdown_text = self._prepare_pr_answer()
         
-        if settings.config.publish_output:
+        if get_settings().config.publish_output:
             logging.info('Pushing answer...')
-            if settings.pr_description.publish_description_as_comment:
+            if get_settings().pr_description.publish_description_as_comment:
                 self.git_provider.publish_comment(markdown_text)
             else:
                 self.git_provider.publish_description(pr_title, pr_body)
@@ -118,10 +116,10 @@ class PRDescription:
         variables["diff"] = self.patches_diff  # update diff
 
         environment = Environment(undefined=StrictUndefined)
-        system_prompt = environment.from_string(settings.pr_description_prompt.system).render(variables)
-        user_prompt = environment.from_string(settings.pr_description_prompt.user).render(variables)
+        system_prompt = environment.from_string(get_settings().pr_description_prompt.system).render(variables)
+        user_prompt = environment.from_string(get_settings().pr_description_prompt.user).render(variables)
 
-        if settings.config.verbosity_level >= 2:
+        if get_settings().config.verbosity_level >= 2:
             logging.info(f"\nSystem prompt:\n{system_prompt}")
             logging.info(f"\nUser prompt:\n{user_prompt}")
 
@@ -172,7 +170,7 @@ class PRDescription:
             else:
                 pr_body += f"{value}\n\n___\n"
 
-        if settings.config.verbosity_level >= 2:
+        if get_settings().config.verbosity_level >= 2:
             logging.info(f"title:\n{title}\n{pr_body}")
 
         return title, pr_body, pr_types, markdown_text

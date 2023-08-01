@@ -1,8 +1,7 @@
 from jinja2 import Environment, StrictUndefined
 from tiktoken import encoding_for_model
 
-from pr_agent.algo import MAX_TOKENS
-from pr_agent.config_loader import settings
+from pr_agent.config_loader import get_settings
 
 
 class TokenHandler:
@@ -10,9 +9,12 @@ class TokenHandler:
     A class for handling tokens in the context of a pull request.
 
     Attributes:
-    - encoder: An object of the encoding_for_model class from the tiktoken module. Used to encode strings and count the number of tokens in them.
-    - limit: The maximum number of tokens allowed for the given model, as defined in the MAX_TOKENS dictionary in the pr_agent.algo module.
-    - prompt_tokens: The number of tokens in the system and user strings, as calculated by the _get_system_user_tokens method.
+    - encoder: An object of the encoding_for_model class from the tiktoken module. Used to encode strings and count the
+      number of tokens in them.
+    - limit: The maximum number of tokens allowed for the given model, as defined in the MAX_TOKENS dictionary in the
+      pr_agent.algo module.
+    - prompt_tokens: The number of tokens in the system and user strings, as calculated by the _get_system_user_tokens
+      method.
     """
 
     def __init__(self, pr, vars: dict, system, user):
@@ -25,7 +27,7 @@ class TokenHandler:
         - system: The system string.
         - user: The user string.
         """
-        self.encoder = encoding_for_model(settings.config.model)
+        self.encoder = encoding_for_model(get_settings().config.model)
         self.prompt_tokens = self._get_system_user_tokens(pr, self.encoder, vars, system, user)
 
     def _get_system_user_tokens(self, pr, encoder, vars: dict, system, user):

@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 import aiohttp
 
 from pr_agent.agent.pr_agent import PRAgent
-from pr_agent.config_loader import settings
+from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.servers.help import bot_help_text
 
@@ -38,8 +38,8 @@ async def polling_loop():
     agent = PRAgent()
 
     try:
-        deployment_type = settings.github.deployment_type
-        token = settings.github.user_token
+        deployment_type = get_settings().github.deployment_type
+        token = get_settings().github.user_token
     except AttributeError:
         deployment_type = 'none'
         token = None

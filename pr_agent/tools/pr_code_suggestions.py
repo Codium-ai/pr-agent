@@ -8,8 +8,8 @@ from jinja2 import Environment, StrictUndefined
 from pr_agent.algo.ai_handler import AiHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import try_fix_json, update_settings_from_args
-from pr_agent.config_loader import settings
+from pr_agent.algo.utils import try_fix_json
+from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import BitbucketProvider, get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
 
@@ -21,7 +21,6 @@ class PRCodeSuggestions:
         self.main_language = get_main_pr_language(
             self.git_provider.get_languages(), self.git_provider.get_files()
         )
-        update_settings_from_args(args)
 
         self.ai_handler = AiHandler()
         self.patches_diff = None
@@ -33,24 +32,24 @@ class PRCodeSuggestions:
             "description": self.git_provider.get_pr_description(),
             "language": self.main_language,
             "diff": "",  # empty diff for initial calculation
-            "num_code_suggestions": settings.pr_code_suggestions.num_code_suggestions,
-            "extra_instructions": settings.pr_code_suggestions.extra_instructions,
+            "num_code_suggestions": get_settings().pr_code_suggestions.num_code_suggestions,
+            "extra_instructions": get_settings().pr_code_suggestions.extra_instructions,
         }
         self.token_handler = TokenHandler(self.git_provider.pr,
                                           self.vars,
-                                          settings.pr_code_suggestions_prompt.system,
-                                          settings.pr_code_suggestions_prompt.user)
+                                          get_settings().pr_code_suggestions_prompt.system,
+                                          get_settings().pr_code_suggestions_prompt.user)
 
-    async def suggest(self):
+    async def run(self):
         assert type(self.git_provider) != BitbucketProvider, "Bitbucket is not supported for now"
 
         logging.info('Generating code suggestions for PR...')
-        if settings.config.publish_output:
+        if get_settings().config.publish_output:
             self.git_provider.publish_comment("Preparing review...", is_temporary=True)
         await retry_with_fallback_models(self._prepare_prediction)
         logging.info('Preparing PR review...')
         data = self._prepare_pr_code_suggestions()
-        if settings.config.publish_output:
+        if get_settings().config.publish_output:
             logging.info('Pushing PR review...')
             self.git_provider.remove_initial_comment()
             logging.info('Pushing inline code comments...')
@@ -71,9 +70,9 @@ class PRCodeSuggestions:
         variables = copy.deepcopy(self.vars)
         variables["diff"] = self.patches_diff  # update diff
         environment = Environment(undefined=StrictUndefined)
-        system_prompt = environment.from_string(settings.pr_code_suggestions_prompt.system).render(variables)
-        user_prompt = environment.from_string(settings.pr_code_suggestions_prompt.user).render(variables)
-        if settings.config.verbosity_level >= 2:
+        system_prompt = environment.from_string(get_settings().pr_code_suggestions_prompt.system).render(variables)
+        user_prompt = environment.from_string(get_settings().pr_code_suggestions_prompt.user).render(variables)
+        if get_settings().config.verbosity_level >= 2:
             logging.info(f"\nSystem prompt:\n{system_prompt}")
             logging.info(f"\nUser prompt:\n{user_prompt}")
         response, finish_reason = await self.ai_handler.chat_completion(model=model, temperature=0.2,
@@ -86,7 +85,7 @@ class PRCodeSuggestions:
         try:
             data = json.loads(review)
         except json.decoder.JSONDecodeError:
-            if settings.config.verbosity_level >= 2:
+            if get_settings().config.verbosity_level >= 2:
                 logging.info(f"Could not parse json response: {review}")
             data = try_fix_json(review, code_suggestions=True)
         return data
@@ -95,7 +94,7 @@ class PRCodeSuggestions:
         code_suggestions = []
         for d in data['Code suggestions']:
             try:
-                if settings.config.verbosity_level >= 2:
+                if get_settings().config.verbosity_level >= 2:
                     logging.info(f"suggestion: {d}")
                 relevant_file = d['relevant file'].strip()
                 relevant_lines_str = d['relevant lines'].strip()
@@ -113,8 +112,8 @@ class PRCodeSuggestions:
                 code_suggestions.append({'body': body, 'relevant_file': relevant_file,
                                          'relevant_lines_start': relevant_lines_start,
                                          'relevant_lines_end': relevant_lines_end})
-            except:
-                if settings.config.verbosity_level >= 2:
+            except Exception:
+                if get_settings().config.verbosity_level >= 2:
                     logging.info(f"Could not parse suggestion: {d}")
 
         self.git_provider.publish_code_suggestions(code_suggestions)
@@ -136,7 +135,7 @@ class PRCodeSuggestions:
                 if delta_spaces > 0:
                     new_code_snippet = textwrap.indent(new_code_snippet, delta_spaces * " ").rstrip('\n')
         except Exception as e:
-            if settings.config.verbosity_level >= 2:
+            if get_settings().config.verbosity_level >= 2:
                 logging.info(f"Could not dedent code snippet for file {relevant_file}, error: {e}")
 
         return new_code_snippet

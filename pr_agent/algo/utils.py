@@ -1,15 +1,24 @@
 from __future__ import annotations
-from typing import List
 
 import difflib
-from datetime import datetime
 import json
 import logging
 import re
 import textwrap
+from datetime import datetime
+from typing import Any, List
 
-from pr_agent.config_loader import settings
+from starlette_context import context
 
+from pr_agent.config_loader import get_settings, global_settings
+
+
+def get_setting(key: str) -> Any:
+    try:
+        key = key.upper()
+        return context.get("settings", global_settings).get(key, global_settings.get(key, None))
+    except Exception:
+        return global_settings.get(key, None)
 
 def convert_to_markdown(output_data: dict) -> str:
     """
@@ -97,12 +106,16 @@ def try_fix_json(review, max_iter=10, code_suggestions=False):
     - data: A dictionary containing the parsed JSON data.
 
     The function attempts to fix broken or incomplete JSON messages by parsing until the last valid code suggestion.
-    If the JSON message ends with a closing bracket, the function calls the fix_json_escape_char function to fix the message.
-    If code_suggestions is True and the JSON message contains code suggestions, the function tries to fix the JSON message by parsing until the last valid code suggestion.
-    The function uses regular expressions to find the last occurrence of "}," with any number of whitespaces or newlines.
+    If the JSON message ends with a closing bracket, the function calls the fix_json_escape_char function to fix the
+    message.
+    If code_suggestions is True and the JSON message contains code suggestions, the function tries to fix the JSON
+    message by parsing until the last valid code suggestion.
+    The function uses regular expressions to find the last occurrence of "}," with any number of whitespaces or
+    newlines.
     It tries to parse the JSON message with the closing bracket and checks if it is valid.
     If the JSON message is valid, the parsed JSON data is returned.
-    If the JSON message is not valid, the last code suggestion is removed and the process is repeated until a valid JSON message is obtained or the maximum number of iterations is reached.
+    If the JSON message is not valid, the last code suggestion is removed and the process is repeated until a valid JSON
+    message is obtained or the maximum number of iterations is reached.
     If a valid JSON message is not obtained, an error is logged and an empty dictionary is returned.
     """
 
@@ -184,7 +197,8 @@ def convert_str_to_datetime(date_str):
 
 def load_large_diff(file, new_file_content_str: str, original_file_content_str: str, patch: str) -> str:
     """
-    Generate a patch for a modified file by comparing the original content of the file with the new content provided as input.
+    Generate a patch for a modified file by comparing the original content of the file with the new content provided as
+    input.
 
     Args:
         file: The file object for which the patch needs to be generated.
@@ -199,14 +213,16 @@ def load_large_diff(file, new_file_content_str: str, original_file_content_str: 
         None.
 
     Additional Information:
-        - If 'patch' is not provided as input, the function generates a patch using the 'difflib' library and returns it as output.
-        - If the 'settings.config.verbosity_level' is greater than or equal to 2, a warning message is logged indicating that the file was modified but no patch was found, and a patch is manually created.
+        - If 'patch' is not provided as input, the function generates a patch using the 'difflib' library and returns it
+          as output.
+        - If the 'settings.config.verbosity_level' is greater than or equal to 2, a warning message is logged indicating
+          that the file was modified but no patch was found, and a patch is manually created.
     """
     if not patch:  # to Do - also add condition for file extension
         try:
             diff = difflib.unified_diff(original_file_content_str.splitlines(keepends=True),
                                         new_file_content_str.splitlines(keepends=True))
-            if settings.config.verbosity_level >= 2:
+            if get_settings().config.verbosity_level >= 2:
                 logging.warning(f"File was modified, but no patch was found. Manually creating patch: {file.filename}.")
             patch = ''.join(diff)
         except Exception:
@@ -214,7 +230,7 @@ def load_large_diff(file, new_file_content_str: str, original_file_content_str: 
     return patch
 
 
-def update_settings_from_args(args: List[str]) -> None:
+def update_settings_from_args(args: List[str]) -> List[str]:
     """
     Update the settings of the Dynaconf object based on the arguments passed to the function.
 
@@ -230,28 +246,22 @@ def update_settings_from_args(args: List[str]) -> None:
         ValueError: If the argument is not in the correct format.
 
     """
+    other_args = []
     if args:
         for arg in args:
-            try:
+            arg = arg.strip()
+            if arg.startswith('--'):
                 arg = arg.strip('-').strip()
                 vals = arg.split('=')
                 if len(vals) != 2:
-                    raise ValueError(f'Invalid argument format: {arg}')
+                    logging.error(f'Invalid argument format: {arg}')
+                    other_args.append(arg)
+                    continue
                 key, value = vals
-                keys = key.split('.')
-                d = settings
-                for i, k in enumerate(keys[:-1]):
-                    if k not in d:
-                        raise ValueError(f'Invalid setting: {key}')
-                    d = d[k]
-                if keys[-1] not in d:
-                    raise ValueError(f'Invalid setting: {key}')
-                if isinstance(d[keys[-1]], bool):
-                    d[keys[-1]] = value.lower() in ("yes", "true", "t", "1")
-                else:
-                    d[keys[-1]] = type(d[keys[-1]])(value)
+                key = key.strip().upper()
+                value = value.strip()
+                get_settings().set(key, value)
                 logging.info(f'Updated setting {key} to: "{value}"')
-            except ValueError as e:
-                logging.error(str(e))
-            except Exception as e:
-                logging.error(f'Failed to parse argument {arg}: {e}')
+            else:
+                other_args.append(arg)
+    return other_args

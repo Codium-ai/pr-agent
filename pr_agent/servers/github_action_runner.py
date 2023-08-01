@@ -3,7 +3,7 @@ import json
 import os
 
 from pr_agent.agent.pr_agent import PRAgent
-from pr_agent.config_loader import settings
+from pr_agent.config_loader import get_settings
 from pr_agent.tools.pr_reviewer import PRReviewer
 
 
@@ -30,11 +30,11 @@ async def run_action():
         return
 
     # Set the environment variables in the settings
-    settings.set("OPENAI.KEY", OPENAI_KEY)
+    get_settings().set("OPENAI.KEY", OPENAI_KEY)
     if OPENAI_ORG:
-        settings.set("OPENAI.ORG", OPENAI_ORG)
-    settings.set("GITHUB.USER_TOKEN", GITHUB_TOKEN)
-    settings.set("GITHUB.DEPLOYMENT_TYPE", "user")
+        get_settings().set("OPENAI.ORG", OPENAI_ORG)
+    get_settings().set("GITHUB.USER_TOKEN", GITHUB_TOKEN)
+    get_settings().set("GITHUB.DEPLOYMENT_TYPE", "user")
 
     # Load the event payload
     try:
@@ -50,7 +50,7 @@ async def run_action():
         if action in ["opened", "reopened"]:
             pr_url = event_payload.get("pull_request", {}).get("url")
             if pr_url:
-                await PRReviewer(pr_url).review()
+                await PRReviewer(pr_url).run()
 
     # Handle issue comment event
     elif GITHUB_EVENT_NAME == "issue_comment":
