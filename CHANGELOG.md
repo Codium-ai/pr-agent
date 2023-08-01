@@ -1,3 +1,10 @@
+## 2023-08-01
+
+### Enhanced
+- Introduced the ability to retrieve commit messages from pull requests across different git providers.
+- Implemented commit messages retrieval for GitHub and GitLab providers.
+- Updated the PR description template to include a section for commit messages if they exist.
+
 ## 2023-07-30
 
 ### Enhanced
