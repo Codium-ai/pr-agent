@@ -42,7 +42,7 @@ class GitLabProvider(GitProvider):
             if repo_settings:
                 repo_settings_file = None
                 try:
-                    fd, repo_settings_file = tempfile.mkstemp(suffix='.yaml')
+                    fd, repo_settings_file = tempfile.mkstemp(suffix='.toml')
                     os.write(fd, repo_settings.encode())
                     get_settings().load_file(repo_settings_file)
                 finally:
@@ -268,7 +268,7 @@ class GitLabProvider(GitProvider):
 
     def get_repo_settings(self):
         try:
-            contents = self.gl.projects.get(self.id_project).files.get(file_path='.pr_agent.yaml', ref=self.mr.source_branch).decode()
+            contents = self.gl.projects.get(self.id_project).files.get(file_path='.pr_agent.toml', ref=self.mr.source_branch).decode()
             return contents
         except Exception:
             return ""
