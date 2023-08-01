@@ -31,6 +31,7 @@ class PRAgent:
         pass
 
     async def handle_request(self, pr_url, request) -> bool:
+        request = request.replace("'", "\\'")
         lexer = shlex.shlex(request, posix=True)
         lexer.whitespace_split = True
         action, *args = list(lexer)

@@ -32,7 +32,7 @@ class PRInformationFromUser:
         self.patches_diff = None
         self.prediction = None
 
-    async def generate_questions(self):
+    async def run(self):
         logging.info('Generating question to the user...')
         if get_settings().config.publish_output:
             self.git_provider.publish_comment("Preparing questions...", is_temporary=True)

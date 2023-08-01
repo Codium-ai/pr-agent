@@ -65,6 +65,8 @@ async def handle_request(body: Dict[str, Any]):
         body: The request body.
     """
     action = body.get("action")
+    if not action:
+        return {}
     agent = PRAgent()
 
     if action == 'created':
@@ -80,7 +82,7 @@ async def handle_request(body: Dict[str, Any]):
         api_url = pull_request.get("url")
         await agent.handle_request(api_url, comment_body)
 
-    elif action in ["opened"] or 'reopened' in action:
+    elif action == "opened" or 'reopened' in action:
         pull_request = body.get("pull_request")
         if not pull_request:
             return {}
