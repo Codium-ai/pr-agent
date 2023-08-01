@@ -1,9 +1,14 @@
 ## 2023-08-01
+2023-08-01
 
 ### Enhanced
 - Introduced the ability to retrieve commit messages from pull requests across different git providers.
 - Implemented commit messages retrieval for GitHub and GitLab providers.
 - Updated the PR description template to include a section for commit messages if they exist.
+- Added support for repository-specific configuration files (.pr_agent.yaml) for the PR Agent.
+- Implemented this feature for both GitHub and GitLab providers.
+- Added a new configuration option 'use_repo_settings_file' to enable or disable the use of a repo-specific settings file.
+
 
 ## 2023-07-30
 
