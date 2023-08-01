@@ -1,7 +1,5 @@
 import logging
-import os
 import re
-import tempfile
 from typing import Optional, Tuple
 from urllib.parse import urlparse
 
@@ -37,17 +35,6 @@ class GitLabProvider(GitProvider):
         self.RE_HUNK_HEADER = re.compile(
             r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@[ ]?(.*)")
         self.incremental = incremental
-        if get_settings().config.use_repo_settings_file:
-            repo_settings = self.get_repo_settings()
-            if repo_settings:
-                repo_settings_file = None
-                try:
-                    fd, repo_settings_file = tempfile.mkstemp(suffix='.toml')
-                    os.write(fd, repo_settings.encode())
-                    get_settings().load_file(repo_settings_file)
-                finally:
-                    if repo_settings_file:
-                        os.remove(repo_settings_file)
 
     def is_supported(self, capability: str) -> bool:
         if capability in ['get_issue_comments', 'create_inline_comment', 'publish_inline_comments']:
@@ -268,7 +255,7 @@ class GitLabProvider(GitProvider):
 
     def get_repo_settings(self):
         try:
-            contents = self.gl.projects.get(self.id_project).files.get(file_path='.pr_agent.toml', ref=self.mr.source_branch).decode()
+            contents = self.gl.projects.get(self.id_project).files.get(file_path='.pr_agent.toml', ref=self.mr.source_branch)
             return contents
         except Exception:
             return ""

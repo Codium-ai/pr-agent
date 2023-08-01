@@ -1,6 +1,4 @@
 import logging
-import os
-import tempfile
 from datetime import datetime
 from typing import Optional, Tuple
 from urllib.parse import urlparse
@@ -9,11 +7,11 @@ from github import AppAuthentication, Auth, Github, GithubException
 from retry import retry
 from starlette_context import context
 
+from .git_provider import FilePatchInfo, GitProvider, IncrementalPR
 from ..algo.language_handler import is_valid_file
 from ..algo.utils import load_large_diff
 from ..config_loader import get_settings
 from ..servers.utils import RateLimitExceeded
-from .git_provider import FilePatchInfo, GitProvider, IncrementalPR
 
 
 class GithubProvider(GitProvider):
@@ -33,17 +31,6 @@ class GithubProvider(GitProvider):
         if pr_url:
             self.set_pr(pr_url)
             self.last_commit_id = list(self.pr.get_commits())[-1]
-        if get_settings().config.use_repo_settings_file:
-            repo_settings = self.get_repo_settings()
-            if repo_settings:
-                repo_settings_file = None
-                try:
-                    fd, repo_settings_file = tempfile.mkstemp(suffix='.toml')
-                    os.write(fd, repo_settings)
-                    get_settings().load_file(repo_settings_file)
-                finally:
-                    if repo_settings_file:
-                        os.remove(repo_settings_file)
 
     def is_supported(self, capability: str) -> bool:
         return True
