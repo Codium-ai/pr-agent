@@ -1,5 +1,4 @@
 ## 2023-08-01
-2023-08-01
 
 ### Enhanced
 - Introduced the ability to retrieve commit messages from pull requests across different git providers.
