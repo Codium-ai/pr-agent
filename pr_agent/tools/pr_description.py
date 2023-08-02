@@ -27,7 +27,6 @@ class PRDescription:
         self.main_pr_language = get_main_pr_language(
             self.git_provider.get_languages(), self.git_provider.get_files()
         )
-        commit_messages_str = self.git_provider.get_commit_messages()
 
         # Initialize the AI handler
         self.ai_handler = AiHandler()
@@ -40,7 +39,7 @@ class PRDescription:
             "language": self.main_pr_language,
             "diff": "",  # empty diff for initial calculation
             "extra_instructions": get_settings().pr_description.extra_instructions,
-            "commit_messages_str": commit_messages_str
+            "commit_messages_str": self.git_provider.get_commit_messages()
         }
     
         # Initialize the token handler
