@@ -32,6 +32,8 @@ extra_instructions = ""
 push_changelog_changes=false
 extra_instructions = ""
 
+[pr_config] # /config #
+
 [github]
 # The type of deployment to create. Valid values are 'app' or 'user'.
 deployment_type = "user"

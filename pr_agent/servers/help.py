@@ -4,7 +4,8 @@ commands_text = "> **/review [-i]**: Request a review of your Pull Request. For 
                 "> **/improve**: Suggest improvements to the code in the PR. \n" \
                 "> **/ask \\<QUESTION\\>**: Pose a question about the PR.\n\n" \
                 ">To edit any configuration parameter from 'configuration.toml', add --config_path=new_value\n" \
-                ">For example: /review --pr_reviewer.extra_instructions=\"focus on the file: ...\" " \
+                ">For example: /review --pr_reviewer.extra_instructions=\"focus on the file: ...\" \n" \
+                ">To list the possible configuration parameters, use the **/config** command.\n" \
 
 
 def bot_help_text(user: str):
