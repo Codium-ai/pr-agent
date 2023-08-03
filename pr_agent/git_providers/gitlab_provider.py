@@ -83,8 +83,10 @@ class GitLabProvider(GitProvider):
         diff_files = []
         for diff in diffs:
             if is_valid_file(diff['new_path']):
-                original_file_content_str = self._get_pr_file_content(diff['old_path'], self.mr.target_branch)
-                new_file_content_str = self._get_pr_file_content(diff['new_path'], self.mr.source_branch)
+                # original_file_content_str = self._get_pr_file_content(diff['old_path'], self.mr.target_branch)
+                # new_file_content_str = self._get_pr_file_content(diff['new_path'], self.mr.source_branch)
+                original_file_content_str = self._get_pr_file_content(diff['old_path'], self.mr.diff_refs['base_sha'])
+                new_file_content_str = self._get_pr_file_content(diff['new_path'], self.mr.diff_refs['head_sha'])
 
                 try:
                     if isinstance(original_file_content_str, bytes):
