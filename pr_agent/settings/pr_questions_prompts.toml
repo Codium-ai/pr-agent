@@ -13,6 +13,11 @@ Description: '{{description}}'
 {%- if language %}
 Main language: {{language}}
 {%- endif %}
+{%- if commit_messages_str %}
+
+Commit messages:
+{{commit_messages_str}}
+{%- endif %}
 
 
 The PR Git Diff:

@@ -24,6 +24,7 @@ class PRInformationFromUser:
             "description": self.git_provider.get_pr_description(),
             "language": self.main_pr_language,
             "diff": "",  # empty diff for initial calculation
+            "commit_messages_str": self.git_provider.get_commit_messages(),
         }
         self.token_handler = TokenHandler(self.git_provider.pr,
                                           self.vars,

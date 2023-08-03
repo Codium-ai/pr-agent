@@ -1,3 +1,10 @@
+## 2023-08-02
+
+### Enhanced
+- Updated several tools in the `pr_agent` package to use commit messages in their functionality.
+- Commit messages are now retrieved and stored in the `vars` dictionary for each tool.
+- Added a section to display the commit messages in the prompts of various tools.
+
 ## 2023-08-01
 
 ### Enhanced
