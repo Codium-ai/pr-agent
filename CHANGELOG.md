@@ -1,3 +1,10 @@
+## 2023-08-03
+
+### Optimized
+- Optimized PR diff processing by introducing caching for diff files, reducing the number of API calls.
+- Refactored `load_large_diff` function to generate a patch only when necessary.
+- Fixed a bug in the GitLab provider where the new file was not retrieved correctly.
+
 ## 2023-08-02
 
 ### Enhanced
