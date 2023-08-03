@@ -195,38 +195,30 @@ def convert_str_to_datetime(date_str):
     return datetime.strptime(date_str, datetime_format)
 
 
-def load_large_diff(file, new_file_content_str: str, original_file_content_str: str, patch: str) -> str:
+def load_large_diff(filename, new_file_content_str: str, original_file_content_str: str) -> str:
     """
     Generate a patch for a modified file by comparing the original content of the file with the new content provided as
     input.
 
     Args:
-        file: The file object for which the patch needs to be generated.
         new_file_content_str: The new content of the file as a string.
         original_file_content_str: The original content of the file as a string.
-        patch: An optional patch string that can be provided as input.
 
     Returns:
         The generated or provided patch string.
 
     Raises:
         None.
-
-    Additional Information:
-        - If 'patch' is not provided as input, the function generates a patch using the 'difflib' library and returns it
-          as output.
-        - If the 'settings.config.verbosity_level' is greater than or equal to 2, a warning message is logged indicating
-          that the file was modified but no patch was found, and a patch is manually created.
     """
-    if not patch:  # to Do - also add condition for file extension
-        try:
-            diff = difflib.unified_diff(original_file_content_str.splitlines(keepends=True),
-                                        new_file_content_str.splitlines(keepends=True))
-            if get_settings().config.verbosity_level >= 2:
-                logging.warning(f"File was modified, but no patch was found. Manually creating patch: {file.filename}.")
-            patch = ''.join(diff)
-        except Exception:
-            pass
+    patch = ""
+    try:
+        diff = difflib.unified_diff(original_file_content_str.splitlines(keepends=True),
+                                    new_file_content_str.splitlines(keepends=True))
+        if get_settings().config.verbosity_level >= 2:
+            logging.warning(f"File was modified, but no patch was found. Manually creating patch: {filename}.")
+        patch = ''.join(diff)
+    except Exception:
+        pass
     return patch
 
 

@@ -58,7 +58,6 @@ class PRCodeSuggestions:
 
     async def _prepare_prediction(self, model: str):
         logging.info('Getting PR diff...')
-        # we are using extended hunk with line numbers for code suggestions
         self.patches_diff = get_pr_diff(self.git_provider,
                                         self.token_handler,
                                         model,

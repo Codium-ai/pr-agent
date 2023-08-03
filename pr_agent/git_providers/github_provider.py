@@ -114,10 +114,12 @@ class GithubProvider(GitProvider):
 
                 if self.incremental.is_incremental and self.file_set:
                     original_file_content_str = self._get_pr_file_content(file, self.incremental.last_seen_commit_sha)
-                    patch = load_large_diff(file, new_file_content_str, original_file_content_str, "")
+                    patch = load_large_diff(file.filename, new_file_content_str, original_file_content_str)
                     self.file_set[file.filename] = patch
                 else:
                     original_file_content_str = self._get_pr_file_content(file, self.pr.base.sha)
+                    if not patch:
+                        patch = load_large_diff(file.filename, new_file_content_str, original_file_content_str)
 
                 diff_files.append(FilePatchInfo(original_file_content_str, new_file_content_str, patch, file.filename))
 

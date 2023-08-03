@@ -9,7 +9,6 @@ from pr_agent.algo import MAX_TOKENS
 from pr_agent.algo.git_patch_processing import convert_to_hunks_with_lines_numbers, extend_patch, handle_patch_deletions
 from pr_agent.algo.language_handler import sort_files_by_main_languages
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import load_large_diff
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers.git_provider import GitProvider
 
@@ -46,7 +45,7 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler, model: s
         PATCH_EXTRA_LINES = 0
 
     try:
-        diff_files = list(git_provider.get_diff_files())
+        diff_files = git_provider.get_diff_files()
     except RateLimitExceededException as e:
         logging.error(f"Rate limit exceeded for git provider API. original message {e}")
         raise
@@ -98,12 +97,7 @@ def pr_generate_extended_diff(pr_languages: list, token_handler: TokenHandler,
     for lang in pr_languages:
         for file in lang['files']:
             original_file_content_str = file.base_file
-            new_file_content_str = file.head_file
             patch = file.patch
-
-            # handle the case of large patch, that initially was not loaded
-            patch = load_large_diff(file, new_file_content_str, original_file_content_str, patch)
-
             if not patch:
                 continue
 
@@ -161,7 +155,6 @@ def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler, mo
         original_file_content_str = file.base_file
         new_file_content_str = file.head_file
         patch = file.patch
-        patch = load_large_diff(file, new_file_content_str, original_file_content_str, patch)
         if not patch:
             continue
 

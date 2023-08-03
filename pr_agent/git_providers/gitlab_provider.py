@@ -7,6 +7,7 @@ import gitlab
 from gitlab import GitlabGetError
 
 from ..algo.language_handler import is_valid_file
+from ..algo.utils import load_large_diff
 from ..config_loader import get_settings
 from .git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
 
@@ -102,8 +103,15 @@ class GitLabProvider(GitProvider):
                 elif diff['renamed_file']:
                     edit_type = EDIT_TYPE.RENAMED
 
+                filename = diff['new_path']
+                patch = diff['diff']
+                if not patch:
+                    patch = load_large_diff(filename, new_file_content_str, original_file_content_str)
+
                 diff_files.append(
-                    FilePatchInfo(original_file_content_str, new_file_content_str, diff['diff'], diff['new_path'],
+                    FilePatchInfo(original_file_content_str, new_file_content_str,
+                                  patch=patch,
+                                  filename=filename,
                                   edit_type=edit_type,
                                   old_filename=None if diff['old_path'] == diff['new_path'] else diff['old_path']))
         self.diff_files = diff_files
