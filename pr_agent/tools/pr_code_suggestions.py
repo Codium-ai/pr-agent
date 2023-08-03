@@ -64,6 +64,7 @@ class PRCodeSuggestions:
                                         model,
                                         add_line_numbers_to_hunks=True,
                                         disable_extra_lines=True)
+
         logging.info('Getting AI prediction...')
         self.prediction = await self._get_prediction(model)
 
