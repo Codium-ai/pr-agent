@@ -3,7 +3,7 @@ import logging
 import openai
 from openai.error import APIError, RateLimitError, Timeout, TryAgain
 from retry import retry
-
+from litellm import acompletion
 from pr_agent.config_loader import get_settings
 
 OPENAI_RETRIES=5
@@ -57,7 +57,7 @@ class AiHandler:
             TryAgain: If there is an attribute error during OpenAI inference.
         """
         try:
-            response = await openai.ChatCompletion.acreate(
+            response = await acompletion(
                             model=model,
                             deployment_id=self.deployment_id,
                             messages=[
