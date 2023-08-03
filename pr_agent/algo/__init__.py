@@ -7,4 +7,8 @@ MAX_TOKENS = {
     'gpt-4': 8000,
     'gpt-4-0613': 8000,
     'gpt-4-32k': 32000,
+    'claude-instant-1': 100000,
+    'claude-2': 100000,
+    'command-nightly': 4096,
+    'replicate/llama-2-70b-chat:2c1608e18606fad2812020dc541930f2d0495ce32eee50074220b87300bc16e1': 4096,
 }

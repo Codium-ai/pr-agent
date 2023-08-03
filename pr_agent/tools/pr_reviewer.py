@@ -160,12 +160,12 @@ class PRReviewer:
         the feedback.
         """
         review = self.prediction.strip()
-    
+        print(f"review: {review}")
         try:
             data = json.loads(review)
         except json.decoder.JSONDecodeError:
             data = try_fix_json(review)
-
+        print(f"data: {data}")
         # Move 'Security concerns' key to 'PR Analysis' section for better display
         if 'PR Feedback' in data and 'Security concerns' in data['PR Feedback']:
             val = data['PR Feedback']['Security concerns']
@@ -173,14 +173,15 @@ class PRReviewer:
             data['PR Analysis']['Security concerns'] = val
 
         # Filter out code suggestions that can be submitted as inline comments
-        if get_settings().config.git_provider != 'bitbucket' and get_settings().pr_reviewer.inline_code_comments \
-                and 'Code suggestions' in data['PR Feedback']:
-            data['PR Feedback']['Code suggestions'] = [
-                d for d in data['PR Feedback']['Code suggestions']
-                if any(key not in d for key in ('relevant file', 'relevant line in file', 'suggestion content'))
-            ]
-            if not data['PR Feedback']['Code suggestions']:
-                del data['PR Feedback']['Code suggestions']
+        if 'PR Feedback' in data:
+            if get_settings().config.git_provider != 'bitbucket' and get_settings().pr_reviewer.inline_code_comments \
+                    and 'Code suggestions' in data['PR Feedback']:
+                data['PR Feedback']['Code suggestions'] = [
+                    d for d in data['PR Feedback']['Code suggestions']
+                    if any(key not in d for key in ('relevant file', 'relevant line in file', 'suggestion content'))
+                ]
+                if not data['PR Feedback']['Code suggestions']:
+                    del data['PR Feedback']['Code suggestions']
 
         # Add incremental review section
         if self.incremental.is_incremental:
@@ -205,7 +206,11 @@ class PRReviewer:
         # Log markdown response if verbosity level is high
         if get_settings().config.verbosity_level >= 2:
             logging.info(f"Markdown response:\n{markdown_text}")
-    
+
+        if markdown_text == None or len(markdown_text) == 0:
+            markdown_text = review
+        
+        print(f"markdown text: {markdown_text}")
         return markdown_text
 
     def _publish_inline_code_comments(self) -> None:

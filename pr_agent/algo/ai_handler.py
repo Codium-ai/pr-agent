@@ -3,6 +3,7 @@ import logging
 import openai
 from openai.error import APIError, RateLimitError, Timeout, TryAgain
 from retry import retry
+import litellm
 from litellm import acompletion
 from pr_agent.config_loader import get_settings
 
@@ -22,6 +23,7 @@ class AiHandler:
         """
         try:
             openai.api_key = get_settings().openai.key
+            litellm.openai_key = get_settings().openai.key
             if get_settings().get("OPENAI.ORG", None):
                 openai.organization = get_settings().openai.org
             self.deployment_id = get_settings().get("OPENAI.DEPLOYMENT_ID", None)
@@ -31,6 +33,9 @@ class AiHandler:
                 openai.api_version = get_settings().openai.api_version
             if get_settings().get("OPENAI.API_BASE", None):
                 openai.api_base = get_settings().openai.api_base
+                litellm.api_base = get_settings().openai.api_base
+            if get_settings().get("LITE.KEY", None):
+                self.llm_api_key = get_settings().lite.key
         except AttributeError as e:
             raise ValueError("OpenAI key is required") from e
 
@@ -65,6 +70,7 @@ class AiHandler:
                                 {"role": "user", "content": user}
                             ],
                             temperature=temperature,
+                            api_key=self.llm_api_key
                         )
         except (APIError, Timeout, TryAgain) as e:
             logging.error("Error during OpenAI inference: ", e)
@@ -75,8 +81,9 @@ class AiHandler:
         except (Exception) as e:
             logging.error("Unknown error during OpenAI inference: ", e)
             raise TryAgain from e
-        if response is None or len(response.choices) == 0:
+        if response is None or len(response["choices"]) == 0:
             raise TryAgain
-        resp = response.choices[0]['message']['content']
-        finish_reason = response.choices[0].finish_reason
+        resp = response["choices"][0]['message']['content']
+        finish_reason = response["choices"][0]["finish_reason"]
+        print(resp, finish_reason)
         return resp, finish_reason

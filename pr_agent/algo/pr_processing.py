@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+import traceback
 import logging
 from typing import Callable, Tuple
 
@@ -221,6 +221,6 @@ async def retry_with_fallback_models(f: Callable):
         try:
             return await f(model)
         except Exception as e:
-            logging.warning(f"Failed to generate prediction with {model}: {e}")
+            logging.warning(f"Failed to generate prediction with {model}: {traceback.format_exc()}")
             if i == len(all_models) - 1:  # If it's the last iteration
                 raise  # Re-raise the last exception
