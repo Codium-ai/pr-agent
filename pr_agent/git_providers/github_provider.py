@@ -27,6 +27,7 @@ class GithubProvider(GitProvider):
         self.pr = None
         self.github_user_id = None
         self.diff_files = None
+        self.git_files = None
         self.incremental = incremental
         if pr_url:
             self.set_pr(pr_url)
@@ -81,40 +82,56 @@ class GithubProvider(GitProvider):
     def get_files(self):
         if self.incremental.is_incremental and self.file_set:
             return self.file_set.values()
-        return self.pr.get_files()
+        if not self.git_files:
+            # bring files from GitHub only once
+            self.git_files = self.pr.get_files()
+        return self.git_files
 
     @retry(exceptions=RateLimitExceeded,
            tries=get_settings().github.ratelimit_retries, delay=2, backoff=2, jitter=(1, 3))
     def get_diff_files(self) -> list[FilePatchInfo]:
+        """
+        Retrieves the list of files that have been modified, added, deleted, or renamed in a pull request in GitHub,
+        along with their content and patch information.
+
+        Returns:
+            diff_files (List[FilePatchInfo]): List of FilePatchInfo objects representing the modified, added, deleted,
+            or renamed files in the merge request.
+        """
         try:
+            if self.diff_files:
+                return self.diff_files
+
             files = self.get_files()
             diff_files = []
-            for file in files:
-                if is_valid_file(file.filename):
-                    new_file_content_str = self._get_pr_file_content(file, self.pr.head.sha)
-                    patch = file.patch
-                    if self.incremental.is_incremental and self.file_set:
-                        original_file_content_str = self._get_pr_file_content(file,
-                                                                              self.incremental.last_seen_commit_sha)
-                        patch = load_large_diff(file,
-                                                new_file_content_str,
-                                                original_file_content_str,
-                                                None)
-                        self.file_set[file.filename] = patch
-                    else:
-                        original_file_content_str = self._get_pr_file_content(file, self.pr.base.sha)
 
-                    diff_files.append(
-                        FilePatchInfo(original_file_content_str, new_file_content_str, patch, file.filename))
+            for file in files:
+                if not is_valid_file(file.filename):
+                    continue
+
+                new_file_content_str = self._get_pr_file_content(file, self.pr.head.sha)  # communication with GitHub
+                patch = file.patch
+
+                if self.incremental.is_incremental and self.file_set:
+                    original_file_content_str = self._get_pr_file_content(file, self.incremental.last_seen_commit_sha)
+                    patch = load_large_diff(file.filename, new_file_content_str, original_file_content_str)
+                    self.file_set[file.filename] = patch
+                else:
+                    original_file_content_str = self._get_pr_file_content(file, self.pr.base.sha)
+                    if not patch:
+                        patch = load_large_diff(file.filename, new_file_content_str, original_file_content_str)
+
+                diff_files.append(FilePatchInfo(original_file_content_str, new_file_content_str, patch, file.filename))
+
             self.diff_files = diff_files
             return diff_files
+
         except GithubException.RateLimitExceededException as e:
             logging.error(f"Rate limit exceeded for GitHub API. Original message: {e}")
             raise RateLimitExceeded("Rate limit exceeded for GitHub API.") from e
 
     def publish_description(self, pr_title: str, pr_body: str):
         self.pr.edit(title=pr_title, body=pr_body)
-        # self.pr.create_issue_comment(pr_comment)
 
     def publish_comment(self, pr_comment: str, is_temporary: bool = False):
         if is_temporary and not get_settings().config.publish_output_progress:
@@ -132,9 +149,9 @@ class GithubProvider(GitProvider):
         self.publish_inline_comments([self.create_inline_comment(body, relevant_file, relevant_line_in_file)])
 
     def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
-        self.diff_files = self.diff_files if self.diff_files else self.get_diff_files()
+        diff_files = self.get_diff_files()
         position = -1
-        for file in self.diff_files:
+        for file in diff_files:
             if file.filename.strip() == relevant_file:
                 patch = file.patch
                 patch_lines = patch.splitlines()
