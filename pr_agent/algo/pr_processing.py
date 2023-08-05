@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import re
+import difflib
 import logging
-from typing import Callable, Tuple
-
+from typing import Callable, Tuple, List, Any, Sequence
 from github import RateLimitExceededException
 
 from pr_agent.algo import MAX_TOKENS
@@ -10,7 +11,7 @@ from pr_agent.algo.git_patch_processing import convert_to_hunks_with_lines_numbe
 from pr_agent.algo.language_handler import sort_files_by_main_languages
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.config_loader import get_settings
-from pr_agent.git_providers.git_provider import GitProvider
+from pr_agent.git_providers.git_provider import GitProvider, FilePatchInfo
 
 DELETED_FILES_ = "Deleted files:\n"
 
@@ -217,3 +218,53 @@ async def retry_with_fallback_models(f: Callable):
             logging.warning(f"Failed to generate prediction with {model}: {e}")
             if i == len(all_models) - 1:  # If it's the last iteration
                 raise  # Re-raise the last exception
+
+
+def find_line_number_of_relevant_line_in_file(diff_files: list[FilePatchInfo], relevant_file: str,
+                                              relevant_line_in_file: str) -> Tuple[int, int]:
+    position = -1
+    absolute_position = -1
+    RE_HUNK_HEADER = re.compile(
+        r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@[ ]?(.*)")
+    for file in diff_files:
+        if file.filename.strip() == relevant_file:
+            patch = file.patch
+            patch_lines = patch.splitlines()
+
+            # try to find the line in the patch using difflib, with some margin of error
+            matches_difflib: list[str | Any] = difflib.get_close_matches(relevant_line_in_file,
+                                                                         file.patch.splitlines(), n=3, cutoff=0.95)
+            if len(matches_difflib) == 1 and matches_difflib[0].startswith('+'):
+                relevant_line_in_file = matches_difflib[0]
+
+            delta = 0
+            for i, line in enumerate(patch_lines):
+
+                if line.startswith('@@'):
+                    delta = 0
+                    match = RE_HUNK_HEADER.match(line)
+                    start1, size1, start2, size2 = map(int, match.groups()[:4])
+                elif not line.startswith('-'):
+                    delta += 1
+
+                if relevant_line_in_file in line and line[0] != '-':
+                    position = i
+                    absolute_position = start2 + delta - 1
+                    break
+            if position == -1:
+                for i, line in enumerate(patch_lines):
+                    if line.startswith('@@'):
+                        delta = 0
+                        match = RE_HUNK_HEADER.match(line)
+                        start1, size1, start2, size2 = map(int, match.groups()[:4])
+                    elif not line.startswith('-'):
+                        delta += 1
+
+                    if relevant_line_in_file[0] == '+' and relevant_line_in_file[1:].lstrip() in line and line[
+                        0] != '-':
+                        # The model often adds a '+' to the beginning of the relevant_line_in_file even if originally
+                        # it's a context line
+                        position = i
+                        absolute_position = start2 + delta - 1
+                        break
+    return position, absolute_position

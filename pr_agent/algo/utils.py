@@ -40,7 +40,7 @@ def convert_to_markdown(output_data: dict) -> str:
         "Security concerns": "🔒",
         "General PR suggestions": "💡",
         "Insights from user's answers": "📝",
-        "Code suggestions": "🤖",
+        "Code feedback": "🤖",
     }
 
     for key, value in output_data.items():
@@ -50,12 +50,12 @@ def convert_to_markdown(output_data: dict) -> str:
             markdown_text += f"## {key}\n\n"
             markdown_text += convert_to_markdown(value)
         elif isinstance(value, list):
-            if key.lower() == 'code suggestions':
+            if key.lower() == 'code feedback':
                 markdown_text += "\n"  # just looks nicer with additional line breaks
             emoji = emojis.get(key, "")
             markdown_text += f"- {emoji} **{key}:**\n\n"
             for item in value:
-                if isinstance(item, dict) and key.lower() == 'code suggestions':
+                if isinstance(item, dict) and key.lower() == 'code feedback':
                     markdown_text += parse_code_suggestion(item)
                 elif item:
                     markdown_text += f"  - {item}\n"
@@ -100,7 +100,7 @@ def try_fix_json(review, max_iter=10, code_suggestions=False):
     Args:
     - review: A string containing the JSON message to be fixed.
     - max_iter: An integer representing the maximum number of iterations to try and fix the JSON message.
-    - code_suggestions: A boolean indicating whether to try and fix JSON messages with code suggestions.
+    - code_suggestions: A boolean indicating whether to try and fix JSON messages with code feedback.
 
     Returns:
     - data: A dictionary containing the parsed JSON data.
@@ -108,7 +108,7 @@ def try_fix_json(review, max_iter=10, code_suggestions=False):
     The function attempts to fix broken or incomplete JSON messages by parsing until the last valid code suggestion.
     If the JSON message ends with a closing bracket, the function calls the fix_json_escape_char function to fix the
     message.
-    If code_suggestions is True and the JSON message contains code suggestions, the function tries to fix the JSON
+    If code_suggestions is True and the JSON message contains code feedback, the function tries to fix the JSON
     message by parsing until the last valid code suggestion.
     The function uses regular expressions to find the last occurrence of "}," with any number of whitespaces or
     newlines.
@@ -128,7 +128,8 @@ def try_fix_json(review, max_iter=10, code_suggestions=False):
     else:
         closing_bracket = "]}}"
 
-    if review.rfind("'Code suggestions': [") > 0 or review.rfind('"Code suggestions": [') > 0:
+    if (review.rfind("'Code feedback': [") > 0 or review.rfind('"Code feedback": [') > 0) or \
+            (review.rfind("'Code suggestions': [") > 0 or review.rfind('"Code suggestions": [') > 0) :
         last_code_suggestion_ind = [m.end() for m in re.finditer(r"\}\s*,", review)][-1] - 1
         valid_json = False
         iter_count = 0

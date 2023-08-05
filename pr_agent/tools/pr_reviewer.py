@@ -7,7 +7,8 @@ from typing import List, Tuple
 from jinja2 import Environment, StrictUndefined
 
 from pr_agent.algo.ai_handler import AiHandler
-from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
+from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models, \
+    find_line_number_of_relevant_line_in_file
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.algo.utils import convert_to_markdown, try_fix_json
 from pr_agent.config_loader import get_settings
@@ -160,27 +161,38 @@ class PRReviewer:
         the feedback.
         """
         review = self.prediction.strip()
-    
+
         try:
             data = json.loads(review)
         except json.decoder.JSONDecodeError:
             data = try_fix_json(review)
 
         # Move 'Security concerns' key to 'PR Analysis' section for better display
-        if 'PR Feedback' in data and 'Security concerns' in data['PR Feedback']:
-            val = data['PR Feedback']['Security concerns']
-            del data['PR Feedback']['Security concerns']
-            data['PR Analysis']['Security concerns'] = val
+        pr_feedback = data.get('PR Feedback', {})
+        security_concerns = pr_feedback.get('Security concerns')
+        if security_concerns:
+            del pr_feedback['Security concerns']
+            data.setdefault('PR Analysis', {})['Security concerns'] = security_concerns
 
-        # Filter out code suggestions that can be submitted as inline comments
-        if get_settings().config.git_provider != 'bitbucket' and get_settings().pr_reviewer.inline_code_comments \
-                and 'Code suggestions' in data['PR Feedback']:
-            data['PR Feedback']['Code suggestions'] = [
-                d for d in data['PR Feedback']['Code suggestions']
-                if any(key not in d for key in ('relevant file', 'relevant line in file', 'suggestion content'))
-            ]
-            if not data['PR Feedback']['Code suggestions']:
-                del data['PR Feedback']['Code suggestions']
+        # 
+        if 'Code feedback' in pr_feedback:
+            code_feedback = pr_feedback['Code feedback']
+
+            # Filter out code suggestions that can be submitted as inline comments
+            if get_settings().pr_reviewer.inline_code_comments:
+                del pr_feedback['Code feedback']
+            else:
+                for suggestion in code_feedback:
+                    relevant_line_str = suggestion['relevant line'].split('\n')[0]
+
+                    # removing '+'
+                    suggestion['relevant line'] = relevant_line_str.lstrip('+').strip()
+
+                    # try to add line numbers link to code suggestions
+                    if hasattr(self.git_provider, 'generate_link_to_relevant_line_number'):
+                        link = self.git_provider.generate_link_to_relevant_line_number(suggestion)
+                        if link:
+                            suggestion['relevant line'] = f"[{suggestion['relevant line']}]({link})"
 
         # Add incremental review section
         if self.incremental.is_incremental:
@@ -205,7 +217,7 @@ class PRReviewer:
         # Log markdown response if verbosity level is high
         if get_settings().config.verbosity_level >= 2:
             logging.info(f"Markdown response:\n{markdown_text}")
-    
+
         return markdown_text
 
     def _publish_inline_code_comments(self) -> None:
@@ -222,10 +234,10 @@ class PRReviewer:
             data = try_fix_json(review)
 
         comments: List[str] = []
-        for suggestion in data.get('PR Feedback', {}).get('Code suggestions', []):
+        for suggestion in data.get('PR Feedback', {}).get('Code feedback', []):
             relevant_file = suggestion.get('relevant file', '').strip()
-            relevant_line_in_file = suggestion.get('relevant line in file', '').strip()
-            content = suggestion.get('suggestion content', '')
+            relevant_line_in_file = suggestion.get('relevant line', '').strip()
+            content = suggestion.get('suggestion', '')
             if not relevant_file or not relevant_line_in_file or not content:
                 logging.info("Skipping inline comment with missing file/line/content")
                 continue

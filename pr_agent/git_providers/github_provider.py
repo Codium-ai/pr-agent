@@ -1,4 +1,6 @@
 import logging
+import hashlib
+
 from datetime import datetime
 from typing import Optional, Tuple
 from urllib.parse import urlparse
@@ -10,6 +12,7 @@ from starlette_context import context
 from .git_provider import FilePatchInfo, GitProvider, IncrementalPR
 from ..algo.language_handler import is_valid_file
 from ..algo.utils import load_large_diff
+from ..algo.pr_processing import find_line_number_of_relevant_line_in_file
 from ..config_loader import get_settings
 from ..servers.utils import RateLimitExceeded
 
@@ -148,22 +151,9 @@ class GithubProvider(GitProvider):
     def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
         self.publish_inline_comments([self.create_inline_comment(body, relevant_file, relevant_line_in_file)])
 
+
     def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
-        diff_files = self.get_diff_files()
-        position = -1
-        for file in diff_files:
-            if file.filename.strip() == relevant_file:
-                patch = file.patch
-                patch_lines = patch.splitlines()
-                for i, line in enumerate(patch_lines):
-                    if relevant_line_in_file in line:
-                        position = i
-                        break
-                    elif relevant_line_in_file[0] == '+' and relevant_line_in_file[1:].lstrip() in line:
-                        # The model often adds a '+' to the beginning of the relevant_line_in_file even if originally
-                        # it's a context line
-                        position = i
-                        break
+        position = find_line_number_of_relevant_line_in_file(self.diff_files, relevant_file.strip('`'), relevant_line_in_file)
         if position == -1:
             if get_settings().config.verbosity_level >= 2:
                 logging.info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
@@ -171,8 +161,6 @@ class GithubProvider(GitProvider):
         else:
             subject_type = "LINE"
         path = relevant_file.strip()
-        # placeholder for future API support (already supported in single inline comment)
-        # return dict(body=body, path=path, position=position, subject_type=subject_type)
         return dict(body=body, path=path, position=position) if subject_type == "LINE" else {}
 
     def publish_inline_comments(self, comments: list[dict]):
@@ -384,3 +372,25 @@ class GithubProvider(GitProvider):
         except:
             commit_messages_str = ""
         return commit_messages_str
+
+    def generate_link_to_relevant_line_number(self, suggestion) -> str:
+        try:
+            relevant_file = suggestion['relevant file']
+            relevant_line_str = suggestion['relevant line']
+            position, absolute_position = find_line_number_of_relevant_line_in_file \
+                (self.diff_files, relevant_file.strip('`'), relevant_line_str)
+
+            if absolute_position != -1:
+                # # link to right file only
+                # link = f"https://github.com/{self.repo}/blob/{self.pr.head.sha}/{relevant_file}" \
+                #        + "#" + f"L{absolute_position}"
+
+                # link to diff
+                sha_file = hashlib.sha256(relevant_file.encode('utf-8')).hexdigest()
+                link = f"https://github.com/{self.repo}/pull/{self.pr_num}/files#diff-{sha_file}R{absolute_position}"
+                return link
+        except Exception as e:
+            if get_settings().config.verbosity_level >= 2:
+                logging.info(f"Failed adding line link, error: {e}")
+
+        return ""
