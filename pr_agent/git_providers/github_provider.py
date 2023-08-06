@@ -1,4 +1,6 @@
 import logging
+import hashlib
+
 from datetime import datetime
 from typing import Optional, Tuple
 from urllib.parse import urlparse
@@ -10,6 +12,7 @@ from starlette_context import context
 from .git_provider import FilePatchInfo, GitProvider, IncrementalPR
 from ..algo.language_handler import is_valid_file
 from ..algo.utils import load_large_diff
+from ..algo.pr_processing import find_line_number_of_relevant_line_in_file
 from ..config_loader import get_settings
 from ..servers.utils import RateLimitExceeded
 
@@ -27,6 +30,7 @@ class GithubProvider(GitProvider):
         self.pr = None
         self.github_user_id = None
         self.diff_files = None
+        self.git_files = None
         self.incremental = incremental
         if pr_url:
             self.set_pr(pr_url)
@@ -81,40 +85,56 @@ class GithubProvider(GitProvider):
     def get_files(self):
         if self.incremental.is_incremental and self.file_set:
             return self.file_set.values()
-        return self.pr.get_files()
+        if not self.git_files:
+            # bring files from GitHub only once
+            self.git_files = self.pr.get_files()
+        return self.git_files
 
     @retry(exceptions=RateLimitExceeded,
            tries=get_settings().github.ratelimit_retries, delay=2, backoff=2, jitter=(1, 3))
     def get_diff_files(self) -> list[FilePatchInfo]:
+        """
+        Retrieves the list of files that have been modified, added, deleted, or renamed in a pull request in GitHub,
+        along with their content and patch information.
+
+        Returns:
+            diff_files (List[FilePatchInfo]): List of FilePatchInfo objects representing the modified, added, deleted,
+            or renamed files in the merge request.
+        """
         try:
+            if self.diff_files:
+                return self.diff_files
+
             files = self.get_files()
             diff_files = []
-            for file in files:
-                if is_valid_file(file.filename):
-                    new_file_content_str = self._get_pr_file_content(file, self.pr.head.sha)
-                    patch = file.patch
-                    if self.incremental.is_incremental and self.file_set:
-                        original_file_content_str = self._get_pr_file_content(file,
-                                                                              self.incremental.last_seen_commit_sha)
-                        patch = load_large_diff(file,
-                                                new_file_content_str,
-                                                original_file_content_str,
-                                                None)
-                        self.file_set[file.filename] = patch
-                    else:
-                        original_file_content_str = self._get_pr_file_content(file, self.pr.base.sha)
 
-                    diff_files.append(
-                        FilePatchInfo(original_file_content_str, new_file_content_str, patch, file.filename))
+            for file in files:
+                if not is_valid_file(file.filename):
+                    continue
+
+                new_file_content_str = self._get_pr_file_content(file, self.pr.head.sha)  # communication with GitHub
+                patch = file.patch
+
+                if self.incremental.is_incremental and self.file_set:
+                    original_file_content_str = self._get_pr_file_content(file, self.incremental.last_seen_commit_sha)
+                    patch = load_large_diff(file.filename, new_file_content_str, original_file_content_str)
+                    self.file_set[file.filename] = patch
+                else:
+                    original_file_content_str = self._get_pr_file_content(file, self.pr.base.sha)
+                    if not patch:
+                        patch = load_large_diff(file.filename, new_file_content_str, original_file_content_str)
+
+                diff_files.append(FilePatchInfo(original_file_content_str, new_file_content_str, patch, file.filename))
+
             self.diff_files = diff_files
             return diff_files
+
         except GithubException.RateLimitExceededException as e:
             logging.error(f"Rate limit exceeded for GitHub API. Original message: {e}")
             raise RateLimitExceeded("Rate limit exceeded for GitHub API.") from e
 
     def publish_description(self, pr_title: str, pr_body: str):
         self.pr.edit(title=pr_title, body=pr_body)
-        # self.pr.create_issue_comment(pr_comment)
 
     def publish_comment(self, pr_comment: str, is_temporary: bool = False):
         if is_temporary and not get_settings().config.publish_output_progress:
@@ -131,22 +151,9 @@ class GithubProvider(GitProvider):
     def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
         self.publish_inline_comments([self.create_inline_comment(body, relevant_file, relevant_line_in_file)])
 
+
     def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
-        self.diff_files = self.diff_files if self.diff_files else self.get_diff_files()
-        position = -1
-        for file in self.diff_files:
-            if file.filename.strip() == relevant_file:
-                patch = file.patch
-                patch_lines = patch.splitlines()
-                for i, line in enumerate(patch_lines):
-                    if relevant_line_in_file in line:
-                        position = i
-                        break
-                    elif relevant_line_in_file[0] == '+' and relevant_line_in_file[1:].lstrip() in line:
-                        # The model often adds a '+' to the beginning of the relevant_line_in_file even if originally
-                        # it's a context line
-                        position = i
-                        break
+        position = find_line_number_of_relevant_line_in_file(self.diff_files, relevant_file.strip('`'), relevant_line_in_file)
         if position == -1:
             if get_settings().config.verbosity_level >= 2:
                 logging.info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
@@ -154,8 +161,6 @@ class GithubProvider(GitProvider):
         else:
             subject_type = "LINE"
         path = relevant_file.strip()
-        # placeholder for future API support (already supported in single inline comment)
-        # return dict(body=body, path=path, position=position, subject_type=subject_type)
         return dict(body=body, path=path, position=position) if subject_type == "LINE" else {}
 
     def publish_inline_comments(self, comments: list[dict]):
@@ -367,3 +372,25 @@ class GithubProvider(GitProvider):
         except:
             commit_messages_str = ""
         return commit_messages_str
+
+    def generate_link_to_relevant_line_number(self, suggestion) -> str:
+        try:
+            relevant_file = suggestion['relevant file']
+            relevant_line_str = suggestion['relevant line']
+            position, absolute_position = find_line_number_of_relevant_line_in_file \
+                (self.diff_files, relevant_file.strip('`'), relevant_line_str)
+
+            if absolute_position != -1:
+                # # link to right file only
+                # link = f"https://github.com/{self.repo}/blob/{self.pr.head.sha}/{relevant_file}" \
+                #        + "#" + f"L{absolute_position}"
+
+                # link to diff
+                sha_file = hashlib.sha256(relevant_file.encode('utf-8')).hexdigest()
+                link = f"https://github.com/{self.repo}/pull/{self.pr_num}/files#diff-{sha_file}R{absolute_position}"
+                return link
+        except Exception as e:
+            if get_settings().config.verbosity_level >= 2:
+                logging.info(f"Failed adding line link, error: {e}")
+
+        return ""

@@ -1,7 +1,10 @@
 from __future__ import annotations
-import traceback
+
+import difflib
 import logging
-from typing import Callable, Tuple
+import re
+import traceback
+from typing import Any, Callable, List, Tuple
 
 from github import RateLimitExceededException
 
@@ -9,9 +12,8 @@ from pr_agent.algo import MAX_TOKENS
 from pr_agent.algo.git_patch_processing import convert_to_hunks_with_lines_numbers, extend_patch, handle_patch_deletions
 from pr_agent.algo.language_handler import sort_files_by_main_languages
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import load_large_diff
 from pr_agent.config_loader import get_settings
-from pr_agent.git_providers.git_provider import GitProvider
+from pr_agent.git_providers.git_provider import FilePatchInfo, GitProvider
 
 DELETED_FILES_ = "Deleted files:\n"
 
@@ -46,7 +48,7 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler, model: s
         PATCH_EXTRA_LINES = 0
 
     try:
-        diff_files = list(git_provider.get_diff_files())
+        diff_files = git_provider.get_diff_files()
     except RateLimitExceededException as e:
         logging.error(f"Rate limit exceeded for git provider API. original message {e}")
         raise
@@ -98,12 +100,7 @@ def pr_generate_extended_diff(pr_languages: list, token_handler: TokenHandler,
     for lang in pr_languages:
         for file in lang['files']:
             original_file_content_str = file.base_file
-            new_file_content_str = file.head_file
             patch = file.patch
-
-            # handle the case of large patch, that initially was not loaded
-            patch = load_large_diff(file, new_file_content_str, original_file_content_str, patch)
-
             if not patch:
                 continue
 
@@ -161,7 +158,6 @@ def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler, mo
         original_file_content_str = file.base_file
         new_file_content_str = file.head_file
         patch = file.patch
-        patch = load_large_diff(file, new_file_content_str, original_file_content_str, patch)
         if not patch:
             continue
 
@@ -224,3 +220,67 @@ async def retry_with_fallback_models(f: Callable):
             logging.warning(f"Failed to generate prediction with {model}: {traceback.format_exc()}")
             if i == len(all_models) - 1:  # If it's the last iteration
                 raise  # Re-raise the last exception
+
+
+def find_line_number_of_relevant_line_in_file(diff_files: List[FilePatchInfo],
+                                              relevant_file: str,
+                                              relevant_line_in_file: str) -> Tuple[int, int]:
+    """
+    Find the line number and absolute position of a relevant line in a file.
+
+    Args:
+        diff_files (List[FilePatchInfo]): A list of FilePatchInfo objects representing the patches of files.
+        relevant_file (str): The name of the file where the relevant line is located.
+        relevant_line_in_file (str): The content of the relevant line.
+
+    Returns:
+        Tuple[int, int]: A tuple containing the line number and absolute position of the relevant line in the file.
+    """
+    position = -1
+    absolute_position = -1
+    re_hunk_header = re.compile(
+        r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@[ ]?(.*)")
+
+    for file in diff_files:
+        if file.filename.strip() == relevant_file:
+            patch = file.patch
+            patch_lines = patch.splitlines()
+
+            # try to find the line in the patch using difflib, with some margin of error
+            matches_difflib: list[str | Any] = difflib.get_close_matches(relevant_line_in_file,
+                                                                         patch_lines, n=3, cutoff=0.93)
+            if len(matches_difflib) == 1 and matches_difflib[0].startswith('+'):
+                relevant_line_in_file = matches_difflib[0]
+
+            delta = 0
+            start1, size1, start2, size2 = 0, 0, 0, 0
+            for i, line in enumerate(patch_lines):
+                if line.startswith('@@'):
+                    delta = 0
+                    match = re_hunk_header.match(line)
+                    start1, size1, start2, size2 = map(int, match.groups()[:4])
+                elif not line.startswith('-'):
+                    delta += 1
+
+                if relevant_line_in_file in line and line[0] != '-':
+                    position = i
+                    absolute_position = start2 + delta - 1
+                    break
+
+            if position == -1 and relevant_line_in_file[0] == '+':
+                no_plus_line = relevant_line_in_file[1:].lstrip()
+                for i, line in enumerate(patch_lines):
+                    if line.startswith('@@'):
+                        delta = 0
+                        match = re_hunk_header.match(line)
+                        start1, size1, start2, size2 = map(int, match.groups()[:4])
+                    elif not line.startswith('-'):
+                        delta += 1
+
+                    if no_plus_line in line and line[0] != '-':
+                        # The model might add a '+' to the beginning of the relevant_line_in_file even if originally
+                        # it's a context line
+                        position = i
+                        absolute_position = start2 + delta - 1
+                        break
+    return position, absolute_position

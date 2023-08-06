@@ -7,6 +7,7 @@ import gitlab
 from gitlab import GitlabGetError
 
 from ..algo.language_handler import is_valid_file
+from ..algo.utils import load_large_diff
 from ..config_loader import get_settings
 from .git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
 
@@ -30,6 +31,7 @@ class GitLabProvider(GitProvider):
         self.id_mr = None
         self.mr = None
         self.diff_files = None
+        self.git_files = None
         self.temp_comments = []
         self._set_merge_request(merge_request_url)
         self.RE_HUNK_HEADER = re.compile(
@@ -65,19 +67,27 @@ class GitLabProvider(GitProvider):
             return ''
 
     def get_diff_files(self) -> list[FilePatchInfo]:
+        """
+        Retrieves the list of files that have been modified, added, deleted, or renamed in a pull request in GitLab,
+        along with their content and patch information.
+
+        Returns:
+            diff_files (List[FilePatchInfo]): List of FilePatchInfo objects representing the modified, added, deleted,
+            or renamed files in the merge request.
+        """
+
+        if self.diff_files:
+            return self.diff_files
+
         diffs = self.mr.changes()['changes']
         diff_files = []
         for diff in diffs:
             if is_valid_file(diff['new_path']):
-                original_file_content_str = self._get_pr_file_content(diff['old_path'], self.mr.target_branch)
-                new_file_content_str = self._get_pr_file_content(diff['new_path'], self.mr.source_branch)
-                edit_type = EDIT_TYPE.MODIFIED
-                if diff['new_file']:
-                    edit_type = EDIT_TYPE.ADDED
-                elif diff['deleted_file']:
-                    edit_type = EDIT_TYPE.DELETED
-                elif diff['renamed_file']:
-                    edit_type = EDIT_TYPE.RENAMED
+                # original_file_content_str = self._get_pr_file_content(diff['old_path'], self.mr.target_branch)
+                # new_file_content_str = self._get_pr_file_content(diff['new_path'], self.mr.source_branch)
+                original_file_content_str = self._get_pr_file_content(diff['old_path'], self.mr.diff_refs['base_sha'])
+                new_file_content_str = self._get_pr_file_content(diff['new_path'], self.mr.diff_refs['head_sha'])
+
                 try:
                     if isinstance(original_file_content_str, bytes):
                         original_file_content_str = bytes.decode(original_file_content_str, 'utf-8')
@@ -86,15 +96,33 @@ class GitLabProvider(GitProvider):
                 except UnicodeDecodeError:
                     logging.warning(
                         f"Cannot decode file {diff['old_path']} or {diff['new_path']} in merge request {self.id_mr}")
+
+                edit_type = EDIT_TYPE.MODIFIED
+                if diff['new_file']:
+                    edit_type = EDIT_TYPE.ADDED
+                elif diff['deleted_file']:
+                    edit_type = EDIT_TYPE.DELETED
+                elif diff['renamed_file']:
+                    edit_type = EDIT_TYPE.RENAMED
+
+                filename = diff['new_path']
+                patch = diff['diff']
+                if not patch:
+                    patch = load_large_diff(filename, new_file_content_str, original_file_content_str)
+
                 diff_files.append(
-                    FilePatchInfo(original_file_content_str, new_file_content_str, diff['diff'], diff['new_path'],
+                    FilePatchInfo(original_file_content_str, new_file_content_str,
+                                  patch=patch,
+                                  filename=filename,
                                   edit_type=edit_type,
                                   old_filename=None if diff['old_path'] == diff['new_path'] else diff['old_path']))
         self.diff_files = diff_files
         return diff_files
 
     def get_files(self):
-        return [change['new_path'] for change in self.mr.changes()['changes']]
+        if not self.git_files:
+            self.git_files = [change['new_path'] for change in self.mr.changes()['changes']]
+        return self.git_files
 
     def publish_description(self, pr_title: str, pr_body: str):
         try:
@@ -110,7 +138,6 @@ class GitLabProvider(GitProvider):
             self.temp_comments.append(comment)
 
     def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
-        self.diff_files = self.diff_files if self.diff_files else self.get_diff_files()
         edit_type, found, source_line_no, target_file, target_line_no = self.search_line(relevant_file,
                                                                                          relevant_line_in_file)
         self.send_inline_comment(body, edit_type, found, relevant_file, relevant_line_in_file, source_line_no,
@@ -151,9 +178,9 @@ class GitLabProvider(GitProvider):
                 relevant_lines_start = suggestion['relevant_lines_start']
                 relevant_lines_end = suggestion['relevant_lines_end']
 
-                self.diff_files = self.diff_files if self.diff_files else self.get_diff_files()
+                diff_files = self.get_diff_files()
                 target_file = None
-                for file in self.diff_files:
+                for file in diff_files:
                     if file.filename == relevant_file:
                         if file.filename == relevant_file:
                             target_file = file
@@ -180,7 +207,7 @@ class GitLabProvider(GitProvider):
         target_file = None
 
         edit_type = self.get_edit_type(relevant_line_in_file)
-        for file in self.diff_files:
+        for file in self.get_diff_files():
             if file.filename == relevant_file:
                 edit_type, found, source_line_no, target_file, target_line_no = self.find_in_file(file,
                                                                                                   relevant_line_in_file)
