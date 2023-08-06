@@ -13,8 +13,8 @@ require_focused_review=true
 require_score_review=false
 require_tests_review=true
 require_security_review=true
-num_code_suggestions=0
-inline_code_comments = true
+num_code_suggestions=3
+inline_code_comments = false
 ask_and_reflect=false
 extra_instructions = ""
 
