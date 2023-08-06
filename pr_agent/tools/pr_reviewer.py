@@ -174,7 +174,7 @@ class PRReviewer:
             del pr_feedback['Security concerns']
             data.setdefault('PR Analysis', {})['Security concerns'] = security_concerns
 
-        # 
+        #
         if 'Code feedback' in pr_feedback:
             code_feedback = pr_feedback['Code feedback']
 
@@ -217,6 +217,9 @@ class PRReviewer:
         # Log markdown response if verbosity level is high
         if get_settings().config.verbosity_level >= 2:
             logging.info(f"Markdown response:\n{markdown_text}")
+
+        if markdown_text == None or len(markdown_text) == 0:
+            markdown_text = review
 
         return markdown_text
 

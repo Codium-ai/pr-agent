@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-import re
 import difflib
 import logging
-from typing import Callable, Tuple, List, Any
+import re
+import traceback
+from typing import Any, Callable, List, Tuple
+
 from github import RateLimitExceededException
 
 from pr_agent.algo import MAX_TOKENS
@@ -11,7 +13,7 @@ from pr_agent.algo.git_patch_processing import convert_to_hunks_with_lines_numbe
 from pr_agent.algo.language_handler import sort_files_by_main_languages
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.config_loader import get_settings
-from pr_agent.git_providers.git_provider import GitProvider, FilePatchInfo
+from pr_agent.git_providers.git_provider import FilePatchInfo, GitProvider
 
 DELETED_FILES_ = "Deleted files:\n"
 
@@ -215,7 +217,7 @@ async def retry_with_fallback_models(f: Callable):
         try:
             return await f(model)
         except Exception as e:
-            logging.warning(f"Failed to generate prediction with {model}: {e}")
+            logging.warning(f"Failed to generate prediction with {model}: {traceback.format_exc()}")
             if i == len(all_models) - 1:  # If it's the last iteration
                 raise  # Re-raise the last exception
 
