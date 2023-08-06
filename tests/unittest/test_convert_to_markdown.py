@@ -51,7 +51,7 @@ class TestConvertToMarkdown:
             'Unrelated changes': 'n/a',  # won't be included in the output
             'Focused PR': 'Yes',
             'General PR suggestions': 'general suggestion...',
-            'Code suggestions': [
+            'Code feedback': [
                 {
                     'Code example': {
                         'Before': 'Code before',
@@ -73,7 +73,7 @@ class TestConvertToMarkdown:
 - ✨ **Focused PR:** Yes
 - 💡 **General PR suggestions:** general suggestion...
 
-- 🤖 **Code suggestions:**
+- 🤖 **Code feedback:**
 
   - **Code example:**
     - **Before:**
