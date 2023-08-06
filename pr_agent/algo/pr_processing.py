@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 import difflib
 import logging
-from typing import Callable, Tuple, List, Any, Sequence
+from typing import Callable, Tuple, List, Any
 from github import RateLimitExceededException
 
 from pr_agent.algo import MAX_TOKENS
@@ -220,12 +220,25 @@ async def retry_with_fallback_models(f: Callable):
                 raise  # Re-raise the last exception
 
 
-def find_line_number_of_relevant_line_in_file(diff_files: list[FilePatchInfo], relevant_file: str,
+def find_line_number_of_relevant_line_in_file(diff_files: List[FilePatchInfo],
+                                              relevant_file: str,
                                               relevant_line_in_file: str) -> Tuple[int, int]:
+    """
+    Find the line number and absolute position of a relevant line in a file.
+
+    Args:
+        diff_files (List[FilePatchInfo]): A list of FilePatchInfo objects representing the patches of files.
+        relevant_file (str): The name of the file where the relevant line is located.
+        relevant_line_in_file (str): The content of the relevant line.
+
+    Returns:
+        Tuple[int, int]: A tuple containing the line number and absolute position of the relevant line in the file.
+    """
     position = -1
     absolute_position = -1
-    RE_HUNK_HEADER = re.compile(
+    re_hunk_header = re.compile(
         r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@[ ]?(.*)")
+
     for file in diff_files:
         if file.filename.strip() == relevant_file:
             patch = file.patch
@@ -233,16 +246,16 @@ def find_line_number_of_relevant_line_in_file(diff_files: list[FilePatchInfo], r
 
             # try to find the line in the patch using difflib, with some margin of error
             matches_difflib: list[str | Any] = difflib.get_close_matches(relevant_line_in_file,
-                                                                         file.patch.splitlines(), n=3, cutoff=0.95)
+                                                                         patch_lines, n=3, cutoff=0.93)
             if len(matches_difflib) == 1 and matches_difflib[0].startswith('+'):
                 relevant_line_in_file = matches_difflib[0]
 
             delta = 0
+            start1, size1, start2, size2 = 0, 0, 0, 0
             for i, line in enumerate(patch_lines):
-
                 if line.startswith('@@'):
                     delta = 0
-                    match = RE_HUNK_HEADER.match(line)
+                    match = re_hunk_header.match(line)
                     start1, size1, start2, size2 = map(int, match.groups()[:4])
                 elif not line.startswith('-'):
                     delta += 1
@@ -251,18 +264,19 @@ def find_line_number_of_relevant_line_in_file(diff_files: list[FilePatchInfo], r
                     position = i
                     absolute_position = start2 + delta - 1
                     break
-            if position == -1:
+
+            if position == -1 and relevant_line_in_file[0] == '+':
+                no_plus_line = relevant_line_in_file[1:].lstrip()
                 for i, line in enumerate(patch_lines):
                     if line.startswith('@@'):
                         delta = 0
-                        match = RE_HUNK_HEADER.match(line)
+                        match = re_hunk_header.match(line)
                         start1, size1, start2, size2 = map(int, match.groups()[:4])
                     elif not line.startswith('-'):
                         delta += 1
 
-                    if relevant_line_in_file[0] == '+' and relevant_line_in_file[1:].lstrip() in line and line[
-                        0] != '-':
-                        # The model often adds a '+' to the beginning of the relevant_line_in_file even if originally
+                    if no_plus_line in line and line[0] != '-':
+                        # The model might add a '+' to the beginning of the relevant_line_in_file even if originally
                         # it's a context line
                         position = i
                         absolute_position = start2 + delta - 1
