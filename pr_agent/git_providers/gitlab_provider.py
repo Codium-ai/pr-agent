@@ -287,6 +287,12 @@ class GitLabProvider(GitProvider):
         except Exception:
             return ""
 
+    def add_eyes_reaction(self, issue_comment_id: int) -> Optional[int]:
+        return True
+
+    def remove_reaction(self, issue_comment_id: int, reaction_id: int) -> bool:
+        return True
+
     def _parse_merge_request_url(self, merge_request_url: str) -> Tuple[str, int]:
         parsed_url = urlparse(merge_request_url)
 

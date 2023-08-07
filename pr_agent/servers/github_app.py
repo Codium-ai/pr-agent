@@ -11,6 +11,7 @@ from starlette_context.middleware import RawContextMiddleware
 
 from pr_agent.agent.pr_agent import PRAgent
 from pr_agent.config_loader import get_settings, global_settings
+from pr_agent.git_providers import get_git_provider
 from pr_agent.servers.utils import verify_signature
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
@@ -80,7 +81,11 @@ async def handle_request(body: Dict[str, Any]):
             return {}
         pull_request = body["issue"]["pull_request"]
         api_url = pull_request.get("url")
+        comment_id = body.get("comment", {}).get("id")
+        provider = get_git_provider()(pr_url=api_url)
+        provider.add_eyes_reaction(comment_id)
         await agent.handle_request(api_url, comment_body)
+
 
     elif action == "opened" or 'reopened' in action:
         pull_request = body.get("pull_request")

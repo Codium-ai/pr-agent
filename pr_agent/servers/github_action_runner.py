@@ -4,6 +4,7 @@ import os
 
 from pr_agent.agent.pr_agent import PRAgent
 from pr_agent.config_loader import get_settings
+from pr_agent.git_providers import get_git_provider
 from pr_agent.tools.pr_reviewer import PRReviewer
 
 
@@ -61,6 +62,9 @@ async def run_action():
                 pr_url = event_payload.get("issue", {}).get("pull_request", {}).get("url")
                 if pr_url:
                     body = comment_body.strip().lower()
+                    comment_id = event_payload.get("comment", {}).get("id")
+                    provider = get_git_provider()(pr_url=pr_url)
+                    provider.add_eyes_reaction(comment_id)
                     await PRAgent().handle_request(pr_url, body)
 
 
