@@ -10,7 +10,7 @@ from pr_agent.algo.ai_handler import AiHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.config_loader import get_settings
-from pr_agent.git_providers import GithubProvider, get_git_provider
+from pr_agent.git_providers import GithubProvider, GitLabProvider, get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
 
 CHANGELOG_LINES = 50
@@ -19,7 +19,10 @@ CHANGELOG_LINES = 50
 class PRUpdateChangelog:
     def __init__(self, pr_url: str, cli_mode=False, args=None):
 
-        self.git_provider = get_git_provider()(pr_url)
+        if isinstance(self.git_provider, GithubProvider):
+            self.git_provider = get_git_provider()(pr_url)
+        elif isinstance(self.git_provider, GitLabProvider):
+            self.git_provider = get_git_provider()(pr_url, incremental=True)
         self.main_language = get_main_pr_language(
             self.git_provider.get_languages(), self.git_provider.get_files()
         )
@@ -46,23 +49,31 @@ class PRUpdateChangelog:
                                           get_settings().pr_update_changelog_prompt.user)
 
     async def run(self):
-        assert type(self.git_provider) == GithubProvider, "Currently only Github is supported"
+        assert type(self.git_provider) in [GithubProvider, GitLabProvider], "Currently only Github and GitLab are supported"
 
         logging.info('Updating the changelog...')
-        if get_settings().config.publish_output:
-            self.git_provider.publish_comment("Preparing changelog updates...", is_temporary=True)
+        if isinstance(self.git_provider, GithubProvider):
+            if get_settings().config.publish_output:
+                self.git_provider.publish_comment("Preparing changelog updates...", is_temporary=True)
+        elif isinstance(self.git_provider, GitLabProvider):
+            # Add code for preparing changelog updates for GitLabProvider
+            pass
         await retry_with_fallback_models(self._prepare_prediction)
         logging.info('Preparing PR changelog updates...')
         new_file_content, answer = self._prepare_changelog_update()
         if get_settings().config.publish_output:
             self.git_provider.remove_initial_comment()
             logging.info('Publishing changelog updates...')
-            if self.commit_changelog:
-                logging.info('Pushing PR changelog updates to repo...')
-                self._push_changelog_update(new_file_content, answer)
-            else:
-                logging.info('Publishing PR changelog as comment...')
-                self.git_provider.publish_comment(f"**Changelog updates:**\n\n{answer}")
+            if isinstance(self.git_provider, GithubProvider):
+                if self.commit_changelog:
+                    logging.info('Pushing PR changelog updates to repo...')
+                    self._push_changelog_update(new_file_content, answer)
+                else:
+                    logging.info('Publishing PR changelog as comment...')
+                    self.git_provider.publish_comment(f"**Changelog updates:**\n\n{answer}")
+            elif isinstance(self.git_provider, GitLabProvider):
+                # Add code for pushing PR changelog updates to GitLab repo
+                pass
 
     async def _prepare_prediction(self, model: str):
         logging.info('Getting PR diff...')
@@ -140,21 +151,25 @@ Example:
         return example_changelog
 
     def _get_changlog_file(self):
-        try:
-            self.changelog_file = self.git_provider.repo_obj.get_contents("CHANGELOG.md",
-                                                                          ref=self.git_provider.get_pr_branch())
-            changelog_file_lines = self.changelog_file.decoded_content.decode().splitlines()
-            changelog_file_lines = changelog_file_lines[:CHANGELOG_LINES]
-            self.changelog_file_str = "\n".join(changelog_file_lines)
-        except Exception:
-            self.changelog_file_str = ""
-            if self.commit_changelog:
-                logging.info("No CHANGELOG.md file found in the repository. Creating one...")
-                changelog_file = self.git_provider.repo_obj.create_file(path="CHANGELOG.md",
-                                                                             message='add CHANGELOG.md',
-                                                                             content="",
-                                                                             branch=self.git_provider.get_pr_branch())
-                self.changelog_file = changelog_file['content']
-
-        if not self.changelog_file_str:
-            self.changelog_file_str = self._get_default_changelog()
+        if isinstance(self.git_provider, GithubProvider):
+            try:
+                self.changelog_file = self.git_provider.repo_obj.get_contents("CHANGELOG.md",
+                                                                              ref=self.git_provider.get_pr_branch())
+                changelog_file_lines = self.changelog_file.decoded_content.decode().splitlines()
+                changelog_file_lines = changelog_file_lines[:CHANGELOG_LINES]
+                self.changelog_file_str = "\n".join(changelog_file_lines)
+            except Exception:
+                self.changelog_file_str = ""
+                if self.commit_changelog:
+                    logging.info("No CHANGELOG.md file found in the repository. Creating one...")
+                    changelog_file = self.git_provider.repo_obj.create_file(path="CHANGELOG.md",
+                                                                                 message='add CHANGELOG.md',
+                                                                                 content="",
+                                                                                 branch=self.git_provider.get_pr_branch())
+                    self.changelog_file = changelog_file['content']
+    
+            if not self.changelog_file_str:
+                self.changelog_file_str = self._get_default_changelog()
+        elif isinstance(self.git_provider, GitLabProvider):
+            # Add code for getting the changelog file for GitLabProvider
+            pass
