@@ -41,14 +41,6 @@ class TestParseCodeSuggestion:
         expected_output = "\n"  # modified to expect a newline character
         assert parse_code_suggestion(input_data) == expected_output
 
-    # Tests that function returns correct output when 'suggestion number' key has a non-integer value
-    def test_non_integer_suggestion_number(self):
-        input_data = {
-            "Suggestion number": "one",
-            "Description": "This is a suggestion"
-        }
-        expected_output = "- **suggestion one:**\n  - **Description:** This is a suggestion\n\n"
-        assert parse_code_suggestion(input_data) == expected_output
 
     # Tests that function returns correct output when 'before' or 'after' key has a non-string value
     def test_non_string_before_or_after(self):
@@ -64,19 +56,17 @@ class TestParseCodeSuggestion:
     # Tests that function returns correct output when input dictionary does not have 'code example' key
     def test_no_code_example_key(self):
         code_suggestions = {
-            'suggestion number': 1,
             'suggestion': 'Suggestion 1',
             'description': 'Description 1',
             'before': 'Before 1',
             'after': 'After 1'
         }
-        expected_output = "- **suggestion 1:**\n  - **suggestion:** Suggestion 1\n  - **description:** Description 1\n  - **before:** Before 1\n  - **after:** After 1\n\n"  # noqa: E501
+        expected_output = "   **suggestion:** Suggestion 1\n   **description:** Description 1\n   **before:** Before 1\n   **after:** After 1\n\n"  # noqa: E501
         assert parse_code_suggestion(code_suggestions) == expected_output
 
     # Tests that function returns correct output when input dictionary has 'code example' key
     def test_with_code_example_key(self):
         code_suggestions = {
-            'suggestion number': 2,
             'suggestion': 'Suggestion 2',
             'description': 'Description 2',
             'code example': {
@@ -84,5 +74,5 @@ class TestParseCodeSuggestion:
                 'after': 'After 2'
             }
         }
-        expected_output = "- **suggestion 2:**\n  - **suggestion:** Suggestion 2\n  - **description:** Description 2\n  - **code example:**\n    - **before:**\n        ```\n        Before 2\n        ```\n    - **after:**\n        ```\n        After 2\n        ```\n\n"  # noqa: E501
+        expected_output = "   **suggestion:** Suggestion 2\n   **description:** Description 2\n  - **code example:**\n    - **before:**\n        ```\n        Before 2\n        ```\n    - **after:**\n        ```\n        After 2\n        ```\n\n"  # noqa: E501
         assert parse_code_suggestion(code_suggestions) == expected_output

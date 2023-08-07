@@ -1,0 +1,8 @@
+name: 'Codium PR Agent'
+description: 'Summarize, review and suggest improvements for pull requests'
+branding:
+  icon: 'award'
+  color: 'green'
+runs:
+  using: 'docker'
+  image: 'Dockerfile.github_action_dockerhub'

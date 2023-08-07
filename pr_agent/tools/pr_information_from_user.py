@@ -11,52 +11,42 @@ from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
 
 
-class PRQuestions:
-    def __init__(self, pr_url: str, args=None):
-        question_str = self.parse_args(args)
+class PRInformationFromUser:
+    def __init__(self, pr_url: str, args: list = None):
         self.git_provider = get_git_provider()(pr_url)
         self.main_pr_language = get_main_pr_language(
             self.git_provider.get_languages(), self.git_provider.get_files()
         )
         self.ai_handler = AiHandler()
-        self.question_str = question_str
         self.vars = {
             "title": self.git_provider.pr.title,
             "branch": self.git_provider.get_pr_branch(),
             "description": self.git_provider.get_pr_description(),
             "language": self.main_pr_language,
             "diff": "",  # empty diff for initial calculation
-            "questions": self.question_str,
             "commit_messages_str": self.git_provider.get_commit_messages(),
         }
         self.token_handler = TokenHandler(self.git_provider.pr,
                                           self.vars,
-                                          get_settings().pr_questions_prompt.system,
-                                          get_settings().pr_questions_prompt.user)
+                                          get_settings().pr_information_from_user_prompt.system,
+                                          get_settings().pr_information_from_user_prompt.user)
         self.patches_diff = None
         self.prediction = None
 
-    def parse_args(self, args):
-        if args and len(args) > 0:
-            question_str = " ".join(args)
-        else:
-            question_str = ""
-        return question_str
-
     async def run(self):
-        logging.info('Answering a PR question...')
+        logging.info('Generating question to the user...')
         if get_settings().config.publish_output:
-            self.git_provider.publish_comment("Preparing answer...", is_temporary=True)
+            self.git_provider.publish_comment("Preparing questions...", is_temporary=True)
         await retry_with_fallback_models(self._prepare_prediction)
-        logging.info('Preparing answer...')
+        logging.info('Preparing questions...')
         pr_comment = self._prepare_pr_answer()
         if get_settings().config.publish_output:
-            logging.info('Pushing answer...')
+            logging.info('Pushing questions...')
             self.git_provider.publish_comment(pr_comment)
             self.git_provider.remove_initial_comment()
         return ""
 
-    async def _prepare_prediction(self, model: str):
+    async def _prepare_prediction(self, model):
         logging.info('Getting PR diff...')
         self.patches_diff = get_pr_diff(self.git_provider, self.token_handler, model)
         logging.info('Getting AI prediction...')
@@ -66,8 +56,8 @@ class PRQuestions:
         variables = copy.deepcopy(self.vars)
         variables["diff"] = self.patches_diff  # update diff
         environment = Environment(undefined=StrictUndefined)
-        system_prompt = environment.from_string(get_settings().pr_questions_prompt.system).render(variables)
-        user_prompt = environment.from_string(get_settings().pr_questions_prompt.user).render(variables)
+        system_prompt = environment.from_string(get_settings().pr_information_from_user_prompt.system).render(variables)
+        user_prompt = environment.from_string(get_settings().pr_information_from_user_prompt.user).render(variables)
         if get_settings().config.verbosity_level >= 2:
             logging.info(f"\nSystem prompt:\n{system_prompt}")
             logging.info(f"\nUser prompt:\n{user_prompt}")
@@ -76,8 +66,9 @@ class PRQuestions:
         return response
 
     def _prepare_pr_answer(self) -> str:
-        answer_str = f"Question: {self.question_str}\n\n"
-        answer_str += f"Answer:\n{self.prediction.strip()}\n\n"
+        model_output = self.prediction.strip()
         if get_settings().config.verbosity_level >= 2:
-            logging.info(f"answer_str:\n{answer_str}")
+            logging.info(f"answer_str:\n{model_output}")
+        answer_str = f"{model_output}\n\n Please respond to the questions above in the following format:\n\n" +\
+                     "\n>/answer\n>1) ...\n>2) ...\n>...\n"
         return answer_str
