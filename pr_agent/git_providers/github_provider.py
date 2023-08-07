@@ -153,7 +153,7 @@ class GithubProvider(GitProvider):
 
 
     def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
-        position = find_line_number_of_relevant_line_in_file(self.diff_files, relevant_file.strip('`'), relevant_line_in_file)
+        position, absolute_position = find_line_number_of_relevant_line_in_file(self.diff_files, relevant_file.strip('`'), relevant_line_in_file)
         if position == -1:
             if get_settings().config.verbosity_level >= 2:
                 logging.info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
