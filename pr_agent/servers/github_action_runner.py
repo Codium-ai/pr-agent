@@ -17,6 +17,7 @@ async def run_action():
     GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN')
     get_settings().set("CONFIG.PUBLISH_OUTPUT_PROGRESS", False)
 
+
     # Check if required environment variables are set
     if not GITHUB_EVENT_NAME:
         print("GITHUB_EVENT_NAME not set")
@@ -65,8 +66,7 @@ async def run_action():
                     body = comment_body.strip().lower()
                     comment_id = event_payload.get("comment", {}).get("id")
                     provider = get_git_provider()(pr_url=pr_url)
-                    provider.add_eyes_reaction(comment_id)
-                    await PRAgent().handle_request(pr_url, body)
+                    await PRAgent().handle_request(pr_url, body, notify=lambda: provider.add_eyes_reaction(comment_id))
 
 
 if __name__ == '__main__':
