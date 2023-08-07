@@ -107,6 +107,7 @@ async def root():
 def start():
     # Override the deployment type to app
     get_settings().set("GITHUB.DEPLOYMENT_TYPE", "app")
+    get_settings().set("CONFIG.PUBLISH_OUTPUT_PROGRESS", False)
     middleware = [Middleware(RawContextMiddleware)]
     app = FastAPI(middleware=middleware)
     app.include_router(router)

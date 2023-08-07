@@ -36,6 +36,7 @@ async def polling_loop():
     git_provider = get_git_provider()()
     user_id = git_provider.get_user_id()
     agent = PRAgent()
+    get_settings().set("CONFIG.PUBLISH_OUTPUT_PROGRESS", False)
 
     try:
         deployment_type = get_settings().github.deployment_type
