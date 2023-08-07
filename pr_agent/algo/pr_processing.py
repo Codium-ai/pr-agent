@@ -214,7 +214,6 @@ async def retry_with_fallback_models(f: Callable):
     if not isinstance(fallback_models, list):
         fallback_models = [m.strip() for m in fallback_models.split(",")]
     all_models = [model] + fallback_models
-
     # getting all deployments
     deployment_id = get_settings().get("openai.deployment_id", None)
     fallback_deployments = get_settings().get("openai.fallback_deployments", [])
@@ -230,7 +229,11 @@ async def retry_with_fallback_models(f: Callable):
             get_settings().set("openai.deployment_id", deployment_id)
             return await f(model)
         except Exception as e:
-            logging.warning(f"Failed to generate prediction with {model}: {traceback.format_exc()}")
+            logging.warning(
+                f"Failed to generate prediction with {model}"
+                f"{(' from deployment ' + deployment_id) if deployment_id else ''}: "
+                f"{traceback.format_exc()}"
+            )
             if i == len(all_models) - 1:  # If it's the last iteration
                 raise  # Re-raise the last exception
 
