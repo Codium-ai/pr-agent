@@ -93,6 +93,7 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 | CORE  | PR compression                              |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |
 |       | Repo language prioritization                |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |
 |       | Adaptive and token-aware<br />file patch fitting |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |
+|       | Multiple models support |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |
 |       | Incremental PR Review |   :white_check_mark:    |      |         |
 
 Examples for invoking the different tools via the CLI:
@@ -152,24 +153,23 @@ Here are some advantages of PR-Agent:
 - We emphasize **real-life practical usage**. Each tool (review, improve, ask, ...) has a single GPT-4 call, no more. We feel that this is critical for realistic team usage - obtaining an answer quickly (~30 seconds) and affordably.
 - Our [PR Compression strategy](./PR_COMPRESSION.md)  is a core ability that enables to effectively tackle both short and long PRs.
 - Our JSON prompting strategy enables to have **modular, customizable tools**. For example, the '/review' tool categories can be controlled via the [configuration](./CONFIGURATION.md) file. Adding additional categories is easy and accessible.
-- We support **multiple git providers** (GitHub, Gitlab, Bitbucket), and multiple ways to use the tool (CLI, GitHub Action, GitHub App, Docker, ...).
+- We support **multiple git providers** (GitHub, Gitlab, Bitbucket), **multiple ways** to use the tool (CLI, GitHub Action, GitHub App, Docker, ...), and **multiple models** (GPT-4, GPT-3.5, Anthropic, Cohere, Llama2).
 - We are open-source, and welcome contributions from the community.
 
 
 ## Roadmap
 
-- [ ] Support open-source models, as a replacement for OpenAI models. (Note - a minimal requirement for each open-source model is to have 8k+ context, and good support for generating JSON as an output)
-- [x] Support other Git providers, such as Gitlab and Bitbucket.
-- [ ] Develop additional logic for handling large PRs, and compressing git patches
+- [x] Support additional models, as a replacement for OpenAI (see [here](https://github.com/Codium-ai/pr-agent/pull/172))
+- [ ] Develop additional logic for handling large PRs
 - [ ] Add additional context to the prompt. For example, repo (or relevant files) summarization, with tools such a [ctags](https://github.com/universal-ctags/ctags)
 - [ ] Adding more tools. Possible directions:
   - [x] PR description
   - [x] Inline code suggestions
   - [x] Reflect and review
+  - [x] Rank the PR (see [here](https://github.com/Codium-ai/pr-agent/pull/89))   
   - [ ] Enforcing CONTRIBUTING.md guidelines
   - [ ] Performance (are there any performance issues)
   - [ ] Documentation (is the PR properly documented)
-  - [ ] Rank the PR importance
   - [ ] ...
 
 ## Similar Projects
