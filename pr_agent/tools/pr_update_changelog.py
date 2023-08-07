@@ -72,7 +72,7 @@ class PRUpdateChangelog:
                     logging.info('Publishing PR changelog as comment...')
                     self.git_provider.publish_comment(f"**Changelog updates:**\n\n{answer}")
             elif isinstance(self.git_provider, GitLabProvider):
-                # Add code for pushing PR changelog updates to GitLab repo
+                Add code for pushing PR changelog updates to GitLab repo
                 pass
 
     async def _prepare_prediction(self, model: str):
