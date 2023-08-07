@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 # enum EDIT_TYPE (ADDED, DELETED, MODIFIED, RENAMED)
 from enum import Enum
+from typing import Optional
 
 
 class EDIT_TYPE(Enum):
@@ -88,6 +89,13 @@ class GitProvider(ABC):
     def get_issue_comments(self):
         pass
 
+    @abstractmethod
+    def add_eyes_reaction(self, issue_comment_id: int) -> Optional[int]:
+        pass
+
+    @abstractmethod
+    def remove_reaction(self, issue_comment_id: int, reaction_id: int) -> bool:
+        pass
 
 def get_main_pr_language(languages, files) -> str:
     """

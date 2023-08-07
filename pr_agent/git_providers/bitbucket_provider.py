@@ -89,6 +89,12 @@ class BitbucketProvider:
     def get_issue_comments(self):
         raise NotImplementedError("Bitbucket provider does not support issue comments yet")
 
+    def add_eyes_reaction(self, issue_comment_id: int) -> Optional[int]:
+        return True
+
+    def remove_reaction(self, issue_comment_id: int, reaction_id: int) -> bool:
+        return True
+
     @staticmethod
     def _parse_pr_url(pr_url: str) -> Tuple[str, int]:
         parsed_url = urlparse(pr_url)
