@@ -27,7 +27,6 @@ class AiHandler:
             self.azure = False
             if get_settings().get("OPENAI.ORG", None):
                 litellm.organization = get_settings().openai.org
-            self.deployment_id = get_settings().get("OPENAI.DEPLOYMENT_ID", None)
             if get_settings().get("OPENAI.API_TYPE", None):
                 if get_settings().openai.api_type == "azure":
                     self.azure = True
@@ -44,6 +43,13 @@ class AiHandler:
                 litellm.replicate_key = get_settings().replicate.key
         except AttributeError as e:
             raise ValueError("OpenAI key is required") from e
+
+    @property
+    def deployment_id(self):
+        """
+        Returns the deployment ID for the OpenAI API.
+        """
+        return get_settings().get("OPENAI.DEPLOYMENT_ID", None)
 
     @retry(exceptions=(APIError, Timeout, TryAgain, AttributeError, RateLimitError),
            tries=OPENAI_RETRIES, delay=2, backoff=2, jitter=(1, 3))
