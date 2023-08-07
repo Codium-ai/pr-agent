@@ -83,10 +83,8 @@ async def handle_request(body: Dict[str, Any]):
         api_url = pull_request.get("url")
         comment_id = body.get("comment", {}).get("id")
         provider = get_git_provider()(pr_url=api_url)
-        added_reaction = provider.add_eyes_reaction(comment_id)
+        provider.add_eyes_reaction(comment_id)
         await agent.handle_request(api_url, comment_body)
-        if added_reaction:
-            provider.remove_reaction(comment_id, added_reaction)
 
 
     elif action == "opened" or 'reopened' in action:

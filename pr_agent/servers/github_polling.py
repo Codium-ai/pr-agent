@@ -100,10 +100,8 @@ async def polling_loop():
                                             rest_of_comment = comment_body.split(user_tag)[1].strip()
                                             comment_id = comment['id']
                                             git_provider.set_pr(pr_url)
-                                            added_reaction = git_provider.add_eyes_reaction(comment_id)
+                                            git_provider.add_eyes_reaction(comment_id)
                                             success = await agent.handle_request(pr_url, rest_of_comment)
-                                            if added_reaction:
-                                                git_provider.remove_reaction(comment_id, added_reaction)
                                             if not success:
                                                 git_provider.set_pr(pr_url)
                                                 git_provider.publish_comment("### How to use PR-Agent\n" +
