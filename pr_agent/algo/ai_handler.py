@@ -1,13 +1,15 @@
 import logging
 
+import litellm
 import openai
+from litellm import acompletion
 from openai.error import APIError, RateLimitError, Timeout, TryAgain
 from retry import retry
-import litellm
-from litellm import acompletion
+
 from pr_agent.config_loader import get_settings
-import traceback
-OPENAI_RETRIES=5
+
+OPENAI_RETRIES = 5
+
 
 class AiHandler:
     """
@@ -81,15 +83,16 @@ class AiHandler:
                     f"{(' from deployment ' + deployment_id) if deployment_id else ''}"
                 )
             response = await acompletion(
-                            model=model,
-                            deployment_id=deployment_id,
-                            messages=[
-                                {"role": "system", "content": system},
-                                {"role": "user", "content": user}
-                            ],
-                            temperature=temperature,
-                            azure=self.azure
-                        )
+                model=model,
+                deployment_id=deployment_id,
+                messages=[
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": user}
+                ],
+                temperature=temperature,
+                azure=self.azure,
+                force_timeout=get_settings().config.ai_timeout
+            )
         except (APIError, Timeout, TryAgain) as e:
             logging.error("Error during OpenAI inference: ", e)
             raise

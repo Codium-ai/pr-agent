@@ -2,10 +2,10 @@ import logging
 import hashlib
 
 from datetime import datetime
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Any
 from urllib.parse import urlparse
 
-from github import AppAuthentication, Auth, Github, GithubException
+from github import AppAuthentication, Auth, Github, GithubException, Reaction
 from retry import retry
 from starlette_context import context
 
@@ -153,7 +153,7 @@ class GithubProvider(GitProvider):
 
 
     def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
-        position = find_line_number_of_relevant_line_in_file(self.diff_files, relevant_file.strip('`'), relevant_line_in_file)
+        position, absolute_position = find_line_number_of_relevant_line_in_file(self.diff_files, relevant_file.strip('`'), relevant_line_in_file)
         if position == -1:
             if get_settings().config.verbosity_level >= 2:
                 logging.info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
@@ -262,6 +262,23 @@ class GithubProvider(GitProvider):
             return contents
         except Exception:
             return ""
+
+    def add_eyes_reaction(self, issue_comment_id: int) -> Optional[int]:
+        try:
+            reaction = self.pr.get_issue_comment(issue_comment_id).create_reaction("eyes")
+            return reaction.id
+        except Exception as e:
+            logging.exception(f"Failed to add eyes reaction, error: {e}")
+            return None
+
+    def remove_reaction(self, issue_comment_id: int, reaction_id: int) -> bool:
+        try:
+            self.pr.get_issue_comment(issue_comment_id).delete_reaction(reaction_id)
+            return True
+        except Exception as e:
+            logging.exception(f"Failed to remove eyes reaction, error: {e}")
+            return False
+
 
     @staticmethod
     def _parse_pr_url(pr_url: str) -> Tuple[str, int]:

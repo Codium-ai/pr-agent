@@ -36,6 +36,7 @@ async def polling_loop():
     git_provider = get_git_provider()()
     user_id = git_provider.get_user_id()
     agent = PRAgent()
+    get_settings().set("CONFIG.PUBLISH_OUTPUT_PROGRESS", False)
 
     try:
         deployment_type = get_settings().github.deployment_type
@@ -98,8 +99,10 @@ async def polling_loop():
                                             if user_tag not in comment_body:
                                                 continue
                                             rest_of_comment = comment_body.split(user_tag)[1].strip()
-
-                                            success = await agent.handle_request(pr_url, rest_of_comment)
+                                            comment_id = comment['id']
+                                            git_provider.set_pr(pr_url)
+                                            success = await agent.handle_request(pr_url, rest_of_comment,
+                                                                                 notify=lambda: git_provider.add_eyes_reaction(comment_id))  # noqa E501
                                             if not success:
                                                 git_provider.set_pr(pr_url)
                                                 git_provider.publish_comment("### How to use PR-Agent\n" +
