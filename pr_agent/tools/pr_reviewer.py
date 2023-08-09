@@ -10,7 +10,7 @@ from yaml import SafeLoader
 
 from pr_agent.algo.ai_handler import AiHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models, \
-    find_line_number_of_relevant_line_in_file
+    find_line_number_of_relevant_line_in_file, clip_tokens
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.algo.utils import convert_to_markdown, try_fix_json, try_fix_yaml, load_yaml
 from pr_agent.config_loader import get_settings

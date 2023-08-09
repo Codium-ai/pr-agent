@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 import requests
 from atlassian.bitbucket import Cloud
 
+from ..algo.pr_processing import clip_tokens
 from ..config_loader import get_settings
 from .git_provider import FilePatchInfo
 
@@ -81,6 +82,9 @@ class BitbucketProvider:
         return self.pr.source_branch
 
     def get_pr_description(self):
+        max_tokens = get_settings().get("CONFIG.MAX_DESCRIPTION_TOKENS", None)
+        if max_tokens:
+            return clip_tokens(self.pr.description, max_tokens)
         return self.pr.description
 
     def get_user_id(self):

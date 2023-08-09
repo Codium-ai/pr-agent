@@ -8,6 +8,8 @@ verbosity_level=0 # 0,1,2
 use_extra_bad_extensions=false
 use_repo_settings_file=true
 ai_timeout=180
+max_description_tokens = 500
+max_commits_tokens = 500
 
 [pr_reviewer] # /review #
 require_focused_review=true

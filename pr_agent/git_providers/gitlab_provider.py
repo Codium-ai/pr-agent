@@ -7,6 +7,7 @@ import gitlab
 from gitlab import GitlabGetError
 
 from ..algo.language_handler import is_valid_file
+from ..algo.pr_processing import clip_tokens
 from ..algo.utils import load_large_diff
 from ..config_loader import get_settings
 from .git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
@@ -275,6 +276,9 @@ class GitLabProvider(GitProvider):
         return self.mr.source_branch
 
     def get_pr_description(self):
+        max_tokens = get_settings().get("CONFIG.MAX_DESCRIPTION_TOKENS", None)
+        if max_tokens:
+            return clip_tokens(self.mr.description, max_tokens)
         return self.mr.description
 
     def get_issue_comments(self):
@@ -338,16 +342,19 @@ class GitLabProvider(GitProvider):
     def get_labels(self):
         return self.mr.labels
 
-    def get_commit_messages(self) -> str:
+    def get_commit_messages(self):
         """
         Retrieves the commit messages of a pull request.
 
         Returns:
             str: A string containing the commit messages of the pull request.
         """
+        max_tokens = get_settings().get("CONFIG.MAX_COMMITS_TOKENS", None)
         try:
             commit_messages_list = [commit['message'] for commit in self.mr.commits()._list]
             commit_messages_str = "\n".join([f"{i + 1}. {message}" for i, message in enumerate(commit_messages_list)])
-        except:
+        except Exception:
             commit_messages_str = ""
+        if max_tokens:
+            commit_messages_str = clip_tokens(commit_messages_str, max_tokens)
         return commit_messages_str
