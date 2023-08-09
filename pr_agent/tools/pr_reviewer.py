@@ -4,13 +4,15 @@ import logging
 from collections import OrderedDict
 from typing import List, Tuple
 
+import yaml
 from jinja2 import Environment, StrictUndefined
+from yaml import SafeLoader
 
 from pr_agent.algo.ai_handler import AiHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models, \
     find_line_number_of_relevant_line_in_file
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import convert_to_markdown, try_fix_json
+from pr_agent.algo.utils import convert_to_markdown, try_fix_json, try_fix_yaml, load_yaml
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import IncrementalPR, get_main_pr_language
@@ -160,19 +162,17 @@ class PRReviewer:
         Prepare the PR review by processing the AI prediction and generating a markdown-formatted text that summarizes
         the feedback.
         """
-        review = self.prediction.strip()
-
-        try:
-            data = json.loads(review)
-        except json.decoder.JSONDecodeError:
-            data = try_fix_json(review)
+        data = load_yaml(self.prediction.strip())
 
         # Move 'Security concerns' key to 'PR Analysis' section for better display
         pr_feedback = data.get('PR Feedback', {})
         security_concerns = pr_feedback.get('Security concerns')
-        if security_concerns:
+        if security_concerns is not None:
             del pr_feedback['Security concerns']
-            data.setdefault('PR Analysis', {})['Security concerns'] = security_concerns
+            if type(security_concerns) == bool and security_concerns == False:
+                data.setdefault('PR Analysis', {})['Security concerns'] = 'No security concerns found'
+            else:
+                data.setdefault('PR Analysis', {})['Security concerns'] = security_concerns
 
         #
         if 'Code feedback' in pr_feedback:
@@ -183,6 +183,12 @@ class PRReviewer:
                 del pr_feedback['Code feedback']
             else:
                 for suggestion in code_feedback:
+                    if ('relevant file' in suggestion) and (not suggestion['relevant file'].startswith('``')):
+                        suggestion['relevant file'] = f"``{suggestion['relevant file']}``"
+
+                    if 'relevant line' not in suggestion:
+                        suggestion['relevant line'] = ''
+
                     relevant_line_str = suggestion['relevant line'].split('\n')[0]
 
                     # removing '+'
@@ -219,7 +225,7 @@ class PRReviewer:
             logging.info(f"Markdown response:\n{markdown_text}")
 
         if markdown_text == None or len(markdown_text) == 0:
-            markdown_text = review
+            markdown_text = ""
 
         return markdown_text
 
@@ -230,11 +236,13 @@ class PRReviewer:
         if get_settings().pr_reviewer.num_code_suggestions == 0:
             return
 
-        review = self.prediction.strip()
+        review_text = self.prediction.strip()
+        review_text = review_text.lstrip('```yaml').rstrip('`')
         try:
-            data = json.loads(review)
-        except json.decoder.JSONDecodeError:
-            data = try_fix_json(review)
+            data = yaml.load(review_text, Loader=SafeLoader)
+        except Exception as e:
+            logging.error(f"Failed to parse AI prediction: {e}")
+            data = try_fix_yaml(review_text)
 
         comments: List[str] = []
         for suggestion in data.get('PR Feedback', {}).get('Code feedback', []):

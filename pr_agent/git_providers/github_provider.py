@@ -392,10 +392,13 @@ class GithubProvider(GitProvider):
 
     def generate_link_to_relevant_line_number(self, suggestion) -> str:
         try:
-            relevant_file = suggestion['relevant file']
+            relevant_file = suggestion['relevant file'].strip('`').strip("'")
             relevant_line_str = suggestion['relevant line']
+            if not relevant_line_str:
+                return ""
+
             position, absolute_position = find_line_number_of_relevant_line_in_file \
-                (self.diff_files, relevant_file.strip('`'), relevant_line_str)
+                (self.diff_files, relevant_file, relevant_line_str)
 
             if absolute_position != -1:
                 # # link to right file only
