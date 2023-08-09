@@ -14,117 +14,121 @@ Extra instructions from the user:
 {{ extra_instructions }}
 {% endif %}
 
-You must use the following JSON schema to format your answer:
-```json
-{
-  "PR Analysis": {
-    "Main theme": {
-      "type": "string",
-      "description": "a short explanation of the PR"
-    },
-    "Type of PR": {
-      "type": "string",
-      "enum": ["Bug fix", "Tests", "Refactoring", "Enhancement", "Documentation", "Other"]
-    },
+You must use the following YAML schema to format your answer:
+```yaml
+PR Analysis:
+  Main theme:
+    type: string
+    description: a short explanation of the PR
+  Type of PR:
+    type: string
+    enum:
+      - Bug fix
+      - Tests
+      - Refactoring
+      - Enhancement
+      - Documentation
+      - Other
 {%- if require_score %}
-    "Score": {
-      "type": "int",
-      "description": "Rate this PR on a scale of 0-100 (inclusive), where 0 means the worst possible PR code, and 100 means PR code of the highest quality, without any bugs or performance issues, that is ready to be merged immediately and run in production at scale."
-    },
+  Score:
+    type: int
+    description: >-
+      Rate this PR on a scale of 0-100 (inclusive), where 0 means the worst
+      possible PR code, and 100 means PR code of the highest quality, without
+      any bugs or performance issues, that is ready to be merged immediately and
+      run in production at scale.
 {%- endif %}
 {%- if require_tests %}
-    "Relevant tests added": {
-      "type": "string",
-      "description": "yes\\no question: does this PR have relevant tests ?"
-    },
+  Relevant tests added:
+    type: string
+    description: yes\\no question: does this PR have relevant tests ?
 {%- endif %}
 {%- if question_str %}
-    "Insights from user's answer": {
-      "type": "string",
-      "description": "shortly summarize the insights you gained from the user's answers to the questions"
-    },
+  Insights from user's answer:
+    type: string
+    description: >-
+      shortly summarize the insights you gained from the user's answers to the questions
 {%- endif %}
 {%- if require_focused %}
-    "Focused PR": {
-      "type": "string",
-      "description": "Is this a focused PR, in the sense that all the PR code diff changes are united under a single focused theme ? If the theme is too broad, or the PR code diff changes are too scattered, then the PR is not focused. Explain your answer shortly."
-    }
-  },
+  Focused PR:
+    type: string
+    description: >-
+      Is this a focused PR, in the sense that all the PR code diff changes are
+      united under a single focused theme ? If the theme is too broad, or the PR
+      code diff changes are too scattered, then the PR is not focused. Explain
+      your answer shortly.
 {%- endif %}
-  "PR Feedback": {
-    "General suggestions": {
-      "type": "string",
-      "description": "General suggestions and feedback for the contributors and maintainers of this PR. May include important suggestions for the overall structure, primary purpose, best practices, critical bugs, and other aspects of the PR. Don't address PR title and description, or lack of tests. Explain your suggestions."
-    },
+PR Feedback:
+  General suggestions:
+    type: string
+    description: >-
+      General suggestions and feedback for the contributors and maintainers of
+      this PR. May include important suggestions for the overall structure,
+      primary purpose, best practices, critical bugs, and other aspects of the
+      PR. Don't address PR title and description, or lack of tests. Explain your
+      suggestions.
 {%- if num_code_suggestions > 0 %}
-    "Code feedback": {
-      "type": "array",
-      "maxItems": {{ num_code_suggestions }},
-      "uniqueItems": true,
-      "items": {
-        "relevant file": {
-          "type": "string",
-          "description": "the relevant file full path"
-        },
-        "suggestion": {
-          "type": "string",
-          "description": "a concrete suggestion for meaningfully improving the new PR code. Also describe how, specifically, the suggestion can be applied to new PR code. Add tags with importance measure that matches each suggestion ('important' or 'medium'). Do not make suggestions for updating or adding docstrings, renaming PR title and description, or linter like.
-        },
-        "relevant line": {
-          "type": "string",
-          "description": "a single code line taken from the relevant file, to which the suggestion applies. The line should be a '+' line. Make sure to output the line exactly as it appears in the relevant file"
-        }
-      }
-    },
+  Code feedback:
+    type: array
+    maxItems: {{ num_code_suggestions }}
+    uniqueItems: true
+    items:
+      relevant file:
+        type: string
+        description: the relevant file full path
+      suggestion:
+        type: string
+        description: >-
+          a concrete suggestion for meaningfully improving the new PR code. Also
+          describe how, specifically, the suggestion can be applied to new PR
+          code. Add tags with importance measure that matches each suggestion
+          ('important' or 'medium'). Do not make suggestions for updating or
+          adding docstrings, renaming PR title and description, or linter like.
+      relevant line:
+        type: string
+        description: >-
+          a single code line taken from the relevant file, to which the
+          suggestion applies. The line should be a '+' line. Make sure to output
+          the line exactly as it appears in the relevant file
 {%- endif %}
 {%- if require_security %}
-    "Security concerns": {
-      "type": "string",
-      "description": "yes\\no question: does this PR code introduce possible security concerns or issues, like SQL injection, XSS, CSRF, and others ? If answered 'yes', explain your answer shortly"
-       ? explain your answer shortly"
-    }
+  Security concerns:
+    type: string
+    description: >-
+      yes\\no question: does this PR code introduce possible security concerns or
+      issues, like SQL injection, XSS, CSRF, and others ? If answered 'yes',explain your answer shortly
 {%- endif %}
-  }
-}
 ```
 
 Example output:
-'
-{
-    "PR Analysis":
-    {
-        "Main theme": "xxx",
-        "Type of PR": "Bug fix",
+```yaml
+PR Analysis:
+  Main theme: xxx
+  Type of PR: Bug fix
 {%- if require_score %}
-        "Score": 89,
+  Score: 89
 {%- endif %}
-{%- if require_tests %}
-        "Relevant tests added": "No",
-{%- endif %}
+  Relevant tests added: No
 {%- if require_focused %}
-        "Focused PR": "yes\\no, because ..."
+  Focused PR: no, because ...
 {%- endif %}
-    },
-    "PR Feedback":
-    {
-        "General PR suggestions": "..., `xxx`...",
+PR Feedback:
+  General PR suggestions: ...
 {%- if num_code_suggestions > 0 %}
-        "Code feedback": [
-            {
-                "relevant file": "directory/xxx.py",
-                "suggestion": "xxx [important]",
-                "relevant line": "xxx",
-            },
-            ...
-        ]
+  Code feedback:
+    - relevant file: |-
+        directory/xxx.py
+      suggestion: xxx [important]
+      relevant line: |-
+        xxx
+    ...
 {%- endif %}
 {%- if require_security %}
-        "Security concerns": "No, because ..."
+  Security concerns: No
 {%- endif %}
-    }
-}
-'
+```
 
+Make sure to output a valid YAML. Use multi-line block scalar ('|') if needed.
 Don't repeat the prompt in the answer, and avoid outputting the 'type' and 'description' fields.
 """
 
@@ -158,6 +162,6 @@ The PR Git Diff:
 ```
 Note that lines in the diff body are prefixed with a symbol that represents the type of change: '-' for deletions, '+' for additions, and ' ' (a space) for unchanged lines.
 
-Response (should be a valid JSON, and nothing else):
-```json
+Response (should be a valid YAML, and nothing else):
+```yaml
 """

@@ -8,6 +8,7 @@ from jinja2 import Environment, StrictUndefined
 from pr_agent.algo.ai_handler import AiHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
+from pr_agent.algo.utils import load_yaml
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
@@ -139,34 +140,45 @@ class PRDescription:
         - title: a string containing the PR title.
         - pr_body: a string containing the PR body in a markdown format.
         - pr_types: a list of strings containing the PR types.
-        - markdown_text: a string containing the AI prediction data in a markdown format.
+        - markdown_text: a string containing the AI prediction data in a markdown format. used for publishing a comment
         """
         # Load the AI prediction data into a dictionary
-        data = json.loads(self.prediction)
+        data = load_yaml(self.prediction.strip())
 
         # Initialization
-        markdown_text = pr_body = ""
         pr_types = []
 
         # Iterate over the dictionary items and append the key and value to 'markdown_text' in a markdown format
+        markdown_text = ""
         for key, value in data.items():
             markdown_text += f"## {key}\n\n"
             markdown_text += f"{value}\n\n"
 
         # If the 'PR Type' key is present in the dictionary, split its value by comma and assign it to 'pr_types'
         if 'PR Type' in data:
-            pr_types = data['PR Type'].split(',')
+            if type(data['PR Type']) == list:
+                pr_types = data['PR Type']
+            elif type(data['PR Type']) == str:
+                pr_types = data['PR Type'].split(',')
 
         # Assign the value of the 'PR Title' key to 'title' variable and remove it from the dictionary
         title = data.pop('PR Title')
 
         # Iterate over the remaining dictionary items and append the key and value to 'pr_body' in a markdown format,
         # except for the items containing the word 'walkthrough'
+        pr_body = ""
         for key, value in data.items():
             pr_body += f"## {key}:\n"
             if 'walkthrough' in key.lower():
-                pr_body += f"{value}\n"
+                # for filename, description in value.items():
+                for file in value:
+                    filename = file['filename'].replace("'", "`")
+                    description = file['changes in file']
+                    pr_body += f'`{filename}`: {description}\n'
             else:
+                # if the value is a list, join its items by comma
+                if type(value) == list:
+                    value = ', '.join(v for v in value)
                 pr_body += f"{value}\n\n___\n"
 
         if get_settings().config.verbosity_level >= 2:
