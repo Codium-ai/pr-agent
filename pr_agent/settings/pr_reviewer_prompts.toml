@@ -78,18 +78,20 @@ PR Feedback:
         description: the relevant file full path
       suggestion:
         type: string
-        description: >-
+        description: |
           a concrete suggestion for meaningfully improving the new PR code. Also
           describe how, specifically, the suggestion can be applied to new PR
           code. Add tags with importance measure that matches each suggestion
           ('important' or 'medium'). Do not make suggestions for updating or
           adding docstrings, renaming PR title and description, or linter like.
+          YAML output should be in block scalar format ('|')
       relevant line:
         type: string
-        description: >-
-          a single code line taken from the relevant file, to which the
-          suggestion applies. The line should be a '+' line. Make sure to output
-          the line exactly as it appears in the relevant file
+        description: |
+          a single code line taken from the relevant file, to which the suggestion applies.
+          The line should be a '+' line.
+          Make sure to output the line exactly as it appears in the relevant file
+          YAML output should be in block scalar format ('|')
 {%- endif %}
 {%- if require_security %}
   Security concerns:
