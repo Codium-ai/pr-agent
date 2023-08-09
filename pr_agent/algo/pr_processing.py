@@ -11,7 +11,7 @@ from github import RateLimitExceededException
 from pr_agent.algo import MAX_TOKENS
 from pr_agent.algo.git_patch_processing import convert_to_hunks_with_lines_numbers, extend_patch, handle_patch_deletions
 from pr_agent.algo.language_handler import sort_files_by_main_languages
-from pr_agent.algo.token_handler import TokenHandler
+from pr_agent.algo.token_handler import TokenHandler, get_token_encoder
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers.git_provider import FilePatchInfo, GitProvider
 
@@ -298,11 +298,12 @@ def clip_tokens(text: str, max_tokens: int) -> str:
         str: The clipped string.
     """
     # We'll estimate the number of tokens by hueristically assuming 2.5 tokens per word
-    words = re.finditer(r'\S+', text)
-    max_words = max_tokens // 2.5
-    end_pos = None
-    for i, token in enumerate(words):
-        if i == max_words:
-            end_pos = token.start()
-            break
-    return text if end_pos is None else text[:end_pos]
+    encoder = get_token_encoder()
+    num_input_tokens = len(encoder.encode(text))
+    if num_input_tokens <= max_tokens:
+        return text
+    num_chars = len(text)
+    chars_per_token = num_chars / num_input_tokens
+    num_output_chars = int(chars_per_token * max_tokens)
+    clipped_text = text[:num_output_chars]
+    return clipped_text

@@ -62,8 +62,6 @@ class PRReviewer:
             "extra_instructions": get_settings().pr_reviewer.extra_instructions,
             "commit_messages_str": self.git_provider.get_commit_messages(),
         }
-        self.vars["description"] = clip_tokens(self.vars["description"], 500)
-        self.vars["commit_messages_str"] = clip_tokens(self.vars["commit_messages_str"], 500)
 
         self.token_handler = TokenHandler(
             self.git_provider.pr,
