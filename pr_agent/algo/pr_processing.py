@@ -298,12 +298,16 @@ def clip_tokens(text: str, max_tokens: int) -> str:
         str: The clipped string.
     """
     # We'll estimate the number of tokens by hueristically assuming 2.5 tokens per word
-    encoder = get_token_encoder()
-    num_input_tokens = len(encoder.encode(text))
-    if num_input_tokens <= max_tokens:
+    try:
+        encoder = get_token_encoder()
+        num_input_tokens = len(encoder.encode(text))
+        if num_input_tokens <= max_tokens:
+            return text
+        num_chars = len(text)
+        chars_per_token = num_chars / num_input_tokens
+        num_output_chars = int(chars_per_token * max_tokens)
+        clipped_text = text[:num_output_chars]
+        return clipped_text
+    except Exception as e:
+        logging.warning(f"Failed to clip tokens: {e}")
         return text
-    num_chars = len(text)
-    chars_per_token = num_chars / num_input_tokens
-    num_output_chars = int(chars_per_token * max_tokens)
-    clipped_text = text[:num_output_chars]
-    return clipped_text
