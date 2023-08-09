@@ -116,17 +116,20 @@ PR Feedback:
   General PR suggestions: ...
 {%- if num_code_suggestions > 0 %}
   Code feedback:
-    - relevant file: directory/xxx.py
+    - relevant file: |-
+        directory/xxx.py
       suggestion: xxx [important]
-      relevant line: 'xxx'
-    - ...
+      relevant line: |-
+        xxx
+    ...
 {%- endif %}
 {%- if require_security %}
   Security concerns: No
 {%- endif %}
 ```
 
-Make sure to output a valid YAML. Don't repeat the prompt in the answer, and avoid outputting the 'type' and 'description' fields.
+Make sure to output a valid YAML. Use multi-line block scalar ('|') if needed.
+Don't repeat the prompt in the answer, and avoid outputting the 'type' and 'description' fields.
 """
 
 user="""PR Info:
