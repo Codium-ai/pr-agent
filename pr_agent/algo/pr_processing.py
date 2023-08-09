@@ -284,3 +284,25 @@ def find_line_number_of_relevant_line_in_file(diff_files: List[FilePatchInfo],
                         absolute_position = start2 + delta - 1
                         break
     return position, absolute_position
+
+
+def clip_tokens(text: str, max_tokens: int) -> str:
+    """
+    Clip the number of tokens in a string to a maximum number of tokens.
+
+    Args:
+        text (str): The string to clip.
+        max_tokens (int): The maximum number of tokens allowed in the string.
+
+    Returns:
+        str: The clipped string.
+    """
+    # We'll estimate the number of tokens by hueristically assuming 2.5 tokens per word
+    words = re.finditer(r'\S+', text)
+    max_words = max_tokens // 2.5
+    end_pos = None
+    for i, token in enumerate(words):
+        if i == max_words:
+            end_pos = token.start()
+            break
+    return text if end_pos is None else text[:end_pos]

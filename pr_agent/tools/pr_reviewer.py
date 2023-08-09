@@ -8,7 +8,7 @@ from jinja2 import Environment, StrictUndefined
 
 from pr_agent.algo.ai_handler import AiHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models, \
-    find_line_number_of_relevant_line_in_file
+    find_line_number_of_relevant_line_in_file, clip_tokens
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.algo.utils import convert_to_markdown, try_fix_json
 from pr_agent.config_loader import get_settings
@@ -62,6 +62,8 @@ class PRReviewer:
             "extra_instructions": get_settings().pr_reviewer.extra_instructions,
             "commit_messages_str": self.git_provider.get_commit_messages(),
         }
+        self.vars["description"] = clip_tokens(self.vars["description"], 500)
+        self.vars["commit_messages_str"] = clip_tokens(self.vars["commit_messages_str"], 500)
 
         self.token_handler = TokenHandler(
             self.git_provider.pr,
