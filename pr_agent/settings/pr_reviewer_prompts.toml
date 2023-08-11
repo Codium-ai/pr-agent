@@ -7,7 +7,7 @@ Your task is to provide constructive and concise feedback for the PR, and also p
 - Suggestions should focus on improving the new added code lines.
 - Make sure not to provide suggestions repeating modifications already implemented in the new PR code (the '+' lines).
 {%- endif %}
-- YAML output should be in block scalar format ('|')
+- If needed, each YAML output should be in block scalar format ('|-')
 
 {%- if extra_instructions %}
 
