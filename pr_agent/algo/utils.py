@@ -261,7 +261,7 @@ def update_settings_from_args(args: List[str]) -> List[str]:
 
 
 def load_yaml(review_text: str) -> dict:
-    review_text = review_text.lstrip('```yaml').rstrip('`')
+    review_text = review_text.removeprefix('```yaml').rstrip('`')
     try:
         data = yaml.load(review_text, Loader=yaml.SafeLoader)
     except Exception as e:

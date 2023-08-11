@@ -237,7 +237,7 @@ class PRReviewer:
             return
 
         review_text = self.prediction.strip()
-        review_text = review_text.lstrip('```yaml').rstrip('`')
+        review_text = review_text.removeprefix('```yaml').rstrip('`')
         try:
             data = yaml.load(review_text, Loader=SafeLoader)
         except Exception as e:
