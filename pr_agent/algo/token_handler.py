@@ -4,6 +4,10 @@ from tiktoken import encoding_for_model, get_encoding
 from pr_agent.config_loader import get_settings
 
 
+def get_token_encoder():
+    return encoding_for_model(get_settings().config.model) if "gpt" in get_settings().config.model else get_encoding(
+        "cl100k_base")
+
 class TokenHandler:
     """
     A class for handling tokens in the context of a pull request.
@@ -27,7 +31,7 @@ class TokenHandler:
         - system: The system string.
         - user: The user string.
         """
-        self.encoder = encoding_for_model(get_settings().config.model) if "gpt" in get_settings().config.model else get_encoding("cl100k_base")
+        self.encoder = get_token_encoder()
         self.prompt_tokens = self._get_system_user_tokens(pr, self.encoder, vars, system, user)
 
     def _get_system_user_tokens(self, pr, encoder, vars: dict, system, user):
