@@ -271,6 +271,13 @@ def load_yaml(review_text: str) -> dict:
 
 def try_fix_yaml(review_text: str) -> dict:
     review_text_lines = review_text.split('\n')
+
+    # Replace multiple ":" coming in same line to one
+    for i in range(0, len(review_text_lines)):
+        if review_text_lines[i].count(':') >= 2:
+            parts = review_text_lines[i].partition(":")
+            review_text_lines[i] = parts[0] + parts[1] + parts[2].replace(":","")
+
     data = {}
     for i in range(1, len(review_text_lines)):
         review_text_lines_tmp = '\n'.join(review_text_lines[:-i])
