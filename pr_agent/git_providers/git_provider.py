@@ -97,6 +97,10 @@ class GitProvider(ABC):
     def remove_reaction(self, issue_comment_id: int, reaction_id: int) -> bool:
         pass
 
+    @abstractmethod
+    def get_commit_messages(self):
+        pass
+
 def get_main_pr_language(languages, files) -> str:
     """
     Get the main language of the commit. Return an empty string if cannot determine.
