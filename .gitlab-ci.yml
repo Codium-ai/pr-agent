@@ -1,0 +1,14 @@
+bot-review:
+  stage: test
+  needs:
+    - job: build-jar
+      artifacts: true
+  variables:
+    MR_URL: ${CI_MERGE_REQUEST_PROJECT_URL}/-/merge_requests/${CI_MERGE_REQUEST_IID}
+  image: docker:latest
+  services:
+    - docker:19-dind
+  script:
+    - docker run --rm -e OPENAI.KEY=${OPEN_API_KEY} -e OPENAI.ORG=${OPEN_API_ORG} -e GITLAB.PERSONAL_ACCESS_TOKEN=${GITLAB_PAT} -e CONFIG.GIT_PROVIDER=gitlab codiumai/pr-agent --pr_url ${MR_URL} describe
+  rules:
+    - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
