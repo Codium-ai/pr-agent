@@ -1,8 +1,5 @@
 bot-review:
   stage: test
-  needs:
-    - job: build-jar
-      artifacts: true
   variables:
     MR_URL: ${CI_MERGE_REQUEST_PROJECT_URL}/-/merge_requests/${CI_MERGE_REQUEST_IID}
   image: docker:latest
