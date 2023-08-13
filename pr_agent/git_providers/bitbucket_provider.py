@@ -93,6 +93,13 @@ class BitbucketProvider:
     def get_issue_comments(self):
         raise NotImplementedError("Bitbucket provider does not support issue comments yet")
 
+    def get_repo_settings(self):
+        try:
+            contents = self.repo_obj.get_contents(".pr_agent.toml", ref=self.pr.head.sha).decoded_content
+            return contents
+        except Exception:
+            return ""
+
     def add_eyes_reaction(self, issue_comment_id: int) -> Optional[int]:
         return True
 
@@ -104,7 +111,7 @@ class BitbucketProvider:
         parsed_url = urlparse(pr_url)
         
         if 'bitbucket.org' not in parsed_url.netloc:
-            raise ValueError("The provided URL is not a valid GitHub URL")
+            raise ValueError("The provided URL is not a valid Bitbucket URL")
 
         path_parts = parsed_url.path.strip('/').split('/')
         
