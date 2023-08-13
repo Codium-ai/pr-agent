@@ -221,6 +221,9 @@ async def retry_with_fallback_models(f: Callable):
         fallback_deployments = [d.strip() for d in fallback_deployments.split(",")]
     if fallback_deployments:
         all_deployments = [deployment_id] + fallback_deployments
+        if len(fallback_deployments) < len(fallback_models):
+            raise ValueError(f"The number of fallback deployments ({len(all_deployments)}) "
+                             f"is less than the number of fallback models ({len(all_models)})")
     else:
         all_deployments = [deployment_id] * len(all_models)
     # try each (model, deployment_id) pair until one is successful, otherwise raise exception
