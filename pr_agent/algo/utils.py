@@ -8,8 +8,8 @@ import textwrap
 from datetime import datetime
 from typing import Any, List
 
+import yaml
 from starlette_context import context
-
 from pr_agent.config_loader import get_settings, global_settings
 
 
@@ -258,3 +258,26 @@ def update_settings_from_args(args: List[str]) -> List[str]:
             else:
                 other_args.append(arg)
     return other_args
+
+
+def load_yaml(review_text: str) -> dict:
+    review_text = review_text.removeprefix('```yaml').rstrip('`')
+    try:
+        data = yaml.load(review_text, Loader=yaml.SafeLoader)
+    except Exception as e:
+        logging.error(f"Failed to parse AI prediction: {e}")
+        data = try_fix_yaml(review_text)
+    return data
+
+def try_fix_yaml(review_text: str) -> dict:
+    review_text_lines = review_text.split('\n')
+    data = {}
+    for i in range(1, len(review_text_lines)):
+        review_text_lines_tmp = '\n'.join(review_text_lines[:-i])
+        try:
+            data = yaml.load(review_text_lines_tmp, Loader=yaml.SafeLoader)
+            logging.info(f"Successfully parsed AI prediction after removing {i} lines")
+            break
+        except:
+            pass
+    return data

@@ -12,7 +12,7 @@ from starlette_context import context
 from .git_provider import FilePatchInfo, GitProvider, IncrementalPR
 from ..algo.language_handler import is_valid_file
 from ..algo.utils import load_large_diff
-from ..algo.pr_processing import find_line_number_of_relevant_line_in_file
+from ..algo.pr_processing import find_line_number_of_relevant_line_in_file, clip_tokens
 from ..config_loader import get_settings
 from ..servers.utils import RateLimitExceeded
 
@@ -234,6 +234,9 @@ class GithubProvider(GitProvider):
         return self.pr.head.ref
 
     def get_pr_description(self):
+        max_tokens = get_settings().get("CONFIG.MAX_DESCRIPTION_TOKENS", None)
+        if max_tokens:
+            return clip_tokens(self.pr.body, max_tokens)
         return self.pr.body
 
     def get_user_id(self):
@@ -375,27 +378,33 @@ class GithubProvider(GitProvider):
             logging.exception(f"Failed to get labels, error: {e}")
             return []
 
-    def get_commit_messages(self) -> str:
+    def get_commit_messages(self):
         """
         Retrieves the commit messages of a pull request.
 
         Returns:
             str: A string containing the commit messages of the pull request.
         """
+        max_tokens = get_settings().get("CONFIG.MAX_COMMITS_TOKENS", None)
         try:
             commit_list = self.pr.get_commits()
             commit_messages = [commit.commit.message for commit in commit_list]
             commit_messages_str = "\n".join([f"{i + 1}. {message}" for i, message in enumerate(commit_messages)])
-        except:
+        except Exception:
             commit_messages_str = ""
+        if max_tokens:
+            commit_messages_str = clip_tokens(commit_messages_str, max_tokens)
         return commit_messages_str
 
     def generate_link_to_relevant_line_number(self, suggestion) -> str:
         try:
-            relevant_file = suggestion['relevant file']
+            relevant_file = suggestion['relevant file'].strip('`').strip("'")
             relevant_line_str = suggestion['relevant line']
+            if not relevant_line_str:
+                return ""
+
             position, absolute_position = find_line_number_of_relevant_line_in_file \
-                (self.diff_files, relevant_file.strip('`'), relevant_line_str)
+                (self.diff_files, relevant_file, relevant_line_str)
 
             if absolute_position != -1:
                 # # link to right file only
