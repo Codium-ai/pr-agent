@@ -29,7 +29,6 @@ class AiHandler:
             self.azure = False
             if get_settings().get("OPENAI.ORG", None):
                 litellm.organization = get_settings().openai.org
-            self.deployment_id = get_settings().get("OPENAI.DEPLOYMENT_ID", None)
             if get_settings().get("OPENAI.API_TYPE", None):
                 if get_settings().openai.api_type == "azure":
                     self.azure = True
@@ -46,6 +45,13 @@ class AiHandler:
                 litellm.replicate_key = get_settings().replicate.key
         except AttributeError as e:
             raise ValueError("OpenAI key is required") from e
+
+    @property
+    def deployment_id(self):
+        """
+        Returns the deployment ID for the OpenAI API.
+        """
+        return get_settings().get("OPENAI.DEPLOYMENT_ID", None)
 
     @retry(exceptions=(APIError, Timeout, TryAgain, AttributeError, RateLimitError),
            tries=OPENAI_RETRIES, delay=2, backoff=2, jitter=(1, 3))
@@ -70,9 +76,15 @@ class AiHandler:
             TryAgain: If there is an attribute error during OpenAI inference.
         """
         try:
+            deployment_id = self.deployment_id
+            if get_settings().config.verbosity_level >= 2:
+                logging.debug(
+                    f"Generating completion with {model}"
+                    f"{(' from deployment ' + deployment_id) if deployment_id else ''}"
+                )
             response = await acompletion(
                 model=model,
-                deployment_id=self.deployment_id,
+                deployment_id=deployment_id,
                 messages=[
                     {"role": "system", "content": system},
                     {"role": "user", "content": user}
