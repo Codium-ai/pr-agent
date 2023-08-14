@@ -129,6 +129,7 @@ Allowing you to automate the review process on your private or public repositori
      - Pull requests: Read & write
      - Issue comment: Read & write
      - Metadata: Read-only
+     - Contents: Read-only
    - Set the following events:
      - Issue comment
      - Pull request
