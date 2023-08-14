@@ -93,6 +93,10 @@ class PRCodeSuggestions:
 
     def push_inline_code_suggestions(self, data):
         code_suggestions = []
+
+        if not data['Code suggestions']:
+            return self.git_provider.publish_comment('🎉 The PR looks good and there is nothing to suggest!')
+
         for d in data['Code suggestions']:
             try:
                 if get_settings().config.verbosity_level >= 2:
