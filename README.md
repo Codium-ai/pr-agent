@@ -118,6 +118,11 @@ To set up your own PR-Agent, see the [Installation](#installation) section
 
 ---
 
+## Soon
+
+Pre PR inside the IDE extension
+Follow us on Discord to find out more
+
 ## Installation
 
 To get started with PR-Agent quickly, you first need to acquire two tokens:
