@@ -95,7 +95,7 @@ class PRCodeSuggestions:
         code_suggestions = []
 
         if not data['Code suggestions']:
-            return self.git_provider.publish_comment('🎉 The PR looks good and there is nothing to suggest!')
+            return self.git_provider.publish_comment('No suggestions found to improve this PR.')
 
         for d in data['Code suggestions']:
             try:
