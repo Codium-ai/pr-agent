@@ -22,12 +22,12 @@ Note: If you want to ensure you're running a specific version of the Docker imag
 The digest is a unique identifier for a specific version of an image. You can pull and run an image using its digest by referencing it like so: repository@sha256:digest. Always ensure you're using the correct and trusted digest for your operations.
 
 1. To request a review for a PR using a specific digest, run the following command:
-```
+```bash
 docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent@sha256:71b5ee15df59c745d352d84752d01561ba64b6d51327f97d46152f0c58a5f678 --pr_url <pr_url> review
 ```
 
 2. To ask a question about a PR using the same digest, run the following command:
-```
+```bash
 docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent@sha256:71b5ee15df59c745d352d84752d01561ba64b6d51327f97d46152f0c58a5f678 --pr_url <pr_url> ask "<your question>"
 ```
 
@@ -63,7 +63,24 @@ jobs:
           OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
+** if you want to pin your action to a specific commit for stability reasons
+```yaml
+on:
+  pull_request:
+  issue_comment:
 
+jobs:
+  pr_agent_job:
+    runs-on: ubuntu-latest
+    name: Run pr agent on every pull request, respond to user comments
+    steps:
+      - name: PR Agent action step
+        id: pragent
+        uses: Codium-ai/pr-agent@<commit_sha>
+        env:
+          OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
 2. Add the following secret to your repository under `Settings > Secrets`:
 
 ```
