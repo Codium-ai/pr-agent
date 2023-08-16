@@ -15,6 +15,7 @@ from pr_agent.tools.pr_update_changelog import PRUpdateChangelog
 from pr_agent.tools.pr_config import PRConfig
 
 command2class = {
+    "auto_review": PRReviewer,
     "answer": PRReviewer,
     "review": PRReviewer,
     "review_pr": PRReviewer,
@@ -43,8 +44,10 @@ class PRAgent:
             repo_settings_file = None
             try:
                 git_provider = get_git_provider()(pr_url)
+                logging.info(f'Fetching repo settings {git_provider.repo}')
                 repo_settings = git_provider.get_repo_settings()
                 if repo_settings:
+                    logging.debug(f'Found settings for repo {git_provider.repo}\n{repo_settings}')
                     repo_settings_file = None
                     fd, repo_settings_file = tempfile.mkstemp(suffix='.toml')
                     os.write(fd, repo_settings)
@@ -70,6 +73,8 @@ class PRAgent:
             if notify:
                 notify()
             await PRReviewer(pr_url, is_answer=True, args=args).run()
+        elif action == "auto_review":
+            await PRReviewer(pr_url, is_auto=True, args=args).run()
         elif action in command2class:
             if notify:
                 notify()
