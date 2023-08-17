@@ -299,10 +299,7 @@ class GitLabProvider(GitProvider):
     def get_pr_branch(self):
         return self.mr.source_branch
 
-    def get_pr_description(self):
-        max_tokens = get_settings().get("CONFIG.MAX_DESCRIPTION_TOKENS", None)
-        if max_tokens:
-            return clip_tokens(self.mr.description, max_tokens)
+    def get_pr_description_full(self):
         return self.mr.description
 
     def get_issue_comments(self):

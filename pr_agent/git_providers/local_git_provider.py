@@ -158,7 +158,7 @@ class LocalGitProvider(GitProvider):
     def get_user_id(self):
         return -1  # Not used anywhere for the local provider, but required by the interface
 
-    def get_pr_description(self):
+    def get_pr_description_full(self):
         commits_diff = list(self.repo.iter_commits(self.target_branch_name + '..HEAD'))
         # Get the commit messages and concatenate
         commit_messages = " ".join([commit.message for commit in commits_diff])

@@ -42,6 +42,8 @@ class PRDescription:
             "extra_instructions": get_settings().pr_description.extra_instructions,
             "commit_messages_str": self.git_provider.get_commit_messages()
         }
+
+        self.user_description = self.git_provider.get_user_description()
     
         # Initialize the token handler
         self.token_handler = TokenHandler(
@@ -145,6 +147,9 @@ class PRDescription:
         # Load the AI prediction data into a dictionary
         data = load_yaml(self.prediction.strip())
 
+        if get_settings().pr_description.keep_user_description and self.user_description:
+            data["User Description"] = self.user_description
+
         # Initialization
         pr_types = []
 
@@ -167,7 +172,7 @@ class PRDescription:
         # Iterate over the remaining dictionary items and append the key and value to 'pr_body' in a markdown format,
         # except for the items containing the word 'walkthrough'
         pr_body = ""
-        for key, value in data.items():
+        for idx, (key, value) in enumerate(data.items()):
             pr_body += f"## {key}:\n"
             if 'walkthrough' in key.lower():
                 # for filename, description in value.items():
@@ -179,7 +184,9 @@ class PRDescription:
                 # if the value is a list, join its items by comma
                 if type(value) == list:
                     value = ', '.join(v for v in value)
-                pr_body += f"{value}\n\n___\n"
+                pr_body += f"{value}\n"
+            if idx < len(data) - 1:
+                pr_body += "\n___\n"
 
         if get_settings().config.verbosity_level >= 2:
             logging.info(f"title:\n{title}\n{pr_body}")

@@ -6,12 +6,11 @@ from urllib.parse import urlparse
 import requests
 from atlassian.bitbucket import Cloud
 
-from ..algo.pr_processing import clip_tokens
 from ..config_loader import get_settings
-from .git_provider import FilePatchInfo
+from .git_provider import FilePatchInfo, GitProvider
 
 
-class BitbucketProvider:
+class BitbucketProvider(GitProvider):
     def __init__(self, pr_url: Optional[str] = None, incremental: Optional[bool] = False):
         s = requests.Session()
         s.headers['Authorization'] = f'Bearer {get_settings().get("BITBUCKET.BEARER_TOKEN", None)}'
@@ -156,10 +155,7 @@ class BitbucketProvider:
     def get_pr_branch(self):
         return self.pr.source_branch
 
-    def get_pr_description(self):
-        max_tokens = get_settings().get("CONFIG.MAX_DESCRIPTION_TOKENS", None)
-        if max_tokens:
-            return clip_tokens(self.pr.description, max_tokens)
+    def get_pr_description_full(self):
         return self.pr.description
 
     def get_user_id(self):

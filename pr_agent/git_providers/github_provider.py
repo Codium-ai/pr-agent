@@ -233,10 +233,7 @@ class GithubProvider(GitProvider):
     def get_pr_branch(self):
         return self.pr.head.ref
 
-    def get_pr_description(self):
-        max_tokens = get_settings().get("CONFIG.MAX_DESCRIPTION_TOKENS", None)
-        if max_tokens:
-            return clip_tokens(self.pr.body, max_tokens)
+    def get_pr_description_full(self):
         return self.pr.body
 
     def get_user_id(self):
