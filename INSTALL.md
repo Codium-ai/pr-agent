@@ -121,6 +121,7 @@ pip install -r requirements.txt
 
 ```
 cp pr_agent/settings/.secrets_template.toml pr_agent/settings/.secrets.toml
+chmod 600 pr_agent/settings/.secrets.toml
 # Edit .secrets.toml file
 ```
 

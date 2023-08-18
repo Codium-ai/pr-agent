@@ -90,6 +90,10 @@ class GitProvider(ABC):
         pass
 
     @abstractmethod
+    def get_repo_settings(self):
+        pass
+
+    @abstractmethod
     def add_eyes_reaction(self, issue_comment_id: int) -> Optional[int]:
         pass
 
