@@ -156,11 +156,14 @@ class GitLabProvider(GitProvider):
             logging.info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
         else:
             # in order to have exact sha's we have to find correct diff for this change
-            d = self.get_relevant_diff(relevant_file, relevant_line_in_file)
+            diff = self.get_relevant_diff(relevant_file, relevant_line_in_file)
+            if diff is None:
+                logger.error(f"Could not get diff for merge request {self.id_mr}")
+                raise ValueError(f"Could not get diff for merge request {self.id_mr}")
             pos_obj = {'position_type': 'text',
                        'new_path': target_file.filename,
                        'old_path': target_file.old_filename if target_file.old_filename else target_file.filename,
-                       'base_sha': d.base_commit_sha, 'start_sha': d.start_commit_sha, 'head_sha': d.head_commit_sha}
+                       'base_sha': diff.base_commit_sha, 'start_sha': diff.start_commit_sha, 'head_sha': diff.head_commit_sha}
             if edit_type == 'deletion':
                 pos_obj['old_line'] = source_line_no - 1
             elif edit_type == 'addition':
@@ -180,7 +183,7 @@ class GitLabProvider(GitProvider):
         all_diffs = self.mr.diffs.list(get_all=True)
         if not all_diffs:
             logging.error('No diffs found for the merge request.')
-            raise ValueError(f"Could not get diff for merge request {self.id_mr}")
+            return None
         for diff in all_diffs:
             for change in changes['changes']:
                 if change['new_path'] == relevant_file and relevant_line_in_file in change['diff']:
