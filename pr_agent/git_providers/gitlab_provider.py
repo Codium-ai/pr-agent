@@ -172,7 +172,7 @@ class GitLabProvider(GitProvider):
             self.mr.discussions.create({'body': body,
                                         'position': pos_obj})
 
-    def get_relevant_diff(self, relevant_file, relevant_line_in_file):
+    def get_relevant_diff(self, relevant_file: str, relevant_line_in_file: int) -> Optional[dict]:
         changes = self.mr.changes()  # Retrieve the changes for the merge request once
         if not changes:
             logging.error('No changes found for the merge request.')
@@ -181,10 +181,10 @@ class GitLabProvider(GitProvider):
         if not all_diffs:
             logging.error('No diffs found for the merge request.')
             raise ValueError(f"Could not get diff for merge request {self.id_mr}")
-        for d in all_diffs:
+        for diff in all_diffs:
             for change in changes['changes']:
                 if change['new_path'] == relevant_file and relevant_line_in_file in change['diff']:
-                    return d
+                    return diff
             logging.debug(
                 f'No relevant diff found for {relevant_file} {relevant_line_in_file}. Falling back to last diff.')
         return self.last_diff  # fallback to last_diff if no relevant diff is found
