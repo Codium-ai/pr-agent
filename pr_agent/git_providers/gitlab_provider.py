@@ -155,7 +155,8 @@ class GitLabProvider(GitProvider):
         if not found:
             logging.info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
         else:
-            d = self.last_diff
+            # in order to have exact sha's we have to find correct diff for this change
+            d = self.get_relevant_diff(relevant_file, relevant_line_in_file)
             pos_obj = {'position_type': 'text',
                        'new_path': target_file.filename,
                        'old_path': target_file.old_filename if target_file.old_filename else target_file.filename,
@@ -170,6 +171,14 @@ class GitLabProvider(GitProvider):
             logging.debug(f"Creating comment in {self.id_mr} with body {body} and position {pos_obj}")
             self.mr.discussions.create({'body': body,
                                         'position': pos_obj})
+
+    def get_relevant_diff(self, relevant_file, relevant_line_in_file):
+        for d in self.mr.diffs.list(get_all=True):
+            changes = self.mr.changes()  # Retrieve the changes for the merge request
+            for change in changes['changes']:
+                if change['new_path'] == relevant_file and relevant_line_in_file in change['diff']:
+                    return d
+        return self.last_diff  # fallback to last_diff if no relevant diff is found
 
     def publish_code_suggestions(self, code_suggestions: list):
         for suggestion in code_suggestions:
