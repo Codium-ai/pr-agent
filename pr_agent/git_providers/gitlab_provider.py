@@ -173,11 +173,15 @@ class GitLabProvider(GitProvider):
                                         'position': pos_obj})
 
     def get_relevant_diff(self, relevant_file, relevant_line_in_file):
-        for d in self.mr.diffs.list(get_all=True):
-            changes = self.mr.changes()  # Retrieve the changes for the merge request
+        changes = self.mr.changes()  # Retrieve the changes for the merge request once
+        all_diffs = self.mr.diffs.list(get_all=True)
+
+        for d in all_diffs:
             for change in changes['changes']:
                 if change['new_path'] == relevant_file and relevant_line_in_file in change['diff']:
                     return d
+            logging.debug(
+                f'No relevant diff found for {relevant_file} {relevant_line_in_file}. Falling back to last diff.')
         return self.last_diff  # fallback to last_diff if no relevant diff is found
 
     def publish_code_suggestions(self, code_suggestions: list):
