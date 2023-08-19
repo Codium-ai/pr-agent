@@ -93,7 +93,7 @@ async def handle_request(body: Dict[str, Any]):
         api_url = pull_request.get("url")
         if not api_url:
             return {}
-        await agent.handle_request(api_url, "/review")
+        await agent.handle_request(api_url, "/auto_review")
 
     return {}
 
