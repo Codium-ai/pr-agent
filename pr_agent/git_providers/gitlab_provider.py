@@ -174,8 +174,13 @@ class GitLabProvider(GitProvider):
 
     def get_relevant_diff(self, relevant_file, relevant_line_in_file):
         changes = self.mr.changes()  # Retrieve the changes for the merge request once
+        if not changes:
+            logging.error('No changes found for the merge request.')
+            return None
         all_diffs = self.mr.diffs.list(get_all=True)
-
+        if not all_diffs:
+            logging.error('No diffs found for the merge request.')
+            raise ValueError(f"Could not get diff for merge request {self.id_mr}")
         for d in all_diffs:
             for change in changes['changes']:
                 if change['new_path'] == relevant_file and relevant_line_in_file in change['diff']:
