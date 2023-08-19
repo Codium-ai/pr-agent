@@ -14,6 +14,9 @@ from .git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
 
 logger = logging.getLogger()
 
+class DiffNotFoundError(Exception):
+    """Raised when the diff for a merge request cannot be found."""
+    pass
 
 class GitLabProvider(GitProvider):
 
@@ -56,7 +59,7 @@ class GitLabProvider(GitProvider):
             self.last_diff = self.mr.diffs.list(get_all=True)[-1]
         except IndexError as e:
             logger.error(f"Could not get diff for merge request {self.id_mr}")
-            raise ValueError(f"Could not get diff for merge request {self.id_mr}") from e
+            raise DiffNotFoundError(f"Could not get diff for merge request {self.id_mr}") from e
 
 
     def _get_pr_file_content(self, file_path: str, branch: str) -> str:
@@ -150,8 +153,8 @@ class GitLabProvider(GitProvider):
     def create_inline_comments(self, comments: list[dict]):
         raise NotImplementedError("Gitlab provider does not support publishing inline comments yet")
 
-    def send_inline_comment(self, body, edit_type, found, relevant_file, relevant_line_in_file, source_line_no,
-                            target_file, target_line_no):
+    def send_inline_comment(self,body: str,edit_type: str,found: bool,relevant_file: str,relevant_line_in_file: int,
+                            source_line_no: int, target_file: str,target_line_no: int) -> None:
         if not found:
             logging.info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
         else:
@@ -159,7 +162,7 @@ class GitLabProvider(GitProvider):
             diff = self.get_relevant_diff(relevant_file, relevant_line_in_file)
             if diff is None:
                 logger.error(f"Could not get diff for merge request {self.id_mr}")
-                raise ValueError(f"Could not get diff for merge request {self.id_mr}")
+                raise DiffNotFoundError(f"Could not get diff for merge request {self.id_mr}")
             pos_obj = {'position_type': 'text',
                        'new_path': target_file.filename,
                        'old_path': target_file.old_filename if target_file.old_filename else target_file.filename,
