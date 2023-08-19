@@ -1,7 +1,7 @@
 [config]
-model="gpt-3.5-turbo-16k"
+model="gpt-4"
 fallback_models=["gpt-3.5-turbo-16k"]
-git_provider="gitlab"
+git_provider="github"
 publish_output=true
 publish_output_progress=true
 verbosity_level=0 # 0,1,2
