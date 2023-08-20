@@ -245,19 +245,27 @@ def update_settings_from_args(args: List[str]) -> List[str]:
             arg = arg.strip()
             if arg.startswith('--'):
                 arg = arg.strip('-').strip()
-                vals = arg.split('=')
+                vals = arg.split('=', 1)
                 if len(vals) != 2:
                     logging.error(f'Invalid argument format: {arg}')
                     other_args.append(arg)
                     continue
-                key, value = vals
-                key = key.strip().upper()
-                value = value.strip()
+                key, value = _fix_key_value(*vals)
                 get_settings().set(key, value)
                 logging.info(f'Updated setting {key} to: "{value}"')
             else:
                 other_args.append(arg)
     return other_args
+
+
+def _fix_key_value(key: str, value: str):
+    key = key.strip().upper()
+    value = value.strip()
+    try:
+        value = yaml.safe_load(value)
+    except Exception as e:
+        logging.error(f"Failed to parse YAML for config override {key}={value}", exc_info=e)
+    return key, value
 
 
 def load_yaml(review_text: str) -> dict:
