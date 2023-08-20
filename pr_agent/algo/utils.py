@@ -253,8 +253,12 @@ def update_settings_from_args(args: List[str]) -> List[str]:
                 key, value = vals
                 key = key.strip().upper()
                 value = value.strip()
-                get_settings().set(key, value)
-                logging.info(f'Updated setting {key} to: "{value}"')
+                if key in get_settings():
+                    get_settings().set(key, value)
+                    logging.info(f'Updated setting {key} to: "{value}"')
+                else:
+                    logging.info(f'No argument: {key}')
+                    other_args.append(arg)
             else:
                 other_args.append(arg)
     return other_args

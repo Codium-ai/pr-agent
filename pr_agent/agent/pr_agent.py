@@ -9,6 +9,7 @@ from pr_agent.git_providers import get_git_provider
 from pr_agent.tools.pr_code_suggestions import PRCodeSuggestions
 from pr_agent.tools.pr_description import PRDescription
 from pr_agent.tools.pr_information_from_user import PRInformationFromUser
+from pr_agent.tools.pr_similar_issue import PRSimilarIssue
 from pr_agent.tools.pr_questions import PRQuestions
 from pr_agent.tools.pr_reviewer import PRReviewer
 from pr_agent.tools.pr_update_changelog import PRUpdateChangelog
@@ -29,6 +30,7 @@ command2class = {
     "update_changelog": PRUpdateChangelog,
     "config": PRConfig,
     "settings": PRConfig,
+    "similar_issue": PRSimilarIssue,
 }
 
 commands = list(command2class.keys())
@@ -73,7 +75,7 @@ class PRAgent:
         elif action in command2class:
             if notify:
                 notify()
-            await command2class[action](pr_url, args=args).run()
+            await command2class[action](pr_url, *args).run()
         else:
             return False
         return True
