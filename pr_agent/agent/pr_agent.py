@@ -44,10 +44,8 @@ class PRAgent:
             repo_settings_file = None
             try:
                 git_provider = get_git_provider()(pr_url)
-                logging.info(f'Fetching repo settings {git_provider.repo}')
                 repo_settings = git_provider.get_repo_settings()
                 if repo_settings:
-                    logging.debug(f'Found settings for repo {git_provider.repo}\n{repo_settings}')
                     repo_settings_file = None
                     fd, repo_settings_file = tempfile.mkstemp(suffix='.toml')
                     os.write(fd, repo_settings)
