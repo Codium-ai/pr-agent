@@ -42,7 +42,7 @@ class PRCodeSuggestions:
                                           get_settings().pr_code_suggestions_prompt.user)
 
     async def run(self):
-        assert type(self.git_provider) != BitbucketProvider, "Bitbucket is not supported for now"
+        # assert type(self.git_provider) != BitbucketProvider, "Bitbucket is not supported for now"
 
         logging.info('Generating code suggestions for PR...')
         if get_settings().config.publish_output:

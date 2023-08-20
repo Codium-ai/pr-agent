@@ -1,3 +1,4 @@
+import json
 import logging
 from typing import Optional, Tuple
 from urllib.parse import urlparse
@@ -14,8 +15,9 @@ class BitbucketProvider:
     def __init__(self, pr_url: Optional[str] = None, incremental: Optional[bool] = False):
         s = requests.Session()
         s.headers['Authorization'] = f'Bearer {get_settings().get("BITBUCKET.BEARER_TOKEN", None)}'
+        s.headers['Content-Type'] = 'application/json'
+        self.headers = s.headers
         self.bitbucket_client = Cloud(session=s)
-
         self.workspace_slug = None
         self.repo_slug = None
         self.repo = None
@@ -25,6 +27,7 @@ class BitbucketProvider:
         self.incremental = incremental
         if pr_url:
             self.set_pr(pr_url)
+        self.bitbucket_comment_api_url = self.pr._BitbucketBase__data['links']['comments']['href']
 
     def get_repo_settings(self):
         try:
@@ -32,6 +35,56 @@ class BitbucketProvider:
             return contents
         except Exception:
             return ""
+        
+    def publish_code_suggestions(self, code_suggestions: list):
+        """
+        Publishes code suggestions as comments on the PR.
+        """
+        post_parameters_list = []
+        for suggestion in code_suggestions:
+            body = suggestion['body']
+            relevant_file = suggestion['relevant_file']
+            relevant_lines_start = suggestion['relevant_lines_start']
+            relevant_lines_end = suggestion['relevant_lines_end']
+
+            if not relevant_lines_start or relevant_lines_start == -1:
+                if get_settings().config.verbosity_level >= 2:
+                    logging.exception(
+                        f"Failed to publish code suggestion, relevant_lines_start is {relevant_lines_start}")
+                continue
+
+            if relevant_lines_end < relevant_lines_start:
+                if get_settings().config.verbosity_level >= 2:
+                    logging.exception(f"Failed to publish code suggestion, "
+                                      f"relevant_lines_end is {relevant_lines_end} and "
+                                      f"relevant_lines_start is {relevant_lines_start}")
+                continue
+
+            if relevant_lines_end > relevant_lines_start:
+                post_parameters = {
+                    "body": body,
+                    "path": relevant_file,
+                    "line": relevant_lines_end,
+                    "start_line": relevant_lines_start,
+                    "start_side": "RIGHT",
+                }
+            else:  # API is different for single line comments
+                post_parameters = {
+                    "body": body,
+                    "path": relevant_file,
+                    "line": relevant_lines_start,
+                    "side": "RIGHT",
+                }
+            post_parameters_list.append(post_parameters)
+            
+        
+        try:
+            self.publish_inline_comments(post_parameters_list)
+            return True
+        except Exception as e:
+            if get_settings().config.verbosity_level >= 2:
+                logging.error(f"Failed to publish code suggestion, error: {e}")
+            return False
 
     def is_supported(self, capability: str) -> bool:
         if capability in ['get_issue_comments', 'create_inline_comment', 'publish_inline_comments', 'get_labels']:
@@ -69,14 +122,29 @@ class BitbucketProvider:
         except Exception as e:
             logging.exception(f"Failed to remove temp comments, error: {e}")
 
-    def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
-        pass
+    def publish_inline_comment(self, comment: str, from_line: int, to_line: int, file: str):
+        payload = json.dumps( {
+            "content": {
+                "raw": comment,
+            },
+            "inline": {
+                "to": from_line,
+                "path": file
+            },
+        })
+        response = requests.request(
+            "POST",
+            self.bitbucket_comment_api_url,
+            data=payload,
+            headers=self.headers
+        )
+        return response
+                
 
-    def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
-        raise NotImplementedError("Bitbucket provider does not support creating inline comments yet")
 
     def publish_inline_comments(self, comments: list[dict]):
-        raise NotImplementedError("Bitbucket provider does not support publishing inline comments yet")
+        for comment in comments:
+            self.publish_inline_comment(comment['body'], comment['start_line'], comment['line'], comment['path'])
 
     def get_title(self):
         return self.pr.title
