@@ -1,0 +1,46 @@
+[pr_sort_code_suggestions_prompt]
+system="""
+"""
+
+user="""You are given a list of code suggestions to improve a PR:
+
+{{ suggestion_str|trim }}
+
+
+Your task is to sort the code suggestions by their order of importance, and return a list with sorting order.
+The sorting order is a list of pairs, where each pair contains the index of the suggestion in the original list.
+Rank the suggestions based on their importance to improving the PR, with critical issues first and minor issues last.
+
+You must use the following YAML schema to format your answer:
+```yaml
+Sort Order:
+    type: array
+    maxItems: {{ suggestion_list|length }}
+    uniqueItems: true
+    items:
+        suggestion number:
+            type: integer
+            minimum: 1
+            maximum: {{ suggestion_list|length }}
+        importance order:
+            type: integer
+            minimum: 1
+            maximum: {{ suggestion_list|length }}
+```
+
+Example output:
+```yaml
+Sort Order:
+    - suggestion number: 1
+      importance order: 2
+    - suggestion number: 2
+      importance order: 3
+    - suggestion number: 3
+      importance order: 1
+```
+
+Make sure to output a valid YAML. Use multi-line block scalar ('|') if needed.
+Don't repeat the prompt in the answer, and avoid outputting the 'type' and 'description' fields.
+Response (should be a valid YAML, and nothing else):
+```yaml
+"""

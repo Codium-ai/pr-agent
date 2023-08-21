@@ -32,6 +32,14 @@ extra_instructions = ""
 num_code_suggestions=4
 extra_instructions = ""
 
+[pr_extendeted_code_suggestions] # /extended_improve #
+num_code_suggestions_per_chunk=8
+extra_instructions = ""
+max_number_of_calls = 5
+rank_suggestions = true
+final_clip_factor = 0.5
+
+
 [pr_update_changelog] # /update_changelog #
 push_changelog_changes=false
 extra_instructions = ""

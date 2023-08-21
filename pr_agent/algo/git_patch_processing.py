@@ -176,7 +176,7 @@ def convert_to_hunks_with_lines_numbers(patch: str, file) -> str:
            ...
     """
     
-    patch_with_lines_str = f"## {file.filename}\n"
+    patch_with_lines_str = f"\n\n## {file.filename}\n"
     import re
     patch_lines = patch.splitlines()
     RE_HUNK_HEADER = re.compile(

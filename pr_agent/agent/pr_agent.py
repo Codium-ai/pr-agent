@@ -11,6 +11,7 @@ from pr_agent.tools.pr_description import PRDescription
 from pr_agent.tools.pr_information_from_user import PRInformationFromUser
 from pr_agent.tools.pr_questions import PRQuestions
 from pr_agent.tools.pr_reviewer import PRReviewer
+from pr_agent.tools.pr_extended_code_suggestions import PRExtendedCodeSuggestions
 from pr_agent.tools.pr_update_changelog import PRUpdateChangelog
 from pr_agent.tools.pr_config import PRConfig
 
@@ -25,6 +26,7 @@ command2class = {
     "describe_pr": PRDescription,
     "improve": PRCodeSuggestions,
     "improve_code": PRCodeSuggestions,
+    "extended_improve": PRExtendedCodeSuggestions,
     "ask": PRQuestions,
     "ask_question": PRQuestions,
     "update_changelog": PRUpdateChangelog,
