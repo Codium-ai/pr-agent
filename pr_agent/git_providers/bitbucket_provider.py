@@ -168,13 +168,6 @@ class BitbucketProvider:
     def get_issue_comments(self):
         raise NotImplementedError("Bitbucket provider does not support issue comments yet")
 
-    def get_repo_settings(self):
-        try:
-            contents = self.repo_obj.get_contents(".pr_agent.toml", ref=self.pr.head.sha).decoded_content
-            return contents
-        except Exception:
-            return ""
-
     def add_eyes_reaction(self, issue_comment_id: int) -> Optional[int]:
         return True
 
