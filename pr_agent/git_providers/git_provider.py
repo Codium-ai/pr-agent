@@ -82,10 +82,10 @@ class GitProvider(ABC):
         pass
 
     @abstractmethod
-    def get_pr_description_full(self):
+    def get_pr_description_full(self) -> str:
         pass
 
-    def get_pr_description(self):
+    def get_pr_description(self) -> str:
         from pr_agent.config_loader import get_settings
         from pr_agent.algo.pr_processing import clip_tokens
         max_tokens = get_settings().get("CONFIG.MAX_DESCRIPTION_TOKENS", None)
@@ -94,7 +94,7 @@ class GitProvider(ABC):
             return clip_tokens(description, max_tokens)
         return description
 
-    def get_user_description(self):
+    def get_user_description(self) -> str:
         description = (self.get_pr_description_full() or "").strip()
         if not description.startswith("## PR Type"):
             return description
