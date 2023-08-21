@@ -135,6 +135,14 @@ python pr_agent/cli.py --pr_url <pr_url> describe
 python pr_agent/cli.py --pr_url <pr_url> improve
 ```
 
+5. **Debugging LLM API Calls**  
+If you're testing your codium/pr-agent server, and need to see if calls were made successfully + the exact call logs, you can use the [LiteLLM Debugger tool](https://docs.litellm.ai/docs/debugging/hosted_debugging). 
+
+You can do this by setting `litellm_debugger=true` in configuration.toml. Your Logs will be viewable in real-time @ `admin.litellm.ai/<your_email>`. Set your email in the `.secrets.toml` under 'user_email'.
+
+<img src="./pics/debugger.png" width="900"/>
+
+
 ---
 
 #### Method 4: Run as a polling server

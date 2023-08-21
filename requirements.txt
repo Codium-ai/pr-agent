@@ -14,4 +14,4 @@ GitPython~=3.1.32
 litellm~=0.1.351
 PyYAML==6.0
 starlette-context==0.3.6
-litellm~=0.1.351
+litellm~=0.1.445
