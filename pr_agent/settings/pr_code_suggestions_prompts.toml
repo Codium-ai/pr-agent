@@ -36,7 +36,7 @@ Specific instructions:
 - Provide the exact line number range (inclusive) for each issue.
 - Assume there is additional relevant code, that is not included in the diff.
 - Provide up to {{ num_code_suggestions }} code suggestions.
-- Avoid making suggestions that have already been implemented in the PR code. For example, if you want to add logs or change a variable to const, or anything else, make sure it isn't already in the '__new hunk__' code.
+- Avoid making suggestions that have already been implemented in the PR code. For example, if you want to add logs, or change a variable to const, or anything else, make sure it isn't already in the '__new hunk__' code.
 - Don't suggest to add docstring or type hints.
 
 {%- if extra_instructions %}

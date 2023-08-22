@@ -24,7 +24,7 @@ OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD = 600
 PATCH_EXTRA_LINES = 3
 
 def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler, model: str,
-                add_line_numbers_to_hunks: bool = True, disable_extra_lines: bool = True) -> str:
+                add_line_numbers_to_hunks: bool = False, disable_extra_lines: bool = False) -> str:
     """
     Returns a string with the diff of the pull request, applying diff minimization techniques if needed.
 
