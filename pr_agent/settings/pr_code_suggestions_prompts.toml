@@ -6,22 +6,23 @@ Example PR Diff input:
 '
 ## src/file1.py
 
---new hunk--
+@@ -12,3 +12,5 @@ def func1():
+__new hunk__
 12  code line that already existed in the file...
 13  code line that already existed in the file....
 14 +new code line added in the PR
 15  code line that already existed in the file...
 16  code line that already existed in the file...
-
---old hunk--
+__old hunk__
  code line that already existed in the file...
 -code line that was removed in the PR
  code line that already existed in the file...
 
 
---new hunk--
+@@ ... @@ def func2():
+__new hunk__
 ...
---old hunk--
+__old hunk__
 ...
 
 
@@ -31,11 +32,12 @@ Example PR Diff input:
 
 Specific instructions:
 - Focus on important suggestions like fixing code problems, issues and bugs. As a second priority, provide suggestions for meaningful code improvements, like performance, vulnerability, modularity, and best practices.
-- Suggestions should refer only to code from the '--new hunk--' sections, and focus on new lines of code (lines starting with '+').
+- Suggestions should refer only to code from the '__new hunk__' sections, and focus on new lines of code (lines starting with '+').
 - Provide the exact line number range (inclusive) for each issue.
 - Assume there is additional relevant code, that is not included in the diff.
 - Provide up to {{ num_code_suggestions }} code suggestions.
-- Avoid making suggestions that have already been implemented in the PR code. For example, if you propose adding a docstring, type hint, or anything else, make sure it isn't already in the '--new hunk--' code.
+- Avoid making suggestions that have already been implemented in the PR code. For example, if you propose adding a docstring, type hint, or anything else, make sure it isn't already in the '__new hunk__' code.
+- Don't suggest to add docstring or type hints.
 
 {%- if extra_instructions %}
 
@@ -58,19 +60,19 @@ You must use the following JSON schema to format your answer:
         },
         "suggestion content": {
           "type": "string",
-          "description": "a concrete suggestion for meaningfully improving the new PR code (lines from the '--new hunk--' sections, starting with '+')."
+          "description": "a concrete suggestion for meaningfully improving the new PR code (lines from the '__new hunk__' sections, starting with '+')."
         },
         "existing code": {
           "type": "string",
-          "description": "a code snippet showing the relevant code lines from a '--new hunk--' section. It must be continuous, correctly formatted and indented, and without line numbers."
+          "description": "a code snippet showing the relevant code lines from a '__new hunk__' section. It must be continuous, correctly formatted and indented, and without line numbers."
         },
         "relevant lines": {
           "type": "string",
-          "description": "the relevant lines from a '--new hunk--' section, in the format of 'start_line-end_line'. For example: '10-15'. They should be derived from the hunk line numbers, and correspond to the 'existing code' snippet above."
+          "description": "the relevant lines from a '__new hunk__' section, in the format of 'start_line-end_line'. For example: '10-15'. They should be derived from the hunk line numbers, and correspond to the 'existing code' snippet above."
         },
         "improved code": {
           "type": "string",
-          "description": "a new code snippet that can be used to replace the relevant lines in '--new hunk--' code. Replacement suggestions should be complete, correctly formatted and indented, and without line numbers."
+          "description": "a new code snippet that can be used to replace the relevant lines in '__new hunk__' code. Replacement suggestions should be complete, correctly formatted and indented, and without line numbers."
         }
       }
     }

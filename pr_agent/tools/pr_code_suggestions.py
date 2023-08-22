@@ -70,7 +70,7 @@ class PRCodeSuggestions:
         if get_settings().config.publish_output:
             logging.info('Pushing PR review...')
             self.git_provider.remove_initial_comment()
-            logging.info('Pushing inline code comments...')
+            logging.info('Pushing inline code suggestions...')
             self.push_inline_code_suggestions(data)
 
     async def _prepare_prediction(self, model: str):
@@ -138,7 +138,11 @@ class PRCodeSuggestions:
                 if get_settings().config.verbosity_level >= 2:
                     logging.info(f"Could not parse suggestion: {d}")
 
-        self.git_provider.publish_code_suggestions(code_suggestions)
+        is_successful = self.git_provider.publish_code_suggestions(code_suggestions)
+        if not is_successful:
+            logging.info("Failed to publish code suggestions, trying to publish each suggestion separately")
+            for code_suggestion in code_suggestions:
+                self.git_provider.publish_code_suggestions([code_suggestion])
 
     def dedent_code(self, relevant_file, relevant_lines_start, new_code_snippet):
         try:  # dedent code snippet
@@ -229,8 +233,8 @@ class PRCodeSuggestions:
                 importance_order = s['importance order']
                 data_sorted[importance_order - 1] = suggestion_list[suggestion_number - 1]
 
-            if get_settings().pr_extendeted_code_suggestions.final_clip_factor != 1:
-                new_len = int(0.5 + len(data_sorted) * get_settings().pr_extendeted_code_suggestions.final_clip_factor)
+            if get_settings().pr_code_suggestions.final_clip_factor != 1:
+                new_len = int(0.5 + len(data_sorted) * get_settings().pr_code_suggestions.final_clip_factor)
                 data_sorted = data_sorted[:new_len]
         except Exception as e:
             if get_settings().config.verbosity_level >= 1:

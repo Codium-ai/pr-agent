@@ -24,7 +24,7 @@ OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD = 600
 PATCH_EXTRA_LINES = 3
 
 def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler, model: str,
-                add_line_numbers_to_hunks: bool = False, disable_extra_lines: bool = False) -> str:
+                add_line_numbers_to_hunks: bool = True, disable_extra_lines: bool = True) -> str:
     """
     Returns a string with the diff of the pull request, applying diff minimization techniques if needed.
 
@@ -103,9 +103,9 @@ def pr_generate_extended_diff(pr_languages: list,
 
             # extend each patch with extra lines of context
             extended_patch = extend_patch(original_file_content_str, patch, num_lines=PATCH_EXTRA_LINES)
-            full_extended_patch = f"## {file.filename}\n\n{extended_patch}\n"
+            full_extended_patch = f"\n\n## {file.filename}\n\n{extended_patch}\n"
 
-            if add_line_numbers_to_hunks and PATCH_EXTRA_LINES > 0:
+            if add_line_numbers_to_hunks:
                 full_extended_patch = convert_to_hunks_with_lines_numbers(extended_patch, file)
 
             patch_tokens = token_handler.count_tokens(full_extended_patch)
@@ -322,7 +322,9 @@ def clip_tokens(text: str, max_tokens: int) -> str:
     Returns:
         str: The clipped string.
     """
-    # We'll estimate the number of tokens by hueristically assuming 2.5 tokens per word
+    if not text:
+        return text
+
     try:
         encoder = get_token_encoder()
         num_input_tokens = len(encoder.encode(text))

@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 import logging
 import re
 
@@ -157,7 +156,7 @@ def convert_to_hunks_with_lines_numbers(patch: str, file) -> str:
 
     example output:
 ## src/file.ts
---new hunk--
+__new hunk__
 881        line1
 882        line2
 883        line3
@@ -166,7 +165,7 @@ def convert_to_hunks_with_lines_numbers(patch: str, file) -> str:
 889        line6
 890        line7
 ...
---old hunk--
+__old hunk__
         line1
         line2
 -       line3
@@ -177,7 +176,6 @@ def convert_to_hunks_with_lines_numbers(patch: str, file) -> str:
     """
     
     patch_with_lines_str = f"\n\n## {file.filename}\n"
-    import re
     patch_lines = patch.splitlines()
     RE_HUNK_HEADER = re.compile(
         r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@[ ]?(.*)")
@@ -185,23 +183,30 @@ def convert_to_hunks_with_lines_numbers(patch: str, file) -> str:
     old_content_lines = []
     match = None
     start1, size1, start2, size2 = -1, -1, -1, -1
+    prev_header_line = []
+    header_line =[]
     for line in patch_lines:
         if 'no newline at end of file' in line.lower():
             continue
 
         if line.startswith('@@'):
+            header_line = line
             match = RE_HUNK_HEADER.match(line)
             if match and new_content_lines:  # found a new hunk, split the previous lines
                 if new_content_lines:
-                    patch_with_lines_str += '\n--new hunk--\n'
+                    if prev_header_line:
+                        patch_with_lines_str += f'\n{prev_header_line}\n'
+                    patch_with_lines_str += '__new hunk__\n'
                     for i, line_new in enumerate(new_content_lines):
                         patch_with_lines_str += f"{start2 + i} {line_new}\n"
                 if old_content_lines:
-                    patch_with_lines_str += '--old hunk--\n'
+                    patch_with_lines_str += '__old hunk__\n'
                     for line_old in old_content_lines:
                         patch_with_lines_str += f"{line_old}\n"
                 new_content_lines = []
                 old_content_lines = []
+            if match:
+                prev_header_line = header_line
             try:
                 start1, size1, start2, size2 = map(int, match.groups()[:4])
             except: # '@@ -0,0 +1 @@' case
@@ -219,12 +224,13 @@ def convert_to_hunks_with_lines_numbers(patch: str, file) -> str:
     # finishing last hunk
     if match and new_content_lines:
         if new_content_lines:
-            patch_with_lines_str += '\n--new hunk--\n'
+            patch_with_lines_str += f'\n{header_line}\n'
+            patch_with_lines_str += '\n__new hunk__\n'
             for i, line_new in enumerate(new_content_lines):
                 patch_with_lines_str += f"{start2 + i} {line_new}\n"
         if old_content_lines:
-            patch_with_lines_str += '\n--old hunk--\n'
+            patch_with_lines_str += '\n__old hunk__\n'
             for line_old in old_content_lines:
                 patch_with_lines_str += f"{line_old}\n"
 
-    return patch_with_lines_str.strip()
+    return patch_with_lines_str.rstrip()
