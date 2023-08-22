@@ -61,7 +61,10 @@ duplicate_requests_cache = false
 duplicate_requests_cache_ttl = 60  # in seconds
 # settings for "pull_request" event
 handle_pr_actions = ['opened', 'reopened', 'ready_for_review', 'review_requested']
-pr_commands = ["/describe", "/auto_review"]
+pr_commands = [
+    "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true",
+    "/auto_review",
+]
 
 [gitlab]
 # URL to the gitlab service
