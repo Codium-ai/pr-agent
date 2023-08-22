@@ -24,6 +24,8 @@ extra_instructions = ""
 
 [pr_description] # /describe #
 publish_description_as_comment=false
+add_original_user_description=false
+keep_original_user_title=false
 extra_instructions = ""
 
 [pr_questions] # /ask #
