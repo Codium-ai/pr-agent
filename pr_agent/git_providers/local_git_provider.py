@@ -130,7 +130,7 @@ class LocalGitProvider(GitProvider):
                                 relevant_lines_start: int, relevant_lines_end: int):
         raise NotImplementedError('Publishing code suggestions is not implemented for the local git provider')
 
-    def publish_code_suggestions(self, code_suggestions: list):
+    def publish_code_suggestions(self, code_suggestions: list) -> bool:
         raise NotImplementedError('Publishing code suggestions is not implemented for the local git provider')
 
     def publish_labels(self, labels):

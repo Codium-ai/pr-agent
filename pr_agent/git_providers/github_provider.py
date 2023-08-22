@@ -166,7 +166,7 @@ class GithubProvider(GitProvider):
     def publish_inline_comments(self, comments: list[dict]):
         self.pr.create_review(commit=self.last_commit_id, comments=comments)
 
-    def publish_code_suggestions(self, code_suggestions: list):
+    def publish_code_suggestions(self, code_suggestions: list) -> bool:
         """
         Publishes code suggestions as comments on the PR.
         """

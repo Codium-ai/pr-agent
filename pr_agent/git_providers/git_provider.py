@@ -54,7 +54,7 @@ class GitProvider(ABC):
         pass
 
     @abstractmethod
-    def publish_code_suggestions(self, code_suggestions: list):
+    def publish_code_suggestions(self, code_suggestions: list) -> bool:
         pass
 
     @abstractmethod
