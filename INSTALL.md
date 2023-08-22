@@ -255,3 +255,71 @@ docker push codiumai/pr-agent:github_app  # Push to your Docker repository
 5. Configure the lambda function to have a Function URL.
 6. Go back to steps 8-9 of [Method 5](#method-5-run-as-a-github-app) with the function url as your Webhook URL.
     The Webhook URL would look like `https://<LAMBDA_FUNCTION_URL>/api/v1/github_webhooks`
+
+---
+
+#### AWS CodeCommit Setup
+
+Not all features have been added to CodeCommit yet.  As of right now, CodeCommit has been implemented to run the pr-agent CLI on the command line, using AWS credentials stored in environment variables.  (More features will be added in the future.)  The following is a set of instructions to have pr-agent do a review of your CodeCommit pull request from the command line:
+
+1. Create an IAM user that you will use to read CodeCommit pull requests and post comments
+    * Note: That user should have CLI access only, not Console access
+2. Add IAM permissions to that user, to allow access to CodeCommit (see IAM Role example below)
+3. Generate an Access Key for your IAM user
+4. Set the Access Key and Secret using environment variables (see Access Key example below)
+5. Set the `git_provider` value to `codecommit` in the `pr_agent/settings/configuration.toml` settings file
+6. Set the `PYTHONPATH` to include your `pr-agent` project directory
+    * Option A: Add `PYTHONPATH="/PATH/TO/PROJECTS/pr-agent` to your `.env` file
+    * Option B: Set `PYTHONPATH` and run the CLI in one command, for example:
+        * `PYTHONPATH="/PATH/TO/PROJECTS/pr-agent python pr_agent/cli.py [--ARGS]`
+
+#### AWS CodeCommit IAM Role Example
+
+Example IAM permissions to that user to allow access to CodeCommit:
+
+* Note: The following is a working example of IAM permissions that has read access to the repositories and write access to allow posting comments
+* Note: If you only want pr-agent to review your pull requests, you can tighten the IAM permissions further, however this IAM example will work, and allow the pr-agent to post comments to the PR
+* Note: You may want to replace the `"Resource": "*"` with your list of repos, to limit access to only those repos
+
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "codecommit:BatchDescribe*",
+                "codecommit:BatchGet*",
+                "codecommit:Describe*",
+                "codecommit:EvaluatePullRequestApprovalRules",
+                "codecommit:Get*",
+                "codecommit:List*",
+                "codecommit:PostComment*",
+                "codecommit:PutCommentReaction"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+```
+
+#### AWS CodeCommit Access Key and Secret
+
+Example setting the Access Key and Secret using environment variables
+
+```sh
+export AWS_ACCESS_KEY_ID="XXXXXXXXXXXXXXXX"
+export AWS_SECRET_ACCESS_KEY="XXXXXXXXXXXXXXXX"
+export AWS_DEFAULT_REGION="us-east-1"
+```
+
+#### AWS CodeCommit CLI Example
+
+After you set up AWS CodeCommit using the instructions above, here is an example CLI run that tells pr-agent to **review** a given pull request.
+(Replace your specific PYTHONPATH and PR URL in the example)
+
+```sh
+PYTHONPATH="/PATH/TO/PROJECTS/pr-agent" python pr_agent/cli.py \
+  --pr_url https://us-east-1.console.aws.amazon.com/codesuite/codecommit/repositories/MY_REPO_NAME/pull-requests/321 \
+  review
+```
