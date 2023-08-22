@@ -70,7 +70,7 @@ async def handle_request(body: Dict[str, Any], event: str):
         body: The request body.
         event: The GitHub event type.
     """
-    action = body.get("action", None)
+    action = body.get("action")
     if not action:
         return {}
     agent = PRAgent()
@@ -85,8 +85,8 @@ async def handle_request(body: Dict[str, Any], event: str):
     if action == 'created':
         if "comment" not in body:
             return {}
-        comment_body = body.get("comment", {}).get("body", None)
-        sender = body.get("sender", {}).get("login", None)
+        comment_body = body.get("comment", {}).get("body")
+        sender = body.get("sender", {}).get("login")
         if sender and bot_user in sender:
             logging.info(f"Ignoring comment from {bot_user} user")
             return {}
@@ -106,19 +106,19 @@ async def handle_request(body: Dict[str, Any], event: str):
     #   automatically review opened/reopened/ready_for_review PRs as long as they're not in draft,
     #   as well as direct review requests from the bot
     elif event == 'pull_request':
-        pull_request = body.get("pull_request", None)
+        pull_request = body.get("pull_request")
         if not pull_request:
             return {}
-        api_url = pull_request.get("url", None)
-        if api_url is None:
+        api_url = pull_request.get("url")
+        if not api_url:
             return {}
-        if pull_request.get("draft", True) or pull_request.get("state", None) != "open" or pull_request.get("user", {}).get("login", "") == bot_user:
+        if pull_request.get("draft", True) or pull_request.get("state") != "open" or pull_request.get("user", {}).get("login", "") == bot_user:
             return {}
         if action in get_settings().github_app.handle_pr_actions:
             if action == "review_requested":
                 if body.get("requested_reviewer", {}).get("login", "") != bot_user:
                     return {}
-                if pull_request.get("created_at", None) == pull_request.get("updated_at", None):
+                if pull_request.get("created_at") == pull_request.get("updated_at"):
                     # avoid double reviews when opening a PR for the first time
                     return {}
             logging.info(f"Performing review because of event={event} and action={action}")
