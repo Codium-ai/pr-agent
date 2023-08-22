@@ -166,8 +166,14 @@ class PRDescription:
             elif type(data['PR Type']) == str:
                 pr_types = data['PR Type'].split(',')
 
-        # Assign the value of the 'PR Title' key to 'title' variable and remove it from the dictionary
-        title = data.pop('PR Title')
+        # Remove the 'PR Title' key from the dictionary
+        ai_title = data.pop('PR Title')
+        if get_settings().pr_description.keep_original_user_title:
+            # Assign the original PR title to the 'title' variable
+            title = self.vars["title"]
+        else:
+            # Assign the value of the 'PR Title' key to 'title' variable
+            title = ai_title
 
         # Iterate over the remaining dictionary items and append the key and value to 'pr_body' in a markdown format,
         # except for the items containing the word 'walkthrough'
