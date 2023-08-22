@@ -54,6 +54,10 @@ on:
 jobs:
   pr_agent_job:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+      contents: write
     name: Run pr agent on every pull request, respond to user comments
     steps:
       - name: PR Agent action step
@@ -72,6 +76,10 @@ on:
 jobs:
   pr_agent_job:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+      contents: write
     name: Run pr agent on every pull request, respond to user comments
     steps:
       - name: PR Agent action step
