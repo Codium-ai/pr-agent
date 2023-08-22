@@ -36,7 +36,7 @@ class BitbucketProvider:
         except Exception:
             return ""
         
-    def publish_code_suggestions(self, code_suggestions: list):
+    def publish_code_suggestions(self, code_suggestions: list) -> bool:
         """
         Publishes code suggestions as comments on the PR.
         """

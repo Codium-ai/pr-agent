@@ -55,7 +55,7 @@ class AiHandler:
 
     @retry(exceptions=(APIError, Timeout, TryAgain, AttributeError, RateLimitError),
            tries=OPENAI_RETRIES, delay=2, backoff=2, jitter=(1, 3))
-    async def chat_completion(self, model: str, temperature: float, system: str, user: str):
+    async def chat_completion(self, model: str, system: str, user: str, temperature: float = 0.2):
         """
         Performs a chat completion using the OpenAI ChatCompletion API.
         Retries in case of API errors or timeouts.
