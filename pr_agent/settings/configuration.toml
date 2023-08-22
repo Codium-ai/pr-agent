@@ -46,7 +46,6 @@ ratelimit_retries = 5
 [github_app]
 # these toggles allows running the github app from custom deployments
 bot_user = "github-actions[bot]"
-verify_signature = true
 override_deployment_type = true
 # in some deployments it's possible to get duplicate requests if the handling is long,
 # these settings are used to avoid handling duplicate requests.
