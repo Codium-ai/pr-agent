@@ -247,7 +247,8 @@ def update_settings_from_args(args: List[str]) -> List[str]:
                 arg = arg.strip('-').strip()
                 vals = arg.split('=', 1)
                 if len(vals) != 2:
-                    logging.error(f'Invalid argument format: {arg}')
+                    if len(vals) > 2: # --extended is a valid argument
+                        logging.error(f'Invalid argument format: {arg}')
                     other_args.append(arg)
                     continue
                 key, value = _fix_key_value(*vals)
