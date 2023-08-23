@@ -195,7 +195,7 @@ class GitLabProvider(GitProvider):
                 f'No relevant diff found for {relevant_file} {relevant_line_in_file}. Falling back to last diff.')
         return self.last_diff  # fallback to last_diff if no relevant diff is found
 
-    def publish_code_suggestions(self, code_suggestions: list):
+    def publish_code_suggestions(self, code_suggestions: list) -> bool:
         for suggestion in code_suggestions:
             try:
                 body = suggestion['body']
@@ -299,10 +299,7 @@ class GitLabProvider(GitProvider):
     def get_pr_branch(self):
         return self.mr.source_branch
 
-    def get_pr_description(self):
-        max_tokens = get_settings().get("CONFIG.MAX_DESCRIPTION_TOKENS", None)
-        if max_tokens:
-            return clip_tokens(self.mr.description, max_tokens)
+    def get_pr_description_full(self):
         return self.mr.description
 
     def get_issue_comments(self):
