@@ -10,6 +10,7 @@ use_repo_settings_file=true
 ai_timeout=180
 max_description_tokens = 500
 max_commits_tokens = 500
+litellm_debugger=false
 
 [pr_reviewer] # /review #
 require_focused_review=false
