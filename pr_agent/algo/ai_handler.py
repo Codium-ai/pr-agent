@@ -26,6 +26,7 @@ class AiHandler:
         try:
             openai.api_key = get_settings().openai.key
             litellm.openai_key = get_settings().openai.key
+            litellm.debugger = get_settings().config.litellm_debugger
             self.azure = False
             if get_settings().get("OPENAI.ORG", None):
                 litellm.organization = get_settings().openai.org
@@ -43,6 +44,12 @@ class AiHandler:
                 litellm.cohere_key = get_settings().cohere.key
             if get_settings().get("REPLICATE.KEY", None):
                 litellm.replicate_key = get_settings().replicate.key
+            if get_settings().get("REPLICATE.KEY", None):
+                litellm.replicate_key = get_settings().replicate.key
+            if get_settings().get("HUGGINGFACE.KEY", None):
+                litellm.huggingface_key = get_settings().huggingface.key
+            if get_settings().get("HUGGINGFACE.KEY", None):
+                litellm.huggingface_key = get_settings().huggingface.key
         except AttributeError as e:
             raise ValueError("OpenAI key is required") from e
 
@@ -82,6 +89,8 @@ class AiHandler:
                     f"Generating completion with {model}"
                     f"{(' from deployment ' + deployment_id) if deployment_id else ''}"
                 )
+            if self.azure:
+                model = self.azure + "/" + model
             response = await acompletion(
                 model=model,
                 deployment_id=deployment_id,
@@ -90,7 +99,6 @@ class AiHandler:
                     {"role": "user", "content": user}
                 ],
                 temperature=temperature,
-                azure=self.azure,
                 force_timeout=get_settings().config.ai_timeout
             )
         except (APIError, Timeout, TryAgain) as e:
