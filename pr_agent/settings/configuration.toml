@@ -13,11 +13,11 @@ max_commits_tokens = 500
 litellm_debugger=false
 
 [pr_reviewer] # /review #
-require_focused_review=true
+require_focused_review=false
 require_score_review=false
 require_tests_review=true
 require_security_review=true
-num_code_suggestions=3
+num_code_suggestions=4
 inline_code_comments = false
 ask_and_reflect=false
 automatic_review=true
