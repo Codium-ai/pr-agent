@@ -225,3 +225,7 @@ class BitbucketProvider:
 
     def get_commit_messages(self):
         return ""  # not implemented yet
+    
+    # bitbucket does not support labels
+    def publish_description(self, pr_title: str, pr_body: str):
+        return ""
