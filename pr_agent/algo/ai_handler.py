@@ -26,10 +26,10 @@ class AiHandler:
         try:
             openai.api_key = get_settings().openai.key
             litellm.openai_key = get_settings().openai.key
+            litellm.debugger = get_settings().config.litellm_debugger
             self.azure = False
             if get_settings().get("OPENAI.ORG", None):
                 litellm.organization = get_settings().openai.org
-            self.deployment_id = get_settings().get("OPENAI.DEPLOYMENT_ID", None)
             if get_settings().get("OPENAI.API_TYPE", None):
                 if get_settings().openai.api_type == "azure":
                     self.azure = True
@@ -44,12 +44,23 @@ class AiHandler:
                 litellm.cohere_key = get_settings().cohere.key
             if get_settings().get("REPLICATE.KEY", None):
                 litellm.replicate_key = get_settings().replicate.key
+            if get_settings().get("REPLICATE.KEY", None):
+                litellm.replicate_key = get_settings().replicate.key
+            if get_settings().get("HUGGINGFACE.KEY", None):
+                litellm.huggingface_key = get_settings().huggingface.key
         except AttributeError as e:
             raise ValueError("OpenAI key is required") from e
 
+    @property
+    def deployment_id(self):
+        """
+        Returns the deployment ID for the OpenAI API.
+        """
+        return get_settings().get("OPENAI.DEPLOYMENT_ID", None)
+
     @retry(exceptions=(APIError, Timeout, TryAgain, AttributeError, RateLimitError),
            tries=OPENAI_RETRIES, delay=2, backoff=2, jitter=(1, 3))
-    async def chat_completion(self, model: str, temperature: float, system: str, user: str):
+    async def chat_completion(self, model: str, system: str, user: str, temperature: float = 0.2):
         """
         Performs a chat completion using the OpenAI ChatCompletion API.
         Retries in case of API errors or timeouts.
@@ -70,15 +81,22 @@ class AiHandler:
             TryAgain: If there is an attribute error during OpenAI inference.
         """
         try:
+            deployment_id = self.deployment_id
+            if get_settings().config.verbosity_level >= 2:
+                logging.debug(
+                    f"Generating completion with {model}"
+                    f"{(' from deployment ' + deployment_id) if deployment_id else ''}"
+                )
+            if self.azure:
+                model = self.azure + "/" + model
             response = await acompletion(
                 model=model,
-                deployment_id=self.deployment_id,
+                deployment_id=deployment_id,
                 messages=[
                     {"role": "system", "content": system},
                     {"role": "user", "content": user}
                 ],
                 temperature=temperature,
-                azure=self.azure,
                 force_timeout=get_settings().config.ai_timeout
             )
         except (APIError, Timeout, TryAgain) as e:
