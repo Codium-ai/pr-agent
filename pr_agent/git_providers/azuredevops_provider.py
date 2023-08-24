@@ -7,7 +7,8 @@ import os
 
 from msrest.authentication import BasicAuthentication
 from azure.devops.connection import Connection
-from azure.devops.v7_0.git.models import Comment, CommentThread, GitVersionDescriptor, GitPullRequest
+
+from azure.devops.v7_1.git.models import Comment, CommentThread, GitVersionDescriptor, GitPullRequest
 
 from ..algo.pr_processing import clip_tokens
 from ..config_loader import get_settings
@@ -32,7 +33,7 @@ class AzureDevopsProvider:
             self.set_pr(pr_url)
 
     def is_supported(self, capability: str) -> bool:
-        if capability in ['get_issue_comments', 'create_inline_comment', 'publish_inline_comments', 'get_labels']:
+        if capability in ['get_issue_comments', 'create_inline_comment', 'publish_inline_comments', 'get_labels', 'remove_initial_comment']:
             return False
         return True
 
@@ -48,8 +49,7 @@ class AzureDevopsProvider:
                                                                  path=".pr_agent.toml")
             return contents
         except Exception as e:
-            logging.info("get repo settings error")
-            logging.info(e)
+            logging.exception("get repo settings error")
             return ""
 
     def get_files(self):
@@ -82,7 +82,6 @@ class AzureDevopsProvider:
                 changes_obj = self.azure_devops_client.get_changes(project=self.workspace_slug,
                                                                    repository_id=self.repo_slug, commit_id=c.commit_id)
                 for i in changes_obj.changes:
-                    logging.info(i)
                     diffs.append(i['item']['path'])
                     diff_types[i['item']['path']] = i['changeType']
 
@@ -154,18 +153,7 @@ class AzureDevopsProvider:
             logging.exception(f"Could not update pull request {self.pr_num} description: {e}")
 
     def remove_initial_comment(self):
-        try:
-            for comment in self.temp_comments:
-                new_comment_thread = CommentThread(comments=[Comment(content='bumm')])
-                # self.azure_devops_client.delete_comment(project=self.workspace_slug, repository_id=self.repo_slug, thread_id=comment['thread_id'], comment_id=comment['comment_id'], pull_request_id=self.pr_num)
-
-                res = self.azure_devops_client.update_thread(project=self.workspace_slug, repository_id=self.repo_slug,
-                                                             thread_id=comment['thread_id'],
-                                                             pull_request_id=self.pr_num,
-                                                             comment_thread=new_comment_thread)
-                logging.info(res)
-        except Exception as e:
-            logging.exception(f"Failed to remove temp comments, error: {e}")
+        return ""  # not implemented yet
 
     def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
         raise NotImplementedError("Azure DevOps provider does not support publishing inline comment yet")
@@ -224,6 +212,9 @@ class AzureDevopsProvider:
     def remove_reaction(self, issue_comment_id: int, reaction_id: int) -> bool:
         return True
 
+    def get_issue_comments(self):
+        raise NotImplementedError("Azure DevOps provider does not support issue comments yet")
+
     @staticmethod
     def _parse_pr_url(pr_url: str) -> Tuple[str, int]:
         parsed_url = urlparse(pr_url)
@@ -268,9 +259,6 @@ class AzureDevopsProvider:
     def _get_pr(self):
         self.pr = self.azure_devops_client.get_pull_request_by_id(pull_request_id=self.pr_num, project=self.workspace_slug)
         return self.pr
-
-    def _get_pr_file_content(self, remote_link: str):
-        return ""
 
     def get_commit_messages(self):
         return ""  # not implemented yet
