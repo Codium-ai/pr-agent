@@ -71,7 +71,7 @@ class PRDescription:
         if get_settings().config.publish_output:
             logging.info('Pushing answer...')
             if get_settings().pr_description.publish_description_as_comment:
-                self.git_provider.publish_comment(markdown_text)
+                self.git_provider.publish_comment(pr_body)
             else:
                 self.git_provider.publish_description(pr_title, pr_body)
                 if self.git_provider.is_supported("get_labels"):

@@ -266,7 +266,10 @@ class PRReviewer:
                 self.git_provider.publish_inline_comment(content, relevant_file, relevant_line_in_file)
 
         if comments:
-            self.git_provider.publish_inline_comments(comments)
+            if get_settings().config.git_provider == 'bitbucket':
+                self.git_provider.publish_bitbucket_inline_comments(comments)
+            else:
+                self.git_provider.publish_inline_comments(comments)
 
     def _get_user_answers(self) -> Tuple[str, str]:
         """
