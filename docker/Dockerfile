@@ -9,6 +9,10 @@ FROM base as github_app
 ADD pr_agent pr_agent
 CMD ["python", "pr_agent/servers/github_app.py"]
 
+FROM base as bitbucket_app
+ADD pr_agent pr_agent
+CMD ["python", "pr_agent/servers/bitbucket_app.py"]
+
 FROM base as github_polling
 ADD pr_agent pr_agent
 CMD ["python", "pr_agent/servers/github_polling.py"]
