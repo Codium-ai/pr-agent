@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 
 import requests
 from atlassian.bitbucket import Cloud
+from starlette_context import context
 
 from ..config_loader import get_settings
 from .git_provider import FilePatchInfo, GitProvider
@@ -13,7 +14,11 @@ from .git_provider import FilePatchInfo, GitProvider
 class BitbucketProvider(GitProvider):
     def __init__(self, pr_url: Optional[str] = None, incremental: Optional[bool] = False):
         s = requests.Session()
-        s.headers['Authorization'] = f'Bearer {get_settings().get("BITBUCKET.BEARER_TOKEN", None)}'
+        try:
+            bearer = context.get("bitbucket_bearer_token", None)
+            s.headers['Authorization'] = f'Bearer {bearer}'
+        except Exception:
+            s.headers['Authorization'] = f'Bearer {get_settings().get("BITBUCKET.BEARER_TOKEN", None)}'
         s.headers['Content-Type'] = 'application/json'
         self.headers = s.headers
         self.bitbucket_client = Cloud(session=s)
