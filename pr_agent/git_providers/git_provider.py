@@ -141,7 +141,7 @@ def get_main_pr_language(languages, files) -> str:
             main_language_str = top_language
 
     except Exception as e:
-        logging.info(e)
+        logging.exception(e)
         pass
 
     return main_language_str
