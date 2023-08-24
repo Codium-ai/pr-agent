@@ -1,5 +1,6 @@
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers.bitbucket_provider import BitbucketProvider
+from pr_agent.git_providers.codecommit_provider import CodeCommitProvider
 from pr_agent.git_providers.github_provider import GithubProvider
 from pr_agent.git_providers.gitlab_provider import GitLabProvider
 from pr_agent.git_providers.local_git_provider import LocalGitProvider
@@ -9,8 +10,9 @@ _GIT_PROVIDERS = {
     'github': GithubProvider,
     'gitlab': GitLabProvider,
     'bitbucket': BitbucketProvider,
-    'local': LocalGitProvider,
-    'azure': AzureDevopsProvider
+    'codecommit': CodeCommitProvider,
+    'azure': AzureDevopsProvider,
+    'local': LocalGitProvider
 }
 
 def get_git_provider():
