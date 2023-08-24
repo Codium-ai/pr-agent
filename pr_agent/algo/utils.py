@@ -32,33 +32,37 @@ def convert_to_markdown(output_data: dict) -> str:
 
     emojis = {
         "Main theme": "🎯",
+        "PR summary": "📝",
         "Type of PR": "📌",
         "Score": "🏅",
         "Relevant tests added": "🧪",
         "Unrelated changes": "⚠️",
         "Focused PR": "✨",
         "Security concerns": "🔒",
-        "General PR suggestions": "💡",
+        "General suggestions": "💡",
         "Insights from user's answers": "📝",
         "Code feedback": "🤖",
     }
 
     for key, value in output_data.items():
-        if not value:
+        if value is None or value == '' or value == {}:
             continue
         if isinstance(value, dict):
             markdown_text += f"## {key}\n\n"
             markdown_text += convert_to_markdown(value)
         elif isinstance(value, list):
-            if key.lower() == 'code feedback':
-                markdown_text += "\n"  # just looks nicer with additional line breaks
             emoji = emojis.get(key, "")
-            markdown_text += f"- {emoji} **{key}:**\n\n"
+            if key.lower() == 'code feedback':
+                markdown_text += f"\n\n- **<details><summary> { emoji } Code feedback:**</summary>\n\n"
+            else:
+                markdown_text += f"- {emoji} **{key}:**\n\n"
             for item in value:
                 if isinstance(item, dict) and key.lower() == 'code feedback':
                     markdown_text += parse_code_suggestion(item)
                 elif item:
                     markdown_text += f"  - {item}\n"
+            if key.lower() == 'code feedback':
+                markdown_text += "</details>\n\n"
         elif value != 'n/a':
             emoji = emojis.get(key, "")
             markdown_text += f"- {emoji} **{key}:** {value}\n"
@@ -247,7 +251,8 @@ def update_settings_from_args(args: List[str]) -> List[str]:
                 arg = arg.strip('-').strip()
                 vals = arg.split('=', 1)
                 if len(vals) != 2:
-                    logging.error(f'Invalid argument format: {arg}')
+                    if len(vals) > 2: # --extended is a valid argument
+                        logging.error(f'Invalid argument format: {arg}')
                     other_args.append(arg)
                     continue
                 key, value = _fix_key_value(*vals)

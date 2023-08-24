@@ -42,8 +42,9 @@ dependencies = [
   "atlassian-python-api==3.39.0",
   "GitPython~=3.1.32",
   "starlette-context==0.3.6",
-  "litellm~=0.1.351",
-  "PyYAML==6.0"
+  "litellm~=0.1.445",
+  "PyYAML==6.0",
+  "boto3~=1.28.25"
 ]
 
 [project.urls]

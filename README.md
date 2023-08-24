@@ -75,26 +75,26 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 
 ## Overview
 `PR-Agent` offers extensive pull request functionalities across various git providers:
-|       |                                             | GitHub | Gitlab | Bitbucket |
-|-------|---------------------------------------------|:------:|:------:|:---------:|
-| TOOLS | Review                                      |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |
-|       | ⮑ Inline review                             |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:
-|       | Ask                                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:
-|       | Auto-Description                            |   :white_check_mark:    |  :white_check_mark:      |  :white_check_mark:
-|       | Improve Code                                |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:
-|       | Reflect and Review                          |   :white_check_mark:    |                         |           |
-|       | Update CHANGELOG.md                         |   :white_check_mark:    |                         |   :white_check_mark:
-|       |                                             |        |        |           |
-| USAGE | CLI                                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |
-|       | App / webhook                               |   :white_check_mark:    |   :white_check_mark:    |           |
-|       | Tagging bot                                 |   :white_check_mark:    |        |           |
-|       | Actions                                     |   :white_check_mark:    |        |           |
-|       |                                             |        |        |           |
-| CORE  | PR compression                              |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |
-|       | Repo language prioritization                |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |
-|       | Adaptive and token-aware<br />file patch fitting |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |
-|       | Multiple models support |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |
-|       | Incremental PR Review |   :white_check_mark:    |      |         |
+|       |                                             | GitHub | Gitlab | Bitbucket | CodeCommit |
+|-------|---------------------------------------------|:------:|:------:|:---------:|:----------:|
+| TOOLS | Review                                      |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |   :white_check_mark:    |
+|       | ⮑ Inline review                             |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:          |
+|       | Ask                                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:          |
+|       | Auto-Description                            |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |
+|       | Improve Code                                |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:          |
+|       | Reflect and Review                          |   :white_check_mark:    |                         |           |          |
+|       | Update CHANGELOG.md                         |   :white_check_mark:    |                         |   :white_check_mark:          |
+|       |                                             |        |        |      |      |
+| USAGE | CLI                                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |   :white_check_mark:    |
+|       | App / webhook                               |   :white_check_mark:    |   :white_check_mark:    |           |          |
+|       | Tagging bot                                 |   :white_check_mark:    |        |           |          |
+|       | Actions                                     |   :white_check_mark:    |        |           |          |
+|       |                                             |        |        |      |      |
+| CORE  | PR compression                              |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |          |
+|       | Repo language prioritization                |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |          |
+|       | Adaptive and token-aware<br />file patch fitting |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |          |
+|       | Multiple models support |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |          |
+|       | Incremental PR Review |   :white_check_mark:    |      |      |      |
 
 Examples for invoking the different tools via the CLI:
 - **Review**:       python cli.py --pr_url=<pr_url>  review
@@ -153,7 +153,7 @@ Here are some advantages of PR-Agent:
 - We emphasize **real-life practical usage**. Each tool (review, improve, ask, ...) has a single GPT-4 call, no more. We feel that this is critical for realistic team usage - obtaining an answer quickly (~30 seconds) and affordably.
 - Our [PR Compression strategy](./PR_COMPRESSION.md)  is a core ability that enables to effectively tackle both short and long PRs.
 - Our JSON prompting strategy enables to have **modular, customizable tools**. For example, the '/review' tool categories can be controlled via the [configuration](./CONFIGURATION.md) file. Adding additional categories is easy and accessible.
-- We support **multiple git providers** (GitHub, Gitlab, Bitbucket), **multiple ways** to use the tool (CLI, GitHub Action, GitHub App, Docker, ...), and **multiple models** (GPT-4, GPT-3.5, Anthropic, Cohere, Llama2).
+- We support **multiple git providers** (GitHub, Gitlab, Bitbucket, CodeCommit), **multiple ways** to use the tool (CLI, GitHub Action, GitHub App, Docker, ...), and **multiple models** (GPT-4, GPT-3.5, Anthropic, Cohere, Llama2).
 - We are open-source, and welcome contributions from the community.
 
 
