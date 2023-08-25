@@ -226,3 +226,11 @@ class BitbucketProvider(GitProvider):
     # bitbucket does not support labels
     def publish_description(self, pr_title: str, pr_body: str):
         return ""
+
+    # bitbucket does not support labels
+    def publish_labels(self, pr_types: list):
+        return ""
+    
+    # bitbucket does not support labels
+    def get_labels(self):
+        return ""
