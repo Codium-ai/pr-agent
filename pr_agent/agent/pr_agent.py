@@ -3,6 +3,8 @@ import os
 import shlex
 import tempfile
 
+from traceloop.tracing import Tracer
+
 from pr_agent.algo.utils import update_settings_from_args
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
@@ -39,6 +41,10 @@ class PRAgent:
         pass
 
     async def handle_request(self, pr_url, request, notify=None) -> bool:
+        Tracer.init(app_name="pr_agent")
+        # To track multiple processing of the same PR together
+        Tracer.set_correlation_id(pr_url)
+
         # First, apply repo specific settings if exists
         if get_settings().config.use_repo_settings_file:
             repo_settings_file = None

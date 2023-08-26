@@ -4,6 +4,7 @@ import logging
 from typing import List, Tuple
 
 from jinja2 import Environment, StrictUndefined
+from traceloop.decorators import workflow
 
 from pr_agent.algo.ai_handler import AiHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
@@ -14,6 +15,7 @@ from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
 
 
+@workflow(name="pr_description", method_name="run")
 class PRDescription:
     def __init__(self, pr_url: str, args: list = None):
         """
