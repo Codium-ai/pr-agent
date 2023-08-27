@@ -1,6 +1,7 @@
 FROM python:3.10 as base
 
 WORKDIR /app
+RUN pip install pip setuptools --upgrade
 ADD pyproject.toml .
 RUN pip install . && rm pyproject.toml
 ENV PYTHONPATH=/app
