@@ -9,7 +9,7 @@
   "authentication": {
     "type": "jwt"
   },
-  "baseUrl": "https://53e2-212-199-118-78.ngrok-free.app",
+  "baseUrl": "base_url",
   "lifecycle": {
     "installed": "/installed",
     "uninstalled": "/uninstalled"

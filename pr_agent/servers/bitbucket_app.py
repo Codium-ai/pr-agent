@@ -54,9 +54,11 @@ async def get_bearer_token(shared_secret: str, client_key: str):
 
 @router.get("/")
 async def handle_manifest(request: Request, response: Response):
-    manifest = open("atlassian-connect.json", "rt").read()
+    cur_dir = os.path.dirname(os.path.abspath(__file__))
+    manifest = open(os.path.join(cur_dir, "atlassian-connect.json"), "rt").read()
     try:
         manifest = manifest.replace("app_key", get_settings().bitbucket.app_key)
+        manifest = manifest.replace("base_url", get_settings().bitbucket.base_url)
     except:
         logging.error("Failed to replace api_key in Bitbucket manifest, trying to continue")
     manifest_obj = json.loads(manifest)
