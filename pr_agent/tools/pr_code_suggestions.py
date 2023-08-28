@@ -1,16 +1,13 @@
 import copy
-import json
 import logging
 import textwrap
-from typing import List
-
-import yaml
+from typing import List, Dict
 from jinja2 import Environment, StrictUndefined
 
 from pr_agent.algo.ai_handler import AiHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models, get_pr_multi_diffs
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import try_fix_json
+from pr_agent.algo.utils import load_yaml
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import BitbucketProvider, get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
@@ -98,14 +95,11 @@ class PRCodeSuggestions:
 
         return response
 
-    def _prepare_pr_code_suggestions(self) -> str:
+    def _prepare_pr_code_suggestions(self) -> Dict:
         review = self.prediction.strip()
-        try:
-            data = json.loads(review)
-        except json.decoder.JSONDecodeError:
-            if get_settings().config.verbosity_level >= 2:
-                logging.info(f"Could not parse json response: {review}")
-            data = try_fix_json(review, code_suggestions=True)
+        data = load_yaml(review)
+        if isinstance(data, list):
+            data = {'Code suggestions': data}
         return data
 
     def push_inline_code_suggestions(self, data):
@@ -227,7 +221,7 @@ class PRCodeSuggestions:
             response, finish_reason = await self.ai_handler.chat_completion(model=model, system=system_prompt,
                                                                             user=user_prompt)
 
-            sort_order = yaml.safe_load(response)
+            sort_order = load_yaml(response)
             for s in sort_order['Sort Order']:
                 suggestion_number = s['suggestion number']
                 importance_order = s['importance order']
