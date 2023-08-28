@@ -157,12 +157,6 @@ class PRDescription:
         # Initialization
         pr_types = []
 
-        # Iterate over the dictionary items and append the key and value to 'markdown_text' in a markdown format
-        markdown_text = ""
-        for key, value in data.items():
-            markdown_text += f"## {key}\n\n"
-            markdown_text += f"{value}\n\n"
-
         # If the 'PR Type' key is present in the dictionary, split its value by comma and assign it to 'pr_types'
         if 'PR Type' in data:
             if type(data['PR Type']) == list:
@@ -197,6 +191,8 @@ class PRDescription:
                 pr_body += f"{value}\n"
             if idx < len(data) - 1:
                 pr_body += "\n___\n"
+
+        markdown_text = f"## Title\n\n{title}\n\n___\n{pr_body}"
 
         if get_settings().config.verbosity_level >= 2:
             logging.info(f"title:\n{title}\n{pr_body}")
