@@ -17,43 +17,43 @@ Making pull requests less painful with an AI agent
 
 CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull requests faster and more efficiently. It automatically analyzes the pull request and can provide several types of PR feedback:
 
-**[Auto-Description](https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1687561986)**: Automatically generating [PR description](https://github.com/Codium-ai/pr-agent/pull/229#issue-1860711415) - title, type, summary, code walkthrough and labels.
+**Auto-Description**: Automatically generating [PR description](https://github.com/Codium-ai/pr-agent/pull/229#issue-1860711415) - title, type, summary, code walkthrough and labels.
 \
-**[Auto Review](https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695021901)**: [Adjustable feedback](https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695022908) about the PR main theme, type, relevant tests, security issues, score, and various suggestions for the PR content.
+**Auto Review**: [Adjustable feedback](https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695022908) about the PR main theme, type, relevant tests, security issues, score, and various suggestions for the PR content.
 \
-**[Question Answering](https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695020538)**: Answering [free-text questions](https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695021332) about the PR.
+**Question Answering**: Answering [free-text questions](https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695021332) about the PR.
 \
-**[Code Suggestions](https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695024952)**: [Committable code suggestions](https://github.com/Codium-ai/pr-agent/pull/229#discussion_r1306919276) for improving the PR.
+**Code Suggestions**: [Committable code suggestions](https://github.com/Codium-ai/pr-agent/pull/229#discussion_r1306919276) for improving the PR.
 \
-**[Update Changelog](https://github.com/Codium-ai/pr-agent/pull/168#issuecomment-1662425518)**: Automatically updating the CHANGELOG.md file with the [PR changes](https://github.com/Codium-ai/pr-agent/pull/168#discussion_r1282077645).
+**Update Changelog**: Automatically updating the CHANGELOG.md file with the [PR changes](https://github.com/Codium-ai/pr-agent/pull/168#discussion_r1282077645).
 
 <h3>Example results:</h2>
 </div>
-<h4>/describe:</h4>
+<h4><a href="https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1687561986">/describe:</a></h4>
 <div align="center">
 <p float="center">
 <img src="https://www.codium.ai/images/describe-2.gif" width="800">
 </p>
 </div>
-<h4>/review:</h4>
+<h4><a href="https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695021901">/review:</a></h4>
 <div align="center">
 <p float="center">
 <img src="https://www.codium.ai/images/review-2.gif" width="800">
 </p>
 </div>
-<h4>/reflect_and_review:</h4>
+<h4><a href="https://github.com/Codium-ai/pr-agent/pull/78#issuecomment-1639739496">/reflect_and_review:</a></h4>
 <div align="center">
 <p float="center">
 <img src="https://www.codium.ai/images/reflect_and_review.gif" width="800">
 </p>
 </div>
-<h4>/ask:</h4>
+<h4><a href="https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695020538">/ask:</a></h4>
 <div align="center">
 <p float="center">
 <img src="https://www.codium.ai/images/ask-2.gif" width="800">
 </p>
 </div>
-<h4>/improve:</h4>
+<h4><a href="https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695024952">/improve:</a></h4>
 <div align="center">
 <p float="center">
 <img src="https://www.codium.ai/images/improve-2.gif" width="800">
@@ -135,7 +135,8 @@ There are several ways to use PR-Agent:
   - Request reviews by tagging your GitHub user on a PR
 - [Method 5: Run as a GitHub App](INSTALL.md#method-5-run-as-a-github-app)
   - Allowing you to automate the review process on your private or public repositories
-
+- [Method 6: Deploy as a Lambda Function](INSTALL.md#method-6---deploy-as-a-lambda-function)
+- [Method 7: AWS CodeCommit](INSTALL.md#method-7---aws-codecommit-setup)
 
 ## How it works
 

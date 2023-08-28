@@ -17,7 +17,7 @@ There are several ways to use PR-Agent:
 - [Method 7: AWS CodeCommit](INSTALL.md#method-7---aws-codecommit-setup)
 ---
 
-#### Method 1: Use Docker image (no installation required)
+### Method 1: Use Docker image (no installation required)
 
 To request a review for a PR, or ask a question about a PR, you can run directly from the Docker image. Here's how:
 
@@ -55,7 +55,7 @@ Possible questions you can ask include:
 
 ---
 
-#### Method 2: Run as a GitHub Action
+### Method 2: Run as a GitHub Action
 
 You can use our pre-built Github Action Docker image to run PR-Agent as a Github Action. 
 
@@ -125,7 +125,7 @@ When you open your next PR, you should see a comment from `github-actions` bot w
 
 ---
 
-#### Method 3: Run from source
+### Method 3: Run from source
 
 1. Clone this repository:
 
@@ -159,7 +159,7 @@ python pr_agent/cli.py --pr_url <pr_url> improve
 
 ---
 
-#### Method 4: Run as a polling server
+### Method 4: Run as a polling server
 Request reviews by tagging your Github user on a PR
 
 Follow steps 1-3 of method 2.
@@ -171,7 +171,7 @@ python pr_agent/servers/github_polling.py
 
 ---
 
-#### Method 5: Run as a GitHub App
+### Method 5: Run as a GitHub App
 Allowing you to automate the review process on your private or public repositories.
 
 1. Create a GitHub App from the [Github Developer Portal](https://docs.github.com/en/developers/apps/creating-a-github-app).
@@ -253,7 +253,7 @@ docker push codiumai/pr-agent:github_app  # Push to your Docker repository
 
 ---
 
-#### Method 6 - Deploy as a Lambda Function
+### Method 6 - Deploy as a Lambda Function
 
 1. Follow steps 1-5 of [Method 5](#method-5-run-as-a-github-app).
 2. Build a docker image that can be used as a lambda function
@@ -272,7 +272,7 @@ docker push codiumai/pr-agent:github_app  # Push to your Docker repository
 
 ---
 
-#### Method 7 - AWS CodeCommit Setup
+### Method 7 - AWS CodeCommit Setup
 
 Not all features have been added to CodeCommit yet.  As of right now, CodeCommit has been implemented to run the pr-agent CLI on the command line, using AWS credentials stored in environment variables.  (More features will be added in the future.)  The following is a set of instructions to have pr-agent do a review of your CodeCommit pull request from the command line:
 
@@ -338,7 +338,7 @@ PYTHONPATH="/PATH/TO/PROJECTS/pr-agent" python pr_agent/cli.py \
   review
 ```
 
-#### Appendix - **Debugging LLM API Calls**  
+### Appendix - **Debugging LLM API Calls**  
 If you're testing your codium/pr-agent server, and need to see if calls were made successfully + the exact call logs, you can use the [LiteLLM Debugger tool](https://docs.litellm.ai/docs/debugging/hosted_debugging). 
 
 You can do this by setting `litellm_debugger=true` in configuration.toml. Your Logs will be viewable in real-time @ `admin.litellm.ai/<your_email>`. Set your email in the `.secrets.toml` under 'user_email'.
