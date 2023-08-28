@@ -1,6 +1,20 @@
 
 ## Installation
 
+To get started with PR-Agent quickly, you first need to acquire two tokens:
+
+1. An OpenAI key from [here](https://platform.openai.com/), with access to GPT-4.
+2. A GitHub personal access token (classic) with the repo scope.
+
+There are several ways to use PR-Agent:
+
+- [Method 1: Use Docker image (no installation required)](INSTALL.md#method-1-use-docker-image-no-installation-required)
+- [Method 2: Run as a GitHub Action](INSTALL.md#method-2-run-as-a-github-action)
+- [Method 3: Run from source](INSTALL.md#method-3-run-from-source)
+- [Method 4: Run as a polling server](INSTALL.md#method-4-run-as-a-polling-server)
+- [Method 5: Run as a GitHub App](INSTALL.md#method-5-run-as-a-github-app)
+- [Method 6: Deploy as a Lambda Function](INSTALL.md#method-6---deploy-as-a-lambda-function)
+- [Method 7: AWS CodeCommit](INSTALL.md#method-7---aws-codecommit-setup)
 ---
 
 #### Method 1: Use Docker image (no installation required)
@@ -143,14 +157,6 @@ python pr_agent/cli.py --pr_url <pr_url> describe
 python pr_agent/cli.py --pr_url <pr_url> improve
 ```
 
-5. **Debugging LLM API Calls**  
-If you're testing your codium/pr-agent server, and need to see if calls were made successfully + the exact call logs, you can use the [LiteLLM Debugger tool](https://docs.litellm.ai/docs/debugging/hosted_debugging). 
-
-You can do this by setting `litellm_debugger=true` in configuration.toml. Your Logs will be viewable in real-time @ `admin.litellm.ai/<your_email>`. Set your email in the `.secrets.toml` under 'user_email'.
-
-<img src="./pics/debugger.png" width="900"/>
-
-
 ---
 
 #### Method 4: Run as a polling server
@@ -247,7 +253,7 @@ docker push codiumai/pr-agent:github_app  # Push to your Docker repository
 
 ---
 
-####  Deploy as a Lambda Function
+#### Method 6 - Deploy as a Lambda Function
 
 1. Follow steps 1-5 of [Method 5](#method-5-run-as-a-github-app).
 2. Build a docker image that can be used as a lambda function
@@ -266,7 +272,7 @@ docker push codiumai/pr-agent:github_app  # Push to your Docker repository
 
 ---
 
-#### AWS CodeCommit Setup
+#### Method 7 - AWS CodeCommit Setup
 
 Not all features have been added to CodeCommit yet.  As of right now, CodeCommit has been implemented to run the pr-agent CLI on the command line, using AWS credentials stored in environment variables.  (More features will be added in the future.)  The following is a set of instructions to have pr-agent do a review of your CodeCommit pull request from the command line:
 
@@ -281,7 +287,7 @@ Not all features have been added to CodeCommit yet.  As of right now, CodeCommit
     * Option B: Set `PYTHONPATH` and run the CLI in one command, for example:
         * `PYTHONPATH="/PATH/TO/PROJECTS/pr-agent python pr_agent/cli.py [--ARGS]`
 
-#### AWS CodeCommit IAM Role Example
+##### AWS CodeCommit IAM Role Example
 
 Example IAM permissions to that user to allow access to CodeCommit:
 
@@ -311,7 +317,7 @@ Example IAM permissions to that user to allow access to CodeCommit:
 }
 ```
 
-#### AWS CodeCommit Access Key and Secret
+##### AWS CodeCommit Access Key and Secret
 
 Example setting the Access Key and Secret using environment variables
 
@@ -321,7 +327,7 @@ export AWS_SECRET_ACCESS_KEY="XXXXXXXXXXXXXXXX"
 export AWS_DEFAULT_REGION="us-east-1"
 ```
 
-#### AWS CodeCommit CLI Example
+##### AWS CodeCommit CLI Example
 
 After you set up AWS CodeCommit using the instructions above, here is an example CLI run that tells pr-agent to **review** a given pull request.
 (Replace your specific PYTHONPATH and PR URL in the example)
@@ -331,3 +337,10 @@ PYTHONPATH="/PATH/TO/PROJECTS/pr-agent" python pr_agent/cli.py \
   --pr_url https://us-east-1.console.aws.amazon.com/codesuite/codecommit/repositories/MY_REPO_NAME/pull-requests/321 \
   review
 ```
+
+#### Appendix - **Debugging LLM API Calls**  
+If you're testing your codium/pr-agent server, and need to see if calls were made successfully + the exact call logs, you can use the [LiteLLM Debugger tool](https://docs.litellm.ai/docs/debugging/hosted_debugging). 
+
+You can do this by setting `litellm_debugger=true` in configuration.toml. Your Logs will be viewable in real-time @ `admin.litellm.ai/<your_email>`. Set your email in the `.secrets.toml` under 'user_email'.
+
+<img src="./pics/debugger.png" width="800"/>

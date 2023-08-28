@@ -15,17 +15,17 @@ Making pull requests less painful with an AI agent
 </div>
 <div style="text-align:left;">
 
-CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull requests faster and more efficiently. It automatically analyzes the pull request and can provide several types of feedback:
+CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull requests faster and more efficiently. It automatically analyzes the pull request and can provide several types of PR feedback:
 
-**Auto-Description**: Automatically generating PR description - title, type, summary, code walkthrough and PR labels.
+**[Auto-Description](https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1687561986)**: Automatically generating [PR description](https://github.com/Codium-ai/pr-agent/pull/229#issue-1860711415) - title, type, summary, code walkthrough and labels.
 \
-**PR Review**: Adjustable feedback about the PR main theme, type, relevant tests, security issues, focus, score, and various suggestions for the PR content.
+**[Auto Review](https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695021901)**: [Adjustable feedback](https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695022908) about the PR main theme, type, relevant tests, security issues, score, and various suggestions for the PR content.
 \
-**Question Answering**: Answering free-text questions about the PR.
+**[Question Answering](https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695020538)**: Answering [free-text questions](https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695021332) about the PR.
 \
-**Code Suggestions**: Committable code suggestions for improving the PR.
+**[Code Suggestions](https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695024952)**: [Committable code suggestions](https://github.com/Codium-ai/pr-agent/pull/229#discussion_r1306919276) for improving the PR.
 \
-**Update Changelog**: Automatically updating the CHANGELOG.md file with the PR changes.
+**[Update Changelog](https://github.com/Codium-ai/pr-agent/pull/168#issuecomment-1662425518)**: Automatically updating the CHANGELOG.md file with the [PR changes](https://github.com/Codium-ai/pr-agent/pull/168#discussion_r1282077645).
 
 <h3>Example results:</h2>
 </div>
@@ -82,6 +82,7 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 |       | Ask                                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:          |
 |       | Auto-Description                            |   :white_check_mark:    |   :white_check_mark:    |           |          |
 |       | Improve Code                                |   :white_check_mark:    |   :white_check_mark:    |           |          |
+|       | ⮑ Extended                             |   :white_check_mark:    |   :white_check_mark:    |           |          |
 |       | Reflect and Review                          |   :white_check_mark:    |                         |           |          |
 |       | Update CHANGELOG.md                         |   :white_check_mark:    |                         |           |          |
 |       |                                             |        |        |      |      |
@@ -160,8 +161,9 @@ Here are some advantages of PR-Agent:
 ## Roadmap
 
 - [x] Support additional models, as a replacement for OpenAI (see [here](https://github.com/Codium-ai/pr-agent/pull/172))
-- [ ] Develop additional logic for handling large PRs
+- [x] Develop additional logic for handling large PRs (see [here](https://github.com/Codium-ai/pr-agent/pull/229))
 - [ ] Add additional context to the prompt. For example, repo (or relevant files) summarization, with tools such a [ctags](https://github.com/universal-ctags/ctags)
+- [ ] PR-Agent for issues, and just for pull requests
 - [ ] Adding more tools. Possible directions:
   - [x] PR description
   - [x] Inline code suggestions
