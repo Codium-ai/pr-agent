@@ -5,10 +5,13 @@ from urllib.parse import urlparse
 
 import os
 
-from msrest.authentication import BasicAuthentication
-from azure.devops.connection import Connection
-
-from azure.devops.v7_1.git.models import Comment, CommentThread, GitVersionDescriptor, GitPullRequest
+AZURE_DEVOPS_AVAILABLE = True
+try:
+    from msrest.authentication import BasicAuthentication
+    from azure.devops.connection import Connection
+    from azure.devops.v7_1.git.models import Comment, CommentThread, GitVersionDescriptor, GitPullRequest
+except ImportError:
+    AZURE_DEVOPS_AVAILABLE = False
 
 from ..algo.pr_processing import clip_tokens
 from ..config_loader import get_settings
@@ -19,6 +22,8 @@ from .git_provider import EDIT_TYPE, FilePatchInfo
 
 class AzureDevopsProvider:
     def __init__(self, pr_url: Optional[str] = None, incremental: Optional[bool] = False):
+        if not AZURE_DEVOPS_AVAILABLE:
+            raise ImportError("Azure DevOps provider is not available. Please install the required dependencies.")
 
         self.azure_devops_client = self._get_azure_devops_client()
 
