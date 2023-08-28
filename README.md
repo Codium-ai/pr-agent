@@ -108,7 +108,7 @@ Examples for invoking the different tools via the CLI:
 "<pr_url>" is the url of the relevant PR (for example: https://github.com/Codium-ai/pr-agent/pull/50).
 
 In the [configuration](./CONFIGURATION.md) file you can select your git provider (GitHub, Gitlab, Bitbucket), and further configure the different tools.
-Options that are available in the configuration file can be specificied at run time when calling actions. Two examples:
+Options that are available in the configuration file can be specified at run time when calling actions. Two examples:
 - /review --pr_reviewer.extra_instructions="focus on the file: ..."
 - /describe --pr_description.add_original_user_description=false -pr_description.extra_instructions="make sure to mention: ..."
 
