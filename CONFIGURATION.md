@@ -25,8 +25,8 @@ This is useful for debugging or experimenting with the different tools.
 When running PR-Agent from GitHub App, the default configuration file (`configuration.toml`) will be loaded.
 
 #### GitHub app default tools
-The GitHub app specific configurations are defined in the `[github_app]` section of the configuration file.
-The main parameter is `pr_commands`, which is a list of tools to run when a new PR is opened:
+The `[github_app]` section of the configuration file defines GitHub app specific configurations. 
+The important parameter is `pr_commands`, which is a list of tools that will be run automatically when a new PR is opened:
 ```
 [github_app]
 pr_commands = [
@@ -37,7 +37,7 @@ pr_commands = [
 This means that when a new PR is opened, PR-Agent will run the `describe` and `auto_review` tools.
 For the describe tool, the `add_original_user_description` and `keep_original_user_title` parameters will be set to `true`.
 
-However, you can override the default tool parameters by uploading a local configuration called `.pr_agent.toml`, to the root of your repo.
+However, you can override the default tool parameters by uploading a local configuration file called `.pr_agent.toml` to the root of your repo.
 For example, if your local `.pr_agent.toml` file contains:
 ```
 [pr_description]
@@ -46,10 +46,10 @@ keep_original_user_title = false
 ```
 Then when a new PR is opened, PR-Agent will run the `describe` tool with the above parameters.
 
-Note that a local `.pr_agent.toml` file enables you to edit and customize the default parameters of any tool, not just the ones that are run by default.
+Note that a local `.pr_agent.toml` file enables you to edit and customize the default parameters of any tool, not just the ones that are run automatically.
 
 #### Online usage
-For online usage (calling tools by comments on a PR), just add `--config_path=<value>` to any command, to edit a specific configuration value.
+For online usage (calling tools by comments on a PR like `/ask ...`), just add `--config_path=<value>` to any command, to edit a specific configuration value.
 For example if you want to edit `pr_reviewer` configurations, you can run:
 ```
 /review --pr_reviewer.extra_instructions="..." --pr_reviewer.require_score_review=false ...
