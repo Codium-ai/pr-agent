@@ -1,3 +1,4 @@
+import logging
 from abc import ABC, abstractmethod
 
 # enum EDIT_TYPE (ADDED, DELETED, MODIFIED, RENAMED)
@@ -119,6 +120,8 @@ def get_main_pr_language(languages, files) -> str:
         # validate that the specific commit uses the main language
         extension_list = []
         for file in files:
+            if isinstance(file, str):
+                file = FilePatchInfo(base_file=None, head_file=None, patch=None, filename=file)
             extension_list.append(file.filename.rsplit('.')[-1])
 
         # get the most common extension
@@ -140,10 +143,12 @@ def get_main_pr_language(languages, files) -> str:
                 most_common_extension == 'scala' and top_language == 'scala' or \
                 most_common_extension == 'kt' and top_language == 'kotlin' or \
                 most_common_extension == 'pl' and top_language == 'perl' or \
-                most_common_extension == 'swift' and top_language == 'swift':
+                most_common_extension == 'swift' and top_language == 'swift' or \
+                most_common_extension == top_language:
             main_language_str = top_language
 
-    except Exception:
+    except Exception as e:
+        logging.exception(e)
         pass
 
     return main_language_str
