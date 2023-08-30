@@ -1,4 +1,4 @@
-dynaconf==3.1.12
+dynaconf~=3.1.12
 fastapi==0.99.0
 PyGithub==1.59.*
 retry==0.9.2
