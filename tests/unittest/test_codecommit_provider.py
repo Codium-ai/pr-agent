@@ -1,7 +1,7 @@
 import pytest
 from pr_agent.git_providers.codecommit_provider import CodeCommitFile
 from pr_agent.git_providers.codecommit_provider import CodeCommitProvider
-from pr_agent.git_providers.git_provider import EDIT_TYPE
+from pr_agent.algo.utils import EDIT_TYPE
 
 
 class TestCodeCommitFile:

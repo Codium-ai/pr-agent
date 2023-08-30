@@ -45,9 +45,7 @@ class PRCodeSuggestions:
             "extra_instructions": get_settings().pr_code_suggestions.extra_instructions,
             "commit_messages_str": self.git_provider.get_commit_messages(),
         }
-        self.token_handler = TokenHandler(self.git_provider.pr,
-                                          self.vars,
-                                          get_settings().pr_code_suggestions_prompt.system,
+        self.token_handler = TokenHandler(self.vars, get_settings().pr_code_suggestions_prompt.system,
                                           get_settings().pr_code_suggestions_prompt.user)
 
     async def run(self):

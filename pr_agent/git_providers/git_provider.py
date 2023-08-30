@@ -1,27 +1,9 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 
 # enum EDIT_TYPE (ADDED, DELETED, MODIFIED, RENAMED)
-from enum import Enum
 from typing import Optional
 
-
-class EDIT_TYPE(Enum):
-    ADDED = 1
-    DELETED = 2
-    MODIFIED = 3
-    RENAMED = 4
-
-
-@dataclass
-class FilePatchInfo:
-    base_file: str
-    head_file: str
-    patch: str
-    filename: str
-    tokens: int = -1
-    edit_type: EDIT_TYPE = EDIT_TYPE.MODIFIED
-    old_filename: str = None
+from pr_agent.algo.utils import FilePatchInfo
 
 
 class GitProvider(ABC):
@@ -87,7 +69,7 @@ class GitProvider(ABC):
 
     def get_pr_description(self) -> str:
         from pr_agent.config_loader import get_settings
-        from pr_agent.algo.pr_processing import clip_tokens
+        from pr_agent.algo.utils import clip_tokens
         max_tokens = get_settings().get("CONFIG.MAX_DESCRIPTION_TOKENS", None)
         description = self.get_pr_description_full()
         if max_tokens:

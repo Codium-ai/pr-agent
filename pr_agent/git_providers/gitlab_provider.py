@@ -7,10 +7,9 @@ import gitlab
 from gitlab import GitlabGetError
 
 from ..algo.language_handler import is_valid_file
-from ..algo.pr_processing import clip_tokens
-from ..algo.utils import load_large_diff
+from ..algo.utils import load_large_diff, clip_tokens, EDIT_TYPE, FilePatchInfo
 from ..config_loader import get_settings
-from .git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
+from .git_provider import GitProvider
 
 logger = logging.getLogger()
 

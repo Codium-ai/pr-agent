@@ -8,7 +8,8 @@ from atlassian.bitbucket import Cloud
 from starlette_context import context
 
 from ..config_loader import get_settings
-from .git_provider import FilePatchInfo, GitProvider
+from .git_provider import GitProvider
+from ..algo.utils import FilePatchInfo
 
 
 class BitbucketProvider(GitProvider):

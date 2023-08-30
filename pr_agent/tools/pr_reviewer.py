@@ -9,8 +9,7 @@ from jinja2 import Environment, StrictUndefined
 from yaml import SafeLoader
 
 from pr_agent.algo.ai_handler import AiHandler
-from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models, \
-    find_line_number_of_relevant_line_in_file, clip_tokens
+from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.algo.utils import convert_to_markdown, try_fix_json, try_fix_yaml, load_yaml
 from pr_agent.config_loader import get_settings
@@ -66,12 +65,8 @@ class PRReviewer:
             "commit_messages_str": self.git_provider.get_commit_messages(),
         }
 
-        self.token_handler = TokenHandler(
-            self.git_provider.pr,
-            self.vars,
-            get_settings().pr_review_prompt.system,
-            get_settings().pr_review_prompt.user
-        )
+        self.token_handler = TokenHandler(self.vars, get_settings().pr_review_prompt.system,
+                                          get_settings().pr_review_prompt.user)
 
     def parse_args(self, args: List[str]) -> None:
         """
@@ -217,8 +212,8 @@ class PRReviewer:
         markdown_text = convert_to_markdown(data)
         user = self.git_provider.get_user_id()
 
-        # Add help text if not in CLI mode
-        if not get_settings().get("CONFIG.CLI_MODE", False):
+        # Add help text if not in CLI§ mode
+        if not get_settings().get("CONFIG.CLI§_MODE", False):
             markdown_text += "\n### How to use\n"
             if user and '[bot]' not in user:
                 markdown_text += bot_help_text(user)

@@ -46,12 +46,8 @@ class PRDescription:
         self.user_description = self.git_provider.get_user_description()
     
         # Initialize the token handler
-        self.token_handler = TokenHandler(
-            self.git_provider.pr,
-            self.vars,
-            get_settings().pr_description_prompt.system,
-            get_settings().pr_description_prompt.user,
-        )
+        self.token_handler = TokenHandler(self.vars, get_settings().pr_description_prompt.system,
+                                          get_settings().pr_description_prompt.user)
     
         # Initialize patches_diff and prediction attributes
         self.patches_diff = None

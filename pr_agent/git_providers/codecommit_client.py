@@ -1,6 +1,9 @@
-import boto3
-import botocore
-
+try:  # Allow this module to be imported without requiring boto3
+    import boto3
+    import botocore
+except ModuleNotFoundError:
+    boto3 = None
+    botocore = None
 
 class CodeCommitDifferencesResponse:
     """

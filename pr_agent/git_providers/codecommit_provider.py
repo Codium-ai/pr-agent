@@ -4,12 +4,11 @@ from collections import Counter
 from typing import List, Optional, Tuple
 from urllib.parse import urlparse
 
-from ..algo.language_handler import is_valid_file, language_extension_map
-from ..algo.pr_processing import clip_tokens
-from ..algo.utils import load_large_diff
-from ..config_loader import get_settings
-from .git_provider import EDIT_TYPE, FilePatchInfo, GitProvider, IncrementalPR
 from pr_agent.git_providers.codecommit_client import CodeCommitClient
+
+from ..algo.language_handler import is_valid_file, language_extension_map
+from ..algo.utils import EDIT_TYPE, FilePatchInfo, load_large_diff
+from .git_provider import GitProvider
 
 
 class PullRequestCCMimic:
