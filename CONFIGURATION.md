@@ -21,20 +21,41 @@ verbosity_level=2
 ```
 This is useful for debugging or experimenting with the different tools.
 
-### Working from pre-built repo (GitHub Action/GitHub App/Docker)
-When running PR-Agent from a pre-built repo, the default configuration file will be loaded.
+### Working from GitHub App (pre-built repo)
+When running PR-Agent from GitHub App, the default configuration file (`configuration.toml`) will be loaded.
 
-To edit the configuration, you have two options: 
-1. Place a local configuration file in the root of your local repo. The local file will be used instead of the default one.
-2. For online usage, just add `--config_path=<value>` to you command, to edit a specific configuration value.
+#### GitHub app default tools
+The GitHub app configuration is defined in the `[github_app]` section of the configuration file.
+The main parameter is `pr_commands`, which is a list of tools to run when a new PR is opened:
+```
+[github_app]
+pr_commands = [
+    "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true",
+    "/auto_review",
+]
+```
+This means that when a new PR is opened, PR-Agent will run the `describe` and `auto_review` tools.
+For the describe tool, the `add_original_user_description` and `keep_original_user_title` parameters will be set to `true`.
+
+However, you can override the default actions parameters by uploading a local configuration called `.pr_agent.toml`, to the root of your repo.
+For example, if your local `.pr_agent.toml` file contains:
+```
+[pr_description]
+add_original_user_description = false
+keep_original_user_title = false
+```
+Then when a new PR is opened, PR-Agent will run the `describe` tool with the above parameters.
+
+#### Online usage
+For online usage (calling tools by comments on a PR), just add `--config_path=<value>` to any command, to edit a specific configuration value.
 For example if you want to edit `pr_reviewer` configurations, you can run:
 ```
 /review --pr_reviewer.extra_instructions="..." --pr_reviewer.require_score_review=false ...
 ```
-
 Any configuration value in `configuration.toml` file can be similarly edited.
 
-### General configuration parameters
+
+### General configuration walkthrough
 
 #### Changing a model
 See [here](pr_agent/algo/__init__.py) for the list of available models.
