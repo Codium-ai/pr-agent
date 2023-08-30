@@ -86,11 +86,11 @@ class GitProvider(ABC):
     def get_pr_description_full(self) -> str:
         pass
 
-    def get_pr_description(self) -> str:
+    def get_pr_description(self, *, full: bool = True) -> str:
         from pr_agent.config_loader import get_settings
         from pr_agent.algo.pr_processing import clip_tokens
         max_tokens = get_settings().get("CONFIG.MAX_DESCRIPTION_TOKENS", None)
-        description = self.get_pr_description_full()
+        description = self.get_pr_description_full() if full else self.get_user_description()
         if max_tokens:
             return clip_tokens(description, max_tokens)
         return description
