@@ -35,7 +35,7 @@ pr_commands = [
 ]
 ```
 This means that when a new PR is opened, PR-Agent will run the `describe` and `auto_review` tools.
-For the describe tool, the `add_original_user_description` and `keep_original_user_title` parameters will be set to `true`.
+For the describe tool, the `add_original_user_description` and `keep_original_user_title` parameters will be set to true.
 
 However, you can override the default tool parameters by uploading a local configuration file called `.pr_agent.toml` to the root of your repo.
 For example, if your local `.pr_agent.toml` file contains:
@@ -47,6 +47,24 @@ keep_original_user_title = false
 Then when a new PR is opened, PR-Agent will run the `describe` tool with the above parameters.
 
 Note that a local `.pr_agent.toml` file enables you to edit and customize the default parameters of any tool, not just the ones that are run automatically.
+
+#### Editing the prompts
+The prompts for the various PR-Agent tools are defined in the `pr_agent/settings` folder.
+
+In practice, the prompts are loaded and stored as a standard setting object. Hence,
+editing them is similar to editing any other configuration value - just place the relevant key in `.pr_agent.toml`file, and override the default value.
+
+For example, if you want to edit the prompts of the [describe](./pr_agent/settings/pr_description_prompts.toml) tool, you can add the following to your `.pr_agent.toml` file:
+```
+[pr_description_prompt]
+system="""
+...
+"""
+user="""
+...
+"""
+```
+Note that the new prompt will need to generate an output compatible with the relevant [post-process function](./pr_agent/tools/pr_description.py#L137).
 
 #### Online usage
 For online usage (calling tools by comments on a PR like `/ask ...`), just add `--config_path=<value>` to any command, to edit a specific configuration value.
