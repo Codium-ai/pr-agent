@@ -68,12 +68,17 @@ Code suggestions:
       type: string
       description: |-
         a code snippet showing the relevant code lines from a '__new hunk__' section.
-        It must be continuous, correctly formatted and indented, and without line numbers.
-    relevant lines:
-      type: string
+        It must be contiguous, correctly formatted and indented, and without line numbers.
+    relevant lines start:
+      type: integer
       description: |-
-        the relevant lines from a '__new hunk__' section, in the format of 'start_line-end_line'.
-        For example: '10-15'. They should be derived from the hunk line numbers, and correspond to the 'existing code' snippet above.
+        The relevant line number from a '__new hunk__' section where the suggestion starts (inclusive).
+        Should be derived from the hunk line numbers, and correspond to the 'existing code' snippet above.
+    relevant lines end:
+      type: integer
+      description: |-
+        The relevant line number from a '__new hunk__' section where the suggestion ends (inclusive).
+        Should be derived from the hunk line numbers, and correspond to the 'existing code' snippet above.
     improved code:
       type: string
       description: |-
@@ -90,7 +95,8 @@ Code suggestions:
         Add a docstring to func1()
     existing code: |-
         def func1():
-    relevant lines: '12-12'
+    relevant lines start: 12
+    relevant lines end: 12
     improved code: |-
         ...
 ```
