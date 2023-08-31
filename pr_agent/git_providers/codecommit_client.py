@@ -64,7 +64,7 @@ class CodeCommitClient:
         """
         Get the differences between two commits in CodeCommit.
 
-        Parameters:
+        Args:
         - repo_name: Name of the repository
         - destination_commit: Commit hash you want to merge into (the "before" hash) (usually on the main or master branch)
         - source_commit: Commit hash of the code you are adding (the "after" branch)
@@ -73,8 +73,8 @@ class CodeCommitClient:
         - List of CodeCommitDifferencesResponse objects
 
         Boto3 Documentation:
-        aws codecommit get-differences
-        https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/codecommit/client/get_differences.html
+        - aws codecommit get-differences
+        - https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/codecommit/client/get_differences.html
         """
         if self.boto_client is None:
             self._connect_boto_client()
@@ -101,7 +101,7 @@ class CodeCommitClient:
         """
         Retrieve a file from CodeCommit.
 
-        Parameters:
+        Args:
         - repo_name: Name of the repository
         - file_path: Path to the file you are retrieving
         - sha_hash: Commit hash of the file you are retrieving
@@ -110,8 +110,8 @@ class CodeCommitClient:
         - File contents
 
         Boto3 Documentation:
-        aws codecommit get_file
-        https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/codecommit/client/get_file.html
+        - aws codecommit get_file
+        - https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/codecommit/client/get_file.html
         """
         if not file_path:
             return ""
@@ -137,15 +137,15 @@ class CodeCommitClient:
         """
         Get a information about a CodeCommit PR.
 
-        Parameters:
+        Args:
         - pr_number: The PR number you are requesting
 
         Returns:
         - CodeCommitPullRequestResponse object
 
         Boto3 Documentation:
-        aws codecommit get_pull_request
-        https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/codecommit/client/get_pull_request.html
+        - aws codecommit get_pull_request
+        - https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/codecommit/client/get_pull_request.html
         """
         if self.boto_client is None:
             self._connect_boto_client()
@@ -164,11 +164,48 @@ class CodeCommitClient:
 
         return CodeCommitPullRequestResponse(response.get("pullRequest", {}))
 
+    def publish_description(self, pr_number: int, pr_title: str, pr_body: str):
+        """
+        Set the title and description on a pull request
+
+        Args:
+        - pr_number: the AWS CodeCommit pull request number
+        - pr_title: title of the pull request
+        - pr_body: body of the pull request
+
+        Returns:
+        - None
+
+        Boto3 Documentation:
+        - aws codecommit update_pull_request_title
+        - https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/codecommit/client/update_pull_request_title.html
+        - aws codecommit update_pull_request_description
+        - https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/codecommit/client/update_pull_request_description.html
+        """
+        if self.boto_client is None:
+            self._connect_boto_client()
+
+        try:
+            self.boto_client.update_pull_request_title(pullRequestId=str(pr_number), title=pr_title)
+            self.boto_client.update_pull_request_description(pullRequestId=str(pr_number), description=pr_body)
+        except botocore.exceptions.ClientError as e:
+            if e.response["Error"]["Code"] == 'PullRequestDoesNotExistException':
+                raise ValueError(f"PR number does not exist: {pr_number}") from e
+            if e.response["Error"]["Code"] == 'InvalidTitleException':
+                raise ValueError(f"Invalid title for PR number: {pr_number}") from e
+            if e.response["Error"]["Code"] == 'InvalidDescriptionException':
+                raise ValueError(f"Invalid description for PR number: {pr_number}") from e
+            if e.response["Error"]["Code"] == 'PullRequestAlreadyClosedException':
+                raise ValueError(f"PR is already closed: PR number: {pr_number}") from e
+            raise ValueError(f"Boto3 client error calling publish_description") from e
+        except Exception as e:
+            raise ValueError(f"Error calling publish_description") from e
+
     def publish_comment(self, repo_name: str, pr_number: int, destination_commit: str, source_commit: str, comment: str):
         """
         Publish a comment to a pull request
 
-        Parameters:
+        Args:
         - repo_name: name of the repository
         - pr_number: number of the pull request
         - destination_commit: The commit hash you want to merge into (the "before" hash) (usually on the main or master branch)
@@ -179,8 +216,8 @@ class CodeCommitClient:
         - None
 
         Boto3 Documentation:
-        aws codecommit post_comment_for_pull_request
-        https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/codecommit/client/post_comment_for_pull_request.html
+        - aws codecommit post_comment_for_pull_request
+        - https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/codecommit/client/post_comment_for_pull_request.html
         """
         if self.boto_client is None:
             self._connect_boto_client()
