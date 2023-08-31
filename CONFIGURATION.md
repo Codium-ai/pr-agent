@@ -73,8 +73,26 @@ key = ...
 
 Also review the [AiHandler](pr_agent/algo/ai_handler.py) file for instruction how to set keys for other models.
 
+#### Changing a GIT provider
+See [here](pr_agent/git_providers/__init__.py) for the list of GIT providers.
+
+To use GitHub, for example, set:
+```
+[config]
+git_provider="github"
+```
+
 #### Extra instructions
+##### General
 All PR-Agent tools have a parameter called `extra_instructions`, that enables to add free-text extra instructions. Example usage:
 ```
 /update_changelog --pr_update_changelog.extra_instructions="Make sure to update also the version ..."
+```
+
+##### Azure DevOps provider
+To use Azure DevOps provider set:
+```
+[config]
+git_provider="azure"
+use_repo_settings_file=false
 ```
