@@ -64,7 +64,7 @@ user="""
 ...
 """
 ```
-Note that the new prompt will need to generate an output compatible with the relevant [post-process function](./pr_agent/tools/pr_description.py).
+Note that the new prompt will need to generate an output compatible with the relevant [post-process function](./pr_agent/tools/pr_description.py#L137).
 
 #### Online usage
 For online usage (calling tools by comments on a PR like `/ask ...`), just add `--config_path=<value>` to any command, to edit a specific configuration value.
