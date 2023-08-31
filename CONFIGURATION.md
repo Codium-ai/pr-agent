@@ -49,10 +49,10 @@ Then when a new PR is opened, PR-Agent will run the `describe` tool with the abo
 Note that a local `.pr_agent.toml` file enables you to edit and customize the default parameters of any tool, not just the ones that are run automatically.
 
 #### Editing the prompts
-The prompts for the different tools of PR-Agent are defined in the `pr_agent/settings` folder. 
+The prompts for the various PR-Agent tools are defined in the `pr_agent/settings` folder.
 
-In practice, the prompts are loaded and stored as a standard setting object,
-so editing them is similar to editing any other configuration value - just place the relevant setting in `.pr_agent.toml`file, and override the default value.
+In practice, the prompts are loaded and stored as a standard setting object. Hence,
+editing them is similar to editing any other configuration value - just place the relevant key in `.pr_agent.toml`file, and override the default value.
 
 For example, if you want to edit the prompts of the [describe](./pr_agent/settings/pr_description_prompts.toml) tool, you can add the following to your `.pr_agent.toml` file:
 ```
