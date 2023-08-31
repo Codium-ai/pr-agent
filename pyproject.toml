@@ -35,7 +35,7 @@ dependencies = {file = ["requirements.txt"]}
 "Homepage" = "https://github.com/Codium-ai/pr-agent"
 
 [tool.setuptools]
-include-package-data = false
+include-package-data = true
 license-files = ["LICENSE"]
 
 [tool.setuptools.packages.find]
