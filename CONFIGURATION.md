@@ -35,7 +35,7 @@ pr_commands = [
 ]
 ```
 This means that when a new PR is opened, PR-Agent will run the `describe` and `auto_review` tools.
-For the describe tool, the `add_original_user_description` and `keep_original_user_title` parameters will be set to `true`.
+For the describe tool, the `add_original_user_description` and `keep_original_user_title` parameters will be set to true.
 
 However, you can override the default tool parameters by uploading a local configuration file called `.pr_agent.toml` to the root of your repo.
 For example, if your local `.pr_agent.toml` file contains:
