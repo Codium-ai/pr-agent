@@ -15,6 +15,10 @@ router = APIRouter()
 
 @router.post("/webhook")
 async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
+    if get_settings().get("GITLAB.SHARED_SECRET"):
+        secret = get_settings().get("GITLAB.SHARED_SECRET")
+        if not request.headers.get("X-Gitlab-Token") == secret:
+            return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content=jsonable_encoder({"message": "unauthorized"}))
     data = await request.json()
     if data.get('object_kind') == 'merge_request' and data['object_attributes'].get('action') in ['open', 'reopen']:
         logging.info(f"A merge request has been opened: {data['object_attributes'].get('title')}")
