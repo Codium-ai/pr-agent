@@ -254,7 +254,7 @@ docker push codiumai/pr-agent:github_app  # Push to your Docker repository
 > **Note:** When running PR-Agent from GitHub App, the default configuration file (configuration.toml) will be loaded.<br>
 > However, you can override the default tool parameters by uploading a local configuration file<br>
 > For more information please check out [CONFIGURATION.md](CONFIGURATION.md#working-from-github-app-pre-built-repo)
-
+---
 
 ### Method 6 - Deploy as a Lambda Function
 
