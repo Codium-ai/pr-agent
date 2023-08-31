@@ -90,9 +90,16 @@ All PR-Agent tools have a parameter called `extra_instructions`, that enables to
 ```
 
 ##### Azure DevOps provider
-To use Azure DevOps provider set:
+To use Azure DevOps provider use the following settings in configuration.toml:
 ```
 [config]
 git_provider="azure"
 use_repo_settings_file=false
+```
+
+And use the following settings (you have to replace the values) in .secrets.toml:
+```
+[azure_devops]
+org = "https://dev.azure.com/YOUR_ORGANIZATION/"
+pat = "YOUR_PAT_TOKEN"
 ```
