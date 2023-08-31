@@ -8,10 +8,13 @@ from starlette.background import BackgroundTasks
 
 from pr_agent.agent.pr_agent import PRAgent
 from pr_agent.config_loader import get_settings
+from pr_agent.secret_providers import get_secret_provider
 
 app = FastAPI()
 router = APIRouter()
 
+if get_settings().config.secret_provider:
+    secret_provider = get_secret_provider()
 
 @router.post("/webhook")
 async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
@@ -19,6 +22,9 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
         secret = get_settings().get("GITLAB.SHARED_SECRET")
         if not request.headers.get("X-Gitlab-Token") == secret:
             return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content=jsonable_encoder({"message": "unauthorized"}))
+    gitlab_token = get_settings().get("GITLAB.PERSONAL_ACCESS_TOKEN", None)
+    if not gitlab_token:
+        return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content=jsonable_encoder({"message": "unauthorized"}))
     data = await request.json()
     if data.get('object_kind') == 'merge_request' and data['object_attributes'].get('action') in ['open', 'reopen']:
         logging.info(f"A merge request has been opened: {data['object_attributes'].get('title')}")
@@ -36,9 +42,6 @@ def start():
     gitlab_url = get_settings().get("GITLAB.URL", None)
     if not gitlab_url:
         raise ValueError("GITLAB.URL is not set")
-    gitlab_token = get_settings().get("GITLAB.PERSONAL_ACCESS_TOKEN", None)
-    if not gitlab_token:
-        raise ValueError("GITLAB.PERSONAL_ACCESS_TOKEN is not set")
     get_settings().config.git_provider = "gitlab"
 
     app = FastAPI()
