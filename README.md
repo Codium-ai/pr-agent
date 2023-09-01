@@ -117,16 +117,16 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 |       | Multiple models support |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       | :white_check_mark: |   :white_check_mark:       |
 |       | Incremental PR Review |   :white_check_mark:    |      |      |      |      |
 
-Review the [configuration](./CONFIGURATION.md) section for instruction how to use the different tools,  select the relevant git provider (GitHub, Gitlab, Bitbucket,...), and adjust the configuration file to your needs.
+Review the [configuration](./CONFIGURATION.md) section for instructions how to use the different tools,  select the relevant git provider (GitHub, Gitlab, Bitbucket,...), and adjust the configuration file to your needs.
 
 ## Try it now
 
 Try GPT-4 powered PR-Agent on your public GitHub repository for free. Just mention `@CodiumAI-Agent` and add the desired command in any PR comment! The agent will generate a response based on your command.
-For example, add a comment:
+For example, add a comment to any pull request with the following text:
 ```
 @CodiumAI-Agent /review
 ```
-And the agent will respond with a review of your PR
+and the agent will respond with a review of your PR
 
 ![Review generation process](https://www.codium.ai/images/demo-2.gif)
 

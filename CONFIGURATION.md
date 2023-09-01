@@ -14,7 +14,7 @@ Options that are available in the configuration file can be specified at run tim
 ```
 
 ### Working from CLI
-When running from source (CLI), your local configuration file will be initially used.
+When running from source (CLI), your local configuration file will be used.
 
 Examples for invoking the different tools via the CLI:
 
@@ -27,9 +27,9 @@ Examples for invoking the different tools via the CLI:
 
 `<pr_url>` is the url of the relevant PR (for example: https://github.com/Codium-ai/pr-agent/pull/50).
 
-Notes:
+**Notes:**
 
-(1) In addition to general configurations, each tool has its own configurations. For example, the 'review' tool will use parameters from the `[pr_reviewer]` section in the [configuration file](pr_agent/settings/configuration.toml)
+(1) In addition to general configuration options, each tool has its own configurations. For example, the 'review' tool will use parameters from the `[pr_reviewer]` section in the [configuration file](/pr_agent/settings/configuration.toml#L16)
 
 (2) You can print results locally, without publishing them, by setting in `configuration.toml`:
 ```
@@ -40,11 +40,11 @@ verbosity_level=2
 This is useful for debugging or experimenting with the different tools.
 
 ### Working from GitHub App (pre-built repo)
-When running PR-Agent from GitHub App, the default configuration file (`configuration.toml`) will be loaded.
+When running PR-Agent from GitHub App, the default configuration file (`configuration.toml`) will be initially loaded.
 
 #### GitHub app default tools
-The `[github_app]` section of the configuration file defines GitHub app specific configurations. 
-The important parameter is `pr_commands`, which is a list of tools that will be run automatically when a new PR is opened:
+The `[github_app]` section defines the GitHub app specific configurations. 
+An important parameter is `pr_commands`, which is a list of tools that will be run automatically when a new PR is opened:
 ```
 [github_app]
 pr_commands = [
@@ -108,15 +108,6 @@ key = ...
 (you can obtain a Llama2 key from [here](https://replicate.com/replicate/llama-2-70b-chat/api))
 
 Also review the [AiHandler](pr_agent/algo/ai_handler.py) file for instruction how to set keys for other models.
-
-#### Changing a GIT provider
-See [here](pr_agent/git_providers/__init__.py) for the list of GIT providers.
-
-To use GitHub, for example, set:
-```
-[config]
-git_provider="github"
-```
 
 #### Extra instructions
 ##### General
