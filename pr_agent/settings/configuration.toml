@@ -1,7 +1,7 @@
 [config]
 model="gpt-4"
 fallback_models=["gpt-3.5-turbo-16k"]
-git_provider="github"
+git_provider="gerrit"
 publish_output=true
 publish_output_progress=true
 verbosity_level=0 # 0,1,2
@@ -85,3 +85,13 @@ polling_interval_seconds = 30
 # LocalGitProvider settings - uncomment to use paths other than default
 # description_path= "path/to/description.md"
 # review_path= "path/to/review.md"
+
+[gerrit]
+# endpoint to the gerrit service
+# url = "ssh://gerrit.example.com:29418"
+# user for gerrit authentication
+# user = "ai-reviewer"
+# patch server where patches will be saved
+# patch_server_endpoint = "http://127.0.0.1:5000/patch"
+# token to authenticate in the patch server
+# patch_server_token = ""
