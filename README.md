@@ -35,33 +35,55 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 <img src="https://www.codium.ai/images/describe-2.gif" width="800">
 </p>
 </div>
-<h4><a href="https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695021901">/review:</a></h4>
-<div align="center">
-<p float="center">
-<img src="https://www.codium.ai/images/review-2.gif" width="800">
-</p>
-</div>
-<h4><a href="https://github.com/Codium-ai/pr-agent/pull/78#issuecomment-1639739496">/reflect_and_review:</a></h4>
-<div align="center">
-<p float="center">
-<img src="https://www.codium.ai/images/reflect_and_review.gif" width="800">
-</p>
-</div>
-<h4><a href="https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695020538">/ask:</a></h4>
-<div align="center">
-<p float="center">
-<img src="https://www.codium.ai/images/ask-2.gif" width="800">
-</p>
-</div>
-<h4><a href="https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695024952">/improve:</a></h4>
-<div align="center">
-<p float="center">
-<img src="https://www.codium.ai/images/improve-2.gif" width="800">
-</p>
-</div>
+
+[//]: # (<h4><a href="https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695021901">/review:</a></h4>)
+[//]: # (<div align="center">)
+
+[//]: # (<p float="center">)
+
+[//]: # (<img src="https://www.codium.ai/images/review-2.gif" width="800">)
+
+[//]: # (</p>)
+
+[//]: # (</div>)
+[//]: # (<h4><a href="https://github.com/Codium-ai/pr-agent/pull/78#issuecomment-1639739496">/reflect_and_review:</a></h4>)
+
+[//]: # (<div align="center">)
+
+[//]: # (<p float="center">)
+
+[//]: # (<img src="https://www.codium.ai/images/reflect_and_review.gif" width="800">)
+
+[//]: # (</p>)
+
+[//]: # (</div>)
+
+[//]: # (<h4><a href="https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695020538">/ask:</a></h4>)
+
+[//]: # (<div align="center">)
+
+[//]: # (<p float="center">)
+
+[//]: # (<img src="https://www.codium.ai/images/ask-2.gif" width="800">)
+
+[//]: # (</p>)
+
+[//]: # (</div>)
+
+[//]: # (<h4><a href="https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695024952">/improve:</a></h4>)
+
+[//]: # (<div align="center">)
+
+[//]: # (<p float="center">)
+
+[//]: # (<img src="https://www.codium.ai/images/improve-2.gif" width="800">)
+
+[//]: # (</p>)
+
+[//]: # (</div>)
 <div align="left">
 
-
+## Table of Contents
 - [Overview](#overview)
 - [Try it now](#try-it-now)
 - [Installation](#installation)
@@ -69,7 +91,6 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 - [How it works](#how-it-works)
 - [Why use PR-Agent](#why-use-pr-agent)
 - [Roadmap](#roadmap)
-- [Similar projects](#similar-projects)
 </div>
 
 
@@ -78,7 +99,6 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 |       |                                             | GitHub | Gitlab | Bitbucket | CodeCommit | Azure DevOps |
 |-------|---------------------------------------------|:------:|:------:|:---------:|:----------:|:----------:|
 | TOOLS | Review                                      |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |   :white_check_mark:    |   :white_check_mark:    |
-|       | ⮑ Inline review                             |   :white_check_mark:    |   :white_check_mark:    |           |          |          |
 |       | Ask                                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:          |   :white_check_mark:          | :white_check_mark:
 |       | Auto-Description                            |   :white_check_mark:    |   :white_check_mark:    |           |   :white_check_mark:    |   :white_check_mark:    |
 |       | Improve Code                                |   :white_check_mark:    |   :white_check_mark:    |           |          |          |
@@ -91,34 +111,27 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 |       | Tagging bot                                 |   :white_check_mark:    |        |           |          |          |
 |       | Actions                                     |   :white_check_mark:    |        |           |          |          |
 |       |                                             |        |        |      |      |      |
-| CORE  | PR compression                              |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |          |   :white_check_mark:       |
-|       | Repo language prioritization                |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |          |   :white_check_mark:       |
-|       | Adaptive and token-aware<br />file patch fitting |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |          |   :white_check_mark:       |
-|       | Multiple models support |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |          |   :white_check_mark:       |
+| CORE  | PR compression                              |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       | :white_check_mark: |   :white_check_mark:       |
+|       | Repo language prioritization                |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       | :white_check_mark: |   :white_check_mark:       |
+|       | Adaptive and token-aware<br />file patch fitting |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       | :white_check_mark: |   :white_check_mark:       |
+|       | Multiple models support |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       | :white_check_mark: |   :white_check_mark:       |
 |       | Incremental PR Review |   :white_check_mark:    |      |      |      |      |
 
-Examples for invoking the different tools via the CLI:
-- **Review**:       python cli.py --pr_url=<pr_url>  review
-- **Describe**:     python cli.py --pr_url=<pr_url>  describe
-- **Improve**:      python cli.py --pr_url=<pr_url>  improve
-- **Ask**:          python cli.py --pr_url=<pr_url>  ask "Write me a poem about this PR"
-- **Reflect**:      python cli.py --pr_url=<pr_url>  reflect
-- **Update Changelog**:      python cli.py --pr_url=<pr_url>  update_changelog
-
-"<pr_url>" is the url of the relevant PR (for example: https://github.com/Codium-ai/pr-agent/pull/50).
-
-In the [configuration](./CONFIGURATION.md) file you can select your git provider (GitHub, Gitlab, Bitbucket), and further configure the different tools.
-Options that are available in the configuration file can be specified at run time when calling actions. Two examples:
-- /review --pr_reviewer.extra_instructions="focus on the file: ..."
-- /describe --pr_description.add_original_user_description=false -pr_description.extra_instructions="make sure to mention: ..."
+Review the **[configuration](./CONFIGURATION.md)** section for detailed instructions how to use the different tools, select the relevant git provider (GitHub, Gitlab, Bitbucket,...), and adjust the configuration file to your needs.
 
 ## Try it now
 
-Try GPT-4 powered PR-Agent on your public GitHub repository for free. Just mention `@CodiumAI-Agent` and add the desired command in any PR comment! The agent will generate a response based on your command.
+You can try GPT-4 powered PR-Agent, on your public GitHub repository, instantly. Just mention `@CodiumAI-Agent` and add the desired command in any PR comment. The agent will generate a response based on your command.
+For example, add a comment to any pull request with the following text:
+```
+@CodiumAI-Agent /review
+```
+and the agent will respond with a review of your PR
 
 ![Review generation process](https://www.codium.ai/images/demo-2.gif)
 
-To set up your own PR-Agent, see the [Installation](#installation) section
+
+To set up your own PR-Agent, see the [Installation](#installation) section below.
 
 ---
 
