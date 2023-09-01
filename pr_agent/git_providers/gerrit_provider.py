@@ -197,13 +197,6 @@ class GerritProvider(GitProvider):
         return self.repo.branches[0].name
 
     def get_issue_comments(self):
-        # raise NotImplementedError(
-        #     'Getting comments is not implemented for the gerrit provider'
-        # )
-        # unclear how to get right comments from gerrit
-        # all user's comments like this "'Patch Set 1: (1 comment)'"
-        # i.e. it's not clear how to get the comment body
-
         comments = list_comments(self.parsed_url, self.refspec)
         Comments = namedtuple('Comments', ['reversed'])
         Comment = namedtuple('Comment', ['body'])

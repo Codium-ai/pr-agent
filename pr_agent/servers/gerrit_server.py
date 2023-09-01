@@ -23,12 +23,14 @@ class Action(str, Enum):
     describe = "describe"
     ask = "ask"
     improve = "improve"
+    reflect = "reflect"
+    answer = "answer"
 
 
 class Item(BaseModel):
     refspec: str
     project: str
-    msg: str = None
+    msg: str = ""
 
 
 @router.post("/api/v1/gerrit/{action}")
@@ -36,21 +38,16 @@ async def handle_gerrit_request(action: Action, item: Item):
     logging.debug("Received a Gerrit request")
     context["settings"] = copy.deepcopy(global_settings)
 
-    agent = PRAgent()
-    pr_url = f"{item.project}:{item.refspec}"
-    if action == Action.review:
-        await agent.handle_request(pr_url, "/review")
-    elif action == Action.describe:
-        await agent.handle_request(pr_url, "/describe")
-    elif action == Action.improve:
-        await agent.handle_request(pr_url, "/improve")
-    elif action == Action.ask:
+    if action == Action.ask:
         if not item.msg:
             return HTTPException(
                 status_code=400,
                 detail="msg is required for ask command"
             )
-        await agent.handle_request(pr_url, f"/ask {item.msg.strip()}")
+    await PRAgent().handle_request(
+        f"{item.project}:{item.refspec}",
+        f"/{action.value} {item.msg.strip()}"
+    )
 
 
 async def get_body(request):
