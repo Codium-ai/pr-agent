@@ -4,6 +4,7 @@ import os
 import pathlib
 import shutil
 import subprocess
+import uuid
 from collections import Counter, namedtuple
 from pathlib import Path
 from tempfile import mkdtemp, NamedTemporaryFile
@@ -333,7 +334,7 @@ class GerritProvider(GitProvider):
 
     def publish_code_suggestions(self, code_suggestions: list):
         msg = []
-        for i, suggestion in enumerate(code_suggestions):
+        for suggestion in code_suggestions:
             description, code = self.split_suggestion(suggestion['body'])
             add_suggestion(
                 pathlib.Path(self.repo_path) / suggestion["relevant_file"],
@@ -342,7 +343,8 @@ class GerritProvider(GitProvider):
                 suggestion["relevant_lines_end"],
             )
             patch = diff(cwd=self.repo_path)
-            path = "/".join(["codium-ai", self.refspec, str(i)])
+            patch_id = uuid.uuid4().hex[0:4]
+            path = "/".join(["codium-ai", self.refspec, patch_id])
             full_path = upload_patch(patch, path)
             reset_local_changes(self.repo_path)
             msg.append(f'* {description}\n{full_path}')
