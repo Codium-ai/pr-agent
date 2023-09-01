@@ -2,6 +2,11 @@
 
 The different tools and sub-tools used by CodiumAI PR-Agent are adjustable via the **[configuration file](pr_agent/settings/configuration.toml)**
 
+The `git_provider` field in the configuration file determines the GIT provider that will be used by PR-Agent. Currently, the following providers are supported:
+`
+"github", "gitlab", "azure", "codecommit","local"
+`
+
 Options that are available in the configuration file can be specified at run time when calling actions. Two examples:
 ```
 - /review --pr_reviewer.extra_instructions="focus on the file: ..."
@@ -13,20 +18,18 @@ When running from source (CLI), your local configuration file will be initially 
 
 Examples for invoking the different tools via the CLI:
 
-```
 - **Review**:       python cli.py --pr_url=<pr_url>  review
 - **Describe**:     python cli.py --pr_url=<pr_url>  describe
 - **Improve**:      python cli.py --pr_url=<pr_url>  improve
 - **Ask**:          python cli.py --pr_url=<pr_url>  ask "Write me a poem about this PR"
 - **Reflect**:      python cli.py --pr_url=<pr_url>  reflect
 - **Update Changelog**:      python cli.py --pr_url=<pr_url>  update_changelog
-```
 
-"<pr_url>" is the url of the relevant PR (for example: https://github.com/Codium-ai/pr-agent/pull/50).
+`<pr_url>` is the url of the relevant PR (for example: https://github.com/Codium-ai/pr-agent/pull/50).
 
 Notes:
 
-(1) In addition to general configurations, each tool has its own configurations. For example, the 'review' tool will use parameters from the `[pr_reviewer]` section.
+(1) In addition to general configurations, each tool has its own configurations. For example, the 'review' tool will use parameters from the `[pr_reviewer]` section in the [configuration file](pr_agent/settings/configuration.toml)
 
 (2) You can print results locally, without publishing them, by setting in `configuration.toml`:
 ```

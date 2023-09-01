@@ -91,7 +91,6 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 - [How it works](#how-it-works)
 - [Why use PR-Agent](#why-use-pr-agent)
 - [Roadmap](#roadmap)
-- [Similar projects](#similar-projects)
 </div>
 
 
@@ -133,6 +132,7 @@ And the agent will respond with a review of your PR
 
 
 To set up your own PR-Agent, see the [Installation](#installation) section below.
+
 ---
 
 ## Installation
