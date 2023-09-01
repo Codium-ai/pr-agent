@@ -4,7 +4,7 @@ The different tools and sub-tools used by CodiumAI PR-Agent are adjustable via t
 
 The `git_provider` field in the configuration file determines the GIT provider that will be used by PR-Agent. Currently, the following providers are supported:
 `
-"github", "gitlab", "azure", "codecommit","local"
+"github", "gitlab", "azure", "codecommit", "local"
 `
 
 Options that are available in the configuration file can be specified at run time when calling actions. Two examples:
@@ -18,12 +18,12 @@ When running from source (CLI), your local configuration file will be used.
 
 Examples for invoking the different tools via the CLI:
 
-- **Review**:       python cli.py --pr_url=<pr_url>  review
-- **Describe**:     python cli.py --pr_url=<pr_url>  describe
-- **Improve**:      python cli.py --pr_url=<pr_url>  improve
-- **Ask**:          python cli.py --pr_url=<pr_url>  ask "Write me a poem about this PR"
-- **Reflect**:      python cli.py --pr_url=<pr_url>  reflect
-- **Update Changelog**:      python cli.py --pr_url=<pr_url>  update_changelog
+- **Review**:       `python cli.py --pr_url=<pr_url>  review`
+- **Describe**:     `python cli.py --pr_url=<pr_url>  describe`
+- **Improve**:      `python cli.py --pr_url=<pr_url>  improve`
+- **Ask**:          `python cli.py --pr_url=<pr_url>  ask "Write me a poem about this PR"`
+- **Reflect**:      `python cli.py --pr_url=<pr_url>  reflect`
+- **Update Changelog**:      `python cli.py --pr_url=<pr_url>  update_changelog`
 
 `<pr_url>` is the url of the relevant PR (for example: https://github.com/Codium-ai/pr-agent/pull/50).
 
@@ -110,13 +110,12 @@ key = ...
 Also review the [AiHandler](pr_agent/algo/ai_handler.py) file for instruction how to set keys for other models.
 
 #### Extra instructions
-##### General
 All PR-Agent tools have a parameter called `extra_instructions`, that enables to add free-text extra instructions. Example usage:
 ```
 /update_changelog --pr_update_changelog.extra_instructions="Make sure to update also the version ..."
 ```
 
-##### Azure DevOps provider
+#### Azure DevOps provider
 To use Azure DevOps provider use the following settings in configuration.toml:
 ```
 [config]
