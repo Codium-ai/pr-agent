@@ -2,18 +2,33 @@
 
 The different tools and sub-tools used by CodiumAI PR-Agent are adjustable via the **[configuration file](pr_agent/settings/configuration.toml)**
 
+Options that are available in the configuration file can be specified at run time when calling actions. Two examples:
+```
+- /review --pr_reviewer.extra_instructions="focus on the file: ..."
+- /describe --pr_description.add_original_user_description=false -pr_description.extra_instructions="make sure to mention: ..."
+```
+
 ### Working from CLI
 When running from source (CLI), your local configuration file will be initially used.
 
-Example for invoking the 'review' tools via the CLI: 
+Examples for invoking the different tools via the CLI:
 
 ```
-python cli.py --pr-url=<pr_url>  review
+- **Review**:       python cli.py --pr_url=<pr_url>  review
+- **Describe**:     python cli.py --pr_url=<pr_url>  describe
+- **Improve**:      python cli.py --pr_url=<pr_url>  improve
+- **Ask**:          python cli.py --pr_url=<pr_url>  ask "Write me a poem about this PR"
+- **Reflect**:      python cli.py --pr_url=<pr_url>  reflect
+- **Update Changelog**:      python cli.py --pr_url=<pr_url>  update_changelog
 ```
-In addition to general configurations, the 'review' tool will use parameters from the `[pr_reviewer]` section (every tool has a dedicated section in the configuration file).
 
-Note that you can print results locally, without publishing them, by setting in `configuration.toml`:
+"<pr_url>" is the url of the relevant PR (for example: https://github.com/Codium-ai/pr-agent/pull/50).
 
+Notes:
+
+(1) In addition to general configurations, each tool has its own configurations. For example, the 'review' tool will use parameters from the `[pr_reviewer]` section.
+
+(2) You can print results locally, without publishing them, by setting in `configuration.toml`:
 ```
 [config]
 publish_output=true

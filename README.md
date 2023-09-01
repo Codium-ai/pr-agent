@@ -118,29 +118,21 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 |       | Multiple models support |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       | :white_check_mark: |   :white_check_mark:       |
 |       | Incremental PR Review |   :white_check_mark:    |      |      |      |      |
 
-Examples for invoking the different tools via the CLI:
-- **Review**:       python cli.py --pr_url=<pr_url>  review
-- **Describe**:     python cli.py --pr_url=<pr_url>  describe
-- **Improve**:      python cli.py --pr_url=<pr_url>  improve
-- **Ask**:          python cli.py --pr_url=<pr_url>  ask "Write me a poem about this PR"
-- **Reflect**:      python cli.py --pr_url=<pr_url>  reflect
-- **Update Changelog**:      python cli.py --pr_url=<pr_url>  update_changelog
-
-"<pr_url>" is the url of the relevant PR (for example: https://github.com/Codium-ai/pr-agent/pull/50).
-
-In the [configuration](./CONFIGURATION.md) file you can select your git provider (GitHub, Gitlab, Bitbucket), and further configure the different tools.
-Options that are available in the configuration file can be specified at run time when calling actions. Two examples:
-- /review --pr_reviewer.extra_instructions="focus on the file: ..."
-- /describe --pr_description.add_original_user_description=false -pr_description.extra_instructions="make sure to mention: ..."
+Review the [configuration](./CONFIGURATION.md) section for instruction how to use the different tools,  select the relevant git provider (GitHub, Gitlab, Bitbucket,...), and adjust the configuration file to your needs.
 
 ## Try it now
 
 Try GPT-4 powered PR-Agent on your public GitHub repository for free. Just mention `@CodiumAI-Agent` and add the desired command in any PR comment! The agent will generate a response based on your command.
+For example, add a comment:
+```
+@CodiumAI-Agent /review
+```
+And the agent will respond with a review of your PR
 
 ![Review generation process](https://www.codium.ai/images/demo-2.gif)
 
-To set up your own PR-Agent, see the [Installation](#installation) section
 
+To set up your own PR-Agent, see the [Installation](#installation) section below.
 ---
 
 ## Installation
