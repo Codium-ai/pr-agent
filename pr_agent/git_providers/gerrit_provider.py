@@ -351,6 +351,7 @@ class GerritProvider(GitProvider):
 
         if msg:
             add_comment(self.parsed_url, self.refspec, "---\n".join(msg))
+            return True
 
     def publish_comment(self, pr_comment: str, is_temporary: bool = False):
         if not is_temporary:
