@@ -292,7 +292,7 @@ class GerritProvider(GitProvider):
                            in lang_count.items()}
         return lang_percentage
 
-    def get_pr_description(self):
+    def get_pr_description_full(self):
         return self.repo.head.commit.message
 
     def get_user_id(self):
