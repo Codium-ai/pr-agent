@@ -35,33 +35,55 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 <img src="https://www.codium.ai/images/describe-2.gif" width="800">
 </p>
 </div>
-<h4><a href="https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695021901">/review:</a></h4>
-<div align="center">
-<p float="center">
-<img src="https://www.codium.ai/images/review-2.gif" width="800">
-</p>
-</div>
-<h4><a href="https://github.com/Codium-ai/pr-agent/pull/78#issuecomment-1639739496">/reflect_and_review:</a></h4>
-<div align="center">
-<p float="center">
-<img src="https://www.codium.ai/images/reflect_and_review.gif" width="800">
-</p>
-</div>
-<h4><a href="https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695020538">/ask:</a></h4>
-<div align="center">
-<p float="center">
-<img src="https://www.codium.ai/images/ask-2.gif" width="800">
-</p>
-</div>
-<h4><a href="https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695024952">/improve:</a></h4>
-<div align="center">
-<p float="center">
-<img src="https://www.codium.ai/images/improve-2.gif" width="800">
-</p>
-</div>
+
+[//]: # (<h4><a href="https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695021901">/review:</a></h4>)
+[//]: # (<div align="center">)
+
+[//]: # (<p float="center">)
+
+[//]: # (<img src="https://www.codium.ai/images/review-2.gif" width="800">)
+
+[//]: # (</p>)
+
+[//]: # (</div>)
+[//]: # (<h4><a href="https://github.com/Codium-ai/pr-agent/pull/78#issuecomment-1639739496">/reflect_and_review:</a></h4>)
+
+[//]: # (<div align="center">)
+
+[//]: # (<p float="center">)
+
+[//]: # (<img src="https://www.codium.ai/images/reflect_and_review.gif" width="800">)
+
+[//]: # (</p>)
+
+[//]: # (</div>)
+
+[//]: # (<h4><a href="https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695020538">/ask:</a></h4>)
+
+[//]: # (<div align="center">)
+
+[//]: # (<p float="center">)
+
+[//]: # (<img src="https://www.codium.ai/images/ask-2.gif" width="800">)
+
+[//]: # (</p>)
+
+[//]: # (</div>)
+
+[//]: # (<h4><a href="https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695024952">/improve:</a></h4>)
+
+[//]: # (<div align="center">)
+
+[//]: # (<p float="center">)
+
+[//]: # (<img src="https://www.codium.ai/images/improve-2.gif" width="800">)
+
+[//]: # (</p>)
+
+[//]: # (</div>)
 <div align="left">
 
-
+## Table of Contents
 - [Overview](#overview)
 - [Try it now](#try-it-now)
 - [Installation](#installation)
@@ -78,7 +100,6 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 |       |                                             | GitHub | Gitlab | Bitbucket | CodeCommit | Azure DevOps |
 |-------|---------------------------------------------|:------:|:------:|:---------:|:----------:|:----------:|
 | TOOLS | Review                                      |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |   :white_check_mark:    |   :white_check_mark:    |
-|       | ⮑ Inline review                             |   :white_check_mark:    |   :white_check_mark:    |           |          |          |
 |       | Ask                                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:          |   :white_check_mark:          | :white_check_mark:
 |       | Auto-Description                            |   :white_check_mark:    |   :white_check_mark:    |           |   :white_check_mark:    |   :white_check_mark:    |
 |       | Improve Code                                |   :white_check_mark:    |   :white_check_mark:    |           |          |          |
@@ -91,10 +112,10 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 |       | Tagging bot                                 |   :white_check_mark:    |        |           |          |          |
 |       | Actions                                     |   :white_check_mark:    |        |           |          |          |
 |       |                                             |        |        |      |      |      |
-| CORE  | PR compression                              |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |          |   :white_check_mark:       |
-|       | Repo language prioritization                |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |          |   :white_check_mark:       |
-|       | Adaptive and token-aware<br />file patch fitting |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |          |   :white_check_mark:       |
-|       | Multiple models support |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |          |   :white_check_mark:       |
+| CORE  | PR compression                              |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       | :white_check_mark: |   :white_check_mark:       |
+|       | Repo language prioritization                |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       | :white_check_mark: |   :white_check_mark:       |
+|       | Adaptive and token-aware<br />file patch fitting |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       | :white_check_mark: |   :white_check_mark:       |
+|       | Multiple models support |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       | :white_check_mark: |   :white_check_mark:       |
 |       | Incremental PR Review |   :white_check_mark:    |      |      |      |      |
 
 Examples for invoking the different tools via the CLI:
