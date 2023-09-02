@@ -8,9 +8,7 @@ There are 3 basic ways to invoke CodiumAI PR-Agent:
 3. Enabling PR-Agent tools to run automatically when a new PR is opened
 
 See the [installation guide](/INSTALL.md) for instructions on how to setup your own PR-Agent.
-
 Specifically, CLI commands can be issued by invoking a pre-built [docker image](/INSTALL.md#running-from-source), or by invoking a [locally cloned repo](INSTALL.md#method-2-run-from-source)
-
 For online usage, you will need to setup either a [GitHub App](INSTALL.md#method-5-run-as-a-github-app), or a [GitHub Action](INSTALL.md#method-3-run-as-a-github-action).
 GitHub App and GitHub Action also enable to run PR-Agent specific tool automatically when a new PR is opened.
 
@@ -19,7 +17,7 @@ GitHub App and GitHub Action also enable to run PR-Agent specific tool automatic
 The different tools and sub-tools used by CodiumAI PR-Agent are adjustable via the **[configuration file](pr_agent/settings/configuration.toml)**
 In addition to general configuration options, each tool has its own configurations. For example, the `review` tool will use parameters from the `[pr_reviewer]` section in the [configuration file](/pr_agent/settings/configuration.toml#L16)
 
-** git provider:**
+**git provider:**
 The [git_provider](pr_agent/settings/configuration.toml#L4) field in the configuration file determines the GIT provider that will be used by PR-Agent. Currently, the following providers are supported:
 `
 "github", "gitlab", "azure", "codecommit", "local"
@@ -38,7 +36,7 @@ The [git_provider](pr_agent/settings/configuration.toml#L4) field in the configu
 [//]: # (```)
 
 ### Working from a local repo (CLI)
-When running from your local repo (CLI), your local configuration file, which you can edit, will be used.
+When running from your local repo (CLI), your local configuration file will be used.
 
 Examples for invoking the different tools via the CLI:
 
@@ -52,7 +50,7 @@ Examples for invoking the different tools via the CLI:
 `<pr_url>` is the url of the relevant PR (for example: https://github.com/Codium-ai/pr-agent/pull/50).
 
 **Notes:**
-(1) in addition to editing the configuration file, you can also override any configuration value by adding it to the command line:
+(1) in addition to editing your local configuration file, you can also change any configuration value by adding it to the command line:
 ```
 python cli.py --pr_url=<pr_url>  review --pr_reviewer.extra_instructions="focus on the file: ..."
 ```
@@ -74,7 +72,7 @@ Commands for invoking the different tools via comments:
 - **Review**:       `/review`
 - **Describe**:     `/describe`
 - **Improve**:      `/improve`
-- **Ask**:          `/ask "Write me a poem about this PR"`
+- **Ask**:          `/ask "..."`
 - **Reflect**:      `/reflect`
 - **Update Changelog**:      `/update_changelog`
 
@@ -82,7 +80,7 @@ Commands for invoking the different tools via comments:
 To edit a specific configuration value, just add `--config_path=<value>` to any command.
 For example if you want to edit the `review` tool configurations, you can run:
 ```
-/review --pr_reviewer.extra_instructions="..." --pr_reviewer.require_score_review=false ...
+/review --pr_reviewer.extra_instructions="..." --pr_reviewer.require_score_review=false
 ```
 Any configuration value in [configuration file](pr_agent/settings/configuration.toml) file can be similarly edited.
 
@@ -91,7 +89,7 @@ Any configuration value in [configuration file](pr_agent/settings/configuration.
 When running PR-Agent from [GitHub App](INSTALL.md#method-5-run-as-a-github-app), the default configurations of a pre-built repo will be initially loaded.
 
 #### GitHub app automatic tools
-The `[github_app]` section of the [configuration file](pr_agent/settings/configuration.toml) defines GitHub app specific configurations. 
+The [github_app](pr_agent/settings/configuration.toml#L56) section defines GitHub app specific configurations. 
 An important parameter is `pr_commands`, which is a list of tools that will be **run automatically when a new PR is opened**:
 ```
 [github_app]
