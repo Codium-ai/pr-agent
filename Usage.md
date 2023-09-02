@@ -1,5 +1,13 @@
 ## Usage guide
 
+### Table of Contents
+- [Introduction](#introduction)
+- [Working from a local repo (CLI)](#working-from-a-local-repo-cli)
+- [Online usage](#online-usage)
+- [Working with GitHub App](#working-with-github-app)
+- [Working with GitHub Action](#working-with-github-action)
+- [Appendix - additional configurations walkthrough](#appendix---additional-configurations-walkthrough)
+
 ### Introduction
 
 There are 3 basic ways to invoke CodiumAI PR-Agent:
