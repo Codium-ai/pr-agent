@@ -87,7 +87,7 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 - [Overview](#overview)
 - [Try it now](#try-it-now)
 - [Installation](#installation)
-- [Configuration](./CONFIGURATION.md)
+- [Usage guide](./Usage.md)
 - [How it works](#how-it-works)
 - [Why use PR-Agent](#why-use-pr-agent)
 - [Roadmap](#roadmap)
@@ -117,7 +117,7 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 |       | Multiple models support |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       | :white_check_mark: |   :white_check_mark:       |
 |       | Incremental PR Review |   :white_check_mark:    |      |      |      |      |
 
-Review the **[configuration](./CONFIGURATION.md)** section for detailed instructions how to use the different tools, select the relevant git provider (GitHub, Gitlab, Bitbucket,...), and adjust the configuration file to your needs.
+Review the **[usage guide](./Usage.md)** section for detailed instructions how to use the different tools, select the relevant git provider (GitHub, Gitlab, Bitbucket,...), and adjust the configuration file to your needs.
 
 ## Try it now
 
@@ -145,8 +145,8 @@ To get started with PR-Agent quickly, you first need to acquire two tokens:
 There are several ways to use PR-Agent:
 
 - [Method 1: Use Docker image (no installation required)](INSTALL.md#method-1-use-docker-image-no-installation-required)
-- [Method 2: Run as a GitHub Action](INSTALL.md#method-2-run-as-a-github-action)
-- [Method 3: Run from source](INSTALL.md#method-3-run-from-source)
+- [Method 2: Run from source](INSTALL.md#method-2-run-from-source)
+- [Method 3: Run as a GitHub Action](INSTALL.md#method-3-run-as-a-github-action)
 - [Method 4: Run as a polling server](INSTALL.md#method-4-run-as-a-polling-server)
   - Request reviews by tagging your GitHub user on a PR
 - [Method 5: Run as a GitHub App](INSTALL.md#method-5-run-as-a-github-app)
@@ -170,7 +170,7 @@ Here are some advantages of PR-Agent:
 
 - We emphasize **real-life practical usage**. Each tool (review, improve, ask, ...) has a single GPT-4 call, no more. We feel that this is critical for realistic team usage - obtaining an answer quickly (~30 seconds) and affordably.
 - Our [PR Compression strategy](./PR_COMPRESSION.md)  is a core ability that enables to effectively tackle both short and long PRs.
-- Our JSON prompting strategy enables to have **modular, customizable tools**. For example, the '/review' tool categories can be controlled via the [configuration](./CONFIGURATION.md) file. Adding additional categories is easy and accessible.
+- Our JSON prompting strategy enables to have **modular, customizable tools**. For example, the '/review' tool categories can be controlled via the [configuration](pr_agent/settings/configuration.toml) file. Adding additional categories is easy and accessible.
 - We support **multiple git providers** (GitHub, Gitlab, Bitbucket, CodeCommit), **multiple ways** to use the tool (CLI, GitHub Action, GitHub App, Docker, ...), and **multiple models** (GPT-4, GPT-3.5, Anthropic, Cohere, Llama2).
 - We are open-source, and welcome contributions from the community.
 
