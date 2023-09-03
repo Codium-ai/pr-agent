@@ -50,12 +50,12 @@ When running from your local repo (CLI), your local configuration file will be u
 
 Examples for invoking the different tools via the CLI:
 
-- **Review**:       `python cli.py --pr_url=<pr_url>  review`
-- **Describe**:     `python cli.py --pr_url=<pr_url>  describe`
-- **Improve**:      `python cli.py --pr_url=<pr_url>  improve`
-- **Ask**:          `python cli.py --pr_url=<pr_url>  ask "Write me a poem about this PR"`
-- **Reflect**:      `python cli.py --pr_url=<pr_url>  reflect`
-- **Update Changelog**:      `python cli.py --pr_url=<pr_url>  update_changelog`
+- **Review**:       `python cli.py --pr_url=<pr_url>  /review`
+- **Describe**:     `python cli.py --pr_url=<pr_url>  /describe`
+- **Improve**:      `python cli.py --pr_url=<pr_url>  /improve`
+- **Ask**:          `python cli.py --pr_url=<pr_url>  /ask "Write me a poem about this PR"`
+- **Reflect**:      `python cli.py --pr_url=<pr_url>  /reflect`
+- **Update Changelog**:      `python cli.py --pr_url=<pr_url>  /update_changelog`
 
 `<pr_url>` is the url of the relevant PR (for example: https://github.com/Codium-ai/pr-agent/pull/50).
 
@@ -63,7 +63,7 @@ Examples for invoking the different tools via the CLI:
 
 (1) in addition to editing your local configuration file, you can also change any configuration value by adding it to the command line:
 ```
-python cli.py --pr_url=<pr_url>  review --pr_reviewer.extra_instructions="focus on the file: ..."
+python cli.py --pr_url=<pr_url>  /review --pr_reviewer.extra_instructions="focus on the file: ..."
 ```
 
 (2) You can print results locally, without publishing them, by setting in `configuration.toml`:
