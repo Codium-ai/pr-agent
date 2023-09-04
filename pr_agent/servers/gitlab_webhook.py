@@ -1,6 +1,7 @@
 import copy
 import json
 import logging
+import sys
 
 import uvicorn
 from fastapi import APIRouter, FastAPI, Request, status
@@ -15,6 +16,7 @@ from pr_agent.agent.pr_agent import PRAgent
 from pr_agent.config_loader import get_settings, global_settings
 from pr_agent.secret_providers import get_secret_provider
 
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 router = APIRouter()
 
 secret_provider = get_secret_provider() if get_settings().get("CONFIG.SECRET_PROVIDER") else None
@@ -43,6 +45,7 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
     if not gitlab_token:
         return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content=jsonable_encoder({"message": "unauthorized"}))
     data = await request.json()
+    logging.info(json.dumps(data))
     if data.get('object_kind') == 'merge_request' and data['object_attributes'].get('action') in ['open', 'reopen']:
         logging.info(f"A merge request has been opened: {data['object_attributes'].get('title')}")
         url = data['object_attributes'].get('url')
@@ -54,6 +57,11 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
             body = data.get('object_attributes', {}).get('note')
             background_tasks.add_task(PRAgent().handle_request, url, body)
     return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
+
+
+@router.get("/")
+async def root():
+    return {"status": "ok"}
 
 def start():
     gitlab_url = get_settings().get("GITLAB.URL", None)
