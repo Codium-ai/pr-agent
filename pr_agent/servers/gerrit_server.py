@@ -30,7 +30,7 @@ class Action(str, Enum):
 class Item(BaseModel):
     refspec: str
     project: str
-    msg: str = ""
+    msg: str
 
 
 @router.post("/api/v1/gerrit/{action}")
@@ -46,7 +46,7 @@ async def handle_gerrit_request(action: Action, item: Item):
             )
     await PRAgent().handle_request(
         f"{item.project}:{item.refspec}",
-        f"/{action.value} {item.msg.strip()}"
+        f"/{item.msg.strip()}"
     )
 
 

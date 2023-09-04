@@ -350,7 +350,7 @@ class GerritProvider(GitProvider):
             msg.append(f'* {description}\n{full_path}')
 
         if msg:
-            add_comment(self.parsed_url, self.refspec, "---\n".join(msg))
+            add_comment(self.parsed_url, self.refspec, "\n".join(msg))
             return True
 
     def publish_comment(self, pr_comment: str, is_temporary: bool = False):
