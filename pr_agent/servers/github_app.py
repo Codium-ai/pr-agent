@@ -98,6 +98,7 @@ async def handle_request(body: Dict[str, Any], event: str):
             api_url = body["comment"]["pull_request_url"]
         else:
             return {}
+        logging.info(body)
         logging.info(f"Handling comment because of event={event} and action={action}")
         comment_id = body.get("comment", {}).get("id")
         provider = get_git_provider()(pr_url=api_url)
@@ -129,6 +130,7 @@ async def handle_request(body: Dict[str, Any], event: str):
                 args = split_command[1:]
                 other_args = update_settings_from_args(args)
                 new_command = ' '.join([command] + other_args)
+                logging.info(body)
                 logging.info(f"Performing command: {new_command}")
                 await agent.handle_request(api_url, new_command)
 

@@ -154,6 +154,7 @@ There are several ways to use PR-Agent:
   - Allowing you to automate the review process on your private or public repositories
 - [Method 6: Deploy as a Lambda Function](INSTALL.md#method-6---deploy-as-a-lambda-function)
 - [Method 7: AWS CodeCommit](INSTALL.md#method-7---aws-codecommit-setup)
+- [Method 8: Run a GitLab webhook server](INSTALL.md#method-8---run-a-gitlab-webhook-server)
 
 ## How it works
 
