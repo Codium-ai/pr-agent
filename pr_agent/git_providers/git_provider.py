@@ -161,7 +161,6 @@ def get_main_pr_language(languages, files) -> str:
                 most_common_extension == 'scala' and top_language == 'scala' or \
                 most_common_extension == 'kt' and top_language == 'kotlin' or \
                 most_common_extension == 'pl' and top_language == 'perl' or \
-                most_common_extension == 'swift' and top_language == 'swift' or \
                 most_common_extension == top_language:
             main_language_str = top_language
 

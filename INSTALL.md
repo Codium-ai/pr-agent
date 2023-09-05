@@ -9,8 +9,8 @@ To get started with PR-Agent quickly, you first need to acquire two tokens:
 There are several ways to use PR-Agent:
 
 - [Method 1: Use Docker image (no installation required)](INSTALL.md#method-1-use-docker-image-no-installation-required)
-- [Method 2: Run as a GitHub Action](INSTALL.md#method-2-run-as-a-github-action)
-- [Method 3: Run from source](INSTALL.md#method-3-run-from-source)
+- [Method 2: Run from source](INSTALL.md#method-2-run-from-source)
+- [Method 3: Run as a GitHub Action](INSTALL.md#method-3-run-as-a-github-action)
 - [Method 4: Run as a polling server](INSTALL.md#method-4-run-as-a-polling-server)
 - [Method 5: Run as a GitHub App](INSTALL.md#method-5-run-as-a-github-app)
 - [Method 6: Deploy as a Lambda Function](INSTALL.md#method-6---deploy-as-a-lambda-function)
@@ -55,7 +55,41 @@ Possible questions you can ask include:
 
 ---
 
-### Method 2: Run as a GitHub Action
+### Method 2: Run from source
+
+1. Clone this repository:
+
+```
+git clone https://github.com/Codium-ai/pr-agent.git
+```
+
+2. Install the requirements in your favorite virtual environment:
+
+```
+pip install -r requirements.txt
+```
+
+3. Copy the secrets template file and fill in your OpenAI key and your GitHub user token:
+
+```
+cp pr_agent/settings/.secrets_template.toml pr_agent/settings/.secrets.toml
+chmod 600 pr_agent/settings/.secrets.toml
+# Edit .secrets.toml file
+```
+
+4. Add the pr_agent folder to your PYTHONPATH, then run the cli.py script:
+
+```
+export PYTHONPATH=[$PYTHONPATH:]<PATH to pr_agent folder>
+python pr_agent/cli.py --pr_url <pr_url> /review
+python pr_agent/cli.py --pr_url <pr_url> /ask <your question>
+python pr_agent/cli.py --pr_url <pr_url> /describe
+python pr_agent/cli.py --pr_url <pr_url> /improve
+```
+
+---
+
+### Method 3: Run as a GitHub Action
 
 You can use our pre-built Github Action Docker image to run PR-Agent as a Github Action. 
 
@@ -114,47 +148,13 @@ The GITHUB_TOKEN secret is automatically created by GitHub.
 3. Merge this change to your main branch. 
 When you open your next PR, you should see a comment from `github-actions` bot with a review of your PR, and instructions on how to use the rest of the tools.
 
-4. You may configure PR-Agent by adding environment variables under the env section corresponding to any configurable property in the [configuration](./CONFIGURATION.md) file. Some examples:
+4. You may configure PR-Agent by adding environment variables under the env section corresponding to any configurable property in the [configuration](./Usage.md) file. Some examples:
 ```yaml
       env:
         # ... previous environment values
         OPENAI.ORG: "<Your organization name under your OpenAI account>"
         PR_REVIEWER.REQUIRE_TESTS_REVIEW: "false" # Disable tests review
         PR_CODE_SUGGESTIONS.NUM_CODE_SUGGESTIONS: 6 # Increase number of code suggestions
-```
-
----
-
-### Method 3: Run from source
-
-1. Clone this repository:
-
-```
-git clone https://github.com/Codium-ai/pr-agent.git
-```
-
-2. Install the requirements in your favorite virtual environment:
-
-```
-pip install -r requirements.txt
-```
-
-3. Copy the secrets template file and fill in your OpenAI key and your GitHub user token:
-
-```
-cp pr_agent/settings/.secrets_template.toml pr_agent/settings/.secrets.toml
-chmod 600 pr_agent/settings/.secrets.toml
-# Edit .secrets.toml file
-```
-
-4. Add the pr_agent folder to your PYTHONPATH, then run the cli.py script:
-
-```
-export PYTHONPATH=[$PYTHONPATH:]<PATH to pr_agent folder>
-python pr_agent/cli.py --pr_url <pr_url> review
-python pr_agent/cli.py --pr_url <pr_url> ask <your question>
-python pr_agent/cli.py --pr_url <pr_url> describe
-python pr_agent/cli.py --pr_url <pr_url> improve
 ```
 
 ---
@@ -253,7 +253,7 @@ docker push codiumai/pr-agent:github_app  # Push to your Docker repository
 
 > **Note:** When running PR-Agent from GitHub App, the default configuration file (configuration.toml) will be loaded.<br>
 > However, you can override the default tool parameters by uploading a local configuration file<br>
-> For more information please check out [CONFIGURATION.md](CONFIGURATION.md#working-from-github-app-pre-built-repo)
+> For more information please check out [CONFIGURATION.md](Usage.md#working-from-github-app-pre-built-repo)
 ---
 
 ### Method 6 - Deploy as a Lambda Function
