@@ -15,6 +15,7 @@ There are several ways to use PR-Agent:
 - [Method 5: Run as a GitHub App](INSTALL.md#method-5-run-as-a-github-app)
 - [Method 6: Deploy as a Lambda Function](INSTALL.md#method-6---deploy-as-a-lambda-function)
 - [Method 7: AWS CodeCommit](INSTALL.md#method-7---aws-codecommit-setup)
+- [Method 8: Run a GitLab webhook server](INSTALL.md#method-8---run-a-gitlab-webhook-server)
 ---
 
 ### Method 1: Use Docker image (no installation required)
