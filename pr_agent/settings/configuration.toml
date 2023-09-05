@@ -85,3 +85,13 @@ polling_interval_seconds = 30
 # LocalGitProvider settings - uncomment to use paths other than default
 # description_path= "path/to/description.md"
 # review_path= "path/to/review.md"
+
+[pr_similar_issue]
+skip_comments = false
+force_update_dataset = false
+max_issues_to_scan = 1000
+
+[pinecone]
+# fill and place in .secrets.toml
+#api_key = ...
+# environment = "gcp-starter"

@@ -19,3 +19,5 @@ google-cloud-storage==2.10.0
 ujson==5.8.0
 azure-devops==7.1.0b3
 msrest==0.7.1
+pinecone-client==2.2.2
+pinecone_datasets==0.6.1
