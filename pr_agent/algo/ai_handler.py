@@ -6,7 +6,6 @@ from litellm import acompletion
 from openai.error import APIError, RateLimitError, Timeout, TryAgain
 from retry import retry
 from pr_agent.config_loader import get_settings
-
 OPENAI_RETRIES = 5
 
 
@@ -46,6 +45,8 @@ class AiHandler:
                 litellm.replicate_key = get_settings().replicate.key
             if get_settings().get("HUGGINGFACE.KEY", None):
                 litellm.huggingface_key = get_settings().huggingface.key
+                if get_settings().get("HUGGINGFACE.API_BASE", None):
+                    litellm.api_base = get_settings().huggingface.api_base
         except AttributeError as e:
             raise ValueError("OpenAI key is required") from e
 
