@@ -180,10 +180,37 @@ class CodeCommitProvider(GitProvider):
                 comment=pr_comment,
             )
         except Exception as e:
-            raise ValueError(f"CodeCommit Cannot post comment for PR: {self.pr_num}") from e
+            raise ValueError(f"CodeCommit Cannot publish comment for PR: {self.pr_num}") from e
 
     def publish_code_suggestions(self, code_suggestions: list) -> bool:
-        return [""]  # not implemented yet
+        counter = 1
+        for suggestion in code_suggestions:
+            # Verify that each suggestion has the required keys
+            if not all(key in suggestion for key in ["body", "relevant_file", "relevant_lines_start"]):
+                logging.warning(f"Skipping code suggestion #{counter}: Each suggestion must have 'body', 'relevant_file', 'relevant_lines_start' keys")
+                continue
+       
+            # Publish the code suggestion to CodeCommit
+            try:
+                logging.debug(f"Code Suggestion #{counter} in file: {suggestion['relevant_file']}: {suggestion['relevant_lines_start']}")
+                self.codecommit_client.publish_comment(
+                    repo_name=self.repo_name,
+                    pr_number=self.pr_num,
+                    destination_commit=self.pr.destination_commit,
+                    source_commit=self.pr.source_commit,
+                    comment=suggestion["body"],
+                    annotation_file=suggestion["relevant_file"],
+                    annotation_line=suggestion["relevant_lines_start"],
+                )
+            except Exception as e:
+                raise ValueError(f"CodeCommit Cannot publish code suggestions for PR: {self.pr_num}") from e
+            
+            counter += 1
+
+        # The calling function passes in a list of code suggestions, and this function publishes each suggestion one at a time.
+        # If we were to return False here, the calling function will attempt to publish the same list of code suggestions again, one at a time.
+        # Since this function publishes the suggestions one at a time anyway, we always return True here to avoid the retry.        
+        return True
 
     def publish_labels(self, labels):
         return [""]  # not implemented yet
@@ -195,6 +222,7 @@ class CodeCommitProvider(GitProvider):
         return ""  # not implemented yet
 
     def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
+        # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/codecommit/client/post_comment_for_compared_commit.html
         raise NotImplementedError("CodeCommit provider does not support publishing inline comments yet")
 
     def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
@@ -255,9 +283,11 @@ class CodeCommitProvider(GitProvider):
         return self.codecommit_client.get_file(self.repo_name, settings_filename, self.pr.source_commit, optional=True)
 
     def add_eyes_reaction(self, issue_comment_id: int) -> Optional[int]:
+        logging.info("CodeCommit provider does not support eyes reaction yet")
         return True
 
     def remove_reaction(self, issue_comment_id: int, reaction_id: int) -> bool:
+        logging.info("CodeCommit provider does not support removing reactions yet")
         return True
 
     @staticmethod
@@ -315,16 +345,16 @@ class CodeCommitProvider(GitProvider):
         return re.match(r"^[a-z]{2}-(gov-)?[a-z]+-\d\.console\.aws\.amazon\.com$", hostname) is not None
 
     def _get_pr(self):
-        response = self.codecommit_client.get_pr(self.pr_num)
+        response = self.codecommit_client.get_pr(self.repo_name, self.pr_num)
 
         if len(response.targets) == 0:
             raise ValueError(f"No files found in CodeCommit PR: {self.pr_num}")
 
-        # TODO: implement support for multiple commits in one CodeCommit PR
-        #       for now, we are only using the first commit in the PR
+        # TODO: implement support for multiple targets in one CodeCommit PR
+        #       for now, we are only using the first target in the PR
         if len(response.targets) > 1:
             logging.warning(
-                "Multiple commits in one PR is not supported for CodeCommit yet. Continuing, using the first commit only..."
+                "Multiple targets in one PR is not supported for CodeCommit yet. Continuing, using the first target only..."
             )
 
         # Return our object that mimics PullRequest class from the PyGithub library

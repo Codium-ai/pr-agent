@@ -90,7 +90,11 @@ class CodeCommitClient:
             ):
                 differences.extend(page.get("differences", []))
         except botocore.exceptions.ClientError as e:
-            raise ValueError(f"Failed to retrieve differences from CodeCommit PR #{self.pr_num}") from e
+            if e.response["Error"]["Code"] == 'RepositoryDoesNotExistException':
+                raise ValueError(f"CodeCommit cannot retrieve differences: Repository does not exist: {repo_name}") from e
+            raise ValueError(f"CodeCommit cannot retrieve differences for {source_commit}..{destination_commit}") from e
+        except Exception as e:
+            raise ValueError(f"CodeCommit cannot retrieve differences for {source_commit}..{destination_commit}") from e
 
         output = []
         for json in differences:
@@ -122,6 +126,8 @@ class CodeCommitClient:
         try:
             response = self.boto_client.get_file(repositoryName=repo_name, commitSpecifier=sha_hash, filePath=file_path)
         except botocore.exceptions.ClientError as e:
+            if e.response["Error"]["Code"] == 'RepositoryDoesNotExistException':
+                raise ValueError(f"CodeCommit cannot retrieve PR: Repository does not exist: {repo_name}") from e
             # if the file does not exist, but is flagged as optional, then return an empty string
             if optional and e.response["Error"]["Code"] == 'FileDoesNotExistException':
                 return ""
@@ -133,11 +139,12 @@ class CodeCommitClient:
 
         return response.get("fileContent", "")
 
-    def get_pr(self, pr_number: int):
+    def get_pr(self, repo_name: str, pr_number: int):
         """
         Get a information about a CodeCommit PR.
 
         Args:
+        - repo_name: Name of the repository
         - pr_number: The PR number you are requesting
 
         Returns:
@@ -155,6 +162,8 @@ class CodeCommitClient:
         except botocore.exceptions.ClientError as e:
             if e.response["Error"]["Code"] == 'PullRequestDoesNotExistException':
                 raise ValueError(f"CodeCommit cannot retrieve PR: PR number does not exist: {pr_number}") from e
+            if e.response["Error"]["Code"] == 'RepositoryDoesNotExistException':
+                raise ValueError(f"CodeCommit cannot retrieve PR: Repository does not exist: {repo_name}") from e
             raise ValueError(f"CodeCommit cannot retrieve PR: {pr_number}: boto client error") from e
         except Exception as e:
             raise ValueError(f"CodeCommit cannot retrieve PR: {pr_number}") from e
@@ -201,7 +210,7 @@ class CodeCommitClient:
         except Exception as e:
             raise ValueError(f"Error calling publish_description") from e
 
-    def publish_comment(self, repo_name: str, pr_number: int, destination_commit: str, source_commit: str, comment: str):
+    def publish_comment(self, repo_name: str, pr_number: int, destination_commit: str, source_commit: str, comment: str, annotation_file: str = None, annotation_line: int = None):
         """
         Publish a comment to a pull request
 
@@ -210,7 +219,13 @@ class CodeCommitClient:
         - pr_number: number of the pull request
         - destination_commit: The commit hash you want to merge into (the "before" hash) (usually on the main or master branch)
         - source_commit: The commit hash of the code you are adding (the "after" branch)
-        - pr_comment: comment
+        - comment: The comment you want to publish
+        - annotation_file: The file you want to annotate (optional)
+        - annotation_line: The line number you want to annotate (optional)
+
+        Comment annotations for CodeCommit are different than GitHub.
+        CodeCommit only designates the starting line number for the comment.
+        It does not support the ending line number to highlight a range of lines.
 
         Returns:
         - None
@@ -223,13 +238,30 @@ class CodeCommitClient:
             self._connect_boto_client()
 
         try:
-            self.boto_client.post_comment_for_pull_request(
-                pullRequestId=str(pr_number),
-                repositoryName=repo_name,
-                beforeCommitId=destination_commit,
-                afterCommitId=source_commit,
-                content=comment,
-            )
+            # If the comment has code annotations,
+            # then set the file path and line number in the location dictionary
+            if annotation_file and annotation_line:
+                self.boto_client.post_comment_for_pull_request(
+                    pullRequestId=str(pr_number),
+                    repositoryName=repo_name,
+                    beforeCommitId=destination_commit,
+                    afterCommitId=source_commit,
+                    content=comment,
+                    location={
+                        "filePath": annotation_file,
+                        "filePosition": annotation_line,
+                        "relativeFileVersion": "AFTER",
+                    },
+                )
+            else:
+                # The comment does not have code annotations
+                self.boto_client.post_comment_for_pull_request(
+                    pullRequestId=str(pr_number),
+                    repositoryName=repo_name,
+                    beforeCommitId=destination_commit,
+                    afterCommitId=source_commit,
+                    content=comment,
+                )
         except botocore.exceptions.ClientError as e:
             if e.response["Error"]["Code"] == 'RepositoryDoesNotExistException':
                 raise ValueError(f"Repository does not exist: {repo_name}") from e
