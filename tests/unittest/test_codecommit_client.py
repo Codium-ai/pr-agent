@@ -125,7 +125,7 @@ class TestCodeCommitProvider:
             }
         }
 
-        pr = api.get_pr(321)
+        pr = api.get_pr("my_test_repo", 321)
 
         assert pr.title == "My PR"
         assert pr.description == "My PR description"
