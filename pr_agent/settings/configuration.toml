@@ -10,19 +10,24 @@ use_repo_settings_file=true
 ai_timeout=180
 max_description_tokens = 500
 max_commits_tokens = 500
+litellm_debugger=false
+secret_provider="google_cloud_storage"
 
 [pr_reviewer] # /review #
-require_focused_review=true
+require_focused_review=false
 require_score_review=false
 require_tests_review=true
 require_security_review=true
-num_code_suggestions=3
+num_code_suggestions=4
 inline_code_comments = false
 ask_and_reflect=false
+automatic_review=true
 extra_instructions = ""
 
 [pr_description] # /describe #
 publish_description_as_comment=false
+add_original_user_description=false
+keep_original_user_title=false
 extra_instructions = ""
 
 [pr_questions] # /ask #
@@ -30,6 +35,12 @@ extra_instructions = ""
 [pr_code_suggestions] # /improve #
 num_code_suggestions=4
 extra_instructions = ""
+rank_suggestions = false
+# params for '/improve --extended' mode
+num_code_suggestions_per_chunk=8
+rank_extended_suggestions = true
+max_number_of_calls = 5
+final_clip_factor = 0.9
 
 [pr_update_changelog] # /update_changelog #
 push_changelog_changes=false
@@ -41,6 +52,21 @@ extra_instructions = ""
 # The type of deployment to create. Valid values are 'app' or 'user'.
 deployment_type = "user"
 ratelimit_retries = 5
+
+[github_app]
+# these toggles allows running the github app from custom deployments
+bot_user = "github-actions[bot]"
+override_deployment_type = true
+# in some deployments it's possible to get duplicate requests if the handling is long,
+# these settings are used to avoid handling duplicate requests.
+duplicate_requests_cache = false
+duplicate_requests_cache_ttl = 60  # in seconds
+# settings for "pull_request" event
+handle_pr_actions = ['opened', 'reopened', 'ready_for_review', 'review_requested']
+pr_commands = [
+    "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true",
+    "/auto_review",
+]
 
 [gitlab]
 # URL to the gitlab service

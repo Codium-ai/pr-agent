@@ -16,6 +16,7 @@ from pr_agent.tools.pr_update_changelog import PRUpdateChangelog
 from pr_agent.tools.pr_config import PRConfig
 
 command2class = {
+    "auto_review": PRReviewer,
     "answer": PRReviewer,
     "review": PRReviewer,
     "review_pr": PRReviewer,
@@ -72,6 +73,8 @@ class PRAgent:
             if notify:
                 notify()
             await PRReviewer(pr_url, is_answer=True, args=args).run()
+        elif action == "auto_review":
+            await PRReviewer(pr_url, is_auto=True, args=args).run()
         elif action in command2class:
             if notify:
                 notify()

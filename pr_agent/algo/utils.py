@@ -250,9 +250,7 @@ def update_settings_from_args(args: List[str]) -> List[str]:
                     logging.error(f'Invalid argument format: {arg}')
                     other_args.append(arg)
                     continue
-                key, value = vals
-                key = key.strip().upper()
-                value = value.strip()
+                key, value = _fix_key_value(*vals)
                 if key in get_settings():
                     get_settings().set(key, value)
                     logging.info(f'Updated setting {key} to: "{value}"')

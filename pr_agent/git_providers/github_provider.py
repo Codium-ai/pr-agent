@@ -166,7 +166,7 @@ class GithubProvider(GitProvider):
     def publish_inline_comments(self, comments: list[dict]):
         self.pr.create_review(commit=self.last_commit_id, comments=comments)
 
-    def publish_code_suggestions(self, code_suggestions: list):
+    def publish_code_suggestions(self, code_suggestions: list) -> bool:
         """
         Publishes code suggestions as comments on the PR.
         """
@@ -233,10 +233,7 @@ class GithubProvider(GitProvider):
     def get_pr_branch(self):
         return self.pr.head.ref
 
-    def get_pr_description(self):
-        max_tokens = get_settings().get("CONFIG.MAX_DESCRIPTION_TOKENS", None)
-        if max_tokens:
-            return clip_tokens(self.pr.body, max_tokens)
+    def get_pr_description_full(self):
         return self.pr.body
 
     def get_user_id(self):
