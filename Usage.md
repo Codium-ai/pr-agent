@@ -149,11 +149,28 @@ TBD
 #### Changing a model
 See [here](pr_agent/algo/__init__.py) for the list of available models.
 
-To use Llama2 model, for example, set:
+To use Azure, set: 
+```
+api_key = "" # your azure api key
+api_type = "azure"
+api_version = '2023-05-15'  # Check Azure documentation for the current API version
+api_base = ""  # The base URL for your Azure OpenAI resource. e.g. "https://<your resource name>.openai.azure.com"
+deployment_id = ""  # The deployment name you chose when you deployed the engine
+```
+in your .secrets.toml
+
+and 
 ```
 [config]
+model="" # the OpenAI model you've deployed on Azure (e.g. gpt-3.5-turbo)
+```
+in the configuration.toml 
+
+To use Llama2 model with Replicate, for example, set:
+```
+[config] # in configuration.toml
 model = "replicate/llama-2-70b-chat:2c1608e18606fad2812020dc541930f2d0495ce32eee50074220b87300bc16e1"
-[replicate]
+[replicate] # in .secrets.toml
 key = ...
 ```
 (you can obtain a Llama2 key from [here](https://replicate.com/replicate/llama-2-70b-chat/api))

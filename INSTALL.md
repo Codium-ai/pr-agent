@@ -364,10 +364,3 @@ In the "Trigger" section, check the ‘comments’ and ‘merge request events�
 6. Test your installation by opening a merge request or commenting or a merge request using one of CodiumAI's commands.
 
 ---
-
-### Appendix - **Debugging LLM API Calls**  
-If you're testing your codium/pr-agent server, and need to see if calls were made successfully + the exact call logs, you can use the [LiteLLM Debugger tool](https://docs.litellm.ai/docs/debugging/hosted_debugging). 
-
-You can do this by setting `litellm_debugger=true` in configuration.toml. Your Logs will be viewable in real-time @ `admin.litellm.ai/<your_email>`. Set your email in the `.secrets.toml` under 'user_email'.
-
-<img src="./pics/debugger.png" width="800"/>

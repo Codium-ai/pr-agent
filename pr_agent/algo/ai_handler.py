@@ -5,7 +5,6 @@ import openai
 from litellm import acompletion
 from openai.error import APIError, RateLimitError, Timeout, TryAgain
 from retry import retry
-
 from pr_agent.config_loader import get_settings
 
 OPENAI_RETRIES = 5
@@ -26,7 +25,6 @@ class AiHandler:
         try:
             openai.api_key = get_settings().openai.key
             litellm.openai_key = get_settings().openai.key
-            litellm.debugger = get_settings().config.litellm_debugger
             self.azure = False
             if get_settings().get("OPENAI.ORG", None):
                 litellm.organization = get_settings().openai.org

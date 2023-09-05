@@ -10,7 +10,6 @@ use_repo_settings_file=true
 ai_timeout=180
 max_description_tokens = 500
 max_commits_tokens = 500
-litellm_debugger=false
 secret_provider="google_cloud_storage"
 
 [pr_reviewer] # /review #
