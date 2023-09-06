@@ -85,3 +85,13 @@ polling_interval_seconds = 30
 # LocalGitProvider settings - uncomment to use paths other than default
 # description_path= "path/to/description.md"
 # review_path= "path/to/review.md"
+
+[gerrit]
+# endpoint to the gerrit service
+# url = "ssh://gerrit.example.com:29418"
+# user for gerrit authentication
+# user = "ai-reviewer"
+# patch server where patches will be saved
+# patch_server_endpoint = "http://127.0.0.1:5000/patch"
+# token to authenticate in the patch server
+# patch_server_token = ""
