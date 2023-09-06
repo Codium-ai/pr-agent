@@ -78,7 +78,7 @@ class PRAgent:
         elif action in command2class:
             if notify:
                 notify()
-            await command2class[action](pr_url, *args).run()
+            await command2class[action](pr_url, args=args).run()
         else:
             return False
         return True
