@@ -48,6 +48,8 @@ class AiHandler:
                 litellm.replicate_key = get_settings().replicate.key
             if get_settings().get("HUGGINGFACE.KEY", None):
                 litellm.huggingface_key = get_settings().huggingface.key
+            if get_settings().get("LITELLM.USER_EMAIL"):
+                litellm.email = get_settings().get("LITELLM.USER_EMAIL", None)
         except AttributeError as e:
             raise ValueError("OpenAI key is required") from e
 
