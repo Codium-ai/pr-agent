@@ -36,9 +36,8 @@ class BitbucketProvider(GitProvider):
         self.incremental = incremental
         if pr_url:
             self.set_pr(pr_url)
-        self.bitbucket_comment_api_url = self.pr._BitbucketBase__data["links"][
-            "comments"
-        ]["href"]
+        self.bitbucket_comment_api_url = self.pr._BitbucketBase__data["links"]["comments"]["href"]
+        self.bitbucket_pull_request_api_url = self.pr._BitbucketBase__data["links"]['self']['href']
 
     def get_repo_settings(self):
         try:
@@ -253,8 +252,15 @@ class BitbucketProvider(GitProvider):
         return ""  # not implemented yet
     
     # bitbucket does not support labels
-    def publish_description(self, pr_title: str, pr_body: str):
-        pass
+    def publish_description(self, pr_title: str, description: str):
+        payload = json.dumps({
+            "description": description,
+            "title": pr_title
+
+            })
+
+        response = requests.request("PUT", self.bitbucket_pull_request_api_url, headers=self.headers, data=payload)
+        return response
 
     # bitbucket does not support labels
     def publish_labels(self, pr_types: list):
