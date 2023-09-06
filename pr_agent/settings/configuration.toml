@@ -10,7 +10,6 @@ use_repo_settings_file=true
 ai_timeout=180
 max_description_tokens = 500
 max_commits_tokens = 500
-litellm_debugger=false
 secret_provider="google_cloud_storage"
 
 [pr_reviewer] # /review #
@@ -95,3 +94,7 @@ polling_interval_seconds = 30
 # patch_server_endpoint = "http://127.0.0.1:5000/patch"
 # token to authenticate in the patch server
 # patch_server_token = ""
+
+[litellm]
+debugger=false
+#email="youremail@example.com"

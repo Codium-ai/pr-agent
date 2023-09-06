@@ -26,7 +26,7 @@ class AiHandler:
         try:
             openai.api_key = get_settings().openai.key
             litellm.openai_key = get_settings().openai.key
-            litellm.debugger = get_settings().config.litellm_debugger
+            litellm.debugger = get_settings().litellm.debugger
             self.azure = False
             if get_settings().get("OPENAI.ORG", None):
                 litellm.organization = get_settings().openai.org
@@ -48,8 +48,8 @@ class AiHandler:
                 litellm.replicate_key = get_settings().replicate.key
             if get_settings().get("HUGGINGFACE.KEY", None):
                 litellm.huggingface_key = get_settings().huggingface.key
-            if get_settings().get("LITELLM.USER_EMAIL"):
-                litellm.email = get_settings().get("LITELLM.USER_EMAIL", None)
+            if get_settings().get("LITELLM.DEBUGGER") and get_settings().get("LITELLM.EMAIL"):
+                litellm.email = get_settings().get("LITELLM.EMAIL", None)
         except AttributeError as e:
             raise ValueError("OpenAI key is required") from e
 
