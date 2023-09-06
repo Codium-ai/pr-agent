@@ -96,26 +96,27 @@ See the [usage guide](./Usage.md) for instructions how to run the different tool
 
 ## Overview
 `PR-Agent` offers extensive pull request functionalities across various git providers:
-|       |                                             | GitHub | Gitlab | Bitbucket | CodeCommit | Azure DevOps |
-|-------|---------------------------------------------|:------:|:------:|:---------:|:----------:|:----------:|
-| TOOLS | Review                                      |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |   :white_check_mark:    |   :white_check_mark:    |
-|       | Ask                                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:          |   :white_check_mark:          | :white_check_mark:
-|       | Auto-Description                            |   :white_check_mark:    |   :white_check_mark:    |           |   :white_check_mark:    |   :white_check_mark:    |
-|       | Improve Code                                |   :white_check_mark:    |   :white_check_mark:    |           |   :white_check_mark:    |          |
-|       | ⮑ Extended                             |   :white_check_mark:    |   :white_check_mark:    |           |   :white_check_mark:    |          |
-|       | Reflect and Review                          |   :white_check_mark:    |                         |           |          |   :white_check_mark:    |
-|       | Update CHANGELOG.md                         |   :white_check_mark:    |                         |           |          |          |
+|       |                                             | GitHub | Gitlab | Bitbucket | CodeCommit | Azure DevOps | Gerrit |
+|-------|---------------------------------------------|:------:|:------:|:---------:|:----------:|:----------:|:----------:|
+| TOOLS | Review                                      |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:    |
+|       | Ask                                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:          |   :white_check_mark:          | :white_check_mark: |  :white_check_mark:    |
+|       | Auto-Description                            |   :white_check_mark:    |   :white_check_mark:    |           |   :white_check_mark:    |   :white_check_mark:    | :white_check_mark:    |
+|       | Improve Code                                |   :white_check_mark:    |   :white_check_mark:    |           |   :white_check_mark:    |          |    :white_check_mark:    |
+|       | ⮑ Extended                             |   :white_check_mark:    |   :white_check_mark:    |           |   :white_check_mark:    |          | :white_check_mark:    |
+|       | Reflect and Review                          |   :white_check_mark:    |                         |           |          |   :white_check_mark:    |    :white_check_mark:    |
+|       | Update CHANGELOG.md                         |   :white_check_mark:    |                         |           |          |          |       |
 |       |                                             |        |        |      |      |      |
 | USAGE | CLI                                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |   :white_check_mark:    |   :white_check_mark:    |
 |       | App / webhook                               |   :white_check_mark:    |   :white_check_mark:    |           |          |          |
 |       | Tagging bot                                 |   :white_check_mark:    |        |           |          |          |
 |       | Actions                                     |   :white_check_mark:    |        |           |          |          |
+|       | Web server                                  |       |        |           |          |          |  :white_check_mark:   |
 |       |                                             |        |        |      |      |      |
-| CORE  | PR compression                              |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       | :white_check_mark: |   :white_check_mark:       |
-|       | Repo language prioritization                |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       | :white_check_mark: |   :white_check_mark:       |
-|       | Adaptive and token-aware<br />file patch fitting |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       | :white_check_mark: |   :white_check_mark:       |
-|       | Multiple models support |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       | :white_check_mark: |   :white_check_mark:       |
-|       | Incremental PR Review |   :white_check_mark:    |      |      |      |      |
+| CORE  | PR compression                              |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       | :white_check_mark: |   :white_check_mark:       | :white_check_mark:       |
+|       | Repo language prioritization                |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       | :white_check_mark: |   :white_check_mark:       | :white_check_mark:       |
+|       | Adaptive and token-aware<br />file patch fitting |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       | :white_check_mark: |   :white_check_mark:       | :white_check_mark:       |
+|       | Multiple models support |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       | :white_check_mark: |   :white_check_mark:       | :white_check_mark:       |
+|       | Incremental PR Review |   :white_check_mark:    |      |      |      |      |      |
 
 Review the **[usage guide](./Usage.md)** section for detailed instructions how to use the different tools, select the relevant git provider (GitHub, Gitlab, Bitbucket,...), and adjust the configuration file to your needs.
 
@@ -153,6 +154,7 @@ There are several ways to use PR-Agent:
   - Allowing you to automate the review process on your private or public repositories
 - [Method 6: Deploy as a Lambda Function](INSTALL.md#method-6---deploy-as-a-lambda-function)
 - [Method 7: AWS CodeCommit](INSTALL.md#method-7---aws-codecommit-setup)
+- [Method 8: Run a GitLab webhook server](INSTALL.md#method-8---run-a-gitlab-webhook-server)
 
 ## How it works
 
