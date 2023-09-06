@@ -176,24 +176,24 @@ class PRSimilarIssue:
                                       level=IssueLevel.ISSUE)
                 )
                 corpus.append(issue_record)
-            if comments:
-                for j, comment in enumerate(comments):
-                    comment_body = comment.body
-                    num_words_comment = len(comment_body.split())
-                    if num_words_comment < 10 or not isinstance(comment_body, str):
-                        continue
+                if comments:
+                    for j, comment in enumerate(comments):
+                        comment_body = comment.body
+                        num_words_comment = len(comment_body.split())
+                        if num_words_comment < 10 or not isinstance(comment_body, str):
+                            continue
 
-                    if len(issue_str) < 8000 or \
-                            self.token_handler.count_tokens(comment_body) < MAX_TOKENS[MODEL]:
-                        comment_record = Record(
-                            id=issue_key + ".comment_" + str(j + 1),
-                            text=comment_body,
-                            metadata=Metadata(repo=repo_name_for_index,
-                                              username=username,  # use issue username for all comments
-                                              created_at=created_at,
-                                              level=IssueLevel.COMMENT)
-                        )
-                        corpus.append(comment_record)
+                        if len(comment_body) < 8000 or \
+                                self.token_handler.count_tokens(comment_body) < MAX_TOKENS[MODEL]:
+                            comment_record = Record(
+                                id=issue_key + ".comment_" + str(j + 1),
+                                text=comment_body,
+                                metadata=Metadata(repo=repo_name_for_index,
+                                                  username=username,  # use issue username for all comments
+                                                  created_at=created_at,
+                                                  level=IssueLevel.COMMENT)
+                            )
+                            corpus.append(comment_record)
         df = pd.DataFrame(corpus.dict()["documents"])
         logging.info('Done')
 
@@ -205,9 +205,13 @@ class PRSimilarIssue:
             embeds = [record['embedding'] for record in res['data']]
         except:
             embeds = []
+            logging.error('Failed to embed entire list, embedding one by one...')
             for i, text in enumerate(list_to_encode):
-                res = openai.Embedding.create(input=[text], engine=MODEL)
-                embeds.append(res['data'][0]['embedding'])
+                try:
+                    res = openai.Embedding.create(input=[text], engine=MODEL)
+                    embeds.append(res['data'][0]['embedding'])
+                except:
+                    embeds.append([0] * 1536)
         df["values"] = embeds
         meta = DatasetMetadata.empty()
         meta.dense_model.dimension = len(embeds[0])
