@@ -132,7 +132,7 @@ class PRSimilarIssue:
         header = issue.title
         body = issue.body
         number = issue.number
-        if get_settings().pinecone.skip_comments:
+        if get_settings().pr_similar_issue.skip_comments:
             comments = []
         else:
             comments = list(issue.get_comments())
@@ -151,11 +151,12 @@ class PRSimilarIssue:
 
         counter = 0
         for issue in issues_list:
-
             if issue.pull_request:
                 continue
 
             counter += 1
+            if counter % 100 == 0:
+                logging.info(f"Scanned {counter} issues")
             if counter >= self.max_issues_to_scan:
                 logging.info(f"Scanned {self.max_issues_to_scan} issues, stopping")
                 break
@@ -179,7 +180,7 @@ class PRSimilarIssue:
                 for j, comment in enumerate(comments):
                     comment_body = comment.body
                     num_words_comment = len(comment_body.split())
-                    if num_words_comment < 10:
+                    if num_words_comment < 10 or not isinstance(comment_body, str):
                         continue
 
                     if len(issue_str) < 8000 or \
@@ -199,8 +200,14 @@ class PRSimilarIssue:
         logging.info('Embedding...')
         openai.api_key = get_settings().openai.key
         list_to_encode = list(df["text"].values)
-        res = openai.Embedding.create(input=list_to_encode, engine=MODEL)
-        embeds = [record['embedding'] for record in res['data']]
+        try:
+            res = openai.Embedding.create(input=list_to_encode, engine=MODEL)
+            embeds = [record['embedding'] for record in res['data']]
+        except:
+            embeds = []
+            for i, text in enumerate(list_to_encode):
+                res = openai.Embedding.create(input=[text], engine=MODEL)
+                embeds.append(res['data'][0]['embedding'])
         df["values"] = embeds
         meta = DatasetMetadata.empty()
         meta.dense_model.dimension = len(embeds[0])
@@ -210,7 +217,7 @@ class PRSimilarIssue:
         api_key = get_settings().pinecone.api_key
         environment = get_settings().pinecone.environment
         if not upsert:
-            logging.info('Creating index...')
+            logging.info('Creating index from scratch...')
             ds.to_pinecone_index(self.index_name, api_key=api_key, environment=environment)
         else:
             logging.info('Upserting index...')
