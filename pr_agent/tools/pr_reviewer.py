@@ -6,7 +6,7 @@ from typing import List, Tuple
 
 import yaml
 from jinja2 import Environment, StrictUndefined
-from traceloop.decorators import workflow
+from traceloop.sdk.decorators import aworkflow
 from yaml import SafeLoader
 
 from pr_agent.algo.ai_handler import AiHandler
@@ -20,7 +20,7 @@ from pr_agent.git_providers.git_provider import IncrementalPR, get_main_pr_langu
 from pr_agent.servers.help import actions_help_text, bot_help_text
 
 
-@workflow(name="pr_reviewer", method_name="run")
+@aworkflow(name="pr_reviewer", method_name="run")
 class PRReviewer:
     """
     The PRReviewer class is responsible for reviewing a pull request and generating feedback using an AI model.

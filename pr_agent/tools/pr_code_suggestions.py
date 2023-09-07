@@ -6,7 +6,7 @@ from typing import List
 
 import yaml
 from jinja2 import Environment, StrictUndefined
-from traceloop.decorators import workflow
+from traceloop.sdk.decorators import aworkflow
 
 from pr_agent.algo.ai_handler import AiHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models, get_pr_multi_diffs
@@ -17,7 +17,7 @@ from pr_agent.git_providers import BitbucketProvider, get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
 
 
-@workflow(name="pr_code_suggestions", method_name="run")
+@aworkflow(name="pr_code_suggestions", method_name="run")
 class PRCodeSuggestions:
     def __init__(self, pr_url: str, cli_mode=False, args: list = None):
 

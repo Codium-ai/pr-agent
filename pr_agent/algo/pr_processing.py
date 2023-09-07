@@ -7,7 +7,7 @@ import traceback
 from typing import Any, Callable, List, Tuple
 
 from github import RateLimitExceededException
-from traceloop.decorators import task
+from traceloop.sdk.decorators import task
 
 from pr_agent.algo import MAX_TOKENS
 from pr_agent.algo.git_patch_processing import convert_to_hunks_with_lines_numbers, extend_patch, handle_patch_deletions
@@ -23,6 +23,7 @@ MORE_MODIFIED_FILES_ = "More modified files:\n"
 OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD = 1000
 OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD = 600
 PATCH_EXTRA_LINES = 3
+
 
 @task(name="get_pr_diff")
 def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler, model: str,
@@ -60,7 +61,7 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler, model: s
 
     # generate a standard diff string, with patch extension
     patches_extended, total_tokens, patches_extended_tokens = pr_generate_extended_diff(pr_languages, token_handler,
-                                                               add_line_numbers_to_hunks)
+                                                                                        add_line_numbers_to_hunks)
 
     # if we are under the limit, return the full diff
     if total_tokens + OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD < MAX_TOKENS[model]:
