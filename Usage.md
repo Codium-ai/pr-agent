@@ -149,6 +149,7 @@ TBD
 #### Changing a model
 See [here](pr_agent/algo/__init__.py) for the list of available models.
 
+#### Azure
 To use Azure, set: 
 ```
 api_key = "" # your azure api key
@@ -166,6 +167,30 @@ model="" # the OpenAI model you've deployed on Azure (e.g. gpt-3.5-turbo)
 ```
 in the configuration.toml 
 
+#### Huggingface
+
+To use a new model with Huggingface Inference Endpoints, for example, set:
+```
+[__init__.py]
+MAX_TOKENS = {
+    "model-name-on-huggingface": <max_tokens>
+}
+e.g.
+MAX_TOKENS={
+    ...,
+    "meta-llama/Llama-2-7b-chat-hf": 4096
+}
+[config] # in configuration.toml
+model = "huggingface/meta-llama/Llama-2-7b-chat-hf"
+
+[huggingface] # in .secrets.toml
+key = ... # your huggingface api key
+api_base = ... # the base url for your huggingface inference endpoint 
+```
+(you can obtain a Llama2 key from [here](https://replicate.com/replicate/llama-2-70b-chat/api))
+
+#### Replicate
+
 To use Llama2 model with Replicate, for example, set:
 ```
 [config] # in configuration.toml
@@ -174,6 +199,7 @@ model = "replicate/llama-2-70b-chat:2c1608e18606fad2812020dc541930f2d0495ce32eee
 key = ...
 ```
 (you can obtain a Llama2 key from [here](https://replicate.com/replicate/llama-2-70b-chat/api))
+
 
 Also review the [AiHandler](pr_agent/algo/ai_handler.py) file for instruction how to set keys for other models.
 
