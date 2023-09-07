@@ -50,7 +50,7 @@ async def run_action():
     # Handle pull request event
     if GITHUB_EVENT_NAME == "pull_request":
         action = event_payload.get("action")
-        if action in ["opened", "reopened"]:
+        if action in ["opened", "reopened", "synchronize", "ready_for_review"]:
             pr_url = event_payload.get("pull_request", {}).get("url")
             if pr_url:
                 await PRReviewer(pr_url).run()
