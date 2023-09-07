@@ -82,12 +82,14 @@ class PRDescription:
             logging.info(f"Using description marker replacements {self.pr_id}")
             pr_title, pr_body = self._prepare_marker_replacements()
         else:
-            pr_title, pr_body, markdown_text = self._prepare_pr_answer()
+            pr_title, pr_body,  = self._prepare_pr_answer()
+        full_markdown_description = f"## Title\n\n{pr_title}\n\n___\n{pr_body}"
+
 
         if get_settings().config.publish_output:
             logging.info(f"Pushing answer {self.pr_id}")
             if get_settings().pr_description.publish_description_as_comment:
-                self.git_provider.publish_comment(markdown_text)
+                self.git_provider.publish_comment(full_markdown_description)
             else:
                 self.git_provider.publish_description(pr_title, pr_body)
                 if get_settings().pr_description.publish_labels and self.git_provider.is_supported("get_labels"):
@@ -198,7 +200,7 @@ class PRDescription:
 
         return title, body
 
-    def _prepare_pr_answer(self) -> Tuple[str, str, str]:
+    def _prepare_pr_answer(self) -> Tuple[str, str]:
         """
         Prepare the PR description based on the AI prediction data.
 
@@ -242,9 +244,7 @@ class PRDescription:
             if idx < len(self.data) - 1:
                 pr_body += "\n___\n"
 
-        markdown_text = f"## Title\n\n{title}\n\n___\n{pr_body}"
-
         if get_settings().config.verbosity_level >= 2:
             logging.info(f"title:\n{title}\n{pr_body}")
 
-        return title, pr_body, markdown_text
+        return title, pr_body
