@@ -115,7 +115,14 @@ def adopt_to_gerrit_message(message):
     lines = message.splitlines()
     buf = []
     for line in lines:
-        line = line.replace("*", "").replace("``", "`")
+        # remove markdown formatting
+        line = (line.replace("*", "")
+                .replace("``", "`")
+                .replace("<details>", "")
+                .replace("</details>", "")
+                .replace("<summary>", "")
+                .replace("</summary>", ""))
+
         line = line.strip()
         if line.startswith('#'):
             buf.append("\n" +
@@ -219,10 +226,12 @@ class GerritProvider(GitProvider):
         return [self.repo.head.commit.message]
 
     def get_repo_settings(self):
-        """
-        TODO: Implement support of .pr_agent.toml
-        """
-        return ""
+        try:
+            with open(self.repo_path / ".pr_agent.toml", 'rb') as f:
+                contents = f.read()
+            return contents
+        except OSError:
+            return b""
 
     def get_diff_files(self) -> list[FilePatchInfo]:
         diffs = self.repo.head.commit.diff(
