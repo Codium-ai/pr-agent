@@ -24,9 +24,15 @@ To request a review for a PR, or ask a question about a PR, you can run directly
 
 1. To request a review for a PR, run the following command:
 
+For GitHub:
 ```
 docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent --pr_url <pr_url> review
 ```
+For GitLab:
+```
+docker run --rm -it -e OPENAI.KEY=<your key> -e CONFIG.GIT_PROVIDER=gitlab -e GITLAB.PERSONAL_ACCESS_TOKEN=<your token> codiumai/pr-agent --pr_url <pr_url> review
+```
+For other git providers, update CONFIG.GIT_PROVIDER accordingly, and check the `pr_agent/settings/.secrets_template.toml` file for the environment variables expected names and values.
 
 2. To ask a question about a PR, run the following command:
 
@@ -354,7 +360,7 @@ PYTHONPATH="/PATH/TO/PROJECTS/pr-agent" python pr_agent/cli.py \
 ```
 WEBHOOK_SECRET=$(python -c "import secrets; print(secrets.token_hex(10))")
 ```
-3. Follow the instructions to build the Docker image, setup a secrets file and deploy on your own server from [Method 5](#method-5-run-as-a-github-app).
+3. Follow the instructions to build the Docker image, setup a secrets file and deploy on your own server from [Method 5](#method-5-run-as-a-github-app) steps 4-7.
 4. In the secrets file, fill in the following:
     - Your OpenAI key.
     - In the [gitlab] section, fill in personal_access_token and shared_secret. The access token can be a personal access token, or a group or project access token.
@@ -363,11 +369,5 @@ WEBHOOK_SECRET=$(python -c "import secrets; print(secrets.token_hex(10))")
 In the "Trigger" section, check the ‘comments’ and ‘merge request events’ boxes. 
 6. Test your installation by opening a merge request or commenting or a merge request using one of CodiumAI's commands.
 
----
 
-### Appendix - **Debugging LLM API Calls**  
-If you're testing your codium/pr-agent server, and need to see if calls were made successfully + the exact call logs, you can use the [LiteLLM Debugger tool](https://docs.litellm.ai/docs/debugging/hosted_debugging). 
-
-You can do this by setting `litellm_debugger=true` in configuration.toml. Your Logs will be viewable in real-time @ `admin.litellm.ai/<your_email>`. Set your email in the `.secrets.toml` under 'user_email'.
-
-<img src="./pics/debugger.png" width="800"/>
+=======
