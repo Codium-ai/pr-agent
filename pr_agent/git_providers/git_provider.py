@@ -1,3 +1,4 @@
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
@@ -85,11 +86,11 @@ class GitProvider(ABC):
     def get_pr_description_full(self) -> str:
         pass
 
-    def get_pr_description(self) -> str:
+    def get_pr_description(self, *, full: bool = True) -> str:
         from pr_agent.config_loader import get_settings
         from pr_agent.algo.pr_processing import clip_tokens
         max_tokens = get_settings().get("CONFIG.MAX_DESCRIPTION_TOKENS", None)
-        description = self.get_pr_description_full()
+        description = self.get_pr_description_full() if full else self.get_user_description()
         if max_tokens:
             return clip_tokens(description, max_tokens)
         return description
@@ -137,6 +138,8 @@ def get_main_pr_language(languages, files) -> str:
         # validate that the specific commit uses the main language
         extension_list = []
         for file in files:
+            if isinstance(file, str):
+                file = FilePatchInfo(base_file=None, head_file=None, patch=None, filename=file)
             extension_list.append(file.filename.rsplit('.')[-1])
 
         # get the most common extension
@@ -158,10 +161,11 @@ def get_main_pr_language(languages, files) -> str:
                 most_common_extension == 'scala' and top_language == 'scala' or \
                 most_common_extension == 'kt' and top_language == 'kotlin' or \
                 most_common_extension == 'pl' and top_language == 'perl' or \
-                most_common_extension == 'swift' and top_language == 'swift':
+                most_common_extension == top_language:
             main_language_str = top_language
 
-    except Exception:
+    except Exception as e:
+        logging.exception(e)
         pass
 
     return main_language_str

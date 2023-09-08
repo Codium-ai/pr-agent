@@ -12,6 +12,7 @@ from starlette_context import context
 from starlette_context.middleware import RawContextMiddleware
 
 from pr_agent.agent.pr_agent import PRAgent
+from pr_agent.algo.utils import update_settings_from_args
 from pr_agent.config_loader import get_settings, global_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.servers.utils import verify_signature
@@ -97,6 +98,7 @@ async def handle_request(body: Dict[str, Any], event: str):
             api_url = body["comment"]["pull_request_url"]
         else:
             return {}
+        logging.info(body)
         logging.info(f"Handling comment because of event={event} and action={action}")
         comment_id = body.get("comment", {}).get("id")
         provider = get_git_provider()(pr_url=api_url)
@@ -123,8 +125,14 @@ async def handle_request(body: Dict[str, Any], event: str):
                     return {}
             logging.info(f"Performing review because of event={event} and action={action}")
             for command in get_settings().github_app.pr_commands:
-                logging.info(f"Performing command: {command}")
-                await agent.handle_request(api_url, command)
+                split_command = command.split(" ")
+                command = split_command[0]
+                args = split_command[1:]
+                other_args = update_settings_from_args(args)
+                new_command = ' '.join([command] + other_args)
+                logging.info(body)
+                logging.info(f"Performing command: {new_command}")
+                await agent.handle_request(api_url, new_command)
 
     logging.info("event or action does not require handling")
     return {}

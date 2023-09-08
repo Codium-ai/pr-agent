@@ -1,0 +1,33 @@
+{
+  "name": "CodiumAI PR-Agent",
+  "description": "CodiumAI PR-Agent",
+  "key": "app_key",
+  "vendor": {
+    "name": "CodiumAI",
+    "url": "https://codium.ai"
+  },
+  "authentication": {
+    "type": "jwt"
+  },
+  "baseUrl": "base_url",
+  "lifecycle": {
+    "installed": "/installed",
+    "uninstalled": "/uninstalled"
+  },
+  "scopes": [
+    "account",
+    "repository",
+    "pullrequest"
+  ],
+  "contexts": [
+    "account"
+  ],
+  "modules": {
+    "webhooks": [
+      {
+        "event": "*",
+        "url": "/webhook"
+      }
+    ]
+  }
+}

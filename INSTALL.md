@@ -1,17 +1,38 @@
 
 ## Installation
 
+To get started with PR-Agent quickly, you first need to acquire two tokens:
+
+1. An OpenAI key from [here](https://platform.openai.com/), with access to GPT-4.
+2. A GitHub personal access token (classic) with the repo scope.
+
+There are several ways to use PR-Agent:
+
+- [Method 1: Use Docker image (no installation required)](INSTALL.md#method-1-use-docker-image-no-installation-required)
+- [Method 2: Run from source](INSTALL.md#method-2-run-from-source)
+- [Method 3: Run as a GitHub Action](INSTALL.md#method-3-run-as-a-github-action)
+- [Method 4: Run as a polling server](INSTALL.md#method-4-run-as-a-polling-server)
+- [Method 5: Run as a GitHub App](INSTALL.md#method-5-run-as-a-github-app)
+- [Method 6: Deploy as a Lambda Function](INSTALL.md#method-6---deploy-as-a-lambda-function)
+- [Method 7: AWS CodeCommit](INSTALL.md#method-7---aws-codecommit-setup)
+- [Method 8: Run a GitLab webhook server](INSTALL.md#method-8---run-a-gitlab-webhook-server)
 ---
 
-#### Method 1: Use Docker image (no installation required)
+### Method 1: Use Docker image (no installation required)
 
 To request a review for a PR, or ask a question about a PR, you can run directly from the Docker image. Here's how:
 
 1. To request a review for a PR, run the following command:
 
+For GitHub:
 ```
 docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent --pr_url <pr_url> review
 ```
+For GitLab:
+```
+docker run --rm -it -e OPENAI.KEY=<your key> -e CONFIG.GIT_PROVIDER=gitlab -e GITLAB.PERSONAL_ACCESS_TOKEN=<your token> codiumai/pr-agent --pr_url <pr_url> review
+```
+For other git providers, update CONFIG.GIT_PROVIDER accordingly, and check the `pr_agent/settings/.secrets_template.toml` file for the environment variables expected names and values.
 
 2. To ask a question about a PR, run the following command:
 
@@ -41,7 +62,41 @@ Possible questions you can ask include:
 
 ---
 
-#### Method 2: Run as a GitHub Action
+### Method 2: Run from source
+
+1. Clone this repository:
+
+```
+git clone https://github.com/Codium-ai/pr-agent.git
+```
+
+2. Install the requirements in your favorite virtual environment:
+
+```
+pip install -r requirements.txt
+```
+
+3. Copy the secrets template file and fill in your OpenAI key and your GitHub user token:
+
+```
+cp pr_agent/settings/.secrets_template.toml pr_agent/settings/.secrets.toml
+chmod 600 pr_agent/settings/.secrets.toml
+# Edit .secrets.toml file
+```
+
+4. Add the pr_agent folder to your PYTHONPATH, then run the cli.py script:
+
+```
+export PYTHONPATH=[$PYTHONPATH:]<PATH to pr_agent folder>
+python pr_agent/cli.py --pr_url <pr_url> /review
+python pr_agent/cli.py --pr_url <pr_url> /ask <your question>
+python pr_agent/cli.py --pr_url <pr_url> /describe
+python pr_agent/cli.py --pr_url <pr_url> /improve
+```
+
+---
+
+### Method 3: Run as a GitHub Action
 
 You can use our pre-built Github Action Docker image to run PR-Agent as a Github Action. 
 
@@ -100,7 +155,7 @@ The GITHUB_TOKEN secret is automatically created by GitHub.
 3. Merge this change to your main branch. 
 When you open your next PR, you should see a comment from `github-actions` bot with a review of your PR, and instructions on how to use the rest of the tools.
 
-4. You may configure PR-Agent by adding environment variables under the env section corresponding to any configurable property in the [configuration](./CONFIGURATION.md) file. Some examples:
+4. You may configure PR-Agent by adding environment variables under the env section corresponding to any configurable property in the [configuration](./Usage.md) file. Some examples:
 ```yaml
       env:
         # ... previous environment values
@@ -111,49 +166,7 @@ When you open your next PR, you should see a comment from `github-actions` bot w
 
 ---
 
-#### Method 3: Run from source
-
-1. Clone this repository:
-
-```
-git clone https://github.com/Codium-ai/pr-agent.git
-```
-
-2. Install the requirements in your favorite virtual environment:
-
-```
-pip install -r requirements.txt
-```
-
-3. Copy the secrets template file and fill in your OpenAI key and your GitHub user token:
-
-```
-cp pr_agent/settings/.secrets_template.toml pr_agent/settings/.secrets.toml
-chmod 600 pr_agent/settings/.secrets.toml
-# Edit .secrets.toml file
-```
-
-4. Add the pr_agent folder to your PYTHONPATH, then run the cli.py script:
-
-```
-export PYTHONPATH=[$PYTHONPATH:]<PATH to pr_agent folder>
-python pr_agent/cli.py --pr_url <pr_url> review
-python pr_agent/cli.py --pr_url <pr_url> ask <your question>
-python pr_agent/cli.py --pr_url <pr_url> describe
-python pr_agent/cli.py --pr_url <pr_url> improve
-```
-
-5. **Debugging LLM API Calls**  
-If you're testing your codium/pr-agent server, and need to see if calls were made successfully + the exact call logs, you can use the [LiteLLM Debugger tool](https://docs.litellm.ai/docs/debugging/hosted_debugging). 
-
-You can do this by setting `litellm_debugger=true` in configuration.toml. Your Logs will be viewable in real-time @ `admin.litellm.ai/<your_email>`. Set your email in the `.secrets.toml` under 'user_email'.
-
-<img src="./pics/debugger.png" width="900"/>
-
-
----
-
-#### Method 4: Run as a polling server
+### Method 4: Run as a polling server
 Request reviews by tagging your Github user on a PR
 
 Follow steps 1-3 of method 2.
@@ -165,7 +178,7 @@ python pr_agent/servers/github_polling.py
 
 ---
 
-#### Method 5: Run as a GitHub App
+### Method 5: Run as a GitHub App
 Allowing you to automate the review process on your private or public repositories.
 
 1. Create a GitHub App from the [Github Developer Portal](https://docs.github.com/en/developers/apps/creating-a-github-app).
@@ -245,9 +258,12 @@ docker push codiumai/pr-agent:github_app  # Push to your Docker repository
 
 9. Install the app by navigating to the "Install App" tab and selecting your desired repositories.
 
+> **Note:** When running PR-Agent from GitHub App, the default configuration file (configuration.toml) will be loaded.<br>
+> However, you can override the default tool parameters by uploading a local configuration file<br>
+> For more information please check out [CONFIGURATION.md](Usage.md#working-from-github-app-pre-built-repo)
 ---
 
-####  Deploy as a Lambda Function
+### Method 6 - Deploy as a Lambda Function
 
 1. Follow steps 1-5 of [Method 5](#method-5-run-as-a-github-app).
 2. Build a docker image that can be used as a lambda function
@@ -266,7 +282,7 @@ docker push codiumai/pr-agent:github_app  # Push to your Docker repository
 
 ---
 
-#### AWS CodeCommit Setup
+### Method 7 - AWS CodeCommit Setup
 
 Not all features have been added to CodeCommit yet.  As of right now, CodeCommit has been implemented to run the pr-agent CLI on the command line, using AWS credentials stored in environment variables.  (More features will be added in the future.)  The following is a set of instructions to have pr-agent do a review of your CodeCommit pull request from the command line:
 
@@ -281,7 +297,7 @@ Not all features have been added to CodeCommit yet.  As of right now, CodeCommit
     * Option B: Set `PYTHONPATH` and run the CLI in one command, for example:
         * `PYTHONPATH="/PATH/TO/PROJECTS/pr-agent python pr_agent/cli.py [--ARGS]`
 
-#### AWS CodeCommit IAM Role Example
+##### AWS CodeCommit IAM Role Example
 
 Example IAM permissions to that user to allow access to CodeCommit:
 
@@ -303,7 +319,9 @@ Example IAM permissions to that user to allow access to CodeCommit:
                 "codecommit:Get*",
                 "codecommit:List*",
                 "codecommit:PostComment*",
-                "codecommit:PutCommentReaction"
+                "codecommit:PutCommentReaction",
+                "codecommit:UpdatePullRequestDescription",
+                "codecommit:UpdatePullRequestTitle"                
             ],
             "Resource": "*"
         }
@@ -311,7 +329,7 @@ Example IAM permissions to that user to allow access to CodeCommit:
 }
 ```
 
-#### AWS CodeCommit Access Key and Secret
+##### AWS CodeCommit Access Key and Secret
 
 Example setting the Access Key and Secret using environment variables
 
@@ -321,7 +339,7 @@ export AWS_SECRET_ACCESS_KEY="XXXXXXXXXXXXXXXX"
 export AWS_DEFAULT_REGION="us-east-1"
 ```
 
-#### AWS CodeCommit CLI Example
+##### AWS CodeCommit CLI Example
 
 After you set up AWS CodeCommit using the instructions above, here is an example CLI run that tells pr-agent to **review** a given pull request.
 (Replace your specific PYTHONPATH and PR URL in the example)
@@ -331,3 +349,25 @@ PYTHONPATH="/PATH/TO/PROJECTS/pr-agent" python pr_agent/cli.py \
   --pr_url https://us-east-1.console.aws.amazon.com/codesuite/codecommit/repositories/MY_REPO_NAME/pull-requests/321 \
   review
 ```
+
+---
+
+### Method 8 - Run a GitLab webhook server
+
+1. From the GitLab workspace or group, create an access token. Enable the "api" scope only.
+2. Generate a random secret for your app, and save it for later. For example, you can use:
+
+```
+WEBHOOK_SECRET=$(python -c "import secrets; print(secrets.token_hex(10))")
+```
+3. Follow the instructions to build the Docker image, setup a secrets file and deploy on your own server from [Method 5](#method-5-run-as-a-github-app) steps 4-7.
+4. In the secrets file, fill in the following:
+    - Your OpenAI key.
+    - In the [gitlab] section, fill in personal_access_token and shared_secret. The access token can be a personal access token, or a group or project access token.
+    - Set deployment_type to 'gitlab' in [configuration.toml](./pr_agent/settings/configuration.toml)
+5. Create a webhook in GitLab. Set the URL to the URL of your app's server. Set the secret token to the generated secret from step 2. 
+In the "Trigger" section, check the ‘comments’ and ‘merge request events’ boxes. 
+6. Test your installation by opening a merge request or commenting or a merge request using one of CodiumAI's commands.
+
+
+=======
