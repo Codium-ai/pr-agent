@@ -5,6 +5,7 @@ from time import sleep
 from typing import Tuple
 
 from jinja2 import Environment, StrictUndefined
+from traceloop.sdk.decorators import aworkflow
 
 from pr_agent.algo.ai_handler import AiHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
@@ -16,6 +17,7 @@ from pr_agent.git_providers.git_provider import get_main_pr_language
 CHANGELOG_LINES = 50
 
 
+@aworkflow(name="pr_update_changelog", method_name="run")
 class PRUpdateChangelog:
     def __init__(self, pr_url: str, cli_mode=False, args=None):
 
