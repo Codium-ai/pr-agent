@@ -3,6 +3,7 @@ FROM python:3.10 as base
 WORKDIR /app
 ADD pyproject.toml .
 ADD requirements.txt .
+RUN pip install --upgrade pip
 RUN pip install . && rm pyproject.toml requirements.txt
 ENV PYTHONPATH=/app
 
