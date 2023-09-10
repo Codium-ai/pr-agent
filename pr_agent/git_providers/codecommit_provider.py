@@ -74,6 +74,7 @@ class CodeCommitProvider(GitProvider):
             "create_inline_comment",
             "publish_inline_comments",
             "get_labels",
+            "gfm_markdown"
         ]:
             return False
         return True
