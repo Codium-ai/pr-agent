@@ -50,12 +50,12 @@ When running from your local repo (CLI), your local configuration file will be u
 
 Examples for invoking the different tools via the CLI:
 
-- **Review**:       `python cli.py --pr_url=<pr_url>  /review`
-- **Describe**:     `python cli.py --pr_url=<pr_url>  /describe`
-- **Improve**:      `python cli.py --pr_url=<pr_url>  /improve`
-- **Ask**:          `python cli.py --pr_url=<pr_url>  /ask "Write me a poem about this PR"`
-- **Reflect**:      `python cli.py --pr_url=<pr_url>  /reflect`
-- **Update Changelog**:      `python cli.py --pr_url=<pr_url>  /update_changelog`
+- **Review**:       `python cli.py --pr_url=<pr_url>  review`
+- **Describe**:     `python cli.py --pr_url=<pr_url>  describe`
+- **Improve**:      `python cli.py --pr_url=<pr_url>  improve`
+- **Ask**:          `python cli.py --pr_url=<pr_url>  ask "Write me a poem about this PR"`
+- **Reflect**:      `python cli.py --pr_url=<pr_url>  reflect`
+- **Update Changelog**:      `python cli.py --pr_url=<pr_url>  update_changelog`
 
 `<pr_url>` is the url of the relevant PR (for example: https://github.com/Codium-ai/pr-agent/pull/50).
 
@@ -168,6 +168,31 @@ model="" # the OpenAI model you've deployed on Azure (e.g. gpt-3.5-turbo)
 in the configuration.toml 
 
 #### Huggingface
+
+**Local**  
+You can run Huggingface models locally through either [VLLM](https://docs.litellm.ai/docs/providers/vllm) or [Ollama](https://docs.litellm.ai/docs/providers/ollama)
+
+E.g. to use a new Huggingface model locally via Ollama, set:
+```
+[__init__.py]
+MAX_TOKENS = {
+    "model-name-on-ollama": <max_tokens>
+}
+e.g.
+MAX_TOKENS={
+    ...,
+    "llama2": 4096
+}
+
+
+[config] # in configuration.toml
+model = "ollama/llama2"
+
+[ollama] # in .secrets.toml
+api_base = ... # the base url for your huggingface inference endpoint 
+```
+
+**Inference Endpoints**
 
 To use a new model with Huggingface Inference Endpoints, for example, set:
 ```

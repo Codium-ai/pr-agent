@@ -174,7 +174,7 @@ def fix_json_escape_char(json_message=None):
     Raises:
         None
 
-    """    
+    """
     try:
         result = json.loads(json_message)
     except Exception as e:
@@ -201,7 +201,7 @@ def convert_str_to_datetime(date_str):
     Example:
         >>> convert_str_to_datetime('Mon, 01 Jan 2022 12:00:00 UTC')
         datetime.datetime(2022, 1, 1, 12, 0, 0)
-    """    
+    """
     datetime_format = '%a, %d %b %Y %H:%M:%S %Z'
     return datetime.strptime(date_str, datetime_format)
 
