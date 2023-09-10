@@ -1,5 +1,5 @@
-pinecone_datasets
 pinecone-client
+pinecone_datasets
 dynaconf==3.1.12
 fastapi==0.99.0
 PyGithub==1.59.*
