@@ -95,6 +95,8 @@ polling_interval_seconds = 30
 # token to authenticate in the patch server
 # patch_server_token = ""
 
+[litellm]
+#use_client = false
 
 [pr_similar_issue]
 skip_comments = false
