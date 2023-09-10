@@ -20,4 +20,4 @@ ujson==5.8.0
 azure-devops==7.1.0b3
 msrest==0.7.1
 pinecone-client
-pinecone-datasets==0.6.1
+pinecone-datasets @ git+https://github.com/mrT23/pinecone-datasets.git@main
