@@ -3,8 +3,6 @@ fastapi==0.99.0
 PyGithub==1.59.*
 retry==0.9.2
 openai==0.27.8
-pinecone-client
-pinecone_datasets
 Jinja2==3.1.2
 tiktoken==0.4.0
 uvicorn==0.22.0
@@ -21,3 +19,5 @@ google-cloud-storage==2.10.0
 ujson==5.8.0
 azure-devops==7.1.0b3
 msrest==0.7.1
+pinecone-client
+pinecone_datasets @ git+https://github.com/mrT23/pinecone-datasets.git@main
