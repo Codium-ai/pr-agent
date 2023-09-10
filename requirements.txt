@@ -1,5 +1,5 @@
 pinecone-client
-pinecone_datasets
+pinecone_datasets @ git+https://github.com/mrT23/pinecone-datasets.git@main
 dynaconf==3.1.12
 fastapi==0.99.0
 PyGithub==1.59.*
