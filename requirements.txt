@@ -21,4 +21,4 @@ azure-devops==7.1.0b3
 msrest==0.7.1
 pinecone-client
 pinecone-datasets @ git+https://github.com/mrT23/pinecone-datasets.git@main
-traceloop-sdk~=0.0.39
+traceloop-sdk~=0.0.40
