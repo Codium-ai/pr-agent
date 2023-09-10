@@ -54,11 +54,16 @@ class CodeCommitClient:
     def __init__(self):
         self.boto_client = None
 
+    def is_supported(self, capability: str) -> bool:
+        if capability in ["gfm_markdown"]:
+            return False
+        return True
+
     def _connect_boto_client(self):
         try:
             self.boto_client = boto3.client("codecommit")
         except Exception as e:
-            raise ValueError(f"Failed to connect to AWS CodeCommit: {e}")
+            raise ValueError(f"Failed to connect to AWS CodeCommit: {e}") from e
 
     def get_differences(self, repo_name: int, destination_commit: str, source_commit: str):
         """

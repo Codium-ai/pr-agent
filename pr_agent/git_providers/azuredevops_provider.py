@@ -38,7 +38,8 @@ class AzureDevopsProvider:
             self.set_pr(pr_url)
 
     def is_supported(self, capability: str) -> bool:
-        if capability in ['get_issue_comments', 'create_inline_comment', 'publish_inline_comments', 'get_labels', 'remove_initial_comment']:
+        if capability in ['get_issue_comments', 'create_inline_comment', 'publish_inline_comments', 'get_labels',
+                          'remove_initial_comment', 'gfm_markdown']:
             return False
         return True
 
