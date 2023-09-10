@@ -96,5 +96,4 @@ polling_interval_seconds = 30
 # patch_server_token = ""
 
 [litellm]
-#LITELLM_TOKEN = "..." # see https://docs.litellm.ai/docs/debugging/hosted_debugging for details and instructions
 #use_client = false
