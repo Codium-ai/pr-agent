@@ -2,8 +2,7 @@ FROM python:3.10 as base
 
 WORKDIR /app
 ADD pyproject.toml .
-ADD requirements.txt .
-RUN pip install . && rm pyproject.toml requirements.txt
+RUN pip install . && rm pyproject.toml
 ENV PYTHONPATH=/app
 
 FROM base as github_app
