@@ -20,7 +20,7 @@ def get_setting(key: str) -> Any:
     except Exception:
         return global_settings.get(key, None)
 
-def convert_to_markdown(output_data: dict) -> str:
+def convert_to_markdown(output_data: dict, gfm_supported: bool) -> str:
     """
     Convert a dictionary of data into markdown format.
     Args:
@@ -49,11 +49,14 @@ def convert_to_markdown(output_data: dict) -> str:
             continue
         if isinstance(value, dict):
             markdown_text += f"## {key}\n\n"
-            markdown_text += convert_to_markdown(value)
+            markdown_text += convert_to_markdown(value, gfm_supported)
         elif isinstance(value, list):
             emoji = emojis.get(key, "")
             if key.lower() == 'code feedback':
-                markdown_text += f"\n\n- **<details><summary> { emoji } Code feedback:**</summary>\n\n"
+                if gfm_supported:
+                    markdown_text += f"\n\n- **<details><summary> { emoji } Code feedback:**</summary>\n\n"
+                else:
+                    markdown_text += f"\n\n- **{emoji} Code feedback:**\n\n"
             else:
                 markdown_text += f"- {emoji} **{key}:**\n\n"
             for item in value:
@@ -62,7 +65,10 @@ def convert_to_markdown(output_data: dict) -> str:
                 elif item:
                     markdown_text += f"  - {item}\n"
             if key.lower() == 'code feedback':
-                markdown_text += "</details>\n\n"
+                if gfm_supported:
+                    markdown_text += "</details>\n\n"
+                else:
+                    markdown_text += "\n\n"
         elif value != 'n/a':
             emoji = emojis.get(key, "")
             markdown_text += f"- {emoji} **{key}:** {value}\n"

@@ -68,12 +68,12 @@ class PRDescription:
         await retry_with_fallback_models(self._prepare_prediction)
         
         logging.info('Preparing answer...')
-        pr_title, pr_body, pr_types, markdown_text = self._prepare_pr_answer()
+        pr_title, pr_body, pr_types, markdown_text, description = self._prepare_pr_answer()
         
         if get_settings().config.publish_output:
             logging.info('Pushing answer...')
             if get_settings().pr_description.publish_description_as_comment:
-                self.git_provider.publish_comment(markdown_text)
+                self.git_provider.publish_comment(pr_body)
             else:
                 self.git_provider.publish_description(pr_title, pr_body)
                 if self.git_provider.is_supported("get_labels"):
@@ -143,6 +143,7 @@ class PRDescription:
         - pr_body: a string containing the PR body in a markdown format.
         - pr_types: a list of strings containing the PR types.
         - markdown_text: a string containing the AI prediction data in a markdown format. used for publishing a comment
+        - user_description: a string containing the user description
         """
         # Load the AI prediction data into a dictionary
         data = load_yaml(self.prediction.strip())
@@ -189,8 +190,9 @@ class PRDescription:
                 pr_body += "\n___\n"
 
         markdown_text = f"## Title\n\n{title}\n\n___\n{pr_body}"
+        description = data['PR Description']
 
         if get_settings().config.verbosity_level >= 2:
             logging.info(f"title:\n{title}\n{pr_body}")
 
-        return title, pr_body, pr_types, markdown_text
+        return title, pr_body, pr_types, markdown_text, description
