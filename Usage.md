@@ -169,6 +169,31 @@ in the configuration.toml
 
 #### Huggingface
 
+**Local**  
+You can run Huggingface models locally through either [VLLM](https://docs.litellm.ai/docs/providers/vllm) or [Ollama](https://docs.litellm.ai/docs/providers/ollama)
+
+E.g. to use a new Huggingface model locally via Ollama, set:
+```
+[__init__.py]
+MAX_TOKENS = {
+    "model-name-on-ollama": <max_tokens>
+}
+e.g.
+MAX_TOKENS={
+    ...,
+    "llama2": 4096
+}
+
+
+[config] # in configuration.toml
+model = "ollama/llama2"
+
+[ollama] # in .secrets.toml
+api_base = ... # the base url for your huggingface inference endpoint 
+```
+
+**Inference Endpoints**
+
 To use a new model with Huggingface Inference Endpoints, for example, set:
 ```
 [__init__.py]
