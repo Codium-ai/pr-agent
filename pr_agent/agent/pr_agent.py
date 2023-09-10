@@ -41,9 +41,12 @@ class PRAgent:
         pass
 
     async def handle_request(self, pr_url, request, notify=None) -> bool:
-        Traceloop.init(app_name="pr_agent")
-        # To track multiple processing of the same PR together
-        Traceloop.set_correlation_id(pr_url)
+        if (get_settings().config.tracing):
+            Traceloop.init(app_name="pr_agent")
+            # To track multiple processing of the same PR together
+            Traceloop.set_correlation_id(pr_url)
+        else:
+            os.environ["TRACELOOP_SUPPRESS_WARNINGS"] = "true"
 
         # First, apply repo specific settings if exists
         if get_settings().config.use_repo_settings_file:

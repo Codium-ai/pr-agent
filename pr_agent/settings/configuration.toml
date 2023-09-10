@@ -11,6 +11,9 @@ ai_timeout=180
 max_description_tokens = 500
 max_commits_tokens = 500
 secret_provider="google_cloud_storage"
+# Set the following to enable tracing with OpenTelemetry to your observability provider (Datadog, etc.)
+# See https://traceloop.com/docs/python-sdk/introduction for instructions how to config the tracer
+tracing=false
 
 [pr_reviewer] # /review #
 require_focused_review=false
