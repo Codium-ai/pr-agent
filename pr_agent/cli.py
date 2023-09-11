@@ -17,6 +17,7 @@ For example:
 - cli.py --pr_url=... improve
 - cli.py --pr_url=... ask "write me a poem about this PR"
 - cli.py --pr_url=... reflect
+- cli.py --issue_url=... similar_issue
 
 Supported commands:
 -review / review_pr - Add a review that includes a summary of the PR and specific suggestions for improvement.
@@ -37,14 +38,22 @@ Configuration:
 To edit any configuration parameter from 'configuration.toml', just add -config_path=<value>.
 For example: 'python cli.py --pr_url=... review --pr_reviewer.extra_instructions="focus on the file: ..."'
 """)
-    parser.add_argument('--pr_url', type=str, help='The URL of the PR to review', required=True)
+    parser.add_argument('--pr_url', type=str, help='The URL of the PR to review', default=None)
+    parser.add_argument('--issue_url', type=str, help='The URL of the Issue to review', default=None)
     parser.add_argument('command', type=str, help='The', choices=commands, default='review')
     parser.add_argument('rest', nargs=argparse.REMAINDER, default=[])
     args = parser.parse_args(inargs)
+    if not args.pr_url and not args.issue_url:
+        parser.print_help()
+        return
+
     logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
     command = args.command.lower()
     get_settings().set("CONFIG.CLI_MODE", True)
-    result = asyncio.run(PRAgent().handle_request(args.pr_url, command + " " + " ".join(args.rest)))
+    if args.issue_url:
+        result = asyncio.run(PRAgent().handle_request(args.issue_url, command + " " + " ".join(args.rest)))
+    else:
+        result = asyncio.run(PRAgent().handle_request(args.pr_url, command + " " + " ".join(args.rest)))
     if not result:
         parser.print_help()
 

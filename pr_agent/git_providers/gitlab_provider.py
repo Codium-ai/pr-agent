@@ -43,7 +43,7 @@ class GitLabProvider(GitProvider):
         self.incremental = incremental
 
     def is_supported(self, capability: str) -> bool:
-        if capability in ['get_issue_comments', 'create_inline_comment', 'publish_inline_comments']:
+        if capability in ['get_issue_comments', 'create_inline_comment', 'publish_inline_comments', 'gfm_markdown']:
             return False
         return True
 

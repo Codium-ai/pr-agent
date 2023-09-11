@@ -94,3 +94,16 @@ polling_interval_seconds = 30
 # patch_server_endpoint = "http://127.0.0.1:5000/patch"
 # token to authenticate in the patch server
 # patch_server_token = ""
+
+[litellm]
+#use_client = false
+
+[pr_similar_issue]
+skip_comments = false
+force_update_dataset = false
+max_issues_to_scan = 500
+
+[pinecone]
+# fill and place in .secrets.toml
+#api_key = ...
+# environment = "gcp-starter"

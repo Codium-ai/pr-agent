@@ -1,4 +1,5 @@
 import logging
+import os
 
 import litellm
 import openai
@@ -24,6 +25,11 @@ class AiHandler:
         try:
             openai.api_key = get_settings().openai.key
             litellm.openai_key = get_settings().openai.key
+            if get_settings().get("litellm.use_client"):
+                litellm_token = get_settings().get("litellm.LITELLM_TOKEN")
+                assert litellm_token, "LITELLM_TOKEN is required"
+                os.environ["LITELLM_TOKEN"] = litellm_token
+                litellm.use_client = True
             self.azure = False
             if get_settings().get("OPENAI.ORG", None):
                 litellm.organization = get_settings().openai.org

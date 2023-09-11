@@ -101,8 +101,7 @@ class BitbucketProvider(GitProvider):
             return False
 
     def is_supported(self, capability: str) -> bool:
-        if capability in ['get_issue_comments', 'publish_inline_comments', 'get_labels']:
-
+        if capability in ['get_issue_comments', 'publish_inline_comments', 'get_labels', 'gfm_markdown']:
             return False
         return True
 
@@ -179,11 +178,6 @@ class BitbucketProvider(GitProvider):
     def publish_inline_comments(self, comments: list[dict]):
         for comment in comments:
             self.publish_inline_comment(comment['body'], comment['start_line'], comment['path'])
-
-    def publish_bitbucket_inline_comments(self, comments: list[dict]):
-        for comment in comments:
-            self.publish_inline_comment(comment['body'],comment['position'], comment['path'])
-
 
     def get_title(self):
         return self.pr.title

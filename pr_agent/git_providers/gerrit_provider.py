@@ -313,7 +313,8 @@ class GerritProvider(GitProvider):
             # 'get_issue_comments',
             'create_inline_comment',
             'publish_inline_comments',
-            'get_labels'
+            'get_labels',
+            'gfm_markdown'
         ]:
             return False
         return True

@@ -21,7 +21,10 @@ jobs:
         id: pragent
         uses: Codium-ai/pr-agent@main
         env:
-          OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
-          OPENAI_ORG: ${{ secrets.OPENAI_ORG }} # optional
+          OPENAI.KEY: ${{ secrets.OPENAI_KEY }}
+          OPENAI.ORG: ${{ secrets.OPENAI_ORG }} # optional
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PINECONE.API_KEY: ${{ secrets.PINECONE_API_KEY }}
+          PINECONE.ENVIRONMENT: ${{ secrets.PINECONE_ENVIRONMENT }}
+
 

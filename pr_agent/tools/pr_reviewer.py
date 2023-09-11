@@ -214,7 +214,7 @@ class PRReviewer:
                 "⏮️ Review for commits since previous PR-Agent review": f"Starting from commit {last_commit_url}"}})
             data.move_to_end('Incremental PR Review', last=False)
 
-        markdown_text = convert_to_markdown(data)
+        markdown_text = convert_to_markdown(data, self.git_provider.is_supported("gfm_markdown"))
         user = self.git_provider.get_user_id()
 
         # Add help text if not in CLI mode
@@ -266,9 +266,6 @@ class PRReviewer:
                 self.git_provider.publish_inline_comment(content, relevant_file, relevant_line_in_file)
 
         if comments:
-            if get_settings().config.git_provider == 'bitbucket':
-                self.git_provider.publish_bitbucket_inline_comments(comments)
-            else:
                 self.git_provider.publish_inline_comments(comments)
 
     def _get_user_answers(self) -> Tuple[str, str]:
