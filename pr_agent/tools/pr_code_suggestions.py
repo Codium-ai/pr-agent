@@ -50,7 +50,7 @@ class PRCodeSuggestions:
     async def run(self):
         logging.info('Generating code suggestions for PR...')
         if get_settings().config.publish_output:
-            self.git_provider.publish_comment("Preparing review...", is_temporary=True)
+            self.git_provider.publish_comment("👀", is_temporary=True)
 
         logging.info('Preparing PR review...')
         if not self.is_extended:

@@ -46,6 +46,18 @@ class GitLabProvider(GitProvider):
         if capability in ['get_issue_comments', 'create_inline_comment', 'publish_inline_comments', 'gfm_markdown']:
             return False
         return True
+    
+    def _get_repo(self):
+        if hasattr(self, 'repo_obj') and \
+                hasattr(self.repo_obj, 'full_name') and \
+                self.repo_obj.full_name == self.repo:
+            return self.repo_obj
+        else:
+            self.repo_obj = self.github_client.get_repo(self.repo)
+            return self.repo_obj
+        
+    def _get_pr(self):
+        return self._get_repo().get_pull(self.pr_num)
 
     @property
     def pr(self):
@@ -122,6 +134,22 @@ class GitLabProvider(GitProvider):
                                   old_filename=None if diff['old_path'] == diff['new_path'] else diff['old_path']))
         self.diff_files = diff_files
         return diff_files
+    
+    def add_eyes_reaction(self, issue_comment_id: int) -> Optional[int]:
+        try:
+            reaction = self.pr.get_issue_comment(issue_comment_id).create_reaction("eyes")
+            return reaction.id
+        except Exception as e:
+            logging.exception(f"Failed to add eyes reaction, error: {e}")
+            return None
+
+    def remove_reaction(self, issue_comment_id: int, reaction_id: int) -> bool:
+        try:
+            self.pr.get_issue_comment(issue_comment_id).delete_reaction(reaction_id)
+            return True
+        except Exception as e:
+            logging.exception(f"Failed to remove eyes reaction, error: {e}")
+            return False
 
     def get_files(self):
         if not self.git_files:
@@ -313,10 +341,20 @@ class GitLabProvider(GitProvider):
             return ""
 
     def add_eyes_reaction(self, issue_comment_id: int) -> Optional[int]:
-        return True
+        try:
+            reaction = self.pr.get_issue_comment(issue_comment_id).create_reaction("eyes")
+            return reaction.id
+        except Exception as e:
+            logging.exception(f"Failed to add eyes reaction, error: {e}")
+            return None
 
     def remove_reaction(self, issue_comment_id: int, reaction_id: int) -> bool:
-        return True
+        try:
+            self.pr.get_issue_comment(issue_comment_id).delete_reaction(reaction_id)
+            return True
+        except Exception as e:
+            logging.exception(f"Failed to remove eyes reaction, error: {e}")
+            return False
 
     def _parse_merge_request_url(self, merge_request_url: str) -> Tuple[str, int]:
         parsed_url = urlparse(merge_request_url)
