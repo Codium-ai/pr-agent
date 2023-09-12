@@ -109,7 +109,7 @@ key = ""  # Acquire through https://platform.openai.com
 
 [bitbucket]
 # Bitbucket personal bearer token
-bearer_token = "v7TX01wzW-hBYZRVl1DMAtX7pjCQoiZ9s9f32XaTbblrLGjBkDR8Zo9p3sIw7iQ40Re102Vos2e0UISExktOp25Pf4XSd4P-msTSkNTwp8fF66Sch5oofe44brsPW_vS"
+bearer_token = ""
 
 [litellm]
 #use_client = false
