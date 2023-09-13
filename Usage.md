@@ -251,6 +251,7 @@ pat = "YOUR_PAT_TOKEN"
 
 #### Similar issue tool
 
+Example usage:
 <img src=./pics/similar_issue_tool.png width="768">
 
 To enable usage of the '**similar issue**' tool, you need to set the following keys in `.secrets.toml` (or in the relevant environment variables):
