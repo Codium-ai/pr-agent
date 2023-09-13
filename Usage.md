@@ -251,7 +251,7 @@ pat = "YOUR_PAT_TOKEN"
 
 #### Similar issue tool
 
-Example usage:
+[Example usage](https://github.com/Alibaba-MIIL/ASL/issues/107)
 
 <img src=./pics/similar_issue_tool.png width="768">
 
