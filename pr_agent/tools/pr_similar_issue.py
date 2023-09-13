@@ -114,21 +114,30 @@ class PRSimilarIssue:
                                    filter={"repo": self.repo_name_for_index},
                                    include_metadata=True).to_dict()
         relevant_issues_number_list = []
+        relevant_comment_number_list = []
+        score_list = []
         for r in res['matches']:
             issue_number = int(r["id"].split('.')[0].split('_')[-1])
             if original_issue_number == issue_number:
                 continue
             if issue_number not in relevant_issues_number_list:
                 relevant_issues_number_list.append(issue_number)
+            if 'comment' in r["id"]:
+                relevant_comment_number_list.append(int(r["id"].split('.')[1].split('_')[-1]))
+            else:
+                relevant_comment_number_list.append(-1)
+            score_list.append(str("{:.2f}".format(r['score'])))
         logging.info('Done')
 
         logging.info('Publishing response...')
-        similar_issues_str = "Similar Issues:\n\n"
+        similar_issues_str = "### Similar Issues\n___\n\n"
         for i, issue_number_similar in enumerate(relevant_issues_number_list):
             issue = self.git_provider.repo_obj.get_issue(issue_number_similar)
             title = issue.title
             url = issue.html_url
-            similar_issues_str += f"{i + 1}. [{title}]({url})\n\n"
+            if relevant_comment_number_list[i] != -1:
+                url = list(issue.get_comments())[relevant_comment_number_list[i]].html_url
+            similar_issues_str += f"{i + 1}. **[{title}]({url})** (score={score_list[i]})\n\n"
         if get_settings().config.publish_output:
             response = issue_main.create_comment(similar_issues_str)
         logging.info(similar_issues_str)
