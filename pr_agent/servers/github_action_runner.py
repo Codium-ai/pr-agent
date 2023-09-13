@@ -61,12 +61,21 @@ async def run_action():
         if action in ["created", "edited"]:
             comment_body = event_payload.get("comment", {}).get("body")
             if comment_body:
-                pr_url = event_payload.get("issue", {}).get("pull_request", {}).get("url")
-                if pr_url:
+                is_pr = False
+                # check if issue is pull request
+                if event_payload.get("issue", {}).get("pull_request"):
+                    url = event_payload.get("issue", {}).get("pull_request", {}).get("url")
+                    is_pr = True
+                else:
+                    url = event_payload.get("issue", {}).get("url")
+                if url:
                     body = comment_body.strip().lower()
                     comment_id = event_payload.get("comment", {}).get("id")
-                    provider = get_git_provider()(pr_url=pr_url)
-                    await PRAgent().handle_request(pr_url, body, notify=lambda: provider.add_eyes_reaction(comment_id))
+                    provider = get_git_provider()(pr_url=url)
+                    if is_pr:
+                        await PRAgent().handle_request(url, body, notify=lambda: provider.add_eyes_reaction(comment_id))
+                    else:
+                        await PRAgent().handle_request(url, body)
 
 
 if __name__ == '__main__':
