@@ -98,11 +98,14 @@ class PRSimilarIssue:
                 logging.info('No new issues to update')
 
     async def run(self):
+        logging.info('Getting issue...')
         repo_name, original_issue_number = self.git_provider._parse_issue_url(self.issue_url.split('=')[-1])
         issue_main = self.git_provider.repo_obj.get_issue(original_issue_number)
         issue_str, comments, number = self._process_issue(issue_main)
         openai.api_key = get_settings().openai.key
+        logging.info('Done')
 
+        logging.info('Querying...')
         res = openai.Embedding.create(input=[issue_str], engine=MODEL)
         embeds = [record['embedding'] for record in res['data']]
         pinecone_index = pinecone.Index(index_name=self.index_name)
@@ -117,7 +120,9 @@ class PRSimilarIssue:
                 continue
             if issue_number not in relevant_issues_number_list:
                 relevant_issues_number_list.append(issue_number)
+        logging.info('Done')
 
+        logging.info('Publishing response...')
         similar_issues_str = "Similar Issues:\n\n"
         for i, issue_number_similar in enumerate(relevant_issues_number_list):
             issue = self.git_provider.repo_obj.get_issue(issue_number_similar)
@@ -127,6 +132,7 @@ class PRSimilarIssue:
         if get_settings().config.publish_output:
             response = issue_main.create_comment(similar_issues_str)
         logging.info(similar_issues_str)
+        logging.info('Done')
 
     def _process_issue(self, issue):
         header = issue.title
