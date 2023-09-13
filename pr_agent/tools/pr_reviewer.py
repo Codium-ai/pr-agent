@@ -101,7 +101,7 @@ class PRReviewer:
         logging.info(f'Reviewing PR: {self.pr_url} ...')
 
         if get_settings().config.publish_output:
-            self.git_provider.publish_comment("👀", is_temporary=True)
+            self.git_provider.publish_comment("Preparing answer...", is_temporary=True)
     
         await retry_with_fallback_models(self._prepare_prediction)
     
