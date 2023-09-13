@@ -250,6 +250,9 @@ pat = "YOUR_PAT_TOKEN"
 ```
 
 #### Similar issue tool
+
+<img src=./pics/similar_issue_tool.png width="768">
+
 To enable usage of the '**similar issue**' tool, you need to set the following keys in `.secrets.toml` (or in the relevant environment variables):
 ```
 [pinecone]
@@ -264,5 +267,4 @@ These parameters can be obtained by registering to [Pinecone](https://app.pineco
 - To invoke the 'similar' issue tool via online usage, [comment](https://github.com/Codium-ai/pr-agent/issues/178#issuecomment-1716934893) on a PR:
 `/similar_issue`
 
-- You can also enable the 'similar issue' tool to run automatically when a new issue is opened, by adding it to the [pr_commands list in the github_app section](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L66).
-```
+- You can also enable the 'similar issue' tool to run automatically when a new issue is opened, by adding it to the [pr_commands list in the github_app section](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L66)
