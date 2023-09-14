@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 from typing import Optional, Tuple
 from urllib.parse import urlparse
 
@@ -246,12 +247,21 @@ class BitbucketProvider(GitProvider):
         return ""  # not implemented yet
     
     # bitbucket does not support labels
-    def publish_description(self, pr_title: str, description: str):
+    def publish_description(self, pr_title: str, pr_body: str):
+        pattern = r"## PR Description:\s*(.*?)\n___"
+        match = re.search(pattern, pr_body, re.DOTALL)
+        description = ""
+        
+        if match:
+            pr_description = match.group(1).strip()
+            if pr_description:
+                description = pr_description
+
         payload = json.dumps({
             "description": description,
             "title": pr_title
 
-            })
+        })
 
         response = requests.request("PUT", self.bitbucket_pull_request_api_url, headers=self.headers, data=payload)
         return response
