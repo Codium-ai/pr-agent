@@ -253,4 +253,4 @@ class PRDescription:
 
         return title, pr_body
 
-        return title, pr_body, pr_types, markdown_text, description
+        return title, pr_body, pr_types, description
