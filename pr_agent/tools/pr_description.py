@@ -75,16 +75,15 @@ class PRDescription:
         else:
             return None
 
+        pr_labels = []
         if get_settings().pr_description.publish_labels:
-            pr_types = self._prepare_types()
+            pr_labels = self._prepare_labels()
 
         if get_settings().pr_description.use_description_markers:
-            logging.info(f"Using description marker replacements {self.pr_id}")
-            pr_title, pr_body = self._prepare_marker_replacements()
+            pr_title, pr_body = self._prepare_pr_answer_with_markers()
         else:
             pr_title, pr_body,  = self._prepare_pr_answer()
         full_markdown_description = f"## Title\n\n{pr_title}\n\n___\n{pr_body}"
-
 
         if get_settings().config.publish_output:
             logging.info(f"Pushing answer {self.pr_id}")
@@ -96,7 +95,7 @@ class PRDescription:
                     current_labels = self.git_provider.get_labels()
                     if current_labels is None:
                         current_labels = []
-                    self.git_provider.publish_labels(pr_types + current_labels)
+                    self.git_provider.publish_labels(pr_labels + current_labels)
             self.git_provider.remove_initial_comment()
         
         return ""
@@ -162,7 +161,7 @@ class PRDescription:
             self.data["User Description"] = self.user_description
 
 
-    def _prepare_types(self) -> List[str]:
+    def _prepare_labels(self) -> List[str]:
         pr_types = []
 
         # If the 'PR Type' key is present in the dictionary, split its value by comma and assign it to 'pr_types'
@@ -174,7 +173,8 @@ class PRDescription:
 
         return pr_types
 
-    def _prepare_marker_replacements(self) -> Tuple[str, str]:
+    def _prepare_pr_answer_with_markers(self) -> Tuple[str, str]:
+        logging.info(f"Using description marker replacements {self.pr_id}")
         title = self.vars["title"]
         body = self.user_description
         if get_settings().pr_description.include_generated_by_header:
@@ -207,8 +207,6 @@ class PRDescription:
         Returns:
         - title: a string containing the PR title.
         - pr_body: a string containing the PR description body in a markdown format.
-        - markdown_text: a string containing the AI prediction data in a markdown format. used for publishing a comment
-        - user_description: a string containing the user description
         """
 
         # Iterate over the dictionary items and append the key and value to 'markdown_text' in a markdown format
@@ -245,12 +243,7 @@ class PRDescription:
             if idx < len(self.data) - 1:
                 pr_body += "\n___\n"
 
-        markdown_text = f"## Title\n\n{title}\n\n___\n{pr_body}"
-        description = data['PR Description']
-
         if get_settings().config.verbosity_level >= 2:
             logging.info(f"title:\n{title}\n{pr_body}")
 
         return title, pr_body
-
-        return title, pr_body, pr_types, description
