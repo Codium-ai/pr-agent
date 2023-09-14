@@ -203,3 +203,13 @@ Here are some advantages of PR-Agent:
 - [openai-pr-reviewer](https://github.com/coderabbitai/openai-pr-reviewer)
 - [CodeReview BOT](https://github.com/anc95/ChatGPT-CodeReview)
 - [AI-Maintainer](https://github.com/merwanehamadi/AI-Maintainer)
+  
+## Links
+
+[![Join our Discord community](https://raw.githubusercontent.com/Codium-ai/codiumai-vscode-release/main/media/docs/Joincommunity.png)](https://discord.gg/kG35uSHDBc)
+
+- Discord community: https://discord.gg/kG35uSHDBc
+- CodiumAI site: https://codium.ai
+- Blog: https://www.codium.ai/blog/
+- Troubleshooting: https://www.codium.ai/blog/technical-faq-and-troubleshooting/
+- Support: support@codium.ai
