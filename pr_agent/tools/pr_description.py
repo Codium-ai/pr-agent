@@ -208,6 +208,7 @@ class PRDescription:
         - title: a string containing the PR title.
         - pr_body: a string containing the PR description body in a markdown format.
         - markdown_text: a string containing the AI prediction data in a markdown format. used for publishing a comment
+        - user_description: a string containing the user description
         """
 
         # Iterate over the dictionary items and append the key and value to 'markdown_text' in a markdown format
@@ -244,7 +245,12 @@ class PRDescription:
             if idx < len(self.data) - 1:
                 pr_body += "\n___\n"
 
+        markdown_text = f"## Title\n\n{title}\n\n___\n{pr_body}"
+        description = data['PR Description']
+
         if get_settings().config.verbosity_level >= 2:
             logging.info(f"title:\n{title}\n{pr_body}")
 
         return title, pr_body
+
+        return title, pr_body, pr_types, markdown_text, description

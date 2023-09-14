@@ -50,12 +50,12 @@ When running from your local repo (CLI), your local configuration file will be u
 
 Examples for invoking the different tools via the CLI:
 
-- **Review**:       `python cli.py --pr_url=<pr_url>  /review`
-- **Describe**:     `python cli.py --pr_url=<pr_url>  /describe`
-- **Improve**:      `python cli.py --pr_url=<pr_url>  /improve`
-- **Ask**:          `python cli.py --pr_url=<pr_url>  /ask "Write me a poem about this PR"`
-- **Reflect**:      `python cli.py --pr_url=<pr_url>  /reflect`
-- **Update Changelog**:      `python cli.py --pr_url=<pr_url>  /update_changelog`
+- **Review**:       `python cli.py --pr_url=<pr_url>  review`
+- **Describe**:     `python cli.py --pr_url=<pr_url>  describe`
+- **Improve**:      `python cli.py --pr_url=<pr_url>  improve`
+- **Ask**:          `python cli.py --pr_url=<pr_url>  ask "Write me a poem about this PR"`
+- **Reflect**:      `python cli.py --pr_url=<pr_url>  reflect`
+- **Update Changelog**:      `python cli.py --pr_url=<pr_url>  update_changelog`
 
 `<pr_url>` is the url of the relevant PR (for example: https://github.com/Codium-ai/pr-agent/pull/50).
 
@@ -149,14 +149,82 @@ TBD
 #### Changing a model
 See [here](pr_agent/algo/__init__.py) for the list of available models.
 
-To use Llama2 model, for example, set:
+#### Azure
+To use Azure, set: 
+```
+api_key = "" # your azure api key
+api_type = "azure"
+api_version = '2023-05-15'  # Check Azure documentation for the current API version
+api_base = ""  # The base URL for your Azure OpenAI resource. e.g. "https://<your resource name>.openai.azure.com"
+deployment_id = ""  # The deployment name you chose when you deployed the engine
+```
+in your .secrets.toml
+
+and 
 ```
 [config]
+model="" # the OpenAI model you've deployed on Azure (e.g. gpt-3.5-turbo)
+```
+in the configuration.toml 
+
+#### Huggingface
+
+**Local**  
+You can run Huggingface models locally through either [VLLM](https://docs.litellm.ai/docs/providers/vllm) or [Ollama](https://docs.litellm.ai/docs/providers/ollama)
+
+E.g. to use a new Huggingface model locally via Ollama, set:
+```
+[__init__.py]
+MAX_TOKENS = {
+    "model-name-on-ollama": <max_tokens>
+}
+e.g.
+MAX_TOKENS={
+    ...,
+    "llama2": 4096
+}
+
+
+[config] # in configuration.toml
+model = "ollama/llama2"
+
+[ollama] # in .secrets.toml
+api_base = ... # the base url for your huggingface inference endpoint 
+```
+
+**Inference Endpoints**
+
+To use a new model with Huggingface Inference Endpoints, for example, set:
+```
+[__init__.py]
+MAX_TOKENS = {
+    "model-name-on-huggingface": <max_tokens>
+}
+e.g.
+MAX_TOKENS={
+    ...,
+    "meta-llama/Llama-2-7b-chat-hf": 4096
+}
+[config] # in configuration.toml
+model = "huggingface/meta-llama/Llama-2-7b-chat-hf"
+
+[huggingface] # in .secrets.toml
+key = ... # your huggingface api key
+api_base = ... # the base url for your huggingface inference endpoint 
+```
+(you can obtain a Llama2 key from [here](https://replicate.com/replicate/llama-2-70b-chat/api))
+
+#### Replicate
+
+To use Llama2 model with Replicate, for example, set:
+```
+[config] # in configuration.toml
 model = "replicate/llama-2-70b-chat:2c1608e18606fad2812020dc541930f2d0495ce32eee50074220b87300bc16e1"
-[replicate]
+[replicate] # in .secrets.toml
 key = ...
 ```
 (you can obtain a Llama2 key from [here](https://replicate.com/replicate/llama-2-70b-chat/api))
+
 
 Also review the [AiHandler](pr_agent/algo/ai_handler.py) file for instruction how to set keys for other models.
 
@@ -180,3 +248,25 @@ And use the following settings (you have to replace the values) in .secrets.toml
 org = "https://dev.azure.com/YOUR_ORGANIZATION/"
 pat = "YOUR_PAT_TOKEN"
 ```
+
+#### Similar issue tool
+
+[Example usage](https://github.com/Alibaba-MIIL/ASL/issues/107)
+
+<img src=./pics/similar_issue_tool.png width="768">
+
+To enable usage of the '**similar issue**' tool, you need to set the following keys in `.secrets.toml` (or in the relevant environment variables):
+```
+[pinecone]
+api_key = "..."
+environment = "..."
+```
+These parameters can be obtained by registering to [Pinecone](https://app.pinecone.io/?sessionType=signup/).
+
+- To invoke the 'similar issue' tool from **CLI**, run:
+`python3 cli.py --issue_url=... similar_issue`
+
+- To invoke the 'similar' issue tool via online usage, [comment](https://github.com/Codium-ai/pr-agent/issues/178#issuecomment-1716934893) on a PR:
+`/similar_issue`
+
+- You can also enable the 'similar issue' tool to run automatically when a new issue is opened, by adding it to the [pr_commands list in the github_app section](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L66)

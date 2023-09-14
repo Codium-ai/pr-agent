@@ -7,6 +7,7 @@ import requests
 from atlassian.bitbucket import Cloud
 from starlette_context import context
 
+from ..algo.pr_processing import clip_tokens, find_line_number_of_relevant_line_in_file
 from ..config_loader import get_settings
 from .git_provider import FilePatchInfo, GitProvider
 
@@ -35,9 +36,8 @@ class BitbucketProvider(GitProvider):
         self.incremental = incremental
         if pr_url:
             self.set_pr(pr_url)
-        self.bitbucket_comment_api_url = self.pr._BitbucketBase__data["links"][
-            "comments"
-        ]["href"]
+        self.bitbucket_comment_api_url = self.pr._BitbucketBase__data["links"]["comments"]["href"]
+        self.bitbucket_pull_request_api_url = self.pr._BitbucketBase__data["links"]['self']['href']
 
     def get_repo_settings(self):
         try:
@@ -101,12 +101,7 @@ class BitbucketProvider(GitProvider):
             return False
 
     def is_supported(self, capability: str) -> bool:
-        if capability in [
-            "get_issue_comments",
-            "create_inline_comment",
-            "publish_inline_comments",
-            "get_labels",
-        ]:
+        if capability in ['get_issue_comments', 'publish_inline_comments', 'get_labels', 'gfm_markdown']:
             return False
         return True
 
@@ -151,17 +146,30 @@ class BitbucketProvider(GitProvider):
         except Exception as e:
             logging.exception(f"Failed to remove temp comments, error: {e}")
 
-    def publish_inline_comment(
-        self, comment: str, from_line: int, to_line: int, file: str
-    ):
-        payload = json.dumps(
-            {
-                "content": {
-                    "raw": comment,
-                },
-                "inline": {"to": from_line, "path": file},
-            }
-        )
+
+    # funtion to create_inline_comment
+    def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
+        position, absolute_position = find_line_number_of_relevant_line_in_file(self.get_diff_files(), relevant_file.strip('`'), relevant_line_in_file)
+        if position == -1:
+            if get_settings().config.verbosity_level >= 2:
+                logging.info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
+            subject_type = "FILE"
+        else:
+            subject_type = "LINE"
+        path = relevant_file.strip()
+        return dict(body=body, path=path, position=absolute_position) if subject_type == "LINE" else {}
+
+
+    def publish_inline_comment(self, comment: str, from_line: int, file: str):
+        payload = json.dumps( {
+            "content": {
+                "raw": comment,
+            },
+            "inline": {
+                "to": from_line,
+                "path": file
+            },
+        })
         response = requests.request(
             "POST", self.bitbucket_comment_api_url, data=payload, headers=self.headers
         )
@@ -169,9 +177,7 @@ class BitbucketProvider(GitProvider):
 
     def publish_inline_comments(self, comments: list[dict]):
         for comment in comments:
-            self.publish_inline_comment(
-                comment["body"], comment["start_line"], comment["line"], comment["path"]
-            )
+            self.publish_inline_comment(comment['body'], comment['start_line'], comment['path'])
 
     def get_title(self):
         return self.pr.title
@@ -238,16 +244,22 @@ class BitbucketProvider(GitProvider):
 
     def get_commit_messages(self):
         return ""  # not implemented yet
+    
+    # bitbucket does not support labels
+    def publish_description(self, pr_title: str, description: str):
+        payload = json.dumps({
+            "description": description,
+            "title": pr_title
 
-    def publish_description(self, pr_title: str, pr_body: str):
-        pass
-    def create_inline_comment(
-        self, body: str, relevant_file: str, relevant_line_in_file: str
-    ):
-        pass
+            })
 
-    def publish_labels(self, labels):
-        pass
+        response = requests.request("PUT", self.bitbucket_pull_request_api_url, headers=self.headers, data=payload)
+        return response
 
+    # bitbucket does not support labels
+    def publish_labels(self, pr_types: list):
+        pass
+    
+    # bitbucket does not support labels
     def get_labels(self):
         pass

@@ -10,8 +10,8 @@ use_repo_settings_file=true
 ai_timeout=180
 max_description_tokens = 500
 max_commits_tokens = 500
-litellm_debugger=false
 secret_provider="google_cloud_storage"
+cli_mode=false
 
 [pr_reviewer] # /review #
 require_focused_review=false
@@ -88,3 +88,26 @@ polling_interval_seconds = 30
 # LocalGitProvider settings - uncomment to use paths other than default
 # description_path= "path/to/description.md"
 # review_path= "path/to/review.md"
+
+[gerrit]
+# endpoint to the gerrit service
+# url = "ssh://gerrit.example.com:29418"
+# user for gerrit authentication
+# user = "ai-reviewer"
+# patch server where patches will be saved
+# patch_server_endpoint = "http://127.0.0.1:5000/patch"
+# token to authenticate in the patch server
+# patch_server_token = ""
+
+[litellm]
+#use_client = false
+
+[pr_similar_issue]
+skip_comments = false
+force_update_dataset = false
+max_issues_to_scan = 500
+
+[pinecone]
+# fill and place in .secrets.toml
+#api_key = ...
+# environment = "gcp-starter"

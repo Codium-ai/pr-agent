@@ -15,6 +15,7 @@ There are several ways to use PR-Agent:
 - [Method 5: Run as a GitHub App](INSTALL.md#method-5-run-as-a-github-app)
 - [Method 6: Deploy as a Lambda Function](INSTALL.md#method-6---deploy-as-a-lambda-function)
 - [Method 7: AWS CodeCommit](INSTALL.md#method-7---aws-codecommit-setup)
+- [Method 8: Run a GitLab webhook server](INSTALL.md#method-8---run-a-gitlab-webhook-server)
 ---
 
 ### Method 1: Use Docker image (no installation required)
@@ -23,9 +24,15 @@ To request a review for a PR, or ask a question about a PR, you can run directly
 
 1. To request a review for a PR, run the following command:
 
+For GitHub:
 ```
 docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent --pr_url <pr_url> review
 ```
+For GitLab:
+```
+docker run --rm -it -e OPENAI.KEY=<your key> -e CONFIG.GIT_PROVIDER=gitlab -e GITLAB.PERSONAL_ACCESS_TOKEN=<your token> codiumai/pr-agent --pr_url <pr_url> review
+```
+For other git providers, update CONFIG.GIT_PROVIDER accordingly, and check the `pr_agent/settings/.secrets_template.toml` file for the environment variables expected names and values.
 
 2. To ask a question about a PR, run the following command:
 
@@ -343,9 +350,24 @@ PYTHONPATH="/PATH/TO/PROJECTS/pr-agent" python pr_agent/cli.py \
   review
 ```
 
-### Appendix - **Debugging LLM API Calls**  
-If you're testing your codium/pr-agent server, and need to see if calls were made successfully + the exact call logs, you can use the [LiteLLM Debugger tool](https://docs.litellm.ai/docs/debugging/hosted_debugging). 
+---
 
-You can do this by setting `litellm_debugger=true` in configuration.toml. Your Logs will be viewable in real-time @ `admin.litellm.ai/<your_email>`. Set your email in the `.secrets.toml` under 'user_email'.
+### Method 8 - Run a GitLab webhook server
 
-<img src="./pics/debugger.png" width="800"/>
+1. From the GitLab workspace or group, create an access token. Enable the "api" scope only.
+2. Generate a random secret for your app, and save it for later. For example, you can use:
+
+```
+WEBHOOK_SECRET=$(python -c "import secrets; print(secrets.token_hex(10))")
+```
+3. Follow the instructions to build the Docker image, setup a secrets file and deploy on your own server from [Method 5](#method-5-run-as-a-github-app) steps 4-7.
+4. In the secrets file, fill in the following:
+    - Your OpenAI key.
+    - In the [gitlab] section, fill in personal_access_token and shared_secret. The access token can be a personal access token, or a group or project access token.
+    - Set deployment_type to 'gitlab' in [configuration.toml](./pr_agent/settings/configuration.toml)
+5. Create a webhook in GitLab. Set the URL to the URL of your app's server. Set the secret token to the generated secret from step 2. 
+In the "Trigger" section, check the ‘comments’ and ‘merge request events’ boxes. 
+6. Test your installation by opening a merge request or commenting or a merge request using one of CodiumAI's commands.
+
+
+=======
