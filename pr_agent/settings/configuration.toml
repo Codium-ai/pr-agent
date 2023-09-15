@@ -55,7 +55,7 @@ extra_instructions = ""
 [github]
 # The type of deployment to create. Valid values are 'app' or 'user'.
 deployment_type = "user"
-user_token = "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"  # A GitHub personal access token with 'repo' scope.
+user_token = ""  # A GitHub personal access token with 'repo' scope.
 ratelimit_retries = 5
 
 [github_app]
