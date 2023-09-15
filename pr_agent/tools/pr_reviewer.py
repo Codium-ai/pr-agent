@@ -23,7 +23,7 @@ class PRReviewer:
     """
     The PRReviewer class is responsible for reviewing a pull request and generating feedback using an AI model.
     """
-    def __init__(self, pr_url: str, is_answer: bool = False, args: list = None):
+    def __init__(self, pr_url: str, is_answer: bool = False, is_auto: bool = False, args: list = None):
         """
         Initialize the PRReviewer object with the necessary attributes and objects to review a pull request.
 
@@ -40,6 +40,7 @@ class PRReviewer:
         )
         self.pr_url = pr_url
         self.is_answer = is_answer
+        self.is_auto = is_auto
 
         if self.is_answer and not self.git_provider.is_supported("get_issue_comments"):
             raise Exception(f"Answer mode is not supported for {get_settings().config.git_provider} for now")
@@ -93,8 +94,12 @@ class PRReviewer:
         """
         Review the pull request and generate feedback.
         """
-        logging.info('Reviewing PR...')
-    
+        if self.is_auto and not get_settings().pr_reviewer.automatic_review:
+            logging.info(f'Automatic review is disabled {self.pr_url}')
+            return None
+
+        logging.info(f'Reviewing PR: {self.pr_url} ...')
+
         if get_settings().config.publish_output:
             self.git_provider.publish_comment("Preparing review...", is_temporary=True)
     
@@ -209,7 +214,7 @@ class PRReviewer:
                 "⏮️ Review for commits since previous PR-Agent review": f"Starting from commit {last_commit_url}"}})
             data.move_to_end('Incremental PR Review', last=False)
 
-        markdown_text = convert_to_markdown(data)
+        markdown_text = convert_to_markdown(data, self.git_provider.is_supported("gfm_markdown"))
         user = self.git_provider.get_user_id()
 
         # Add help text if not in CLI mode
@@ -261,7 +266,7 @@ class PRReviewer:
                 self.git_provider.publish_inline_comment(content, relevant_file, relevant_line_in_file)
 
         if comments:
-            self.git_provider.publish_inline_comments(comments)
+                self.git_provider.publish_inline_comments(comments)
 
     def _get_user_answers(self) -> Tuple[str, str]:
         """

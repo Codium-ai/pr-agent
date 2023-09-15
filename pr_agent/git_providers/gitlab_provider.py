@@ -14,6 +14,9 @@ from .git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
 
 logger = logging.getLogger()
 
+class DiffNotFoundError(Exception):
+    """Raised when the diff for a merge request cannot be found."""
+    pass
 
 class GitLabProvider(GitProvider):
 
@@ -40,7 +43,7 @@ class GitLabProvider(GitProvider):
         self.incremental = incremental
 
     def is_supported(self, capability: str) -> bool:
-        if capability in ['get_issue_comments', 'create_inline_comment', 'publish_inline_comments']:
+        if capability in ['get_issue_comments', 'create_inline_comment', 'publish_inline_comments', 'gfm_markdown']:
             return False
         return True
 
@@ -56,7 +59,7 @@ class GitLabProvider(GitProvider):
             self.last_diff = self.mr.diffs.list(get_all=True)[-1]
         except IndexError as e:
             logger.error(f"Could not get diff for merge request {self.id_mr}")
-            raise ValueError(f"Could not get diff for merge request {self.id_mr}") from e
+            raise DiffNotFoundError(f"Could not get diff for merge request {self.id_mr}") from e
 
 
     def _get_pr_file_content(self, file_path: str, branch: str) -> str:
@@ -150,16 +153,20 @@ class GitLabProvider(GitProvider):
     def create_inline_comments(self, comments: list[dict]):
         raise NotImplementedError("Gitlab provider does not support publishing inline comments yet")
 
-    def send_inline_comment(self, body, edit_type, found, relevant_file, relevant_line_in_file, source_line_no,
-                            target_file, target_line_no):
+    def send_inline_comment(self,body: str,edit_type: str,found: bool,relevant_file: str,relevant_line_in_file: int,
+                            source_line_no: int, target_file: str,target_line_no: int) -> None:
         if not found:
             logging.info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
         else:
-            d = self.last_diff
+            # in order to have exact sha's we have to find correct diff for this change
+            diff = self.get_relevant_diff(relevant_file, relevant_line_in_file)
+            if diff is None:
+                logger.error(f"Could not get diff for merge request {self.id_mr}")
+                raise DiffNotFoundError(f"Could not get diff for merge request {self.id_mr}")
             pos_obj = {'position_type': 'text',
                        'new_path': target_file.filename,
                        'old_path': target_file.old_filename if target_file.old_filename else target_file.filename,
-                       'base_sha': d.base_commit_sha, 'start_sha': d.start_commit_sha, 'head_sha': d.head_commit_sha}
+                       'base_sha': diff.base_commit_sha, 'start_sha': diff.start_commit_sha, 'head_sha': diff.head_commit_sha}
             if edit_type == 'deletion':
                 pos_obj['old_line'] = source_line_no - 1
             elif edit_type == 'addition':
@@ -171,7 +178,24 @@ class GitLabProvider(GitProvider):
             self.mr.discussions.create({'body': body,
                                         'position': pos_obj})
 
-    def publish_code_suggestions(self, code_suggestions: list):
+    def get_relevant_diff(self, relevant_file: str, relevant_line_in_file: int) -> Optional[dict]:
+        changes = self.mr.changes()  # Retrieve the changes for the merge request once
+        if not changes:
+            logging.error('No changes found for the merge request.')
+            return None
+        all_diffs = self.mr.diffs.list(get_all=True)
+        if not all_diffs:
+            logging.error('No diffs found for the merge request.')
+            return None
+        for diff in all_diffs:
+            for change in changes['changes']:
+                if change['new_path'] == relevant_file and relevant_line_in_file in change['diff']:
+                    return diff
+            logging.debug(
+                f'No relevant diff found for {relevant_file} {relevant_line_in_file}. Falling back to last diff.')
+        return self.last_diff  # fallback to last_diff if no relevant diff is found
+
+    def publish_code_suggestions(self, code_suggestions: list) -> bool:
         for suggestion in code_suggestions:
             try:
                 body = suggestion['body']
@@ -275,10 +299,7 @@ class GitLabProvider(GitProvider):
     def get_pr_branch(self):
         return self.mr.source_branch
 
-    def get_pr_description(self):
-        max_tokens = get_settings().get("CONFIG.MAX_DESCRIPTION_TOKENS", None)
-        if max_tokens:
-            return clip_tokens(self.mr.description, max_tokens)
+    def get_pr_description_full(self):
         return self.mr.description
 
     def get_issue_comments(self):

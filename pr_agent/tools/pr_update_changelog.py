@@ -46,7 +46,7 @@ class PRUpdateChangelog:
                                           get_settings().pr_update_changelog_prompt.user)
 
     async def run(self):
-        assert type(self.git_provider) == GithubProvider, "Currently only Github is supported"
+        # assert type(self.git_provider) == GithubProvider, "Currently only Github is supported"
 
         logging.info('Updating the changelog...')
         if get_settings().config.publish_output:

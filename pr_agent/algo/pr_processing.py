@@ -57,7 +57,7 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler, model: s
     pr_languages = sort_files_by_main_languages(git_provider.get_languages(), diff_files)
 
     # generate a standard diff string, with patch extension
-    patches_extended, total_tokens = pr_generate_extended_diff(pr_languages, token_handler,
+    patches_extended, total_tokens, patches_extended_tokens = pr_generate_extended_diff(pr_languages, token_handler,
                                                                add_line_numbers_to_hunks)
 
     # if we are under the limit, return the full diff
@@ -78,9 +78,9 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler, model: s
     return final_diff
 
 
-def pr_generate_extended_diff(pr_languages: list, token_handler: TokenHandler,
-                              add_line_numbers_to_hunks: bool) -> \
-        Tuple[list, int]:
+def pr_generate_extended_diff(pr_languages: list,
+                              token_handler: TokenHandler,
+                              add_line_numbers_to_hunks: bool) -> Tuple[list, int, list]:
     """
     Generate a standard diff string with patch extension, while counting the number of tokens used and applying diff
     minimization techniques if needed.
@@ -90,13 +90,10 @@ def pr_generate_extended_diff(pr_languages: list, token_handler: TokenHandler,
       files.
     - token_handler: An object of the TokenHandler class used for handling tokens in the context of the pull request.
     - add_line_numbers_to_hunks: A boolean indicating whether to add line numbers to the hunks in the diff.
-
-    Returns:
-    - patches_extended: A list of extended patches for each file in the pull request.
-    - total_tokens: The total number of tokens used in the extended patches.
     """
     total_tokens = token_handler.prompt_tokens  # initial tokens
     patches_extended = []
+    patches_extended_tokens = []
     for lang in pr_languages:
         for file in lang['files']:
             original_file_content_str = file.base_file
@@ -106,7 +103,7 @@ def pr_generate_extended_diff(pr_languages: list, token_handler: TokenHandler,
 
             # extend each patch with extra lines of context
             extended_patch = extend_patch(original_file_content_str, patch, num_lines=PATCH_EXTRA_LINES)
-            full_extended_patch = f"## {file.filename}\n\n{extended_patch}\n"
+            full_extended_patch = f"\n\n## {file.filename}\n\n{extended_patch}\n"
 
             if add_line_numbers_to_hunks:
                 full_extended_patch = convert_to_hunks_with_lines_numbers(extended_patch, file)
@@ -114,9 +111,10 @@ def pr_generate_extended_diff(pr_languages: list, token_handler: TokenHandler,
             patch_tokens = token_handler.count_tokens(full_extended_patch)
             file.tokens = patch_tokens
             total_tokens += patch_tokens
+            patches_extended_tokens.append(patch_tokens)
             patches_extended.append(full_extended_patch)
 
-    return patches_extended, total_tokens
+    return patches_extended, total_tokens, patches_extended_tokens
 
 
 def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler, model: str,
@@ -208,18 +206,45 @@ def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler, mo
 
 
 async def retry_with_fallback_models(f: Callable):
+    all_models = _get_all_models()
+    all_deployments = _get_all_deployments(all_models)
+    # try each (model, deployment_id) pair until one is successful, otherwise raise exception
+    for i, (model, deployment_id) in enumerate(zip(all_models, all_deployments)):
+        try:
+            get_settings().set("openai.deployment_id", deployment_id)
+            return await f(model)
+        except Exception as e:
+            logging.warning(
+                f"Failed to generate prediction with {model}"
+                f"{(' from deployment ' + deployment_id) if deployment_id else ''}: "
+                f"{traceback.format_exc()}"
+            )
+            if i == len(all_models) - 1:  # If it's the last iteration
+                raise  # Re-raise the last exception
+
+
+def _get_all_models() -> List[str]:
     model = get_settings().config.model
     fallback_models = get_settings().config.fallback_models
     if not isinstance(fallback_models, list):
-        fallback_models = [fallback_models]
+        fallback_models = [m.strip() for m in fallback_models.split(",")]
     all_models = [model] + fallback_models
-    for i, model in enumerate(all_models):
-        try:
-            return await f(model)
-        except Exception as e:
-            logging.warning(f"Failed to generate prediction with {model}: {traceback.format_exc()}")
-            if i == len(all_models) - 1:  # If it's the last iteration
-                raise  # Re-raise the last exception
+    return all_models
+
+
+def _get_all_deployments(all_models: List[str]) -> List[str]:
+    deployment_id = get_settings().get("openai.deployment_id", None)
+    fallback_deployments = get_settings().get("openai.fallback_deployments", [])
+    if not isinstance(fallback_deployments, list) and fallback_deployments:
+        fallback_deployments = [d.strip() for d in fallback_deployments.split(",")]
+    if fallback_deployments:
+        all_deployments = [deployment_id] + fallback_deployments
+        if len(all_deployments) < len(all_models):
+            raise ValueError(f"The number of deployments ({len(all_deployments)}) "
+                             f"is less than the number of models ({len(all_models)})")
+    else:
+        all_deployments = [deployment_id] * len(all_models)
+    return all_deployments
 
 
 def find_line_number_of_relevant_line_in_file(diff_files: List[FilePatchInfo],
@@ -297,7 +322,9 @@ def clip_tokens(text: str, max_tokens: int) -> str:
     Returns:
         str: The clipped string.
     """
-    # We'll estimate the number of tokens by hueristically assuming 2.5 tokens per word
+    if not text:
+        return text
+
     try:
         encoder = get_token_encoder()
         num_input_tokens = len(encoder.encode(text))
@@ -311,3 +338,83 @@ def clip_tokens(text: str, max_tokens: int) -> str:
     except Exception as e:
         logging.warning(f"Failed to clip tokens: {e}")
         return text
+
+
+def get_pr_multi_diffs(git_provider: GitProvider,
+                       token_handler: TokenHandler,
+                       model: str,
+                       max_calls: int = 5) -> List[str]:
+    """
+    Retrieves the diff files from a Git provider, sorts them by main language, and generates patches for each file.
+    The patches are split into multiple groups based on the maximum number of tokens allowed for the given model.
+    
+    Args:
+        git_provider (GitProvider): An object that provides access to Git provider APIs.
+        token_handler (TokenHandler): An object that handles tokens in the context of a pull request.
+        model (str): The name of the model.
+        max_calls (int, optional): The maximum number of calls to retrieve diff files. Defaults to 5.
+    
+    Returns:
+        List[str]: A list of final diff strings, split into multiple groups based on the maximum number of tokens allowed for the given model.
+    
+    Raises:
+        RateLimitExceededException: If the rate limit for the Git provider API is exceeded.
+    """
+    try:
+        diff_files = git_provider.get_diff_files()
+    except RateLimitExceededException as e:
+        logging.error(f"Rate limit exceeded for git provider API. original message {e}")
+        raise
+
+    # Sort files by main language
+    pr_languages = sort_files_by_main_languages(git_provider.get_languages(), diff_files)
+
+    # Sort files within each language group by tokens in descending order
+    sorted_files = []
+    for lang in pr_languages:
+        sorted_files.extend(sorted(lang['files'], key=lambda x: x.tokens, reverse=True))
+
+    patches = []
+    final_diff_list = []
+    total_tokens = token_handler.prompt_tokens
+    call_number = 1
+    for file in sorted_files:
+        if call_number > max_calls:
+            if get_settings().config.verbosity_level >= 2:
+                logging.info(f"Reached max calls ({max_calls})")
+            break
+
+        original_file_content_str = file.base_file
+        new_file_content_str = file.head_file
+        patch = file.patch
+        if not patch:
+            continue
+
+        # Remove delete-only hunks
+        patch = handle_patch_deletions(patch, original_file_content_str, new_file_content_str, file.filename)
+        if patch is None:
+            continue
+
+        patch = convert_to_hunks_with_lines_numbers(patch, file)
+        new_patch_tokens = token_handler.count_tokens(patch)
+        if patch and (total_tokens + new_patch_tokens > MAX_TOKENS[model] - OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD):
+            final_diff = "\n".join(patches)
+            final_diff_list.append(final_diff)
+            patches = []
+            total_tokens = token_handler.prompt_tokens
+            call_number += 1
+            if get_settings().config.verbosity_level >= 2:
+                logging.info(f"Call number: {call_number}")
+
+        if patch:
+            patches.append(patch)
+            total_tokens += new_patch_tokens
+            if get_settings().config.verbosity_level >= 2:
+                logging.info(f"Tokens: {total_tokens}, last filename: {file.filename}")
+
+    # Add the last chunk
+    if patches:
+        final_diff = "\n".join(patches)
+        final_diff_list.append(final_diff)
+
+    return final_diff_list

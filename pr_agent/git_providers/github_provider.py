@@ -32,7 +32,7 @@ class GithubProvider(GitProvider):
         self.diff_files = None
         self.git_files = None
         self.incremental = incremental
-        if pr_url:
+        if pr_url and 'pull' in pr_url:
             self.set_pr(pr_url)
             self.last_commit_id = list(self.pr.get_commits())[-1]
 
@@ -166,7 +166,7 @@ class GithubProvider(GitProvider):
     def publish_inline_comments(self, comments: list[dict]):
         self.pr.create_review(commit=self.last_commit_id, comments=comments)
 
-    def publish_code_suggestions(self, code_suggestions: list):
+    def publish_code_suggestions(self, code_suggestions: list) -> bool:
         """
         Publishes code suggestions as comments on the PR.
         """
@@ -233,10 +233,7 @@ class GithubProvider(GitProvider):
     def get_pr_branch(self):
         return self.pr.head.ref
 
-    def get_pr_description(self):
-        max_tokens = get_settings().get("CONFIG.MAX_DESCRIPTION_TOKENS", None)
-        if max_tokens:
-            return clip_tokens(self.pr.body, max_tokens)
+    def get_pr_description_full(self):
         return self.pr.body
 
     def get_user_id(self):
@@ -311,6 +308,35 @@ class GithubProvider(GitProvider):
             raise ValueError("Unable to convert PR number to integer") from e
 
         return repo_name, pr_number
+
+    @staticmethod
+    def _parse_issue_url(issue_url: str) -> Tuple[str, int]:
+        parsed_url = urlparse(issue_url)
+
+        if 'github.com' not in parsed_url.netloc:
+            raise ValueError("The provided URL is not a valid GitHub URL")
+
+        path_parts = parsed_url.path.strip('/').split('/')
+        if 'api.github.com' in parsed_url.netloc:
+            if len(path_parts) < 5 or path_parts[3] != 'issues':
+                raise ValueError("The provided URL does not appear to be a GitHub ISSUE URL")
+            repo_name = '/'.join(path_parts[1:3])
+            try:
+                issue_number = int(path_parts[4])
+            except ValueError as e:
+                raise ValueError("Unable to convert issue number to integer") from e
+            return repo_name, issue_number
+
+        if len(path_parts) < 4 or path_parts[2] != 'issues':
+            raise ValueError("The provided URL does not appear to be a GitHub PR issue")
+
+        repo_name = '/'.join(path_parts[:2])
+        try:
+            issue_number = int(path_parts[3])
+        except ValueError as e:
+            raise ValueError("Unable to convert issue number to integer") from e
+
+        return repo_name, issue_number
 
     def _get_github_client(self):
         deployment_type = get_settings().get("GITHUB.DEPLOYMENT_TYPE", "user")

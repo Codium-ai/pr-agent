@@ -1,5 +1,6 @@
 import copy
 import json
+import re
 import logging
 from typing import List, Tuple
 
@@ -28,6 +29,7 @@ class PRDescription:
         self.main_pr_language = get_main_pr_language(
             self.git_provider.get_languages(), self.git_provider.get_files()
         )
+        self.pr_id = f"{self.git_provider.repo}/{self.git_provider.pr_num}"
 
         # Initialize the AI handler
         self.ai_handler = AiHandler()
@@ -36,12 +38,14 @@ class PRDescription:
         self.vars = {
             "title": self.git_provider.pr.title,
             "branch": self.git_provider.get_pr_branch(),
-            "description": self.git_provider.get_pr_description(),
+            "description": self.git_provider.get_pr_description(full=False),
             "language": self.main_pr_language,
             "diff": "",  # empty diff for initial calculation
             "extra_instructions": get_settings().pr_description.extra_instructions,
             "commit_messages_str": self.git_provider.get_commit_messages()
         }
+
+        self.user_description = self.git_provider.get_user_description()
     
         # Initialize the token handler
         self.token_handler = TokenHandler(
@@ -59,26 +63,39 @@ class PRDescription:
         """
         Generates a PR description using an AI model and publishes it to the PR.
         """
-        logging.info('Generating a PR description...')
+        logging.info(f"Generating a PR description {self.pr_id}")
         if get_settings().config.publish_output:
             self.git_provider.publish_comment("Preparing pr description...", is_temporary=True)
-        
+
         await retry_with_fallback_models(self._prepare_prediction)
-        
-        logging.info('Preparing answer...')
-        pr_title, pr_body, pr_types, markdown_text = self._prepare_pr_answer()
-        
+
+        logging.info(f"Preparing answer {self.pr_id}")
+        if self.prediction:
+            self._prepare_data()
+        else:
+            return None
+
+        pr_labels = []
+        if get_settings().pr_description.publish_labels:
+            pr_labels = self._prepare_labels()
+
+        if get_settings().pr_description.use_description_markers:
+            pr_title, pr_body = self._prepare_pr_answer_with_markers()
+        else:
+            pr_title, pr_body,  = self._prepare_pr_answer()
+        full_markdown_description = f"## Title\n\n{pr_title}\n\n___\n{pr_body}"
+
         if get_settings().config.publish_output:
-            logging.info('Pushing answer...')
+            logging.info(f"Pushing answer {self.pr_id}")
             if get_settings().pr_description.publish_description_as_comment:
-                self.git_provider.publish_comment(markdown_text)
+                self.git_provider.publish_comment(full_markdown_description)
             else:
                 self.git_provider.publish_description(pr_title, pr_body)
-                if self.git_provider.is_supported("get_labels"):
+                if get_settings().pr_description.publish_labels and self.git_provider.is_supported("get_labels"):
                     current_labels = self.git_provider.get_labels()
                     if current_labels is None:
                         current_labels = []
-                    self.git_provider.publish_labels(pr_types + current_labels)
+                    self.git_provider.publish_labels(pr_labels + current_labels)
             self.git_provider.remove_initial_comment()
         
         return ""
@@ -97,9 +114,12 @@ class PRDescription:
             Any exceptions raised by the 'get_pr_diff' and '_get_prediction' functions.
 
         """
-        logging.info('Getting PR diff...')
+        if get_settings().pr_description.use_description_markers and 'pr_agent:' not in self.user_description:
+            return None
+
+        logging.info(f"Getting PR diff {self.pr_id}")
         self.patches_diff = get_pr_diff(self.git_provider, self.token_handler, model)
-        logging.info('Getting AI prediction...')
+        logging.info(f"Getting AI prediction {self.pr_id}")
         self.prediction = await self._get_prediction(model)
 
     async def _get_prediction(self, model: str) -> str:
@@ -132,42 +152,82 @@ class PRDescription:
 
         return response
 
-    def _prepare_pr_answer(self) -> Tuple[str, str, List[str], str]:
+
+    def _prepare_data(self):
+        # Load the AI prediction data into a dictionary
+        self.data = load_yaml(self.prediction.strip())
+
+        if get_settings().pr_description.add_original_user_description and self.user_description:
+            self.data["User Description"] = self.user_description
+
+
+    def _prepare_labels(self) -> List[str]:
+        pr_types = []
+
+        # If the 'PR Type' key is present in the dictionary, split its value by comma and assign it to 'pr_types'
+        if 'PR Type' in self.data:
+            if type(self.data['PR Type']) == list:
+                pr_types = self.data['PR Type']
+            elif type(self.data['PR Type']) == str:
+                pr_types = self.data['PR Type'].split(',')
+
+        return pr_types
+
+    def _prepare_pr_answer_with_markers(self) -> Tuple[str, str]:
+        logging.info(f"Using description marker replacements {self.pr_id}")
+        title = self.vars["title"]
+        body = self.user_description
+        if get_settings().pr_description.include_generated_by_header:
+            ai_header = f"### 🤖 Generated by PR Agent at {self.git_provider.last_commit_id.sha}\n\n"
+        else:
+            ai_header = ""
+
+        ai_summary = self.data.get('PR Description')
+        if ai_summary and not re.search(r'<!--\s*pr_agent:summary\s*-->', body):
+            summary = f"{ai_header}{ai_summary}"
+            body = body.replace('pr_agent:summary', summary)
+
+        if not re.search(r'<!--\s*pr_agent:walkthrough\s*-->', body):
+            ai_walkthrough = self.data.get('PR Main Files Walkthrough')
+            if ai_walkthrough:
+                walkthrough = str(ai_header)
+                for file in ai_walkthrough:
+                    filename = file['filename'].replace("'", "`")
+                    description = file['changes in file'].replace("'", "`")
+                    walkthrough += f'- `{filename}`: {description}\n'
+
+                body = body.replace('pr_agent:walkthrough', walkthrough)
+
+        return title, body
+
+    def _prepare_pr_answer(self) -> Tuple[str, str]:
         """
         Prepare the PR description based on the AI prediction data.
 
         Returns:
         - title: a string containing the PR title.
-        - pr_body: a string containing the PR body in a markdown format.
-        - pr_types: a list of strings containing the PR types.
-        - markdown_text: a string containing the AI prediction data in a markdown format. used for publishing a comment
+        - pr_body: a string containing the PR description body in a markdown format.
         """
-        # Load the AI prediction data into a dictionary
-        data = load_yaml(self.prediction.strip())
-
-        # Initialization
-        pr_types = []
 
         # Iterate over the dictionary items and append the key and value to 'markdown_text' in a markdown format
         markdown_text = ""
-        for key, value in data.items():
+        for key, value in self.data.items():
             markdown_text += f"## {key}\n\n"
             markdown_text += f"{value}\n\n"
 
-        # If the 'PR Type' key is present in the dictionary, split its value by comma and assign it to 'pr_types'
-        if 'PR Type' in data:
-            if type(data['PR Type']) == list:
-                pr_types = data['PR Type']
-            elif type(data['PR Type']) == str:
-                pr_types = data['PR Type'].split(',')
-
-        # Assign the value of the 'PR Title' key to 'title' variable and remove it from the dictionary
-        title = data.pop('PR Title')
+        # Remove the 'PR Title' key from the dictionary
+        ai_title = self.data.pop('PR Title', self.vars["title"])
+        if get_settings().pr_description.keep_original_user_title:
+            # Assign the original PR title to the 'title' variable
+            title = self.vars["title"]
+        else:
+            # Assign the value of the 'PR Title' key to 'title' variable
+            title = ai_title
 
         # Iterate over the remaining dictionary items and append the key and value to 'pr_body' in a markdown format,
         # except for the items containing the word 'walkthrough'
         pr_body = ""
-        for key, value in data.items():
+        for idx, (key, value) in enumerate(self.data.items()):
             pr_body += f"## {key}:\n"
             if 'walkthrough' in key.lower():
                 # for filename, description in value.items():
@@ -179,9 +239,11 @@ class PRDescription:
                 # if the value is a list, join its items by comma
                 if type(value) == list:
                     value = ', '.join(v for v in value)
-                pr_body += f"{value}\n\n___\n"
+                pr_body += f"{value}\n"
+            if idx < len(self.data) - 1:
+                pr_body += "\n___\n"
 
         if get_settings().config.verbosity_level >= 2:
             logging.info(f"title:\n{title}\n{pr_body}")
 
-        return title, pr_body, pr_types, markdown_text
+        return title, pr_body

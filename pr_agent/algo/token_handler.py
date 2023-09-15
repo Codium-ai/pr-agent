@@ -21,7 +21,7 @@ class TokenHandler:
       method.
     """
 
-    def __init__(self, pr, vars: dict, system, user):
+    def __init__(self, pr=None, vars: dict = {}, system="", user=""):
         """
         Initializes the TokenHandler object.
 
@@ -32,7 +32,8 @@ class TokenHandler:
         - user: The user string.
         """
         self.encoder = get_token_encoder()
-        self.prompt_tokens = self._get_system_user_tokens(pr, self.encoder, vars, system, user)
+        if pr is not None:
+            self.prompt_tokens = self._get_system_user_tokens(pr, self.encoder, vars, system, user)
 
     def _get_system_user_tokens(self, pr, encoder, vars: dict, system, user):
         """

@@ -20,7 +20,7 @@ def get_setting(key: str) -> Any:
     except Exception:
         return global_settings.get(key, None)
 
-def convert_to_markdown(output_data: dict) -> str:
+def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
     """
     Convert a dictionary of data into markdown format.
     Args:
@@ -32,33 +32,43 @@ def convert_to_markdown(output_data: dict) -> str:
 
     emojis = {
         "Main theme": "🎯",
+        "PR summary": "📝",
         "Type of PR": "📌",
         "Score": "🏅",
         "Relevant tests added": "🧪",
         "Unrelated changes": "⚠️",
         "Focused PR": "✨",
         "Security concerns": "🔒",
-        "General PR suggestions": "💡",
+        "General suggestions": "💡",
         "Insights from user's answers": "📝",
         "Code feedback": "🤖",
     }
 
     for key, value in output_data.items():
-        if not value:
+        if value is None or value == '' or value == {}:
             continue
         if isinstance(value, dict):
             markdown_text += f"## {key}\n\n"
-            markdown_text += convert_to_markdown(value)
+            markdown_text += convert_to_markdown(value, gfm_supported)
         elif isinstance(value, list):
-            if key.lower() == 'code feedback':
-                markdown_text += "\n"  # just looks nicer with additional line breaks
             emoji = emojis.get(key, "")
-            markdown_text += f"- {emoji} **{key}:**\n\n"
+            if key.lower() == 'code feedback':
+                if gfm_supported:
+                    markdown_text += f"\n\n- **<details><summary> { emoji } Code feedback:**</summary>\n\n"
+                else:
+                    markdown_text += f"\n\n- **{emoji} Code feedback:**\n\n"
+            else:
+                markdown_text += f"- {emoji} **{key}:**\n\n"
             for item in value:
                 if isinstance(item, dict) and key.lower() == 'code feedback':
                     markdown_text += parse_code_suggestion(item)
                 elif item:
                     markdown_text += f"  - {item}\n"
+            if key.lower() == 'code feedback':
+                if gfm_supported:
+                    markdown_text += "</details>\n\n"
+                else:
+                    markdown_text += "\n\n"
         elif value != 'n/a':
             emoji = emojis.get(key, "")
             markdown_text += f"- {emoji} **{key}:** {value}\n"
@@ -164,7 +174,7 @@ def fix_json_escape_char(json_message=None):
     Raises:
         None
 
-    """    
+    """
     try:
         result = json.loads(json_message)
     except Exception as e:
@@ -191,7 +201,7 @@ def convert_str_to_datetime(date_str):
     Example:
         >>> convert_str_to_datetime('Mon, 01 Jan 2022 12:00:00 UTC')
         datetime.datetime(2022, 1, 1, 12, 0, 0)
-    """    
+    """
     datetime_format = '%a, %d %b %Y %H:%M:%S %Z'
     return datetime.strptime(date_str, datetime_format)
 
@@ -245,14 +255,13 @@ def update_settings_from_args(args: List[str]) -> List[str]:
             arg = arg.strip()
             if arg.startswith('--'):
                 arg = arg.strip('-').strip()
-                vals = arg.split('=')
+                vals = arg.split('=', 1)
                 if len(vals) != 2:
-                    logging.error(f'Invalid argument format: {arg}')
+                    if len(vals) > 2: # --extended is a valid argument
+                        logging.error(f'Invalid argument format: {arg}')
                     other_args.append(arg)
                     continue
-                key, value = vals
-                key = key.strip().upper()
-                value = value.strip()
+                key, value = _fix_key_value(*vals)
                 get_settings().set(key, value)
                 logging.info(f'Updated setting {key} to: "{value}"')
             else:
@@ -260,10 +269,20 @@ def update_settings_from_args(args: List[str]) -> List[str]:
     return other_args
 
 
+def _fix_key_value(key: str, value: str):
+    key = key.strip().upper()
+    value = value.strip()
+    try:
+        value = yaml.safe_load(value)
+    except Exception as e:
+        logging.error(f"Failed to parse YAML for config override {key}={value}", exc_info=e)
+    return key, value
+
+
 def load_yaml(review_text: str) -> dict:
     review_text = review_text.removeprefix('```yaml').rstrip('`')
     try:
-        data = yaml.load(review_text, Loader=yaml.SafeLoader)
+        data = yaml.safe_load(review_text)
     except Exception as e:
         logging.error(f"Failed to parse AI prediction: {e}")
         data = try_fix_yaml(review_text)

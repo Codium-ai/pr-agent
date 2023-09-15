@@ -1,7 +1,7 @@
 [config]
 model="gpt-4"
 fallback_models=["gpt-3.5-turbo-16k"]
-git_provider="github"
+git_provider="bitbucket"
 publish_output=true
 publish_output_progress=true
 verbosity_level=0 # 0,1,2
@@ -10,26 +10,41 @@ use_repo_settings_file=true
 ai_timeout=180
 max_description_tokens = 500
 max_commits_tokens = 500
+secret_provider="google_cloud_storage"
+cli_mode=false
 
 [pr_reviewer] # /review #
-require_focused_review=true
+require_focused_review=false
 require_score_review=false
 require_tests_review=true
 require_security_review=true
-num_code_suggestions=3
+num_code_suggestions=4
 inline_code_comments = false
 ask_and_reflect=false
+automatic_review=true
 extra_instructions = ""
 
 [pr_description] # /describe #
+publish_labels=true
 publish_description_as_comment=false
+add_original_user_description=false
+keep_original_user_title=false
 extra_instructions = ""
+# markers
+use_description_markers=false
+include_generated_by_header=true
 
 [pr_questions] # /ask #
 
 [pr_code_suggestions] # /improve #
 num_code_suggestions=4
 extra_instructions = ""
+rank_suggestions = false
+# params for '/improve --extended' mode
+num_code_suggestions_per_chunk=8
+rank_extended_suggestions = true
+max_number_of_calls = 5
+final_clip_factor = 0.9
 
 [pr_update_changelog] # /update_changelog #
 push_changelog_changes=false
@@ -40,7 +55,23 @@ extra_instructions = ""
 [github]
 # The type of deployment to create. Valid values are 'app' or 'user'.
 deployment_type = "user"
+user_token = "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"  # A GitHub personal access token with 'repo' scope.
 ratelimit_retries = 5
+
+[github_app]
+# these toggles allows running the github app from custom deployments
+bot_user = "github-actions[bot]"
+override_deployment_type = true
+# in some deployments it's possible to get duplicate requests if the handling is long,
+# these settings are used to avoid handling duplicate requests.
+duplicate_requests_cache = false
+duplicate_requests_cache_ttl = 60  # in seconds
+# settings for "pull_request" event
+handle_pr_actions = ['opened', 'reopened', 'ready_for_review', 'review_requested']
+pr_commands = [
+    "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true",
+    "/auto_review",
+]
 
 [gitlab]
 # URL to the gitlab service
@@ -59,3 +90,41 @@ polling_interval_seconds = 30
 # LocalGitProvider settings - uncomment to use paths other than default
 # description_path= "path/to/description.md"
 # review_path= "path/to/review.md"
+
+[gerrit]
+# endpoint to the gerrit service
+# url = "ssh://gerrit.example.com:29418"
+# user for gerrit authentication
+# user = "ai-reviewer"
+# patch server where patches will be saved
+# patch_server_endpoint = "http://127.0.0.1:5000/patch"
+# token to authenticate in the patch server
+# patch_server_token = ""
+
+
+[openai]
+key = ""  # Acquire through https://platform.openai.com
+#org = "<ORGANIZATION>"  # Optional, may be commented out.
+# Uncomment the following for Azure OpenAI
+#api_type = "azure"
+#api_version = '2023-05-15'  # Check Azure documentation for the current API version
+#api_base = ""  # The base URL for your Azure OpenAI resource. e.g. "https://<your resource name>.openai.azure.com"
+#deployment_id = ""  # The deployment name you chose when you deployed the engine
+#fallback_deployments = []  # For each fallback model specified in configuration.toml in the [config] section, specify the appropriate deployment_id
+
+[bitbucket]
+# Bitbucket personal bearer token
+bearer_token = ""
+
+[litellm]
+#use_client = false
+
+[pr_similar_issue]
+skip_comments = false
+force_update_dataset = false
+max_issues_to_scan = 500
+
+[pinecone]
+# fill and place in .secrets.toml
+#api_key = ...
+# environment = "gcp-starter"
