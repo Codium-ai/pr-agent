@@ -158,6 +158,7 @@ There are several ways to use PR-Agent:
 - [Method 6: Deploy as a Lambda Function](INSTALL.md#method-6---deploy-as-a-lambda-function)
 - [Method 7: AWS CodeCommit](INSTALL.md#method-7---aws-codecommit-setup)
 - [Method 8: Run a GitLab webhook server](INSTALL.md#method-8---run-a-gitlab-webhook-server)
+- [Method 9: Run as a Bitbucket Pipeline](INSTALL.md#method-9-run-as-a-bitbucket-pipeline)
 
 ## How it works
 
