@@ -232,7 +232,7 @@ class PRDescription:
             if 'walkthrough' in key.lower():
                 # for filename, description in value.items():
                 if self.git_provider.is_supported("gfm_markdown"):
-                    pr_body += "<details> <summary>files:</summary>\n"
+                    pr_body += "<details> <summary>files:</summary>\n\n"
                 for file in value:
                     filename = file['filename'].replace("'", "`")
                     description = file['changes in file']
