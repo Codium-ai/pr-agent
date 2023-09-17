@@ -85,12 +85,12 @@ PR Analysis:
       code diff changes are too scattered, then the PR is not focused. Explain
       your answer shortly.
 {%- endif %}
-{%- if require_estimate_time_to_review %}
-  Estimated time to review:
+{%- if require_estimate_effort_to_review %}
+  Estimated effort to review [1-5]:
     type: string
     description: >-
-      Estimate, in minutes, how much time it would take for an experienced developer to review this PR, and provide meaningful feedback.
-      Take into account the size, complexity, quality and possible needed changes of the PR code diff.
+      Estimate, on a scale of 1-5 (inclusive), the time and effort required to review this PR by an experienced and knowledgeable developer. 1 means short and easy review , 5 means long and hard review.
+      Take into account the size, complexity, quality, and the needed changes of the PR code diff.
       Explain your answer shortly (1-2 sentences).
 {%- endif %}
 PR Feedback:
