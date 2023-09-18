@@ -25,7 +25,7 @@ automatic_review=true
 extra_instructions = ""
 
 [pr_description] # /describe #
-publish_description_as_comment=false
+publish_description_as_comment=true
 add_original_user_description=false
 keep_original_user_title=false
 extra_instructions = ""
@@ -50,7 +50,7 @@ extra_instructions = ""
 
 [github]
 # The type of deployment to create. Valid values are 'app' or 'user'.
-deployment_type = "user"
+deployment_type = "app"
 ratelimit_retries = 5
 
 [github_app]
@@ -64,7 +64,6 @@ duplicate_requests_cache_ttl = 60  # in seconds
 # settings for "pull_request" event
 handle_pr_actions = ['opened', 'reopened', 'ready_for_review', 'review_requested']
 pr_commands = [
-    "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true",
     "/auto_review",
 ]
 
