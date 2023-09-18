@@ -59,6 +59,7 @@ class PRReviewer:
             "require_tests": get_settings().pr_reviewer.require_tests_review,
             "require_security": get_settings().pr_reviewer.require_security_review,
             "require_focused": get_settings().pr_reviewer.require_focused_review,
+            "require_estimate_effort_to_review": get_settings().pr_reviewer.require_estimate_effort_to_review,
             'num_code_suggestions': get_settings().pr_reviewer.num_code_suggestions,
             'question_str': question_str,
             'answer_str': answer_str,

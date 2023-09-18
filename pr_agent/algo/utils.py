@@ -42,6 +42,7 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
         "General suggestions": "💡",
         "Insights from user's answers": "📝",
         "Code feedback": "🤖",
+        "Estimated effort to review [1-5]": "⏱️",
     }
 
     for key, value in output_data.items():

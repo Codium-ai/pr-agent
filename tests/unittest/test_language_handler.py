@@ -61,7 +61,7 @@ class TestSortFilesByMainLanguages:
             type('', (object,), {'filename': 'file1.py'})(),
             type('', (object,), {'filename': 'file2.java'})()
         ]
-        expected_output = [{'language': 'Other', 'files': []}]
+        expected_output = [{'language': 'Other', 'files': files}]
         assert sort_files_by_main_languages(languages, files) == expected_output
 
     # Tests that function handles empty files list

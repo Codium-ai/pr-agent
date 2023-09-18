@@ -231,10 +231,14 @@ class PRDescription:
             pr_body += f"## {key}:\n"
             if 'walkthrough' in key.lower():
                 # for filename, description in value.items():
+                if self.git_provider.is_supported("gfm_markdown"):
+                    pr_body += "<details> <summary>files:</summary>\n\n"
                 for file in value:
                     filename = file['filename'].replace("'", "`")
                     description = file['changes in file']
                     pr_body += f'`{filename}`: {description}\n'
+                if self.git_provider.is_supported("gfm_markdown"):
+                    pr_body +="</details>\n"
             else:
                 # if the value is a list, join its items by comma
                 if type(value) == list:
