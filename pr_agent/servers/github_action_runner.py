@@ -3,6 +3,7 @@ import json
 import os
 
 from pr_agent.agent.pr_agent import PRAgent
+from pr_agent.algo.utils import update_settings_from_args
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.tools.pr_reviewer import PRReviewer
@@ -54,6 +55,25 @@ async def run_action():
             pr_url = event_payload.get("pull_request", {}).get("url")
             if pr_url:
                 await PRReviewer(pr_url).run()
+                
+    # Handle pull request event
+    if GITHUB_EVENT_NAME == "pull_request":
+        action = event_payload.get("action")
+        if action in ["opened", "reopened"]:
+            pr_url = event_payload.get("pull_request", {}).get("url")
+            if pr_url:
+                pr_commands = get_settings().github_action.pr_commands
+                if not pr_commands:
+                    await PRReviewer(pr_url).run()
+                else:
+                    for command in pr_commands:
+                        split_command = command.split(" ")
+                        command = split_command[0]
+                        args = split_command[1:]
+                        other_args = update_settings_from_args(args)
+                        new_command = ' '.join([command] + other_args)
+                        await PRAgent().handle_request(pr_url, new_command)
+
 
     # Handle issue comment event
     elif GITHUB_EVENT_NAME == "issue_comment":

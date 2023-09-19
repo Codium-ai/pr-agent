@@ -28,7 +28,7 @@ extra_instructions = ""
 [pr_description] # /describe #
 publish_labels=true
 publish_description_as_comment=false
-add_original_user_description=false
+add_original_user_description=true
 keep_original_user_title=false
 extra_instructions = ""
 # markers
@@ -57,6 +57,12 @@ extra_instructions = ""
 # The type of deployment to create. Valid values are 'app' or 'user'.
 deployment_type = "user"
 ratelimit_retries = 5
+
+[github_action]
+pr_commands = [
+    "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true",
+    "/auto_review",
+]
 
 [github_app]
 # these toggles allows running the github app from custom deployments
