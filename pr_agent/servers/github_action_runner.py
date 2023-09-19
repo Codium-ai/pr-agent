@@ -50,7 +50,7 @@ async def run_action():
         print(f"Failed to parse JSON: {e}")
         return
     
-    context = []
+    context = {}
     context["settings"] = copy.deepcopy(global_settings)
                 
     # Handle pull request event
