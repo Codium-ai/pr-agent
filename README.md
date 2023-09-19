@@ -84,13 +84,14 @@ See the [usage guide](./Usage.md) for instructions how to run the different tool
 <div align="left">
 
 ## Table of Contents
+- [Table of Contents](#table-of-contents)
 - [Overview](#overview)
 - [Try it now](#try-it-now)
 - [Installation](#installation)
-- [Usage guide](./Usage.md)
 - [How it works](#how-it-works)
-- [Why use PR-Agent](#why-use-pr-agent)
+- [Why use PR-Agent?](#why-use-pr-agent)
 - [Roadmap](#roadmap)
+- [Similar Projects](#similar-projects)
 </div>
 
 
@@ -103,8 +104,8 @@ See the [usage guide](./Usage.md) for instructions how to run the different tool
 |       | Auto-Description                            |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |   :white_check_mark:    |   :white_check_mark:    | :white_check_mark:    |
 |       | Improve Code                                |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |   :white_check_mark:    |          |    :white_check_mark:    |
 |       | ⮑ Extended                             |   :white_check_mark:    |   :white_check_mark:    |        :white_check_mark:   |   :white_check_mark:    |          | :white_check_mark:    |
-|       | Reflect and Review                          |   :white_check_mark:    |                         |   :white_check_mark:        |          |   :white_check_mark:    |    :white_check_mark:    |
-|       | Update CHANGELOG.md                         |   :white_check_mark:    |                         |   :white_check_mark:        |          |          |       |
+|       | Reflect and Review                          |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |          |   :white_check_mark:    |    :white_check_mark:    |
+|       | Update CHANGELOG.md                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |          |          |       |
 |       |                                             |        |        |      |      |      |
 | USAGE | CLI                                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |   :white_check_mark:    |   :white_check_mark:    |
 |       | App / webhook                               |   :white_check_mark:    |   :white_check_mark:    |           |          |          |
