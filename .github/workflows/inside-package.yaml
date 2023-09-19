@@ -35,4 +35,4 @@ jobs:
           tags: ghcr.io/inside-ai-me/pr-agent:latest
           cache-from: type=gha,scope=dev
           cache-to: type=gha,mode=max,scope=dev
-          target: main
+          target: base
