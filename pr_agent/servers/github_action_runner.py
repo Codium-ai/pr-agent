@@ -3,6 +3,7 @@ import asyncio
 import json
 import os
 import logging
+import sys
 
 from pr_agent.agent.pr_agent import PRAgent
 from pr_agent.algo.utils import update_settings_from_args
@@ -12,6 +13,7 @@ from pr_agent.tools.pr_reviewer import PRReviewer
 
 
 async def run_action():
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
     # Get environment variables
     GITHUB_EVENT_NAME = os.environ.get('GITHUB_EVENT_NAME')
     GITHUB_EVENT_PATH = os.environ.get('GITHUB_EVENT_PATH')
