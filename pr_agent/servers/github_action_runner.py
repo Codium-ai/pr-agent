@@ -3,7 +3,6 @@ import asyncio
 import json
 import os
 import logging
-from starlette_context import context
 
 from pr_agent.agent.pr_agent import PRAgent
 from pr_agent.algo.utils import update_settings_from_args
@@ -51,6 +50,7 @@ async def run_action():
         print(f"Failed to parse JSON: {e}")
         return
     
+    context = []
     context["settings"] = copy.deepcopy(global_settings)
                 
     # Handle pull request event
