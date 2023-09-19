@@ -42,6 +42,11 @@ def sort_files_by_main_languages(languages: Dict, files: list):
     files_sorted = []
     rest_files = {}
 
+    # if no languages detected, put all files in the "Other" category
+    if not languages:
+        files_sorted = [({"language": "Other", "files": list(files_filtered)})]
+        return files_sorted
+
     main_extensions_flat = []
     for ext in main_extensions:
         main_extensions_flat.extend(ext)

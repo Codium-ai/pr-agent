@@ -20,7 +20,7 @@ def get_setting(key: str) -> Any:
     except Exception:
         return global_settings.get(key, None)
 
-def convert_to_markdown(output_data: dict, gfm_supported: bool) -> str:
+def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
     """
     Convert a dictionary of data into markdown format.
     Args:
@@ -42,6 +42,7 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool) -> str:
         "General suggestions": "💡",
         "Insights from user's answers": "📝",
         "Code feedback": "🤖",
+        "Estimated effort to review [1-5]": "⏱️",
     }
 
     for key, value in output_data.items():

@@ -26,6 +26,8 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 ‣ **Code Suggestions (`/improve`)**: [Committable code suggestions](https://github.com/Codium-ai/pr-agent/pull/229#discussion_r1306919276) for improving the PR.
 \
 ‣ **Update Changelog (`/update_changelog`)**: Automatically updating the CHANGELOG.md file with the [PR changes](https://github.com/Codium-ai/pr-agent/pull/168#discussion_r1282077645).
+\
+‣ **Find similar issue (`/similar_issue`)**: Automatically retrieves and presents [similar issues](https://github.com/Alibaba-MIIL/ASL/issues/107).
 
 
 See the [usage guide](./Usage.md) for instructions how to run the different tools from [CLI](./Usage.md#working-from-a-local-repo-cli), or by [online usage](./Usage.md#online-usage), as well as additional details on optional commands and configurations.
@@ -106,6 +108,7 @@ See the [usage guide](./Usage.md) for instructions how to run the different tool
 |       | ⮑ Extended                             |   :white_check_mark:    |   :white_check_mark:    |        :white_check_mark:   |   :white_check_mark:    |          | :white_check_mark:    |
 |       | Reflect and Review                          |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |          |   :white_check_mark:    |    :white_check_mark:    |
 |       | Update CHANGELOG.md                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |          |          |       |
+|       | Find similar issue                          |   :white_check_mark:    |                         |                             |          |          |       |
 |       |                                             |        |        |      |      |      |
 | USAGE | CLI                                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |   :white_check_mark:    |   :white_check_mark:    |
 |       | App / webhook                               |   :white_check_mark:    |   :white_check_mark:    |           |          |          |
@@ -183,7 +186,7 @@ Here are some advantages of PR-Agent:
 - [x] Support additional models, as a replacement for OpenAI (see [here](https://github.com/Codium-ai/pr-agent/pull/172))
 - [x] Develop additional logic for handling large PRs (see [here](https://github.com/Codium-ai/pr-agent/pull/229))
 - [ ] Add additional context to the prompt. For example, repo (or relevant files) summarization, with tools such a [ctags](https://github.com/universal-ctags/ctags)
-- [ ] PR-Agent for issues, and just for pull requests
+- [x] PR-Agent for issues
 - [ ] Adding more tools. Possible directions:
   - [x] PR description
   - [x] Inline code suggestions
@@ -201,3 +204,13 @@ Here are some advantages of PR-Agent:
 - [openai-pr-reviewer](https://github.com/coderabbitai/openai-pr-reviewer)
 - [CodeReview BOT](https://github.com/anc95/ChatGPT-CodeReview)
 - [AI-Maintainer](https://github.com/merwanehamadi/AI-Maintainer)
+  
+## Links
+
+[![Join our Discord community](https://raw.githubusercontent.com/Codium-ai/codiumai-vscode-release/main/media/docs/Joincommunity.png)](https://discord.gg/kG35uSHDBc)
+
+- Discord community: https://discord.gg/kG35uSHDBc
+- CodiumAI site: https://codium.ai
+- Blog: https://www.codium.ai/blog/
+- Troubleshooting: https://www.codium.ai/blog/technical-faq-and-troubleshooting/
+- Support: support@codium.ai
