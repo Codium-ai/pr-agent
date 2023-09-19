@@ -1,9 +1,9 @@
-import copy
 import asyncio
 import json
 import os
 import logging
 import sys
+import tempfile
 
 from pr_agent.agent.pr_agent import PRAgent
 from pr_agent.algo.utils import update_settings_from_args
@@ -51,15 +51,32 @@ async def run_action():
     except json.decoder.JSONDecodeError as e:
         print(f"Failed to parse JSON: {e}")
         return
-    
-    get_settings().copy(global_settings)
-                
+
     # Handle pull request event
     if GITHUB_EVENT_NAME == "pull_request":
         action = event_payload.get("action")
         if action in ["opened", "reopened"]:
             pr_url = event_payload.get("pull_request", {}).get("url")
             if pr_url:
+                # First, apply repo specific settings if exists
+                if get_settings().config.use_repo_settings_file:
+                    repo_settings_file = None
+                    try:
+                        git_provider = get_git_provider()(pr_url)
+                        repo_settings = git_provider.get_repo_settings()
+                        logging.error(repo_settings)
+                        if repo_settings:
+                            repo_settings_file = None
+                            fd, repo_settings_file = tempfile.mkstemp(suffix='.toml')
+                            os.write(fd, repo_settings)
+                            get_settings().load_file(repo_settings_file)
+                    finally:
+                        if repo_settings_file:
+                            try:
+                                os.remove(repo_settings_file)
+                            except Exception as e:
+                                logging.error(f"Failed to remove temporary settings file {repo_settings_file}", e)
+
                 logging.error(get_settings())
                 logging.error(get_settings().github_app.pr_commands)
                 logging.error(get_settings().github_action)
