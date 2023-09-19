@@ -1,0 +1,20 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_and_push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build and Push Docker Image
+        run: |
+          docker build -f Dockerfile.github_action . -t ghcr.io/inside-ai-me/pr-agent:${{ github.sha }}
+          echo "${{ secrets.AGENT_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          docker push ghcr.io/inside-ai-me/pr-agent:${{ github.sha }}
