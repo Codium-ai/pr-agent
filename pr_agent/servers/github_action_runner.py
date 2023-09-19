@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import logging
 
 from pr_agent.agent.pr_agent import PRAgent
 from pr_agent.algo.utils import update_settings_from_args
@@ -54,9 +55,9 @@ async def run_action():
         if action in ["opened", "reopened"]:
             pr_url = event_payload.get("pull_request", {}).get("url")
             if pr_url:
-                print(get_settings())
-                print(get_settings().github_action)
-                print(get_settings().github_action.pr_commands)
+                logging.info(get_settings())
+                logging.info(get_settings().github_action)
+                logging.info(get_settings().github_action.pr_commands)
                 pr_commands = get_settings().github_action.pr_commands
                 if not pr_commands:
                     await PRReviewer(pr_url).run()
