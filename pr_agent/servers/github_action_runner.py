@@ -1,11 +1,13 @@
+import copy
 import asyncio
 import json
 import os
 import logging
+from starlette_context import context
 
 from pr_agent.agent.pr_agent import PRAgent
 from pr_agent.algo.utils import update_settings_from_args
-from pr_agent.config_loader import get_settings
+from pr_agent.config_loader import get_settings, global_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.tools.pr_reviewer import PRReviewer
 
@@ -48,6 +50,8 @@ async def run_action():
     except json.decoder.JSONDecodeError as e:
         print(f"Failed to parse JSON: {e}")
         return
+    
+    context["settings"] = copy.deepcopy(global_settings)
                 
     # Handle pull request event
     if GITHUB_EVENT_NAME == "pull_request":
