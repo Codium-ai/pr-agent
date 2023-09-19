@@ -55,9 +55,10 @@ async def run_action():
         if action in ["opened", "reopened"]:
             pr_url = event_payload.get("pull_request", {}).get("url")
             if pr_url:
-                logging.info(get_settings())
-                logging.info(get_settings().github_action)
-                logging.info(get_settings().github_action.pr_commands)
+                logging.error(get_settings())
+                logging.error(get_settings().github_app.pr_commands)
+                logging.error(get_settings().github_action)
+                logging.error(get_settings().github_action.pr_commands)
                 pr_commands = get_settings().github_action.pr_commands
                 if not pr_commands:
                     await PRReviewer(pr_url).run()
