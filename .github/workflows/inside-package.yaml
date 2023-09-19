@@ -33,6 +33,6 @@ jobs:
           file: Dockerfile.github_action
           push: true
           tags: ghcr.io/inside-ai-me/pr-agent:latest
-          cache-from: type=gha,scope=dev
-          cache-to: type=gha,mode=max,scope=dev
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           target: base
