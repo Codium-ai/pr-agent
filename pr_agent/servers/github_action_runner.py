@@ -52,8 +52,7 @@ async def run_action():
         print(f"Failed to parse JSON: {e}")
         return
     
-    context = {}
-    context["settings"] = copy.deepcopy(global_settings)
+    get_settings().copy(global_settings)
                 
     # Handle pull request event
     if GITHUB_EVENT_NAME == "pull_request":
