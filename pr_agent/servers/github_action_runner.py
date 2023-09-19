@@ -47,14 +47,6 @@ async def run_action():
     except json.decoder.JSONDecodeError as e:
         print(f"Failed to parse JSON: {e}")
         return
-
-    # Handle pull request event
-    if GITHUB_EVENT_NAME == "pull_request":
-        action = event_payload.get("action")
-        if action in ["opened", "reopened"]:
-            pr_url = event_payload.get("pull_request", {}).get("url")
-            if pr_url:
-                await PRReviewer(pr_url).run()
                 
     # Handle pull request event
     if GITHUB_EVENT_NAME == "pull_request":
@@ -73,7 +65,6 @@ async def run_action():
                         other_args = update_settings_from_args(args)
                         new_command = ' '.join([command] + other_args)
                         await PRAgent().handle_request(pr_url, new_command)
-
 
     # Handle issue comment event
     elif GITHUB_EVENT_NAME == "issue_comment":
