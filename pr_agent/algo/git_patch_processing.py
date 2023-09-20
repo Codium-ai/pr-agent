@@ -40,12 +40,16 @@ def extend_patch(original_file_str, patch_str, num_lines) -> str:
                         extended_patch_lines.extend(
                             original_lines[start1 + size1 - 1:start1 + size1 - 1 + num_lines])
 
+                    res = list(match.groups())
+                    for i in range(len(res)):
+                        if res[i] is None:
+                            res[i] = 0
                     try:
-                        start1, size1, start2, size2 = map(int, match.groups()[:4])
+                        start1, size1, start2, size2 = map(int, res[:4])
                     except:  # '@@ -0,0 +1 @@' case
-                        start1, size1, size2 = map(int, match.groups()[:3])
+                        start1, size1, size2 = map(int, res[:3])
                         start2 = 0
-                    section_header = match.groups()[4]
+                    section_header = res[4]
                     extended_start1 = max(1, start1 - num_lines)
                     extended_size1 = size1 + (start1 - extended_start1) + num_lines
                     extended_start2 = max(1, start2 - num_lines)
@@ -207,10 +211,15 @@ __old hunk__
                 old_content_lines = []
             if match:
                 prev_header_line = header_line
+
+            res = list(match.groups())
+            for i in range(len(res)):
+                if res[i] is None:
+                    res[i] = 0
             try:
-                start1, size1, start2, size2 = map(int, match.groups()[:4])
+                start1, size1, start2, size2 = map(int, res[:4])
             except: # '@@ -0,0 +1 @@' case
-                start1, size1, size2 = map(int, match.groups()[:3])
+                start1, size1, size2 = map(int, res[:3])
                 start2 = 0
 
         elif line.startswith('+'):
