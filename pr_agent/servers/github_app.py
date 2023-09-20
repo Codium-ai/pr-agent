@@ -37,7 +37,7 @@ for var in env_vars:
         new_var_name = var.replace("_", ".", 1)
         
         get_settings().set(new_var_name, value)
-        logging.info(f'Rewrite evar: {new_var_name} - {os.environ[value]} ')
+        logging.info(f'Rewrite evar: {new_var_name} - {value}')
 
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
