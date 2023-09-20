@@ -63,40 +63,44 @@ class PRDescription:
         """
         Generates a PR description using an AI model and publishes it to the PR.
         """
-        logging.info(f"Generating a PR description {self.pr_id}")
-        if get_settings().config.publish_output:
-            self.git_provider.publish_comment("Preparing pr description...", is_temporary=True)
 
-        await retry_with_fallback_models(self._prepare_prediction)
+        try:
+            logging.info(f"Generating a PR description {self.pr_id}")
+            if get_settings().config.publish_output:
+                self.git_provider.publish_comment("Preparing pr description...", is_temporary=True)
 
-        logging.info(f"Preparing answer {self.pr_id}")
-        if self.prediction:
-            self._prepare_data()
-        else:
-            return None
+            await retry_with_fallback_models(self._prepare_prediction)
 
-        pr_labels = []
-        if get_settings().pr_description.publish_labels:
-            pr_labels = self._prepare_labels()
-
-        if get_settings().pr_description.use_description_markers:
-            pr_title, pr_body = self._prepare_pr_answer_with_markers()
-        else:
-            pr_title, pr_body,  = self._prepare_pr_answer()
-        full_markdown_description = f"## Title\n\n{pr_title}\n\n___\n{pr_body}"
-
-        if get_settings().config.publish_output:
-            logging.info(f"Pushing answer {self.pr_id}")
-            if get_settings().pr_description.publish_description_as_comment:
-                self.git_provider.publish_comment(full_markdown_description)
+            logging.info(f"Preparing answer {self.pr_id}")
+            if self.prediction:
+                self._prepare_data()
             else:
-                self.git_provider.publish_description(pr_title, pr_body)
-                if get_settings().pr_description.publish_labels and self.git_provider.is_supported("get_labels"):
-                    current_labels = self.git_provider.get_labels()
-                    if current_labels is None:
-                        current_labels = []
-                    self.git_provider.publish_labels(pr_labels + current_labels)
-            self.git_provider.remove_initial_comment()
+                return None
+
+            pr_labels = []
+            if get_settings().pr_description.publish_labels:
+                pr_labels = self._prepare_labels()
+
+            if get_settings().pr_description.use_description_markers:
+                pr_title, pr_body = self._prepare_pr_answer_with_markers()
+            else:
+                pr_title, pr_body,  = self._prepare_pr_answer()
+            full_markdown_description = f"## Title\n\n{pr_title}\n\n___\n{pr_body}"
+
+            if get_settings().config.publish_output:
+                logging.info(f"Pushing answer {self.pr_id}")
+                if get_settings().pr_description.publish_description_as_comment:
+                    self.git_provider.publish_comment(full_markdown_description)
+                else:
+                    self.git_provider.publish_description(pr_title, pr_body)
+                    if get_settings().pr_description.publish_labels and self.git_provider.is_supported("get_labels"):
+                        current_labels = self.git_provider.get_labels()
+                        if current_labels is None:
+                            current_labels = []
+                        self.git_provider.publish_labels(pr_labels + current_labels)
+                self.git_provider.remove_initial_comment()
+        except Exception as e:
+            logging.error(f"Error generating PR description {self.pr_id}: {e}")
         
         return ""
 
