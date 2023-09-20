@@ -23,7 +23,8 @@ env_vars = [
     "GITHUB_APP_ID",
     "GITHUB_DEPLOYMENT_TYPE",
     "GITHUB_PRIVATE_KEY",
-    "GITHUB_WEBHOOK_SECRET"
+    "GITHUB_WEBHOOK_SECRET",
+    "OPENAI_KEY"
 ]
 
 # Convert each environment variable name
