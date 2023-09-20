@@ -95,28 +95,32 @@ class PRReviewer:
         """
         Review the pull request and generate feedback.
         """
-        if self.is_auto and not get_settings().pr_reviewer.automatic_review:
-            logging.info(f'Automatic review is disabled {self.pr_url}')
-            return None
 
-        logging.info(f'Reviewing PR: {self.pr_url} ...')
+        try:
+            if self.is_auto and not get_settings().pr_reviewer.automatic_review:
+                logging.info(f'Automatic review is disabled {self.pr_url}')
+                return None
 
-        if get_settings().config.publish_output:
-            self.git_provider.publish_comment("Preparing review...", is_temporary=True)
-    
-        await retry_with_fallback_models(self._prepare_prediction)
-    
-        logging.info('Preparing PR review...')
-        pr_comment = self._prepare_pr_review()
-    
-        if get_settings().config.publish_output:
-            logging.info('Pushing PR review...')
-            self.git_provider.publish_comment(pr_comment)
-            self.git_provider.remove_initial_comment()
-        
-            if get_settings().pr_reviewer.inline_code_comments:
-                logging.info('Pushing inline code comments...')
-                self._publish_inline_code_comments()
+            logging.info(f'Reviewing PR: {self.pr_url} ...')
+
+            if get_settings().config.publish_output:
+                self.git_provider.publish_comment("Preparing review...", is_temporary=True)
+
+            await retry_with_fallback_models(self._prepare_prediction)
+
+            logging.info('Preparing PR review...')
+            pr_comment = self._prepare_pr_review()
+
+            if get_settings().config.publish_output:
+                logging.info('Pushing PR review...')
+                self.git_provider.publish_comment(pr_comment)
+                self.git_provider.remove_initial_comment()
+
+                if get_settings().pr_reviewer.inline_code_comments:
+                    logging.info('Pushing inline code comments...')
+                    self._publish_inline_code_comments()
+        except Exception as e:
+            logging.error(f"Failed to review PR: {e}")
 
     async def _prepare_prediction(self, model: str) -> None:
         """
