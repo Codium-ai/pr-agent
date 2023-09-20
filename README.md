@@ -86,14 +86,12 @@ See the [usage guide](./Usage.md) for instructions how to run the different tool
 <div align="left">
 
 ## Table of Contents
-- [Table of Contents](#table-of-contents)
 - [Overview](#overview)
 - [Try it now](#try-it-now)
 - [Installation](#installation)
 - [How it works](#how-it-works)
 - [Why use PR-Agent?](#why-use-pr-agent)
 - [Roadmap](#roadmap)
-- [Similar Projects](#similar-projects)
 </div>
 
 
