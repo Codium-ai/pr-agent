@@ -122,7 +122,7 @@ jobs:
           OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
-** if you want to pin your action to a specific commit for stability reasons
+** if you want to pin your action to a specific release (v0.7 for example) for stability reasons, use:
 ```yaml
 on:
   pull_request:
@@ -139,7 +139,7 @@ jobs:
     steps:
       - name: PR Agent action step
         id: pragent
-        uses: Codium-ai/pr-agent@<commit_sha>
+        uses: Codium-ai/pr-agent@v0.7
         env:
           OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
