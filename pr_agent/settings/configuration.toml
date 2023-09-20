@@ -15,12 +15,12 @@ cli_mode=false
 
 [pr_reviewer] # /review #
 require_focused_review=false
-require_score_review=false
-require_tests_review=true
+require_score_review=true
+require_tests_review=false
 require_security_review=true
 require_estimate_effort_to_review=true
 num_code_suggestions=4
-inline_code_comments = false
+inline_code_comments = true
 ask_and_reflect=false
 automatic_review=true
 extra_instructions = ""
@@ -33,7 +33,7 @@ keep_original_user_title=false
 extra_instructions = ""
 # markers
 use_description_markers=false
-include_generated_by_header=true
+include_generated_by_header=false
 
 [pr_questions] # /ask #
 
