@@ -17,6 +17,32 @@ from pr_agent.config_loader import get_settings, global_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.servers.utils import verify_signature
 
+
+# List of environment variable names to convert
+env_vars = [
+    "GITHUB_APP_ID",
+    "GITHUB_DEPLOYMENT_TYPE",
+    "GITHUB_PRIVATE_KEY",
+    "GITHUB_WEBHOOK_SECRET"
+]
+
+# Convert each environment variable name
+for var in env_vars:
+    # Check if the environment variable exists
+    if var in os.environ:
+        # Get the value of the environment variable
+        value = os.environ[var]
+        
+        # Convert the name by replacing the first underscore
+        new_var = var.replace("_", ".", 1)
+        
+        # Set the new environment variable
+        os.environ[new_var] = value
+        
+        # Optionally, delete the old environment variable
+        del os.environ[var]
+
+
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 router = APIRouter()
 

@@ -55,7 +55,7 @@ extra_instructions = ""
 
 [github]
 # The type of deployment to create. Valid values are 'app' or 'user'.
-deployment_type = "user"
+deployment_type = "app"
 ratelimit_retries = 5
 
 [github_action]
