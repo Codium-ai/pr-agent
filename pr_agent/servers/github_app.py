@@ -38,6 +38,7 @@ for var in env_vars:
         
         # Set the new environment variable
         os.environ[new_var] = value
+        logging.info(f'Rewrite evar: {new_var} - {os.environ[new_var]} ')
         
         # Optionally, delete the old environment variable
         del os.environ[var]
