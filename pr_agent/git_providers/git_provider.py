@@ -127,6 +127,9 @@ class GitProvider(ABC):
     def get_commit_messages(self):
         pass
 
+    def get_pr_id(self):
+        return ""
+
 def get_main_pr_language(languages, files) -> str:
     """
     Get the main language of the commit. Return an empty string if cannot determine.

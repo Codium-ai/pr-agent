@@ -446,3 +446,10 @@ class GithubProvider(GitProvider):
                 logging.info(f"Failed adding line link, error: {e}")
 
         return ""
+
+    def get_pr_id(self):
+        try:
+            pr_id = f"{self.repo}/{self.pr_num}"
+            return pr_id
+        except:
+            return ""
