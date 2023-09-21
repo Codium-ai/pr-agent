@@ -32,6 +32,8 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 
 See the [usage guide](./Usage.md) for instructions how to run the different tools from [CLI](./Usage.md#working-from-a-local-repo-cli), or by [online usage](./Usage.md#online-usage), as well as additional details on optional commands and configurations.
 
+[Release notes](./RELEASE_NOTES.md)
+
 <h3>Example results:</h3>
 </div>
 <h4><a href="https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1687561986">/describe:</a></h4>
