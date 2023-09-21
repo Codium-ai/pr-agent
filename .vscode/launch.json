@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: cli.py review",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/pr_agent/cli.py",
+      "args": ["--pr_url=${input:inputPrUrl}", "review"],
+      "console": "integratedTerminal"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "inputPrUrl",
+      "type": "promptString",
+      "description": "Enter the PR URL:",
+      "default": "https://github.com/Inside-AI-me/demo-repository/pull/12"
+    }
+  ]
+}

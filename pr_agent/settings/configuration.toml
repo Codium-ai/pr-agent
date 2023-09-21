@@ -39,7 +39,14 @@ include_generated_by_header=false
 
 [pr_code_suggestions] # /improve #
 num_code_suggestions=4
-extra_instructions = ""
+extra_instructions = """
+You are reviewing code for 'Meet snap', a Chrome extension designed to enhance the Google Meet experience. This TypeScript-based project uses Vite for development and has a strong emphasis on service workers, content scripts, and React best practices. When suggesting improvements:
+Ensure suggestions align with Chrome extension best practices, especially for service workers and content scripts.
+Prioritize suggestions that improve the efficiency and reliability of the extension's core functionalities.
+Ensure code suggestions are compatible with the Vite ecosystem and adhere to TypeScript best practices.
+Given the project's use of React, ensure suggestions are in line with modern React best practices, including hooks and functional components.
+Your goal is to provide meaningful and actionable code suggestions that enhance the performance, security, and user experience of 'Meet snap'. Forgot about logging."
+"""
 rank_suggestions = false
 # params for '/improve --extended' mode
 num_code_suggestions_per_chunk=8
@@ -81,6 +88,8 @@ pr_commands = [
     "/auto_review",
     "/improve --extended"
 ]
+
+[]
 
 [gitlab]
 # URL to the gitlab service
