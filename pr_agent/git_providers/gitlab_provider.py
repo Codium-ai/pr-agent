@@ -382,6 +382,7 @@ class GitLabProvider(GitProvider):
 
     def get_pr_id(self):
         try:
-            return str(self.pr.id)
+            pr_id = self.mr.web_url
+            return pr_id
         except:
             return ""
