@@ -62,16 +62,9 @@ extra_instructions = ""
 
 [github]
 # The type of deployment to create. Valid values are 'app' or 'user'.
-deployment_type = "app"
+deployment_type = "user"
 ratelimit_retries = 5
 
-[github_action]
-# Commands to execute
-pr_commands = [
-    "/describe",
-    "/auto_review",
-    "/improve --extended"
-]
 
 [github_app]
 # these toggles allows running the github app from custom deployments
@@ -81,15 +74,20 @@ override_deployment_type = true
 # these settings are used to avoid handling duplicate requests.
 duplicate_requests_cache = false
 duplicate_requests_cache_ttl = 60  # in seconds
-# settings for "pull_request" event
-handle_pr_actions = ['opened', 'reopened', 'ready_for_review', 'review_requested']
-pr_commands = [    
-    "/describe",
-    "/auto_review",
-    "/improve --extended"
-]
 
-[]
+# settings for "pull_request" event (new format)
+[github_app.pr_actions.opened]
+pr_commands = ["/describe", "/auto_review"]
+
+[github_app.pr_actions.reopened]
+pr_commands = ["/describe", "/auto_review"]
+
+[github_app.pr_actions.review_requested]
+pr_commands = ["/improve --extended"]
+
+[github_app.pr_actions.closed]
+pr_commands = ["/update_changelog"]
+
 
 [gitlab]
 # URL to the gitlab service

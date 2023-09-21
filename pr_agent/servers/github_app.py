@@ -138,17 +138,18 @@ async def handle_request(body: Dict[str, Any], event: str):
         api_url = pull_request.get("url")
         if not api_url:
             return {}
-        if pull_request.get("draft", True) or pull_request.get("state") != "open" or pull_request.get("user", {}).get("login", "") == bot_user:
-            return {}
-        if action in get_settings().github_app.handle_pr_actions:
-            if action == "review_requested":
-                if body.get("requested_reviewer", {}).get("login", "") != bot_user:
-                    return {}
-                if pull_request.get("created_at") == pull_request.get("updated_at"):
-                    # avoid double reviews when opening a PR for the first time
-                    return {}
+        
+        pr_actions_and_commands = get_pr_actions_and_commands()
+        
+        # Check if the action is in the list of actions we want to handle
+        if action in pr_actions_and_commands:
+            if action == "review_requested" and body.get("requested_reviewer", {}).get("login", "") != bot_user:
+                return {}
+            if pull_request.get("user", {}).get("login", "") == bot_user:
+                return {}
+            
             logging.info(f"Performing review because of event={event} and action={action}")
-            for command in get_settings().github_app.pr_commands:
+            for command in pr_actions_and_commands[action]:
                 split_command = command.split(" ")
                 command = split_command[0]
                 args = split_command[1:]
@@ -160,6 +161,21 @@ async def handle_request(body: Dict[str, Any], event: str):
 
     logging.info("event or action does not require handling")
     return {}
+
+
+def _get_pr_actions_and_commands():
+    """
+    Returns a dictionary of PR actions and their corresponding commands.
+    Supports both old and new configuration formats.
+    """
+    config = get_settings().github_app
+    if hasattr(config, 'handle_pr_actions') and hasattr(config, 'pr_commands'):
+        # Old configuration format
+        return {action: config.pr_commands for action in config.handle_pr_actions}
+    else:
+        # New configuration format
+        pr_actions_config = config.pr_actions
+        return {action: getattr(pr_actions_config, action).pr_commands for action in dir(pr_actions_config) if not action.startswith('__')}
 
 
 def _is_duplicate_request(body: Dict[str, Any]) -> bool:
