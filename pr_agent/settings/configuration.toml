@@ -1,7 +1,7 @@
 [config]
 model="gpt-4"
 fallback_models=["gpt-3.5-turbo-16k"]
-git_provider="bitbucket"
+git_provider="github"
 publish_output=true
 publish_output_progress=true
 verbosity_level=0 # 0,1,2
@@ -56,7 +56,6 @@ extra_instructions = ""
 [github]
 # The type of deployment to create. Valid values are 'app' or 'user'.
 deployment_type = "user"
-user_token = ""  # A GitHub personal access token with 'repo' scope.
 ratelimit_retries = 5
 
 [github_app]
@@ -101,21 +100,6 @@ polling_interval_seconds = 30
 # patch_server_endpoint = "http://127.0.0.1:5000/patch"
 # token to authenticate in the patch server
 # patch_server_token = ""
-
-
-[openai]
-key = ""  # Acquire through https://platform.openai.com
-#org = "<ORGANIZATION>"  # Optional, may be commented out.
-# Uncomment the following for Azure OpenAI
-#api_type = "azure"
-#api_version = '2023-05-15'  # Check Azure documentation for the current API version
-#api_base = ""  # The base URL for your Azure OpenAI resource. e.g. "https://<your resource name>.openai.azure.com"
-#deployment_id = ""  # The deployment name you chose when you deployed the engine
-#fallback_deployments = []  # For each fallback model specified in configuration.toml in the [config] section, specify the appropriate deployment_id
-
-[bitbucket]
-# Bitbucket personal bearer token
-bearer_token = ""
 
 [litellm]
 #use_client = false
