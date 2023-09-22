@@ -22,7 +22,7 @@ code line that already existed in the file....
 ...
 '
 
-Thre review should focus on new code added in the PR (lines starting with '+'), and not on code that already existed in the file (lines starting with '-', or without prefix).
+The review should focus on new code added in the PR (lines starting with '+'), and not on code that already existed in the file (lines starting with '-', or without prefix).
 
 {%- if num_code_suggestions > 0 %}
 - Provide up to {{ num_code_suggestions }} code suggestions.
