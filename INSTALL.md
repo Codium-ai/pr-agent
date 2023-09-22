@@ -379,6 +379,7 @@ You can use our pre-build Bitbucket-Pipeline docker image to run as Bitbucket-Pi
 
 1. Add the following file in your repository bitbucket_pipelines.yml
 
+```yaml
   pipelines:
     pull-requests:
       '**':
@@ -394,6 +395,7 @@ You can use our pre-build Bitbucket-Pipeline docker image to run as Bitbucket-Pi
               - cd pr-agent
               - docker build -t bitbucket_runner:latest -f Dockerfile.bitbucket_pipeline .
               - docker run -e OPENAI_API_KEY=$OPENAI_API_KEY -e BITBUCKET_BEARER_TOKEN=$BITBUCKET_BEARER_TOKEN -e BITBUCKET_PR_ID=$BITBUCKET_PR_ID -e BITBUCKET_REPO_SLUG=$BITBUCKET_REPO_SLUG -e BITBUCKET_WORKSPACE=$BITBUCKET_WORKSPACE bitbucket_runner:latest
+```
 
 2. Add the following secret to your repository under Repository settings > Pipelines > Repository variables.
 OPENAI_API_KEY: <your key>
