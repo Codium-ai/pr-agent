@@ -16,6 +16,7 @@ There are several ways to use PR-Agent:
 - [Method 6: Deploy as a Lambda Function](INSTALL.md#method-6---deploy-as-a-lambda-function)
 - [Method 7: AWS CodeCommit](INSTALL.md#method-7---aws-codecommit-setup)
 - [Method 8: Run a GitLab webhook server](INSTALL.md#method-8---run-a-gitlab-webhook-server)
+- [Method 9: Run as a Bitbucket Pipeline](INSTALL.md#method-9-run-as-a-bitbucket-pipeline)
 ---
 
 ### Method 1: Use Docker image (no installation required)
@@ -368,6 +369,65 @@ WEBHOOK_SECRET=$(python -c "import secrets; print(secrets.token_hex(10))")
 5. Create a webhook in GitLab. Set the URL to the URL of your app's server. Set the secret token to the generated secret from step 2. 
 In the "Trigger" section, check the ‘comments’ and ‘merge request events’ boxes. 
 6. Test your installation by opening a merge request or commenting or a merge request using one of CodiumAI's commands.
+
+
+
+### Method 9: Run as a Bitbucket Pipeline
+
+
+You can use our pre-build Bitbucket-Pipeline docker image to run as Bitbucket-Pipeline.
+
+1. Add the following file in your repository bitbucket_pipelines.yml
+
+```yaml
+  pipelines:
+    pull-requests:
+      '**':
+        - step:
+            name: PR Agent Pipeline
+            caches:
+              - pip
+            image: python:3.8
+            services:
+              - docker
+            script:
+              - git clone https://github.com/Codium-ai/pr-agent.git
+              - cd pr-agent
+              - docker build -t bitbucket_runner:latest -f Dockerfile.bitbucket_pipeline .
+              - docker run -e OPENAI_API_KEY=$OPENAI_API_KEY -e BITBUCKET_BEARER_TOKEN=$BITBUCKET_BEARER_TOKEN -e BITBUCKET_PR_ID=$BITBUCKET_PR_ID -e BITBUCKET_REPO_SLUG=$BITBUCKET_REPO_SLUG -e BITBUCKET_WORKSPACE=$BITBUCKET_WORKSPACE bitbucket_runner:latest
+```
+
+2. Add the following secret to your repository under Repository settings > Pipelines > Repository variables.
+OPENAI_API_KEY: <your key>
+BITBUCKET_BEARER_TOKEN: <your token>
+
+3. To get BITBUCKET_BEARER_TOKEN follow these steps
+  So here is my step by step tutorial
+  i) Insert your workspace name instead of {workspace_name} and go to the following link in order to create an OAuth consumer.
+
+      https://bitbucket.org/{workspace_name}/workspace/settings/api
+
+      set callback URL to http://localhost:8976 (doesn't need to be a real server there)
+      select permissions: repository -> read
+
+  ii) use consumer's Key as a {client_id} and open the following URL in the browser
+
+      https://bitbucket.org/site/oauth2/authorize?client_id={client_id}&response_type=code
+
+  iii)
+      after you press "Grant access" in the browser it will redirect you to
+
+      http://localhost:8976?code=<CODE>
+
+  iv) use the code from the previous step and consumer's Key as a {client_id}, and consumer's Secret as {client_secret}
+
+      curl -X POST -u "{client_id}:{client_secret}" \
+          https://bitbucket.org/site/oauth2/access_token \
+          -d grant_type=authorization_code \
+          -d code={code} \
+
+
+After completing this steps, you just to place this access token in the repository varibles.
 
 
 =======
