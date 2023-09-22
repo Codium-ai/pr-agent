@@ -29,7 +29,7 @@ class PRDescription:
         self.main_pr_language = get_main_pr_language(
             self.git_provider.get_languages(), self.git_provider.get_files()
         )
-        self.pr_id = f"{self.git_provider.repo}/{self.git_provider.pr_num}"
+        self.pr_id = self.git_provider.get_pr_id()
 
         # Initialize the AI handler
         self.ai_handler = AiHandler()
