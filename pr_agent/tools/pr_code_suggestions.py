@@ -48,27 +48,33 @@ class PRCodeSuggestions:
                                           get_settings().pr_code_suggestions_prompt.user)
 
     async def run(self):
-        logging.info('Generating code suggestions for PR...')
-        if get_settings().config.publish_output:
-            self.git_provider.publish_comment("Preparing review...", is_temporary=True)
+        try:
+            logging.info('Generating code suggestions for PR...')
+            if get_settings().config.publish_output:
+                self.git_provider.publish_comment("Preparing review...", is_temporary=True)
 
-        logging.info('Preparing PR review...')
-        if not self.is_extended:
-            await retry_with_fallback_models(self._prepare_prediction)
-            data = self._prepare_pr_code_suggestions()
-        else:
-            data = await retry_with_fallback_models(self._prepare_prediction_extended)
+            logging.info('Preparing PR review...')
+            if not self.is_extended:
+                await retry_with_fallback_models(self._prepare_prediction)
+                data = self._prepare_pr_code_suggestions()
+            else:
+                data = await retry_with_fallback_models(self._prepare_prediction_extended)
+            if (not data) or (not 'Code suggestions' in data):
+                logging.info('No code suggestions found for PR.')
+                return
 
-        if (not self.is_extended and get_settings().pr_code_suggestions.rank_suggestions) or \
-                (self.is_extended and get_settings().pr_code_suggestions.rank_extended_suggestions):
-            logging.info('Ranking Suggestions...')
-            data['Code suggestions'] = await self.rank_suggestions(data['Code suggestions'])
+            if (not self.is_extended and get_settings().pr_code_suggestions.rank_suggestions) or \
+                    (self.is_extended and get_settings().pr_code_suggestions.rank_extended_suggestions):
+                logging.info('Ranking Suggestions...')
+                data['Code suggestions'] = await self.rank_suggestions(data['Code suggestions'])
 
-        if get_settings().config.publish_output:
-            logging.info('Pushing PR review...')
-            self.git_provider.remove_initial_comment()
-            logging.info('Pushing inline code suggestions...')
-            self.push_inline_code_suggestions(data)
+            if get_settings().config.publish_output:
+                logging.info('Pushing PR review...')
+                self.git_provider.remove_initial_comment()
+                logging.info('Pushing inline code suggestions...')
+                self.push_inline_code_suggestions(data)
+        except Exception as e:
+            logging.error(f"Failed to generate code suggestions for PR, error: {e}")
 
     async def _prepare_prediction(self, model: str):
         logging.info('Getting PR diff...')
