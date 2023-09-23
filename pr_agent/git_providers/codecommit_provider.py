@@ -233,7 +233,7 @@ class CodeCommitProvider(GitProvider):
         raise NotImplementedError("CodeCommit provider does not support publishing inline comments yet")
 
     def get_title(self):
-        return self.pr.get("title", "")
+        return self.pr.title
 
     def get_pr_id(self):
         """
