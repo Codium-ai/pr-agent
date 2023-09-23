@@ -67,7 +67,7 @@ class PRDescription:
         try:
             logging.info(f"Generating a PR description {self.pr_id}")
             if get_settings().config.publish_output:
-                self.git_provider.publish_comment("Preparing pr description...", is_temporary=True)
+                self.git_provider.publish_comment("Preparing PR description...", is_temporary=True)
 
             await retry_with_fallback_models(self._prepare_prediction)
 
