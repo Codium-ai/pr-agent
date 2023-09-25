@@ -156,7 +156,7 @@ The GITHUB_TOKEN secret is automatically created by GitHub.
 3. Merge this change to your main branch. 
 When you open your next PR, you should see a comment from `github-actions` bot with a review of your PR, and instructions on how to use the rest of the tools.
 
-4. You may configure PR-Agent by adding environment variables under the env section corresponding to any configurable property in the [configuration](./Usage.md) file. Some examples:
+4. You may configure PR-Agent by adding environment variables under the env section corresponding to any configurable property in the [configuration]((pr_agent/settings/configuration.toml)) file. Some examples:
 ```yaml
       env:
         # ... previous environment values
