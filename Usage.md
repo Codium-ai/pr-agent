@@ -142,7 +142,21 @@ user="""
 Note that the new prompt will need to generate an output compatible with the relevant [post-process function](./pr_agent/tools/pr_description.py#L137).
 
 ### Working with GitHub Action
-TBD
+You can configure settings in GitHyb action by adding environment variables under the env section in `.github/workflows/pr_agent.yml` file. Some examples:
+```yaml
+      env:
+        # ... previous environment values
+        OPENAI.ORG: "<Your organization name under your OpenAI account>"
+        PR_REVIEWER.REQUIRE_TESTS_REVIEW: "false" # Disable tests review
+        PR_CODE_SUGGESTIONS.NUM_CODE_SUGGESTIONS: 6 # Increase number of code suggestions
+        github_action.auto_review: "true" # Enable auto review
+        github_action.auto_describe: "true" # Enable auto describe
+        github_action.auto_improve: "false" # Disable auto improve      
+```
+specifically, `github_action.auto_review`, `github_action.auto_describe` and `github_action.auto_improve` are used to enable/disable automatic tools that run when a new PR is opened.
+
+if not set, the default option is that only the `review` tool will run automatically when a new PR is opened.
+
 
 ### Appendix - additional configurations walkthrough
 
