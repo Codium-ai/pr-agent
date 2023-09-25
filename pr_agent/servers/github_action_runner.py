@@ -5,6 +5,8 @@ import os
 from pr_agent.agent.pr_agent import PRAgent
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
+from pr_agent.tools.pr_code_suggestions import PRCodeSuggestions
+from pr_agent.tools.pr_description import PRDescription
 from pr_agent.tools.pr_reviewer import PRReviewer
 
 
@@ -53,7 +55,15 @@ async def run_action():
         if action in ["opened", "reopened"]:
             pr_url = event_payload.get("pull_request", {}).get("url")
             if pr_url:
-                await PRReviewer(pr_url).run()
+                auto_review = os.environ.get('github_action.auto_review', None)
+                if auto_review is None or (isinstance(auto_review, str) and auto_review.lower() == 'true'):
+                    await PRReviewer(pr_url).run()
+                auto_describe = os.environ.get('github_action.auto_describe', None)
+                if isinstance(auto_describe, str) and auto_describe.lower() == 'true':
+                    await PRDescription(pr_url).run()
+                auto_improve = os.environ.get('github_action.auto_improve', None)
+                if isinstance(auto_improve, str) and auto_improve.lower() == 'true':
+                    await PRCodeSuggestions(pr_url).run()
 
     # Handle issue comment event
     elif GITHUB_EVENT_NAME == "issue_comment":
