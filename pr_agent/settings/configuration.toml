@@ -59,7 +59,7 @@ deployment_type = "user"
 ratelimit_retries = 5
 
 [github_action]
-# auto_review = true    # set as env var in .github/workflows/pr-agent.yml
+# auto_review = true    # set as env var in .github/workflows/pr-agent.yaml
 # auto_describe = true  # set as env var in .github/workflows/pr-agent.yaml
 # auto_improve = true   # set as env var in .github/workflows/pr-agent.yaml
 
