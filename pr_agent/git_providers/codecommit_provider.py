@@ -233,8 +233,20 @@ class CodeCommitProvider(GitProvider):
         raise NotImplementedError("CodeCommit provider does not support publishing inline comments yet")
 
     def get_title(self):
-        return self.pr.get("title", "")
+        return self.pr.title
 
+    def get_pr_id(self):
+        """
+        Returns the PR ID in the format: "repo_name/pr_number".
+        Note: This is an internal identifier for PR-Agent, 
+        and is not the same as the CodeCommit PR identifier.
+        """
+        try:
+            pr_id = f"{self.repo_name}/{self.pr_num}"
+            return pr_id
+        except:
+            return ""
+        
     def get_languages(self):
         """
         Returns a dictionary of languages, containing the percentage of each language used in the PR.
