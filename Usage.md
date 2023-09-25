@@ -142,7 +142,7 @@ user="""
 Note that the new prompt will need to generate an output compatible with the relevant [post-process function](./pr_agent/tools/pr_description.py#L137).
 
 ### Working with GitHub Action
-You can configure settings in GitHyb action by adding environment variables under the env section in `.github/workflows/pr_agent.yml` file. Some examples:
+You can configure settings in GitHub action by adding environment variables under the env section in `.github/workflows/pr_agent.yml` file. Some examples:
 ```yaml
       env:
         # ... previous environment values
