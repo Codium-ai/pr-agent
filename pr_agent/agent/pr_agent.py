@@ -6,6 +6,7 @@ import tempfile
 from pr_agent.algo.utils import update_settings_from_args
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
+from pr_agent.tools.pr_add_docs import PRAddDocs
 from pr_agent.tools.pr_code_suggestions import PRCodeSuggestions
 from pr_agent.tools.pr_description import PRDescription
 from pr_agent.tools.pr_information_from_user import PRInformationFromUser
@@ -32,6 +33,7 @@ command2class = {
     "config": PRConfig,
     "settings": PRConfig,
     "similar_issue": PRSimilarIssue,
+    "add_docs": PRAddDocs,
 }
 
 commands = list(command2class.keys())
