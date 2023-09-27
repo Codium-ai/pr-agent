@@ -1,3 +1,19 @@
+## [Version 0.8] - 2023-09-27
+- codiumai/pr-agent:0.8
+- codiumai/pr-agent:0.8-github_app
+- codiumai/pr-agent:0.8-bitbucket-app
+- codiumai/pr-agent:0.8-gitlab_webhook
+- codiumai/pr-agent:0.8-github_polling
+- codiumai/pr-agent:0.8-github_action
+
+### Added::Algo
+- GitHub Action: Can control which tools will run automatically when a new PR is created. (see usage guide: https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#working-with-github-action)
+- Code suggestion tool: Will try to avoid an 'add comments' suggestion  (see https://github.com/Codium-ai/pr-agent/pull/327)
+
+### Fixed
+- Gitlab: Fixed a bug of improper usage of pr_id
+
+
 ## [Version 0.7] - 2023-09-20
 
 ### Docker Tags
@@ -20,6 +36,3 @@
 ### Fixed
 - Protection against no code suggestions generated.
 - Resilience to repositories where the languages cannot be automatically detected.
-
-
-
