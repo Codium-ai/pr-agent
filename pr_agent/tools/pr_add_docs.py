@@ -134,6 +134,10 @@ class PRAddDocs:
                 self.git_provider.publish_code_suggestions([code_suggestion])
 
     def dedent_code(self, relevant_file, relevant_lines_start, new_code_snippet, add_original_line=False):
+    """
+    This method dedents the code snippet to match the original code's indentation.
+    It also has the option to add the original line of code to the new code snippet.
+    """
         try:  # dedent code snippet
             self.diff_files = self.git_provider.diff_files if self.git_provider.diff_files \
                 else self.git_provider.get_diff_files()
@@ -183,6 +187,11 @@ class PRAddDocs:
         return data
 
 
+"""
+This function determines the type of documentation to generate based on the main language of the PR.
+It supports Javadocs for Java, Docstrings for Python, Lisp, and Clojure, JSdocs for JavaScript and TypeScript,
+and Doxygen for C++. For other languages, it defaults to generating generic Docs.
+"""
 def get_docs_for_language(language, style):
     language = language.lower()
     if language == 'java':
