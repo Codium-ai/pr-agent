@@ -58,6 +58,13 @@ Code Documentation:
       type: integer
       description: |-
         The relevant line number from a '__new hunk__' section where the {{ docs_for_language }} should be added.
+    doc placement:
+      type: string
+      enum:
+        - before
+        - after
+      description: |-
+        The {{ docs_for_language }} placement relative to the relevant line (code component).
     documentation:
       type: string
       description: |-
@@ -70,6 +77,7 @@ Code Documentation:
 -   relevant file: |-
         src/file1.py
     relevant lines: 12
+    doc placement: after
     documentation: |-
         \"\"\"
         This is a python docstring for func1.

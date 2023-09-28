@@ -115,8 +115,9 @@ class PRAddDocs:
                 relevant_file = d['relevant file'].strip()
                 relevant_line = int(d['relevant line'])  # absolute position
                 documentation = d['documentation']
+                doc_placement = d['doc placement'].strip()
                 if documentation:
-                    new_code_snippet = self.dedent_code(relevant_file, relevant_line, documentation,
+                    new_code_snippet = self.dedent_code(relevant_file, relevant_line, documentation, doc_placement,
                                                         add_original_line=True)
 
                     body = f"**Suggestion:** Proposed documentation\n```suggestion\n" + new_code_snippet + "\n```"
@@ -133,7 +134,7 @@ class PRAddDocs:
             for code_suggestion in code_suggestions:
                 self.git_provider.publish_code_suggestions([code_suggestion])
 
-    def dedent_code(self, relevant_file, relevant_lines_start, new_code_snippet, add_original_line=False):
+    def dedent_code(self, relevant_file, relevant_lines_start, new_code_snippet, doc_placement='after', add_original_line=False):
         try:  # dedent code snippet
             self.diff_files = self.git_provider.diff_files if self.git_provider.diff_files \
                 else self.git_provider.get_diff_files()
@@ -143,14 +144,21 @@ class PRAddDocs:
                     original_initial_line = file.head_file.splitlines()[relevant_lines_start - 1]
                     break
             if original_initial_line:
+                if doc_placement == 'after':
+                    line = file.head_file.splitlines()[relevant_lines_start]
+                else:
+                    line = original_initial_line
                 suggested_initial_line = new_code_snippet.splitlines()[0]
-                original_initial_spaces = len(original_initial_line) - len(original_initial_line.lstrip())
+                original_initial_spaces = len(line) - len(line.lstrip())
                 suggested_initial_spaces = len(suggested_initial_line) - len(suggested_initial_line.lstrip())
                 delta_spaces = original_initial_spaces - suggested_initial_spaces
                 if delta_spaces > 0:
                     new_code_snippet = textwrap.indent(new_code_snippet, delta_spaces * " ").rstrip('\n')
                 if add_original_line:
-                    new_code_snippet = original_initial_line + "\n" + new_code_snippet
+                    if doc_placement == 'after':
+                        new_code_snippet = original_initial_line + "\n" + new_code_snippet
+                    else:
+                        new_code_snippet = new_code_snippet + "\n" + original_initial_line
         except Exception as e:
             if get_settings().config.verbosity_level >= 2:
                 logging.info(f"Could not dedent code snippet for file {relevant_file}, error: {e}")
