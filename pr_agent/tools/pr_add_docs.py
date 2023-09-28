@@ -160,7 +160,7 @@ class PRAddDocs:
                     if doc_placement == 'after':
                         new_code_snippet = original_initial_line + "\n" + new_code_snippet
                     else:
-                        new_code_snippet = new_code_snippet + "\n" + original_initial_line
+                        new_code_snippet = new_code_snippet.rstrip() + "\n" + original_initial_line
         except Exception as e:
             if get_settings().config.verbosity_level >= 2:
                 logging.info(f"Could not dedent code snippet for file {relevant_file}, error: {e}")
