@@ -39,7 +39,7 @@ class PRAddDocs:
             "diff": "",  # empty diff for initial calculation
             "extra_instructions": get_settings().pr_add_docs_prompt.extra_instructions,
             "commit_messages_str": self.git_provider.get_commit_messages(),
-            'docs_for_language': get_docs_for_language(self.main_language),
+            'docs_for_language': get_docs_for_language(self.main_language, get_settings().pr_add_docs_prompt.docs_style),
         }
         self.token_handler = TokenHandler(self.git_provider.pr,
                                           self.vars,
@@ -183,15 +183,15 @@ class PRAddDocs:
         return data
 
 
-def get_docs_for_language(language):
+def get_docs_for_language(language, style):
     language = language.lower()
     if language == 'java':
-        return "javadocs"
+        return "Javadocs"
     elif language in ['python', 'lisp', 'clojure']:
-        return "docstrings"
+        return f"Docstring ({style})"
     elif language in ['javascript', 'typescript']:
-        return "jsdocs"
+        return "JSdocs"
     elif language == 'c++':
-        return "doxygen"
+        return "Doxygen"
     else:
-        return "docs"
+        return "Docs"
