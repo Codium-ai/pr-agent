@@ -68,25 +68,20 @@ class PRAddDocs:
             logging.info('Preparing PR review...')
             if not self.is_extended:
                 await retry_with_fallback_models(self._prepare_prediction)
-                data = self._prepare_pr_code_suggestions()
+                data = self._prepare_pr_code_docs()
             else:
                 data = await retry_with_fallback_models(self._prepare_prediction_extended)
-            if (not data) or (not 'Code suggestions' in data):
-                logging.info('No code suggestions found for PR.')
+            if (not data) or (not 'Code Documentation' in data):
+                logging.info('No code documentation found for PR.')
                 return
-
-            if (not self.is_extended and get_settings().pr_code_suggestions.rank_suggestions) or \
-                    (self.is_extended and get_settings().pr_code_suggestions.rank_extended_suggestions):
-                logging.info('Ranking Suggestions...')
-                data['Code suggestions'] = await self.rank_suggestions(data['Code suggestions'])
 
             if get_settings().config.publish_output:
                 logging.info('Pushing PR review...')
                 self.git_provider.remove_initial_comment()
-                logging.info('Pushing inline code suggestions...')
-                self.push_inline_code_suggestions(data)
+                logging.info('Pushing inline code documentation...')
+                self.push_inline_docs_suggestions(data)
         except Exception as e:
-            logging.error(f"Failed to generate code suggestions for PR, error: {e}")
+            logging.error(f"Failed to generate code documentation for PR, error: {e}")
 
     async def _prepare_prediction(self, model: str):
         logging.info('Getting PR diff...')
@@ -113,47 +108,44 @@ class PRAddDocs:
 
         return response
 
-    def _prepare_pr_code_suggestions(self) -> Dict:
+    def _prepare_pr_code_docs(self) -> Dict:
         review = self.prediction.strip()
         data = load_yaml(review)
         if isinstance(data, list):
-            data = {'Code suggestions': data}
+            data = {'Code Documentation': data}
         return data
 
-    def push_inline_code_suggestions(self, data):
+    def push_inline_docs_suggestions(self, data):
         code_suggestions = []
 
-        if not data['Code suggestions']:
-            return self.git_provider.publish_comment('No suggestions found to improve this PR.')
+        if not data['Code Documentation']:
+            return self.git_provider.publish_comment('No code documentation found to improve this PR.')
 
-        for d in data['Code suggestions']:
+        for d in data['Code Documentation']:
             try:
                 if get_settings().config.verbosity_level >= 2:
-                    logging.info(f"suggestion: {d}")
+                    logging.info(f"add_docs: {d}")
                 relevant_file = d['relevant file'].strip()
-                relevant_lines_start = int(d['relevant lines start'])  # absolute position
-                relevant_lines_end = int(d['relevant lines end'])
-                content = d['suggestion content']
-                new_code_snippet = d['documented code']
+                relevant_line = int(d['relevant line'])  # absolute position
+                documentation = d['documentation']
+                if documentation:
+                    new_code_snippet = self.dedent_code(relevant_file, relevant_line, documentation, add_original_line=True)
 
-                if new_code_snippet:
-                    new_code_snippet = self.dedent_code(relevant_file, relevant_lines_start, new_code_snippet)
-
-                body = f"**Suggestion:** {content}\n```suggestion\n" + new_code_snippet + "\n```"
-                code_suggestions.append({'body': body, 'relevant_file': relevant_file,
-                                         'relevant_lines_start': relevant_lines_start,
-                                         'relevant_lines_end': relevant_lines_end})
+                    body = f"**Suggestion:** Proposed documentation\n```suggestion\n" + new_code_snippet + "\n```"
+                    code_suggestions.append({'body': body, 'relevant_file': relevant_file,
+                                         'relevant_lines_start': relevant_line,
+                                         'relevant_lines_end': relevant_line})
             except Exception:
                 if get_settings().config.verbosity_level >= 2:
-                    logging.info(f"Could not parse suggestion: {d}")
+                    logging.info(f"Could not parse code docs: {d}")
 
         is_successful = self.git_provider.publish_code_suggestions(code_suggestions)
         if not is_successful:
-            logging.info("Failed to publish code suggestions, trying to publish each suggestion separately")
+            logging.info("Failed to publish code docs, trying to publish each docs separately")
             for code_suggestion in code_suggestions:
                 self.git_provider.publish_code_suggestions([code_suggestion])
 
-    def dedent_code(self, relevant_file, relevant_lines_start, new_code_snippet):
+    def dedent_code(self, relevant_file, relevant_lines_start, new_code_snippet, add_original_line=False):
         try:  # dedent code snippet
             self.diff_files = self.git_provider.diff_files if self.git_provider.diff_files \
                 else self.git_provider.get_diff_files()
@@ -169,6 +161,8 @@ class PRAddDocs:
                 delta_spaces = original_initial_spaces - suggested_initial_spaces
                 if delta_spaces > 0:
                     new_code_snippet = textwrap.indent(new_code_snippet, delta_spaces * " ").rstrip('\n')
+                if add_original_line:
+                    new_code_snippet = original_initial_line + "\n" + new_code_snippet
         except Exception as e:
             if get_settings().config.verbosity_level >= 2:
                 logging.info(f"Could not dedent code snippet for file {relevant_file}, error: {e}")
@@ -192,64 +186,10 @@ class PRAddDocs:
         data = {}
         for prediction in prediction_list:
             self.prediction = prediction
-            data_per_chunk = self._prepare_pr_code_suggestions()
-            if "Code suggestions" in data:
-                data["Code suggestions"].extend(data_per_chunk["Code suggestions"])
+            data_per_chunk = self._prepare_pr_code_docs()
+            if "Code Documentation" in data:
+                data["Code Documentation"].extend(data_per_chunk["Code Documentation"])
             else:
                 data.update(data_per_chunk)
         self.data = data
         return data
-
-    async def rank_suggestions(self, data: List) -> List:
-        """
-        Call a model to rank (sort) code suggestions based on their importance order.
-
-        Args:
-            data (List): A list of code suggestions to be ranked.
-
-        Returns:
-            List: The ranked list of code suggestions.
-        """
-
-        suggestion_list = []
-        # remove invalid suggestions
-        for i, suggestion in enumerate(data):
-            if suggestion['existing code'] != suggestion['improved code']:
-                suggestion_list.append(suggestion)
-
-        data_sorted = [[]] * len(suggestion_list)
-
-        try:
-            suggestion_str = ""
-            for i, suggestion in enumerate(suggestion_list):
-                suggestion_str += f"suggestion {i + 1}: " + str(suggestion) + '\n\n'
-
-            variables = {'suggestion_list': suggestion_list, 'suggestion_str': suggestion_str}
-            model = get_settings().config.model
-            environment = Environment(undefined=StrictUndefined)
-            system_prompt = environment.from_string(get_settings().pr_sort_code_suggestions_prompt.system).render(
-                variables)
-            user_prompt = environment.from_string(get_settings().pr_sort_code_suggestions_prompt.user).render(variables)
-            if get_settings().config.verbosity_level >= 2:
-                logging.info(f"\nSystem prompt:\n{system_prompt}")
-                logging.info(f"\nUser prompt:\n{user_prompt}")
-            response, finish_reason = await self.ai_handler.chat_completion(model=model, system=system_prompt,
-                                                                            user=user_prompt)
-
-            sort_order = load_yaml(response)
-            for s in sort_order['Sort Order']:
-                suggestion_number = s['suggestion number']
-                importance_order = s['importance order']
-                data_sorted[importance_order - 1] = suggestion_list[suggestion_number - 1]
-
-            if get_settings().pr_code_suggestions.final_clip_factor != 1:
-                new_len = int(0.5 + len(data_sorted) * get_settings().pr_code_suggestions.final_clip_factor)
-                data_sorted = data_sorted[:new_len]
-        except Exception as e:
-            if get_settings().config.verbosity_level >= 1:
-                logging.info(f"Could not sort suggestions, error: {e}")
-            data_sorted = suggestion_list
-
-        return data_sorted
-
-
