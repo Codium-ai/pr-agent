@@ -14,22 +14,6 @@ from pr_agent.git_providers.git_provider import get_main_pr_language
 
 
 class PRAddDocs:
-"""
-The PRAddDocs class is responsible for generating documentation for the code in a PR.
-It uses AI models to predict the documentation for the new or edited code components.
-It also handles the interaction with the git provider to get the PR details and to publish the generated documentation.
-
-Attributes:
-    git_provider: An instance of the git provider class.
-    main_language: The main language of the PR.
-    is_extended: A boolean indicating whether the extended mode is enabled.
-    ai_handler: An instance of the AiHandler class.
-    patches_diff: The diff of the PR.
-    prediction: The predicted documentation.
-    cli_mode: A boolean indicating whether the CLI mode is enabled.
-    vars: A dictionary containing various information about the PR.
-    token_handler: An instance of the TokenHandler class.
-"""
     def __init__(self, pr_url: str, cli_mode=False, args: list = None):
 
         self.git_provider = get_git_provider()(pr_url)
@@ -119,12 +103,6 @@ Attributes:
         return data
 
     def push_inline_docs_suggestions(self, data):
-    """
-    This method publishes the generated documentation as inline suggestions in the PR.
-
-    Args:
-        data: A dictionary containing the generated documentation.
-    """
         code_suggestions = []
 
         if not data['Code Documentation']:
@@ -156,18 +134,6 @@ Attributes:
                 self.git_provider.publish_code_suggestions([code_suggestion])
 
     def dedent_code(self, relevant_file, relevant_lines_start, new_code_snippet, add_original_line=False):
-    """
-    This method dedents the new code snippet to match the indentation of the original code.
-
-    Args:
-        relevant_file: The file where the new code snippet should be added.
-        relevant_lines_start: The line number where the new code snippet should be added.
-        new_code_snippet: The new code snippet.
-        add_original_line: A boolean indicating whether to add the original line to the new code snippet.
-
-    Returns:
-        The dedented new code snippet.
-    """
         try:  # dedent code snippet
             self.diff_files = self.git_provider.diff_files if self.git_provider.diff_files \
                 else self.git_provider.get_diff_files()
@@ -192,16 +158,6 @@ Attributes:
         return new_code_snippet
 
     async def _prepare_prediction_extended(self, model: str) -> dict:
-    """
-    This method prepares the prediction for the documentation in extended mode.
-    It gets the PR diff and uses an AI model to predict the documentation for each chunk of the diff.
-
-    Args:
-        model: The name of the AI model to use for the prediction.
-
-    Returns:
-        A dictionary containing the predicted documentation for each chunk of the diff.
-    """
         logging.info('Getting PR diff...')
         patches_diff_list = get_pr_multi_diffs(self.git_provider, self.token_handler, model,
                                                max_calls=get_settings().pr_code_suggestions.max_number_of_calls)
