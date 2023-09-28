@@ -39,7 +39,8 @@ class PRAddDocs:
             "diff": "",  # empty diff for initial calculation
             "extra_instructions": get_settings().pr_add_docs_prompt.extra_instructions,
             "commit_messages_str": self.git_provider.get_commit_messages(),
-            'docs_for_language': get_docs_for_language(self.main_language, get_settings().pr_add_docs_prompt.docs_style),
+            'docs_for_language': get_docs_for_language(self.main_language,
+                                                       get_settings().pr_add_docs_prompt.docs_style),
         }
         self.token_handler = TokenHandler(self.git_provider.pr,
                                           self.vars,
@@ -134,7 +135,8 @@ class PRAddDocs:
             for code_suggestion in code_suggestions:
                 self.git_provider.publish_code_suggestions([code_suggestion])
 
-    def dedent_code(self, relevant_file, relevant_lines_start, new_code_snippet, doc_placement='after', add_original_line=False):
+    def dedent_code(self, relevant_file, relevant_lines_start, new_code_snippet, doc_placement='after',
+                    add_original_line=False):
         try:  # dedent code snippet
             self.diff_files = self.git_provider.diff_files if self.git_provider.diff_files \
                 else self.git_provider.get_diff_files()
@@ -191,6 +193,11 @@ class PRAddDocs:
         return data
 
 
+"""
+This function determines the type of documentation to generate based on the main language of the PR.
+It supports Javadocs for Java, Docstrings for Python, Lisp, and Clojure, JSdocs for JavaScript and TypeScript,
+and Doxygen for C++. For other languages, it defaults to generating generic Docs.
+"""
 def get_docs_for_language(language, style):
     language = language.lower()
     if language == 'java':
