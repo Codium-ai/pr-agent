@@ -13,19 +13,6 @@ from pr_agent.git_providers import BitbucketProvider, get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
 
 
-def get_docs_for_language(language):
-    if language.lower() == 'java':
-        return "javadocs"
-    elif language.lower() in ['python', 'lisp', 'clojure']:
-        return "docstrings"
-    elif language.lower() in ['javascript', 'typescript']:
-        return "jsdocs"
-    elif language.lower() == 'c++':
-        return "doxygen"
-    else:
-        return "docs"
-
-
 class PRAddDocs:
     def __init__(self, pr_url: str, cli_mode=False, args: list = None):
 
@@ -129,12 +116,13 @@ class PRAddDocs:
                 relevant_line = int(d['relevant line'])  # absolute position
                 documentation = d['documentation']
                 if documentation:
-                    new_code_snippet = self.dedent_code(relevant_file, relevant_line, documentation, add_original_line=True)
+                    new_code_snippet = self.dedent_code(relevant_file, relevant_line, documentation,
+                                                        add_original_line=True)
 
                     body = f"**Suggestion:** Proposed documentation\n```suggestion\n" + new_code_snippet + "\n```"
                     code_suggestions.append({'body': body, 'relevant_file': relevant_file,
-                                         'relevant_lines_start': relevant_line,
-                                         'relevant_lines_end': relevant_line})
+                                             'relevant_lines_start': relevant_line,
+                                             'relevant_lines_end': relevant_line})
             except Exception:
                 if get_settings().config.verbosity_level >= 2:
                     logging.info(f"Could not parse code docs: {d}")
@@ -193,3 +181,17 @@ class PRAddDocs:
                 data.update(data_per_chunk)
         self.data = data
         return data
+
+
+def get_docs_for_language(language):
+    language = language.lower()
+    if language == 'java':
+        return "javadocs"
+    elif language in ['python', 'lisp', 'clojure']:
+        return "docstrings"
+    elif language in ['javascript', 'typescript']:
+        return "jsdocs"
+    elif language == 'c++':
+        return "doxygen"
+    else:
+        return "docs"
