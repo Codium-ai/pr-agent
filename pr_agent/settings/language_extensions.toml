@@ -53,7 +53,8 @@ default = [
     'xz',
     'zip',
     'zst',
-    'snap'
+    'snap',
+    'lockb'
 ]
 extra = [
     'md',
