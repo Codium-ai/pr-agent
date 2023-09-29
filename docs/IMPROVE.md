@@ -1,14 +1,14 @@
 # Describe Tool
 
 The `improve` tool scans the PR code changes, and automatically generate committable suggestions for improving the PR code.
-It can ba invoked manually by commenting on any PR:
+It can be invoked manually by commenting on any PR:
 ```
 /improve
 ```
 For example:
 
 <kbd><img src=./../pics/improve_comment.png width="768"></kbd>
-<kbd><img src=./../pics/improve.png width="768"><kbd>
+<kbd><img src=./../pics/improve.png width="768"></kbd>
 
 The `improve` tool can also be triggered automatically every time a new PR is opened. See examples for automatic triggers for [GitHub App](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#github-app-automatic-tools) and [GitHub Action](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#working-with-github-action)
 
@@ -16,7 +16,7 @@ An extended mode, which does not involve PR Compression and provides more compre
 ```
 /improve --extended
 ```
-Note that the extended mode divides the PR code changes into chunks, due to token limits, where each chunk is handled separately (multiple calls to GPT-4).
+Note that the extended mode divides the PR code changes into chunks, up to the token limits, where each chunk is handled separately (multiple calls to GPT-4).
 Hence, the total number of suggestions is proportional to the number of chunks, i.e. the size of the PR.
 
 ### Configuration options
