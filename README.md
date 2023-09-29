@@ -17,7 +17,7 @@ Making pull requests less painful with an AI agent
 
 CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull requests faster and more efficiently. It automatically analyzes the pull request and can provide several types of commands:
 
-‣ **Auto Description (`/describe`)**: Automatically generating [PR description](https://github.com/Codium-ai/pr-agent/pull/229#issue-1860711415) - title, type, summary, code walkthrough and labels.
+‣ **Auto Description (`/describe`)**: Automatically generating [PR description](./docs/DESCRIBE.md) - title, type, summary, code walkthrough and labels.
 \
 ‣ **Auto Review (`/review`)**: [Adjustable feedback](https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695022908) about the PR main theme, type, relevant tests, security issues, score, and various suggestions for the PR content.
 \
