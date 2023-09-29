@@ -1,4 +1,4 @@
-# Describe Tool
+# Improve Tool
 
 The `improve` tool scans the PR code changes, and automatically generate committable suggestions for improving the PR code.
 It can be invoked manually by commenting on any PR:
