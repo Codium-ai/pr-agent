@@ -15,7 +15,7 @@ The `describe` tool can also be triggered automatically every time a new PR is o
 
 ### Configuration options
 
-Under the section 'pr_description', the [configuration file](./../pr_agent/settings/configuration.toml) contains options to customize the 'describe' tool:
+Under the section 'pr_description', the [configuration file](./../pr_agent/settings/configuration.toml#L28) contains options to customize the 'describe' tool:
 
 - `publish_labels`: if set to true, the tool will publish the labels to the PR. Default is true.
 
