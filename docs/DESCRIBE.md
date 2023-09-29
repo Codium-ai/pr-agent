@@ -1,4 +1,4 @@
-## Describe
+# Describe Tool
 
 The `describe` tool scans the PR code changes, and automatically generates PR description - title, type, summary, code walkthrough and labels.
 It can ba invoked manually by commenting on any PR:
@@ -15,7 +15,7 @@ The `describe` tool can also be triggered automatically every time a new PR is o
 
 ### Configuration options
 
-Under the section 'pr_description', the [configuration file](pr_agent/settings/configuration.toml) contains options to customize the 'describe' tool:
+Under the section 'pr_description', the [configuration file](./../pr_agent/settings/configuration.toml) contains options to customize the 'describe' tool:
 
 - `publish_labels`: if set to true, the tool will publish the labels to the PR. Default is true.
 
