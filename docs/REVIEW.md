@@ -7,9 +7,8 @@ It can ba invoked manually by commenting on any PR:
 ```
 
 
-<kbd><img src=./../pics/review_comment.png width="768" style="border: 2px black"/></kbd>
-
-<img src=./../pics/describe.png width="768" style="border: 2px">
+<kbd><img src=./../pics/review_comment.png width="768"></kbd>
+<kbd><img src=./../pics/describe.png width="768"><kbd>
 
 The `review` tool can also be triggered automatically every time a new PR is opened. See examples for automatic triggers for [GitHub App](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#github-app-automatic-tools) and [GitHub Action](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#working-with-github-action)
 
@@ -34,6 +33,6 @@ By invoking:
 ```
 The module will first ask the author questions about the PR, and will guide the review based on his answers.
 
-<img src=./../pics/reflection_questions.png width="768" style="border: 2px black"/>
-<img src=./../pics/reflection_answers.png width="768" style="border: 2px black"/>
-<img src=./../pics/reflection_insights.png width="768" style="border: 2px black"/>
+<kbd><img src=./../pics/reflection_questions.png width="768"></kbd>
+<kbd><img src=./../pics/reflection_answers.png width="768"></kbd>
+<kbd><img src=./../pics/reflection_insights.png width="768"></kbd>
