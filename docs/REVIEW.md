@@ -7,7 +7,7 @@ It can ba invoked manually by commenting on any PR:
 ```
 
 
-<img src=./../pics/review_comment.png width="768" style="border: 2px">
+<kbd><img src=./../pics/review_comment.png width="768" style="border: 2px black"/></kbd>
 
 <img src=./../pics/describe.png width="768" style="border: 2px">
 
@@ -34,6 +34,6 @@ By invoking:
 ```
 The module will first ask the author questions about the PR, and will guide the review based on his answers.
 
-<img src=./../pics/reflection_questions.png width="768" style="border: 2px">
-<img src=./../pics/reflection_answers.png width="768" style="border: 2px">
-<img src=./../pics/reflection_insights.png width="768" style="border: 2px">
+<img src=./../pics/reflection_questions.png width="768" style="border: 2px black"/>
+<img src=./../pics/reflection_answers.png width="768" style="border: 2px black"/>
+<img src=./../pics/reflection_insights.png width="768" style="border: 2px black"/>
