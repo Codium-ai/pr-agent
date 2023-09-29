@@ -1,4 +1,4 @@
-## Usage guide
+## Usage Guide
 
 ### Table of Contents
 - [Introduction](#introduction)
@@ -15,7 +15,7 @@ There are 3 basic ways to invoke CodiumAI PR-Agent:
 2. Online usage - by [commenting](https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695021901) on a PR
 3. Enabling PR-Agent tools to run automatically when a new PR is opened
 
-See the [installation guide](/INSTALL.md) for instructions on how to setup your own PR-Agent.
+See the **[installation guide](/INSTALL.md)** for instructions on how to setup your own PR-Agent.
 
 Specifically, CLI commands can be issued by invoking a pre-built [docker image](/INSTALL.md#running-from-source), or by invoking a [locally cloned repo](INSTALL.md#method-2-run-from-source).
 
@@ -262,25 +262,3 @@ And use the following settings (you have to replace the values) in .secrets.toml
 org = "https://dev.azure.com/YOUR_ORGANIZATION/"
 pat = "YOUR_PAT_TOKEN"
 ```
-
-#### Similar issue tool
-
-[Example usage](https://github.com/Alibaba-MIIL/ASL/issues/107)
-
-<img src=./pics/similar_issue_tool.png width="768">
-
-To enable usage of the '**similar issue**' tool, you need to set the following keys in `.secrets.toml` (or in the relevant environment variables):
-```
-[pinecone]
-api_key = "..."
-environment = "..."
-```
-These parameters can be obtained by registering to [Pinecone](https://app.pinecone.io/?sessionType=signup/).
-
-- To invoke the 'similar issue' tool from **CLI**, run:
-`python3 cli.py --issue_url=... similar_issue`
-
-- To invoke the 'similar' issue tool via online usage, [comment](https://github.com/Codium-ai/pr-agent/issues/178#issuecomment-1716934893) on a PR:
-`/similar_issue`
-
-- You can also enable the 'similar issue' tool to run automatically when a new issue is opened, by adding it to the [pr_commands list in the github_app section](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L66)
