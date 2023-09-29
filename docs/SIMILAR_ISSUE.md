@@ -4,6 +4,7 @@ It can ba invoked manually by commenting on any PR:
 ```
 /similar_issue
 ```
+For example:
 
 <img src=./../pics/similar_issue_original_issue.png width="768">
 <img src=./../pics/similar_issue_comment.png width="768">

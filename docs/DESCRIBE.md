@@ -5,7 +5,7 @@ It can ba invoked manually by commenting on any PR:
 ```
 /describe
 ```
-
+For example:
 
 <img src=./../pics/describe_comment.png width="768">
 

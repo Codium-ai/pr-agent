@@ -5,7 +5,7 @@ It can ba invoked manually by commenting on any PR:
 ```
 /review
 ```
-
+For example:
 
 <kbd><img src=./../pics/review_comment.png width="768"></kbd>
 <kbd><img src=./../pics/describe.png width="768"><kbd>
