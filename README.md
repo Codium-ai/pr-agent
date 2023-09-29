@@ -34,7 +34,7 @@ See the [Usage Guide](./Usage.md) for instructions how to run the different tool
 
 See the [Tools Guide](./docs/TOOLS_GUIDE.md) for detailed description of the different tools.
 
-[Release notes](./RELEASE_NOTES.md)
+See the [Release notes](./RELEASE_NOTES.md) for updates on the latest changes.
 
 <h3>Example results:</h3>
 </div>

@@ -1,7 +1,7 @@
 # Describe Tool
 
 The `review` tool scans the PR code changes, and automatically generates a PR review.
-It can ba invoked manually by commenting on any PR:
+It can be invoked manually by commenting on any PR:
 ```
 /review
 ```
@@ -31,7 +31,7 @@ By invoking:
 ```
 /reflect_and_review
 ```
-The module will first ask the author questions about the PR, and will guide the review based on his answers.
+The tool will first ask the author questions about the PR, and will guide the review based on his answers.
 
 <kbd><img src=./../pics/reflection_questions.png width="768"></kbd>
 <kbd><img src=./../pics/reflection_answers.png width="768"></kbd>

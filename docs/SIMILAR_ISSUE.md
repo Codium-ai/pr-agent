@@ -1,6 +1,6 @@
 # Similar Issue Tool
 The similar issue tool retrieves the most similar issues to the current issue.
-It can ba invoked manually by commenting on any PR:
+It can be invoked manually by commenting on any PR:
 ```
 /similar_issue
 ```

@@ -15,5 +15,5 @@ For example:
 
 Under the section 'pr_update_changelog', the [configuration file](./../pr_agent/settings/configuration.toml#L50) contains options to customize the 'update changelog' tool:
 
-- `push_changelog_changes`: whether to push the changes to changelog changes, or just print them. Default is false (print only).
+- `push_changelog_changes`: whether to push the changes to CHANGELOG.md, or just print them. Default is false (print only).
 - `extra_instructions`: Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...

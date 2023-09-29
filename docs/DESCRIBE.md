@@ -1,7 +1,7 @@
 # Describe Tool
 
 The `describe` tool scans the PR code changes, and automatically generates PR description - title, type, summary, code walkthrough and labels.
-It can ba invoked manually by commenting on any PR:
+It can be invoked manually by commenting on any PR:
 ```
 /describe
 ```
@@ -29,9 +29,10 @@ Under the section 'pr_description', the [configuration file](./../pr_agent/setti
 
 #### Markers template
 
-markers template enable to easily integrate user's content and auto-generated content.
+markers enable to easily integrate user's content and auto-generated content, with a template-like mechanism.
 
 - `use_description_markers`: if set to true, the tool will use markers template. It replaces every marker of the form `pr_agent:marker_name` with the relevant content. Default is false.
+
 For example, if the PR original description was:
 ```
 User content...

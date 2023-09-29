@@ -15,7 +15,7 @@ There are 3 basic ways to invoke CodiumAI PR-Agent:
 2. Online usage - by [commenting](https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695021901) on a PR
 3. Enabling PR-Agent tools to run automatically when a new PR is opened
 
-See the [installation guide](/INSTALL.md) for instructions on how to setup your own PR-Agent.
+See the **[installation guide]**(/INSTALL.md) for instructions on how to setup your own PR-Agent.
 
 Specifically, CLI commands can be issued by invoking a pre-built [docker image](/INSTALL.md#running-from-source), or by invoking a [locally cloned repo](INSTALL.md#method-2-run-from-source).
 
