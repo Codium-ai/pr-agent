@@ -1,4 +1,4 @@
-# Describe Tool
+# Review Tool
 
 The `review` tool scans the PR code changes, and automatically generates a PR review.
 It can be invoked manually by commenting on any PR:

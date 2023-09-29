@@ -89,10 +89,10 @@ chmod 600 pr_agent/settings/.secrets.toml
 
 ```
 export PYTHONPATH=[$PYTHONPATH:]<PATH to pr_agent folder>
-python pr_agent/cli.py --pr_url <pr_url> /review
-python pr_agent/cli.py --pr_url <pr_url> /ask <your question>
-python pr_agent/cli.py --pr_url <pr_url> /describe
-python pr_agent/cli.py --pr_url <pr_url> /improve
+python3 -m pr_agent.cli --pr_url <pr_url> /review
+python3 -m pr_agent.cli --pr_url <pr_url> /ask <your question>
+python3 -m pr_agent.cli --pr_url <pr_url> /describe
+python3 -m pr_agent.cli --pr_url <pr_url> /improve
 ```
 
 ---
