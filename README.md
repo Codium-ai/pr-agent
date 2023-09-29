@@ -30,7 +30,8 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 ‣ **Find similar issue ([`/similar_issue`](./docs/SIMILAR_ISSUE.md))**: Automatically retrieves and presents similar issues
 
 
-See the [usage guide](./Usage.md) for instructions how to run the different tools from [CLI](./Usage.md#working-from-a-local-repo-cli), or by [online usage](./Usage.md#online-usage), as well as additional details on optional commands and configurations.
+See the [Usage Guide](./Usage.md) for instructions how to run the different tools from CLI, online usage, Or by automatically triggering them when a new PR is opened.
+See the [Tools Guide](./docs/TOOLS_GUIDE.md) for detailed description of the different tools.
 
 [Release notes](./RELEASE_NOTES.md)
 

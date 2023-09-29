@@ -6,9 +6,9 @@ It can ba invoked manually by commenting on any PR:
 ```
 For example:
 
-<img src=./../pics/similar_issue_original_issue.png width="768">
-<img src=./../pics/similar_issue_comment.png width="768">
-<img src=./../pics/similar_issue.png width="768">
+<kbd><img src=./../pics/similar_issue_original_issue.png width="768"></kbd>
+<kbd><img src=./../pics/similar_issue_comment.png width="768"></kbd>
+<kbd><img src=./../pics/similar_issue.png width="768"></kbd>
 
 Note that to perform retrieval, the `similar_issue` tool indexes all the repo previous issues (once).
 

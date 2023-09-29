@@ -1,4 +1,4 @@
-## Usage guide
+## Usage Guide
 
 ### Table of Contents
 - [Introduction](#introduction)

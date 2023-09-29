@@ -7,9 +7,9 @@ It can ba invoked manually by commenting on any PR:
 ```
 For example:
 
-<img src=./../pics/describe_comment.png width="768">
+<kbd><img src=./../pics/describe_comment.png width="768"></kbd>
 
-<img src=./../pics/describe.png width="768">
+<kbd><img src=./../pics/describe.png width="768"></kbd>
 
 The `describe` tool can also be triggered automatically every time a new PR is opened. See examples for automatic triggers for [GitHub App](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#github-app-automatic-tools) and [GitHub Action](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#working-with-github-action)
 
