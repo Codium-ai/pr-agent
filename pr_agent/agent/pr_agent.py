@@ -67,8 +67,8 @@ class PRAgent:
         args = update_settings_from_args(args)
 
         action = action.lstrip("/").lower()
-        if action == "reflect_and_review" and not get_settings().pr_reviewer.ask_and_reflect:
-            action = "review"
+        if action == "reflect_and_review":
+            get_settings().pr_reviewer.ask_and_reflect = True
         if action == "answer":
             if notify:
                 notify()
