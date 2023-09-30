@@ -6,6 +6,7 @@
 - [Online usage](#online-usage)
 - [Working with GitHub App](#working-with-github-app)
 - [Working with GitHub Action](#working-with-github-action)
+- [Changing a model](#changing-a-model)
 - [Appendix - additional configurations walkthrough](#appendix---additional-configurations-walkthrough)
 
 ### Introduction
@@ -50,12 +51,12 @@ When running from your local repo (CLI), your local configuration file will be u
 
 Examples for invoking the different tools via the CLI:
 
-- **Review**:       `python cli.py --pr_url=<pr_url>  review`
-- **Describe**:     `python cli.py --pr_url=<pr_url>  describe`
-- **Improve**:      `python cli.py --pr_url=<pr_url>  improve`
-- **Ask**:          `python cli.py --pr_url=<pr_url>  ask "Write me a poem about this PR"`
-- **Reflect**:      `python cli.py --pr_url=<pr_url>  reflect`
-- **Update Changelog**:      `python cli.py --pr_url=<pr_url>  update_changelog`
+- **Review**:       `python -m pr_agent.cli --pr_url=<pr_url>  review`
+- **Describe**:     `python -m pr_agent.cli --pr_url=<pr_url>  describe`
+- **Improve**:      `python -m pr_agent.cli --pr_url=<pr_url>  improve`
+- **Ask**:          `python -m pr_agent.cli --pr_url=<pr_url>  ask "Write me a poem about this PR"`
+- **Reflect**:      `python -m pr_agent.cli --pr_url=<pr_url>  reflect`
+- **Update Changelog**:      `python -m pr_agent.cli --pr_url=<pr_url>  update_changelog`
 
 `<pr_url>` is the url of the relevant PR (for example: https://github.com/Codium-ai/pr-agent/pull/50).
 
@@ -63,7 +64,7 @@ Examples for invoking the different tools via the CLI:
 
 (1) in addition to editing your local configuration file, you can also change any configuration value by adding it to the command line:
 ```
-python cli.py --pr_url=<pr_url>  /review --pr_reviewer.extra_instructions="focus on the file: ..."
+python -m pr_agent.cli --pr_url=<pr_url>  /review --pr_reviewer.extra_instructions="focus on the file: ..."
 ```
 
 (2) You can print results locally, without publishing them, by setting in `configuration.toml`:
@@ -157,14 +158,15 @@ specifically, `github_action.auto_review`, `github_action.auto_describe` and `gi
 
 if not set, the default option is that only the `review` tool will run automatically when a new PR is opened.
 
+### Changing a model
 
-### Appendix - additional configurations walkthrough
-
-#### Changing a model
 See [here](pr_agent/algo/__init__.py) for the list of available models.
+To use a different model than the default (GPT-4), you need to edit [configuration file](pr_agent/settings/configuration.toml#L2)
+
+For models and environments not from OPENAI, you might need to provide additional keys and other parameters. See below for instructions.
 
 #### Azure
-To use Azure, set: 
+To use Azure, set in your .secrets.toml: 
 ```
 api_key = "" # your azure api key
 api_type = "azure"
@@ -172,7 +174,6 @@ api_version = '2023-05-15'  # Check Azure documentation for the current API vers
 api_base = ""  # The base URL for your Azure OpenAI resource. e.g. "https://<your resource name>.openai.azure.com"
 deployment_id = ""  # The deployment name you chose when you deployed the engine
 ```
-in your .secrets.toml
 
 and 
 ```
@@ -241,6 +242,9 @@ key = ...
 
 
 Also review the [AiHandler](pr_agent/algo/ai_handler.py) file for instruction how to set keys for other models.
+
+### Appendix - additional configurations walkthrough
+
 
 #### Extra instructions
 All PR-Agent tools have a parameter called `extra_instructions`, that enables to add free-text extra instructions. Example usage:
