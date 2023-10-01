@@ -151,6 +151,9 @@ PR Analysis:
 {%- if require_focused %}
   Focused PR: no, because ...
 {%- endif %}
+{%- if require_estimate_effort_to_review %}
+  Estimated effort to review [1-5]: 3, because ...
+{%- endif %}
 PR Feedback:
   General PR suggestions: |-
     ...
