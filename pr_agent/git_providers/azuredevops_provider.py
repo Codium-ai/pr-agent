@@ -88,6 +88,8 @@ class AzureDevopsProvider:
                 changes_obj = self.azure_devops_client.get_changes(project=self.workspace_slug,
                                                                    repository_id=self.repo_slug, commit_id=c.commit_id)
                 for i in changes_obj.changes:
+                    if(i['item']['gitObjectType'] == 'tree'):
+                        continue
                     diffs.append(i['item']['path'])
                     diff_types[i['item']['path']] = i['changeType']
 
