@@ -199,7 +199,7 @@ Here are some advantages of PR-Agent:
   - [x] Rank the PR (see [here](https://github.com/Codium-ai/pr-agent/pull/89))   
   - [ ] Enforcing CONTRIBUTING.md guidelines
   - [ ] Performance (are there any performance issues)
-  - [ ] Documentation (is the PR properly documented)
+  - [x] Documentation (is the PR properly documented)
   - [ ] ...
 
 ## Similar Projects
