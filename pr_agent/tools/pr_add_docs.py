@@ -67,7 +67,7 @@ class PRAddDocs:
                 logging.info('Pushing PR review...')
                 self.git_provider.remove_initial_comment()
                 logging.info('Pushing inline code documentation...')
-                self.push_inline_docs_suggestions(data)
+                self.push_inline_docs(data)
         except Exception as e:
             logging.error(f"Failed to generate code documentation for PR, error: {e}")
 
@@ -103,8 +103,8 @@ class PRAddDocs:
             data = {'Code Documentation': data}
         return data
 
-    def push_inline_docs_suggestions(self, data):
-        code_suggestions = []
+    def push_inline_docs(self, data):
+        docs = []
 
         if not data['Code Documentation']:
             return self.git_provider.publish_comment('No code documentation found to improve this PR.')
@@ -122,18 +122,18 @@ class PRAddDocs:
                                                         add_original_line=True)
 
                     body = f"**Suggestion:** Proposed documentation\n```suggestion\n" + new_code_snippet + "\n```"
-                    code_suggestions.append({'body': body, 'relevant_file': relevant_file,
+                    docs.append({'body': body, 'relevant_file': relevant_file,
                                              'relevant_lines_start': relevant_line,
                                              'relevant_lines_end': relevant_line})
             except Exception:
                 if get_settings().config.verbosity_level >= 2:
                     logging.info(f"Could not parse code docs: {d}")
 
-        is_successful = self.git_provider.publish_code_suggestions(code_suggestions)
+        is_successful = self.git_provider.publish_code_suggestions(docs)
         if not is_successful:
             logging.info("Failed to publish code docs, trying to publish each docs separately")
-            for code_suggestion in code_suggestions:
-                self.git_provider.publish_code_suggestions([code_suggestion])
+            for documentation in docs:
+                self.git_provider.publish_code_suggestions([documentation])
 
     def dedent_code(self, relevant_file, relevant_lines_start, new_code_snippet, doc_placement='after',
                     add_original_line=False):
@@ -170,7 +170,7 @@ class PRAddDocs:
     async def _prepare_prediction_extended(self, model: str) -> dict:
         logging.info('Getting PR diff...')
         patches_diff_list = get_pr_multi_diffs(self.git_provider, self.token_handler, model,
-                                               max_calls=get_settings().pr_code_suggestions.max_number_of_calls)
+                                               max_calls=get_settings().pr_add_docs_prompt.max_number_of_calls)
 
         logging.info('Getting multi AI predictions...')
         prediction_list = []
