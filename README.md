@@ -124,7 +124,7 @@ See the [Release notes](./RELEASE_NOTES.md) for updates on the latest changes.
 |       | Multiple models support |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       | :white_check_mark: |   :white_check_mark:       | :white_check_mark:       |
 |       | Incremental PR Review |   :white_check_mark:    |      |      |      |      |      |
 
-Review the **[usage guide](./Usage.md)** section for detailed instructions how to use the different tools, select the relevant git provider (GitHub, Gitlab, Bitbucket,...), and adjust the configuration file to your needs.
+Review the [usage guide](./Usage.md) section for detailed instructions how to use the different tools, select the relevant git provider (GitHub, Gitlab, Bitbucket,...), and adjust the configuration file to your needs.
 
 ## Try it now
 
