@@ -6,4 +6,4 @@
 - [SIMILAR_ISSUE](./SIMILAR_ISSUE.md)
 - [UPDATE CHANGELOG](./UPDATE_CHANGELOG.md)
 
-See the **[installation guide](/INSTALL.md)** for instructions on how to setup your own PR-Agent.
+See the **[installation guide](/INSTALL.md)** for instructions on how to setup PR-Agent.
