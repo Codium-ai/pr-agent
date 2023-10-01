@@ -25,12 +25,13 @@ GitHub App and GitHub Action also enable to run PR-Agent specific tool automatic
 #### The configuration file
 The different tools and sub-tools used by CodiumAI PR-Agent are adjustable via the **[configuration file](pr_agent/settings/configuration.toml)**.
 In addition to general configuration options, each tool has its own configurations. For example, the `review` tool will use parameters from the [pr_reviewer](/pr_agent/settings/configuration.toml#L16) section in the configuration file.
+
 The [Tools Guide](./docs/TOOLS_GUIDE.md) provides a detailed description of the different tools and their configurations.
 
 #### git provider
 The [git_provider](pr_agent/settings/configuration.toml#L4) field in the configuration file determines the GIT provider that will be used by PR-Agent. Currently, the following providers are supported:
 `
-"github", "gitlab", "azure", "codecommit", "local"
+"github", "gitlab", "azure", "codecommit", "local", "gerrit"
 `
 
 [//]: # (** online usage:**)
@@ -124,7 +125,6 @@ Note that a local `.pr_agent.toml` file enables you to edit and customize the de
 
 #### Editing the prompts
 The prompts for the various PR-Agent tools are defined in the `pr_agent/settings` folder.
-
 In practice, the prompts are loaded and stored as a standard setting object. 
 Hence, editing them is similar to editing any other configuration value - just place the relevant key in `.pr_agent.toml`file, and override the default value.
 
@@ -154,12 +154,12 @@ You can configure settings in GitHub action by adding environment variables unde
 ```
 specifically, `github_action.auto_review`, `github_action.auto_describe` and `github_action.auto_improve` are used to enable/disable automatic tools that run when a new PR is opened.
 
-if not set, the default option is that only the `review` tool will run automatically when a new PR is opened.
+If not set, the default option is that only the `review` tool will run automatically when a new PR is opened.
 
 ### Changing a model
 
 See [here](pr_agent/algo/__init__.py) for the list of available models.
-To use a different model than the default (GPT-4), you need to edit [configuration file](pr_agent/settings/configuration.toml#L2)
+To use a different model than the default (GPT-4), you need to edit [configuration file](pr_agent/settings/configuration.toml#L2).
 For models and environments not from OPENAI, you might need to provide additional keys and other parameters. See below for instructions.
 
 #### Azure
