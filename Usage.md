@@ -11,15 +11,13 @@
 
 ### Introduction
 
-There are 3 basic ways to invoke CodiumAI PR-Agent:
+See the **[installation guide](/INSTALL.md)** for instructions on how to setup PR-Agent. After installation, there are three basic ways to invoke CodiumAI PR-Agent:
 1. Locally running a CLI command
 2. Online usage - by [commenting](https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695021901) on a PR
 3. Enabling PR-Agent tools to run automatically when a new PR is opened
 
-See the **[installation guide](/INSTALL.md)** for instructions on how to setup your own PR-Agent.
 
 Specifically, CLI commands can be issued by invoking a pre-built [docker image](/INSTALL.md#running-from-source), or by invoking a [locally cloned repo](INSTALL.md#method-2-run-from-source).
-
 For online usage, you will need to setup either a [GitHub App](INSTALL.md#method-5-run-as-a-github-app), or a [GitHub Action](INSTALL.md#method-3-run-as-a-github-action).
 GitHub App and GitHub Action also enable to run PR-Agent specific tool automatically when a new PR is opened.
 
@@ -27,8 +25,9 @@ GitHub App and GitHub Action also enable to run PR-Agent specific tool automatic
 #### The configuration file
 The different tools and sub-tools used by CodiumAI PR-Agent are adjustable via the **[configuration file](pr_agent/settings/configuration.toml)**.
 In addition to general configuration options, each tool has its own configurations. For example, the `review` tool will use parameters from the [pr_reviewer](/pr_agent/settings/configuration.toml#L16) section in the configuration file.
+The [Tools Guide](./docs/TOOLS_GUIDE.md) provides a detailed description of the different tools and their configurations.
 
-**git provider:**
+#### git provider
 The [git_provider](pr_agent/settings/configuration.toml#L4) field in the configuration file determines the GIT provider that will be used by PR-Agent. Currently, the following providers are supported:
 `
 "github", "gitlab", "azure", "codecommit", "local"
@@ -48,7 +47,6 @@ The [git_provider](pr_agent/settings/configuration.toml#L4) field in the configu
 
 ### Working from a local repo (CLI)
 When running from your local repo (CLI), your local configuration file will be used.
-
 Examples for invoking the different tools via the CLI:
 
 - **Review**:       `python -m pr_agent.cli --pr_url=<pr_url>  review`
@@ -94,15 +92,15 @@ For example if you want to edit the `review` tool configurations, you can run:
 ```
 /review --pr_reviewer.extra_instructions="..." --pr_reviewer.require_score_review=false
 ```
-Any configuration value in [configuration file](pr_agent/settings/configuration.toml) file can be similarly edited.
+Any configuration value in [configuration file](pr_agent/settings/configuration.toml) file can be similarly edited. comment `/config` to see the list of available configurations.
 
 
 ### Working with GitHub App
-When running PR-Agent from [GitHub App](INSTALL.md#method-5-run-as-a-github-app), the default configurations from a pre-built repo will be initially loaded.
+When running PR-Agent from [GitHub App](INSTALL.md#method-5-run-as-a-github-app), the default configurations from a pre-built docker will be initially loaded.
 
 #### GitHub app automatic tools
 The [github_app](pr_agent/settings/configuration.toml#L56) section defines GitHub app specific configurations. 
-An important parameter is `pr_commands`, which is a list of tools that will be **run automatically when a new PR is opened**:
+An important parameter is `pr_commands`, which is a list of tools that will be **run automatically** when a new PR is opened:
 ```
 [github_app]
 pr_commands = [
@@ -113,7 +111,7 @@ pr_commands = [
 This means that when a new PR is opened, PR-Agent will run the `describe` and `auto_review` tools.
 For the describe tool, the `add_original_user_description` and `keep_original_user_title` parameters will be set to true.
 
-However, you can override the default tool parameters by uploading a local configuration file called `.pr_agent.toml` to the root of your repo.
+You can override the default tool parameters by uploading a local configuration file called `.pr_agent.toml` to the root of your repo.
 For example, if your local `.pr_agent.toml` file contains:
 ```
 [pr_description]
@@ -162,7 +160,6 @@ if not set, the default option is that only the `review` tool will run automatic
 
 See [here](pr_agent/algo/__init__.py) for the list of available models.
 To use a different model than the default (GPT-4), you need to edit [configuration file](pr_agent/settings/configuration.toml#L2)
-
 For models and environments not from OPENAI, you might need to provide additional keys and other parameters. See below for instructions.
 
 #### Azure
