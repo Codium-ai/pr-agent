@@ -49,8 +49,7 @@ final_clip_factor = 0.9
 
 [pr_add_docs] # /add_docs #
 extra_instructions = ""
-docs_style = "Google Style" # "Google Style", "Numpy Style", "Sphinx Style", "PEP257", "reStructuredText"
-max_number_of_calls = 5
+docs_style = "Sphinx Style" # "Google Style with Args, Returns, Attributes...etc", "Numpy Style", "Sphinx Style", "PEP257", "reStructuredText"
 
 [pr_update_changelog] # /update_changelog #
 push_changelog_changes=false

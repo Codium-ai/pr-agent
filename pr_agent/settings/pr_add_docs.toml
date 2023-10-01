@@ -32,7 +32,7 @@ __old hunk__
 
 Specific instructions:
 - Try to identify edited/added code components (classes/functions/methods...) that are undocumented. and generate {{ docs_for_language }} for each one.
-- If there are edited/added code components, but they are already documented, ignore them.
+- If there are documented (any type of {{ language }} documentation) code components in the PR, Don't generate {{ docs_for_language }} for them.
 - Ignore code components that don't appear fully in the '__new hunk__' section. For example. you must see the component header and body,
 - Make sure the {{ docs_for_language }} starts and ends with standart {{ language }} {{ docs_for_language }} signs.
 - The {{ docs_for_language }} should be in standard format.

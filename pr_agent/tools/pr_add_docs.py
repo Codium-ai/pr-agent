@@ -21,12 +21,6 @@ class PRAddDocs:
             self.git_provider.get_languages(), self.git_provider.get_files()
         )
 
-        # extended mode
-        try:
-            self.is_extended = any(["extended" in arg for arg in args])
-        except:
-            self.is_extended = False
-
         self.ai_handler = AiHandler()
         self.patches_diff = None
         self.prediction = None
@@ -51,20 +45,17 @@ class PRAddDocs:
         try:
             logging.info('Generating code Docs for PR...')
             if get_settings().config.publish_output:
-                self.git_provider.publish_comment("Preparing review...", is_temporary=True)
+                self.git_provider.publish_comment("Generating Documentation...", is_temporary=True)
 
-            logging.info('Preparing PR review...')
-            if not self.is_extended:
-                await retry_with_fallback_models(self._prepare_prediction)
-                data = self._prepare_pr_code_docs()
-            else:
-                data = await retry_with_fallback_models(self._prepare_prediction_extended)
+            logging.info('Preparing PR documentation...')
+            await retry_with_fallback_models(self._prepare_prediction)
+            data = self._prepare_pr_code_docs()
             if (not data) or (not 'Code Documentation' in data):
                 logging.info('No code documentation found for PR.')
                 return
 
             if get_settings().config.publish_output:
-                logging.info('Pushing PR review...')
+                logging.info('Pushing PR documentation...')
                 self.git_provider.remove_initial_comment()
                 logging.info('Pushing inline code documentation...')
                 self.push_inline_docs(data)
@@ -97,8 +88,8 @@ class PRAddDocs:
         return response
 
     def _prepare_pr_code_docs(self) -> Dict:
-        review = self.prediction.strip()
-        data = load_yaml(review)
+        docs = self.prediction.strip()
+        data = load_yaml(docs)
         if isinstance(data, list):
             data = {'Code Documentation': data}
         return data
@@ -167,37 +158,7 @@ class PRAddDocs:
 
         return new_code_snippet
 
-    async def _prepare_prediction_extended(self, model: str) -> dict:
-        logging.info('Getting PR diff...')
-        patches_diff_list = get_pr_multi_diffs(self.git_provider, self.token_handler, model,
-                                               max_calls=get_settings().pr_add_docs.max_number_of_calls)
 
-        logging.info('Getting multi AI predictions...')
-        prediction_list = []
-        for i, patches_diff in enumerate(patches_diff_list):
-            logging.info(f"Processing chunk {i + 1} of {len(patches_diff_list)}")
-            self.patches_diff = patches_diff
-            prediction = await self._get_prediction(model)
-            prediction_list.append(prediction)
-        self.prediction_list = prediction_list
-
-        data = {}
-        for prediction in prediction_list:
-            self.prediction = prediction
-            data_per_chunk = self._prepare_pr_code_docs()
-            if "Code Documentation" in data:
-                data["Code Documentation"].extend(data_per_chunk["Code Documentation"])
-            else:
-                data.update(data_per_chunk)
-        self.data = data
-        return data
-
-
-"""
-This function determines the type of documentation to generate based on the main language of the PR.
-It supports Javadocs for Java, Docstrings for Python, Lisp, and Clojure, JSdocs for JavaScript and TypeScript,
-and Doxygen for C++. For other languages, it defaults to generating generic Docs.
-"""
 def get_docs_for_language(language, style):
     language = language.lower()
     if language == 'java':
