@@ -28,7 +28,8 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 ‣ **Update Changelog (`/update_changelog`)**: Automatically updating the CHANGELOG.md file with the [PR changes](https://github.com/Codium-ai/pr-agent/pull/168#discussion_r1282077645).
 \
 ‣ **Find similar issue (`/similar_issue`)**: Automatically retrieves and presents [similar issues](https://github.com/Alibaba-MIIL/ASL/issues/107).
-
+\
+‣ **Add Documentation (`/add_docs`)**: Automatically adds [documentation](https://github.com/Codium-ai/pr-agent/pull/337#discussion_r1342111682) to un-documented functions/classes in the PR.
 
 See the [usage guide](./Usage.md) for instructions how to run the different tools from [CLI](./Usage.md#working-from-a-local-repo-cli), or by [online usage](./Usage.md#online-usage), as well as additional details on optional commands and configurations.
 
@@ -109,6 +110,7 @@ See the [usage guide](./Usage.md) for instructions how to run the different tool
 |       | Reflect and Review                          |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |          |   :white_check_mark:    |    :white_check_mark:    |
 |       | Update CHANGELOG.md                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |          |          |       |
 |       | Find similar issue                          |   :white_check_mark:    |                         |                             |          |          |       |
+|       | Add Documentation                           |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |   :white_check_mark:    |          |    :white_check_mark:    |
 |       |                                             |        |        |      |      |      |
 | USAGE | CLI                                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |   :white_check_mark:    |   :white_check_mark:    |
 |       | App / webhook                               |   :white_check_mark:    |   :white_check_mark:    |           |          |          |

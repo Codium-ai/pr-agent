@@ -37,10 +37,10 @@ class PRAddDocs:
             "description": self.git_provider.get_pr_description(),
             "language": self.main_language,
             "diff": "",  # empty diff for initial calculation
-            "extra_instructions": get_settings().pr_add_docs_prompt.extra_instructions,
+            "extra_instructions": get_settings().pr_add_docs.extra_instructions,
             "commit_messages_str": self.git_provider.get_commit_messages(),
             'docs_for_language': get_docs_for_language(self.main_language,
-                                                       get_settings().pr_add_docs_prompt.docs_style),
+                                                       get_settings().pr_add_docs.docs_style),
         }
         self.token_handler = TokenHandler(self.git_provider.pr,
                                           self.vars,
@@ -132,8 +132,8 @@ class PRAddDocs:
         is_successful = self.git_provider.publish_code_suggestions(docs)
         if not is_successful:
             logging.info("Failed to publish code docs, trying to publish each docs separately")
-            for documentation in docs:
-                self.git_provider.publish_code_suggestions([documentation])
+            for doc_suggestion in docs:
+                self.git_provider.publish_code_suggestions([doc_suggestion])
 
     def dedent_code(self, relevant_file, relevant_lines_start, new_code_snippet, doc_placement='after',
                     add_original_line=False):
@@ -170,7 +170,7 @@ class PRAddDocs:
     async def _prepare_prediction_extended(self, model: str) -> dict:
         logging.info('Getting PR diff...')
         patches_diff_list = get_pr_multi_diffs(self.git_provider, self.token_handler, model,
-                                               max_calls=get_settings().pr_add_docs_prompt.max_number_of_calls)
+                                               max_calls=get_settings().pr_add_docs.max_number_of_calls)
 
         logging.info('Getting multi AI predictions...')
         prediction_list = []

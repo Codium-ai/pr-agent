@@ -93,9 +93,9 @@ Don't repeat the prompt in the answer, and avoid outputting the 'type' and 'desc
 
 user="""PR Info:
 
-Title: '{{title}}'
+Title: '{{ title }}'
 
-Branch: '{{branch}}'
+Branch: '{{ branch }}'
 
 Description: '{{description}}'
 

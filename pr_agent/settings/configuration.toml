@@ -47,7 +47,7 @@ rank_extended_suggestions = true
 max_number_of_calls = 5
 final_clip_factor = 0.9
 
-[pr_add_docs_prompt] # /add_docs #
+[pr_add_docs] # /add_docs #
 extra_instructions = ""
 docs_style = "Google Style" # "Google Style", "Numpy Style", "Sphinx Style", "PEP257", "reStructuredText"
 max_number_of_calls = 5
