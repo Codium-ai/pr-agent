@@ -29,7 +29,7 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 \
 ‣ **Find similar issue ([`/similar_issue`](./docs/SIMILAR_ISSUE.md))**: Automatically retrieves and presents similar issues
 \
-‣ **Add Documentation (`/add_docs`)**: Automatically adds [documentation](https://github.com/Codium-ai/pr-agent/pull/337#discussion_r1342111682) to un-documented functions/classes in the PR.
+‣ **Add Documentation (`/add_docs`)**: Automatically adds [documentation](./docs/ADD_DOCUMENTATION.md) to un-documented functions/classes in the PR.
 
 See the [Usage Guide](./Usage.md) for instructions how to run the different tools from _CLI_, _online usage_, Or by _automatically triggering_ them when a new PR is opened.
 

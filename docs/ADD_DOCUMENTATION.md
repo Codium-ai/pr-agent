@@ -6,6 +6,7 @@ It can be invoked manually by commenting on any PR:
 /add_docs
 ```
 For example:
+
 <kbd><img src=./../pics/add_docs_comment.png width="768"></kbd>
 <kbd><img src=./../pics/add_docs.png width="768"></kbd>
 
