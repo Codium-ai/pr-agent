@@ -109,7 +109,8 @@ class AzureDevopsProvider:
                                                                             include_content=True)
 
                     new_file_content_str = new_file_content_str.content
-                except Exception as e:                    
+                except Exception as error:
+                    logging.error("Failed to retrieve new file content of %s at version %s. Error: %s", file, version, str(error))
                     new_file_content_str = ""
 
                 edit_type = EDIT_TYPE.MODIFIED
@@ -129,7 +130,8 @@ class AzureDevopsProvider:
                                                                               download=False,
                                                                               include_content=True)
                     original_file_content_str = original_file_content_str.content
-                except Exception as e:
+                except Exception as error:
+                    logging.error("Failed to retrieve original file content of %s at version %s. Error: %s", file, version, str(error))
                     original_file_content_str = ""
 
                 patch = load_large_diff(file, new_file_content_str, original_file_content_str)
