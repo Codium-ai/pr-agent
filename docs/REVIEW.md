@@ -31,6 +31,9 @@ For an incremental review, which only considers changes since the last PR-Agent 
 /improve -i
 ```
 Note that the incremental mode is only available for GitHub.
+
+<kbd><img src=./../pics/incremental_review.png width="768"></kbd>
+
 #### PR Reflection
 By invoking:
 ```
