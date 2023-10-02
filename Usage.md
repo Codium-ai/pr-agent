@@ -7,6 +7,7 @@
 - [Working with GitHub App](#working-with-github-app)
 - [Working with GitHub Action](#working-with-github-action)
 - [Changing a model](#changing-a-model)
+- [Working with large PRs](#working-with-large-prs)
 - [Appendix - additional configurations walkthrough](#appendix---additional-configurations-walkthrough)
 
 ### Introduction
@@ -239,6 +240,17 @@ key = ...
 
 
 Also review the [AiHandler](pr_agent/algo/ai_handler.py) file for instruction how to set keys for other models.
+
+### Working with large PRs
+
+The default mode of CodiumAI is to have a single call per tool, using GPT-4, which has a token limit of 8000 tokens.
+This mode provide a very good speed-quality-cost tradeoff, and can handle most PRs successfully. 
+When the PR is above the token limit, it employs a [PR Compression strategy](./PR_COMPRESSION.md).
+
+However, for very large PRs, or in case you want to emphasize quality over speed and cost, there are 2 possible solutions:
+1) [Use a model](#changing-a-model) with larger context, like GPT-32K, or claude-100K. This solution will be applicable for all the tools.
+2) For the `/improve` tool, there is an ['extended' mode](./docs/IMPROVE.md) (`/improve --extended`), 
+which divides the PR to chunks, and process each chunk separately. With this mode, regardless of the model, no compression will be done (but for large PRs, multiple model calls may occur)
 
 ### Appendix - additional configurations walkthrough
 
