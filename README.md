@@ -169,7 +169,7 @@ There are several ways to use PR-Agent:
 
 The following diagram illustrates PR-Agent tools and their flow:
 
-![PR-Agent Tools](https://www.codium.ai/wp-content/uploads/2023/07/codiumai-diagram-v4.jpg)
+![PR-Agent Tools](https://www.codium.ai/wp-content/uploads/2023/10/codiumai-diagram-v5.png)
 
 Check out the [PR Compression strategy](./PR_COMPRESSION.md) page for more details on how we convert a code diff to a manageable LLM prompt
 
