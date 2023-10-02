@@ -28,7 +28,8 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 ‣ **Update Changelog ([`/update_changelog`](./docs/UPDATE_CHANGELOG.md))**: Automatically updating the CHANGELOG.md file with the PR changes.
 \
 ‣ **Find similar issue ([`/similar_issue`](./docs/SIMILAR_ISSUE.md))**: Automatically retrieves and presents similar issues
-
+\
+‣ **Add Documentation (`/add_docs`)**: Automatically adds [documentation](./docs/ADD_DOCUMENTATION.md) to un-documented functions/classes in the PR.
 
 See the [Usage Guide](./Usage.md) for instructions how to run the different tools from _CLI_, _online usage_, Or by _automatically triggering_ them when a new PR is opened.
 
@@ -111,6 +112,7 @@ See the [Release notes](./RELEASE_NOTES.md) for updates on the latest changes.
 |       | Reflect and Review                          |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |          |   :white_check_mark:    |    :white_check_mark:    |
 |       | Update CHANGELOG.md                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |          |          |       |
 |       | Find similar issue                          |   :white_check_mark:    |                         |                             |          |          |       |
+|       | Add Documentation                           |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |   :white_check_mark:    |          |    :white_check_mark:    |
 |       |                                             |        |        |      |      |      |
 | USAGE | CLI                                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |   :white_check_mark:    |   :white_check_mark:    |
 |       | App / webhook                               |   :white_check_mark:    |   :white_check_mark:    |           |          |          |
@@ -197,7 +199,7 @@ Here are some advantages of PR-Agent:
   - [x] Rank the PR (see [here](https://github.com/Codium-ai/pr-agent/pull/89))   
   - [ ] Enforcing CONTRIBUTING.md guidelines
   - [ ] Performance (are there any performance issues)
-  - [ ] Documentation (is the PR properly documented)
+  - [x] Documentation (is the PR properly documented)
   - [ ] ...
 
 ## Similar Projects
