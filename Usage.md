@@ -1,4 +1,4 @@
-## Usage guide
+## Usage Guide
 
 ### Table of Contents
 - [Introduction](#introduction)
@@ -6,19 +6,19 @@
 - [Online usage](#online-usage)
 - [Working with GitHub App](#working-with-github-app)
 - [Working with GitHub Action](#working-with-github-action)
+- [Changing a model](#changing-a-model)
+- [Working with large PRs](#working-with-large-prs)
 - [Appendix - additional configurations walkthrough](#appendix---additional-configurations-walkthrough)
 
 ### Introduction
 
-There are 3 basic ways to invoke CodiumAI PR-Agent:
+See the **[installation guide](/INSTALL.md)** for instructions on how to setup PR-Agent. After installation, there are three basic ways to invoke CodiumAI PR-Agent:
 1. Locally running a CLI command
 2. Online usage - by [commenting](https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695021901) on a PR
 3. Enabling PR-Agent tools to run automatically when a new PR is opened
 
-See the [installation guide](/INSTALL.md) for instructions on how to setup your own PR-Agent.
 
 Specifically, CLI commands can be issued by invoking a pre-built [docker image](/INSTALL.md#running-from-source), or by invoking a [locally cloned repo](INSTALL.md#method-2-run-from-source).
-
 For online usage, you will need to setup either a [GitHub App](INSTALL.md#method-5-run-as-a-github-app), or a [GitHub Action](INSTALL.md#method-3-run-as-a-github-action).
 GitHub App and GitHub Action also enable to run PR-Agent specific tool automatically when a new PR is opened.
 
@@ -27,10 +27,12 @@ GitHub App and GitHub Action also enable to run PR-Agent specific tool automatic
 The different tools and sub-tools used by CodiumAI PR-Agent are adjustable via the **[configuration file](pr_agent/settings/configuration.toml)**.
 In addition to general configuration options, each tool has its own configurations. For example, the `review` tool will use parameters from the [pr_reviewer](/pr_agent/settings/configuration.toml#L16) section in the configuration file.
 
-**git provider:**
+The [Tools Guide](./docs/TOOLS_GUIDE.md) provides a detailed description of the different tools and their configurations.
+
+#### git provider
 The [git_provider](pr_agent/settings/configuration.toml#L4) field in the configuration file determines the GIT provider that will be used by PR-Agent. Currently, the following providers are supported:
 `
-"github", "gitlab", "azure", "codecommit", "local"
+"github", "gitlab", "azure", "codecommit", "local", "gerrit"
 `
 
 [//]: # (** online usage:**)
@@ -47,15 +49,14 @@ The [git_provider](pr_agent/settings/configuration.toml#L4) field in the configu
 
 ### Working from a local repo (CLI)
 When running from your local repo (CLI), your local configuration file will be used.
-
 Examples for invoking the different tools via the CLI:
 
-- **Review**:       `python cli.py --pr_url=<pr_url>  review`
-- **Describe**:     `python cli.py --pr_url=<pr_url>  describe`
-- **Improve**:      `python cli.py --pr_url=<pr_url>  improve`
-- **Ask**:          `python cli.py --pr_url=<pr_url>  ask "Write me a poem about this PR"`
-- **Reflect**:      `python cli.py --pr_url=<pr_url>  reflect`
-- **Update Changelog**:      `python cli.py --pr_url=<pr_url>  update_changelog`
+- **Review**:       `python -m pr_agent.cli --pr_url=<pr_url>  review`
+- **Describe**:     `python -m pr_agent.cli --pr_url=<pr_url>  describe`
+- **Improve**:      `python -m pr_agent.cli --pr_url=<pr_url>  improve`
+- **Ask**:          `python -m pr_agent.cli --pr_url=<pr_url>  ask "Write me a poem about this PR"`
+- **Reflect**:      `python -m pr_agent.cli --pr_url=<pr_url>  reflect`
+- **Update Changelog**:      `python -m pr_agent.cli --pr_url=<pr_url>  update_changelog`
 
 `<pr_url>` is the url of the relevant PR (for example: https://github.com/Codium-ai/pr-agent/pull/50).
 
@@ -63,7 +64,7 @@ Examples for invoking the different tools via the CLI:
 
 (1) in addition to editing your local configuration file, you can also change any configuration value by adding it to the command line:
 ```
-python cli.py --pr_url=<pr_url>  /review --pr_reviewer.extra_instructions="focus on the file: ..."
+python -m pr_agent.cli --pr_url=<pr_url>  /review --pr_reviewer.extra_instructions="focus on the file: ..."
 ```
 
 (2) You can print results locally, without publishing them, by setting in `configuration.toml`:
@@ -93,15 +94,15 @@ For example if you want to edit the `review` tool configurations, you can run:
 ```
 /review --pr_reviewer.extra_instructions="..." --pr_reviewer.require_score_review=false
 ```
-Any configuration value in [configuration file](pr_agent/settings/configuration.toml) file can be similarly edited.
+Any configuration value in [configuration file](pr_agent/settings/configuration.toml) file can be similarly edited. comment `/config` to see the list of available configurations.
 
 
 ### Working with GitHub App
-When running PR-Agent from [GitHub App](INSTALL.md#method-5-run-as-a-github-app), the default configurations from a pre-built repo will be initially loaded.
+When running PR-Agent from [GitHub App](INSTALL.md#method-5-run-as-a-github-app), the default configurations from a pre-built docker will be initially loaded.
 
 #### GitHub app automatic tools
 The [github_app](pr_agent/settings/configuration.toml#L56) section defines GitHub app specific configurations. 
-An important parameter is `pr_commands`, which is a list of tools that will be **run automatically when a new PR is opened**:
+An important parameter is `pr_commands`, which is a list of tools that will be **run automatically** when a new PR is opened:
 ```
 [github_app]
 pr_commands = [
@@ -112,7 +113,7 @@ pr_commands = [
 This means that when a new PR is opened, PR-Agent will run the `describe` and `auto_review` tools.
 For the describe tool, the `add_original_user_description` and `keep_original_user_title` parameters will be set to true.
 
-However, you can override the default tool parameters by uploading a local configuration file called `.pr_agent.toml` to the root of your repo.
+You can override the default tool parameters by uploading a local configuration file called `.pr_agent.toml` to the root of your repo.
 For example, if your local `.pr_agent.toml` file contains:
 ```
 [pr_description]
@@ -125,7 +126,6 @@ Note that a local `.pr_agent.toml` file enables you to edit and customize the de
 
 #### Editing the prompts
 The prompts for the various PR-Agent tools are defined in the `pr_agent/settings` folder.
-
 In practice, the prompts are loaded and stored as a standard setting object. 
 Hence, editing them is similar to editing any other configuration value - just place the relevant key in `.pr_agent.toml`file, and override the default value.
 
@@ -142,15 +142,29 @@ user="""
 Note that the new prompt will need to generate an output compatible with the relevant [post-process function](./pr_agent/tools/pr_description.py#L137).
 
 ### Working with GitHub Action
-TBD
+You can configure settings in GitHub action by adding environment variables under the env section in `.github/workflows/pr_agent.yml` file. Some examples:
+```yaml
+      env:
+        # ... previous environment values
+        OPENAI.ORG: "<Your organization name under your OpenAI account>"
+        PR_REVIEWER.REQUIRE_TESTS_REVIEW: "false" # Disable tests review
+        PR_CODE_SUGGESTIONS.NUM_CODE_SUGGESTIONS: 6 # Increase number of code suggestions
+        github_action.auto_review: "true" # Enable auto review
+        github_action.auto_describe: "true" # Enable auto describe
+        github_action.auto_improve: "false" # Disable auto improve      
+```
+specifically, `github_action.auto_review`, `github_action.auto_describe` and `github_action.auto_improve` are used to enable/disable automatic tools that run when a new PR is opened.
 
-### Appendix - additional configurations walkthrough
+If not set, the default option is that only the `review` tool will run automatically when a new PR is opened.
 
-#### Changing a model
+### Changing a model
+
 See [here](pr_agent/algo/__init__.py) for the list of available models.
+To use a different model than the default (GPT-4), you need to edit [configuration file](pr_agent/settings/configuration.toml#L2).
+For models and environments not from OPENAI, you might need to provide additional keys and other parameters. See below for instructions.
 
 #### Azure
-To use Azure, set: 
+To use Azure, set in your .secrets.toml: 
 ```
 api_key = "" # your azure api key
 api_type = "azure"
@@ -158,7 +172,6 @@ api_version = '2023-05-15'  # Check Azure documentation for the current API vers
 api_base = ""  # The base URL for your Azure OpenAI resource. e.g. "https://<your resource name>.openai.azure.com"
 deployment_id = ""  # The deployment name you chose when you deployed the engine
 ```
-in your .secrets.toml
 
 and 
 ```
@@ -228,6 +241,20 @@ key = ...
 
 Also review the [AiHandler](pr_agent/algo/ai_handler.py) file for instruction how to set keys for other models.
 
+### Working with large PRs
+
+The default mode of CodiumAI is to have a single call per tool, using GPT-4, which has a token limit of 8000 tokens.
+This mode provide a very good speed-quality-cost tradeoff, and can handle most PRs successfully. 
+When the PR is above the token limit, it employs a [PR Compression strategy](./PR_COMPRESSION.md).
+
+However, for very large PRs, or in case you want to emphasize quality over speed and cost, there are 2 possible solutions:
+1) [Use a model](#changing-a-model) with larger context, like GPT-32K, or claude-100K. This solution will be applicable for all the tools.
+2) For the `/improve` tool, there is an ['extended' mode](./docs/IMPROVE.md) (`/improve --extended`), 
+which divides the PR to chunks, and process each chunk separately. With this mode, regardless of the model, no compression will be done (but for large PRs, multiple model calls may occur)
+
+### Appendix - additional configurations walkthrough
+
+
 #### Extra instructions
 All PR-Agent tools have a parameter called `extra_instructions`, that enables to add free-text extra instructions. Example usage:
 ```
@@ -248,25 +275,3 @@ And use the following settings (you have to replace the values) in .secrets.toml
 org = "https://dev.azure.com/YOUR_ORGANIZATION/"
 pat = "YOUR_PAT_TOKEN"
 ```
-
-#### Similar issue tool
-
-[Example usage](https://github.com/Alibaba-MIIL/ASL/issues/107)
-
-<img src=./pics/similar_issue_tool.png width="768">
-
-To enable usage of the '**similar issue**' tool, you need to set the following keys in `.secrets.toml` (or in the relevant environment variables):
-```
-[pinecone]
-api_key = "..."
-environment = "..."
-```
-These parameters can be obtained by registering to [Pinecone](https://app.pinecone.io/?sessionType=signup/).
-
-- To invoke the 'similar issue' tool from **CLI**, run:
-`python3 cli.py --issue_url=... similar_issue`
-
-- To invoke the 'similar' issue tool via online usage, [comment](https://github.com/Codium-ai/pr-agent/issues/178#issuecomment-1716934893) on a PR:
-`/similar_issue`
-
-- You can also enable the 'similar issue' tool to run automatically when a new issue is opened, by adding it to the [pr_commands list in the github_app section](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L66)

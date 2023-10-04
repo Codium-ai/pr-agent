@@ -1,6 +1,8 @@
 import pytest
+from unittest.mock import patch
 from pr_agent.git_providers.codecommit_provider import CodeCommitFile
 from pr_agent.git_providers.codecommit_provider import CodeCommitProvider
+from pr_agent.git_providers.codecommit_provider import PullRequestCCMimic
 from pr_agent.git_providers.git_provider import EDIT_TYPE
 
 
@@ -25,6 +27,21 @@ class TestCodeCommitFile:
 
 
 class TestCodeCommitProvider:
+    def test_get_title(self):
+        # Test that the get_title() function returns the PR title
+        with patch.object(CodeCommitProvider, "__init__", lambda x, y: None):
+            provider = CodeCommitProvider(None)
+            provider.pr = PullRequestCCMimic("My Test PR Title", [])
+            assert provider.get_title() == "My Test PR Title"
+
+    def test_get_pr_id(self):
+        # Test that the get_pr_id() function returns the correct ID
+        with patch.object(CodeCommitProvider, "__init__", lambda x, y: None):
+            provider = CodeCommitProvider(None)
+            provider.repo_name = "my_test_repo"
+            provider.pr_num = 321
+            assert provider.get_pr_id() == "my_test_repo/321"
+
     def test_parse_pr_url(self):
         # Test that the _parse_pr_url() function can extract the repo name and PR number from a CodeCommit URL
         url = "https://us-east-1.console.aws.amazon.com/codesuite/codecommit/repositories/my_test_repo/pull-requests/321"

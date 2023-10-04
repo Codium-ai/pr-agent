@@ -22,7 +22,10 @@ class PRCodeSuggestions:
         )
 
         # extended mode
-        self.is_extended = any(["extended" in arg for arg in args])
+        try:
+            self.is_extended = any(["extended" in arg for arg in args])
+        except:
+            self.is_extended = False
         if self.is_extended:
             num_code_suggestions = get_settings().pr_code_suggestions.num_code_suggestions_per_chunk
         else:

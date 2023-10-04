@@ -110,7 +110,7 @@ class TestCodeCommitProvider:
         # Mock the response from the AWS client for get_pull_request method
         api.boto_client.get_pull_request.return_value = {
             "pullRequest": {
-                "pullRequestId": "3",
+                "pullRequestId": "321",
                 "title": "My PR",
                 "description": "My PR description",
                 "pullRequestTargets": [

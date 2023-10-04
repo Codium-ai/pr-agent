@@ -34,7 +34,7 @@ Specific instructions:
 - Provide up to {{ num_code_suggestions }} code suggestions.
 - Prioritize suggestions that address major problems, issues and bugs in the code.
   As a second priority, suggestions should focus on best practices, code readability, maintainability, enhancments, performance, and other aspects.
-  Don't suggest to add docstring or type hints.
+  Don't suggest to add docstring, type hints, or comments.
   Try to provide diverse and insightful suggestions.
 - Suggestions should refer only to code from the '__new hunk__' sections, and focus on new lines of code (lines starting with '+').
   Avoid making suggestions that have already been implemented in the PR code. For example, if you want to add logs, or change a variable to const, or anything else, make sure it isn't already in the '__new hunk__' code.

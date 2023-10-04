@@ -89,10 +89,10 @@ chmod 600 pr_agent/settings/.secrets.toml
 
 ```
 export PYTHONPATH=[$PYTHONPATH:]<PATH to pr_agent folder>
-python pr_agent/cli.py --pr_url <pr_url> /review
-python pr_agent/cli.py --pr_url <pr_url> /ask <your question>
-python pr_agent/cli.py --pr_url <pr_url> /describe
-python pr_agent/cli.py --pr_url <pr_url> /improve
+python3 -m pr_agent.cli --pr_url <pr_url> /review
+python3 -m pr_agent.cli --pr_url <pr_url> /ask <your question>
+python3 -m pr_agent.cli --pr_url <pr_url> /describe
+python3 -m pr_agent.cli --pr_url <pr_url> /improve
 ```
 
 ---
@@ -156,7 +156,7 @@ The GITHUB_TOKEN secret is automatically created by GitHub.
 3. Merge this change to your main branch. 
 When you open your next PR, you should see a comment from `github-actions` bot with a review of your PR, and instructions on how to use the rest of the tools.
 
-4. You may configure PR-Agent by adding environment variables under the env section corresponding to any configurable property in the [configuration](./Usage.md) file. Some examples:
+4. You may configure PR-Agent by adding environment variables under the env section corresponding to any configurable property in the [configuration](pr_agent/settings/configuration.toml) file. Some examples:
 ```yaml
       env:
         # ... previous environment values
@@ -379,21 +379,23 @@ You can use our pre-build Bitbucket-Pipeline docker image to run as Bitbucket-Pi
 
 1. Add the following file in your repository bitbucket_pipelines.yml
 
-    pipelines:
+```yaml
+  pipelines:
     pull-requests:
-     '**':
+      '**':
         - step:
             name: PR Agent Pipeline
             caches:
-             - pip
-            image: python:3.8 # Use an appropriate Python image with pip
+              - pip
+            image: python:3.8
             services:
-             - docker
+              - docker
             script:
-             - git clone https://github.com/Codium-ai/pr-agent.git
-             - cd pr-agent
-             - pip install docker-compose
-             - docker-compose up --build
+              - git clone https://github.com/Codium-ai/pr-agent.git
+              - cd pr-agent
+              - docker build -t bitbucket_runner:latest -f Dockerfile.bitbucket_pipeline .
+              - docker run -e OPENAI_API_KEY=$OPENAI_API_KEY -e BITBUCKET_BEARER_TOKEN=$BITBUCKET_BEARER_TOKEN -e BITBUCKET_PR_ID=$BITBUCKET_PR_ID -e BITBUCKET_REPO_SLUG=$BITBUCKET_REPO_SLUG -e BITBUCKET_WORKSPACE=$BITBUCKET_WORKSPACE bitbucket_runner:latest
+```
 
 2. Add the following secret to your repository under Repository settings > Pipelines > Repository variables.
 OPENAI_API_KEY: <your key>
