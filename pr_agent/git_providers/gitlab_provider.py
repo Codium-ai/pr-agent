@@ -175,8 +175,7 @@ class GitLabProvider(GitProvider):
                 pos_obj['new_line'] = target_line_no - 1
                 pos_obj['old_line'] = source_line_no - 1
             logging.debug(f"Creating comment in {self.id_mr} with body {body} and position {pos_obj}")
-            self.mr.discussions.create({'body': body,
-                                        'position': pos_obj})
+            self.mr.discussions.create({'body': body, 'position': pos_obj})
 
     def get_relevant_diff(self, relevant_file: str, relevant_line_in_file: int) -> Optional[dict]:
         changes = self.mr.changes()  # Retrieve the changes for the merge request once

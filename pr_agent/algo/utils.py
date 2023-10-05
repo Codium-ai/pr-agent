@@ -99,6 +99,8 @@ def parse_code_suggestion(code_suggestions: dict) -> str:
                 markdown_text += f"\n  - **{sub_key}:** {sub_value}\n"
             else:
                 markdown_text += f"   **{sub_key}:** {sub_value}\n"
+            if "relevant line" not in sub_key.lower(): # nicer presentation
+                    markdown_text = markdown_text.rstrip('\n') + "\\\n"
 
     markdown_text += "\n"
     return markdown_text

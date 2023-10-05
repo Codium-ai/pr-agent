@@ -122,6 +122,13 @@ keep_original_user_title = false
 ```
 When a new PR is opened, PR-Agent will run the `describe` tool with the above parameters.
 
+To cancel the automatic run of all the tools, set:
+```
+[github_app]
+pr_commands = []
+```
+
+
 Note that a local `.pr_agent.toml` file enables you to edit and customize the default parameters of any tool, not just the ones that are run automatically.
 
 #### Editing the prompts
