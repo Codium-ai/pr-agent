@@ -261,6 +261,17 @@ All PR-Agent tools have a parameter called `extra_instructions`, that enables to
 /update_changelog --pr_update_changelog.extra_instructions="Make sure to update also the version ..."
 ```
 
+#### Patch Extra Lines
+By default, around any change in your PR, git patch provides 3 lines of context above and below the change.
+For the `review`, `describe`, `ask` and `add_docs` tools, if the token budget allows, PR-Agent tries to increase the number of lines of context, via the parameter:
+```
+[config]
+patch_extra_lines=3
+```
+Increasing this number provides more context to the model, but will also increase the token budget.
+If the PR is too large (see [PR Compression strategy](./PR_COMPRESSION.md)), we automatically set this number to 0 
+
+
 #### Azure DevOps provider
 To use Azure DevOps provider use the following settings in configuration.toml:
 ```
