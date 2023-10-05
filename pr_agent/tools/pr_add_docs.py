@@ -68,7 +68,7 @@ class PRAddDocs:
                                         self.token_handler,
                                         model,
                                         add_line_numbers_to_hunks=True,
-                                        disable_extra_lines=True)
+                                        disable_extra_lines=False)
 
         logging.info('Getting AI prediction...')
         self.prediction = await self._get_prediction(model)

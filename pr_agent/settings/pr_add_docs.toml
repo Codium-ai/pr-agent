@@ -42,7 +42,9 @@ Specific instructions:
 {%- if extra_instructions %}
 
 Extra instructions from the user:
+'
 {{ extra_instructions }}
+'
 {%- endif %}
 
 You must use the following YAML schema to format your answer:

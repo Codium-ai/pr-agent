@@ -21,7 +21,6 @@ MORE_MODIFIED_FILES_ = "More modified files:\n"
 
 OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD = 1000
 OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD = 600
-PATCH_EXTRA_LINES = 3
 
 def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler, model: str,
                 add_line_numbers_to_hunks: bool = False, disable_extra_lines: bool = False) -> str:
@@ -44,8 +43,9 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler, model: s
     """
 
     if disable_extra_lines:
-        global PATCH_EXTRA_LINES
         PATCH_EXTRA_LINES = 0
+    else:
+        PATCH_EXTRA_LINES = get_settings().config.patch_extra_lines
 
     try:
         diff_files = git_provider.get_diff_files()
@@ -57,8 +57,8 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler, model: s
     pr_languages = sort_files_by_main_languages(git_provider.get_languages(), diff_files)
 
     # generate a standard diff string, with patch extension
-    patches_extended, total_tokens, patches_extended_tokens = pr_generate_extended_diff(pr_languages, token_handler,
-                                                               add_line_numbers_to_hunks)
+    patches_extended, total_tokens, patches_extended_tokens = pr_generate_extended_diff(
+        pr_languages, token_handler, add_line_numbers_to_hunks, patch_extra_lines=PATCH_EXTRA_LINES)
 
     # if we are under the limit, return the full diff
     if total_tokens + OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD < MAX_TOKENS[model]:
@@ -80,7 +80,8 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler, model: s
 
 def pr_generate_extended_diff(pr_languages: list,
                               token_handler: TokenHandler,
-                              add_line_numbers_to_hunks: bool) -> Tuple[list, int, list]:
+                              add_line_numbers_to_hunks: bool,
+                              patch_extra_lines: int = 0) -> Tuple[list, int, list]:
     """
     Generate a standard diff string with patch extension, while counting the number of tokens used and applying diff
     minimization techniques if needed.
@@ -102,7 +103,7 @@ def pr_generate_extended_diff(pr_languages: list,
                 continue
 
             # extend each patch with extra lines of context
-            extended_patch = extend_patch(original_file_content_str, patch, num_lines=PATCH_EXTRA_LINES)
+            extended_patch = extend_patch(original_file_content_str, patch, num_lines=patch_extra_lines)
             full_extended_patch = f"\n\n## {file.filename}\n\n{extended_patch}\n"
 
             if add_line_numbers_to_hunks:
