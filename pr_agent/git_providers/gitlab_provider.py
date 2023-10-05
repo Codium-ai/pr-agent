@@ -399,7 +399,7 @@ class GitLabProvider(GitProvider):
 
             if absolute_position != -1:
                 # link to right file only
-                link = f"https://gitlab.com/codiumai/pr-agent/-/blob/{self.mr.target_branch}/{relevant_file}?ref_type=heads#L{absolute_position}"
+                link = f"https://gitlab.com/codiumai/pr-agent/-/blob/{self.mr.source_branch}/{relevant_file}?ref_type=heads#L{absolute_position}"
 
                 # # link to diff
                 # sha_file = hashlib.sha1(relevant_file.encode('utf-8')).hexdigest()
