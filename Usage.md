@@ -263,13 +263,26 @@ All PR-Agent tools have a parameter called `extra_instructions`, that enables to
 
 #### Patch Extra Lines
 By default, around any change in your PR, git patch provides 3 lines of context above and below the change.
+```
+@@ -12,5 +12,5 @@ def func1():
+ code line that already existed in the file...
+ code line that already existed in the file...
+ code line that already existed in the file....
+-code line that was removed in the PR
++new code line added in the PR
+ code line that already existed in the file...
+ code line that already existed in the file...
+ code line that already existed in the file...
+```
+
 For the `review`, `describe`, `ask` and `add_docs` tools, if the token budget allows, PR-Agent tries to increase the number of lines of context, via the parameter:
 ```
 [config]
 patch_extra_lines=3
 ```
+
 Increasing this number provides more context to the model, but will also increase the token budget.
-If the PR is too large (see [PR Compression strategy](./PR_COMPRESSION.md)), we automatically set this number to 0 
+If the PR is too large (see [PR Compression strategy](./PR_COMPRESSION.md)), PR-Agent automatically sets this number to 0, using the original git patch.
 
 
 #### Azure DevOps provider
