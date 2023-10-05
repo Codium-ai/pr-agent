@@ -11,6 +11,7 @@ from github import RateLimitExceededException
 from pr_agent.algo import MAX_TOKENS
 from pr_agent.algo.git_patch_processing import convert_to_hunks_with_lines_numbers, extend_patch, handle_patch_deletions
 from pr_agent.algo.language_handler import sort_files_by_main_languages
+from pr_agent.algo.file_filter import filter_ignored
 from pr_agent.algo.token_handler import TokenHandler, get_token_encoder
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers.git_provider import FilePatchInfo, GitProvider
@@ -52,6 +53,8 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler, model: s
     except RateLimitExceededException as e:
         logging.error(f"Rate limit exceeded for git provider API. original message {e}")
         raise
+
+    diff_files = filter_ignored(diff_files)
 
     # get pr languages
     pr_languages = sort_files_by_main_languages(git_provider.get_languages(), diff_files)
@@ -348,16 +351,16 @@ def get_pr_multi_diffs(git_provider: GitProvider,
     """
     Retrieves the diff files from a Git provider, sorts them by main language, and generates patches for each file.
     The patches are split into multiple groups based on the maximum number of tokens allowed for the given model.
-    
+
     Args:
         git_provider (GitProvider): An object that provides access to Git provider APIs.
         token_handler (TokenHandler): An object that handles tokens in the context of a pull request.
         model (str): The name of the model.
         max_calls (int, optional): The maximum number of calls to retrieve diff files. Defaults to 5.
-    
+
     Returns:
         List[str]: A list of final diff strings, split into multiple groups based on the maximum number of tokens allowed for the given model.
-    
+
     Raises:
         RateLimitExceededException: If the rate limit for the Git provider API is exceeded.
     """
@@ -366,6 +369,8 @@ def get_pr_multi_diffs(git_provider: GitProvider,
     except RateLimitExceededException as e:
         logging.error(f"Rate limit exceeded for git provider API. original message {e}")
         raise
+
+    diff_files = filter_ignored(diff_files)
 
     # Sort files by main language
     pr_languages = sort_files_by_main_languages(git_provider.get_languages(), diff_files)

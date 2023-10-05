@@ -12,18 +12,19 @@ global_settings = Dynaconf(
     envvar_prefix=False,
     merge_enabled=True,
     settings_files=[join(current_dir, f) for f in [
+        "settings_prod/.secrets.toml"
         "settings/.secrets.toml",
         "settings/configuration.toml",
+        "settings/ignore.toml",
         "settings/language_extensions.toml",
-        "settings/pr_reviewer_prompts.toml",
-        "settings/pr_questions_prompts.toml",
-        "settings/pr_description_prompts.toml",
-        "settings/pr_code_suggestions_prompts.toml",
-        "settings/pr_sort_code_suggestions_prompts.toml",
-        "settings/pr_information_from_user_prompts.toml",
-        "settings/pr_update_changelog_prompts.toml",
         "settings/pr_add_docs.toml",
-        "settings_prod/.secrets.toml"
+        "settings/pr_code_suggestions_prompts.toml",
+        "settings/pr_description_prompts.toml",
+        "settings/pr_information_from_user_prompts.toml",
+        "settings/pr_questions_prompts.toml",
+        "settings/pr_reviewer_prompts.toml",
+        "settings/pr_sort_code_suggestions_prompts.toml",
+        "settings/pr_update_changelog_prompts.toml",
     ]]
 )
 
