@@ -1,3 +1,4 @@
+import hashlib
 import logging
 import re
 from typing import Optional, Tuple
@@ -7,7 +8,7 @@ import gitlab
 from gitlab import GitlabGetError
 
 from ..algo.language_handler import is_valid_file
-from ..algo.pr_processing import clip_tokens
+from ..algo.pr_processing import clip_tokens, find_line_number_of_relevant_line_in_file
 from ..algo.utils import load_large_diff
 from ..config_loader import get_settings
 from .git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
@@ -386,27 +387,26 @@ class GitLabProvider(GitProvider):
         except:
             return ""
 
-    # def generate_link_to_relevant_line_number(self, suggestion) -> str:
-    #     try:
-    #         relevant_file = suggestion['relevant file'].strip('`').strip("'")
-    #         relevant_line_str = suggestion['relevant line']
-    #         if not relevant_line_str:
-    #             return ""
-    #
-    #         position, absolute_position = find_line_number_of_relevant_line_in_file \
-    #             (self.diff_files, relevant_file, relevant_line_str)
-    #
-    #         if absolute_position != -1:
-    #             # # link to right file only
-    #             # link = f"https://github.com/{self.repo}/blob/{self.pr.head.sha}/{relevant_file}" \
-    #             #        + "#" + f"L{absolute_position}"
-    #
-    #             # link to diff
-    #             sha_file = hashlib.sha1(relevant_file.encode('utf-8')).hexdigest()
-    #             link = f"{self.pr.web_url}/diffs#{sha_file}_{absolute_position}_{absolute_position}"
-    #             return link
-    #     except Exception as e:
-    #         if get_settings().config.verbosity_level >= 2:
-    #             logging.info(f"Failed adding line link, error: {e}")
-    #
-    #     return ""
+    def generate_link_to_relevant_line_number(self, suggestion) -> str:
+        try:
+            relevant_file = suggestion['relevant file'].strip('`').strip("'")
+            relevant_line_str = suggestion['relevant line']
+            if not relevant_line_str:
+                return ""
+
+            position, absolute_position = find_line_number_of_relevant_line_in_file \
+                (self.diff_files, relevant_file, relevant_line_str)
+
+            if absolute_position != -1:
+                # link to right file only
+                link = f"https://gitlab.com/codiumai/pr-agent/-/blob/{self.mr.target_branch}/{relevant_file}?ref_type=heads#L{absolute_position}"
+
+                # # link to diff
+                # sha_file = hashlib.sha1(relevant_file.encode('utf-8')).hexdigest()
+                # link = f"{self.pr.web_url}/diffs#{sha_file}_{absolute_position}_{absolute_position}"
+                return link
+        except Exception as e:
+            if get_settings().config.verbosity_level >= 2:
+                logging.info(f"Failed adding line link, error: {e}")
+
+        return ""
