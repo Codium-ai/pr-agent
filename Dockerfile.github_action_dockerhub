@@ -1,1 +1,1 @@
-FROM codiumai/pr-agent:github_action
+FROM bitoai/pr-agent:github_action

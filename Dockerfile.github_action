@@ -1,6 +1,7 @@
 FROM python:3.10 as base
 
 WORKDIR /app
+COPY bito /app/bito
 ADD pyproject.toml .
 ADD requirements.txt .
 RUN pip install . && rm pyproject.toml requirements.txt
