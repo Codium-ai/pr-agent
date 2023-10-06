@@ -92,6 +92,8 @@ class AiHandler:
                     f"Generating completion with {model}"
                     f"{(' from deployment ' + deployment_id) if deployment_id else ''}"
                 )
+            if self.azure:
+                model = self.azure + "/" + model
             response = await acompletion(
                 model=model,
                 deployment_id=deployment_id,
@@ -100,7 +102,6 @@ class AiHandler:
                     {"role": "user", "content": user}
                 ],
                 temperature=temperature,
-                azure=self.azure,
                 force_timeout=get_settings().config.ai_timeout
             )
         except (APIError, Timeout, TryAgain) as e:
