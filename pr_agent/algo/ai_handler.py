@@ -93,7 +93,7 @@ class AiHandler:
                     f"{(' from deployment ' + deployment_id) if deployment_id else ''}"
                 )
             if self.azure:
-                model = self.azure + "/" + model
+                model = 'azure/' + model
             response = await acompletion(
                 model=model,
                 deployment_id=deployment_id,
