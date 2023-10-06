@@ -29,6 +29,16 @@ In addition to general configuration options, each tool has its own configuratio
 
 The [Tools Guide](./docs/TOOLS_GUIDE.md) provides a detailed description of the different tools and their configurations.
 
+#### Ignoring files from analysis
+In some cases, you may want to exclude specific files or directories from the analysis performed by CodiumAI PR-Agent. This can be useful, for example, when you have files that are generated automatically or files that shouldn't be reviewed, like vendored code.
+
+To ignore files or directories, edit the **[ignore.toml](/pr_agent/settings/ignore.toml)** configuration file. This setting is also exposed the following environment variables:
+
+ - `IGNORE.GLOB`
+ - `IGNORE.REGEX`
+
+See [dynaconf envvars documentation](https://www.dynaconf.com/envvars/).
+
 #### git provider
 The [git_provider](pr_agent/settings/configuration.toml#L4) field in the configuration file determines the GIT provider that will be used by PR-Agent. Currently, the following providers are supported:
 `
@@ -101,7 +111,7 @@ Any configuration value in [configuration file](pr_agent/settings/configuration.
 When running PR-Agent from [GitHub App](INSTALL.md#method-5-run-as-a-github-app), the default configurations from a pre-built docker will be initially loaded.
 
 #### GitHub app automatic tools
-The [github_app](pr_agent/settings/configuration.toml#L56) section defines GitHub app specific configurations. 
+The [github_app](pr_agent/settings/configuration.toml#L56) section defines GitHub app specific configurations.
 An important parameter is `pr_commands`, which is a list of tools that will be **run automatically** when a new PR is opened:
 ```
 [github_app]
@@ -133,7 +143,7 @@ Note that a local `.pr_agent.toml` file enables you to edit and customize the de
 
 #### Editing the prompts
 The prompts for the various PR-Agent tools are defined in the `pr_agent/settings` folder.
-In practice, the prompts are loaded and stored as a standard setting object. 
+In practice, the prompts are loaded and stored as a standard setting object.
 Hence, editing them is similar to editing any other configuration value - just place the relevant key in `.pr_agent.toml`file, and override the default value.
 
 For example, if you want to edit the prompts of the [describe](./pr_agent/settings/pr_description_prompts.toml) tool, you can add the following to your `.pr_agent.toml` file:
@@ -158,7 +168,7 @@ You can configure settings in GitHub action by adding environment variables unde
         PR_CODE_SUGGESTIONS.NUM_CODE_SUGGESTIONS: 6 # Increase number of code suggestions
         github_action.auto_review: "true" # Enable auto review
         github_action.auto_describe: "true" # Enable auto describe
-        github_action.auto_improve: "false" # Disable auto improve      
+        github_action.auto_improve: "false" # Disable auto improve
 ```
 specifically, `github_action.auto_review`, `github_action.auto_describe` and `github_action.auto_improve` are used to enable/disable automatic tools that run when a new PR is opened.
 
@@ -171,7 +181,7 @@ To use a different model than the default (GPT-4), you need to edit [configurati
 For models and environments not from OPENAI, you might need to provide additional keys and other parameters. See below for instructions.
 
 #### Azure
-To use Azure, set in your .secrets.toml: 
+To use Azure, set in your .secrets.toml:
 ```
 api_key = "" # your azure api key
 api_type = "azure"
@@ -180,16 +190,16 @@ api_base = ""  # The base URL for your Azure OpenAI resource. e.g. "https://<you
 deployment_id = ""  # The deployment name you chose when you deployed the engine
 ```
 
-and 
+and
 ```
 [config]
 model="" # the OpenAI model you've deployed on Azure (e.g. gpt-3.5-turbo)
 ```
-in the configuration.toml 
+in the configuration.toml
 
 #### Huggingface
 
-**Local**  
+**Local**
 You can run Huggingface models locally through either [VLLM](https://docs.litellm.ai/docs/providers/vllm) or [Ollama](https://docs.litellm.ai/docs/providers/ollama)
 
 E.g. to use a new Huggingface model locally via Ollama, set:
@@ -209,7 +219,7 @@ MAX_TOKENS={
 model = "ollama/llama2"
 
 [ollama] # in .secrets.toml
-api_base = ... # the base url for your huggingface inference endpoint 
+api_base = ... # the base url for your huggingface inference endpoint
 ```
 
 **Inference Endpoints**
@@ -230,7 +240,7 @@ model = "huggingface/meta-llama/Llama-2-7b-chat-hf"
 
 [huggingface] # in .secrets.toml
 key = ... # your huggingface api key
-api_base = ... # the base url for your huggingface inference endpoint 
+api_base = ... # the base url for your huggingface inference endpoint
 ```
 (you can obtain a Llama2 key from [here](https://replicate.com/replicate/llama-2-70b-chat/api))
 
@@ -251,12 +261,12 @@ Also review the [AiHandler](pr_agent/algo/ai_handler.py) file for instruction ho
 ### Working with large PRs
 
 The default mode of CodiumAI is to have a single call per tool, using GPT-4, which has a token limit of 8000 tokens.
-This mode provide a very good speed-quality-cost tradeoff, and can handle most PRs successfully. 
+This mode provide a very good speed-quality-cost tradeoff, and can handle most PRs successfully.
 When the PR is above the token limit, it employs a [PR Compression strategy](./PR_COMPRESSION.md).
 
 However, for very large PRs, or in case you want to emphasize quality over speed and cost, there are 2 possible solutions:
 1) [Use a model](#changing-a-model) with larger context, like GPT-32K, or claude-100K. This solution will be applicable for all the tools.
-2) For the `/improve` tool, there is an ['extended' mode](./docs/IMPROVE.md) (`/improve --extended`), 
+2) For the `/improve` tool, there is an ['extended' mode](./docs/IMPROVE.md) (`/improve --extended`),
 which divides the PR to chunks, and process each chunk separately. With this mode, regardless of the model, no compression will be done (but for large PRs, multiple model calls may occur)
 
 ### Appendix - additional configurations walkthrough
