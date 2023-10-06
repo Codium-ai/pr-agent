@@ -10,14 +10,13 @@ def filter_ignored(files):
 
     # load regex patterns, and translate glob patterns to regex
     patterns = get_settings().ignore.regex
-    patterns += [fnmatch.translate(glob) for glob in  get_settings().ignore.glob]
+    patterns += [fnmatch.translate(glob) for glob in get_settings().ignore.glob]
 
+    # compile regex patterns
     compiled_patterns = [re.compile(r) for r in patterns]
-    filenames = [file.filename for file in files]
 
-    # keep filenames that don't match the ignore regex
+    # keep filenames that _don't_ match the ignore regex
     for r in compiled_patterns:
-        filenames = [f for f in filenames if not r.match(f)]
+        files = [f for f in files if not r.match(f.filename)]
 
-    # map filenames back to files
-    return [file for file in files if file.filename in filenames]
+    return files
