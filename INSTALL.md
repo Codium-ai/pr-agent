@@ -40,7 +40,7 @@ For other git providers, update CONFIG.GIT_PROVIDER accordingly, and check the `
 ```
 docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent --pr_url <pr_url> ask "<your question>"
 ```
-Note: If you want to ensure you're running a specific version of the Docker image, consider using the image's digest. 
+Note: If you want to ensure you're running a specific version of the Docker image, consider using the image's digest.
 The digest is a unique identifier for a specific version of an image. You can pull and run an image using its digest by referencing it like so: repository@sha256:digest. Always ensure you're using the correct and trusted digest for your operations.
 
 1. To request a review for a PR using a specific digest, run the following command:
@@ -89,17 +89,17 @@ chmod 600 pr_agent/settings/.secrets.toml
 
 ```
 export PYTHONPATH=[$PYTHONPATH:]<PATH to pr_agent folder>
-python3 -m pr_agent.cli --pr_url <pr_url> /review
-python3 -m pr_agent.cli --pr_url <pr_url> /ask <your question>
-python3 -m pr_agent.cli --pr_url <pr_url> /describe
-python3 -m pr_agent.cli --pr_url <pr_url> /improve
+python3 -m pr_agent.cli --pr_url <pr_url> review
+python3 -m pr_agent.cli --pr_url <pr_url> ask <your question>
+python3 -m pr_agent.cli --pr_url <pr_url> describe
+python3 -m pr_agent.cli --pr_url <pr_url> improve
 ```
 
 ---
 
 ### Method 3: Run as a GitHub Action
 
-You can use our pre-built Github Action Docker image to run PR-Agent as a Github Action. 
+You can use our pre-built Github Action Docker image to run PR-Agent as a Github Action.
 
 1. Add the following file to your repository under `.github/workflows/pr_agent.yml`:
 
@@ -153,7 +153,7 @@ OPENAI_KEY: <your key>
 
 The GITHUB_TOKEN secret is automatically created by GitHub.
 
-3. Merge this change to your main branch. 
+3. Merge this change to your main branch.
 When you open your next PR, you should see a comment from `github-actions` bot with a review of your PR, and instructions on how to use the rest of the tools.
 
 4. You may configure PR-Agent by adding environment variables under the env section corresponding to any configurable property in the [configuration](pr_agent/settings/configuration.toml) file. Some examples:
@@ -221,12 +221,12 @@ git clone https://github.com/Codium-ai/pr-agent.git
    - Copy your app's webhook secret to the webhook_secret field.
    - Set deployment_type to 'app' in [configuration.toml](./pr_agent/settings/configuration.toml)
 
-> The .secrets.toml file is not copied to the Docker image by default, and is only used for local development. 
+> The .secrets.toml file is not copied to the Docker image by default, and is only used for local development.
 > If you want to use the .secrets.toml file in your Docker image, you can add remove it from the .dockerignore file.
-> In most production environments, you would inject the secrets file as environment variables or as mounted volumes. 
+> In most production environments, you would inject the secrets file as environment variables or as mounted volumes.
 > For example, in order to inject a secrets file as a volume in a Kubernetes environment you can update your pod spec to include the following,
 > assuming you have a secret named `pr-agent-settings` with a key named `.secrets.toml`:
-``` 
+```
        volumes:
         - name: settings-volume
           secret:
@@ -322,7 +322,7 @@ Example IAM permissions to that user to allow access to CodeCommit:
                 "codecommit:PostComment*",
                 "codecommit:PutCommentReaction",
                 "codecommit:UpdatePullRequestDescription",
-                "codecommit:UpdatePullRequestTitle"                
+                "codecommit:UpdatePullRequestTitle"
             ],
             "Resource": "*"
         }
@@ -366,8 +366,8 @@ WEBHOOK_SECRET=$(python -c "import secrets; print(secrets.token_hex(10))")
     - Your OpenAI key.
     - In the [gitlab] section, fill in personal_access_token and shared_secret. The access token can be a personal access token, or a group or project access token.
     - Set deployment_type to 'gitlab' in [configuration.toml](./pr_agent/settings/configuration.toml)
-5. Create a webhook in GitLab. Set the URL to the URL of your app's server. Set the secret token to the generated secret from step 2. 
-In the "Trigger" section, check the ‘comments’ and ‘merge request events’ boxes. 
+5. Create a webhook in GitLab. Set the URL to the URL of your app's server. Set the secret token to the generated secret from step 2.
+In the "Trigger" section, check the ‘comments’ and ‘merge request events’ boxes.
 6. Test your installation by opening a merge request or commenting or a merge request using one of CodiumAI's commands.
 
 
