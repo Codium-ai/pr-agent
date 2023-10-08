@@ -241,7 +241,8 @@ class PRReviewer:
         # Add help text if not in CLI mode
         if not get_settings().get("CONFIG.CLI_MODE", False):
             markdown_text += "\n### How to use\n"
-            if user and '[bot]' not in user:
+            bot_user = "[bot]" if get_settings().github_app.override_deployment_type else get_settings().github_app.bot_user
+            if user and bot_user not in user:
                 markdown_text += bot_help_text(user)
             else:
                 markdown_text += actions_help_text
