@@ -23,7 +23,7 @@ Under the section 'pr_description', the [configuration file](./../pr_agent/setti
 
 - `add_original_user_description`: if set to true, the tool will add the original user description to the generated description. Default is false.
 
-- `add_original_user_title`: if set to true, the tool will keep the original PR title, and won't change it. Default is false.
+- `keep_original_user_title`: if set to true, the tool will keep the original PR title, and won't change it. Default is false.
 
 - `extra_instructions`: Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".
 
