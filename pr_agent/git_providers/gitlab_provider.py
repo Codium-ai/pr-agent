@@ -196,6 +196,10 @@ class GitLabProvider(GitProvider):
         return self.last_diff  # fallback to last_diff if no relevant diff is found
 
     def publish_code_suggestions(self, code_suggestions: list) -> bool:
+        if len(code_suggestions) > 1:
+            logging.debug(f"in gitlab we dont currently support publishing multiple code suggestions simultaneously")
+            return False
+
         for suggestion in code_suggestions:
             try:
                 body = suggestion['body']
