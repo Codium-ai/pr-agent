@@ -228,6 +228,9 @@ class GitLabProvider(GitProvider):
             except Exception as e:
                 logging.exception(f"Could not publish code suggestion:\nsuggestion: {suggestion}\nerror: {e}")
 
+        # note that we publish suggestions one-by-one. so, if one fails, the rest will still be published
+        return True
+
     def search_line(self, relevant_file, relevant_line_in_file):
         target_file = None
 
