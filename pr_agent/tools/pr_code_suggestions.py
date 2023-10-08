@@ -140,7 +140,7 @@ class PRCodeSuggestions:
 
         is_successful = self.git_provider.publish_code_suggestions(code_suggestions)
         if not is_successful:
-            # logging.info("Failed to publish code suggestions, trying to publish each suggestion separately")
+            logging.info("Failed to publish code suggestions, trying to publish each suggestion separately")
             for code_suggestion in code_suggestions:
                 self.git_provider.publish_code_suggestions([code_suggestion])
 

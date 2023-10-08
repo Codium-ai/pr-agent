@@ -196,10 +196,6 @@ class GitLabProvider(GitProvider):
         return self.last_diff  # fallback to last_diff if no relevant diff is found
 
     def publish_code_suggestions(self, code_suggestions: list) -> bool:
-        if len(code_suggestions) > 1:
-            logging.debug(f"in gitlab we dont currently support publishing multiple code suggestions simultaneously")
-            return False
-
         for suggestion in code_suggestions:
             try:
                 body = suggestion['body']
@@ -231,6 +227,7 @@ class GitLabProvider(GitProvider):
                                          target_file, target_line_no)
             except Exception as e:
                 logging.exception(f"Could not publish code suggestion:\nsuggestion: {suggestion}\nerror: {e}")
+        return True
 
     def search_line(self, relevant_file, relevant_line_in_file):
         target_file = None
