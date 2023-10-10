@@ -187,7 +187,7 @@ api_key = "" # your azure api key
 api_type = "azure"
 api_version = '2023-05-15'  # Check Azure documentation for the current API version
 api_base = ""  # The base URL for your Azure OpenAI resource. e.g. "https://<your resource name>.openai.azure.com"
-deployment_id = ""  # The deployment name you chose when you deployed the engine
+openai.deployment_id = ""  # The deployment name you chose when you deployed the engine
 ```
 
 and
