@@ -1,5 +1,24 @@
 {
     "recommendations": [
-        "sensetime.kestrel"
+        "sensetime.kestrel",
+        "batisteo.vscode-django",
+        "github.vscode-github-actions",
+        "donjayamanne.git-extension-pack",
+        "ms-vscode.vscode-github-issue-notebooks",
+        "eamodio.gitlens",
+        "ionutvmi.path-autocomplete",
+        "christian-kohler.path-intellisense",
+        "ms-python.vscode-pylance",
+        "ms-toolsai.jupyter-keymap",
+        "ms-toolsai.jupyter-renderers",
+        "esbenp.prettier-vscode",
+        "visualstudioexptteam.vscodeintellicode",
+        "ms-toolsai.vscode-jupyter-cell-tags",
+        "ms-toolsai.vscode-jupyter-slideshow",
+        "ms-vscode-remote.remote-wsl",
+        "vscode-icons-team.vscode-icons",
+        "xabikos.javascriptsnippets",
+        "zhuangtongfa.material-theme",
+        "davidanson.vscode-markdownlint"
     ]
 }
