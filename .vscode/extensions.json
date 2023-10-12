@@ -1,5 +1,6 @@
 {
     "recommendations": [
-        "sensetime.kestrel"
+        "sensetime.kestrel",
+        "tabnine.tabnine-vscode-self-hosted-updater"
     ]
 }
