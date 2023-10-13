@@ -6,6 +6,7 @@ import tempfile
 from pr_agent.algo.utils import update_settings_from_args
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
+from pr_agent.git_providers.utils import apply_repo_settings
 from pr_agent.tools.pr_add_docs import PRAddDocs
 from pr_agent.tools.pr_code_suggestions import PRCodeSuggestions
 from pr_agent.tools.pr_description import PRDescription
@@ -44,22 +45,7 @@ class PRAgent:
 
     async def handle_request(self, pr_url, request, notify=None) -> bool:
         # First, apply repo specific settings if exists
-        if get_settings().config.use_repo_settings_file:
-            repo_settings_file = None
-            try:
-                git_provider = get_git_provider()(pr_url)
-                repo_settings = git_provider.get_repo_settings()
-                if repo_settings:
-                    repo_settings_file = None
-                    fd, repo_settings_file = tempfile.mkstemp(suffix='.toml')
-                    os.write(fd, repo_settings)
-                    get_settings().load_file(repo_settings_file)
-            finally:
-                if repo_settings_file:
-                    try:
-                        os.remove(repo_settings_file)
-                    except Exception as e:
-                        logging.error(f"Failed to remove temporary settings file {repo_settings_file}", e)
+        apply_repo_settings(pr_url)
 
         # Then, apply user specific settings if exists
         request = request.replace("'", "\\'")
@@ -84,3 +70,4 @@ class PRAgent:
         else:
             return False
         return True
+
