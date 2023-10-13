@@ -135,7 +135,7 @@ When a new PR is opened, PR-Agent will run the `describe` tool with the above pa
 To cancel the automatic run of all the tools, set:
 ```
 [github_app]
-pr_commands = []
+pr_commands = ""
 ```
 
 
