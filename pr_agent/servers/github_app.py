@@ -15,6 +15,7 @@ from pr_agent.agent.pr_agent import PRAgent
 from pr_agent.algo.utils import update_settings_from_args
 from pr_agent.config_loader import get_settings, global_settings
 from pr_agent.git_providers import get_git_provider
+from pr_agent.git_providers.utils import apply_repo_settings
 from pr_agent.servers.utils import verify_signature
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
@@ -124,6 +125,7 @@ async def handle_request(body: Dict[str, Any], event: str):
                     # avoid double reviews when opening a PR for the first time
                     return {}
             logging.info(f"Performing review because of event={event} and action={action}")
+            apply_repo_settings(api_url)
             for command in get_settings().github_app.pr_commands:
                 split_command = command.split(" ")
                 command = split_command[0]
