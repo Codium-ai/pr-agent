@@ -78,7 +78,7 @@ async def handle_request(body: Dict[str, Any], event: str):
     agent = PRAgent()
     bot_user = get_settings().github_app.bot_user
     sender = body.get("sender", {}).get("login")
-    log_context = {"action": action, "event": event, "sender": sender}
+    log_context = {"action": action, "event": event, "sender": sender, "server_type": "github_app"}
 
     if get_settings().github_app.duplicate_requests_cache and _is_duplicate_request(body):
         return {}
