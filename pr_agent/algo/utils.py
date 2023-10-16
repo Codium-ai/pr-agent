@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import difflib
 import json
-import logging
 import re
 import textwrap
 from datetime import datetime
@@ -11,6 +10,7 @@ from typing import Any, List
 import yaml
 from starlette_context import context
 from pr_agent.config_loader import get_settings, global_settings
+from pr_agent.log import get_logger
 
 
 def get_setting(key: str) -> Any:
@@ -159,7 +159,7 @@ def try_fix_json(review, max_iter=10, code_suggestions=False):
                 iter_count += 1
 
         if not valid_json:
-            logging.error("Unable to decode JSON response from AI")
+            get_logger().error("Unable to decode JSON response from AI")
             data = {}
 
     return data
@@ -230,7 +230,7 @@ def load_large_diff(filename, new_file_content_str: str, original_file_content_s
         diff = difflib.unified_diff(original_file_content_str.splitlines(keepends=True),
                                     new_file_content_str.splitlines(keepends=True))
         if get_settings().config.verbosity_level >= 2:
-            logging.warning(f"File was modified, but no patch was found. Manually creating patch: {filename}.")
+            get_logger().warning(f"File was modified, but no patch was found. Manually creating patch: {filename}.")
         patch = ''.join(diff)
     except Exception:
         pass
@@ -262,12 +262,12 @@ def update_settings_from_args(args: List[str]) -> List[str]:
                 vals = arg.split('=', 1)
                 if len(vals) != 2:
                     if len(vals) > 2: # --extended is a valid argument
-                        logging.error(f'Invalid argument format: {arg}')
+                        get_logger().error(f'Invalid argument format: {arg}')
                     other_args.append(arg)
                     continue
                 key, value = _fix_key_value(*vals)
                 get_settings().set(key, value)
-                logging.info(f'Updated setting {key} to: "{value}"')
+                get_logger().info(f'Updated setting {key} to: "{value}"')
             else:
                 other_args.append(arg)
     return other_args
@@ -279,7 +279,7 @@ def _fix_key_value(key: str, value: str):
     try:
         value = yaml.safe_load(value)
     except Exception as e:
-        logging.error(f"Failed to parse YAML for config override {key}={value}", exc_info=e)
+        get_logger().error(f"Failed to parse YAML for config override {key}={value}", exc_info=e)
     return key, value
 
 
@@ -288,7 +288,7 @@ def load_yaml(review_text: str) -> dict:
     try:
         data = yaml.safe_load(review_text)
     except Exception as e:
-        logging.error(f"Failed to parse AI prediction: {e}")
+        get_logger().error(f"Failed to parse AI prediction: {e}")
         data = try_fix_yaml(review_text)
     return data
 
@@ -299,7 +299,7 @@ def try_fix_yaml(review_text: str) -> dict:
         review_text_lines_tmp = '\n'.join(review_text_lines[:-i])
         try:
             data = yaml.load(review_text_lines_tmp, Loader=yaml.SafeLoader)
-            logging.info(f"Successfully parsed AI prediction after removing {i} lines")
+            get_logger().info(f"Successfully parsed AI prediction after removing {i} lines")
             break
         except:
             pass

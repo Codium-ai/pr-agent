@@ -1,9 +1,10 @@
 import json
-import logging
 from typing import Optional, Tuple
 from urllib.parse import urlparse
 
 import os
+
+from ..log import get_logger
 
 AZURE_DEVOPS_AVAILABLE = True
 try:
@@ -55,7 +56,7 @@ class AzureDevopsProvider:
                                                                  path=".pr_agent.toml")
             return contents
         except Exception as e:
-            logging.exception("get repo settings error")
+            get_logger().exception("get repo settings error")
             return ""
 
     def get_files(self):
@@ -110,7 +111,7 @@ class AzureDevopsProvider:
 
                     new_file_content_str = new_file_content_str.content
                 except Exception as error:
-                    logging.error("Failed to retrieve new file content of %s at version %s. Error: %s", file, version, str(error))
+                    get_logger().error("Failed to retrieve new file content of %s at version %s. Error: %s", file, version, str(error))
                     new_file_content_str = ""
 
                 edit_type = EDIT_TYPE.MODIFIED
@@ -131,7 +132,7 @@ class AzureDevopsProvider:
                                                                               include_content=True)
                     original_file_content_str = original_file_content_str.content
                 except Exception as error:
-                    logging.error("Failed to retrieve original file content of %s at version %s. Error: %s", file, version, str(error))
+                    get_logger().error("Failed to retrieve original file content of %s at version %s. Error: %s", file, version, str(error))
                     original_file_content_str = ""
 
                 patch = load_large_diff(file, new_file_content_str, original_file_content_str)
@@ -166,7 +167,7 @@ class AzureDevopsProvider:
                                                          pull_request_id=self.pr_num,
                                                          git_pull_request_to_update=updated_pr)
         except Exception as e:
-            logging.exception(f"Could not update pull request {self.pr_num} description: {e}")
+            get_logger().exception(f"Could not update pull request {self.pr_num} description: {e}")
 
     def remove_initial_comment(self):
         return ""  # not implemented yet

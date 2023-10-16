@@ -1,5 +1,4 @@
 import json
-import logging
 from typing import Optional, Tuple
 from urllib.parse import urlparse
 
@@ -7,8 +6,9 @@ import requests
 from atlassian.bitbucket import Cloud
 from starlette_context import context
 
-from ..algo.pr_processing import clip_tokens, find_line_number_of_relevant_line_in_file
+from ..algo.pr_processing import find_line_number_of_relevant_line_in_file
 from ..config_loader import get_settings
+from ..log import get_logger
 from .git_provider import FilePatchInfo, GitProvider
 
 
@@ -61,14 +61,14 @@ class BitbucketProvider(GitProvider):
 
             if not relevant_lines_start or relevant_lines_start == -1:
                 if get_settings().config.verbosity_level >= 2:
-                    logging.exception(
+                    get_logger().exception(
                         f"Failed to publish code suggestion, relevant_lines_start is {relevant_lines_start}"
                     )
                 continue
 
             if relevant_lines_end < relevant_lines_start:
                 if get_settings().config.verbosity_level >= 2:
-                    logging.exception(
+                    get_logger().exception(
                         f"Failed to publish code suggestion, "
                         f"relevant_lines_end is {relevant_lines_end} and "
                         f"relevant_lines_start is {relevant_lines_start}"
@@ -97,7 +97,7 @@ class BitbucketProvider(GitProvider):
             return True
         except Exception as e:
             if get_settings().config.verbosity_level >= 2:
-                logging.error(f"Failed to publish code suggestion, error: {e}")
+                get_logger().error(f"Failed to publish code suggestion, error: {e}")
             return False
 
     def is_supported(self, capability: str) -> bool:
@@ -144,7 +144,7 @@ class BitbucketProvider(GitProvider):
             for comment in self.temp_comments:
                 self.pr.delete(f"comments/{comment}")
         except Exception as e:
-            logging.exception(f"Failed to remove temp comments, error: {e}")
+            get_logger().exception(f"Failed to remove temp comments, error: {e}")
 
 
     # funtion to create_inline_comment
@@ -152,7 +152,7 @@ class BitbucketProvider(GitProvider):
         position, absolute_position = find_line_number_of_relevant_line_in_file(self.get_diff_files(), relevant_file.strip('`'), relevant_line_in_file)
         if position == -1:
             if get_settings().config.verbosity_level >= 2:
-                logging.info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
+                get_logger().info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
             subject_type = "FILE"
         else:
             subject_type = "LINE"

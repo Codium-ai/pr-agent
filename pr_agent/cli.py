@@ -1,11 +1,12 @@
 import argparse
 import asyncio
-import logging
 import os
 
 from pr_agent.agent.pr_agent import PRAgent, commands
 from pr_agent.config_loader import get_settings
+from pr_agent.log import setup_logger
 
+setup_logger()
 
 def run(inargs=None):
     parser = argparse.ArgumentParser(description='AI based pull request analyzer', usage=
@@ -47,7 +48,6 @@ For example: 'python cli.py --pr_url=... review --pr_reviewer.extra_instructions
         parser.print_help()
         return
 
-    logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
     command = args.command.lower()
     get_settings().set("CONFIG.CLI_MODE", True)
     if args.issue_url:

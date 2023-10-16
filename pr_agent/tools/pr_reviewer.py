@@ -1,6 +1,4 @@
 import copy
-import json
-import logging
 from collections import OrderedDict
 from typing import List, Tuple
 
@@ -9,13 +7,13 @@ from jinja2 import Environment, StrictUndefined
 from yaml import SafeLoader
 
 from pr_agent.algo.ai_handler import AiHandler
-from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models, \
-    find_line_number_of_relevant_line_in_file, clip_tokens
+from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import convert_to_markdown, try_fix_json, try_fix_yaml, load_yaml
+from pr_agent.algo.utils import convert_to_markdown, load_yaml, try_fix_yaml
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import IncrementalPR, get_main_pr_language
+from pr_agent.log import get_logger
 from pr_agent.servers.help import actions_help_text, bot_help_text
 
 
@@ -98,29 +96,29 @@ class PRReviewer:
 
         try:
             if self.is_auto and not get_settings().pr_reviewer.automatic_review:
-                logging.info(f'Automatic review is disabled {self.pr_url}')
+                get_logger().info(f'Automatic review is disabled {self.pr_url}')
                 return None
 
-            logging.info(f'Reviewing PR: {self.pr_url} ...')
+            get_logger().info(f'Reviewing PR: {self.pr_url} ...')
 
             if get_settings().config.publish_output:
                 self.git_provider.publish_comment("Preparing review...", is_temporary=True)
 
             await retry_with_fallback_models(self._prepare_prediction)
 
-            logging.info('Preparing PR review...')
+            get_logger().info('Preparing PR review...')
             pr_comment = self._prepare_pr_review()
 
             if get_settings().config.publish_output:
-                logging.info('Pushing PR review...')
+                get_logger().info('Pushing PR review...')
                 self.git_provider.publish_comment(pr_comment)
                 self.git_provider.remove_initial_comment()
 
                 if get_settings().pr_reviewer.inline_code_comments:
-                    logging.info('Pushing inline code comments...')
+                    get_logger().info('Pushing inline code comments...')
                     self._publish_inline_code_comments()
         except Exception as e:
-            logging.error(f"Failed to review PR: {e}")
+            get_logger().error(f"Failed to review PR: {e}")
 
     async def _prepare_prediction(self, model: str) -> None:
         """
@@ -132,9 +130,9 @@ class PRReviewer:
         Returns:
             None
         """
-        logging.info('Getting PR diff...')
+        get_logger().info('Getting PR diff...')
         self.patches_diff = get_pr_diff(self.git_provider, self.token_handler, model)
-        logging.info('Getting AI prediction...')
+        get_logger().info('Getting AI prediction...')
         self.prediction = await self._get_prediction(model)
 
     async def _get_prediction(self, model: str) -> str:
@@ -155,8 +153,8 @@ class PRReviewer:
         user_prompt = environment.from_string(get_settings().pr_review_prompt.user).render(variables)
 
         if get_settings().config.verbosity_level >= 2:
-            logging.info(f"\nSystem prompt:\n{system_prompt}")
-            logging.info(f"\nUser prompt:\n{user_prompt}")
+            get_logger().info(f"\nSystem prompt:\n{system_prompt}")
+            get_logger().info(f"\nUser prompt:\n{user_prompt}")
 
         response, finish_reason = await self.ai_handler.chat_completion(
             model=model,
@@ -249,7 +247,7 @@ class PRReviewer:
 
         # Log markdown response if verbosity level is high
         if get_settings().config.verbosity_level >= 2:
-            logging.info(f"Markdown response:\n{markdown_text}")
+            get_logger().info(f"Markdown response:\n{markdown_text}")
 
         if markdown_text == None or len(markdown_text) == 0:
             markdown_text = ""
@@ -268,7 +266,7 @@ class PRReviewer:
         try:
             data = yaml.load(review_text, Loader=SafeLoader)
         except Exception as e:
-            logging.error(f"Failed to parse AI prediction: {e}")
+            get_logger().error(f"Failed to parse AI prediction: {e}")
             data = try_fix_yaml(review_text)
 
         comments: List[str] = []
@@ -277,7 +275,7 @@ class PRReviewer:
             relevant_line_in_file = suggestion.get('relevant line', '').strip()
             content = suggestion.get('suggestion', '')
             if not relevant_file or not relevant_line_in_file or not content:
-                logging.info("Skipping inline comment with missing file/line/content")
+                get_logger().info("Skipping inline comment with missing file/line/content")
                 continue
 
             if self.git_provider.is_supported("create_inline_comment"):

@@ -1,6 +1,4 @@
 import copy
-import logging
-import sys
 import os
 import time
 from typing import Any, Dict
@@ -16,9 +14,11 @@ from pr_agent.algo.utils import update_settings_from_args
 from pr_agent.config_loader import get_settings, global_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.utils import apply_repo_settings
+from pr_agent.log import LoggingFormat, get_logger, setup_logger
 from pr_agent.servers.utils import verify_signature
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+setup_logger(fmt=LoggingFormat.JSON)
+
 router = APIRouter()
 
 
@@ -29,11 +29,11 @@ async def handle_github_webhooks(request: Request, response: Response):
     Verifies the request signature, parses the request body, and passes it to the handle_request function for further
     processing.
     """
-    logging.debug("Received a GitHub webhook")
+    get_logger().debug("Received a GitHub webhook")
 
     body = await get_body(request)
 
-    logging.debug(f'Request body:\n{body}')
+    get_logger().debug(f'Request body:\n{body}')
     installation_id = body.get("installation", {}).get("id")
     context["installation_id"] = installation_id
     context["settings"] = copy.deepcopy(global_settings)
@@ -45,13 +45,13 @@ async def handle_github_webhooks(request: Request, response: Response):
 @router.post("/api/v1/marketplace_webhooks")
 async def handle_marketplace_webhooks(request: Request, response: Response):
     body = await get_body(request)
-    logging.info(f'Request body:\n{body}')
+    get_logger().info(f'Request body:\n{body}')
 
 async def get_body(request):
     try:
         body = await request.json()
     except Exception as e:
-        logging.error("Error parsing request body", e)
+        get_logger().error("Error parsing request body", e)
         raise HTTPException(status_code=400, detail="Error parsing request body") from e
     webhook_secret = getattr(get_settings().github, 'webhook_secret', None)
     if webhook_secret:
@@ -77,8 +77,8 @@ async def handle_request(body: Dict[str, Any], event: str):
         return {}
     agent = PRAgent()
     bot_user = get_settings().github_app.bot_user
-    logging.info(f"action: '{action}'")
-    logging.info(f"event: '{event}'")
+    sender = body.get("sender", {}).get("login")
+    log_context = {"action": action, "event": event, "sender": sender, "server_type": "github_app"}
 
     if get_settings().github_app.duplicate_requests_cache and _is_duplicate_request(body):
         return {}
@@ -88,22 +88,23 @@ async def handle_request(body: Dict[str, Any], event: str):
         if "comment" not in body:
             return {}
         comment_body = body.get("comment", {}).get("body")
-        sender = body.get("sender", {}).get("login")
         if sender and bot_user in sender:
-            logging.info(f"Ignoring comment from {bot_user} user")
+            get_logger().info(f"Ignoring comment from {bot_user} user")
             return {}
-        logging.info(f"Processing comment from {sender} user")
+        get_logger().info(f"Processing comment from {sender} user")
         if "issue" in body and "pull_request" in body["issue"] and "url" in body["issue"]["pull_request"]:
             api_url = body["issue"]["pull_request"]["url"]
         elif "comment" in body and "pull_request_url" in body["comment"]:
             api_url = body["comment"]["pull_request_url"]
         else:
             return {}
-        logging.info(body)
-        logging.info(f"Handling comment because of event={event} and action={action}")
+        log_context["api_url"] = api_url
+        get_logger().info(body)
+        get_logger().info(f"Handling comment because of event={event} and action={action}")
         comment_id = body.get("comment", {}).get("id")
         provider = get_git_provider()(pr_url=api_url)
-        await agent.handle_request(api_url, comment_body, notify=lambda: provider.add_eyes_reaction(comment_id))
+        with get_logger().contextualize(**log_context):
+            await agent.handle_request(api_url, comment_body, notify=lambda: provider.add_eyes_reaction(comment_id))
 
     # handle pull_request event:
     #   automatically review opened/reopened/ready_for_review PRs as long as they're not in draft,
@@ -115,6 +116,7 @@ async def handle_request(body: Dict[str, Any], event: str):
         api_url = pull_request.get("url")
         if not api_url:
             return {}
+        log_context["api_url"] = api_url
         if pull_request.get("draft", True) or pull_request.get("state") != "open" or pull_request.get("user", {}).get("login", "") == bot_user:
             return {}
         if action in get_settings().github_app.handle_pr_actions:
@@ -124,7 +126,7 @@ async def handle_request(body: Dict[str, Any], event: str):
                 if pull_request.get("created_at") == pull_request.get("updated_at"):
                     # avoid double reviews when opening a PR for the first time
                     return {}
-            logging.info(f"Performing review because of event={event} and action={action}")
+            get_logger().info(f"Performing review because of event={event} and action={action}")
             apply_repo_settings(api_url)
             for command in get_settings().github_app.pr_commands:
                 split_command = command.split(" ")
@@ -132,11 +134,12 @@ async def handle_request(body: Dict[str, Any], event: str):
                 args = split_command[1:]
                 other_args = update_settings_from_args(args)
                 new_command = ' '.join([command] + other_args)
-                logging.info(body)
-                logging.info(f"Performing command: {new_command}")
-                await agent.handle_request(api_url, new_command)
+                get_logger().info(body)
+                get_logger().info(f"Performing command: {new_command}")
+                with get_logger().contextualize(**log_context):
+                    await agent.handle_request(api_url, new_command)
 
-    logging.info("event or action does not require handling")
+    get_logger().info("event or action does not require handling")
     return {}
 
 
@@ -146,7 +149,7 @@ def _is_duplicate_request(body: Dict[str, Any]) -> bool:
     This function checks if the request is duplicate and if so - ignores it.
     """
     request_hash = hash(str(body))
-    logging.info(f"request_hash: {request_hash}")
+    get_logger().info(f"request_hash: {request_hash}")
     request_time = time.monotonic()
     ttl = get_settings().github_app.duplicate_requests_cache_ttl  # in seconds
     to_delete = [key for key, key_time in _duplicate_requests_cache.items() if request_time - key_time > ttl]
@@ -155,7 +158,7 @@ def _is_duplicate_request(body: Dict[str, Any]) -> bool:
     is_duplicate = request_hash in _duplicate_requests_cache
     _duplicate_requests_cache[request_hash] = request_time
     if is_duplicate:
-        logging.info(f"Ignoring duplicate request {request_hash}")
+        get_logger().info(f"Ignoring duplicate request {request_hash}")
     return is_duplicate
 
 

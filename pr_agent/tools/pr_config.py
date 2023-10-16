@@ -1,7 +1,6 @@
-import logging
-
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
+from pr_agent.log import get_logger
 
 
 class PRConfig:
@@ -19,11 +18,11 @@ class PRConfig:
         self.git_provider = get_git_provider()(pr_url)
 
     async def run(self):
-        logging.info('Getting configuration settings...')
-        logging.info('Preparing configs...')
+        get_logger().info('Getting configuration settings...')
+        get_logger().info('Preparing configs...')
         pr_comment = self._prepare_pr_configs()
         if get_settings().config.publish_output:
-            logging.info('Pushing configs...')
+            get_logger().info('Pushing configs...')
             self.git_provider.publish_comment(pr_comment)
             self.git_provider.remove_initial_comment()
         return ""
@@ -44,5 +43,5 @@ class PRConfig:
                 comment_str += f"\n{header.lower()}.{key.lower()} = {repr(value) if isinstance(value, str) else value}"
                 comment_str += "  "
         if get_settings().config.verbosity_level >= 2:
-            logging.info(f"comment_str:\n{comment_str}")
+            get_logger().info(f"comment_str:\n{comment_str}")
         return comment_str
