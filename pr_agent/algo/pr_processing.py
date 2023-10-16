@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import difflib
-import logging
 import re
 import traceback
 from typing import Any, Callable, List, Tuple
@@ -15,6 +14,7 @@ from pr_agent.algo.file_filter import filter_ignored
 from pr_agent.algo.token_handler import TokenHandler, get_token_encoder
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers.git_provider import FilePatchInfo, GitProvider
+from pr_agent.log import get_logger
 
 DELETED_FILES_ = "Deleted files:\n"
 
@@ -51,7 +51,7 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler, model: s
     try:
         diff_files = git_provider.get_diff_files()
     except RateLimitExceededException as e:
-        logging.error(f"Rate limit exceeded for git provider API. original message {e}")
+        get_logger().error(f"Rate limit exceeded for git provider API. original message {e}")
         raise
 
     diff_files = filter_ignored(diff_files)
@@ -180,7 +180,7 @@ def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler, mo
 
         # Hard Stop, no more tokens
         if total_tokens > MAX_TOKENS[model] - OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD:
-            logging.warning(f"File was fully skipped, no more tokens: {file.filename}.")
+            get_logger().warning(f"File was fully skipped, no more tokens: {file.filename}.")
             continue
 
         # If the patch is too large, just show the file name
@@ -189,7 +189,7 @@ def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler, mo
             # TODO: Option for alternative logic to remove hunks from the patch to reduce the number of tokens
             #  until we meet the requirements
             if get_settings().config.verbosity_level >= 2:
-                logging.warning(f"Patch too large, minimizing it, {file.filename}")
+                get_logger().warning(f"Patch too large, minimizing it, {file.filename}")
             if not modified_files_list:
                 total_tokens += token_handler.count_tokens(MORE_MODIFIED_FILES_)
             modified_files_list.append(file.filename)
@@ -204,7 +204,7 @@ def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler, mo
             patches.append(patch_final)
             total_tokens += token_handler.count_tokens(patch_final)
             if get_settings().config.verbosity_level >= 2:
-                logging.info(f"Tokens: {total_tokens}, last filename: {file.filename}")
+                get_logger().info(f"Tokens: {total_tokens}, last filename: {file.filename}")
 
     return patches, modified_files_list, deleted_files_list
 
@@ -218,7 +218,7 @@ async def retry_with_fallback_models(f: Callable):
             get_settings().set("openai.deployment_id", deployment_id)
             return await f(model)
         except Exception as e:
-            logging.warning(
+            get_logger().warning(
                 f"Failed to generate prediction with {model}"
                 f"{(' from deployment ' + deployment_id) if deployment_id else ''}: "
                 f"{traceback.format_exc()}"
@@ -340,7 +340,7 @@ def clip_tokens(text: str, max_tokens: int) -> str:
         clipped_text = text[:num_output_chars]
         return clipped_text
     except Exception as e:
-        logging.warning(f"Failed to clip tokens: {e}")
+        get_logger().warning(f"Failed to clip tokens: {e}")
         return text
 
 
@@ -367,7 +367,7 @@ def get_pr_multi_diffs(git_provider: GitProvider,
     try:
         diff_files = git_provider.get_diff_files()
     except RateLimitExceededException as e:
-        logging.error(f"Rate limit exceeded for git provider API. original message {e}")
+        get_logger().error(f"Rate limit exceeded for git provider API. original message {e}")
         raise
 
     diff_files = filter_ignored(diff_files)
@@ -387,7 +387,7 @@ def get_pr_multi_diffs(git_provider: GitProvider,
     for file in sorted_files:
         if call_number > max_calls:
             if get_settings().config.verbosity_level >= 2:
-                logging.info(f"Reached max calls ({max_calls})")
+                get_logger().info(f"Reached max calls ({max_calls})")
             break
 
         original_file_content_str = file.base_file
@@ -410,13 +410,13 @@ def get_pr_multi_diffs(git_provider: GitProvider,
             total_tokens = token_handler.prompt_tokens
             call_number += 1
             if get_settings().config.verbosity_level >= 2:
-                logging.info(f"Call number: {call_number}")
+                get_logger().info(f"Call number: {call_number}")
 
         if patch:
             patches.append(patch)
             total_tokens += new_patch_tokens
             if get_settings().config.verbosity_level >= 2:
-                logging.info(f"Tokens: {total_tokens}, last filename: {file.filename}")
+                get_logger().info(f"Tokens: {total_tokens}, last filename: {file.filename}")
 
     # Add the last chunk
     if patches:

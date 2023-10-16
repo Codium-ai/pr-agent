@@ -1,5 +1,4 @@
 import hashlib
-import logging
 import re
 from typing import Optional, Tuple
 from urllib.parse import urlparse
@@ -12,8 +11,8 @@ from ..algo.pr_processing import clip_tokens, find_line_number_of_relevant_line_
 from ..algo.utils import load_large_diff
 from ..config_loader import get_settings
 from .git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
+from ..log import get_logger
 
-logger = logging.getLogger()
 
 class DiffNotFoundError(Exception):
     """Raised when the diff for a merge request cannot be found."""
@@ -59,7 +58,7 @@ class GitLabProvider(GitProvider):
         try:
             self.last_diff = self.mr.diffs.list(get_all=True)[-1]
         except IndexError as e:
-            logger.error(f"Could not get diff for merge request {self.id_mr}")
+            get_logger().error(f"Could not get diff for merge request {self.id_mr}")
             raise DiffNotFoundError(f"Could not get diff for merge request {self.id_mr}") from e
 
 
@@ -99,7 +98,7 @@ class GitLabProvider(GitProvider):
                     if isinstance(new_file_content_str, bytes):
                         new_file_content_str = bytes.decode(new_file_content_str, 'utf-8')
                 except UnicodeDecodeError:
-                    logging.warning(
+                    get_logger().warning(
                         f"Cannot decode file {diff['old_path']} or {diff['new_path']} in merge request {self.id_mr}")
 
                 edit_type = EDIT_TYPE.MODIFIED
@@ -135,7 +134,7 @@ class GitLabProvider(GitProvider):
             self.mr.description = pr_body
             self.mr.save()
         except Exception as e:
-            logging.exception(f"Could not update merge request {self.id_mr} description: {e}")
+            get_logger().exception(f"Could not update merge request {self.id_mr} description: {e}")
 
     def publish_comment(self, mr_comment: str, is_temporary: bool = False):
         comment = self.mr.notes.create({'body': mr_comment})
@@ -157,12 +156,12 @@ class GitLabProvider(GitProvider):
     def send_inline_comment(self,body: str,edit_type: str,found: bool,relevant_file: str,relevant_line_in_file: int,
                             source_line_no: int, target_file: str,target_line_no: int) -> None:
         if not found:
-            logging.info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
+            get_logger().info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
         else:
             # in order to have exact sha's we have to find correct diff for this change
             diff = self.get_relevant_diff(relevant_file, relevant_line_in_file)
             if diff is None:
-                logger.error(f"Could not get diff for merge request {self.id_mr}")
+                get_logger().error(f"Could not get diff for merge request {self.id_mr}")
                 raise DiffNotFoundError(f"Could not get diff for merge request {self.id_mr}")
             pos_obj = {'position_type': 'text',
                        'new_path': target_file.filename,
@@ -175,23 +174,23 @@ class GitLabProvider(GitProvider):
             else:
                 pos_obj['new_line'] = target_line_no - 1
                 pos_obj['old_line'] = source_line_no - 1
-            logging.debug(f"Creating comment in {self.id_mr} with body {body} and position {pos_obj}")
+            get_logger().debug(f"Creating comment in {self.id_mr} with body {body} and position {pos_obj}")
             self.mr.discussions.create({'body': body, 'position': pos_obj})
 
     def get_relevant_diff(self, relevant_file: str, relevant_line_in_file: int) -> Optional[dict]:
         changes = self.mr.changes()  # Retrieve the changes for the merge request once
         if not changes:
-            logging.error('No changes found for the merge request.')
+            get_logger().error('No changes found for the merge request.')
             return None
         all_diffs = self.mr.diffs.list(get_all=True)
         if not all_diffs:
-            logging.error('No diffs found for the merge request.')
+            get_logger().error('No diffs found for the merge request.')
             return None
         for diff in all_diffs:
             for change in changes['changes']:
                 if change['new_path'] == relevant_file and relevant_line_in_file in change['diff']:
                     return diff
-            logging.debug(
+            get_logger().debug(
                 f'No relevant diff found for {relevant_file} {relevant_line_in_file}. Falling back to last diff.')
         return self.last_diff  # fallback to last_diff if no relevant diff is found
 
@@ -226,7 +225,7 @@ class GitLabProvider(GitProvider):
                 self.send_inline_comment(body, edit_type, found, relevant_file, relevant_line_in_file, source_line_no,
                                          target_file, target_line_no)
             except Exception as e:
-                logging.exception(f"Could not publish code suggestion:\nsuggestion: {suggestion}\nerror: {e}")
+                get_logger().exception(f"Could not publish code suggestion:\nsuggestion: {suggestion}\nerror: {e}")
 
         # note that we publish suggestions one-by-one. so, if one fails, the rest will still be published
         return True
@@ -290,7 +289,7 @@ class GitLabProvider(GitProvider):
             for comment in self.temp_comments:
                 comment.delete()
         except Exception as e:
-            logging.exception(f"Failed to remove temp comments, error: {e}")
+            get_logger().exception(f"Failed to remove temp comments, error: {e}")
 
     def get_title(self):
         return self.mr.title
@@ -358,7 +357,7 @@ class GitLabProvider(GitProvider):
             self.mr.labels = list(set(pr_types))
             self.mr.save()
         except Exception as e:
-            logging.exception(f"Failed to publish labels, error: {e}")
+            get_logger().exception(f"Failed to publish labels, error: {e}")
 
     def publish_inline_comments(self, comments: list[dict]):
         pass
@@ -410,6 +409,6 @@ class GitLabProvider(GitProvider):
                 return link
         except Exception as e:
             if get_settings().config.verbosity_level >= 2:
-                logging.info(f"Failed adding line link, error: {e}")
+                get_logger().info(f"Failed adding line link, error: {e}")
 
         return ""

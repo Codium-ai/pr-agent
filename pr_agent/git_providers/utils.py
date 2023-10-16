@@ -1,5 +1,4 @@
 import copy
-import logging
 import os
 import tempfile
 
@@ -7,6 +6,7 @@ from dynaconf import Dynaconf
 
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
+from pr_agent.log import get_logger
 
 
 def apply_repo_settings(pr_url):
@@ -32,4 +32,4 @@ def apply_repo_settings(pr_url):
                 try:
                     os.remove(repo_settings_file)
                 except Exception as e:
-                    logging.error(f"Failed to remove temporary settings file {repo_settings_file}", e)
+                    get_logger().error(f"Failed to remove temporary settings file {repo_settings_file}", e)

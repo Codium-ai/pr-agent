@@ -1,4 +1,3 @@
-import logging
 import os
 
 import litellm
@@ -7,6 +6,8 @@ from litellm import acompletion
 from openai.error import APIError, RateLimitError, Timeout, TryAgain
 from retry import retry
 from pr_agent.config_loader import get_settings
+from pr_agent.log import get_logger
+
 OPENAI_RETRIES = 5
 
 
@@ -88,34 +89,34 @@ class AiHandler:
         try:
             deployment_id = self.deployment_id
             if get_settings().config.verbosity_level >= 2:
-                logging.debug(
+                get_logger().debug(
                     f"Generating completion with {model}"
                     f"{(' from deployment ' + deployment_id) if deployment_id else ''}"
                 )
             if self.azure:
                 model = 'azure/' + model
+            messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
             response = await acompletion(
                 model=model,
                 deployment_id=deployment_id,
-                messages=[
-                    {"role": "system", "content": system},
-                    {"role": "user", "content": user}
-                ],
+                messages=messages,
                 temperature=temperature,
                 force_timeout=get_settings().config.ai_timeout
             )
         except (APIError, Timeout, TryAgain) as e:
-            logging.error("Error during OpenAI inference: ", e)
+            get_logger().error("Error during OpenAI inference: ", e)
             raise
         except (RateLimitError) as e:
-            logging.error("Rate limit error during OpenAI inference: ", e)
+            get_logger().error("Rate limit error during OpenAI inference: ", e)
             raise
         except (Exception) as e:
-            logging.error("Unknown error during OpenAI inference: ", e)
+            get_logger().error("Unknown error during OpenAI inference: ", e)
             raise TryAgain from e
         if response is None or len(response["choices"]) == 0:
             raise TryAgain
         resp = response["choices"][0]['message']['content']
         finish_reason = response["choices"][0]["finish_reason"]
-        print(resp, finish_reason)
+        usage = response.get("usage")
+        get_logger().info("AI response", response=resp, messages=messages, finish_reason=finish_reason,
+                          model=model, usage=usage)
         return resp, finish_reason

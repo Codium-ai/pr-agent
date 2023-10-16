@@ -1,10 +1,11 @@
-import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
 # enum EDIT_TYPE (ADDED, DELETED, MODIFIED, RENAMED)
 from enum import Enum
 from typing import Optional
+
+from pr_agent.log import get_logger
 
 
 class EDIT_TYPE(Enum):
@@ -136,7 +137,7 @@ def get_main_pr_language(languages, files) -> str:
     """
     main_language_str = ""
     if not languages:
-        logging.info("No languages detected")
+        get_logger().info("No languages detected")
         return main_language_str
 
     try:
@@ -172,7 +173,7 @@ def get_main_pr_language(languages, files) -> str:
             main_language_str = top_language
 
     except Exception as e:
-        logging.exception(e)
+        get_logger().exception(e)
         pass
 
     return main_language_str

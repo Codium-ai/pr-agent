@@ -1,16 +1,17 @@
 import copy
-import logging
 import textwrap
-from typing import List, Dict
+from typing import Dict
+
 from jinja2 import Environment, StrictUndefined
 
 from pr_agent.algo.ai_handler import AiHandler
-from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models, get_pr_multi_diffs
+from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.algo.utils import load_yaml
 from pr_agent.config_loader import get_settings
-from pr_agent.git_providers import BitbucketProvider, get_git_provider
+from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
+from pr_agent.log import get_logger
 
 
 class PRAddDocs:
@@ -43,34 +44,34 @@ class PRAddDocs:
 
     async def run(self):
         try:
-            logging.info('Generating code Docs for PR...')
+            get_logger().info('Generating code Docs for PR...')
             if get_settings().config.publish_output:
                 self.git_provider.publish_comment("Generating Documentation...", is_temporary=True)
 
-            logging.info('Preparing PR documentation...')
+            get_logger().info('Preparing PR documentation...')
             await retry_with_fallback_models(self._prepare_prediction)
             data = self._prepare_pr_code_docs()
             if (not data) or (not 'Code Documentation' in data):
-                logging.info('No code documentation found for PR.')
+                get_logger().info('No code documentation found for PR.')
                 return
 
             if get_settings().config.publish_output:
-                logging.info('Pushing PR documentation...')
+                get_logger().info('Pushing PR documentation...')
                 self.git_provider.remove_initial_comment()
-                logging.info('Pushing inline code documentation...')
+                get_logger().info('Pushing inline code documentation...')
                 self.push_inline_docs(data)
         except Exception as e:
-            logging.error(f"Failed to generate code documentation for PR, error: {e}")
+            get_logger().error(f"Failed to generate code documentation for PR, error: {e}")
 
     async def _prepare_prediction(self, model: str):
-        logging.info('Getting PR diff...')
+        get_logger().info('Getting PR diff...')
         self.patches_diff = get_pr_diff(self.git_provider,
                                         self.token_handler,
                                         model,
                                         add_line_numbers_to_hunks=True,
                                         disable_extra_lines=False)
 
-        logging.info('Getting AI prediction...')
+        get_logger().info('Getting AI prediction...')
         self.prediction = await self._get_prediction(model)
 
     async def _get_prediction(self, model: str):
@@ -80,8 +81,8 @@ class PRAddDocs:
         system_prompt = environment.from_string(get_settings().pr_add_docs_prompt.system).render(variables)
         user_prompt = environment.from_string(get_settings().pr_add_docs_prompt.user).render(variables)
         if get_settings().config.verbosity_level >= 2:
-            logging.info(f"\nSystem prompt:\n{system_prompt}")
-            logging.info(f"\nUser prompt:\n{user_prompt}")
+            get_logger().info(f"\nSystem prompt:\n{system_prompt}")
+            get_logger().info(f"\nUser prompt:\n{user_prompt}")
         response, finish_reason = await self.ai_handler.chat_completion(model=model, temperature=0.2,
                                                                         system=system_prompt, user=user_prompt)
 
@@ -103,7 +104,7 @@ class PRAddDocs:
         for d in data['Code Documentation']:
             try:
                 if get_settings().config.verbosity_level >= 2:
-                    logging.info(f"add_docs: {d}")
+                    get_logger().info(f"add_docs: {d}")
                 relevant_file = d['relevant file'].strip()
                 relevant_line = int(d['relevant line'])  # absolute position
                 documentation = d['documentation']
@@ -118,11 +119,11 @@ class PRAddDocs:
                                              'relevant_lines_end': relevant_line})
             except Exception:
                 if get_settings().config.verbosity_level >= 2:
-                    logging.info(f"Could not parse code docs: {d}")
+                    get_logger().info(f"Could not parse code docs: {d}")
 
         is_successful = self.git_provider.publish_code_suggestions(docs)
         if not is_successful:
-            logging.info("Failed to publish code docs, trying to publish each docs separately")
+            get_logger().info("Failed to publish code docs, trying to publish each docs separately")
             for doc_suggestion in docs:
                 self.git_provider.publish_code_suggestions([doc_suggestion])
 
@@ -154,7 +155,7 @@ class PRAddDocs:
                         new_code_snippet = new_code_snippet.rstrip() + "\n" + original_initial_line
         except Exception as e:
             if get_settings().config.verbosity_level >= 2:
-                logging.info(f"Could not dedent code snippet for file {relevant_file}, error: {e}")
+                get_logger().info(f"Could not dedent code snippet for file {relevant_file}, error: {e}")
 
         return new_code_snippet
 

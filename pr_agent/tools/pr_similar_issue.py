@@ -1,18 +1,17 @@
-import copy
-import json
-import logging
 from enum import Enum
-from typing import List, Tuple
-import pinecone
+from typing import List
+
 import openai
 import pandas as pd
+import pinecone
+from pinecone_datasets import Dataset, DatasetMetadata
 from pydantic import BaseModel, Field
 
 from pr_agent.algo import MAX_TOKENS
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
-from pinecone_datasets import Dataset, DatasetMetadata
+from pr_agent.log import get_logger
 
 MODEL = "text-embedding-ada-002"
 
@@ -62,11 +61,11 @@ class PRSimilarIssue:
                     upsert = False
 
         if run_from_scratch or upsert:  # index the entire repo
-            logging.info('Indexing the entire repo...')
+            get_logger().info('Indexing the entire repo...')
 
-            logging.info('Getting issues...')
+            get_logger().info('Getting issues...')
             issues = list(repo_obj.get_issues(state='all'))
-            logging.info('Done')
+            get_logger().info('Done')
             self._update_index_with_issues(issues, repo_name_for_index, upsert=upsert)
         else:  # update index if needed
             pinecone_index = pinecone.Index(index_name=index_name)
@@ -92,20 +91,20 @@ class PRSimilarIssue:
                     break
 
             if issues_to_update:
-                logging.info(f'Updating index with {counter} new issues...')
+                get_logger().info(f'Updating index with {counter} new issues...')
                 self._update_index_with_issues(issues_to_update, repo_name_for_index, upsert=True)
             else:
-                logging.info('No new issues to update')
+                get_logger().info('No new issues to update')
 
     async def run(self):
-        logging.info('Getting issue...')
+        get_logger().info('Getting issue...')
         repo_name, original_issue_number = self.git_provider._parse_issue_url(self.issue_url.split('=')[-1])
         issue_main = self.git_provider.repo_obj.get_issue(original_issue_number)
         issue_str, comments, number = self._process_issue(issue_main)
         openai.api_key = get_settings().openai.key
-        logging.info('Done')
+        get_logger().info('Done')
 
-        logging.info('Querying...')
+        get_logger().info('Querying...')
         res = openai.Embedding.create(input=[issue_str], engine=MODEL)
         embeds = [record['embedding'] for record in res['data']]
         pinecone_index = pinecone.Index(index_name=self.index_name)
@@ -127,9 +126,9 @@ class PRSimilarIssue:
             else:
                 relevant_comment_number_list.append(-1)
             score_list.append(str("{:.2f}".format(r['score'])))
-        logging.info('Done')
+        get_logger().info('Done')
 
-        logging.info('Publishing response...')
+        get_logger().info('Publishing response...')
         similar_issues_str = "### Similar Issues\n___\n\n"
         for i, issue_number_similar in enumerate(relevant_issues_number_list):
             issue = self.git_provider.repo_obj.get_issue(issue_number_similar)
@@ -140,8 +139,8 @@ class PRSimilarIssue:
             similar_issues_str += f"{i + 1}. **[{title}]({url})** (score={score_list[i]})\n\n"
         if get_settings().config.publish_output:
             response = issue_main.create_comment(similar_issues_str)
-        logging.info(similar_issues_str)
-        logging.info('Done')
+        get_logger().info(similar_issues_str)
+        get_logger().info('Done')
 
     def _process_issue(self, issue):
         header = issue.title
@@ -155,7 +154,7 @@ class PRSimilarIssue:
         return issue_str, comments, number
 
     def _update_index_with_issues(self, issues_list, repo_name_for_index, upsert=False):
-        logging.info('Processing issues...')
+        get_logger().info('Processing issues...')
         corpus = Corpus()
         example_issue_record = Record(
             id=f"example_issue_{repo_name_for_index}",
@@ -171,9 +170,9 @@ class PRSimilarIssue:
 
             counter += 1
             if counter % 100 == 0:
-                logging.info(f"Scanned {counter} issues")
+                get_logger().info(f"Scanned {counter} issues")
             if counter >= self.max_issues_to_scan:
-                logging.info(f"Scanned {self.max_issues_to_scan} issues, stopping")
+                get_logger().info(f"Scanned {self.max_issues_to_scan} issues, stopping")
                 break
 
             issue_str, comments, number = self._process_issue(issue)
@@ -210,9 +209,9 @@ class PRSimilarIssue:
                             )
                             corpus.append(comment_record)
         df = pd.DataFrame(corpus.dict()["documents"])
-        logging.info('Done')
+        get_logger().info('Done')
 
-        logging.info('Embedding...')
+        get_logger().info('Embedding...')
         openai.api_key = get_settings().openai.key
         list_to_encode = list(df["text"].values)
         try:
@@ -220,7 +219,7 @@ class PRSimilarIssue:
             embeds = [record['embedding'] for record in res['data']]
         except:
             embeds = []
-            logging.error('Failed to embed entire list, embedding one by one...')
+            get_logger().error('Failed to embed entire list, embedding one by one...')
             for i, text in enumerate(list_to_encode):
                 try:
                     res = openai.Embedding.create(input=[text], engine=MODEL)
@@ -231,21 +230,21 @@ class PRSimilarIssue:
         meta = DatasetMetadata.empty()
         meta.dense_model.dimension = len(embeds[0])
         ds = Dataset.from_pandas(df, meta)
-        logging.info('Done')
+        get_logger().info('Done')
 
         api_key = get_settings().pinecone.api_key
         environment = get_settings().pinecone.environment
         if not upsert:
-            logging.info('Creating index from scratch...')
+            get_logger().info('Creating index from scratch...')
             ds.to_pinecone_index(self.index_name, api_key=api_key, environment=environment)
         else:
-            logging.info('Upserting index...')
+            get_logger().info('Upserting index...')
             namespace = ""
             batch_size: int = 100
             concurrency: int = 10
             pinecone.init(api_key=api_key, environment=environment)
             ds._upsert_to_index(self.index_name, namespace, batch_size, concurrency)
-        logging.info('Done')
+        get_logger().info('Done')
 
 
 class IssueLevel(str, Enum):

@@ -1,8 +1,9 @@
 from __future__ import annotations
-import logging
+
 import re
 
 from pr_agent.config_loader import get_settings
+from pr_agent.log import get_logger
 
 
 def extend_patch(original_file_str, patch_str, num_lines) -> str:
@@ -63,7 +64,7 @@ def extend_patch(original_file_str, patch_str, num_lines) -> str:
             extended_patch_lines.append(line)
     except Exception as e:
         if get_settings().config.verbosity_level >= 2:
-            logging.error(f"Failed to extend patch: {e}")
+            get_logger().error(f"Failed to extend patch: {e}")
         return patch_str
 
     # finish previous hunk
@@ -134,14 +135,14 @@ def handle_patch_deletions(patch: str, original_file_content_str: str,
     if not new_file_content_str:
         # logic for handling deleted files - don't show patch, just show that the file was deleted
         if get_settings().config.verbosity_level > 0:
-            logging.info(f"Processing file: {file_name}, minimizing deletion file")
+            get_logger().info(f"Processing file: {file_name}, minimizing deletion file")
         patch = None # file was deleted
     else:
         patch_lines = patch.splitlines()
         patch_new = omit_deletion_hunks(patch_lines)
         if patch != patch_new:
             if get_settings().config.verbosity_level > 0:
-                logging.info(f"Processing file: {file_name}, hunks were deleted")
+                get_logger().info(f"Processing file: {file_name}, hunks were deleted")
             patch = patch_new
     return patch
 

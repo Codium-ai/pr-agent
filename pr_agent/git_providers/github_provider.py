@@ -1,20 +1,19 @@
-import logging
 import hashlib
-
 from datetime import datetime
-from typing import Optional, Tuple, Any
+from typing import Optional, Tuple
 from urllib.parse import urlparse
 
-from github import AppAuthentication, Auth, Github, GithubException, Reaction
+from github import AppAuthentication, Auth, Github, GithubException
 from retry import retry
 from starlette_context import context
 
-from .git_provider import FilePatchInfo, GitProvider, IncrementalPR
 from ..algo.language_handler import is_valid_file
+from ..algo.pr_processing import clip_tokens, find_line_number_of_relevant_line_in_file
 from ..algo.utils import load_large_diff
-from ..algo.pr_processing import find_line_number_of_relevant_line_in_file, clip_tokens
 from ..config_loader import get_settings
+from ..log import get_logger
 from ..servers.utils import RateLimitExceeded
+from .git_provider import FilePatchInfo, GitProvider, IncrementalPR
 
 
 class GithubProvider(GitProvider):
@@ -58,7 +57,7 @@ class GithubProvider(GitProvider):
             self.file_set = dict()
             for commit in self.incremental.commits_range:
                 if commit.commit.message.startswith(f"Merge branch '{self._get_repo().default_branch}'"):
-                    logging.info(f"Skipping merge commit {commit.commit.message}")
+                    get_logger().info(f"Skipping merge commit {commit.commit.message}")
                     continue
                 self.file_set.update({file.filename: file for file in commit.files})
 
@@ -130,7 +129,7 @@ class GithubProvider(GitProvider):
             return diff_files
 
         except GithubException.RateLimitExceededException as e:
-            logging.error(f"Rate limit exceeded for GitHub API. Original message: {e}")
+            get_logger().error(f"Rate limit exceeded for GitHub API. Original message: {e}")
             raise RateLimitExceeded("Rate limit exceeded for GitHub API.") from e
 
     def publish_description(self, pr_title: str, pr_body: str):
@@ -138,7 +137,7 @@ class GithubProvider(GitProvider):
 
     def publish_comment(self, pr_comment: str, is_temporary: bool = False):
         if is_temporary and not get_settings().config.publish_output_progress:
-            logging.debug(f"Skipping publish_comment for temporary comment: {pr_comment}")
+            get_logger().debug(f"Skipping publish_comment for temporary comment: {pr_comment}")
             return
         response = self.pr.create_issue_comment(pr_comment)
         if hasattr(response, "user") and hasattr(response.user, "login"):
@@ -156,7 +155,7 @@ class GithubProvider(GitProvider):
         position, absolute_position = find_line_number_of_relevant_line_in_file(self.diff_files, relevant_file.strip('`'), relevant_line_in_file)
         if position == -1:
             if get_settings().config.verbosity_level >= 2:
-                logging.info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
+                get_logger().info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
             subject_type = "FILE"
         else:
             subject_type = "LINE"
@@ -179,13 +178,13 @@ class GithubProvider(GitProvider):
 
             if not relevant_lines_start or relevant_lines_start == -1:
                 if get_settings().config.verbosity_level >= 2:
-                    logging.exception(
+                    get_logger().exception(
                         f"Failed to publish code suggestion, relevant_lines_start is {relevant_lines_start}")
                 continue
 
             if relevant_lines_end < relevant_lines_start:
                 if get_settings().config.verbosity_level >= 2:
-                    logging.exception(f"Failed to publish code suggestion, "
+                    get_logger().exception(f"Failed to publish code suggestion, "
                                       f"relevant_lines_end is {relevant_lines_end} and "
                                       f"relevant_lines_start is {relevant_lines_start}")
                 continue
@@ -212,7 +211,7 @@ class GithubProvider(GitProvider):
             return True
         except Exception as e:
             if get_settings().config.verbosity_level >= 2:
-                logging.error(f"Failed to publish code suggestion, error: {e}")
+                get_logger().error(f"Failed to publish code suggestion, error: {e}")
             return False
 
     def remove_initial_comment(self):
@@ -221,7 +220,7 @@ class GithubProvider(GitProvider):
                 if comment.is_temporary:
                     comment.delete()
         except Exception as e:
-            logging.exception(f"Failed to remove initial comment, error: {e}")
+            get_logger().exception(f"Failed to remove initial comment, error: {e}")
 
     def get_title(self):
         return self.pr.title
@@ -269,7 +268,7 @@ class GithubProvider(GitProvider):
             reaction = self.pr.get_issue_comment(issue_comment_id).create_reaction("eyes")
             return reaction.id
         except Exception as e:
-            logging.exception(f"Failed to add eyes reaction, error: {e}")
+            get_logger().exception(f"Failed to add eyes reaction, error: {e}")
             return None
 
     def remove_reaction(self, issue_comment_id: int, reaction_id: int) -> bool:
@@ -277,7 +276,7 @@ class GithubProvider(GitProvider):
             self.pr.get_issue_comment(issue_comment_id).delete_reaction(reaction_id)
             return True
         except Exception as e:
-            logging.exception(f"Failed to remove eyes reaction, error: {e}")
+            get_logger().exception(f"Failed to remove eyes reaction, error: {e}")
             return False
 
 
@@ -396,13 +395,13 @@ class GithubProvider(GitProvider):
                 "PUT", f"{self.pr.issue_url}/labels", input=post_parameters
             )
         except Exception as e:
-            logging.exception(f"Failed to publish labels, error: {e}")
+            get_logger().exception(f"Failed to publish labels, error: {e}")
 
     def get_labels(self):
         try:
             return [label.name for label in self.pr.labels]
         except Exception as e:
-            logging.exception(f"Failed to get labels, error: {e}")
+            get_logger().exception(f"Failed to get labels, error: {e}")
             return []
 
     def get_commit_messages(self):
@@ -444,7 +443,7 @@ class GithubProvider(GitProvider):
                 return link
         except Exception as e:
             if get_settings().config.verbosity_level >= 2:
-                logging.info(f"Failed adding line link, error: {e}")
+                get_logger().info(f"Failed adding line link, error: {e}")
 
         return ""
 
