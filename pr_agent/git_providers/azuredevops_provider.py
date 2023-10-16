@@ -236,9 +236,6 @@ class AzureDevopsProvider:
     def _parse_pr_url(pr_url: str) -> Tuple[str, int]:
         parsed_url = urlparse(pr_url)
 
-        if 'azure.com' not in parsed_url.netloc:
-            raise ValueError("The provided URL is not a valid Azure DevOps URL")
-
         path_parts = parsed_url.path.strip('/').split('/')
 
         if len(path_parts) < 6 or path_parts[4] != 'pullrequest':
