@@ -336,8 +336,9 @@ class GithubProvider(GitProvider):
             issue_number = int(path_parts[3])
         except ValueError as e:
             raise ValueError("Unable to convert issue number to integer") from e
+        workspace_slug = None
 
-        return repo_name, issue_number
+        return workspace_slug, repo_name, issue_number
 
     def _get_github_client(self):
         deployment_type = get_settings().get("GITHUB.DEPLOYMENT_TYPE", "user")
@@ -454,3 +455,56 @@ class GithubProvider(GitProvider):
             return pr_id
         except:
             return ""
+        
+    def get_repo_issues(self, repo_obj):
+        return list(repo_obj.get_issues(state='all'))
+    
+    def get_issues_comments(self, workspace_slug, repo_name, original_issue_number):
+        return self.repo_obj.get_issue(original_issue_number)
+    
+    def get_issue_url(self, issue):
+        return issue.html_url
+    
+    def create_issue_comment(self, similar_issues_str, workspace_slug, repo_name, original_issue_number):
+        try:
+            issue = self.repo_obj.get_issue(original_issue_number)
+            issue.create_comment(similar_issues_str)
+        except Exception as e:
+            logging.exception(f"Failed to create issue comment, error: {e}")
+
+    def get_issue_body(self, issue):
+        return issue.body
+        
+    def get_issue_number(self, issue):
+        return issue.number
+    
+    def get_issues_comments(self, workspace_slug, repo_name, original_issue_number):
+        issue = self.repo_obj.get_issue(original_issue_number)
+        return list(issue.get_comments())
+    
+    def get_issue_body(self, issue):
+        return issue.body
+    
+    def get_username(self, issue, workspace_slug):
+        return issue.user.login
+    
+    def get_issue_created_at(self, issue):
+        return str(issue.created_at)
+    
+    def get_issue_comment_body(self, comment):
+        return comment.body
+    
+    def get_issue(self, workspace_slug, repo_name, original_issue_number):
+        return self.repo_obj.get_issue(original_issue_number)
+    
+    def get_repo_obj(self, workspace_slug, repo_name):
+        return self.github_client.get_repo(repo_name)
+    
+    def get_repo_name_for_indexing(self, repo_obj):
+        return repo_obj.full_name.lower().replace('/', '-').replace('_/', '-')
+    
+    def check_if_issue_pull_request(self, issue):
+        if issue.pull_request:
+            return True
+        return False
+

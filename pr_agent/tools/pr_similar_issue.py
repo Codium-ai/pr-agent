@@ -19,29 +19,27 @@ MODEL = "text-embedding-ada-002"
 
 class PRSimilarIssue:
     def __init__(self, issue_url: str, args: list = None):
-        if get_settings().config.git_provider != "github":
-            raise Exception("Only github is supported for similar issue tool")
 
         self.cli_mode = get_settings().CONFIG.CLI_MODE
         self.max_issues_to_scan = get_settings().pr_similar_issue.max_issues_to_scan
         self.issue_url = issue_url
         self.git_provider = get_git_provider()()
-        repo_name, issue_number = self.git_provider._parse_issue_url(issue_url.split('=')[-1])
-        self.git_provider.repo = repo_name
-        self.git_provider.repo_obj = self.git_provider.github_client.get_repo(repo_name)
+        self.workspace_slug, self.repo_name, self.issue_number = self.git_provider._parse_issue_url(issue_url.split('=')[-1])
+        self.git_provider.repo = self.repo_name
+        self.git_provider.repo_obj = self.git_provider.get_repo_obj(self.workspace_slug, self.repo_name)
         self.token_handler = TokenHandler()
         repo_obj = self.git_provider.repo_obj
-        repo_name_for_index = self.repo_name_for_index = repo_obj.full_name.lower().replace('/', '-').replace('_/', '-')
+        repo_name_for_index = self.repo_name_for_index = self.git_provider.get_repo_name_for_indexing(repo_obj)
         index_name = self.index_name = "codium-ai-pr-agent-issues"
 
         # assuming pinecone api key and environment are set in secrets file
         try:
-            api_key = get_settings().pinecone.api_key
-            environment = get_settings().pinecone.environment
+            api_key = get_settings().github.api_key
+            environment = get_settings().github.environment
         except Exception:
             if not self.cli_mode:
-                repo_name, original_issue_number = self.git_provider._parse_issue_url(self.issue_url.split('=')[-1])
-                issue_main = self.git_provider.repo_obj.get_issue(original_issue_number)
+                workspace_slug, repo_name, original_issue_number = self.git_provider._parse_issue_url(self.issue_url.split('=')[-1])
+                issue_main = self.git_provider.get_issue(workspace_slug, repo_name, original_issue_number)
                 issue_main.create_comment("Please set pinecone api key and environment in secrets file")
             raise Exception("Please set pinecone api key and environment in secrets file")
 
@@ -65,19 +63,21 @@ class PRSimilarIssue:
             logging.info('Indexing the entire repo...')
 
             logging.info('Getting issues...')
-            issues = list(repo_obj.get_issues(state='all'))
+            issues = self.git_provider.get_repo_issues(repo_obj)
             logging.info('Done')
             self._update_index_with_issues(issues, repo_name_for_index, upsert=upsert)
         else:  # update index if needed
             pinecone_index = pinecone.Index(index_name=index_name)
             issues_to_update = []
-            issues_paginated_list = repo_obj.get_issues(state='all')
+            issues_paginated_list = []
+            issues_paginated_list = self.git_provider.get_repo_issues(repo_obj)
             counter = 1
             for issue in issues_paginated_list:
-                if issue.pull_request:
+                issue_pull_request = self.git_provider.check_if_issue_pull_request(issue)
+                if issue_pull_request:
                     continue
                 issue_str, comments, number = self._process_issue(issue)
-                issue_key = f"issue_{number}"
+                issue_key = f"issue_{number}"   
                 id = issue_key + "." + "issue"
                 res = pinecone_index.fetch([id]).to_dict()
                 is_new_issue = True
@@ -99,8 +99,8 @@ class PRSimilarIssue:
 
     async def run(self):
         logging.info('Getting issue...')
-        repo_name, original_issue_number = self.git_provider._parse_issue_url(self.issue_url.split('=')[-1])
-        issue_main = self.git_provider.repo_obj.get_issue(original_issue_number)
+        workspace_slug, repo_name, original_issue_number = self.git_provider._parse_issue_url(self.issue_url.split('=')[-1])
+        issue_main = self.git_provider.get_issue(workspace_slug, repo_name, original_issue_number)
         issue_str, comments, number = self._process_issue(issue_main)
         openai.api_key = get_settings().openai.key
         logging.info('Done')
@@ -132,25 +132,23 @@ class PRSimilarIssue:
         logging.info('Publishing response...')
         similar_issues_str = "### Similar Issues\n___\n\n"
         for i, issue_number_similar in enumerate(relevant_issues_number_list):
-            issue = self.git_provider.repo_obj.get_issue(issue_number_similar)
+            issue = self.git_provider.get_issue(workspace_slug, repo_name, issue_number_similar)
             title = issue.title
-            url = issue.html_url
-            if relevant_comment_number_list[i] != -1:
-                url = list(issue.get_comments())[relevant_comment_number_list[i]].html_url
+            url = self.git_provider.get_issue_url(issue)
             similar_issues_str += f"{i + 1}. **[{title}]({url})** (score={score_list[i]})\n\n"
         if get_settings().config.publish_output:
-            response = issue_main.create_comment(similar_issues_str)
+            response = self.git_provider.create_issue_comment(similar_issues_str, workspace_slug, repo_name, original_issue_number)
         logging.info(similar_issues_str)
         logging.info('Done')
 
     def _process_issue(self, issue):
         header = issue.title
-        body = issue.body
-        number = issue.number
+        body = self.git_provider.get_issue_body(issue)
+        number = self.git_provider.get_issue_number(issue)
         if get_settings().pr_similar_issue.skip_comments:
             comments = []
         else:
-            comments = list(issue.get_comments())
+            comments = self.git_provider.get_issues_comments(self.workspace_slug, self.repo_name, self.issue_number)
         issue_str = f"Issue Header: \"{header}\"\n\nIssue Body:\n{body}"
         return issue_str, comments, number
 
@@ -158,7 +156,7 @@ class PRSimilarIssue:
         logging.info('Processing issues...')
         corpus = Corpus()
         example_issue_record = Record(
-            id=f"example_issue_{repo_name_for_index}",
+            id=str([issue.number for issue in issues_list]),
             text="example_issue",
             metadata=Metadata(repo=repo_name_for_index)
         )
@@ -166,7 +164,9 @@ class PRSimilarIssue:
 
         counter = 0
         for issue in issues_list:
-            if issue.pull_request:
+
+            issue_pull_request = self.git_provider.check_if_issue_pull_request(issue)
+            if issue_pull_request:
                 continue
 
             counter += 1
@@ -178,8 +178,8 @@ class PRSimilarIssue:
 
             issue_str, comments, number = self._process_issue(issue)
             issue_key = f"issue_{number}"
-            username = issue.user.login
-            created_at = str(issue.created_at)
+            username = self.git_provider.get_username(issue, self.workspace_slug)
+            created_at = self.git_provider.get_issue_created_at(issue)
             if len(issue_str) < 8000 or \
                     self.token_handler.count_tokens(issue_str) < MAX_TOKENS[MODEL]:  # fast reject first
                 issue_record = Record(
@@ -193,7 +193,7 @@ class PRSimilarIssue:
                 corpus.append(issue_record)
                 if comments:
                     for j, comment in enumerate(comments):
-                        comment_body = comment.body
+                        comment_body = self.git_provider.get_issue_comment_body(comment)
                         num_words_comment = len(comment_body.split())
                         if num_words_comment < 10 or not isinstance(comment_body, str):
                             continue
@@ -233,8 +233,8 @@ class PRSimilarIssue:
         ds = Dataset.from_pandas(df, meta)
         logging.info('Done')
 
-        api_key = get_settings().pinecone.api_key
-        environment = get_settings().pinecone.environment
+        api_key = get_settings().github.api_key
+        environment = get_settings().github.environment
         if not upsert:
             logging.info('Creating index from scratch...')
             ds.to_pinecone_index(self.index_name, api_key=api_key, environment=environment)

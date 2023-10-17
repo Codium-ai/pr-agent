@@ -14,8 +14,7 @@ from .git_provider import FilePatchInfo, GitProvider
 
 class BitbucketProvider(GitProvider):
     def __init__(
-        self, pr_url: Optional[str] = None, incremental: Optional[bool] = False
-    ):
+        self, pr_url: Optional[str] = None, incremental: Optional[bool] = False):
         s = requests.Session()
         try:
             bearer = context.get("bitbucket_bearer_token", None)
@@ -32,12 +31,15 @@ class BitbucketProvider(GitProvider):
         self.repo = None
         self.pr_num = None
         self.pr = None
+        self.feature = None
+        self.issue_num = None
+        self.issue_name = None
         self.temp_comments = []
         self.incremental = incremental
-        if pr_url:
+        if pr_url and 'pull' in pr_url:
             self.set_pr(pr_url)
-        self.bitbucket_comment_api_url = self.pr._BitbucketBase__data["links"]["comments"]["href"]
-        self.bitbucket_pull_request_api_url = self.pr._BitbucketBase__data["links"]['self']['href']
+            self.bitbucket_comment_api_url = self.pr._BitbucketBase__data["links"]["comments"]["href"]
+            self.bitbucket_pull_request_api_url = self.pr._BitbucketBase__data["links"]['self']['href']
 
     def get_repo_settings(self):
         try:
@@ -228,6 +230,27 @@ class BitbucketProvider(GitProvider):
             raise ValueError("Unable to convert PR number to integer") from e
 
         return workspace_slug, repo_slug, pr_number
+    
+    @staticmethod
+    def _parse_issue_url(issue_url: str) -> Tuple[str, int]:
+        parsed_url = urlparse(issue_url)
+
+        if "bitbucket.org" not in parsed_url.netloc:
+            raise ValueError("The provided URL is not a valid Bitbucket URL")
+
+        path_parts = parsed_url.path.strip('/').split('/')
+        if len(path_parts) < 5 or path_parts[2] != "issues":
+            raise ValueError("The provided URL does not appear to be a Bitbucket issue URL")
+        
+        workspace_slug = path_parts[0]
+        repo_slug = path_parts[1]
+        try:
+            issue_number = int(path_parts[3])
+        except ValueError as e:
+            raise ValueError("Unable to convert issue number to integer") from e
+        
+        return workspace_slug, repo_slug, issue_number
+
 
     def _get_repo(self):
         if self.repo is None:
@@ -263,3 +286,68 @@ class BitbucketProvider(GitProvider):
     # bitbucket does not support labels
     def get_labels(self):
         pass
+
+    def get_issue(self, workspace_slug, repo_name, original_issue_number):
+        issue = self.bitbucket_client.repositories.get(workspace_slug, repo_name).issues.get(original_issue_number)
+        return issue
+    
+    def get_issue_url(self, issue):
+        return issue._BitbucketBase__data['links']['html']['href']
+    
+    def get_issue_body(self, issue):
+        return issue.content['raw']
+    
+    def get_issue_number(self, issue):
+        return issue.id
+    
+    def get_issue_comment_body(self, comment):
+        return comment['content']['raw']
+    
+    def get_issue_comment_user(self, comment):
+        return comment['user']['display_name']
+    
+    def get_issue_created_at(self, issue):
+        return str(issue.created_on)
+    
+    def get_username(self, issue, workspace_slug):
+        return workspace_slug
+
+    
+    def get_repo_issues(self, repo_obj):
+        return repo_obj._Repository__issues.each()
+
+   
+    def get_issues_comments(self, workspace_slug, repo_name, original_issue_number):
+        import requests
+
+        url = f"https://api.bitbucket.org/2.0/repositories/{workspace_slug}/{repo_name}/issues/{original_issue_number}/comments"
+
+        payload = {}
+        headers = {}
+
+        response = requests.request("GET", url, headers=headers, data=payload)
+        return response.json()['values']
+    
+    def create_issue_comment(self, similar_issues_str, workspace_slug, repo_name, original_issue_number):
+        url = f"https://api.bitbucket.org/2.0/repositories/{workspace_slug}/{repo_name}/issues/{original_issue_number}/comments"
+        payload = json.dumps({
+        "content": {
+            "raw": similar_issues_str
+        }
+        })
+        headers = {
+        'Authorization': f'Bearer {get_settings().get("BITBUCKET.BEARER_TOKEN", None)}',
+        'Content-Type': 'application/json'
+        }
+
+        response = requests.request("POST", url, headers=headers, data=payload)
+
+    def get_repo_obj(self, workspace_slug, repo_name):
+        return self.bitbucket_client.repositories.get(workspace_slug, repo_name)
+    
+    def get_repo_name_for_indexing(self, repo_obj):
+        return repo_obj._BitbucketBase__data['full_name'].lower().replace('/', '-').replace('_/', '-')
+    
+    def check_if_issue_pull_request(self, issue):
+        return False
+
