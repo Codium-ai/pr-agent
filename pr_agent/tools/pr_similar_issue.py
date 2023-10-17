@@ -47,7 +47,7 @@ class PRSimilarIssue:
 
         # check if index exists, and if repo is already indexed
         run_from_scratch = False
-        if run_from_scratch:
+        if run_from_scratch:  # for debugging
             if not index_name in pinecone.list_indexes():
                 get_logger().info('Removing index...')
                 pinecone.init(api_key=api_key, environment=environment)
