@@ -116,7 +116,16 @@ class PRSimilarIssue:
         relevant_comment_number_list = []
         score_list = []
         for r in res['matches']:
-            issue_number = int(r["id"].split('.')[0].split('_')[-1])
+            # skip example issue
+            if 'example_issue_' in r["id"]:
+                continue
+
+            try:
+                issue_number = int(r["id"].split('.')[0].split('_')[-1])
+            except:
+                get_logger().debug(f"Failed to parse issue number from {r['id']}")
+                continue
+
             if original_issue_number == issue_number:
                 continue
             if issue_number not in relevant_issues_number_list:
