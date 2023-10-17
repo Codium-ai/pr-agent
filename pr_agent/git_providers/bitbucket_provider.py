@@ -177,7 +177,13 @@ class BitbucketProvider(GitProvider):
 
     def publish_inline_comments(self, comments: list[dict]):
         for comment in comments:
-            self.publish_inline_comment(comment['body'], comment['start_line'], comment['path'])
+            try:
+                if 'position' in comment:
+                    self.publish_inline_comment(comment['body'], comment['position'], comment['path'])
+                elif 'start_line' in comment:
+                    self.publish_inline_comment(comment['body'], comment['start_line'], comment['path'])
+            except Exception as e:
+                logging.exception(f"Failed to publish inline comment, error: {e}")
 
     def get_title(self):
         return self.pr.title
