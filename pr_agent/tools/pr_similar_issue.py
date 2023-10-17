@@ -1,3 +1,4 @@
+import time
 from enum import Enum
 from typing import List
 
@@ -46,6 +47,13 @@ class PRSimilarIssue:
 
         # check if index exists, and if repo is already indexed
         run_from_scratch = False
+        if run_from_scratch:
+            if not index_name in pinecone.list_indexes():
+                get_logger().info('Removing index...')
+                pinecone.init(api_key=api_key, environment=environment)
+                pinecone.delete_index(index_name)
+                get_logger().info('Done')
+
         upsert = True
         pinecone.init(api_key=api_key, environment=environment)
         if not index_name in pinecone.list_indexes():
@@ -246,6 +254,7 @@ class PRSimilarIssue:
         if not upsert:
             get_logger().info('Creating index from scratch...')
             ds.to_pinecone_index(self.index_name, api_key=api_key, environment=environment)
+            time.sleep(15)  # wait for pinecone to finalize indexing before querying
         else:
             get_logger().info('Upserting index...')
             namespace = ""
@@ -253,6 +262,7 @@ class PRSimilarIssue:
             concurrency: int = 10
             pinecone.init(api_key=api_key, environment=environment)
             ds._upsert_to_index(self.index_name, namespace, batch_size, concurrency)
+            time.sleep(5)  # wait for pinecone to finalize upserting before querying
         get_logger().info('Done')
 
 
