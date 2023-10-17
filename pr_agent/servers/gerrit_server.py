@@ -1,6 +1,4 @@
 import copy
-import logging
-import sys
 from enum import Enum
 from json import JSONDecodeError
 
@@ -12,9 +10,10 @@ from starlette_context import context
 from starlette_context.middleware import RawContextMiddleware
 
 from pr_agent.agent.pr_agent import PRAgent
-from pr_agent.config_loader import global_settings, get_settings
+from pr_agent.config_loader import get_settings, global_settings
+from pr_agent.log import get_logger, setup_logger
 
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+setup_logger()
 router = APIRouter()
 
 
@@ -35,7 +34,7 @@ class Item(BaseModel):
 
 @router.post("/api/v1/gerrit/{action}")
 async def handle_gerrit_request(action: Action, item: Item):
-    logging.debug("Received a Gerrit request")
+    get_logger().debug("Received a Gerrit request")
     context["settings"] = copy.deepcopy(global_settings)
 
     if action == Action.ask:
@@ -54,7 +53,7 @@ async def get_body(request):
     try:
         body = await request.json()
     except JSONDecodeError as e:
-        logging.error("Error parsing request body", e)
+        get_logger().error("Error parsing request body", e)
         return {}
     return body
 

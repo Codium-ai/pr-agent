@@ -1,7 +1,5 @@
 import copy
-import json
 import re
-import logging
 from typing import List, Tuple
 
 from jinja2 import Environment, StrictUndefined
@@ -13,6 +11,7 @@ from pr_agent.algo.utils import load_yaml
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
+from pr_agent.log import get_logger
 
 
 class PRDescription:
@@ -65,13 +64,13 @@ class PRDescription:
         """
 
         try:
-            logging.info(f"Generating a PR description {self.pr_id}")
+            get_logger().info(f"Generating a PR description {self.pr_id}")
             if get_settings().config.publish_output:
                 self.git_provider.publish_comment("Preparing PR description...", is_temporary=True)
 
             await retry_with_fallback_models(self._prepare_prediction)
 
-            logging.info(f"Preparing answer {self.pr_id}")
+            get_logger().info(f"Preparing answer {self.pr_id}")
             if self.prediction:
                 self._prepare_data()
             else:
@@ -88,7 +87,7 @@ class PRDescription:
             full_markdown_description = f"## Title\n\n{pr_title}\n\n___\n{pr_body}"
 
             if get_settings().config.publish_output:
-                logging.info(f"Pushing answer {self.pr_id}")
+                get_logger().info(f"Pushing answer {self.pr_id}")
                 if get_settings().pr_description.publish_description_as_comment:
                     self.git_provider.publish_comment(full_markdown_description)
                 else:
@@ -100,7 +99,7 @@ class PRDescription:
                         self.git_provider.publish_labels(pr_labels + current_labels)
                 self.git_provider.remove_initial_comment()
         except Exception as e:
-            logging.error(f"Error generating PR description {self.pr_id}: {e}")
+            get_logger().error(f"Error generating PR description {self.pr_id}: {e}")
         
         return ""
 
@@ -121,9 +120,9 @@ class PRDescription:
         if get_settings().pr_description.use_description_markers and 'pr_agent:' not in self.user_description:
             return None
 
-        logging.info(f"Getting PR diff {self.pr_id}")
+        get_logger().info(f"Getting PR diff {self.pr_id}")
         self.patches_diff = get_pr_diff(self.git_provider, self.token_handler, model)
-        logging.info(f"Getting AI prediction {self.pr_id}")
+        get_logger().info(f"Getting AI prediction {self.pr_id}")
         self.prediction = await self._get_prediction(model)
 
     async def _get_prediction(self, model: str) -> str:
@@ -144,8 +143,8 @@ class PRDescription:
         user_prompt = environment.from_string(get_settings().pr_description_prompt.user).render(variables)
 
         if get_settings().config.verbosity_level >= 2:
-            logging.info(f"\nSystem prompt:\n{system_prompt}")
-            logging.info(f"\nUser prompt:\n{user_prompt}")
+            get_logger().info(f"\nSystem prompt:\n{system_prompt}")
+            get_logger().info(f"\nUser prompt:\n{user_prompt}")
 
         response, finish_reason = await self.ai_handler.chat_completion(
             model=model,
@@ -178,7 +177,7 @@ class PRDescription:
         return pr_types
 
     def _prepare_pr_answer_with_markers(self) -> Tuple[str, str]:
-        logging.info(f"Using description marker replacements {self.pr_id}")
+        get_logger().info(f"Using description marker replacements {self.pr_id}")
         title = self.vars["title"]
         body = self.user_description
         if get_settings().pr_description.include_generated_by_header:
@@ -252,6 +251,6 @@ class PRDescription:
                 pr_body += "\n___\n"
 
         if get_settings().config.verbosity_level >= 2:
-            logging.info(f"title:\n{title}\n{pr_body}")
+            get_logger().info(f"title:\n{title}\n{pr_body}")
 
         return title, pr_body

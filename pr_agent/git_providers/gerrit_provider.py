@@ -1,5 +1,4 @@
 import json
-import logging
 import os
 import pathlib
 import shutil
@@ -7,18 +6,16 @@ import subprocess
 import uuid
 from collections import Counter, namedtuple
 from pathlib import Path
-from tempfile import mkdtemp, NamedTemporaryFile
+from tempfile import NamedTemporaryFile, mkdtemp
 
 import requests
 import urllib3.util
 from git import Repo
 
 from pr_agent.config_loader import get_settings
-from pr_agent.git_providers.git_provider import GitProvider, FilePatchInfo, \
-    EDIT_TYPE
+from pr_agent.git_providers.git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
 from pr_agent.git_providers.local_git_provider import PullRequestMimic
-
-logger = logging.getLogger(__name__)
+from pr_agent.log import get_logger
 
 
 def _call(*command, **kwargs) -> (int, str, str):
@@ -33,42 +30,42 @@ def _call(*command, **kwargs) -> (int, str, str):
 
 
 def clone(url, directory):
-    logger.info("Cloning %s to %s", url, directory)
+    get_logger().info("Cloning %s to %s", url, directory)
     stdout = _call('git', 'clone', "--depth", "1", url, directory)
-    logger.info(stdout)
+    get_logger().info(stdout)
 
 
 def fetch(url, refspec, cwd):
-    logger.info("Fetching %s %s", url, refspec)
+    get_logger().info("Fetching %s %s", url, refspec)
     stdout = _call(
         'git', 'fetch', '--depth', '2', url, refspec,
         cwd=cwd
     )
-    logger.info(stdout)
+    get_logger().info(stdout)
 
 
 def checkout(cwd):
-    logger.info("Checking out")
+    get_logger().info("Checking out")
     stdout = _call('git', 'checkout', "FETCH_HEAD", cwd=cwd)
-    logger.info(stdout)
+    get_logger().info(stdout)
 
 
 def show(*args, cwd=None):
-    logger.info("Show")
+    get_logger().info("Show")
     return _call('git', 'show', *args, cwd=cwd)
 
 
 def diff(*args, cwd=None):
-    logger.info("Diff")
+    get_logger().info("Diff")
     patch = _call('git', 'diff', *args, cwd=cwd)
     if not patch:
-        logger.warning("No changes found")
+        get_logger().warning("No changes found")
         return
     return patch
 
 
 def reset_local_changes(cwd):
-    logger.info("Reset local changes")
+    get_logger().info("Reset local changes")
     _call('git', 'checkout', "--force", cwd=cwd)
 
 
