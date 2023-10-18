@@ -5,4 +5,4 @@ branding:
   color: 'green'
 runs:
   using: 'docker'
-  image: 'ghcr.io/sofatutor/pr-agent:sofatutor-kids'
+  image: 'docker://ghcr.io/sofatutor/pr-agent:sofatutor-kids'
