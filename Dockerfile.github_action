@@ -1,15 +1,31 @@
-FROM python:3.10-slim-bookworm as base
+FROM python:3.10-slim-bookworm as build
 
 WORKDIR /app
-ADD pyproject.toml .
-ADD requirements.txt .
+ADD pyproject.toml requirements.txt ./
+
+# Install git and Python dependencies
 RUN apt-get update \
-    && apt-get install git -y \
+    && apt-get install -y --no-install-recommends git \
+    && pip install --no-cache-dir -r requirements.txt \
     && apt-get autoremove -y \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
-RUN pip install . && rm pyproject.toml requirements.txt
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+FROM python:3.10-slim-bookworm as runtime
+
+WORKDIR /app
+
+# Copy Python dependencies from build stage
+COPY --from=build /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
+
+# Set Python path
 ENV PYTHONPATH=/app
+
+# Copy the rest of the application
 ADD pr_agent pr_agent
 ADD github_action/entrypoint.sh /
+
+# Make entrypoint script executable
 RUN chmod +x /entrypoint.sh
+
 ENTRYPOINT ["/entrypoint.sh"]
