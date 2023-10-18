@@ -375,59 +375,28 @@ In the "Trigger" section, check the ‘comments’ and ‘merge request events�
 ### Method 9: Run as a Bitbucket Pipeline
 
 
-You can use our pre-build Bitbucket-Pipeline docker image to run as Bitbucket-Pipeline.
+You can use the Bitbucket Pipeline system to run PR-Agent on every pull request open or update.
 
 1. Add the following file in your repository bitbucket_pipelines.yml
 
 ```yaml
-  pipelines:
+pipelines:
     pull-requests:
       '**':
         - step:
-            name: PR Agent Pipeline
-            caches:
-              - pip
-            image: python:3.8
+            name: PR Agent Review
+            image: python:3.10
             services:
               - docker
             script:
-              - git clone https://github.com/Codium-ai/pr-agent.git
-              - cd pr-agent
-              - docker build -t bitbucket_runner:latest -f Dockerfile.bitbucket_pipeline .
-              - docker run -e OPENAI_API_KEY=$OPENAI_API_KEY -e BITBUCKET_BEARER_TOKEN=$BITBUCKET_BEARER_TOKEN -e BITBUCKET_PR_ID=$BITBUCKET_PR_ID -e BITBUCKET_REPO_SLUG=$BITBUCKET_REPO_SLUG -e BITBUCKET_WORKSPACE=$BITBUCKET_WORKSPACE bitbucket_runner:latest
+              - docker run -e CONFIG.GIT_PROVIDER=bitbucket -e OPENAI.KEY=$OPENAI_API_KEY -e BITBUCKET.BEARER_TOKEN=$BITBUCKET_BEARER_TOKEN codiumai/pr-agent:latest --pr_url=https://bitbucket.org/$BITBUCKET_WORKSPACE/$BITBUCKET_REPO_SLUG/pull-requests/$BITBUCKET_PR_ID review
 ```
 
-2. Add the following secret to your repository under Repository settings > Pipelines > Repository variables.
+2. Add the following secure variables to your repository under Repository settings > Pipelines > Repository variables.
 OPENAI_API_KEY: <your key>
 BITBUCKET_BEARER_TOKEN: <your token>
 
-3. To get BITBUCKET_BEARER_TOKEN follow these steps
-  So here is my step by step tutorial
-  i) Insert your workspace name instead of {workspace_name} and go to the following link in order to create an OAuth consumer.
-
-      https://bitbucket.org/{workspace_name}/workspace/settings/api
-
-      set callback URL to http://localhost:8976 (doesn't need to be a real server there)
-      select permissions: repository -> read
-
-  ii) use consumer's Key as a {client_id} and open the following URL in the browser
-
-      https://bitbucket.org/site/oauth2/authorize?client_id={client_id}&response_type=code
-
-  iii)
-      after you press "Grant access" in the browser it will redirect you to
-
-      http://localhost:8976?code=<CODE>
-
-  iv) use the code from the previous step and consumer's Key as a {client_id}, and consumer's Secret as {client_secret}
-
-      curl -X POST -u "{client_id}:{client_secret}" \
-          https://bitbucket.org/site/oauth2/access_token \
-          -d grant_type=authorization_code \
-          -d code={code} \
-
-
-After completing this steps, you just to place this access token in the repository varibles.
+You can get a Bitbucket token for your repository by following Repository Settings -> Security -> Access Tokens
 
 
 =======
