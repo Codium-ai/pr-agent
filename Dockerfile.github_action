@@ -1,4 +1,4 @@
-FROM python:3.10 as base
+FROM python:3.10-slim-bookworm as base
 
 WORKDIR /app
 ADD pyproject.toml .
