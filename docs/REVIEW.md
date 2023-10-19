@@ -49,8 +49,9 @@ The tool will first ask the author questions about the PR, and will guide the re
 #### A note on code suggestions quality
 
 - With current level of AI for code (GPT-4), mistakes can happen. Not all the suggestions will be perfect, and a user should not accept all of them automatically.
-Suggestions are not meant to be [simplistic](./../pr_agent/settings/pr_reviewer_prompts.toml#L29). Instead, they aim to give deep feedback and raise questions, ideas and thoughts to the user, who can then use his judgment, experience, and understanding of the code base.
 
-- Recommended to use the 'extra instructions' field to guide the model to suggestions that are more relevant to the specific needs of the project.
+- Suggestions are not meant to be [simplistic](./../pr_agent/settings/pr_reviewer_prompts.toml#L29). Instead, they aim to give deep feedback and raise questions, ideas and thoughts to the user, who can then use his judgment, experience, and understanding of the code base.
+
+- Recommended to use the 'extra_instructions' field to guide the model to suggestions that are more relevant to the specific needs of the project.
 
 - Unlike the 'review', which does a lot of things, the ['improve --extended'](./IMPROVE.md) feature is dedicated to suggestions, and usually gives better suggestions
