@@ -31,7 +31,8 @@ PR Type:
       - Other
 PR Description:
   type: string
-  description: an informative and concise description of the PR
+  description: an informative and concise description of the PR.
+  {%- if use_bullet_points %} Use bullet points. {% endif %}
 PR Main Files Walkthrough:
   type: array
   maxItems: 10

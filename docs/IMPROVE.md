@@ -32,3 +32,14 @@ Under the section 'pr_code_suggestions', the [configuration file](./../pr_agent/
 - `rank_extended_suggestions`: if set to true, the tool will rank the suggestions, based on importance. Default is true.
 - `max_number_of_calls`: maximum number of chunks. Default is 5.
 - `final_clip_factor`: factor to remove suggestions with low confidence. Default is 0.9.
+
+
+#### A note on code suggestions quality
+
+- With current level of AI for code (GPT-4), mistakes can happen. Not all the suggestions will be perfect, and a user should not accept all of them automatically.
+
+- Suggestions are not meant to be [simplistic](./../pr_agent/settings/pr_code_suggestions_prompts.toml#L34). Instead, they aim to give deep feedback and raise questions, ideas and thoughts to the user, who can then use his judgment, experience, and understanding of the code base.
+
+- Recommended to use the 'extra_instructions' field to guide the model to suggestions that are more relevant to the specific needs of the project.
+
+- Best quality will be obtained by using 'improve --extended' mode.

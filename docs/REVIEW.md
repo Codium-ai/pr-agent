@@ -44,3 +44,14 @@ The tool will first ask the author questions about the PR, and will guide the re
 <kbd><img src=./../pics/reflection_questions.png width="768"></kbd>
 <kbd><img src=./../pics/reflection_answers.png width="768"></kbd>
 <kbd><img src=./../pics/reflection_insights.png width="768"></kbd>
+
+
+#### A note on code suggestions quality
+
+- With current level of AI for code (GPT-4), mistakes can happen. Not all the suggestions will be perfect, and a user should not accept all of them automatically.
+
+- Suggestions are not meant to be [simplistic](./../pr_agent/settings/pr_reviewer_prompts.toml#L29). Instead, they aim to give deep feedback and raise questions, ideas and thoughts to the user, who can then use his judgment, experience, and understanding of the code base.
+
+- Recommended to use the 'extra_instructions' field to guide the model to suggestions that are more relevant to the specific needs of the project.
+
+- Unlike the 'review' feature, which does a lot of things, the ['improve --extended'](./IMPROVE.md) feature is dedicated only to suggestions, and usually gives better results.

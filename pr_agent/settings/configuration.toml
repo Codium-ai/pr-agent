@@ -31,6 +31,7 @@ publish_labels=true
 publish_description_as_comment=false
 add_original_user_description=false
 keep_original_user_title=false
+use_bullet_points=true
 extra_instructions = ""
 # markers
 use_description_markers=false
