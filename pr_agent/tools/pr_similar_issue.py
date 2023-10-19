@@ -129,11 +129,11 @@ class PRSimilarIssue:
                 continue
 
             try:
-                issue_number = int(r["id"].split('.')[0].split('_')[-1])
+                issue_id= r['id']
+                issue_number = self.git_provider.get_issue_numbers_from_list(issue_id)
             except:
                 get_logger().debug(f"Failed to parse issue number from {r['id']}")
                 continue
-
             if original_issue_number == issue_number:
                 continue
             if issue_number not in relevant_issues_number_list:
@@ -171,8 +171,9 @@ class PRSimilarIssue:
     def _update_index_with_issues(self, issues_list, repo_name_for_index, upsert=False):
         get_logger().info('Processing issues...')
         corpus = Corpus()
+        issues = self.git_provider.get_issue_numbers(issues_list)
         example_issue_record = Record(
-            id=str([issue.number for issue in issues_list]),
+            id=str(issues),
             text="example_issue",
             metadata=Metadata(repo=repo_name_for_index)
         )

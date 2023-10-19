@@ -10,6 +10,7 @@ from ..algo.pr_processing import find_line_number_of_relevant_line_in_file
 from ..config_loader import get_settings
 from ..log import get_logger
 from .git_provider import FilePatchInfo, GitProvider
+import ast
 
 
 class BitbucketProvider(GitProvider):
@@ -350,4 +351,17 @@ class BitbucketProvider(GitProvider):
     
     def check_if_issue_pull_request(self, issue):
         return False
+    
+    def get_issue_numbers(self, issue):
+        list_of_issue_numbers = []
+        for issue in issue:
+            list_of_issue_numbers.append(issue.id)
+        return str(list_of_issue_numbers)
+    
+    def get_issue_numbers_from_list(self, issues):
+        # convert str to list'
+        int_list = ast.literal_eval(issues)
+        int_list = [int(x) for x in int_list]
+        for issue_number in int_list:
+            return issue_number
 

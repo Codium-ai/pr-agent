@@ -494,7 +494,7 @@ class GithubProvider(GitProvider):
         return comment.body
     
     def get_issue(self, workspace_slug, repo_name, original_issue_number):
-        return self.repo_obj.get_issue(original_issue_number)
+        return self.repo_obj.get_issue(int(original_issue_number))
     
     def get_repo_obj(self, workspace_slug, repo_name):
         return self.github_client.get_repo(repo_name)
@@ -506,4 +506,10 @@ class GithubProvider(GitProvider):
         if issue.pull_request:
             return True
         return False
+    
+    def get_issue_numbers(self, issues_list):
+        return str([issue.number for issue in issues_list])
+    
+    def get_issue_numbers_from_list(self, r):
+        return int(r.split('.')[0].split('_')[-1])
 
