@@ -34,8 +34,8 @@ class PRSimilarIssue:
 
         # assuming pinecone api key and environment are set in secrets file
         try:
-            api_key = get_settings().github.api_key
-            environment = get_settings().github.environment
+            api_key = get_settings().pinecone.api_key
+            environment = get_settings().pinecone.environment
         except Exception:
             if not self.cli_mode:
                 workspace_slug, repo_name, original_issue_number = self.git_provider._parse_issue_url(self.issue_url.split('=')[-1])
@@ -250,8 +250,8 @@ class PRSimilarIssue:
         ds = Dataset.from_pandas(df, meta)
         get_logger().info('Done')
 
-        api_key = get_settings().github.api_key
-        environment = get_settings().github.environment
+        api_key = get_settings().pinecone.api_key
+        environment = get_settings().pinecone.environment
         if not upsert:
             get_logger().info('Creating index from scratch...')
             ds.to_pinecone_index(self.index_name, api_key=api_key, environment=environment)
