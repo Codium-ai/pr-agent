@@ -25,7 +25,7 @@ code line that already existed in the file....
 The review should focus on new code added in the PR (lines starting with '+'), and not on code that already existed in the file (lines starting with '-', or without prefix).
 
 {%- if num_code_suggestions > 0 %}
-- Provide up to {{ num_code_suggestions }} code suggestions.
+- Provide up to {{ num_code_suggestions }} code suggestions. Try to provide diverse and insightful suggestions.
 - Focus on important suggestions like fixing code problems, issues and bugs. As a second priority, provide suggestions for meaningful code improvements, like performance, vulnerability, modularity, and best practices.
 - Avoid making suggestions that have already been implemented in the PR code. For example, if you want to add logs, or change a variable to const, or anything else, make sure it isn't already in the PR code.
 - Don't suggest to add docstring, type hints, or comments.
@@ -99,10 +99,10 @@ PR Feedback:
   General suggestions:
     type: string
     description: |-
-      General suggestions and feedback for the contributors and maintainers of
-      this PR. May include important suggestions for the overall structure,
-      primary purpose, best practices, critical bugs, and other aspects of the
-      PR. Don't address PR title and description, or lack of tests. Explain your suggestions.
+      General suggestions and feedback for the contributors and maintainers of this PR.
+      May include important suggestions for the overall structure,
+      primary purpose, best practices, critical bugs, and other aspects of the PR.
+      Don't address PR title and description, or lack of tests. Explain your suggestions.
 {%- if num_code_suggestions > 0 %}
   Code feedback:
     type: array
@@ -115,11 +115,10 @@ PR Feedback:
       suggestion:
         type: string
         description: |-
-          a concrete suggestion for meaningfully improving the new PR code. Also
-          describe how, specifically, the suggestion can be applied to new PR
-          code. Add tags with importance measure that matches each suggestion
-          ('important' or 'medium'). Do not make suggestions for updating or
-          adding docstrings, renaming PR title and description, or linter like.
+          a concrete suggestion for meaningfully improving the new PR code.
+          Also describe how, specifically, the suggestion can be applied to new PR code.
+          Add tags with importance measure that matches each suggestion ('important' or 'medium').
+          Do not make suggestions for updating or adding docstrings, renaming PR title and description, or linter like.
       relevant line:
         type: string
         description: |-
