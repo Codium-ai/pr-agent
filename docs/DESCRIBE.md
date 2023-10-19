@@ -35,8 +35,6 @@ For example, if the PR original description was:
 ```
 User content...
 
-## PR Type:
-pr_agent:pr_type
 
 ## PR Description:
 pr_agent:summary
@@ -44,7 +42,7 @@ pr_agent:summary
 ## PR Walkthrough:
 pr_agent:walkthrough
 ```
-The marker `pr_agent:pr_type` will be replaced with the PR type, `pr_agent:summary` will be replaced with the PR summary, and `pr_agent:walkthrough` will be replaced with the PR walkthrough.
+The marker `pr_agent:summary` will be replaced with the PR summary, and `pr_agent:walkthrough` will be replaced with the PR walkthrough.
 
 ##### Example:
 ```
