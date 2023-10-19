@@ -57,5 +57,7 @@ The marker `pr_agent:pr_type` will be replaced with the PR type, `pr_agent:summa
 ```          
 
 <kbd><img src=./../pics/describe_markers_before.png width="768"></kbd>
+
 ==>
+
 <kbd><img src=./../pics/describe_markers_after.png width="768"></kbd>
