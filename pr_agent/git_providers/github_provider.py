@@ -77,7 +77,7 @@ class GithubProvider(GitProvider):
         self.previous_review = None
         self.comments = list(self.pr.get_issue_comments())
         for index in range(len(self.comments) - 1, -1, -1):
-            if self.comments[index].body.startswith("## PR Analysis"):
+            if self.comments[index].body.startswith("## PR Analysis") or self.comments[index].body.startswith("## Incremental PR Review"):
                 self.previous_review = self.comments[index]
                 break
 
