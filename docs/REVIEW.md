@@ -54,4 +54,4 @@ The tool will first ask the author questions about the PR, and will guide the re
 
 - Recommended to use the 'extra_instructions' field to guide the model to suggestions that are more relevant to the specific needs of the project.
 
-- Unlike the 'review', which does a lot of things, the ['improve --extended'](./IMPROVE.md) feature is dedicated to suggestions, and usually gives better suggestions
+- Unlike the 'review' feature, which does a lot of things, the ['improve --extended'](./IMPROVE.md) feature is dedicated only to suggestions, and usually gives better results.
