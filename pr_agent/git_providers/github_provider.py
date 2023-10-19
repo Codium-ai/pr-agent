@@ -241,7 +241,7 @@ class GithubProvider(GitProvider):
                 self.github_user_id = self.github_client.get_user().raw_data['login']
             except Exception as e:
                 self.github_user_id = ""
-                # logging.exception(f"Failed to get user id, error: {e}")
+                # get_logger().exception(f"Failed to get user id, error: {e}")
         return self.github_user_id
 
     def get_notifications(self, since: datetime):
@@ -469,7 +469,7 @@ class GithubProvider(GitProvider):
             issue = self.repo_obj.get_issue(original_issue_number)
             issue.create_comment(similar_issues_str)
         except Exception as e:
-            logging.exception(f"Failed to create issue comment, error: {e}")
+            get_logger().exception(f"Failed to create issue comment, error: {e}")
 
     def get_issue_body(self, issue):
         return issue.body
