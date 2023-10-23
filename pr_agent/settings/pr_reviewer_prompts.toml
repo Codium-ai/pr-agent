@@ -52,12 +52,7 @@ PR Analysis:
   Type of PR:
     type: string
     enum:
-      - Bug fix
-      - Tests
-      - Refactoring
-      - Enhancement
-      - Documentation
-      - Other
+{{ custom_labels }}
 {%- if require_score %}
   Score:
     type: int

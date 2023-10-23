@@ -22,13 +22,7 @@ PR Type:
   items:
     type: string
     enum:
-      - Bug fix
-      - Tests
-      - Bug fix with tests
-      - Refactoring
-      - Enhancement
-      - Documentation
-      - Other
+{{ custom_labels }}
 PR Description:
   type: string
   description: an informative and concise description of the PR.

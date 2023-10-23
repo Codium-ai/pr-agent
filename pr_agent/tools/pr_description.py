@@ -42,7 +42,9 @@ class PRDescription:
             "diff": "",  # empty diff for initial calculation
             "use_bullet_points": get_settings().pr_description.use_bullet_points,
             "extra_instructions": get_settings().pr_description.extra_instructions,
-            "commit_messages_str": self.git_provider.get_commit_messages()
+            "commit_messages_str": self.git_provider.get_commit_messages(),
+            "custom_labels": ""
+
         }
 
         self.user_description = self.git_provider.get_user_description()
@@ -140,6 +142,7 @@ class PRDescription:
         variables["diff"] = self.patches_diff  # update diff
 
         environment = Environment(undefined=StrictUndefined)
+        await self.set_custom_labels(variables)
         system_prompt = environment.from_string(get_settings().pr_description_prompt.system).render(variables)
         user_prompt = environment.from_string(get_settings().pr_description_prompt.user).render(variables)
 
@@ -156,6 +159,14 @@ class PRDescription:
 
         return response
 
+    async def set_custom_labels(self, variables):
+        labels = get_settings().pr_description.custom_labels
+        if not labels:
+            # set default labels
+            labels = ['Bug fix', 'Tests', 'Bug fix with tests', 'Refactoring', 'Enhancement', 'Documentation', 'Other']
+        labels_list = "\n      - ".join(labels) if labels else ""
+        labels_list = f"      - {labels_list}" if labels_list else ""
+        variables["custom_labels"] = labels_list
 
     def _prepare_data(self):
         # Load the AI prediction data into a dictionary

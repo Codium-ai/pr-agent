@@ -149,6 +149,7 @@ class PRReviewer:
         variables["diff"] = self.patches_diff  # update diff
 
         environment = Environment(undefined=StrictUndefined)
+        await self.set_custom_labels(variables)
         system_prompt = environment.from_string(get_settings().pr_review_prompt.system).render(variables)
         user_prompt = environment.from_string(get_settings().pr_review_prompt.user).render(variables)
 
@@ -311,3 +312,12 @@ class PRReviewer:
                     break
 
         return question_str, answer_str
+
+    async def set_custom_labels(self, variables):
+        labels = get_settings().pr_description.custom_labels
+        if not labels:
+            # set default labels
+            labels = ['Bug fix', 'Tests', 'Bug fix with tests', 'Refactoring', 'Enhancement', 'Documentation', 'Other']
+        labels_list = "\n      - ".join(labels) if labels else ""
+        labels_list = f"      - {labels_list}" if labels_list else ""
+        variables["custom_labels"] = labels_list
