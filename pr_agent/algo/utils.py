@@ -304,3 +304,18 @@ def try_fix_yaml(review_text: str) -> dict:
         except:
             pass
     return data
+
+
+async def set_custom_labels(variables):
+    labels = get_settings().custom_labels
+    if not labels:
+        # set default labels
+        labels = ['Bug fix', 'Tests', 'Bug fix with tests', 'Refactoring', 'Enhancement', 'Documentation', 'Other']
+        labels_list = "\n      - ".join(labels) if labels else ""
+        labels_list = f"      - {labels_list}" if labels_list else ""
+        variables["custom_labels"] = labels_list
+        return
+    final_labels = ""
+    for k, v in labels.items():
+        final_labels += f"      - {k} ({v['description']})\n"
+    variables["custom_labels"] = final_labels

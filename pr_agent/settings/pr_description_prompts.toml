@@ -19,6 +19,7 @@ PR Title:
   description: an informative title for the PR, describing its main theme
 PR Type:
   type: array
+  description: One or more labels that describe the PR type. Don't output the description in the parentheses.
   items:
     type: string
     enum:

@@ -38,7 +38,24 @@ extra_instructions = ""
 use_description_markers=false
 include_generated_by_header=true
 
-custom_labels = ['Bug fix', 'Tests', 'Bug fix with tests', 'Refactoring', 'Enhancement', 'Documentation', 'Other']
+[custom_labels."Bug fix"]
+description = "Fixes a bug in the code"
+[custom_labels."Tests"]
+description = "Adds or modifies tests"
+[custom_labels."Bug fix with tests"]
+description = "Fixes a bug in the code and adds or modifies tests"
+[custom_labels."Refactoring"]
+description = "Refactors the code without changing its functionality"
+[custom_labels."Enhancement"]
+description = "Adds new features or functionality"
+[custom_labels."Documentation"]
+description = "Adds or modifies documentation"
+[custom_labels."SQL modifications"]
+description = "Adds or modifies SQL queries"
+[custom_labels."Other"]
+description = "Other changes that do not fit in any of the above categories"
+
+#custom_labels = ['Bug fix', 'Tests', 'Bug fix with tests', 'Refactoring', 'Enhancement', 'Documentation', 'Other']
 
 [pr_questions] # /ask #
 

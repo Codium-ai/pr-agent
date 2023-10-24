@@ -9,7 +9,7 @@ from yaml import SafeLoader
 from pr_agent.algo.ai_handler import AiHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import convert_to_markdown, load_yaml, try_fix_yaml
+from pr_agent.algo.utils import convert_to_markdown, load_yaml, try_fix_yaml, set_custom_labels
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import IncrementalPR, get_main_pr_language
@@ -150,7 +150,7 @@ class PRReviewer:
         variables["diff"] = self.patches_diff  # update diff
 
         environment = Environment(undefined=StrictUndefined)
-        await self.set_custom_labels(variables)
+        await set_custom_labels(variables)
         system_prompt = environment.from_string(get_settings().pr_review_prompt.system).render(variables)
         user_prompt = environment.from_string(get_settings().pr_review_prompt.user).render(variables)
 
@@ -313,12 +313,3 @@ class PRReviewer:
                     break
 
         return question_str, answer_str
-
-    async def set_custom_labels(self, variables):
-        labels = get_settings().pr_description.custom_labels
-        if not labels:
-            # set default labels
-            labels = ['Bug fix', 'Tests', 'Bug fix with tests', 'Refactoring', 'Enhancement', 'Documentation', 'Other']
-        labels_list = "\n      - ".join(labels) if labels else ""
-        labels_list = f"      - {labels_list}" if labels_list else ""
-        variables["custom_labels"] = labels_list
