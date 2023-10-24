@@ -63,6 +63,7 @@ class PRReviewer:
             'answer_str': answer_str,
             "extra_instructions": get_settings().pr_reviewer.extra_instructions,
             "commit_messages_str": self.git_provider.get_commit_messages(),
+            "custom_labels": ""
         }
 
         self.token_handler = TokenHandler(
