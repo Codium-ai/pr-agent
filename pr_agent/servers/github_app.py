@@ -1,7 +1,7 @@
 import copy
 import os
-import time
-from typing import Any, Dict
+import asyncio.locks
+from typing import Any, Dict, List
 
 import uvicorn
 from fastapi import APIRouter, FastAPI, HTTPException, Request, Response
@@ -14,8 +14,9 @@ from pr_agent.algo.utils import update_settings_from_args
 from pr_agent.config_loader import get_settings, global_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.utils import apply_repo_settings
+from pr_agent.git_providers.git_provider import IncrementalPR
 from pr_agent.log import LoggingFormat, get_logger, setup_logger
-from pr_agent.servers.utils import verify_signature
+from pr_agent.servers.utils import verify_signature, DefaultDictWithTimeout
 
 setup_logger(fmt=LoggingFormat.JSON)
 
@@ -47,6 +48,7 @@ async def handle_marketplace_webhooks(request: Request, response: Response):
     body = await get_body(request)
     get_logger().info(f'Request body:\n{body}')
 
+
 async def get_body(request):
     try:
         body = await request.json()
@@ -61,7 +63,9 @@ async def get_body(request):
     return body
 
 
-_duplicate_requests_cache = {}
+_duplicate_requests_cache = DefaultDictWithTimeout(ttl=get_settings().github_app.duplicate_requests_cache_ttl)
+_duplicate_branch_push_triggers = DefaultDictWithTimeout(ttl=get_settings().github_app.push_event_pending_triggers_ttl)
+_pending_task_duplicate_push_conditions = DefaultDictWithTimeout(asyncio.locks.Condition, ttl=get_settings().github_app.push_event_pending_triggers_ttl)
 
 
 async def handle_request(body: Dict[str, Any], event: str):
@@ -73,7 +77,7 @@ async def handle_request(body: Dict[str, Any], event: str):
         event: The GitHub event type.
     """
     action = body.get("action")
-    if not action:
+    if not (action or event == "push"):
         return {}
     agent = PRAgent()
     bot_user = get_settings().github_app.bot_user
@@ -127,20 +131,120 @@ async def handle_request(body: Dict[str, Any], event: str):
                     # avoid double reviews when opening a PR for the first time
                     return {}
             get_logger().info(f"Performing review because of event={event} and action={action}")
-            apply_repo_settings(api_url)
-            for command in get_settings().github_app.pr_commands:
-                split_command = command.split(" ")
-                command = split_command[0]
-                args = split_command[1:]
-                other_args = update_settings_from_args(args)
-                new_command = ' '.join([command] + other_args)
-                get_logger().info(body)
-                get_logger().info(f"Performing command: {new_command}")
-                with get_logger().contextualize(**log_context):
-                    await agent.handle_request(api_url, new_command)
+            await _perform_commands(get_settings().github_app.pr_commands, agent, body, api_url, log_context)
+
+    # handle push event for new commits
+    elif event == "push" and get_settings().github_app.handle_push_event:
+        get_logger().debug(f"[PUSH] {body=}")
+        # get the branch name
+        ref = body.get("ref")
+        get_logger().debug(f"[PUSH] {ref=}")
+        if not (ref and ref.startswith("refs/heads/")):
+            return {}
+        branch = ref.removeprefix("refs/heads/")
+        get_logger().debug(f"[PUSH] {branch=}")
+        # skip first push (PR will follow)
+        if body.get("created"):
+            get_logger().debug("[PUSH] skipping first push")
+            return {}
+        # skip if no relevant commits (e.g. no commits at all, only bot/merge commits)
+        commits = body.get("commits", [])
+        get_logger().debug(f"[PUSH] {len(commits)} {commits=}")
+        bot_commits = [commit for commit in commits if commit.get("author", {}).get("username", "") == bot_user]
+        get_logger().debug(f"[PUSH] {len(bot_commits)} {bot_commits=}")
+        merge_commits = [commit for commit in commits if commit.get("message", "").startswith("Merge branch ")]
+        get_logger().debug(f"[PUSH] {len(merge_commits)} {merge_commits=}")
+        commit_ids_to_ignore = set()
+        if get_settings().github_app.push_event_ignore_bot_commits:
+            commit_ids_to_ignore.update({commit.get("id") for commit in bot_commits})
+        if get_settings().github_app.push_event_ignore_bot_commits:
+            commit_ids_to_ignore.update({commit.get("id") for commit in merge_commits})
+        commits = [commit for commit in commits if commit.get("id") not in commit_ids_to_ignore]
+        if not commits:
+            return {}
+        # TODO: consider adding some custom prompt to instruct the PR-Agent how to address bot commits
+
+        # Prevent triggering multiple times for subsequent push events when one is enough:
+        # The first event will trigger the processing, and if there's a second event in the meanwhile it will wait.
+        # Any more events will be discarded, because they will all trigger the exact same processing on the PR.
+        # We let the second event wait instead of discarding it because while the first event was being processed,
+        # more commits may have been pushed that led to the subsequent push events,
+        # so we keep just one waiting as a delegate to trigger the processing for the new commits when done waiting.
+        current_active_tasks = _duplicate_branch_push_triggers.setdefault(branch, 0)
+        max_active_tasks = 2 if get_settings().github_app.push_event_pending_triggers_backlog else 1
+        if current_active_tasks < max_active_tasks:
+            # first and second tasks can enter
+            get_logger().info(
+                f"Continue processing push event for {branch=} because there are {current_active_tasks} active tasks"
+            )
+            _duplicate_branch_push_triggers[branch] += 1
+        else:
+            get_logger().info(
+                f"Skipping push event for {branch=} because another event already triggered the same processing"
+            )
+            return {}
+        async with _pending_task_duplicate_push_conditions[branch]:
+            if current_active_tasks == 1:
+                # second task waits
+                get_logger().info(
+                    f"Waiting to process push event for {branch=} because the first task is still in progress"
+                )
+                await _pending_task_duplicate_push_conditions[branch].wait()
+                get_logger().info(f"Finished waiting to process push event for {branch=} - continue with flow")
+
+        try:
+            # get PR info for branch
+            provider = get_git_provider()()
+            provider.repo, _ = provider._parse_pr_url(body["repository"]["html_url"].rstrip("/") + "/pull/1")
+            get_logger().debug(f"[PUSH] {provider.repo=}")
+            github_repo = provider._get_repo()
+            default_branch = body["repository"]["default_branch"]
+            get_logger().debug(f"[PUSH] {default_branch=}")
+            org = body["repository"]["organization"]
+            get_logger().debug(f"[PUSH] {org=}")
+            pull_requests = list(github_repo.get_pulls(state="open", base=default_branch, head=":".join((org, branch))))
+            get_logger().debug(f"[PUSH] {pull_requests=}")
+            if not pull_requests:
+                return {}
+            pull_request = pull_requests[0].raw_data
+            # check that the PR is valid to run the agent like in the pull_request event
+            if not pull_request:
+                return {}
+            api_url = pull_request.get("url")
+            get_logger().debug(f"[PUSH] {api_url=}")
+            if not api_url:
+                return {}
+            log_context["api_url"] = api_url
+            if pull_request.get("draft", True) or pull_request.get("state") != "open" or pull_request.get("user", {}).get("login", "") == bot_user:
+                return {}
+            if get_settings().github_app.push_event_wait_for_initial_review and not get_git_provider()(api_url, incremental=IncrementalPR(True)).previous_review:
+                get_logger().info(f"Skipping incremental review because there was no initial review for PR={api_url} yet")
+                return {}
+            get_logger().info(f"Performing incremental review because of event={event} and branch={branch} with PR={api_url}")
+            await _perform_commands(get_settings().github_app.push_commands, agent, body, api_url, log_context)
+
+        finally:
+            # release the waiting task block
+            async with _pending_task_duplicate_push_conditions[branch]:
+                _pending_task_duplicate_push_conditions[branch].notify(1)
+                _duplicate_branch_push_triggers[branch] -= 1
 
     get_logger().info("event or action does not require handling")
     return {}
+
+
+async def _perform_commands(commands: List[str], agent: PRAgent, body: dict, api_url: str, log_context: dict):
+    apply_repo_settings(api_url)
+    for command in commands:
+        split_command = command.split(" ")
+        command = split_command[0]
+        args = split_command[1:]
+        other_args = update_settings_from_args(args)
+        new_command = ' '.join([command] + other_args)
+        get_logger().info(body)
+        get_logger().info(f"Performing command: {new_command}")
+        with get_logger().contextualize(**log_context):
+            await agent.handle_request(api_url, new_command)
 
 
 def _is_duplicate_request(body: Dict[str, Any]) -> bool:
@@ -150,13 +254,8 @@ def _is_duplicate_request(body: Dict[str, Any]) -> bool:
     """
     request_hash = hash(str(body))
     get_logger().info(f"request_hash: {request_hash}")
-    request_time = time.monotonic()
-    ttl = get_settings().github_app.duplicate_requests_cache_ttl  # in seconds
-    to_delete = [key for key, key_time in _duplicate_requests_cache.items() if request_time - key_time > ttl]
-    for key in to_delete:
-        del _duplicate_requests_cache[key]
-    is_duplicate = request_hash in _duplicate_requests_cache
-    _duplicate_requests_cache[request_hash] = request_time
+    is_duplicate = _duplicate_requests_cache.get(request_hash, False)
+    _duplicate_requests_cache[request_hash] = True
     if is_duplicate:
         get_logger().info(f"Ignoring duplicate request {request_hash}")
     return is_duplicate

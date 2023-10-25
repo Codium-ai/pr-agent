@@ -98,6 +98,9 @@ class PRReviewer:
             if self.is_auto and not get_settings().pr_reviewer.automatic_review:
                 get_logger().info(f'Automatic review is disabled {self.pr_url}')
                 return None
+            if self.is_auto and self.incremental.is_incremental and not self.incremental.first_new_commit_sha:
+                get_logger().info(f"Incremental review is enabled for {self.pr_url} but there are no new commits")
+                return None
 
             get_logger().info(f'Reviewing PR: {self.pr_url} ...')
 
@@ -228,9 +231,13 @@ class PRReviewer:
         if self.incremental.is_incremental:
             last_commit_url = f"{self.git_provider.get_pr_url()}/commits/" \
                               f"{self.git_provider.incremental.first_new_commit_sha}"
+            last_commit_msg = self.incremental.commits_range[0].commit.message if self.incremental.commits_range else ""
+            incremental_review_markdown_text = f"Starting from commit {last_commit_url}"
+            if last_commit_msg:
+                incremental_review_markdown_text += f"  \n_({last_commit_msg.splitlines(keepends=False)[0]})_"
             data = OrderedDict(data)
             data.update({'Incremental PR Review': {
-                "⏮️ Review for commits since previous PR-Agent review": f"Starting from commit {last_commit_url}"}})
+                "⏮️ Review for commits since previous PR-Agent review": incremental_review_markdown_text}})
             data.move_to_end('Incremental PR Review', last=False)
 
         markdown_text = convert_to_markdown(data, self.git_provider.is_supported("gfm_markdown"))

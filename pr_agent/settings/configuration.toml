@@ -83,6 +83,26 @@ pr_commands = [
     "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true",
     "/auto_review",
 ]
+# settings for "push" event
+handle_push_event = false
+push_event_ignore_bot_commits = true
+push_event_ignore_merge_commits = true
+push_event_wait_for_initial_review = true
+push_event_pending_triggers_backlog = true
+push_event_pending_triggers_ttl = 300
+push_commands = [
+    "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true",
+    """/auto_review -i \
+       --pr_reviewer.require_focused_review=false \
+       --pr_reviewer.require_score_review=false \
+       --pr_reviewer.require_tests_review=false \
+       --pr_reviewer.require_security_review=false \
+       --pr_reviewer.require_estimate_effort_to_review=false \
+       --pr_reviewer.num_code_suggestions=0 \
+       --pr_reviewer.inline_code_comments=false \
+       --pr_reviewer.extra_instructions='' \
+    """
+]
 
 [gitlab]
 # URL to the gitlab service
