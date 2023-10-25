@@ -18,10 +18,10 @@ async def run_action():
     OPENAI_ORG = os.environ.get('OPENAI_ORG') or os.environ.get('OPENAI.ORG')
     GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN')
     CUSTOM_LABELS = os.environ.get('CUSTOM_LABELS')
+    CUSTOM_LABELS_DESCRIPTION = os.environ.get('CUSTOM_LABELS_DESCRIPTION')
     # CUSTOM_LABELS is a comma separated list of labels (string), convert to list and strip spaces
 
     get_settings().set("CONFIG.PUBLISH_OUTPUT_PROGRESS", False)
-
 
     # Check if required environment variables are set
     if not GITHUB_EVENT_NAME:
@@ -42,6 +42,22 @@ async def run_action():
         # Set default labels
         CUSTOM_LABELS = ['Bug fix', 'Tests', 'Bug fix with tests', 'Refactoring', 'Enhancement', 'Documentation', 'Other']
         print(f"Using default labels: {CUSTOM_LABELS}")
+    if CUSTOM_LABELS_DESCRIPTION:
+        CUSTOM_LABELS_DESCRIPTION = [x.strip() for x in CUSTOM_LABELS_DESCRIPTION.split(',')]
+    else:
+        # Set default labels
+        CUSTOM_LABELS_DESCRIPTION = ['Fixes a bug in the code', 'Adds or modifies tests',
+                                     'Fixes a bug in the code and adds or modifies tests',
+                                     'Refactors the code without changing its functionality',
+                                     'Adds new features or functionality',
+                                     'Adds or modifies documentation',
+                                     'Other changes that do not fit in any of the above categories']
+        print(f"Using default labels: {CUSTOM_LABELS_DESCRIPTION}")
+
+    # create a dictionary of labels and descriptions
+    CUSTOM_LABELS_DICT = dict()
+    for i in range(len(CUSTOM_LABELS)):
+        CUSTOM_LABELS_DICT[CUSTOM_LABELS[i]] = {'description': CUSTOM_LABELS_DESCRIPTION[i]}
 
     # Set the environment variables in the settings
     get_settings().set("OPENAI.KEY", OPENAI_KEY)
@@ -49,7 +65,7 @@ async def run_action():
         get_settings().set("OPENAI.ORG", OPENAI_ORG)
     get_settings().set("GITHUB.USER_TOKEN", GITHUB_TOKEN)
     get_settings().set("GITHUB.DEPLOYMENT_TYPE", "user")
-    get_settings().set("PR_DESCIPTION.CUSTOM_LABELS", CUSTOM_LABELS)
+    get_settings().set("CUSTOM_LABELS", CUSTOM_LABELS_DICT)
 
     # Load the event payload
     try:
