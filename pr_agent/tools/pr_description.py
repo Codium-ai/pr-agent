@@ -43,7 +43,9 @@ class PRDescription:
             "use_bullet_points": get_settings().pr_description.use_bullet_points,
             "extra_instructions": get_settings().pr_description.extra_instructions,
             "commit_messages_str": self.git_provider.get_commit_messages(),
-            "custom_labels": ""
+            "enable_custom_labels": get_settings().pr_description.enable_custom_labels,
+            "custom_labels": "",
+            "custom_labels_examples": "",
         }
 
         self.user_description = self.git_provider.get_user_description()
@@ -141,7 +143,7 @@ class PRDescription:
         variables["diff"] = self.patches_diff  # update diff
 
         environment = Environment(undefined=StrictUndefined)
-        await set_custom_labels(variables)
+        set_custom_labels(variables)
         system_prompt = environment.from_string(get_settings().pr_description_prompt.system).render(variables)
         user_prompt = environment.from_string(get_settings().pr_description_prompt.user).render(variables)
 

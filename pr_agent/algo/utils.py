@@ -306,7 +306,7 @@ def try_fix_yaml(review_text: str) -> dict:
     return data
 
 
-async def set_custom_labels(variables):
+def set_custom_labels(variables):
     labels = get_settings().custom_labels
     if not labels:
         # set default labels
@@ -319,3 +319,4 @@ async def set_custom_labels(variables):
     for k, v in labels.items():
         final_labels += f"      - {k} ({v['description']})\n"
     variables["custom_labels"] = final_labels
+    variables["custom_labels_examples"] = f"      - {list(labels.keys())[0]}"

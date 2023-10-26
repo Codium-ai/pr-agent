@@ -51,8 +51,22 @@ PR Analysis:
     description: summary of the PR in 2-3 sentences.
   Type of PR:
     type: string
+{%- if enable_custom_labels %}
+  description: One or more labels that describe the PR type. Don't output the description in the parentheses.
+{%- endif %}
+  items:
+    type: string
     enum:
+{%- if enable_custom_labels %}
 {{ custom_labels }}
+{%- else %}
+      - Bug fix
+      - Tests
+      - Refactoring
+      - Enhancement
+      - Documentation
+      - Other
+{%- endif %}
 {%- if require_score %}
   Score:
     type: int
