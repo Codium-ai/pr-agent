@@ -335,7 +335,7 @@ class PRReviewer:
 
     def _remove_previous_review_comment(self, comment):
         """
-        Get the previous review comment if it exists.
+        Remove the previous review comment if it exists.
         """
         try:
             if get_settings().pr_reviewer.remove_previous_review_comment and comment:
