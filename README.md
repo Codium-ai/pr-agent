@@ -33,7 +33,9 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 ‣ **Add Documentation ([`/add_docs`](./docs/ADD_DOCUMENTATION.md))**: Automatically adds documentation to un-documented functions/classes in the PR.
 
 See the [Installation Guide](./INSTALL.md) for instructions how to install and run the tool on different platforms.
+
 See the [Usage Guide](./Usage.md) for instructions how to run the different tools from _CLI_, _online usage_, or by _automatically triggering_ them when a new PR is opened.
+
 See the [Tools Guide](./docs/TOOLS_GUIDE.md) for detailed description of the different tools.
 
 <h3>Example results:</h3>

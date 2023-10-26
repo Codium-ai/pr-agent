@@ -4,24 +4,25 @@
 To get started with PR-Agent quickly, you first need to acquire two tokens:
 
 1. An OpenAI key from [here](https://platform.openai.com/), with access to GPT-4.
-2. A GitHub personal access token (classic) with the repo scope.
+2. A GitHub\GitLab\BitBucket\... personal access token (classic) with the repo scope.
 
 There are several ways to use PR-Agent:
 
-- [Use Docker image (no installation required)](INSTALL.md#use-docker-image-no-installation-required)
+**Locally**
+- [Using Docker image (no installation required)](INSTALL.md#use-docker-image-no-installation-required)
 - [Run from source](INSTALL.md#run-from-source)
 
-GitHub specific methods:
+**GitHub specific methods**
 - [Run as a GitHub Action](INSTALL.md#run-as-a-github-action)
 - [Run as a polling server](INSTALL.md#run-as-a-polling-server)
 - [Run as a GitHub App](INSTALL.md#run-as-a-github-app)
 - [Deploy as a Lambda Function](INSTALL.md#deploy-as-a-lambda-function)
 - [AWS CodeCommit](INSTALL.md#aws-codecommit-setup)
 
-GitLab specific methods:
-- [un a GitLab webhook server](INSTALL.md#run-a-gitlab-webhook-server)
+**GitLab specific methods**
+- [Run a GitLab webhook server](INSTALL.md#run-a-gitlab-webhook-server)
 
-BitBucket specific methods:
+**BitBucket specific methods**
 - [Run as a Bitbucket Pipeline](INSTALL.md#run-as-a-bitbucket-pipeline)
 - [Run on a hosted app](INSTALL.md#run-on-a-hosted-bitbucket-app)
 ---
@@ -34,12 +35,17 @@ To request a review for a PR, or ask a question about a PR, you can run directly
 
 For GitHub:
 ```
-docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent --pr_url <pr_url> review
+docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent:latest --pr_url <pr_url> review
 ```
 For GitLab:
 ```
-docker run --rm -it -e OPENAI.KEY=<your key> -e CONFIG.GIT_PROVIDER=gitlab -e GITLAB.PERSONAL_ACCESS_TOKEN=<your token> codiumai/pr-agent --pr_url <pr_url> review
+docker run --rm -it -e OPENAI.KEY=<your key> -e CONFIG.GIT_PROVIDER=gitlab -e GITLAB.PERSONAL_ACCESS_TOKEN=<your token> codiumai/pr-agent:latest --pr_url <pr_url> review
 ```
+For BitBucker:
+```
+docker run -e CONFIG.GIT_PROVIDER=bitbucket -e OPENAI.KEY=$OPENAI_API_KEY -e BITBUCKET.BEARER_TOKEN=$BITBUCKET_BEARER_TOKEN codiumai/pr-agent:latest --pr_url=https://bitbucket.org/$BITBUCKET_WORKSPACE/$BITBUCKET_REPO_SLUG/pull-requests/$BITBUCKET_PR_ID review
+```
+
 For other git providers, update CONFIG.GIT_PROVIDER accordingly, and check the `pr_agent/settings/.secrets_template.toml` file for the environment variables expected names and values.
 
 2. To ask a question about a PR, run the following command:
@@ -49,24 +55,15 @@ docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> c
 ```
 Note: If you want to ensure you're running a specific version of the Docker image, consider using the image's digest.
 The digest is a unique identifier for a specific version of an image. You can pull and run an image using its digest by referencing it like so: repository@sha256:digest. Always ensure you're using the correct and trusted digest for your operations.
-
-1. To request a review for a PR using a specific digest, run the following command:
+For example, to request a review for a PR using a specific digest, run the following command:
 ```bash
 docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent@sha256:71b5ee15df59c745d352d84752d01561ba64b6d51327f97d46152f0c58a5f678 --pr_url <pr_url> review
 ```
 
-2. To ask a question about a PR using the same digest, run the following command:
-```bash
-docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent@sha256:71b5ee15df59c745d352d84752d01561ba64b6d51327f97d46152f0c58a5f678 --pr_url <pr_url> ask "<your question>"
+in addition, you can use tags to pull a [specific released versions](./RELEASE_NOTES.md) of the image, for example:
 ```
-
-Possible questions you can ask include:
-
-- What is the main theme of this PR?
-- Is the PR ready for merge?
-- What are the main changes in this PR?
-- Should this PR be split into smaller parts?
-- Can you compose a rhymed song about this PR?
+codiumai/pr-agent@v0.8
+```
 
 ---
 
@@ -177,7 +174,8 @@ When you open your next PR, you should see a comment from `github-actions` bot w
 ### Run as a polling server
 Request reviews by tagging your GitHub user on a PR
 
-Follow steps 1-3 of method 2.
+Follow steps 1-3 of [the previous step](#run-as-a-github-app).
+
 Run the following command to start the server:
 
 ```
@@ -267,8 +265,8 @@ docker push codiumai/pr-agent:github_app  # Push to your Docker repository
 9. Install the app by navigating to the "Install App" tab and selecting your desired repositories.
 
 > **Note:** When running PR-Agent from GitHub App, the default configuration file (configuration.toml) will be loaded.<br>
-> However, you can override the default tool parameters by uploading a local configuration file<br>
-> For more information please check out [CONFIGURATION.md](Usage.md#working-from-github-app-pre-built-repo)
+> However, you can override the default tool parameters by uploading a local configuration file `.pr_agent.toml`<br>
+> For more information please check out the [USAGE GUIDE](./Usage.md#working-from-github-app-pre-built-repo)
 ---
 
 ### Deploy as a Lambda Function
