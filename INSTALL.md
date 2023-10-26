@@ -396,7 +396,9 @@ pipelines:
 OPENAI_API_KEY: <your key>
 BITBUCKET_BEARER_TOKEN: <your token>
 
-You can get a Bitbucket token for your repository by following Repository Settings -> Security -> Access Tokens
+You can get a Bitbucket token for your repository by following Repository Settings -> Security -> Access Tokens.
+
+Please contact <support@codium.ai> if you're interested in a hosted BitBucket app solution that provides full functionality including PR reviews and comment handling. It's based on the [bitbucket_app.py](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/git_providers/bitbucket_provider.py) implmentation.
 
 
 =======
