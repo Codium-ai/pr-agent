@@ -8,18 +8,25 @@ To get started with PR-Agent quickly, you first need to acquire two tokens:
 
 There are several ways to use PR-Agent:
 
-- [Method 1: Use Docker image (no installation required)](INSTALL.md#method-1-use-docker-image-no-installation-required)
-- [Method 2: Run from source](INSTALL.md#method-2-run-from-source)
-- [Method 3: Run as a GitHub Action](INSTALL.md#method-3-run-as-a-github-action)
-- [Method 4: Run as a polling server](INSTALL.md#method-4-run-as-a-polling-server)
-- [Method 5: Run as a GitHub App](INSTALL.md#method-5-run-as-a-github-app)
-- [Method 6: Deploy as a Lambda Function](INSTALL.md#method-6---deploy-as-a-lambda-function)
-- [Method 7: AWS CodeCommit](INSTALL.md#method-7---aws-codecommit-setup)
-- [Method 8: Run a GitLab webhook server](INSTALL.md#method-8---run-a-gitlab-webhook-server)
-- [Method 9: Run as a Bitbucket Pipeline](INSTALL.md#method-9-run-as-a-bitbucket-pipeline)
+- [Use Docker image (no installation required)](INSTALL.md#use-docker-image-no-installation-required)
+- [Run from source](INSTALL.md#run-from-source)
+
+GitHub specific methods:
+- [Run as a GitHub Action](INSTALL.md#run-as-a-github-action)
+- [Run as a polling server](INSTALL.md#run-as-a-polling-server)
+- [Run as a GitHub App](INSTALL.md#run-as-a-github-app)
+- [Deploy as a Lambda Function](INSTALL.md#deploy-as-a-lambda-function)
+- [AWS CodeCommit](INSTALL.md#aws-codecommit-setup)
+
+GitLab specific methods:
+- [un a GitLab webhook server](INSTALL.md#run-a-gitlab-webhook-server)
+
+BitBucket specific methods:
+- [Run as a Bitbucket Pipeline](INSTALL.md#run-as-a-bitbucket-pipeline)
+- [Run on a hosted app](INSTALL.md#run-on-a-hosted-bitbucket-app)
 ---
 
-### Method 1: Use Docker image (no installation required)
+### Use Docker image (no installation required)
 
 To request a review for a PR, or ask a question about a PR, you can run directly from the Docker image. Here's how:
 
@@ -63,7 +70,7 @@ Possible questions you can ask include:
 
 ---
 
-### Method 2: Run from source
+### Run from source
 
 1. Clone this repository:
 
@@ -97,7 +104,7 @@ python3 -m pr_agent.cli --pr_url <pr_url> improve
 
 ---
 
-### Method 3: Run as a GitHub Action
+### Run as a GitHub Action
 
 You can use our pre-built Github Action Docker image to run PR-Agent as a Github Action.
 
@@ -167,8 +174,8 @@ When you open your next PR, you should see a comment from `github-actions` bot w
 
 ---
 
-### Method 4: Run as a polling server
-Request reviews by tagging your Github user on a PR
+### Run as a polling server
+Request reviews by tagging your GitHub user on a PR
 
 Follow steps 1-3 of method 2.
 Run the following command to start the server:
@@ -179,7 +186,7 @@ python pr_agent/servers/github_polling.py
 
 ---
 
-### Method 5: Run as a GitHub App
+### Run as a GitHub App
 Allowing you to automate the review process on your private or public repositories.
 
 1. Create a GitHub App from the [Github Developer Portal](https://docs.github.com/en/developers/apps/creating-a-github-app).
@@ -264,9 +271,9 @@ docker push codiumai/pr-agent:github_app  # Push to your Docker repository
 > For more information please check out [CONFIGURATION.md](Usage.md#working-from-github-app-pre-built-repo)
 ---
 
-### Method 6 - Deploy as a Lambda Function
+### Deploy as a Lambda Function
 
-1. Follow steps 1-5 of [Method 5](#method-5-run-as-a-github-app).
+1. Follow steps 1-5 of [Method 5](#run-as-a-github-app).
 2. Build a docker image that can be used as a lambda function
     ```shell
     docker buildx build --platform=linux/amd64 . -t codiumai/pr-agent:serverless -f docker/Dockerfile.lambda
@@ -278,12 +285,12 @@ docker push codiumai/pr-agent:github_app  # Push to your Docker repository
     ```
 4. Create a lambda function that uses the uploaded image. Set the lambda timeout to be at least 3m.
 5. Configure the lambda function to have a Function URL.
-6. Go back to steps 8-9 of [Method 5](#method-5-run-as-a-github-app) with the function url as your Webhook URL.
+6. Go back to steps 8-9 of [Method 5](#run-as-a-github-app) with the function url as your Webhook URL.
     The Webhook URL would look like `https://<LAMBDA_FUNCTION_URL>/api/v1/github_webhooks`
 
 ---
 
-### Method 7 - AWS CodeCommit Setup
+### AWS CodeCommit Setup
 
 Not all features have been added to CodeCommit yet.  As of right now, CodeCommit has been implemented to run the pr-agent CLI on the command line, using AWS credentials stored in environment variables.  (More features will be added in the future.)  The following is a set of instructions to have pr-agent do a review of your CodeCommit pull request from the command line:
 
@@ -353,7 +360,7 @@ PYTHONPATH="/PATH/TO/PROJECTS/pr-agent" python pr_agent/cli.py \
 
 ---
 
-### Method 8 - Run a GitLab webhook server
+### Run a GitLab webhook server
 
 1. From the GitLab workspace or group, create an access token. Enable the "api" scope only.
 2. Generate a random secret for your app, and save it for later. For example, you can use:
@@ -372,7 +379,7 @@ In the "Trigger" section, check the ‘comments’ and ‘merge request events�
 
 
 
-### Method 9: Run as a Bitbucket Pipeline
+### Run as a Bitbucket Pipeline
 
 
 You can use the Bitbucket Pipeline system to run PR-Agent on every pull request open or update.
@@ -397,6 +404,9 @@ OPENAI_API_KEY: <your key>
 BITBUCKET_BEARER_TOKEN: <your token>
 
 You can get a Bitbucket token for your repository by following Repository Settings -> Security -> Access Tokens.
+
+
+### Run on a hosted Bitbucket app
 
 Please contact <support@codium.ai> if you're interested in a hosted BitBucket app solution that provides full functionality including PR reviews and comment handling. It's based on the [bitbucket_app.py](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/git_providers/bitbucket_provider.py) implmentation.
 
