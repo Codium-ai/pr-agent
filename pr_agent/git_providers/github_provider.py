@@ -63,7 +63,7 @@ class GithubProvider(GitProvider):
 
     def get_commit_range(self):
         last_review_time = self.previous_review.created_at
-        first_new_commit_index = 0
+        first_new_commit_index = None
         for index in range(len(self.commits) - 1, -1, -1):
             if self.commits[index].commit.author.date > last_review_time:
                 self.incremental.first_new_commit_sha = self.commits[index].sha
@@ -71,7 +71,7 @@ class GithubProvider(GitProvider):
             else:
                 self.incremental.last_seen_commit_sha = self.commits[index].sha
                 break
-        return self.commits[first_new_commit_index:]
+        return self.commits[first_new_commit_index:] if first_new_commit_index is not None else []
 
     def get_previous_review(self, *, full: bool, incremental: bool):
         if not (full or incremental):
