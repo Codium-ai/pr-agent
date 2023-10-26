@@ -28,15 +28,15 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 \
 ‣ **Update Changelog ([`/update_changelog`](./docs/UPDATE_CHANGELOG.md))**: Automatically updating the CHANGELOG.md file with the PR changes.
 \
-‣ **Find similar issue ([`/similar_issue`](./docs/SIMILAR_ISSUE.md))**: Automatically retrieves and presents similar issues
+‣ **Find Similar Issue ([`/similar_issue`](./docs/SIMILAR_ISSUE.md))**: Automatically retrieves and presents similar issues
 \
 ‣ **Add Documentation ([`/add_docs`](./docs/ADD_DOCUMENTATION.md))**: Automatically adds documentation to un-documented functions/classes in the PR.
 
-See the [Usage Guide](./Usage.md) for instructions how to run the different tools from _CLI_, _online usage_, Or by _automatically triggering_ them when a new PR is opened.
+See the [Installation Guide](./INSTALL.md) for instructions how to install and run the tool on different platforms.
+
+See the [Usage Guide](./Usage.md) for instructions how to run the different tools from _CLI_, _online usage_, or by _automatically triggering_ them when a new PR is opened.
 
 See the [Tools Guide](./docs/TOOLS_GUIDE.md) for detailed description of the different tools.
-
-See the [Release notes](./RELEASE_NOTES.md) for updates on the latest changes.
 
 <h3>Example results:</h3>
 </div>
@@ -204,6 +204,9 @@ Here are some advantages of PR-Agent:
   - [x] Documentation (is the PR properly documented)
   - [ ] ...
 
+See the [Release notes](./RELEASE_NOTES.md) for updates on the latest changes.
+
+
 ## Similar Projects
 
 - [CodiumAI - Meaningful tests for busy devs](https://github.com/Codium-ai/codiumai-vscode-release) (although various capabilities are much more advanced in the CodiumAI IDE plugins)
@@ -211,7 +214,12 @@ Here are some advantages of PR-Agent:
 - [openai-pr-reviewer](https://github.com/coderabbitai/openai-pr-reviewer)
 - [CodeReview BOT](https://github.com/anc95/ChatGPT-CodeReview)
 - [AI-Maintainer](https://github.com/merwanehamadi/AI-Maintainer)
-  
+
+## Data Privacy
+
+If you use self-host PR-Agent, e.g. via CLI running on your computer, with your OpenAI API key, it is between you and OpenAI. You can read their API data privacy policy here:
+https://openai.com/enterprise-privacy
+
 ## Links
 
 [![Join our Discord community](https://raw.githubusercontent.com/Codium-ai/codiumai-vscode-release/main/media/docs/Joincommunity.png)](https://discord.gg/kG35uSHDBc)

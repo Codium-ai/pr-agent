@@ -12,7 +12,7 @@
 
 ### Introduction
 
-See the **[installation guide](/INSTALL.md)** for instructions on how to setup PR-Agent. After installation, there are three basic ways to invoke CodiumAI PR-Agent:
+After [installation](/INSTALL.md), there are three basic ways to invoke CodiumAI PR-Agent:
 1. Locally running a CLI command
 2. Online usage - by [commenting](https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695021901) on a PR
 3. Enabling PR-Agent tools to run automatically when a new PR is opened
