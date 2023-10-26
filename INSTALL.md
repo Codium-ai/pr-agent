@@ -4,7 +4,7 @@
 To get started with PR-Agent quickly, you first need to acquire two tokens:
 
 1. An OpenAI key from [here](https://platform.openai.com/), with access to GPT-4.
-2. A GitHub\GitLab\BitBucket\... personal access token (classic) with the repo scope.
+2. A GitHub\GitLab\BitBucket personal access token (classic) with the repo scope.
 
 There are several ways to use PR-Agent:
 
@@ -31,8 +31,6 @@ There are several ways to use PR-Agent:
 
 To request a review for a PR, or ask a question about a PR, you can run directly from the Docker image. Here's how:
 
-1. To request a review for a PR, run the following command:
-
 For GitHub:
 ```
 docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent:latest --pr_url <pr_url> review
@@ -41,26 +39,27 @@ For GitLab:
 ```
 docker run --rm -it -e OPENAI.KEY=<your key> -e CONFIG.GIT_PROVIDER=gitlab -e GITLAB.PERSONAL_ACCESS_TOKEN=<your token> codiumai/pr-agent:latest --pr_url <pr_url> review
 ```
-For BitBucker:
+For BitBucket:
 ```
 docker run -e CONFIG.GIT_PROVIDER=bitbucket -e OPENAI.KEY=$OPENAI_API_KEY -e BITBUCKET.BEARER_TOKEN=$BITBUCKET_BEARER_TOKEN codiumai/pr-agent:latest --pr_url=https://bitbucket.org/$BITBUCKET_WORKSPACE/$BITBUCKET_REPO_SLUG/pull-requests/$BITBUCKET_PR_ID review
 ```
 
 For other git providers, update CONFIG.GIT_PROVIDER accordingly, and check the `pr_agent/settings/.secrets_template.toml` file for the environment variables expected names and values.
 
-2. To ask a question about a PR, run the following command:
 
+Similarly, to ask a question about a PR, run the following command:
 ```
 docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent --pr_url <pr_url> ask "<your question>"
 ```
-Note: If you want to ensure you're running a specific version of the Docker image, consider using the image's digest.
-The digest is a unique identifier for a specific version of an image. You can pull and run an image using its digest by referencing it like so: repository@sha256:digest. Always ensure you're using the correct and trusted digest for your operations.
-For example, to request a review for a PR using a specific digest, run the following command:
+
+A list of the relevant tools can be found in the [tools guide](./docs/TOOLS_GUIDE.md).
+
+
+Note: If you want to ensure you're running a specific version of the Docker image, consider using the image's digest:
 ```bash
 docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent@sha256:71b5ee15df59c745d352d84752d01561ba64b6d51327f97d46152f0c58a5f678 --pr_url <pr_url> review
 ```
-
-in addition, you can use tags to pull a [specific released versions](./RELEASE_NOTES.md) of the image, for example:
+in addition, you can run a [specific released versions](./RELEASE_NOTES.md) of pr-agent, for example:
 ```
 codiumai/pr-agent@v0.8
 ```
@@ -97,6 +96,9 @@ python3 -m pr_agent.cli --pr_url <pr_url> review
 python3 -m pr_agent.cli --pr_url <pr_url> ask <your question>
 python3 -m pr_agent.cli --pr_url <pr_url> describe
 python3 -m pr_agent.cli --pr_url <pr_url> improve
+python3 -m pr_agent.cli --pr_url <pr_url> add_docs
+python3 -m pr_agent.cli --issue_url <issue_url> similar_issue
+...
 ```
 
 ---
@@ -174,7 +176,7 @@ When you open your next PR, you should see a comment from `github-actions` bot w
 ### Run as a polling server
 Request reviews by tagging your GitHub user on a PR
 
-Follow steps 1-3 of [the previous step](#run-as-a-github-app).
+Follow [steps 1-3](#run-as-a-github-action) of the GitHub Action setup.
 
 Run the following command to start the server:
 
@@ -266,7 +268,7 @@ docker push codiumai/pr-agent:github_app  # Push to your Docker repository
 
 > **Note:** When running PR-Agent from GitHub App, the default configuration file (configuration.toml) will be loaded.<br>
 > However, you can override the default tool parameters by uploading a local configuration file `.pr_agent.toml`<br>
-> For more information please check out the [USAGE GUIDE](./Usage.md#working-from-github-app-pre-built-repo)
+> For more information please check out the [USAGE GUIDE](./Usage.md#working-with-github-app)
 ---
 
 ### Deploy as a Lambda Function
