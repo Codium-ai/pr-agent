@@ -84,13 +84,13 @@ pr_commands = [
     "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true",
     "/auto_review",
 ]
-# settings for "push" event
-handle_push_event = false
-push_event_ignore_bot_commits = true
-push_event_ignore_merge_commits = true
-push_event_wait_for_initial_review = true
-push_event_pending_triggers_backlog = true
-push_event_pending_triggers_ttl = 300
+# settings for "pull_request" event with "synchronize" action - used to detect and handle push triggers for new commits
+handle_push_trigger = false
+push_trigger_ignore_bot_commits = true
+push_trigger_ignore_merge_commits = true
+push_trigger_wait_for_initial_review = true
+push_trigger_pending_tasks_backlog = true
+push_trigger_pending_tasks_ttl = 300
 push_commands = [
     "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true",
     """/auto_review -i \
