@@ -50,7 +50,7 @@ class GithubProvider(GitProvider):
     def get_incremental_commits(self):
         self.commits = list(self.pr.get_commits())
 
-        self.get_previous_review()
+        self.previous_review = self.get_previous_review(full=True, incremental=True)
         if self.previous_review:
             self.incremental.commits_range = self.get_commit_range()
             # Get all files changed during the commit range
@@ -73,13 +73,19 @@ class GithubProvider(GitProvider):
                 break
         return self.commits[first_new_commit_index:]
 
-    def get_previous_review(self):
-        self.previous_review = None
-        self.comments = list(self.pr.get_issue_comments())
+    def get_previous_review(self, *, full: bool, incremental: bool):
+        if not (full or incremental):
+            raise ValueError("At least one of full or incremental must be True")
+        if not getattr(self, "comments", None):
+            self.comments = list(self.pr.get_issue_comments())
+        prefixes = []
+        if full:
+            prefixes.append("## PR Analysis")
+        if incremental:
+            prefixes.append("## Incremental PR Review")
         for index in range(len(self.comments) - 1, -1, -1):
-            if self.comments[index].body.startswith("## PR Analysis") or self.comments[index].body.startswith("## Incremental PR Review"):
-                self.previous_review = self.comments[index]
-                break
+            if any(self.comments[index].body.startswith(prefix) for prefix in prefixes):
+                return self.comments[index]
 
     def get_files(self):
         if self.incremental.is_incremental and self.file_set:
@@ -218,9 +224,15 @@ class GithubProvider(GitProvider):
         try:
             for comment in getattr(self.pr, 'comments_list', []):
                 if comment.is_temporary:
-                    comment.delete()
+                    self.remove_comment(comment)
         except Exception as e:
             get_logger().exception(f"Failed to remove initial comment, error: {e}")
+
+    def remove_comment(self, comment):
+        try:
+            comment.delete()
+        except Exception as e:
+            get_logger().exception(f"Failed to remove comment, error: {e}")
 
     def get_title(self):
         return self.pr.title

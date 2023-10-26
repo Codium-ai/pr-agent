@@ -72,6 +72,10 @@ class GitProvider(ABC):
         pass
 
     @abstractmethod
+    def remove_comment(self, comment):
+        pass
+
+    @abstractmethod
     def get_languages(self):
         pass
 

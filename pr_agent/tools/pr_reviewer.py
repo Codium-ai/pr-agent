@@ -114,9 +114,10 @@ class PRReviewer:
 
             if get_settings().config.publish_output:
                 get_logger().info('Pushing PR review...')
+                previous_review_comment = self._get_previous_review_comment()
                 self.git_provider.publish_comment(pr_comment)
                 self.git_provider.remove_initial_comment()
-
+                self._remove_previous_review_comment(previous_review_comment)
                 if get_settings().pr_reviewer.inline_code_comments:
                     get_logger().info('Pushing inline code comments...')
                     self._publish_inline_code_comments()
@@ -318,3 +319,26 @@ class PRReviewer:
                     break
 
         return question_str, answer_str
+
+    def _get_previous_review_comment(self):
+        """
+        Get the previous review comment if it exists.
+        """
+        try:
+            if get_settings().pr_reviewer.remove_previous_review_comment and hasattr(self.git_provider, "get_previous_review"):
+                return self.git_provider.get_previous_review(
+                    full=not self.incremental.is_incremental,
+                    incremental=self.incremental.is_incremental,
+                )
+        except Exception as e:
+            get_logger().exception(f"Failed to get previous review comment, error: {e}")
+
+    def _remove_previous_review_comment(self, comment):
+        """
+        Get the previous review comment if it exists.
+        """
+        try:
+            if get_settings().pr_reviewer.remove_previous_review_comment and comment:
+                self.git_provider.remove_comment(comment)
+        except Exception as e:
+            get_logger().exception(f"Failed to remove previous review comment, error: {e}")

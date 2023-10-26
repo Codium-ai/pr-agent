@@ -396,5 +396,8 @@ class GerritProvider(GitProvider):
         # shutil.rmtree(self.repo_path)
         pass
 
+    def remove_comment(self, comment):
+        pass
+
     def get_pr_branch(self):
         return self.repo.head

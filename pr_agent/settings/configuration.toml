@@ -24,6 +24,7 @@ num_code_suggestions=4
 inline_code_comments = false
 ask_and_reflect=false
 automatic_review=true
+remove_previous_review_comment=false
 extra_instructions = ""
 
 [pr_description] # /describe #
@@ -100,6 +101,7 @@ push_commands = [
        --pr_reviewer.require_estimate_effort_to_review=false \
        --pr_reviewer.num_code_suggestions=0 \
        --pr_reviewer.inline_code_comments=false \
+       --pr_reviewer.remove_previous_review_comment=true \
        --pr_reviewer.extra_instructions='' \
     """
 ]
