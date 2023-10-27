@@ -37,7 +37,6 @@ extra_instructions = ""
 # markers
 use_description_markers=false
 include_generated_by_header=true
-enable_custom_labels=false
 
 #custom_labels = ['Bug fix', 'Tests', 'Bug fix with tests', 'Refactoring', 'Enhancement', 'Documentation', 'Other']
 

@@ -45,7 +45,7 @@ class PRGenerateLabels:
             "commit_messages_str": self.git_provider.get_commit_messages(),
             "custom_labels": "",
             "custom_labels_examples": "",
-            "enable_custom_labels": get_settings().pr_description.enable_custom_labels,
+            "enable_custom_labels": get_settings().enable_custom_labels,
         }
 
         # Initialize the token handler
