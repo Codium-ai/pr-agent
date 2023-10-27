@@ -12,23 +12,33 @@ from starlette_context.middleware import RawContextMiddleware
 
 from pr_agent.agent.pr_agent import PRAgent
 from pr_agent.config_loader import get_settings, global_settings
-from pr_agent.log import get_logger, setup_logger
+from pr_agent.log import LoggingFormat, get_logger, setup_logger
 from pr_agent.secret_providers import get_secret_provider
 
-setup_logger()
+setup_logger(fmt=LoggingFormat.JSON)
 router = APIRouter()
 
 secret_provider = get_secret_provider() if get_settings().get("CONFIG.SECRET_PROVIDER") else None
 
 
+def handle_request(background_tasks: BackgroundTasks, url: str, body: str, log_context: dict):
+    log_context["action"] = body
+    log_context["event"] = "pull_request" if body == "/review" else "comment"
+    log_context["api_url"] = url
+    with get_logger().contextualize(**log_context):
+        background_tasks.add_task(PRAgent().handle_request, url, body)
+
+
 @router.post("/webhook")
 async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
+    log_context = {"server_type": "gitlab_app"}
     if request.headers.get("X-Gitlab-Token") and secret_provider:
         request_token = request.headers.get("X-Gitlab-Token")
         secret = secret_provider.get_secret(request_token)
         try:
             secret_dict = json.loads(secret)
             gitlab_token = secret_dict["gitlab_token"]
+            log_context["sender"] = secret_dict["id"]
             context["settings"] = copy.deepcopy(global_settings)
             context["settings"].gitlab.personal_access_token = gitlab_token
         except Exception as e:
@@ -48,13 +58,13 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
     if data.get('object_kind') == 'merge_request' and data['object_attributes'].get('action') in ['open', 'reopen']:
         get_logger().info(f"A merge request has been opened: {data['object_attributes'].get('title')}")
         url = data['object_attributes'].get('url')
-        background_tasks.add_task(PRAgent().handle_request, url, "/review")
+        handle_request(background_tasks, url, "/review")
     elif data.get('object_kind') == 'note' and data['event_type'] == 'note':
         if 'merge_request' in data:
             mr = data['merge_request']
             url = mr.get('url')
             body = data.get('object_attributes', {}).get('note')
-            background_tasks.add_task(PRAgent().handle_request, url, body)
+            handle_request(background_tasks, url, body)
     return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
 
 
