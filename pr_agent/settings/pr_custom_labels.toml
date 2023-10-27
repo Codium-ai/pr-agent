@@ -34,7 +34,7 @@ PR Type:
 
 Example output:
 ```yaml
-PR Labels:
+PR Type:
 {%- if enable_custom_labels %}
 {{ custom_labels_examples }}
 {%- else %}
