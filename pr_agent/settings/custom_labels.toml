@@ -1,4 +1,4 @@
-enable_custom_labels=true
+enable_custom_labels=false
 
 [custom_labels."Bug fix"]
 description = "Fixes a bug in the code"
