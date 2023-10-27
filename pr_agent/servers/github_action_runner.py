@@ -18,7 +18,7 @@ async def run_action():
     OPENAI_ORG = os.environ.get('OPENAI_ORG') or os.environ.get('OPENAI.ORG')
     GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN')
     CUSTOM_LABELS = os.environ.get('CUSTOM_LABELS')
-    CUSTOM_LABELS_DESCRIPTION = os.environ.get('CUSTOM_LABELS_DESCRIPTION')
+    CUSTOM_LABELS_DESCRIPTIONS = os.environ.get('CUSTOM_LABELS_DESCRIPTIONS')
     # CUSTOM_LABELS is a comma separated list of labels (string), convert to list and strip spaces
 
     get_settings().set("CONFIG.PUBLISH_OUTPUT_PROGRESS", False)
@@ -36,7 +36,7 @@ async def run_action():
     if not GITHUB_TOKEN:
         print("GITHUB_TOKEN not set")
         return
-    CUSTOM_LABELS_DICT = handle_custom_labels(CUSTOM_LABELS, CUSTOM_LABELS_DESCRIPTION)
+    CUSTOM_LABELS_DICT = handle_custom_labels(CUSTOM_LABELS, CUSTOM_LABELS_DESCRIPTIONS)
 
     # Set the environment variables in the settings
     get_settings().set("OPENAI.KEY", OPENAI_KEY)
@@ -93,7 +93,7 @@ async def run_action():
                         await PRAgent().handle_request(url, body)
 
 
-def handle_custom_labels(CUSTOM_LABELS, CUSTOM_LABELS_DESCRIPTION):
+def handle_custom_labels(CUSTOM_LABELS, CUSTOM_LABELS_DESCRIPTIONS):
     if CUSTOM_LABELS:
         CUSTOM_LABELS = [x.strip() for x in CUSTOM_LABELS.split(',')]
     else:
@@ -101,21 +101,21 @@ def handle_custom_labels(CUSTOM_LABELS, CUSTOM_LABELS_DESCRIPTION):
         CUSTOM_LABELS = ['Bug fix', 'Tests', 'Bug fix with tests', 'Refactoring', 'Enhancement', 'Documentation',
                          'Other']
         print(f"Using default labels: {CUSTOM_LABELS}")
-    if CUSTOM_LABELS_DESCRIPTION:
-        CUSTOM_LABELS_DESCRIPTION = [x.strip() for x in CUSTOM_LABELS_DESCRIPTION.split(',')]
+    if CUSTOM_LABELS_DESCRIPTIONS:
+        CUSTOM_LABELS_DESCRIPTIONS = [x.strip() for x in CUSTOM_LABELS_DESCRIPTIONS.split(',')]
     else:
         # Set default labels
-        CUSTOM_LABELS_DESCRIPTION = ['Fixes a bug in the code', 'Adds or modifies tests',
+        CUSTOM_LABELS_DESCRIPTIONS = ['Fixes a bug in the code', 'Adds or modifies tests',
                                      'Fixes a bug in the code and adds or modifies tests',
                                      'Refactors the code without changing its functionality',
                                      'Adds new features or functionality',
                                      'Adds or modifies documentation',
                                      'Other changes that do not fit in any of the above categories']
-        print(f"Using default labels: {CUSTOM_LABELS_DESCRIPTION}")
+        print(f"Using default labels: {CUSTOM_LABELS_DESCRIPTIONS}")
     # create a dictionary of labels and descriptions
     CUSTOM_LABELS_DICT = dict()
     for i in range(len(CUSTOM_LABELS)):
-        CUSTOM_LABELS_DICT[CUSTOM_LABELS[i]] = {'description': CUSTOM_LABELS_DESCRIPTION[i]}
+        CUSTOM_LABELS_DICT[CUSTOM_LABELS[i]] = {'description': CUSTOM_LABELS_DESCRIPTIONS[i]}
     return CUSTOM_LABELS_DICT
 
 
