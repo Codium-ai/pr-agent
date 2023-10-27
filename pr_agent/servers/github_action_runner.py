@@ -17,8 +17,11 @@ async def run_action():
     OPENAI_KEY = os.environ.get('OPENAI_KEY') or os.environ.get('OPENAI.KEY')
     OPENAI_ORG = os.environ.get('OPENAI_ORG') or os.environ.get('OPENAI.ORG')
     GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN')
-    get_settings().set("CONFIG.PUBLISH_OUTPUT_PROGRESS", False)
+    CUSTOM_LABELS = os.environ.get('CUSTOM_LABELS')
+    CUSTOM_LABELS_DESCRIPTIONS = os.environ.get('CUSTOM_LABELS_DESCRIPTIONS')
+    # CUSTOM_LABELS is a comma separated list of labels (string), convert to list and strip spaces
 
+    get_settings().set("CONFIG.PUBLISH_OUTPUT_PROGRESS", False)
 
     # Check if required environment variables are set
     if not GITHUB_EVENT_NAME:
@@ -33,6 +36,7 @@ async def run_action():
     if not GITHUB_TOKEN:
         print("GITHUB_TOKEN not set")
         return
+    CUSTOM_LABELS_DICT = handle_custom_labels(CUSTOM_LABELS, CUSTOM_LABELS_DESCRIPTIONS)
 
     # Set the environment variables in the settings
     get_settings().set("OPENAI.KEY", OPENAI_KEY)
@@ -40,6 +44,7 @@ async def run_action():
         get_settings().set("OPENAI.ORG", OPENAI_ORG)
     get_settings().set("GITHUB.USER_TOKEN", GITHUB_TOKEN)
     get_settings().set("GITHUB.DEPLOYMENT_TYPE", "user")
+    get_settings().set("CUSTOM_LABELS", CUSTOM_LABELS_DICT)
 
     # Load the event payload
     try:
@@ -86,6 +91,32 @@ async def run_action():
                         await PRAgent().handle_request(url, body, notify=lambda: provider.add_eyes_reaction(comment_id))
                     else:
                         await PRAgent().handle_request(url, body)
+
+
+def handle_custom_labels(CUSTOM_LABELS, CUSTOM_LABELS_DESCRIPTIONS):
+    if CUSTOM_LABELS:
+        CUSTOM_LABELS = [x.strip() for x in CUSTOM_LABELS.split(',')]
+    else:
+        # Set default labels
+        CUSTOM_LABELS = ['Bug fix', 'Tests', 'Bug fix with tests', 'Refactoring', 'Enhancement', 'Documentation',
+                         'Other']
+        print(f"Using default labels: {CUSTOM_LABELS}")
+    if CUSTOM_LABELS_DESCRIPTIONS:
+        CUSTOM_LABELS_DESCRIPTIONS = [x.strip() for x in CUSTOM_LABELS_DESCRIPTIONS.split(',')]
+    else:
+        # Set default labels
+        CUSTOM_LABELS_DESCRIPTIONS = ['Fixes a bug in the code', 'Adds or modifies tests',
+                                     'Fixes a bug in the code and adds or modifies tests',
+                                     'Refactors the code without changing its functionality',
+                                     'Adds new features or functionality',
+                                     'Adds or modifies documentation',
+                                     'Other changes that do not fit in any of the above categories']
+        print(f"Using default labels: {CUSTOM_LABELS_DESCRIPTIONS}")
+    # create a dictionary of labels and descriptions
+    CUSTOM_LABELS_DICT = dict()
+    for i in range(len(CUSTOM_LABELS)):
+        CUSTOM_LABELS_DICT[CUSTOM_LABELS[i]] = {'description': CUSTOM_LABELS_DESCRIPTIONS[i]}
+    return CUSTOM_LABELS_DICT
 
 
 if __name__ == '__main__':

@@ -7,6 +7,7 @@ from pr_agent.tools.pr_add_docs import PRAddDocs
 from pr_agent.tools.pr_code_suggestions import PRCodeSuggestions
 from pr_agent.tools.pr_config import PRConfig
 from pr_agent.tools.pr_description import PRDescription
+from pr_agent.tools.pr_generate_labels import PRGenerateLabels
 from pr_agent.tools.pr_information_from_user import PRInformationFromUser
 from pr_agent.tools.pr_questions import PRQuestions
 from pr_agent.tools.pr_reviewer import PRReviewer
@@ -31,6 +32,7 @@ command2class = {
     "settings": PRConfig,
     "similar_issue": PRSimilarIssue,
     "add_docs": PRAddDocs,
+    "generate_labels": PRGenerateLabels,
 }
 
 commands = list(command2class.keys())
