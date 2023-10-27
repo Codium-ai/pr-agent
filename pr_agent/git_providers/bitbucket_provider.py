@@ -288,9 +288,10 @@ class BitbucketProvider(GitProvider):
     def get_labels(self):
         pass
 
-    def get_issue(self, workspace_slug, repo_name, original_issue_number):
+    def get_issue(self, issue_url):
+        workspace_slug, repo_name, original_issue_number = self._parse_issue_url(issue_url)
         issue = self.bitbucket_client.repositories.get(workspace_slug, repo_name).issues.get(original_issue_number)
-        return issue
+        return issue, original_issue_number
     
     def get_issue_url(self, issue):
         return issue._BitbucketBase__data['links']['html']['href']
@@ -310,7 +311,8 @@ class BitbucketProvider(GitProvider):
     def get_issue_created_at(self, issue):
         return str(issue.created_on)
     
-    def get_username(self, issue, workspace_slug):
+    def get_username(self, issue, issue_url):
+        workspace_slug, repo_name, original_issue_numbers = self._parse_issue_url(issue_url)
         return workspace_slug
 
     
@@ -318,7 +320,8 @@ class BitbucketProvider(GitProvider):
         return repo_obj._Repository__issues.each()
 
    
-    def get_issues_comments(self, workspace_slug, repo_name, original_issue_number):
+    def get_issues_comments(self, issue):
+        workspace_slug, repo_name, original_issue_number = self._parse_issue_url(issue)
         import requests
 
         url = f"https://api.bitbucket.org/2.0/repositories/{workspace_slug}/{repo_name}/issues/{original_issue_number}/comments"
@@ -329,7 +332,8 @@ class BitbucketProvider(GitProvider):
         response = requests.request("GET", url, headers=headers, data=payload)
         return response.json()['values']
     
-    def create_issue_comment(self, similar_issues_str, workspace_slug, repo_name, original_issue_number):
+    def create_issue_comment(self, similar_issues_str, issue_url, original_issue_number):
+        workspace_slug, repo_name, original_issue_number = self._parse_issue_url(issue_url)
         url = f"https://api.bitbucket.org/2.0/repositories/{workspace_slug}/{repo_name}/issues/{original_issue_number}/comments"
         payload = json.dumps({
         "content": {
@@ -343,7 +347,8 @@ class BitbucketProvider(GitProvider):
 
         response = requests.request("POST", url, headers=headers, data=payload)
 
-    def get_repo_obj(self, workspace_slug, repo_name):
+    def get_repo_obj_parse_issue_url(self, issue_url):
+        workspace_slug, repo_name, original_issue_number = self._parse_issue_url(issue_url)
         return self.bitbucket_client.repositories.get(workspace_slug, repo_name)
     
     def get_repo_name_for_indexing(self, repo_obj):
@@ -352,16 +357,19 @@ class BitbucketProvider(GitProvider):
     def check_if_issue_pull_request(self, issue):
         return False
     
-    def get_issue_numbers(self, issue):
-        list_of_issue_numbers = []
-        for issue in issue:
-            list_of_issue_numbers.append(issue.id)
-        return str(list_of_issue_numbers)
-    
     def get_issue_numbers_from_list(self, issues):
         # convert str to list'
         int_list = ast.literal_eval(issues)
         int_list = [int(x) for x in int_list]
         for issue_number in int_list:
             return issue_number
+        
+    def get_similar_issues(self, issue_url, issue_number_similar):
+        workspace_slug, repo_name, original_issue_number = self._parse_issue_url(issue_url)
+        issue = self.bitbucket_client.repositories.get(workspace_slug, repo_name).issues.get(issue_number_similar)
+        return issue
 
+    def get_main_issue(self, issue_url):
+        workspace_slug, repo_name, original_issue_number = self._parse_issue_url(issue_url)
+        issue = self.bitbucket_client.repositories.get(workspace_slug, repo_name).issues.get(original_issue_number)
+        return issue

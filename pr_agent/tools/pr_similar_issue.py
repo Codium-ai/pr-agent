@@ -24,9 +24,7 @@ class PRSimilarIssue:
         self.max_issues_to_scan = get_settings().pr_similar_issue.max_issues_to_scan
         self.issue_url = issue_url
         self.git_provider = get_git_provider()()
-        self.workspace_slug, self.repo_name, self.issue_number = self.git_provider._parse_issue_url(issue_url.split('=')[-1])
-        self.git_provider.repo = self.repo_name
-        self.git_provider.repo_obj = self.git_provider.get_repo_obj(self.workspace_slug, self.repo_name)
+        self.git_provider.repo_obj  = self.git_provider.get_repo_obj_parse_issue_url(issue_url.split('=')[-1])
         self.token_handler = TokenHandler()
         repo_obj = self.git_provider.repo_obj
         repo_name_for_index = self.repo_name_for_index = self.git_provider.get_repo_name_for_indexing(repo_obj)
@@ -38,17 +36,16 @@ class PRSimilarIssue:
             environment = get_settings().pinecone.environment
         except Exception:
             if not self.cli_mode:
-                workspace_slug, repo_name, original_issue_number = self.git_provider._parse_issue_url(self.issue_url.split('=')[-1])
-                issue_main = self.git_provider.get_issue(workspace_slug, repo_name, original_issue_number)
+                issue_main = self.git_provider.get_main_issue(self.issue_url.split('=')[-1])
                 issue_main.create_comment("Please set pinecone api key and environment in secrets file")
             raise Exception("Please set pinecone api key and environment in secrets file")
 
         # check if index exists, and if repo is already indexed
-        run_from_scratch = False
+        run_from_scratch = True
         if run_from_scratch:  # for debugging
-            if not index_name in pinecone.list_indexes():
+            pinecone.init(api_key=api_key, environment=environment)
+            if index_name in pinecone.list_indexes():
                 get_logger().info('Removing index...')
-                pinecone.init(api_key=api_key, environment=environment)
                 pinecone.delete_index(index_name)
                 get_logger().info('Done')
 
@@ -106,8 +103,7 @@ class PRSimilarIssue:
 
     async def run(self):
         get_logger().info('Getting issue...')
-        workspace_slug, repo_name, original_issue_number = self.git_provider._parse_issue_url(self.issue_url.split('=')[-1])
-        issue_main = self.git_provider.get_issue(workspace_slug, repo_name, original_issue_number)
+        issue_main, original_issue_number = self.git_provider.get_issue(self.issue_url.split('=')[-1])
         issue_str, comments, number = self._process_issue(issue_main)
         openai.api_key = get_settings().openai.key
         get_logger().info('Done')
@@ -130,7 +126,7 @@ class PRSimilarIssue:
 
             try:
                 issue_id= r['id']
-                issue_number = self.git_provider.get_issue_numbers_from_list(issue_id)
+                issue_number = int(issue_id.split('.')[0].split('_')[-1])
             except:
                 get_logger().debug(f"Failed to parse issue number from {r['id']}")
                 continue
@@ -148,12 +144,12 @@ class PRSimilarIssue:
         get_logger().info('Publishing response...')
         similar_issues_str = "### Similar Issues\n___\n\n"
         for i, issue_number_similar in enumerate(relevant_issues_number_list):
-            issue = self.git_provider.get_issue(workspace_slug, repo_name, issue_number_similar)
+            issue = self.git_provider.get_similar_issues(self.issue_url.split('=')[-1], issue_number_similar)
             title = issue.title
             url = self.git_provider.get_issue_url(issue)
             similar_issues_str += f"{i + 1}. **[{title}]({url})** (score={score_list[i]})\n\n"
         if get_settings().config.publish_output:
-            response = self.git_provider.create_issue_comment(similar_issues_str, workspace_slug, repo_name, original_issue_number)
+            response = self.git_provider.create_issue_comment(similar_issues_str, self.issue_url.split('=')[-1], original_issue_number)
         get_logger().info(similar_issues_str)
         get_logger().info('Done')
 
@@ -164,16 +160,15 @@ class PRSimilarIssue:
         if get_settings().pr_similar_issue.skip_comments:
             comments = []
         else:
-            comments = self.git_provider.get_issues_comments(self.workspace_slug, self.repo_name, self.issue_number)
+            comments = self.git_provider.get_issues_comments(self.issue_url.split('=')[-1])
         issue_str = f"Issue Header: \"{header}\"\n\nIssue Body:\n{body}"
         return issue_str, comments, number
 
     def _update_index_with_issues(self, issues_list, repo_name_for_index, upsert=False):
         get_logger().info('Processing issues...')
         corpus = Corpus()
-        issues = self.git_provider.get_issue_numbers(issues_list)
         example_issue_record = Record(
-            id=str(issues),
+            id=f"example_issue_{repo_name_for_index}",
             text="example_issue",
             metadata=Metadata(repo=repo_name_for_index)
         )
@@ -195,7 +190,7 @@ class PRSimilarIssue:
 
             issue_str, comments, number = self._process_issue(issue)
             issue_key = f"issue_{number}"
-            username = self.git_provider.get_username(issue, self.workspace_slug)
+            username = self.git_provider.get_username(issue, self.issue_url.split('=')[-1])
             created_at = self.git_provider.get_issue_created_at(issue)
             if len(issue_str) < 8000 or \
                     self.token_handler.count_tokens(issue_str) < MAX_TOKENS[MODEL]:  # fast reject first
