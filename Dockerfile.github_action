@@ -1,4 +1,4 @@
-FROM python:3.10 as base
+FROM public.ecr.aws/lambda/python:3.10 as base
 
 WORKDIR /app
 ADD pyproject.toml .
