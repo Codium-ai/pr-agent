@@ -3,7 +3,7 @@ The `generte_labels` tool scans the PR code changes, and given a list of labels 
 
 It can be invoked manually by commenting on any PR:
 ```
-/generte_labels
+/generate_labels
 ```
 For example:
 
