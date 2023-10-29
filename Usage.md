@@ -160,7 +160,7 @@ Note that the new prompt will need to generate an output compatible with the rel
 
 ### Working with GitHub Action
 You can configure settings in GitHub action by adding environment variables under the env section in `.github/workflows/pr_agent.yml` file. 
-Specifically, you need to set the following environment variables:
+Specifically, should set the following environment variables:
 ```yaml
       env:
         OPENAI_KEY: ${{ secrets.OPENAI_KEY }} # or give directly your key
