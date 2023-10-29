@@ -159,20 +159,27 @@ user="""
 Note that the new prompt will need to generate an output compatible with the relevant [post-process function](./pr_agent/tools/pr_description.py#L137).
 
 ### Working with GitHub Action
-You can configure settings in GitHub action by adding environment variables under the env section in `.github/workflows/pr_agent.yml` file. Some examples:
+You can configure settings in GitHub action by adding environment variables under the env section in `.github/workflows/pr_agent.yml` file. 
+Specifically, start by setting the following environment variables:
 ```yaml
       env:
-        # ... previous environment values
-        OPENAI.ORG: "<Your organization name under your OpenAI account>"
-        PR_REVIEWER.REQUIRE_TESTS_REVIEW: "false" # Disable tests review
-        PR_CODE_SUGGESTIONS.NUM_CODE_SUGGESTIONS: 6 # Increase number of code suggestions
-        github_action.auto_review: "true" # Enable auto review
-        github_action.auto_describe: "true" # Enable auto describe
-        github_action.auto_improve: "false" # Disable auto improve
+        OPENAI_KEY: ${{ secrets.OPENAI_KEY }} # Make sure to add your OpenAI key to your repo secrets
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Make sure to add your GitHub token to your repo secrets
+        github_action.auto_review: "true" # enable\disable auto review
+        github_action.auto_describe: "true" # enable\disable auto describe
+        github_action.auto_improve: "false" # enable\disable auto improve
 ```
-specifically, `github_action.auto_review`, `github_action.auto_describe` and `github_action.auto_improve` are used to enable/disable automatic tools that run when a new PR is opened.
-
+`github_action.auto_review`, `github_action.auto_describe` and `github_action.auto_improve` are used to enable/disable automatic tools that run when a new PR is opened.
 If not set, the default option is that only the `review` tool will run automatically when a new PR is opened.
+
+Note that you can give additional config parameters by adding environment variables to `.github/workflows/pr_agent.yml`, or by using a `.pr_agent.toml` file in the root of your repo, similar to the GitHub App usage.
+
+For example, you can set an environment variable: `pr_description.add_original_user_description=false`, or add a `.pr_agent.toml` file with the following content:
+```
+[pr_description]
+add_original_user_description = false
+```
+
 
 ### Changing a model
 

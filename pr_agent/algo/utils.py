@@ -307,6 +307,9 @@ def try_fix_yaml(review_text: str) -> dict:
 
 
 def set_custom_labels(variables):
+    if not get_settings().config.enable_custom_labels:
+        return
+
     labels = get_settings().custom_labels
     if not labels:
         # set default labels
