@@ -160,14 +160,14 @@ Note that the new prompt will need to generate an output compatible with the rel
 
 ### Working with GitHub Action
 You can configure settings in GitHub action by adding environment variables under the env section in `.github/workflows/pr_agent.yml` file. 
-Specifically, should set the following environment variables:
+Specifically, start by setting the following environment variables:
 ```yaml
       env:
         OPENAI_KEY: ${{ secrets.OPENAI_KEY }} # Make sure to add your OpenAI key to your repo secrets
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Make sure to add your GitHub token to your repo secrets
-        github_action.auto_review: "true" # Enable auto review
-        github_action.auto_describe: "true" # Enable auto describe
-        github_action.auto_improve: "false" # Disable auto improve
+        github_action.auto_review: "true" # enable\disable auto review
+        github_action.auto_describe: "true" # enable\disable auto describe
+        github_action.auto_improve: "false" # enable\disable auto improve
 ```
 `github_action.auto_review`, `github_action.auto_describe` and `github_action.auto_improve` are used to enable/disable automatic tools that run when a new PR is opened.
 If not set, the default option is that only the `review` tool will run automatically when a new PR is opened.
