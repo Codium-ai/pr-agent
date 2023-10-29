@@ -1,3 +1,25 @@
+## [Version 0.9] - 2023-10-29
+- codiumai/pr-agent:0.9
+- codiumai/pr-agent:0.9-github_app
+- codiumai/pr-agent:0.9-bitbucket-app
+- codiumai/pr-agent:0.9-gitlab_webhook
+- codiumai/pr-agent:0.9-github_polling
+- codiumai/pr-agent:0.9-github_action
+
+### Added::Algo
+- New tool `/generate_labels`, and new ability to use customize labels if every tool - see [link](https://github.com/Codium-ai/pr-agent/blob/hl/custom_labels/docs/GENERATE_CUSTOM_LABELS.md#configuration-changes)
+- GitHub Action: Can now use a `.pr_agent.toml` file to control configuration (see [Usage Guide](./Usage.md#working-with-github-action))
+- GitHub App: Added ability to trigger tools on push events (see [link](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L91)_
+- Support custom domain URLs for azure devOps integration (see [link](https://github.com/Codium-ai/pr-agent/pull/381))
+
+### Added::Documentation
+Significant documentation updates (see [installation guide](https://github.com/Codium-ai/pr-agent/blob/main/INSTALL.md)], [Usage guide](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md), and [tools guide](https://github.com/Codium-ai/pr-agent/blob/main/docs/TOOLS_GUIDE.md))
+
+### Fixed
+- Fixed support for BitBucket pipeline (see [link](https://github.com/Codium-ai/pr-agent/pull/386))
+- Fixed a bug in `review -i` tool
+- Added blacklist for non-Editable file extensions in `add_docs` tool (see [link](https://github.com/Codium-ai/pr-agent/pull/385/))
+
 ## [Version 0.8] - 2023-09-27
 - codiumai/pr-agent:0.8
 - codiumai/pr-agent:0.8-github_app
