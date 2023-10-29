@@ -142,10 +142,15 @@ class BitbucketProvider(GitProvider):
     def remove_initial_comment(self):
         try:
             for comment in self.temp_comments:
-                self.pr.delete(f"comments/{comment}")
+                self.remove_comment(comment)
         except Exception as e:
             get_logger().exception(f"Failed to remove temp comments, error: {e}")
 
+    def remove_comment(self, comment):
+        try:
+            self.pr.delete(f"comments/{comment}")
+        except Exception as e:
+            get_logger().exception(f"Failed to remove comment, error: {e}")
 
     # funtion to create_inline_comment
     def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):

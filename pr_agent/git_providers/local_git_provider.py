@@ -140,6 +140,9 @@ class LocalGitProvider(GitProvider):
     def remove_initial_comment(self):
         pass  # Not applicable to the local git provider, but required by the interface
 
+    def remove_comment(self, comment):
+        pass  # Not applicable to the local git provider, but required by the interface
+
     def get_languages(self):
         """
         Calculate percentage of languages in repository. Used for hunk prioritisation.

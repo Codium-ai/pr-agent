@@ -24,6 +24,7 @@ num_code_suggestions=4
 inline_code_comments = false
 ask_and_reflect=false
 automatic_review=true
+remove_previous_review_comment=false
 extra_instructions = ""
 
 [pr_description] # /describe #
@@ -85,6 +86,27 @@ handle_pr_actions = ['opened', 'reopened', 'ready_for_review', 'review_requested
 pr_commands = [
     "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true",
     "/auto_review",
+]
+# settings for "pull_request" event with "synchronize" action - used to detect and handle push triggers for new commits
+handle_push_trigger = false
+push_trigger_ignore_bot_commits = true
+push_trigger_ignore_merge_commits = true
+push_trigger_wait_for_initial_review = true
+push_trigger_pending_tasks_backlog = true
+push_trigger_pending_tasks_ttl = 300
+push_commands = [
+    "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true",
+    """/auto_review -i \
+       --pr_reviewer.require_focused_review=false \
+       --pr_reviewer.require_score_review=false \
+       --pr_reviewer.require_tests_review=false \
+       --pr_reviewer.require_security_review=false \
+       --pr_reviewer.require_estimate_effort_to_review=false \
+       --pr_reviewer.num_code_suggestions=0 \
+       --pr_reviewer.inline_code_comments=false \
+       --pr_reviewer.remove_previous_review_comment=true \
+       --pr_reviewer.extra_instructions='' \
+    """
 ]
 
 [gitlab]
