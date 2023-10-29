@@ -14,10 +14,14 @@ When running the `generate_labels` tool on a PR that includes changes in SQL que
 <kbd><img src=./../pics/custom_label_published.png width="768"></kbd>
 
 ### How to enable custom labels
+
+Note that in addition to the dedicated tool `generate_labels`, the custom labels will also be used by the `review` and `describe` tools.
+
 #### CLI
 To enable custom labels, you need to apply the [configuration changes](#configuration-changes) to the [custom_labels file](./../pr_agent/settings/custom_labels.toml):
-#### Github Action and Gihub App
-To enable custom labels, you need to apply the [configuration changes](#configuration-changes) to the `.pr_agent.toml` file in you repository.
+
+#### GitHub Action and GitHub App
+To enable custom labels, you need to apply the [configuration changes](#configuration-changes) to the local `.pr_agent.toml` file in you repository.
 
 #### Configuration changes
  - Change `enable_custom_labels` to True: This will turn off the default labels and enable the custom labels provided in the custom_labels.toml file.
