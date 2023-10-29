@@ -116,10 +116,11 @@ class PRReviewer:
 
             if get_settings().config.publish_output:
                 get_logger().info('Pushing PR review...')
-                previous_review_comment = self._get_previous_review_comment()
                 self.git_provider.publish_comment(pr_comment)
                 self.git_provider.remove_initial_comment()
-                self._remove_previous_review_comment(previous_review_comment)
+                previous_review_comment = self._get_previous_review_comment()
+                if previous_review_comment:
+                    self._remove_previous_review_comment(previous_review_comment)
                 if get_settings().pr_reviewer.inline_code_comments:
                     get_logger().info('Pushing inline code comments...')
                     self._publish_inline_code_comments()
