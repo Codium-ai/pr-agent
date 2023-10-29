@@ -7,11 +7,12 @@
 - codiumai/pr-agent:0.9-github_action
 
 ### Added::Algo
-- New tool `/generate_labels` - see [link](https://github.com/Codium-ai/pr-agent/blob/main/docs/GENERATE_CUSTOM_LABELS.md)
-- New ability to use customize labels on `review` and `describe` tools - see [link](https://github.com/Codium-ai/pr-agent/blob/main/docs/GENERATE_CUSTOM_LABELS.md#configuration-changes)
-- GitHub Action: Can now use a `.pr_agent.toml` file to control configuration parameters (see [Usage Guide](./Usage.md#working-with-github-action))
+- New tool - [/generate_labels](https://github.com/Codium-ai/pr-agent/blob/main/docs/GENERATE_CUSTOM_LABELS.md)
+- New ability to use [customize labels](https://github.com/Codium-ai/pr-agent/blob/main/docs/GENERATE_CUSTOM_LABELS.md#configuration-changes) on the `review` and `describe` tools.
+- GitHub Action: Can now use a `.pr_agent.toml` file to control configuration parameters (see [Usage Guide](./Usage.md#working-with-github-action)).
 - GitHub App: Added ability to trigger tools on push events (see [link](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L91))
-- Support custom domain URLs for azure devops integration (see [link](https://github.com/Codium-ai/pr-agent/pull/381))
+- Support custom domain URLs for azure devops integration (see [link](https://github.com/Codium-ai/pr-agent/pull/381)).
+- PR Description default mode is now in [bullet points](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L35).
 
 ### Added::Documentation
 Significant documentation updates (see [Installation Guide](https://github.com/Codium-ai/pr-agent/blob/main/INSTALL.md), [Usage Guide](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md), and [Tools Guide](https://github.com/Codium-ai/pr-agent/blob/main/docs/TOOLS_GUIDE.md))
