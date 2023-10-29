@@ -64,7 +64,7 @@ class PRReviewer:
             "extra_instructions": get_settings().pr_reviewer.extra_instructions,
             "commit_messages_str": self.git_provider.get_commit_messages(),
             "custom_labels": "",
-            "enable_custom_labels": get_settings().enable_custom_labels,
+            "enable_custom_labels": get_settings().config.enable_custom_labels,
         }
 
         self.token_handler = TokenHandler(

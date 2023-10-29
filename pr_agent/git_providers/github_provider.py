@@ -258,7 +258,10 @@ class GithubProvider(GitProvider):
 
     def get_repo_settings(self):
         try:
-            contents = self.repo_obj.get_contents(".pr_agent.toml", ref=self.pr.head.sha).decoded_content
+            # contents = self.repo_obj.get_contents(".pr_agent.toml", ref=self.pr.head.sha).decoded_content
+
+            # more logical to take 'pr_agent.toml' from the default branch
+            contents = self.repo_obj.get_contents(".pr_agent.toml").decoded_content
             return contents
         except Exception:
             return ""

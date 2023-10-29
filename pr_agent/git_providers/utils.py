@@ -26,6 +26,7 @@ def apply_repo_settings(pr_url):
                         section_dict[key] = value
                     get_settings().unset(section)
                     get_settings().set(section, section_dict, merge=False)
+                    get_logger().info(f"Applying repo settings for section {section}, contents: {contents}")
 
         finally:
             if repo_settings_file:
