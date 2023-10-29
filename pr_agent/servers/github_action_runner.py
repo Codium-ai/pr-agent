@@ -38,7 +38,7 @@ async def run_action():
     if not GITHUB_TOKEN:
         print("GITHUB_TOKEN not set")
         return
-    CUSTOM_LABELS_DICT = handle_custom_labels(CUSTOM_LABELS, CUSTOM_LABELS_DESCRIPTIONS)
+    # CUSTOM_LABELS_DICT = handle_custom_labels(CUSTOM_LABELS, CUSTOM_LABELS_DESCRIPTIONS)
 
     # Set the environment variables in the settings
     get_settings().set("OPENAI.KEY", OPENAI_KEY)
@@ -46,7 +46,7 @@ async def run_action():
         get_settings().set("OPENAI.ORG", OPENAI_ORG)
     get_settings().set("GITHUB.USER_TOKEN", GITHUB_TOKEN)
     get_settings().set("GITHUB.DEPLOYMENT_TYPE", "user")
-    get_settings().set("CUSTOM_LABELS", CUSTOM_LABELS_DICT)
+    # get_settings().set("CUSTOM_LABELS", CUSTOM_LABELS_DICT)
 
     # Load the event payload
     try:
@@ -56,18 +56,18 @@ async def run_action():
         print(f"Failed to parse JSON: {e}")
         return
 
+    try:
+        get_logger().info("Applying repo settings")
+        pr_url = event_payload.get("pull_request", {}).get("html_url")
+        if pr_url:
+            apply_repo_settings(pr_url)
+            get_logger().info(f"enable_custom_labels: {get_settings().config.enable_custom_labels}")
+    except Exception as e:
+        get_logger().info(f"github action: failed to apply repo settings: {e}")
+
     # Handle pull request event
     if GITHUB_EVENT_NAME == "pull_request":
         action = event_payload.get("action")
-
-        try:
-            get_logger().info("Applying repo settings")
-            pr_url = event_payload.get("pull_request", {}).get("html_url")
-            if pr_url:
-                apply_repo_settings(pr_url)
-        except Exception as e:
-            get_logger().info(f"github action: failed to apply repo settings: {e}")
-
         if action in ["opened", "reopened"]:
             pr_url = event_payload.get("pull_request", {}).get("url")
             if pr_url:
