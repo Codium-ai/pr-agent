@@ -25,6 +25,7 @@ Under the section 'pr_reviewer', the [configuration file](./../pr_agent/settings
 - `inline_code_comments`: if set to true, the tool will publish the code suggestions as comments on the code diff. Default is false.
 - `automatic_review`: if set to false, no automatic reviews will be done. Default is true.
 - `extra_instructions`: Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".
+- To enable `custom labels`, apply the configuration changes described [here](./GENERATE_CUSTOM_LABELS.md#configuration-changes) 
 ####  Incremental Mode
 For an incremental review, which only considers changes since the last PR-Agent review, this can be useful when working on the PR in an iterative manner, and you want to focus on the changes since the last review instead of reviewing the entire PR again, the following command can be used:
 ```

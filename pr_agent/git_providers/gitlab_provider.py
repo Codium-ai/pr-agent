@@ -287,9 +287,15 @@ class GitLabProvider(GitProvider):
     def remove_initial_comment(self):
         try:
             for comment in self.temp_comments:
-                comment.delete()
+                self.remove_comment(comment)
         except Exception as e:
             get_logger().exception(f"Failed to remove temp comments, error: {e}")
+
+    def remove_comment(self, comment):
+        try:
+            comment.delete()
+        except Exception as e:
+            get_logger().exception(f"Failed to remove comment, error: {e}")
 
     def get_title(self):
         return self.mr.title
