@@ -31,6 +31,8 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 ‣ **Find Similar Issue ([`/similar_issue`](./docs/SIMILAR_ISSUE.md))**: Automatically retrieves and presents similar issues
 \
 ‣ **Add Documentation ([`/add_docs`](./docs/ADD_DOCUMENTATION.md))**: Automatically adds documentation to un-documented functions/classes in the PR.
+\
+‣ **Generate Custom Labels ([`/generate_labels`](./docs/GENERATE_CUSTOM_LABELS.md))**: Automatically suggests custom labels based on the PR code changes.
 
 See the [Installation Guide](./INSTALL.md) for instructions how to install and run the tool on different platforms.
 
@@ -115,6 +117,7 @@ See the [Tools Guide](./docs/TOOLS_GUIDE.md) for detailed description of the dif
 |       | Update CHANGELOG.md                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |   :white_check_mark:    |          |       |
 |       | Find similar issue                          |   :white_check_mark:    |                         |                             |          |          |       |
 |       | Add Documentation                           |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |   :white_check_mark:    |          |    :white_check_mark:    |
+|       | Generate Labels                           |   :white_check_mark:    |   :white_check_mark:    |         |     |          |      |
 |       |                                             |        |        |      |      |      |
 | USAGE | CLI                                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |   :white_check_mark:    |   :white_check_mark:    |
 |       | App / webhook                               |   :white_check_mark:    |   :white_check_mark:    |           |          |          |

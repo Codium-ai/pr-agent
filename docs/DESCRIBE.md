@@ -26,7 +26,7 @@ Under the section 'pr_description', the [configuration file](./../pr_agent/setti
 - `keep_original_user_title`: if set to true, the tool will keep the original PR title, and won't change it. Default is false.
 
 - `extra_instructions`: Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".
-
+- To enable `custom labels`, apply the configuration changes described [here](./GENERATE_CUSTOM_LABELS.md#configuration-changes)
 ### Markers template
 
 markers enable to easily integrate user's content and auto-generated content, with a template-like mechanism.

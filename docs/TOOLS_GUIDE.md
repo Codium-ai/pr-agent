@@ -6,5 +6,6 @@
 - [SIMILAR_ISSUE](./SIMILAR_ISSUE.md)
 - [UPDATE CHANGELOG](./UPDATE_CHANGELOG.md)
 - [ADD DOCUMENTATION](./ADD_DOCUMENTATION.md)
+- [GENERATE CUSTOM LABELS](./GENERATE_CUSTOM_LABELS.md)
 
 See the **[installation guide](/INSTALL.md)** for instructions on how to setup PR-Agent.

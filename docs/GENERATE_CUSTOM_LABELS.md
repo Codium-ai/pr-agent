@@ -22,7 +22,8 @@ To enable custom labels, you need to apply the [configuration changes](#configur
 #### Configuration changes
  - Change `enable_custom_labels` to True: This will turn off the default labels and enable the custom labels provided in the custom_labels.toml file.
  - Add the custom labels. It should be formatted as follows:
- ```
+
+```
 [config]
 enable_custom_labels=true
 
