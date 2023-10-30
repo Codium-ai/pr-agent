@@ -248,8 +248,7 @@ class BitbucketProvider(GitProvider):
         try:
             issue_number = int(path_parts[3])
         except ValueError as e:
-            raise ValueError("Unable to convert issue number to integer") from e
-        
+            raise ValueError("Unable to convert issue number to integer") from e       
         return workspace_slug, repo_slug, issue_number
 
 
@@ -320,7 +319,7 @@ class BitbucketProvider(GitProvider):
         return repo_obj._Repository__issues.each()
 
    
-    def get_issues_comments(self, issue):
+    def parse_issue_url_and_get_comments(self, issue):
         workspace_slug, repo_name, original_issue_number = self._parse_issue_url(issue)
         import requests
 
@@ -332,7 +331,7 @@ class BitbucketProvider(GitProvider):
         response = requests.request("GET", url, headers=headers, data=payload)
         return response.json()['values']
     
-    def create_issue_comment(self, similar_issues_str, issue_url, original_issue_number):
+    def parse_issue_url_and_create_comment(self, similar_issues_str, issue_url, original_issue_number):
         workspace_slug, repo_name, original_issue_number = self._parse_issue_url(issue_url)
         url = f"https://api.bitbucket.org/2.0/repositories/{workspace_slug}/{repo_name}/issues/{original_issue_number}/comments"
         payload = json.dumps({
@@ -347,7 +346,7 @@ class BitbucketProvider(GitProvider):
 
         response = requests.request("POST", url, headers=headers, data=payload)
 
-    def get_repo_obj_parse_issue_url(self, issue_url):
+    def parse_issue_url_and_get_repo_obj(self, issue_url):
         workspace_slug, repo_name, original_issue_number = self._parse_issue_url(issue_url)
         return self.bitbucket_client.repositories.get(workspace_slug, repo_name)
     
@@ -364,12 +363,12 @@ class BitbucketProvider(GitProvider):
         for issue_number in int_list:
             return issue_number
         
-    def get_similar_issues(self, issue_url, issue_number_similar):
+    def parse_issue_url_and_get_similar_issues(self, issue_url, issue_number_similar):
         workspace_slug, repo_name, original_issue_number = self._parse_issue_url(issue_url)
         issue = self.bitbucket_client.repositories.get(workspace_slug, repo_name).issues.get(issue_number_similar)
         return issue
 
-    def get_main_issue(self, issue_url):
+    def parse_issue_url_and_get_main_issue(self, issue_url):
         workspace_slug, repo_name, original_issue_number = self._parse_issue_url(issue_url)
         issue = self.bitbucket_client.repositories.get(workspace_slug, repo_name).issues.get(original_issue_number)
         return issue

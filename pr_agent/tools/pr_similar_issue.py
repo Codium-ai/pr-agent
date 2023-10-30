@@ -24,7 +24,7 @@ class PRSimilarIssue:
         self.max_issues_to_scan = get_settings().pr_similar_issue.max_issues_to_scan
         self.issue_url = issue_url
         self.git_provider = get_git_provider()()
-        self.git_provider.repo_obj  = self.git_provider.get_repo_obj_parse_issue_url(issue_url.split('=')[-1])
+        self.git_provider.repo_obj  = self.git_provider.parse_issue_url_and_get_repo_obj(issue_url.split('=')[-1])
         self.token_handler = TokenHandler()
         repo_obj = self.git_provider.repo_obj
         repo_name_for_index = self.repo_name_for_index = self.git_provider.get_repo_name_for_indexing(repo_obj)
@@ -36,7 +36,7 @@ class PRSimilarIssue:
             environment = get_settings().pinecone.environment
         except Exception:
             if not self.cli_mode:
-                issue_main = self.git_provider.get_main_issue(self.issue_url.split('=')[-1])
+                issue_main = self.git_provider.parse_issue_url_and_get_issue(self.issue_url.split('=')[-1])
                 issue_main.create_comment("Please set pinecone api key and environment in secrets file")
             raise Exception("Please set pinecone api key and environment in secrets file")
 
@@ -128,6 +128,7 @@ class PRSimilarIssue:
             except:
                 get_logger().debug(f"Failed to parse issue number from {r['id']}")
                 continue
+
             if original_issue_number == issue_number:
                 continue
             if issue_number not in relevant_issues_number_list:
@@ -142,12 +143,12 @@ class PRSimilarIssue:
         get_logger().info('Publishing response...')
         similar_issues_str = "### Similar Issues\n___\n\n"
         for i, issue_number_similar in enumerate(relevant_issues_number_list):
-            issue = self.git_provider.get_similar_issues(self.issue_url.split('=')[-1], issue_number_similar)
+            issue = self.git_provider.parse_issue_url_and_get_similar_issues(self.issue_url.split('=')[-1], issue_number_similar)
             title = issue.title
             url = self.git_provider.get_issue_url(issue)
             similar_issues_str += f"{i + 1}. **[{title}]({url})** (score={score_list[i]})\n\n"
         if get_settings().config.publish_output:
-            response = self.git_provider.create_issue_comment(similar_issues_str, self.issue_url.split('=')[-1], original_issue_number)
+            response = self.git_provider.parse_issue_url_and_create_comment(similar_issues_str, self.issue_url.split('=')[-1], original_issue_number)
         get_logger().info(similar_issues_str)
         get_logger().info('Done')
 
@@ -158,7 +159,8 @@ class PRSimilarIssue:
         if get_settings().pr_similar_issue.skip_comments:
             comments = []
         else:
-            comments = self.git_provider.get_issues_comments(self.issue_url.split('=')[-1])
+            comments = self.git_provider.parse_issue_url_and_get_comments(self.issue_url.split('=')[-1])
+            print('comments: ', comments)
         issue_str = f"Issue Header: \"{header}\"\n\nIssue Body:\n{body}"
         return issue_str, comments, number
 

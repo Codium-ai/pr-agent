@@ -457,14 +457,10 @@ class GithubProvider(GitProvider):
     def get_repo_issues(self, repo_obj):
         return list(repo_obj.get_issues(state='all'))
     
-    def get_issues_comments(self, issue):
-        repo_name, original_issue_number = self._parse_issue_url(issue)
-        return self.repo_obj.get_issue(original_issue_number)
-    
     def get_issue_url(self, issue):
         return issue.html_url
     
-    def create_issue_comment(self, similar_issues_str, issue_url, original_issue_number):
+    def parse_issue_url_and_create_comment(self, similar_issues_str, issue_url, original_issue_number):
         repo_name, original_issue_number = self._parse_issue_url(issue_url)
         try:
             issue = self.repo_obj.get_issue(original_issue_number)
@@ -478,7 +474,7 @@ class GithubProvider(GitProvider):
     def get_issue_number(self, issue):
         return issue.number
     
-    def get_issues_comments(self, issue):
+    def parse_issue_url_and_get_comments(self, issue):
         repo_name, original_issue_number = self._parse_issue_url(issue)
         issue = self.repo_obj.get_issue(original_issue_number)
         return list(issue.get_comments())
@@ -500,7 +496,7 @@ class GithubProvider(GitProvider):
         issue = self.repo_obj.get_issue(original_issue_number)
         return issue, original_issue_number
     
-    def get_repo_obj_parse_issue_url(self, issue_url):
+    def parse_issue_url_and_get_repo_obj(self, issue_url):
         repo_name, original_issue_number = self._parse_issue_url(issue_url)
         return self.github_client.get_repo(repo_name)
     
@@ -515,12 +511,12 @@ class GithubProvider(GitProvider):
     def get_issue_numbers_from_list(self, r):
         return int(r.split('.')[0].split('_')[-1])
     
-    def get_similar_issues(self, issue_url, issue_number_similar):
+    def parse_issue_url_and_get_similar_issues(self, issue_url, issue_number_similar):
         repo_name, original_issue_number = self._parse_issue_url(issue_url)
         issue = self.github_client.get_repo(repo_name).get_issue(issue_number_similar)
         return issue
 
-    def get_main_issue(self, issue_url):
+    def parse_issue_url_and_get_main_issue(self, issue_url):
         repo_name, original_issue_number = self._parse_issue_url(issue_url)
         issue = self.github_client.get_repo(repo_name).get_issue(original_issue_number)
         return issue
