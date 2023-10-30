@@ -101,7 +101,8 @@ def parse_code_suggestion(code_suggestions: dict, gfm_supported: bool=True) -> s
                 markdown_text += f"   **{sub_key}:** {sub_value}\n"
             if not gfm_supported:
                 if "relevant line" not in sub_key.lower(): # nicer presentation
-                        markdown_text = markdown_text.rstrip('\n') + "\\\n"
+                        # markdown_text = markdown_text.rstrip('\n') + "\\\n" # works for gitlab
+                        markdown_text = markdown_text.rstrip('\n') + "   \n"  # works for gitlab and bitbucker
 
     markdown_text += "\n"
     return markdown_text
