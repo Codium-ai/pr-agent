@@ -41,9 +41,10 @@ class BitbucketProvider(GitProvider):
 
     def get_repo_settings(self):
         try:
-            contents = self.repo_obj.get_contents(
-                ".pr_agent.toml", ref=self.pr.head.sha
-            ).decoded_content
+            url = (f"https://api.bitbucket.org/2.0/repositories/{self.workspace_slug}/{self.repo_slug}/src/"
+                   f"{self.pr.destination_branch}/.pr_agent.toml")
+            response = requests.request("GET", url, headers=self.headers)
+            contents = response.text.encode('utf-8')
             return contents
         except Exception:
             return ""
