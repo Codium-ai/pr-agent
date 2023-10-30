@@ -58,13 +58,13 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
     if data.get('object_kind') == 'merge_request' and data['object_attributes'].get('action') in ['open', 'reopen']:
         get_logger().info(f"A merge request has been opened: {data['object_attributes'].get('title')}")
         url = data['object_attributes'].get('url')
-        handle_request(background_tasks, url, "/review")
+        handle_request(background_tasks, url, "/review", log_context)
     elif data.get('object_kind') == 'note' and data['event_type'] == 'note':
         if 'merge_request' in data:
             mr = data['merge_request']
             url = mr.get('url')
             body = data.get('object_attributes', {}).get('note')
-            handle_request(background_tasks, url, body)
+            handle_request(background_tasks, url, body, log_context)
     return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
 
 
