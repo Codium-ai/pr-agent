@@ -516,7 +516,8 @@ class GithubProvider(GitProvider):
         return int(r.split('.')[0].split('_')[-1])
     
     def get_similar_issues(self, issue_url, issue_number_similar):
-        repo_name, original_issue_number = self._parse_issue_url(issue_url)        issue = self.github_client.get_repo(repo_name).get_issue(issue_number_similar)
+        repo_name, original_issue_number = self._parse_issue_url(issue_url)
+        issue = self.github_client.get_repo(repo_name).get_issue(issue_number_similar)
         return issue
 
     def get_main_issue(self, issue_url):

@@ -41,7 +41,7 @@ class PRSimilarIssue:
             raise Exception("Please set pinecone api key and environment in secrets file")
 
         # check if index exists, and if repo is already indexed
-        run_from_scratch = True
+        run_from_scratch = False
         if run_from_scratch:  # for debugging
             pinecone.init(api_key=api_key, environment=environment)
             if index_name in pinecone.list_indexes():
@@ -73,7 +73,6 @@ class PRSimilarIssue:
         else:  # update index if needed
             pinecone_index = pinecone.Index(index_name=index_name)
             issues_to_update = []
-            issues_paginated_list = []
             issues_paginated_list = self.git_provider.get_repo_issues(repo_obj)
             counter = 1
             for issue in issues_paginated_list:
@@ -81,7 +80,7 @@ class PRSimilarIssue:
                 if issue_pull_request:
                     continue
                 issue_str, comments, number = self._process_issue(issue)
-                issue_key = f"issue_{number}"   
+                issue_key = f"issue_{number}"
                 id = issue_key + "." + "issue"
                 res = pinecone_index.fetch([id]).to_dict()
                 is_new_issue = True
@@ -125,8 +124,7 @@ class PRSimilarIssue:
                 continue
 
             try:
-                issue_id= r['id']
-                issue_number = int(issue_id.split('.')[0].split('_')[-1])
+                issue_number = int(r["id"].split('.')[0].split('_')[-1])
             except:
                 get_logger().debug(f"Failed to parse issue number from {r['id']}")
                 continue
