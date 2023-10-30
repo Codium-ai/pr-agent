@@ -122,7 +122,7 @@ async def handle_request(body: Dict[str, Any], event: str):
                 if body.get("requested_reviewer", {}).get("login", "") != bot_user:
                     return {}
             get_logger().info(f"Performing review for {api_url=} because of {event=} and {action=}")
-            await _perform_commands(get_settings().github_app.pr_commands, agent, body, api_url, log_context)
+            await _perform_commands(agent, body, api_url, log_context)
 
     # handle pull_request event with synchronize action - "push trigger" for new commits
     elif event == 'pull_request' and action == 'synchronize' and get_settings().github_app.handle_push_trigger:
@@ -174,7 +174,7 @@ async def handle_request(body: Dict[str, Any], event: str):
                 get_logger().info(f"Skipping incremental review because there was no initial review for {api_url=} yet")
                 return {}
             get_logger().info(f"Performing incremental review for {api_url=} because of {event=} and {action=}")
-            await _perform_commands(get_settings().github_app.push_commands, agent, body, api_url, log_context)
+            await _perform_commands(agent, body, api_url, log_context)
 
         finally:
             # release the waiting task block
@@ -203,8 +203,9 @@ def _check_pull_request_event(action: str, body: dict, log_context: dict, bot_us
     return pull_request, api_url
 
 
-async def _perform_commands(commands: List[str], agent: PRAgent, body: dict, api_url: str, log_context: dict):
+async def _perform_commands(agent: PRAgent, body: dict, api_url: str, log_context: dict):
     apply_repo_settings(api_url)
+    commands = get_settings().github_app.pr_commands
     for command in commands:
         split_command = command.split(" ")
         command = split_command[0]
