@@ -239,7 +239,7 @@ class PRReviewer:
             last_commit_msg = self.incremental.commits_range[0].commit.message if self.incremental.commits_range else ""
             incremental_review_markdown_text = f"Starting from commit {last_commit_url}"
             if last_commit_msg:
-                incremental_review_markdown_text += f"  \n_({last_commit_msg.splitlines(keepends=False)[0].replace('_', r'\_')})_"
+                incremental_review_markdown_text += f"  \n_({last_commit_msg.splitlines(keepends=False)[0].replace('__', '__')})_"
             data = OrderedDict(data)
             data.update({'Incremental PR Review': {
                 "⏮️ Review for commits since previous PR-Agent review": incremental_review_markdown_text}})
