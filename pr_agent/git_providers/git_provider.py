@@ -190,6 +190,13 @@ class IncrementalPR:
     def __init__(self, is_incremental: bool = False):
         self.is_incremental = is_incremental
         self.commits_range = None
-        self.first_new_commit_sha = None
-        self.last_seen_commit_sha = None
+        self.first_new_commit = None
+        self.last_seen_commit = None
 
+    @property
+    def first_new_commit_sha(self):
+        return None if self.first_new_commit is None else self.first_new_commit.sha
+
+    @property
+    def last_seen_commit_sha(self):
+        return None if self.last_seen_commit is None else self.last_seen_commit.sha
