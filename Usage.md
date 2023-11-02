@@ -108,12 +108,22 @@ Any configuration value in [configuration file](pr_agent/settings/configuration.
 
 
 ### Working with GitHub App
-When running PR-Agent from [GitHub App](INSTALL.md#method-5-run-as-a-github-app), the default configurations from a pre-built docker will be initially loaded.
+When running PR-Agent from GitHub App, the default [configuration file](pr_agent/settings/configuration.toml) from a pre-built docker will be initially loaded.
+
+By uploading a local `.pr_agent.toml` file, you can edit and customize any configuration parameter.
+
+For example, if you set in `.pr_agent.toml`:
+
+```
+[pr_reviewer]
+num_code_suggestions=1
+```
+
+Than you will overwrite the default number of code suggestions to be 1.
 
 #### GitHub app automatic tools
-The [github_app](pr_agent/settings/configuration.toml#L56) section defines GitHub app specific configurations.  
+The [github_app](pr_agent/settings/configuration.toml#L76) section defines GitHub app-specific configurations.  
 In this section you can define configurations to control the conditions for which tools will **run automatically**.  
-Note that a local `.pr_agent.toml` file enables you to edit and customize the default parameters of any tool, not just the ones that are run automatically.
 
 ##### GitHub app automatic tools for PR actions
 The GitHub app can respond to the following actions on a PR:
@@ -151,7 +161,7 @@ handle_pr_actions = []
 ```
 
 ##### GitHub app automatic tools for new code (PR push)
-In addition the running automatic tools when a PR is opened, the GitHub app can also respond to new code that is pushed to an open PR.
+In addition to running automatic tools when a PR is opened, the GitHub app can also respond to new code that is pushed to an open PR.
 
 The configuration toggle `handle_push_trigger` can be used to enable this feature.  
 The configuration parameter `push_commands` defines the list of tools that will be **run automatically** when new code is pushed to the PR.

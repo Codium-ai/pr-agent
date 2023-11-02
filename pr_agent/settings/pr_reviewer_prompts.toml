@@ -151,7 +151,7 @@ PR Analysis:
   PR summary: |-
     xxx
   Type of PR: |-
-    Bug fix
+    ...
 {%- if require_score %}
   Score: 89
 {%- endif %}

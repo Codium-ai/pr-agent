@@ -143,6 +143,9 @@ def get_main_pr_language(languages, files) -> str:
     if not languages:
         get_logger().info("No languages detected")
         return main_language_str
+    if not files:
+        get_logger().info("No files in diff")
+        return main_language_str
 
     try:
         top_language = max(languages, key=languages.get).lower()
