@@ -183,7 +183,7 @@ class BitbucketProvider(GitProvider):
 
     def publish_inline_comments(self, comments: list[dict]):
         for comment in comments:
-            self.publish_inline_comment(comment['body'], comment['start_line'], comment['path'])
+            self.publish_inline_comment(comment['body'], comment['position'], comment['path'])
 
     def get_title(self):
         return self.pr.title
