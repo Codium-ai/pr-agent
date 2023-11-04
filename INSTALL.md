@@ -39,6 +39,11 @@ For GitLab:
 ```
 docker run --rm -it -e OPENAI.KEY=<your key> -e CONFIG.GIT_PROVIDER=gitlab -e GITLAB.PERSONAL_ACCESS_TOKEN=<your token> codiumai/pr-agent:latest --pr_url <pr_url> review
 ```
+Note: If you have a dedicated gitlab instance, you need to specify the custom url as variable:
+```
+docker run --rm -it -e OPENAI.KEY=<your key> -e CONFIG.GIT_PROVIDER=gitlab -e GITLAB.PERSONAL_ACCESS_TOKEN=<your token> GITLAB.URL=<your gitlab instance url> codiumai/pr-agent:latest --pr_url <pr_url> review
+```
+
 For BitBucket:
 ```
 docker run --rm -it -e CONFIG.GIT_PROVIDER=bitbucket -e OPENAI.KEY=$OPENAI_API_KEY -e BITBUCKET.BEARER_TOKEN=$BITBUCKET_BEARER_TOKEN codiumai/pr-agent:latest --pr_url=<pr_url> review
