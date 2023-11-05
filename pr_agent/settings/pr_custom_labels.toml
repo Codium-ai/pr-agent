@@ -39,7 +39,6 @@ PR Type:
 {{ custom_labels_examples }}
 {%- else %}
   - Bug fix
-  - Tests
 {%- endif %}
 ```
 

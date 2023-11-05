@@ -172,11 +172,11 @@ class PRDescription:
         pr_types = []
 
         # If the 'PR Type' key is present in the dictionary, split its value by comma and assign it to 'pr_types'
-        if 'PR Type' in self.data:
-            if type(self.data['PR Type']) == list:
-                pr_types = self.data['PR Type']
-            elif type(self.data['PR Type']) == str:
-                pr_types = self.data['PR Type'].split(',')
+        if 'PR Labels' in self.data:
+            if type(self.data['PR Labels']) == list:
+                pr_types = self.data['PR Labels']
+            elif type(self.data['PR Labels']) == str:
+                pr_types = self.data['PR Labels'].split(',')
 
         return pr_types
 
