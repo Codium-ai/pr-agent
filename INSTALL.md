@@ -31,21 +31,29 @@ There are several ways to use PR-Agent:
 
 To request a review for a PR, or ask a question about a PR, you can run directly from the Docker image. Here's how:
 
-For GitHub:
+- For GitHub:
 ```
 docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent:latest --pr_url <pr_url> review
 ```
-For GitLab:
+
+- For GitLab:
 ```
 docker run --rm -it -e OPENAI.KEY=<your key> -e CONFIG.GIT_PROVIDER=gitlab -e GITLAB.PERSONAL_ACCESS_TOKEN=<your token> codiumai/pr-agent:latest --pr_url <pr_url> review
 ```
-For BitBucket:
+
+Note: If you have a dedicated GitLab instance, you need to specify the custom url as variable:
+```
+docker run --rm -it -e OPENAI.KEY=<your key> -e CONFIG.GIT_PROVIDER=gitlab -e GITLAB.PERSONAL_ACCESS_TOKEN=<your token> GITLAB.URL=<your gitlab instance url> codiumai/pr-agent:latest --pr_url <pr_url> review
+```
+
+- For BitBucket:
 ```
 docker run --rm -it -e CONFIG.GIT_PROVIDER=bitbucket -e OPENAI.KEY=$OPENAI_API_KEY -e BITBUCKET.BEARER_TOKEN=$BITBUCKET_BEARER_TOKEN codiumai/pr-agent:latest --pr_url=<pr_url> review
 ```
 
 For other git providers, update CONFIG.GIT_PROVIDER accordingly, and check the `pr_agent/settings/.secrets_template.toml` file for the environment variables expected names and values.
 
+---
 
 Similarly, to ask a question about a PR, run the following command:
 ```
@@ -59,7 +67,8 @@ Note: If you want to ensure you're running a specific version of the Docker imag
 ```bash
 docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent@sha256:71b5ee15df59c745d352d84752d01561ba64b6d51327f97d46152f0c58a5f678 --pr_url <pr_url> review
 ```
-in addition, you can run a [specific released versions](./RELEASE_NOTES.md) of pr-agent, for example:
+
+Or you can run a [specific released versions](./RELEASE_NOTES.md) of pr-agent, for example:
 ```
 codiumai/pr-agent@v0.8
 ```
