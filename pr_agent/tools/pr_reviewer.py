@@ -217,19 +217,6 @@ class PRReviewer:
                             suggestion['relevant line'] = f"[{suggestion['relevant line']}]({link})"
                     else:
                         pass
-                        # try:
-                        #     relevant_file = suggestion['relevant file'].strip('`').strip("'")
-                        #     relevant_line_str = suggestion['relevant line']
-                        #     if not relevant_line_str:
-                        #         return ""
-                        #
-                        #     position, absolute_position = find_line_number_of_relevant_line_in_file(
-                        #         self.git_provider.diff_files, relevant_file, relevant_line_str)
-                        #     if absolute_position != -1:
-                        #         suggestion[
-                        #             'relevant line'] = f"{suggestion['relevant line']} (line {absolute_position})"
-                        # except:
-                        #     pass
 
 
         # Add incremental review section
