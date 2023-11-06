@@ -228,7 +228,7 @@ class PRDescription:
         # Iterate over the dictionary items and append the key and value to 'markdown_text' in a markdown format
         markdown_text = ""
         # Don't display 'PR Labels'
-        if 'PR Labels' in self.data:
+        if 'PR Labels' in self.data and self.git_provider.is_supported("get_labels"):
             self.data.pop('PR Labels')
         if not get_settings().pr_description.enable_pr_type:
             self.data.pop('PR Type')
