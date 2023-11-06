@@ -248,7 +248,7 @@ class PRDescription:
                 for file in value:
                     filename = file['filename'].replace("'", "`")
                     description = file['changes in file']
-                    pr_body += f'`{filename}`: {description}\n'
+                    pr_body += f'- `{filename}`: {description}\n'
                 if self.git_provider.is_supported("gfm_markdown"):
                     pr_body +="</details>\n"
             else:

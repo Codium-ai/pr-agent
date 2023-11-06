@@ -29,7 +29,9 @@ There are several ways to use PR-Agent:
 
 ### Use Docker image (no installation required)
 
-To request a review for a PR, or ask a question about a PR, you can run directly from the Docker image. Here's how:
+A list of the relevant tools can be found in the [tools guide](./docs/TOOLS_GUIDE.md).
+
+To invoke a tool (for example `review`), you can run directly from the Docker image. Here's how:
 
 - For GitHub:
 ```
@@ -55,22 +57,15 @@ For other git providers, update CONFIG.GIT_PROVIDER accordingly, and check the `
 
 ---
 
-Similarly, to ask a question about a PR, run the following command:
-```
-docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent --pr_url <pr_url> ask "<your question>"
-```
 
-A list of the relevant tools can be found in the [tools guide](./docs/TOOLS_GUIDE.md).
-
-
-Note: If you want to ensure you're running a specific version of the Docker image, consider using the image's digest:
+If you want to ensure you're running a specific version of the Docker image, consider using the image's digest:
 ```bash
 docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent@sha256:71b5ee15df59c745d352d84752d01561ba64b6d51327f97d46152f0c58a5f678 --pr_url <pr_url> review
 ```
 
 Or you can run a [specific released versions](./RELEASE_NOTES.md) of pr-agent, for example:
 ```
-codiumai/pr-agent@v0.8
+codiumai/pr-agent@v0.9
 ```
 
 ---
