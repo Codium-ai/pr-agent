@@ -29,11 +29,25 @@ Under the section 'pr_reviewer', the [configuration file](./../pr_agent/settings
 ####  Incremental Mode
 For an incremental review, which only considers changes since the last PR-Agent review, this can be useful when working on the PR in an iterative manner, and you want to focus on the changes since the last review instead of reviewing the entire PR again, the following command can be used:
 ```
-/improve -i
+/review -i
 ```
 Note that the incremental mode is only available for GitHub.
 
 <kbd><img src=./../pics/incremental_review.png width="768"></kbd>
+
+Under the section 'pr_reviewer', the [configuration file](./../pr_agent/settings/configuration.toml#L16) contains options to customize the 'review -i' tool.  
+These configurations can be used to control the rate at which the incremental review tool will create new review comments when invoked automatically, to prevent making too much noise in the PR.
+- `minimal_commits_for_incremental_review`: Minimal number of commits since the last review that are required to create incremental review.
+If there are less than the specified number of commits since the last review, the tool will not perform any action.
+Default is 0 - the tool will always run, no matter how many commits since the last review.
+- `minimal_minutes_for_incremental_review`: Minimal number of minutes that need to pass since the last reviewed commit to create incremental review.
+If less that the specified number of minutes have passed between the last reviewed commit and running this command, the tool will not perform any action. 
+Default is 0 - the tool will always run, no matter how much time have passed since the last reviewed commit.
+- `require_all_thresholds_for_incremental_review`: If set to true, all the previous thresholds must be met for incremental review to run. If false, only one is enough to run the tool.
+For example, if `minimal_commits_for_incremental_review=2` and `minimal_minutes_for_incremental_review=2`, and we have 3 commits since the last review, but the last reviewed commit is from 1 minute ago:
+When `require_all_thresholds_for_incremental_review=true` the incremental review __will not__ run, because only 1 out of 2 conditions were met (we have enough commits but the last review is too recent),
+but when `require_all_thresholds_for_incremental_review=false` the incremental review __will__ run, because one condition is enough (we have 3 commits which is more than the configured 2).
+Default is false - the tool will run as long as at least once conditions is met.
 
 #### PR Reflection
 By invoking:
