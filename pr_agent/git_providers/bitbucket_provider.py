@@ -44,6 +44,8 @@ class BitbucketProvider(GitProvider):
             url = (f"https://api.bitbucket.org/2.0/repositories/{self.workspace_slug}/{self.repo_slug}/src/"
                    f"{self.pr.destination_branch}/.pr_agent.toml")
             response = requests.request("GET", url, headers=self.headers)
+            if response.status_code == 404:  # not found
+                return ""
             contents = response.text.encode('utf-8')
             return contents
         except Exception:
