@@ -66,10 +66,10 @@ class GithubProvider(GitProvider):
         first_new_commit_index = None
         for index in range(len(self.commits) - 1, -1, -1):
             if self.commits[index].commit.author.date > last_review_time:
-                self.incremental.first_new_commit_sha = self.commits[index].sha
+                self.incremental.first_new_commit = self.commits[index]
                 first_new_commit_index = index
             else:
-                self.incremental.last_seen_commit_sha = self.commits[index].sha
+                self.incremental.last_seen_commit = self.commits[index]
                 break
         return self.commits[first_new_commit_index:] if first_new_commit_index is not None else []
 

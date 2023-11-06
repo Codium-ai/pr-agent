@@ -26,6 +26,10 @@ ask_and_reflect=false
 automatic_review=true
 remove_previous_review_comment=false
 extra_instructions = ""
+# specific configurations for incremental review (/review -i)
+require_all_thresholds_for_incremental_review=false
+minimal_commits_for_incremental_review=0
+minimal_minutes_for_incremental_review=0
 
 [pr_description] # /describe #
 publish_labels=true
@@ -106,6 +110,9 @@ push_commands = [
        --pr_reviewer.num_code_suggestions=0 \
        --pr_reviewer.inline_code_comments=false \
        --pr_reviewer.remove_previous_review_comment=true \
+       --pr_reviewer.require_all_thresholds_for_incremental_review=false \
+       --pr_reviewer.minimal_commits_for_incremental_review=5 \
+       --pr_reviewer.minimal_minutes_for_incremental_review=30 \
        --pr_reviewer.extra_instructions='' \
     """
 ]

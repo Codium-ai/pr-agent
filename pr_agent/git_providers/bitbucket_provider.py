@@ -32,8 +32,10 @@ class BitbucketProvider(GitProvider):
         self.repo = None
         self.pr_num = None
         self.pr = None
+        self.pr_url = pr_url
         self.temp_comments = []
         self.incremental = incremental
+        self.diff_files = None
         if pr_url:
             self.set_pr(pr_url)
         self.bitbucket_comment_api_url = self.pr._BitbucketBase__data["links"]["comments"]["href"]
@@ -44,6 +46,8 @@ class BitbucketProvider(GitProvider):
             url = (f"https://api.bitbucket.org/2.0/repositories/{self.workspace_slug}/{self.repo_slug}/src/"
                    f"{self.pr.destination_branch}/.pr_agent.toml")
             response = requests.request("GET", url, headers=self.headers)
+            if response.status_code == 404:  # not found
+                return ""
             contents = response.text.encode('utf-8')
             return contents
         except Exception:
@@ -114,6 +118,9 @@ class BitbucketProvider(GitProvider):
         return [diff.new.path for diff in self.pr.diffstat()]
 
     def get_diff_files(self) -> list[FilePatchInfo]:
+        if self.diff_files:
+            return self.diff_files
+
         diffs = self.pr.diffstat()
         diff_split = [
             "diff --git%s" % x for x in self.pr.diff().split("diff --git") if x.strip()
@@ -133,6 +140,7 @@ class BitbucketProvider(GitProvider):
                     diff.new.path,
                 )
             )
+        self.diff_files = diff_files
         return diff_files
 
     def publish_comment(self, pr_comment: str, is_temporary: bool = False):
@@ -181,9 +189,29 @@ class BitbucketProvider(GitProvider):
         )
         return response
 
+    def generate_link_to_relevant_line_number(self, suggestion) -> str:
+        try:
+            relevant_file = suggestion['relevant file'].strip('`').strip("'")
+            relevant_line_str = suggestion['relevant line']
+            if not relevant_line_str:
+                return ""
+
+            diff_files = self.get_diff_files()
+            position, absolute_position = find_line_number_of_relevant_line_in_file \
+                (diff_files, relevant_file, relevant_line_str)
+
+            if absolute_position != -1 and self.pr_url:
+                link = f"{self.pr_url}/#L{relevant_file}T{absolute_position}"
+                return link
+        except Exception as e:
+            if get_settings().config.verbosity_level >= 2:
+                get_logger().info(f"Failed adding line link, error: {e}")
+
+        return ""
+
     def publish_inline_comments(self, comments: list[dict]):
         for comment in comments:
-            self.publish_inline_comment(comment['body'], comment['start_line'], comment['path'])
+            self.publish_inline_comment(comment['body'], comment['position'], comment['path'])
 
     def get_title(self):
         return self.pr.title

@@ -1,4 +1,5 @@
 import copy
+import datetime
 from collections import OrderedDict
 from typing import List, Tuple
 
@@ -100,8 +101,7 @@ class PRReviewer:
             if self.is_auto and not get_settings().pr_reviewer.automatic_review:
                 get_logger().info(f'Automatic review is disabled {self.pr_url}')
                 return None
-            if self.is_auto and self.incremental.is_incremental and not self.incremental.first_new_commit_sha:
-                get_logger().info(f"Incremental review is enabled for {self.pr_url} but there are no new commits")
+            if self.incremental.is_incremental and not self._can_run_incremental_review():
                 return None
 
             get_logger().info(f'Reviewing PR: {self.pr_url} ...')
@@ -217,19 +217,6 @@ class PRReviewer:
                             suggestion['relevant line'] = f"[{suggestion['relevant line']}]({link})"
                     else:
                         pass
-                        # try:
-                        #     relevant_file = suggestion['relevant file'].strip('`').strip("'")
-                        #     relevant_line_str = suggestion['relevant line']
-                        #     if not relevant_line_str:
-                        #         return ""
-                        #
-                        #     position, absolute_position = find_line_number_of_relevant_line_in_file(
-                        #         self.git_provider.diff_files, relevant_file, relevant_line_str)
-                        #     if absolute_position != -1:
-                        #         suggestion[
-                        #             'relevant line'] = f"{suggestion['relevant line']} (line {absolute_position})"
-                        # except:
-                        #     pass
 
 
         # Add incremental review section
@@ -347,3 +334,34 @@ class PRReviewer:
                 self.git_provider.remove_comment(comment)
         except Exception as e:
             get_logger().exception(f"Failed to remove previous review comment, error: {e}")
+
+    def _can_run_incremental_review(self) -> bool:
+        """Checks if we can run incremental review according the various configurations and previous review"""
+        # checking if running is auto mode but there are no new commits
+        if self.is_auto and not self.incremental.first_new_commit_sha:
+            get_logger().info(f"Incremental review is enabled for {self.pr_url} but there are no new commits")
+            return False
+        # checking if there are enough commits to start the review
+        num_new_commits = len(self.incremental.commits_range)
+        num_commits_threshold = get_settings().pr_reviewer.minimal_commits_for_incremental_review
+        not_enough_commits = num_new_commits < num_commits_threshold
+        # checking if the commits are not too recent to start the review
+        recent_commits_threshold = datetime.datetime.now() - datetime.timedelta(
+            minutes=get_settings().pr_reviewer.minimal_minutes_for_incremental_review
+        )
+        last_seen_commit_date = (
+            self.incremental.last_seen_commit.commit.author.date if self.incremental.last_seen_commit else None
+        )
+        all_commits_too_recent = (
+            last_seen_commit_date > recent_commits_threshold if self.incremental.last_seen_commit else False
+        )
+        # check all the thresholds or just one to start the review
+        condition = any if get_settings().pr_reviewer.require_all_thresholds_for_incremental_review else all
+        if condition((not_enough_commits, all_commits_too_recent)):
+            get_logger().info(
+                f"Incremental review is enabled for {self.pr_url} but didn't pass the threshold check to run:"
+                f"\n* Number of new commits = {num_new_commits} (threshold is {num_commits_threshold})"
+                f"\n* Last seen commit date = {last_seen_commit_date} (threshold is {recent_commits_threshold})"
+            )
+            return False
+        return True
