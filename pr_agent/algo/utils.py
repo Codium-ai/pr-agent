@@ -324,3 +324,20 @@ def set_custom_labels(variables):
         final_labels += f"      - {k} ({v['description']})\n"
     variables["custom_labels"] = final_labels
     variables["custom_labels_examples"] = f"      - {list(labels.keys())[0]}"
+
+
+def get_user_labels(current_labels):
+    ## Only keep labels that has been added by the user
+    if current_labels is None:
+        current_labels = []
+    user_labels = []
+    for label in current_labels:
+        if label in ['Bug fix', 'Tests', 'Refactoring', 'Enhancement', 'Documentation', 'Other']:
+            continue
+        if get_settings().config.enable_custom_labels:
+            if label in get_settings().custom_labels:
+                continue
+        user_labels.append(label)
+    if user_labels:
+        get_logger().info(f"Keeping user labels: {user_labels}")
+    return user_labels

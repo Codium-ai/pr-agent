@@ -7,7 +7,7 @@ from jinja2 import Environment, StrictUndefined
 from pr_agent.algo.ai_handler import AiHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import load_yaml, set_custom_labels
+from pr_agent.algo.utils import load_yaml, set_custom_labels, get_user_labels
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
@@ -84,9 +84,8 @@ class PRGenerateLabels:
                 get_logger().info(f"Pushing labels {self.pr_id}")
 
                 current_labels = self.git_provider.get_labels()
-                if current_labels is None:
-                    current_labels = []
-                pr_labels = pr_labels + current_labels
+                user_labels = get_user_labels(current_labels)
+                pr_labels = pr_labels + user_labels
 
                 if self.git_provider.is_supported("get_labels"):
                     self.git_provider.publish_labels(pr_labels)
