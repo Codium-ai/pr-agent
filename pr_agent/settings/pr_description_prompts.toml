@@ -19,22 +19,22 @@ PR Title:
   type: string
   description: an informative title for the PR, describing its main theme
 PR Type:
-  type: array
+  type: string
+  enum:
+    - Bug fix
+    - Tests
+    - Refactoring
+    - Enhancement
+    - Documentation
+    - Other
 {%- if enable_custom_labels %}
-  description: One or more labels that describe the PR type. Don't output the description in the parentheses.
-{%- endif %}
+PR Labels:
+  type: array
+  description: One or more labels that describe the PR labels. Don't output the description in the parentheses.
   items:
     type: string
     enum:
-{%- if enable_custom_labels %}
 {{ custom_labels }}
-{%- else %}
-      - Bug fix
-      - Tests
-      - Refactoring
-      - Enhancement
-      - Documentation
-      - Other
 {%- endif %}
 PR Description:
   type: string
@@ -60,10 +60,10 @@ Example output:
 PR Title: |-
   ...
 PR Type:
+  ...
 {%- if enable_custom_labels %}
+PR Labels:
 {{ custom_labels_examples }}
-{%- else %}
-  - Bug fix
 {%- endif %}
 PR Description: |-
   ...

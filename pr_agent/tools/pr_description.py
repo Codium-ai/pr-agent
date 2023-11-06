@@ -172,12 +172,16 @@ class PRDescription:
         pr_types = []
 
         # If the 'PR Type' key is present in the dictionary, split its value by comma and assign it to 'pr_types'
-        if 'PR Type' in self.data:
+        if 'PR Labels' in self.data:
+            if type(self.data['PR Labels']) == list:
+                pr_types = self.data['PR Labels']
+            elif type(self.data['PR Labels']) == str:
+                pr_types = self.data['PR Labels'].split(',')
+        elif 'PR Type' in self.data:
             if type(self.data['PR Type']) == list:
                 pr_types = self.data['PR Type']
             elif type(self.data['PR Type']) == str:
                 pr_types = self.data['PR Type'].split(',')
-
         return pr_types
 
     def _prepare_pr_answer_with_markers(self) -> Tuple[str, str]:
@@ -223,6 +227,11 @@ class PRDescription:
 
         # Iterate over the dictionary items and append the key and value to 'markdown_text' in a markdown format
         markdown_text = ""
+        # Don't display 'PR Labels'
+        if 'PR Labels' in self.data:
+            self.data.pop('PR Labels')
+        if not get_settings().pr_description.enable_pr_type:
+            self.data.pop('PR Type')
         for key, value in self.data.items():
             markdown_text += f"## {key}\n\n"
             markdown_text += f"{value}\n\n"
