@@ -102,7 +102,7 @@ PR Main Files Walkthrough:
 ```
 
 Make sure to output a valid YAML. Don't repeat the prompt in the answer, and avoid outputting the 'type' and 'description' fields.
-
+If needed, each YAML output should be in block scalar format ('|-')
 
 
 Response (should be a valid YAML, and nothing else):
