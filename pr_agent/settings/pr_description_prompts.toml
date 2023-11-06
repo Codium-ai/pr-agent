@@ -52,6 +52,7 @@ PR Main Files Walkthrough:
     changes in file:
       type: string
       description: minimal and concise description of the changes in the relevant file
+```
 
 
 Example output:
