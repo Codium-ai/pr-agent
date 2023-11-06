@@ -230,6 +230,8 @@ class PRDescription:
         # Don't display 'PR Labels'
         if 'PR Labels' in self.data:
             self.data.pop('PR Labels')
+        if not get_settings().pr_description.enable_pr_type:
+            self.data.pop('PR Type')
         for key, value in self.data.items():
             markdown_text += f"## {key}\n\n"
             markdown_text += f"{value}\n\n"

@@ -34,6 +34,7 @@ add_original_user_description=false
 keep_original_user_title=false
 use_bullet_points=true
 extra_instructions = ""
+enable_pr_type=true
 
 # markers
 use_description_markers=false
