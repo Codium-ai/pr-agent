@@ -13,7 +13,7 @@ atlassian-python-api==3.39.0
 GitPython==3.1.32
 PyYAML==6.0
 starlette-context==0.3.6
-litellm~=0.1.574
+litellm==0.12.5
 boto3==1.28.25
 google-cloud-storage==2.10.0
 ujson==5.8.0
@@ -22,3 +22,4 @@ msrest==0.7.1
 pinecone-client
 pinecone-datasets @ git+https://github.com/mrT23/pinecone-datasets.git@main
 loguru==0.7.2
+google-cloud-aiplatform==1.35.0
