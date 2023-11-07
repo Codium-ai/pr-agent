@@ -1,5 +1,5 @@
 [config]
-model="gpt-4"
+model="gpt-4" # "gpt-4-1106-preview"
 fallback_models=["gpt-3.5-turbo-16k"]
 git_provider="github"
 publish_output=true
@@ -10,6 +10,7 @@ use_repo_settings_file=true
 ai_timeout=180
 max_description_tokens = 500
 max_commits_tokens = 500
+max_model_tokens = 32000 # even if a model supports more tokens, quality may degrade. Hence, enable to limit the number of tokens.
 patch_extra_lines = 3
 secret_provider="google_cloud_storage"
 cli_mode=false
