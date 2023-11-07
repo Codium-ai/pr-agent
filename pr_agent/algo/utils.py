@@ -344,10 +344,11 @@ def get_user_labels(current_labels):
         get_logger().info(f"Keeping user labels: {user_labels}")
     return user_labels
 
+
 def get_max_tokens(model):
+    settings = get_settings()
     max_tokens_model = MAX_TOKENS[model]
-    if get_settings().config.max_model_tokens:
-        if max_tokens_model > get_settings().config.max_model_tokens:
-            max_tokens_model = get_settings().config.max_model_tokens
-            # get_logger().debug(f"limiting max tokens to {max_tokens_model}")
+    if settings.config.max_model_tokens and max_tokens_model > settings.config.max_model_tokens:
+        max_tokens_model = settings.config.max_model_tokens
+        # get_logger().debug(f"limiting max tokens to {max_tokens_model}")
     return max_tokens_model
