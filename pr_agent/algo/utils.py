@@ -9,6 +9,8 @@ from typing import Any, List
 
 import yaml
 from starlette_context import context
+
+from pr_agent.algo import MAX_TOKENS
 from pr_agent.config_loader import get_settings, global_settings
 from pr_agent.log import get_logger
 
@@ -341,3 +343,12 @@ def get_user_labels(current_labels):
     if user_labels:
         get_logger().info(f"Keeping user labels: {user_labels}")
     return user_labels
+
+
+def get_max_tokens(model):
+    settings = get_settings()
+    max_tokens_model = MAX_TOKENS[model]
+    if settings.config.max_model_tokens:
+        max_tokens_model = min(settings.config.max_model_tokens, max_tokens_model)
+        # get_logger().debug(f"limiting max tokens to {max_tokens_model}")
+    return max_tokens_model

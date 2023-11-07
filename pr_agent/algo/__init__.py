@@ -8,6 +8,7 @@ MAX_TOKENS = {
     'gpt-4': 8000,
     'gpt-4-0613': 8000,
     'gpt-4-32k': 32000,
+    'gpt-4-1106-preview': 128000, # 128K, but may be limited by config.max_model_tokens
     'claude-instant-1': 100000,
     'claude-2': 100000,
     'command-nightly': 4096,

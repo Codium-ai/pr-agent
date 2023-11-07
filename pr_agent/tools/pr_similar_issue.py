@@ -8,8 +8,8 @@ import pinecone
 from pinecone_datasets import Dataset, DatasetMetadata
 from pydantic import BaseModel, Field
 
-from pr_agent.algo import MAX_TOKENS
 from pr_agent.algo.token_handler import TokenHandler
+from pr_agent.algo.utils import get_max_tokens
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.log import get_logger
@@ -197,7 +197,7 @@ class PRSimilarIssue:
             username = issue.user.login
             created_at = str(issue.created_at)
             if len(issue_str) < 8000 or \
-                    self.token_handler.count_tokens(issue_str) < MAX_TOKENS[MODEL]:  # fast reject first
+                    self.token_handler.count_tokens(issue_str) < get_max_tokens(MODEL):  # fast reject first
                 issue_record = Record(
                     id=issue_key + "." + "issue",
                     text=issue_str,
