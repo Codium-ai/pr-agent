@@ -18,9 +18,9 @@ from pr_agent.log import get_logger
 
 DELETED_FILES_ = "Deleted files:\n"
 
-MORE_MODIFIED_FILES_ = "Additional modified files (not enough token budget to process):\n"
+MORE_MODIFIED_FILES_ = "Additional modified files (insufficient token budget to process):\n"
 
-ADDED_FILES_ = "Additional added files (not enough token budget to process):\n"
+ADDED_FILES_ = "Additional added files (insufficient token budget to process):\n"
 
 OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD = 1000
 OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD = 600

@@ -13,6 +13,7 @@ class EDIT_TYPE(Enum):
     DELETED = 2
     MODIFIED = 3
     RENAMED = 4
+    UNKNOWN = 5
 
 
 @dataclass
@@ -22,7 +23,7 @@ class FilePatchInfo:
     patch: str
     filename: str
     tokens: int = -1
-    edit_type: EDIT_TYPE = EDIT_TYPE.MODIFIED
+    edit_type: EDIT_TYPE = EDIT_TYPE.UNKNOWN
     old_filename: str = None
 
 
