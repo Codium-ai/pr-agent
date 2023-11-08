@@ -1,6 +1,6 @@
 name: Regular Issue
 title: 'Sweep: '
-description: 
+description: ""
 labels: sweep
 body:
   - type: textarea
