@@ -138,8 +138,15 @@ class BitbucketProvider(GitProvider):
                 diff_split[index],
                 diff.new.path,
             )
+
             if diff.data['status'] == 'added':
                 file_patch_canonic_structure.edit_type = EDIT_TYPE.ADDED
+            elif diff.data['status'] == 'removed':
+                file_patch_canonic_structure.edit_type = EDIT_TYPE.DELETED
+            elif diff.data['status'] == 'modified':
+                file_patch_canonic_structure.edit_type = EDIT_TYPE.MODIFIED
+            elif diff.data['status'] == 'renamed':
+                file_patch_canonic_structure.edit_type = EDIT_TYPE.RENAMED
             diff_files.append(file_patch_canonic_structure)
 
 

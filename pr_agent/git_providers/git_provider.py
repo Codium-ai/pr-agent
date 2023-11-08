@@ -154,6 +154,8 @@ def get_main_pr_language(languages, files) -> str:
         # validate that the specific commit uses the main language
         extension_list = []
         for file in files:
+            if not file:
+                continue
             if isinstance(file, str):
                 file = FilePatchInfo(base_file=None, head_file=None, patch=None, filename=file)
             extension_list.append(file.filename.rsplit('.')[-1])
