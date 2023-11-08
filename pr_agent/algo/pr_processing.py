@@ -408,7 +408,7 @@ def get_pr_multi_diffs(git_provider: GitProvider,
             continue
 
         # Remove delete-only hunks
-        patch = handle_patch_deletions(patch, original_file_content_str, new_file_content_str, file.filename)
+        patch = handle_patch_deletions(patch, original_file_content_str, new_file_content_str, file.filename, file.edit_type)
         if patch is None:
             continue
 

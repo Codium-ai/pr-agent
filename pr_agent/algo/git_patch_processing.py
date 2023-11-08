@@ -116,7 +116,7 @@ def omit_deletion_hunks(patch_lines) -> str:
 
 
 def handle_patch_deletions(patch: str, original_file_content_str: str,
-                           new_file_content_str: str, file_name: str, edit_type: EDIT_TYPE) -> str:
+                           new_file_content_str: str, file_name: str, edit_type: EDIT_TYPE = EDIT_TYPE.MODIFIED) -> str:
     """
     Handle entire file or deletion patches.
 
