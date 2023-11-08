@@ -1,6 +1,6 @@
-name: Feature Request
+name: Test a PR
 title: 'Sweep: '
-description: Write something like "Write an api endpoint that does "..." in the "..." file"
+description: Generate tests for components that changed in a PR
 labels: sweep
 body:
   - type: textarea
