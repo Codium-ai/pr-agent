@@ -13,12 +13,14 @@ from pr_agent.algo.file_filter import filter_ignored
 from pr_agent.algo.token_handler import TokenHandler, get_token_encoder
 from pr_agent.algo.utils import get_max_tokens
 from pr_agent.config_loader import get_settings
-from pr_agent.git_providers.git_provider import FilePatchInfo, GitProvider
+from pr_agent.git_providers.git_provider import FilePatchInfo, GitProvider, EDIT_TYPE
 from pr_agent.log import get_logger
 
 DELETED_FILES_ = "Deleted files:\n"
 
-MORE_MODIFIED_FILES_ = "More modified files:\n"
+MORE_MODIFIED_FILES_ = "Additional modified files (not enough token budget to process):\n"
+
+ADDED_FILES_ = "Additional added files (not enough token budget to process):\n"
 
 OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD = 1000
 OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD = 600
@@ -68,10 +70,13 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler, model: s
         return "\n".join(patches_extended)
 
     # if we are over the limit, start pruning
-    patches_compressed, modified_file_names, deleted_file_names = \
+    patches_compressed, modified_file_names, deleted_file_names, added_file_names = \
         pr_generate_compressed_diff(pr_languages, token_handler, model, add_line_numbers_to_hunks)
 
     final_diff = "\n".join(patches_compressed)
+    if added_file_names:
+        added_list_str = ADDED_FILES_ + "\n".join(added_file_names)
+        final_diff = final_diff + "\n\n" + added_list_str
     if modified_file_names:
         modified_list_str = MORE_MODIFIED_FILES_ + "\n".join(modified_file_names)
         final_diff = final_diff + "\n\n" + modified_list_str
@@ -122,7 +127,7 @@ def pr_generate_extended_diff(pr_languages: list,
 
 
 def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler, model: str,
-                                convert_hunks_to_line_numbers: bool) -> Tuple[list, list, list]:
+                                convert_hunks_to_line_numbers: bool) -> Tuple[list, list, list, list]:
     """
     Generate a compressed diff string for a pull request, using diff minimization techniques to reduce the number of
     tokens used.
@@ -148,6 +153,7 @@ def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler, mo
     """
 
     patches = []
+    added_files_list = []
     modified_files_list = []
     deleted_files_list = []
     # sort each one of the languages in top_langs by the number of tokens in the diff
@@ -165,7 +171,7 @@ def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler, mo
 
         # removing delete-only hunks
         patch = handle_patch_deletions(patch, original_file_content_str,
-                                       new_file_content_str, file.filename)
+                                       new_file_content_str, file.filename, file.edit_type)
         if patch is None:
             if not deleted_files_list:
                 total_tokens += token_handler.count_tokens(DELETED_FILES_)
@@ -190,10 +196,15 @@ def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler, mo
             #  until we meet the requirements
             if get_settings().config.verbosity_level >= 2:
                 get_logger().warning(f"Patch too large, minimizing it, {file.filename}")
-            if not modified_files_list:
-                total_tokens += token_handler.count_tokens(MORE_MODIFIED_FILES_)
-            modified_files_list.append(file.filename)
-            total_tokens += token_handler.count_tokens(file.filename) + 1
+            if file.edit_type == EDIT_TYPE.ADDED:
+                if not added_files_list:
+                    total_tokens += token_handler.count_tokens(ADDED_FILES_)
+                added_files_list.append(file.filename)
+            else:
+                if not modified_files_list:
+                    total_tokens += token_handler.count_tokens(MORE_MODIFIED_FILES_)
+                modified_files_list.append(file.filename)
+                total_tokens += token_handler.count_tokens(file.filename) + 1
             continue
 
         if patch:
@@ -206,7 +217,7 @@ def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler, mo
             if get_settings().config.verbosity_level >= 2:
                 get_logger().info(f"Tokens: {total_tokens}, last filename: {file.filename}")
 
-    return patches, modified_files_list, deleted_files_list
+    return patches, modified_files_list, deleted_files_list, added_files_list
 
 
 async def retry_with_fallback_models(f: Callable):
