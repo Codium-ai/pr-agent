@@ -23,7 +23,7 @@ def filter_ignored(files):
 
         # keep filenames that _don't_ match the ignore regex
         for r in compiled_patterns:
-            files = [f for f in files if not r.match(f.filename)]
+            files = [f for f in files if (f.filename and not r.match(f.filename))]
 
     except Exception as e:
         print(f"Could not filter file list: {e}")

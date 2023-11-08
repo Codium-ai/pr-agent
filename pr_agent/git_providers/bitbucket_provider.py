@@ -9,7 +9,7 @@ from starlette_context import context
 from ..algo.pr_processing import find_line_number_of_relevant_line_in_file
 from ..config_loader import get_settings
 from ..log import get_logger
-from .git_provider import FilePatchInfo, GitProvider
+from .git_provider import FilePatchInfo, GitProvider, EDIT_TYPE
 
 
 class BitbucketProvider(GitProvider):
@@ -132,14 +132,24 @@ class BitbucketProvider(GitProvider):
                 diff.old.get_data("links")
             )
             new_file_content_str = self._get_pr_file_content(diff.new.get_data("links"))
-            diff_files.append(
-                FilePatchInfo(
-                    original_file_content_str,
-                    new_file_content_str,
-                    diff_split[index],
-                    diff.new.path,
-                )
+            file_patch_canonic_structure = FilePatchInfo(
+                original_file_content_str,
+                new_file_content_str,
+                diff_split[index],
+                diff.new.path,
             )
+
+            if diff.data['status'] == 'added':
+                file_patch_canonic_structure.edit_type = EDIT_TYPE.ADDED
+            elif diff.data['status'] == 'removed':
+                file_patch_canonic_structure.edit_type = EDIT_TYPE.DELETED
+            elif diff.data['status'] == 'modified':
+                file_patch_canonic_structure.edit_type = EDIT_TYPE.MODIFIED
+            elif diff.data['status'] == 'renamed':
+                file_patch_canonic_structure.edit_type = EDIT_TYPE.RENAMED
+            diff_files.append(file_patch_canonic_structure)
+
+
         self.diff_files = diff_files
         return diff_files
 
@@ -288,6 +298,11 @@ class BitbucketProvider(GitProvider):
             })
 
         response = requests.request("PUT", self.bitbucket_pull_request_api_url, headers=self.headers, data=payload)
+        try:
+            if response.status_code != 200:
+                get_logger().info(f"Failed to update description, error code: {response.status_code}")
+        except:
+            pass
         return response
 
     # bitbucket does not support labels

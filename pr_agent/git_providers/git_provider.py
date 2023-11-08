@@ -13,6 +13,7 @@ class EDIT_TYPE(Enum):
     DELETED = 2
     MODIFIED = 3
     RENAMED = 4
+    UNKNOWN = 5
 
 
 @dataclass
@@ -22,7 +23,7 @@ class FilePatchInfo:
     patch: str
     filename: str
     tokens: int = -1
-    edit_type: EDIT_TYPE = EDIT_TYPE.MODIFIED
+    edit_type: EDIT_TYPE = EDIT_TYPE.UNKNOWN
     old_filename: str = None
 
 
@@ -94,10 +95,10 @@ class GitProvider(ABC):
     def get_pr_description(self, *, full: bool = True) -> str:
         from pr_agent.config_loader import get_settings
         from pr_agent.algo.pr_processing import clip_tokens
-        max_tokens = get_settings().get("CONFIG.MAX_DESCRIPTION_TOKENS", None)
+        max_tokens_description = get_settings().get("CONFIG.MAX_DESCRIPTION_TOKENS", None)
         description = self.get_pr_description_full() if full else self.get_user_description()
-        if max_tokens:
-            return clip_tokens(description, max_tokens)
+        if max_tokens_description:
+            return clip_tokens(description, max_tokens_description)
         return description
 
     def get_user_description(self) -> str:
@@ -153,6 +154,8 @@ def get_main_pr_language(languages, files) -> str:
         # validate that the specific commit uses the main language
         extension_list = []
         for file in files:
+            if not file:
+                continue
             if isinstance(file, str):
                 file = FilePatchInfo(base_file=None, head_file=None, patch=None, filename=file)
             extension_list.append(file.filename.rsplit('.')[-1])

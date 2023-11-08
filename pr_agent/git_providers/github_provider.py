@@ -13,7 +13,7 @@ from ..algo.utils import load_large_diff
 from ..config_loader import get_settings
 from ..log import get_logger
 from ..servers.utils import RateLimitExceeded
-from .git_provider import FilePatchInfo, GitProvider, IncrementalPR
+from .git_provider import FilePatchInfo, GitProvider, IncrementalPR, EDIT_TYPE
 
 
 class GithubProvider(GitProvider):
@@ -129,7 +129,20 @@ class GithubProvider(GitProvider):
                     if not patch:
                         patch = load_large_diff(file.filename, new_file_content_str, original_file_content_str)
 
-                diff_files.append(FilePatchInfo(original_file_content_str, new_file_content_str, patch, file.filename))
+                if file.status == 'added':
+                    edit_type = EDIT_TYPE.ADDED
+                elif file.status == 'removed':
+                    edit_type = EDIT_TYPE.DELETED
+                elif file.status == 'renamed':
+                    edit_type = EDIT_TYPE.RENAMED
+                elif file.status == 'modified':
+                    edit_type = EDIT_TYPE.MODIFIED
+                else:
+                    get_logger().error(f"Unknown edit type: {file.status}")
+                    edit_type = EDIT_TYPE.UNKNOWN
+                file_patch_canonical_structure = FilePatchInfo(original_file_content_str, new_file_content_str, patch,
+                                                               file.filename, edit_type=edit_type)
+                diff_files.append(file_patch_canonical_structure)
 
             self.diff_files = diff_files
             return diff_files
