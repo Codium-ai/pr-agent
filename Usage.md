@@ -173,7 +173,7 @@ push_commands = [
     "/auto_review -i --pr_reviewer.remove_previous_review_comment=true",
 ]
 ```
-The means that when new code is pused to the PR, the PR-Agent will run the `describe` and incremental `auto_review` tools.  
+The means that when new code is pushed to the PR, the PR-Agent will run the `describe` and incremental `auto_review` tools.  
 For the describe tool, the `add_original_user_description` and `keep_original_user_title` parameters will be set to true.  
 For the `auto_review` tool, it will run in incremental mode, and the `remove_previous_review_comment` parameter will be set to true.
 

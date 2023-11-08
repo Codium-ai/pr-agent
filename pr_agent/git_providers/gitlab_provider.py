@@ -136,6 +136,18 @@ class GitLabProvider(GitProvider):
         except Exception as e:
             get_logger().exception(f"Could not update merge request {self.id_mr} description: {e}")
 
+    def publish_persistent_review(self, pr_comment: str):
+        try:
+            for comment in self.mr.notes.list(get_all=True)[::-1]:
+                if comment.body.startswith('## PR Analysis'):
+                    pr_comment_updated = pr_comment.replace('## PR Analysis\n', '## PR Analysis (updated)\n')
+                    response = self.mr.notes.update(comment.id, {'body': pr_comment_updated})
+                    return
+        except Exception as e:
+            get_logger().exception(f"Failed to update persistent review, error: {e}")
+            pass
+        self.publish_comment(pr_comment)
+
     def publish_comment(self, mr_comment: str, is_temporary: bool = False):
         comment = self.mr.notes.create({'body': mr_comment})
         if is_temporary:
