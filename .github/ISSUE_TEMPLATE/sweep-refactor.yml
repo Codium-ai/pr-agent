@@ -1,6 +1,6 @@
-name: Refactor
+name: Document a PR
 title: 'Sweep: '
-description: Write something like "Modify the ... api endpoint to use ... version and ... framework"
+description: Generate Docstrings for relevant components in a PR
 labels: sweep
 body:
   - type: textarea
