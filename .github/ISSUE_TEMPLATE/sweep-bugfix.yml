@@ -1,6 +1,6 @@
-name: Bugfix
+name: Regular Issue
 title: 'Sweep: '
-description: Write something like "We notice ... behavior when ... happens instead of ...""
+description: 
 labels: sweep
 body:
   - type: textarea
