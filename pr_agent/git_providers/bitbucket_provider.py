@@ -155,18 +155,17 @@ class BitbucketProvider(GitProvider):
 
 
     def publish_persistent_review(self, pr_comment: str):
-        ## not working yet, need to find a way to update the comment
-        # try:
-        #     for comment in self.pr.comments():
-        #         body = comment.raw
-        #         if '## PR Analysis' in body:
-        #             pr_comment_updated = pr_comment.replace('## PR Analysis\n', '## PR Analysis (updated)\n')
-        #             comment.data['content']['raw']= pr_comment_updated
-        #             comment.update()
-        #             return
-        # except Exception as e:
-        #     get_logger().exception(f"Failed to update persistent review, error: {e}")
-        #     pass
+        try:
+            for comment in self.pr.comments():
+                body = comment.raw
+                if '## PR Analysis' in body:
+                    pr_comment_updated = pr_comment.replace('## PR Analysis\n', '## PR Analysis (updated)\n')
+                    d = {"content": {"raw": pr_comment_updated}}
+                    response = comment._update_data(comment.put(None, data=d))
+                    return
+        except Exception as e:
+            get_logger().exception(f"Failed to update persistent review, error: {e}")
+            pass
         self.publish_comment(pr_comment)
 
     def publish_comment(self, pr_comment: str, is_temporary: bool = False):
