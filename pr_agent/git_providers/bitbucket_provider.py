@@ -153,10 +153,7 @@ class BitbucketProvider(GitProvider):
         self.diff_files = diff_files
         return diff_files
 
-
-    def publish_persistent_comment(self, pr_comment: str,
-                                   initial_text="## PR Analysis",
-                                   updated_text="## PR Analysis (updated)"):
+    def publish_persistent_comment(self, pr_comment: str, initial_text: str, updated_text: str):
         try:
             for comment in self.pr.comments():
                 body = comment.raw

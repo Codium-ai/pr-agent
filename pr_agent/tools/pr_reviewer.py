@@ -120,7 +120,9 @@ class PRReviewer:
 
                 # publish the review
                 if get_settings().pr_reviewer.persistent_comment and not self.incremental.is_incremental:
-                    self.git_provider.publish_persistent_comment(pr_comment)
+                    self.git_provider.publish_persistent_comment(pr_comment,
+                                                                 initial_text="## PR Analysis",
+                                                                 updated_text="## PR Analysis (updated)")
                 else:
                     self.git_provider.publish_comment(pr_comment)
 
