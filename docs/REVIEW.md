@@ -24,6 +24,8 @@ Under the section 'pr_reviewer', the [configuration file](./../pr_agent/settings
 - `num_code_suggestions`: number of code suggestions provided by the 'review' tool. Default is 4.
 - `inline_code_comments`: if set to true, the tool will publish the code suggestions as comments on the code diff. Default is false.
 - `automatic_review`: if set to false, no automatic reviews will be done. Default is true.
+- `remove_previous_review_comment`: if set to true, the tool will remove the previous review comment before adding a new one. Default is false.
+- `persistent_comment`: if set to true, the review comment will be persistent. Default is true.
 - `extra_instructions`: Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".
 - To enable `custom labels`, apply the configuration changes described [here](./GENERATE_CUSTOM_LABELS.md#configuration-changes) 
 ####  Incremental Mode

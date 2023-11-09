@@ -154,10 +154,24 @@ class GithubProvider(GitProvider):
     def publish_description(self, pr_title: str, pr_body: str):
         self.pr.edit(title=pr_title, body=pr_body)
 
+    def publish_persistent_comment(self, pr_comment: str, initial_text: str, updated_text: str):
+        prev_comments = list(self.pr.get_issue_comments())
+        for comment in prev_comments:
+            body = comment.body
+            if body.startswith(initial_text):
+                if updated_text:
+                    pr_comment_updated = pr_comment.replace(initial_text, updated_text)
+                else:
+                    pr_comment_updated = pr_comment
+                response = comment.edit(pr_comment_updated)
+                return
+        self.publish_comment(pr_comment)
+
     def publish_comment(self, pr_comment: str, is_temporary: bool = False):
         if is_temporary and not get_settings().config.publish_output_progress:
             get_logger().debug(f"Skipping publish_comment for temporary comment: {pr_comment}")
             return
+
         response = self.pr.create_issue_comment(pr_comment)
         if hasattr(response, "user") and hasattr(response.user, "login"):
             self.github_user_id = response.user.login

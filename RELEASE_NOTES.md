@@ -1,3 +1,6 @@
+## Unreleased
+- review tool now posts persistent comments by default
+
 ## [Version 0.9] - 2023-10-29
 - codiumai/pr-agent:0.9
 - codiumai/pr-agent:0.9-github_app

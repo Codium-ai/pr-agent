@@ -117,7 +117,15 @@ class PRReviewer:
             if get_settings().config.publish_output:
                 get_logger().info('Pushing PR review...')
                 previous_review_comment = self._get_previous_review_comment()
-                self.git_provider.publish_comment(pr_comment)
+
+                # publish the review
+                if get_settings().pr_reviewer.persistent_comment and not self.incremental.is_incremental:
+                    self.git_provider.publish_persistent_comment(pr_comment,
+                                                                 initial_text="## PR Analysis",
+                                                                 updated_text="## PR Analysis (updated)")
+                else:
+                    self.git_provider.publish_comment(pr_comment)
+
                 self.git_provider.remove_initial_comment()
                 if previous_review_comment:
                     self._remove_previous_review_comment(previous_review_comment)
@@ -156,7 +164,6 @@ class PRReviewer:
         variables["diff"] = self.patches_diff  # update diff
 
         environment = Environment(undefined=StrictUndefined)
-        # set_custom_labels(variables)
         system_prompt = environment.from_string(get_settings().pr_review_prompt.system).render(variables)
         user_prompt = environment.from_string(get_settings().pr_review_prompt.user).render(variables)
 
