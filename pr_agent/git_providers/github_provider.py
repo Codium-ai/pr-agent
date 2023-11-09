@@ -154,11 +154,17 @@ class GithubProvider(GitProvider):
     def publish_description(self, pr_title: str, pr_body: str):
         self.pr.edit(title=pr_title, body=pr_body)
 
-    def publish_persistent_review(self, pr_comment: str):
+    def publish_persistent_comment(self, pr_comment: str,
+                                   initial_text="## PR Analysis",
+                                   updated_text="## PR Analysis (updated)"):
         prev_comments = list(self.pr.get_issue_comments())
         for comment in prev_comments:
-            if comment.body.startswith('## PR Analysis'):
-                pr_comment_updated = pr_comment.replace('## PR Analysis\n', '## PR Analysis (updated)\n')
+            body = comment.body
+            if body.startswith(initial_text):
+                if updated_text:
+                    pr_comment_updated = pr_comment.replace(initial_text, updated_text)
+                else:
+                    pr_comment_updated = pr_comment
                 response = comment.edit(pr_comment_updated)
                 return
         self.publish_comment(pr_comment)

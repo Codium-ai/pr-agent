@@ -154,12 +154,17 @@ class BitbucketProvider(GitProvider):
         return diff_files
 
 
-    def publish_persistent_review(self, pr_comment: str):
+    def publish_persistent_comment(self, pr_comment: str,
+                                   initial_text="## PR Analysis",
+                                   updated_text="## PR Analysis (updated)"):
         try:
             for comment in self.pr.comments():
                 body = comment.raw
-                if '## PR Analysis' in body:
-                    pr_comment_updated = pr_comment.replace('## PR Analysis\n', '## PR Analysis (updated)\n')
+                if initial_text in body:
+                    if updated_text:
+                        pr_comment_updated = pr_comment.replace(initial_text, updated_text)
+                    else:
+                        pr_comment_updated = pr_comment
                     d = {"content": {"raw": pr_comment_updated}}
                     response = comment._update_data(comment.put(None, data=d))
                     return
