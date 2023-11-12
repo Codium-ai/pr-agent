@@ -62,7 +62,7 @@ async def run_action():
     # Handle pull request event
     if GITHUB_EVENT_NAME == "pull_request":
         action = event_payload.get("action")
-        if action in ["opened", "reopened"]:
+        if action in ["opened", "reopened", "review_requested"]:
             pr_url = event_payload.get("pull_request", {}).get("url")
             if pr_url:
                 auto_review = os.environ.get('github_action.auto_review', None)
