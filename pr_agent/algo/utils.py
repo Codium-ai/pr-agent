@@ -336,11 +336,14 @@ def set_custom_labels(variables):
         labels_list = f"      - {labels_list}" if labels_list else ""
         variables["custom_labels"] = labels_list
         return
-    final_labels = ""
+    #final_labels = ""
+    #for k, v in labels.items():
+    #    final_labels += f"      - {k} ({v['description']})\n"
+    #variables["custom_labels"] = final_labels
+    #variables["custom_labels_examples"] = f"      - {list(labels.keys())[0]}"
+    variables["custom_labels_class"] = "class Labels(Enum):"
     for k, v in labels.items():
-        final_labels += f"      - {k} ({v['description']})\n"
-    variables["custom_labels"] = final_labels
-    variables["custom_labels_examples"] = f"      - {list(labels.keys())[0]}"
+        variables["custom_labels_class"] += f"\n    {k.lower().replace(' ','_')} = '{k}' # {v['description']}"
 
 
 def get_user_labels(current_labels: List[str] = None):

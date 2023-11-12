@@ -13,67 +13,57 @@ Extra instructions from the user:
 '
 {% endif %}
 
-You must use the following YAML schema to format your answer:
-```yaml
-PR Title:
-  type: string
-  description: an informative title for the PR, describing its main theme
-PR Type:
-  type: string
-  enum:
-    - Bug fix
-    - Tests
-    - Refactoring
-    - Enhancement
-    - Documentation
-    - Other
+
+The output must be a YAML object equivalent to type $PRDescription, according to the following Pydantic definitions:
+'
+Class PRType(Enum):
+    bug_fix = "Bug fix"
+    tests = "Tests"
+    refactoring = "Refactoring"
+    enhancement = "Enhancement"
+    documentation = "Documentation"
+    other = "Other"
+
 {%- if enable_custom_labels %}
-PR Labels:
-  type: array
-  description: One or more labels that describe the PR labels. Don't output the description in the parentheses.
-  items:
-    type: string
-    enum:
-{{ custom_labels }}
+
+{{ custom_labels_class }}
 {%- endif %}
-PR Description:
-  type: string
-  description: an informative and concise description of the PR.
-  {%- if use_bullet_points %} Use bullet points. {% endif %}
-PR Main Files Walkthrough:
-  type: array
-  maxItems: 10
-  description: |-
-    a walkthrough of the PR changes. Review main files, and shortly describe the changes in each file (up to 10 most important files).
-  items:
-    filename:
-      type: string
-      description: the relevant file full path
-    changes in file:
-      type: string
-      description: minimal and concise description of the changes in the relevant file
-```
+
+class FileWalkthrough(BaseModel):
+    filename: str = Field(description="the relevant file full path")
+    changes_in_file: str = Field(description="minimal and concise description of the changes in the relevant file")
+
+Class PRDescription(BaseModel):
+    title: str = Field(description="an informative title for the PR, describing its main theme")
+    type: List[PRType] = Field(description="one or more types that describe the PR type")
+    description: str = Field(description="an informative and concise description of the PR. {%- if use_bullet_points %} Use bullet points. {% endif %}")
+{%- if enable_custom_labels %}
+    labels: List[Labels] = Field(description="one or more custom labels that describe the PR")
+{%- endif %}
+    main_files_walkthrough: List[FileWalkthrough] = Field(max_items=10)
+'
 
 
 Example output:
 ```yaml
-PR Title: |-
+title: |-
   ...
-PR Type:
-  ...
+type:
+- ...
+- ...
 {%- if enable_custom_labels %}
-PR Labels:
+labels:
 - ...
 - ...
 {%- endif %}
-PR Description: |-
+description: |-
   ...
-PR Main Files Walkthrough:
+main_files_walkthrough:
   - ...
   - ...
 ```
 
-Make sure to output a valid YAML. Don't repeat the prompt in the answer, and avoid outputting the 'type' and 'description' fields.
+Answer should be a valid YAML, and nothing else. Each YAML output MUST be after a newline, with proper indent, and block scalar indicator ('|-')
 """
 
 user="""PR Info:
