@@ -11,38 +11,35 @@ Extra instructions from the user:
 '
 {% endif %}
 
-You must use the following YAML schema to format your answer:
-```yaml
-PR Type:
-  type: array
+The output must be a YAML object equivalent to type $Labels, according to the following Pydantic definitions:
+'
 {%- if enable_custom_labels %}
-  description: One or more labels that describe the PR type. Don't output the description in the parentheses.
-{%- endif %}
-  items:
-    type: string
-    enum:
-{%- if enable_custom_labels %}
-{{ custom_labels }}
+
+{{ custom_labels_class }}
+
 {%- else %}
-      - Bug fix
-      - Tests
-      - Refactoring
-      - Enhancement
-      - Documentation
-      - Other
+class Label(Enum):
+    bug_fix = "Bug fix"
+    tests = "Tests"
+    refactoring = "Refactoring"
+    enhancement = "Enhancement"
+    documentation = "Documentation"
+    other = "Other"
 {%- endif %}
+
+class Labels(BaseModel):
+    labels: List[Label]
+'
+
 
 Example output:
 ```yaml
-PR Type:
-{%- if enable_custom_labels %}
-{{ custom_labels_examples }}
-{%- else %}
-  - Bug fix
-{%- endif %}
+labels:
+- ...
+- ...
 ```
 
-Make sure to output a valid YAML. Don't repeat the prompt in the answer, and avoid outputting the 'type' and 'description' fields.
+Answer should be a valid YAML, and nothing else.
 """
 
 user="""PR Info:

@@ -38,7 +38,7 @@ Class PRDescription(BaseModel):
     type: List[PRType] = Field(description="one or more types that describe the PR type")
     description: str = Field(description="an informative and concise description of the PR. {%- if use_bullet_points %} Use bullet points. {% endif %}")
 {%- if enable_custom_labels %}
-    labels: List[Labels] = Field(description="one or more custom labels that describe the PR")
+    labels: List[Label] = Field(description="one or more custom labels that describe the PR")
 {%- endif %}
     main_files_walkthrough: List[FileWalkthrough] = Field(max_items=10)
 '
