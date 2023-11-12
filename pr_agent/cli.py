@@ -8,6 +8,8 @@ from pr_agent.log import setup_logger
 
 setup_logger()
 
+
+
 def run(inargs=None):
     parser = argparse.ArgumentParser(description='AI based pull request analyzer', usage=
 """\
@@ -51,9 +53,9 @@ For example: 'python cli.py --pr_url=... review --pr_reviewer.extra_instructions
     command = args.command.lower()
     get_settings().set("CONFIG.CLI_MODE", True)
     if args.issue_url:
-        result = asyncio.run(PRAgent().handle_request(args.issue_url, command + " " + " ".join(args.rest)))
+        result = asyncio.run(PRAgent().handle_request(args.issue_url, [command] + args.rest))
     else:
-        result = asyncio.run(PRAgent().handle_request(args.pr_url, command + " " + " ".join(args.rest)))
+        result = asyncio.run(PRAgent().handle_request(args.pr_url, [command] + args.rest))
     if not result:
         parser.print_help()
 
