@@ -297,6 +297,21 @@ def load_yaml(review_text: str) -> dict:
 
 def try_fix_yaml(review_text: str) -> dict:
     review_text_lines = review_text.split('\n')
+
+    # first fallback - try to convert 'relevant line: ...' to relevant line: |-\n        ...'
+    review_text_lines_copy = review_text_lines.copy()
+    for i in range(0, len(review_text_lines_copy)):
+        if 'relevant line:' in review_text_lines_copy[i] and not '|-' in review_text_lines_copy[i]:
+            review_text_lines_copy[i] = review_text_lines_copy[i].replace('relevant line: ',
+                                                    'relevant line: |-\n        ')
+    try:
+        data = yaml.load('\n'.join(review_text_lines_copy), Loader=yaml.SafeLoader)
+        get_logger().info(f"Successfully parsed AI prediction after adding |-\n        to relevant line")
+        return data
+    except:
+        get_logger().debug(f"Failed to parse AI prediction after adding |-\n        to relevant line")
+
+    # second fallback - try to remove last lines
     data = {}
     for i in range(1, len(review_text_lines)):
         review_text_lines_tmp = '\n'.join(review_text_lines[:-i])
