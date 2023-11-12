@@ -8,6 +8,16 @@ from pr_agent.log import setup_logger
 
 setup_logger()
 
+
+def handle_args_with_quotes(args):
+    if args.rest:
+        for i, r in enumerate(args.rest):
+            if r.startswith("--") and r.count("=") == 1 and " " in r:
+                r_split = r.split("=")
+                args.rest[i] = r_split[0] + "=" + '"' + r_split[1] + '"'
+    return args
+
+
 def run(inargs=None):
     parser = argparse.ArgumentParser(description='AI based pull request analyzer', usage=
 """\
@@ -44,6 +54,7 @@ For example: 'python cli.py --pr_url=... review --pr_reviewer.extra_instructions
     parser.add_argument('command', type=str, help='The', choices=commands, default='review')
     parser.add_argument('rest', nargs=argparse.REMAINDER, default=[])
     args = parser.parse_args(inargs)
+    args = handle_args_with_quotes(args)
     if not args.pr_url and not args.issue_url:
         parser.print_help()
         return
