@@ -16,7 +16,7 @@ You must use the following YAML schema to format your answer:
 PR Type:
   type: array
 {%- if enable_custom_labels %}
-  description: One or more labels that describe the PR type. Don't output the description in the parentheses.
+  description: Labels that describe the PR type. Don't output the description in the parentheses. If none of the labels is relevant to the PR, output an empty array.
 {%- endif %}
   items:
     type: string
