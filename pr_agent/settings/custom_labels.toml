@@ -3,16 +3,16 @@ enable_custom_labels=false
 
 ## template for custom labels
 #[custom_labels."Bug fix"]
-#description = "Fixes a bug in the code"
+#description = """Fixes a bug in the code"""
 #[custom_labels."Tests"]
-#description = "Adds or modifies tests"
+#description = """Adds or modifies tests"""
 #[custom_labels."Bug fix with tests"]
-#description = "Fixes a bug in the code and adds or modifies tests"
+#description = """Fixes a bug in the code and adds or modifies tests"""
 #[custom_labels."Refactoring"]
-#description = "Code refactoring without changing functionality"
+#description = """Code refactoring without changing functionality"""
 #[custom_labels."Enhancement"]
-#description = "Adds new features or functionality"
+#description = """Adds new features or functionality"""
 #[custom_labels."Documentation"]
-#description = "Adds or modifies documentation"
+#description = """Adds or modifies documentation"""
 #[custom_labels."Other"]
-#description = "Other changes that do not fit in any of the above categories"
+#description = """Other changes that do not fit in any of the above categories"""
