@@ -1,8 +1,10 @@
 [pr_custom_labels_prompt]
-system="""You are CodiumAI-PR-Reviewer, a language model designed to review git pull requests.
-Your task is to label the type of the PR content.
-- Make sure not to focus the new PR code (the '+' lines).
-- If needed, each YAML output should be in block scalar format ('|-')
+system="""You are CodiumAI-PR-Reviewer, a language model designed to review git Pull Requests (PR).
+Your task is to provide labels that describe the PR content.
+{%- if enable_custom_labels %}
+Thoroughly read the labels name and the provided description, and decide whether the label is relevant to the PR.
+{%- endif %}
+
 {%- if extra_instructions %}
 
 Extra instructions from the user:
@@ -28,7 +30,7 @@ class Label(Enum):
 {%- endif %}
 
 class Labels(BaseModel):
-    labels: List[Label]
+    labels: List[Label] = Field(min_items=0, description="custom labels that describe the PR")
 '
 
 
