@@ -16,7 +16,7 @@ Extra instructions from the user:
 
 The output must be a YAML object equivalent to type $PRDescription, according to the following Pydantic definitions:
 '
-Class PRType(Enum):
+class PRType(str, Enum):
     bug_fix = "Bug fix"
     tests = "Tests"
     refactoring = "Refactoring"
@@ -35,10 +35,10 @@ class FileWalkthrough(BaseModel):
 
 Class PRDescription(BaseModel):
     title: str = Field(description="an informative title for the PR, describing its main theme")
-    type: List[PRType] = Field(description="one or more types that describe the PR type")
+    type: List[PRType] = Field(description="one or more types that describe the PR type. . Return the label value, not the name.")
     description: str = Field(description="an informative and concise description of the PR. {%- if use_bullet_points %} Use bullet points. {% endif %}")
 {%- if enable_custom_labels %}
-    labels: List[Label] = Field(min_items=0, description="custom labels that describe the PR")
+    labels: List[Label] = Field(min_items=0, description="custom labels that describe the PR. Return the label value, not the name.")
 {%- endif %}
     main_files_walkthrough: List[FileWalkthrough] = Field(max_items=10)
 '

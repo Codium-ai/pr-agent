@@ -20,7 +20,7 @@ The output must be a YAML object equivalent to type $Labels, according to the fo
 {{ custom_labels_class }}
 
 {%- else %}
-class Label(Enum):
+class Label(str, Enum):
     bug_fix = "Bug fix"
     tests = "Tests"
     refactoring = "Refactoring"
@@ -30,7 +30,7 @@ class Label(Enum):
 {%- endif %}
 
 class Labels(BaseModel):
-    labels: List[Label] = Field(min_items=0, description="custom labels that describe the PR")
+    labels: List[Label] = Field(min_items=0, description="custom labels that describe the PR. Return the label value, not the name.")
 '
 
 

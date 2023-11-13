@@ -341,7 +341,7 @@ def set_custom_labels(variables):
     #    final_labels += f"      - {k} ({v['description']})\n"
     #variables["custom_labels"] = final_labels
     #variables["custom_labels_examples"] = f"      - {list(labels.keys())[0]}"
-    variables["custom_labels_class"] = "class Label(Enum):"
+    variables["custom_labels_class"] = "class Label(str, Enum):"
     for k, v in labels.items():
         description = v['description'].strip('\n').replace('\n', '\\n')
         variables["custom_labels_class"] += f"\n    {k.lower().replace(' ', '_')} = '{k}' # {description}"
