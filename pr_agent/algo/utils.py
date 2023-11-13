@@ -343,8 +343,8 @@ def set_custom_labels(variables):
     #variables["custom_labels_examples"] = f"      - {list(labels.keys())[0]}"
     variables["custom_labels_class"] = "class Label(Enum):"
     for k, v in labels.items():
-        variables["custom_labels_class"] += f"\n    {k.lower().replace(' ','_')} = '{k}' # {v['description']}"
-
+        description = v['description'].strip('\n').replace('\n', '\\n')
+        variables["custom_labels_class"] += f"\n    {k.lower().replace(' ', '_')} = '{k}' # {description}"
 
 def get_user_labels(current_labels: List[str] = None):
     """
