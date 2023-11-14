@@ -287,6 +287,7 @@ def _fix_key_value(key: str, value: str):
 
 
 def load_yaml(review_text: str) -> dict:
+    test = 1
     review_text = review_text.removeprefix('```yaml').rstrip('`')
     try:
         data = yaml.safe_load(review_text)
