@@ -10,7 +10,7 @@ from yaml import SafeLoader
 from pr_agent.algo.ai_handler import AiHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import convert_to_markdown, load_yaml, try_fix_yaml, set_custom_labels
+from pr_agent.algo.utils import convert_to_markdown, load_yaml, try_fix_yaml, set_custom_labels, get_user_labels
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import IncrementalPR, get_main_pr_language
@@ -255,6 +255,9 @@ class PRReviewer:
             else:
                 markdown_text += actions_help_text
 
+        # Add custom labels from the review prediction (effort, security)
+        self.set_review_labels(data)
+
         # Log markdown response if verbosity level is high
         if get_settings().config.verbosity_level >= 2:
             get_logger().info(f"Markdown response:\n{markdown_text}")
@@ -375,3 +378,28 @@ class PRReviewer:
             )
             return False
         return True
+
+    def set_review_labels(self, data):
+        if (get_settings().pr_reviewer.enable_review_labels_security or
+                get_settings().pr_reviewer.enable_review_labels_effort):
+            try:
+                review_labels = []
+                if get_settings().pr_reviewer.enable_review_labels_effort:
+                    estimated_effort = data['PR Analysis']['Estimated effort to review [1-5]']
+                    estimated_effort_number = int(estimated_effort.split(',')[0])
+                    if 1 <= estimated_effort_number <= 5: # 1, because ...
+                        review_labels.append(f'Review effort [1-5]: {estimated_effort_number}')
+                if get_settings().pr_reviewer.enable_review_labels_security:
+                    security_concerns = data['PR Analysis']['Security concerns'] # yes, because ...
+                    security_concerns_bool = 'yes' in security_concerns.lower() or 'true' in security_concerns.lower()
+                    if security_concerns_bool:
+                        review_labels.append('Possible security concern')
+
+                if review_labels:
+                    current_labels = self.git_provider.get_labels()
+                    current_labels_filtered = [label for label in current_labels if
+                                               not label.lower().startswith('review effort [1-5]:') and not label.lower().startswith(
+                                                   'possible security concern')]
+                    self.git_provider.publish_labels(review_labels + current_labels_filtered)
+            except Exception as e:
+                get_logger().error(f"Failed to set review labels, error: {e}")

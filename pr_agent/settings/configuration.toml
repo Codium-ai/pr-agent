@@ -16,11 +16,13 @@ secret_provider="google_cloud_storage"
 cli_mode=false
 
 [pr_reviewer] # /review #
+# enable/disable features
 require_focused_review=false
 require_score_review=false
 require_tests_review=true
 require_security_review=true
 require_estimate_effort_to_review=true
+# general options
 num_code_suggestions=4
 inline_code_comments = false
 ask_and_reflect=false
@@ -28,6 +30,9 @@ automatic_review=true
 remove_previous_review_comment=false
 persistent_comment=true
 extra_instructions = ""
+# review labels
+enable_review_labels_security=true
+enable_review_labels_effort=false
 # specific configurations for incremental review (/review -i)
 require_all_thresholds_for_incremental_review=false
 minimal_commits_for_incremental_review=0
