@@ -8,12 +8,12 @@
 
 ### Added::Algo
 - Review tool now works with [persistent comments](https://github.com/Codium-ai/pr-agent/pull/451) by default
-- Decoupled custom labels from [PR type](https://github.com/Codium-ai/pr-agent/pull/431)
 - Bitbucket now publishes review suggestions with [code links](https://github.com/Codium-ai/pr-agent/pull/428)
 - Enabling to limit [max number of tokens](https://github.com/Codium-ai/pr-agent/pull/437/files)
 - Support ['gpt-4-1106-preview'](https://github.com/Codium-ai/pr-agent/pull/437/files) model
-- Support Google's [Vertex AI](https://github.com/Codium-ai/pr-agent/pull/436)
+- Support for Google's [Vertex AI](https://github.com/Codium-ai/pr-agent/pull/436)
 - Implementing [thresholds](https://github.com/Codium-ai/pr-agent/pull/423) for incremental PR reviews
+- Decoupled custom labels from [PR type](https://github.com/Codium-ai/pr-agent/pull/431)
 
 ### Fixed
 - Fixed bug in [parsing quotes](https://github.com/Codium-ai/pr-agent/pull/446) in CLI
