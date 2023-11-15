@@ -136,12 +136,13 @@ class GitLabProvider(GitProvider):
         except Exception as e:
             get_logger().exception(f"Could not update merge request {self.id_mr} description: {e}")
 
-    def publish_persistent_comment(self, pr_comment: str, initial_text: str, updated_text: str):
+    def publish_persistent_comment(self, pr_comment: str, initial_header: str, update_header: str = True):
         try:
             for comment in self.mr.notes.list(get_all=True)[::-1]:
-                if comment.body.startswith(initial_text):
-                    if updated_text:
-                        pr_comment_updated = pr_comment.replace(initial_text, updated_text)
+                if comment.body.startswith(initial_header):
+                    if update_header:
+                        updated_header = f"{initial_header}\n\n ### (updated)\n"
+                        pr_comment_updated = pr_comment.replace(initial_header, updated_header)
                     else:
                         pr_comment_updated = pr_comment
                     response = self.mr.notes.update(comment.id, {'body': pr_comment_updated})

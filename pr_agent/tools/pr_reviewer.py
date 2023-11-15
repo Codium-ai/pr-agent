@@ -121,8 +121,8 @@ class PRReviewer:
                 # publish the review
                 if get_settings().pr_reviewer.persistent_comment and not self.incremental.is_incremental:
                     self.git_provider.publish_persistent_comment(pr_comment,
-                                                                 initial_text="## PR Analysis",
-                                                                 updated_text="## PR Analysis (updated)")
+                                                                 initial_header="## PR Analysis",
+                                                                 update_header=True)
                 else:
                     self.git_provider.publish_comment(pr_comment)
 
@@ -177,6 +177,9 @@ class PRReviewer:
             system=system_prompt,
             user=user_prompt
         )
+
+        if get_settings().config.verbosity_level >= 2:
+            get_logger().info(f"\nAI response:\n{response}")
 
         return response
 

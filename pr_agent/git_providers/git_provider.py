@@ -44,7 +44,7 @@ class GitProvider(ABC):
     def publish_comment(self, pr_comment: str, is_temporary: bool = False):
         pass
 
-    def publish_persistent_comment(self, pr_comment: str, initial_text: str, updated_text: str):
+    def publish_persistent_comment(self, pr_comment: str, initial_header: str, update_header: bool):
         self.publish_comment(pr_comment)
 
     @abstractmethod
