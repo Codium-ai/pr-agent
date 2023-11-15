@@ -282,7 +282,7 @@ def find_line_number_of_relevant_line_in_file(diff_files: List[FilePatchInfo],
         r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@[ ]?(.*)")
 
     for file in diff_files:
-        if file.filename.strip() == relevant_file:
+        if file.filename and (file.filename.strip() == relevant_file):
             patch = file.patch
             patch_lines = patch.splitlines()
 

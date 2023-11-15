@@ -158,6 +158,9 @@ class PRDescription:
             user=user_prompt
         )
 
+        if get_settings().config.verbosity_level >= 2:
+            get_logger().info(f"\nAI response:\n{response}")
+
         return response
 
     def _prepare_data(self):

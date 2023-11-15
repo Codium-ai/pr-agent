@@ -16,16 +16,18 @@ The `review` tool can also be triggered automatically every time a new PR is ope
 
 Under the section 'pr_reviewer', the [configuration file](./../pr_agent/settings/configuration.toml#L16) contains options to customize the 'review' tool:
 
+#### enable\\disable features
 - `require_focused_review`: if set to true, the tool will add a section - 'is the PR a focused one'. Default is false.
 - `require_score_review`: if set to true, the tool will add a section that scores the PR. Default is false.
 - `require_tests_review`: if set to true, the tool will add a section that checks if the PR contains tests. Default is true.
 - `require_security_review`: if set to true, the tool will add a section that checks if the PR contains security issues. Default is true.
 - `require_estimate_effort_to_review`: if set to true, the tool will add a section that estimates thed effort needed to review the PR. Default is true.
+#### general options
 - `num_code_suggestions`: number of code suggestions provided by the 'review' tool. Default is 4.
 - `inline_code_comments`: if set to true, the tool will publish the code suggestions as comments on the code diff. Default is false.
 - `automatic_review`: if set to false, no automatic reviews will be done. Default is true.
 - `remove_previous_review_comment`: if set to true, the tool will remove the previous review comment before adding a new one. Default is false.
-- `persistent_comment`: if set to true, the review comment will be persistent. Default is true.
+- `persistent_comment`: if set to true, the review comment will be persistent, meaning that every new review request will edit the previous one. Default is true.
 - `extra_instructions`: Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".
 - To enable `custom labels`, apply the configuration changes described [here](./GENERATE_CUSTOM_LABELS.md#configuration-changes) 
 ####  Incremental Mode
