@@ -29,6 +29,9 @@ Under the section 'pr_reviewer', the [configuration file](./../pr_agent/settings
 - `remove_previous_review_comment`: if set to true, the tool will remove the previous review comment before adding a new one. Default is false.
 - `persistent_comment`: if set to true, the review comment will be persistent, meaning that every new review request will edit the previous one. Default is true.
 - `extra_instructions`: Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".
+#### review labels
+- `enable_review_labels_security`: if set to true, the tool will publish a 'possible security issue' label if it detects a security issue. Default is true.
+- `enable_review_labels_effort`: if set to true, the tool will publish a 'Review effort [1-5]: x' label. Default is false.
 - To enable `custom labels`, apply the configuration changes described [here](./GENERATE_CUSTOM_LABELS.md#configuration-changes) 
 ####  Incremental Mode
 For an incremental review, which only considers changes since the last PR-Agent review, this can be useful when working on the PR in an iterative manner, and you want to focus on the changes since the last review instead of reviewing the entire PR again, the following command can be used:
