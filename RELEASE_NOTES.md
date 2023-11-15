@@ -1,5 +1,24 @@
-## Unreleased
-- review tool now posts persistent comments by default
+## [Version 0.10] - 2023-11-15
+- codiumai/pr-agent:0.10
+- codiumai/pr-agent:0.10-github_app
+- codiumai/pr-agent:0.10-bitbucket-app
+- codiumai/pr-agent:0.10-gitlab_webhook
+- codiumai/pr-agent:0.10-github_polling
+- codiumai/pr-agent:0.10-github_action
+
+### Added::Algo
+- Review tool now works with [persistent comments](https://github.com/Codium-ai/pr-agent/pull/451) by default
+- Decoupled custom labels from [PR type](https://github.com/Codium-ai/pr-agent/pull/431)
+- Bitbucket now publishes review suggestions with [code links](https://github.com/Codium-ai/pr-agent/pull/428)
+- Enabling to limit [max number of tokens](https://github.com/Codium-ai/pr-agent/pull/437/files)
+- Support ['gpt-4-1106-preview'](https://github.com/Codium-ai/pr-agent/pull/437/files) model
+- Support Google's [Vertex AI](https://github.com/Codium-ai/pr-agent/pull/436)
+- Implementing [thresholds](https://github.com/Codium-ai/pr-agent/pull/423) for incremental PR reviews
+
+### Fixed
+- Fixed bug in [parsing quotes](https://github.com/Codium-ai/pr-agent/pull/446) in CLI
+- Preserve [user-added labels](https://github.com/Codium-ai/pr-agent/pull/433) in pull requests
+- Bug fixes in GitLab and BitBucket
 
 ## [Version 0.9] - 2023-10-29
 - codiumai/pr-agent:0.9
