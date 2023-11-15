@@ -93,7 +93,7 @@ PR Analysis:
     description: >-
       Estimate, on a scale of 1-5 (inclusive), the time and effort required to review this PR by an experienced and knowledgeable developer. 1 means short and easy review , 5 means long and hard review.
       Take into account the size, complexity, quality, and the needed changes of the PR code diff.
-      Explain your answer shortly (1-2 sentences).
+      Explain your answer shortly (1-2 sentences). Use the format: '1, because ...'
 {%- endif %}
 PR Feedback:
   General suggestions:
@@ -130,7 +130,8 @@ PR Feedback:
   Security concerns:
     type: string
     description: >-
-      yes\\no question: does this PR code introduce possible vulnerabilities such as exposure of sensitive information (e.g., API keys, secrets, passwords), or security concerns like SQL injection, XSS, CSRF, and others ? If answered 'yes', explain your answer briefly.
+      does this PR code introduce possible vulnerabilities such as exposure of sensitive information (e.g., API keys, secrets, passwords), or security concerns like SQL injection, XSS, CSRF, and others ? Answer 'No' if there are no possible issues.
+      Answer 'Yes, because ...' if there are security concerns or issues. Explain your answer shortly.
 {%- endif %}
 ```
 
