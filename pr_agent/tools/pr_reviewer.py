@@ -398,5 +398,5 @@ class PRReviewer:
                                                not label.lower().startswith('review effort [1-5]:') and not label.lower().startswith(
                                                    'possible security concern')]
                     self.git_provider.publish_labels(review_labels + current_labels_filtered)
-            except:
-                pass
+            except Exception as e:
+                get_logger().error(f"Failed to set review labels, error: {e}")
