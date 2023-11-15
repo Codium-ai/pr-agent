@@ -136,15 +136,27 @@ class GitLabProvider(GitProvider):
         except Exception as e:
             get_logger().exception(f"Could not update merge request {self.id_mr} description: {e}")
 
-    def publish_persistent_comment(self, pr_comment: str, initial_text: str, updated_text: str):
+    def get_latest_commit_url(self):
+        return self.mr.commits().next().web_url
+
+    def get_comment_url(self, comment):
+        return f"{self.mr.web_url}#note_{comment.id}"
+
+    def publish_persistent_comment(self, pr_comment: str, initial_header: str, update_header: bool = True):
         try:
             for comment in self.mr.notes.list(get_all=True)[::-1]:
-                if comment.body.startswith(initial_text):
-                    if updated_text:
-                        pr_comment_updated = pr_comment.replace(initial_text, updated_text)
+                if comment.body.startswith(initial_header):
+                    latest_commit_url = self.get_latest_commit_url()
+                    comment_url = self.get_comment_url(comment)
+                    if update_header:
+                        updated_header = f"{initial_header}\n\n### (review updated until commit {latest_commit_url})\n"
+                        pr_comment_updated = pr_comment.replace(initial_header, updated_header)
                     else:
                         pr_comment_updated = pr_comment
+                    get_logger().info(f"Persistent mode- updating comment {comment_url} to latest review message")
                     response = self.mr.notes.update(comment.id, {'body': pr_comment_updated})
+                    self.publish_comment(
+                        f"**[Persistent review]({comment_url})** updated to latest commit {latest_commit_url}")
                     return
         except Exception as e:
             get_logger().exception(f"Failed to update persistent review, error: {e}")
