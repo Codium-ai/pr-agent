@@ -303,6 +303,23 @@ key = ...
 
 Also review the [AiHandler](pr_agent/algo/ai_handler.py) file for instruction how to set keys for other models.
 
+#### Vertex AI
+
+To use Google's Vertex AI platform and its associated models (chat-bison/codechat-bison) set:
+
+``` 
+[config] # in configuration.toml
+model = "vertex_ai/codechat-bison"
+
+[vertexai] # in .secrets.toml
+vertex_project = "my-google-cloud-project"
+vertex_location = ""
+```
+
+Your [application default credentials](https://cloud.google.com/docs/authentication/application-default-credentials) will be used for authentication so there is no need to set explicit credentials in most environments.
+
+If you do want to set explicit credentials then you can use the `GOOGLE_APPLICATION_CREDENTIALS` environment variable set to a path to a json credentials file.
+
 ### Working with large PRs
 
 The default mode of CodiumAI is to have a single call per tool, using GPT-4, which has a token limit of 8000 tokens.
