@@ -3,10 +3,8 @@ from mangum import Mangum
 from starlette.middleware import Middleware
 from starlette_context.middleware import RawContextMiddleware
 
-from pr_agent.log import setup_logger
 from pr_agent.servers.github_app import router
 
-setup_logger()
 
 middleware = [Middleware(RawContextMiddleware)]
 app = FastAPI(middleware=middleware)
