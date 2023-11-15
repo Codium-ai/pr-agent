@@ -153,6 +153,7 @@ class GitLabProvider(GitProvider):
                         pr_comment_updated = pr_comment.replace(initial_header, updated_header)
                     else:
                         pr_comment_updated = pr_comment
+                    get_logger().info(f"Persistent mode- updating comment {comment_url} to latest review message")
                     response = self.mr.notes.update(comment.id, {'body': pr_comment_updated})
                     self.publish_comment(
                         f"**[Persistent review]({comment_url})** updated to latest commit {latest_commit_url}")
