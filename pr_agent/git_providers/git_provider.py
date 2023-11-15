@@ -41,42 +41,7 @@ class GitProvider(ABC):
         pass
 
     @abstractmethod
-    def publish_comment(self, pr_comment: str, is_temporary: bool = False):
-        pass
-
-    def publish_persistent_comment(self, pr_comment: str, initial_header: str, update_header: bool):
-        self.publish_comment(pr_comment)
-
-    @abstractmethod
-    def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
-        pass
-
-    @abstractmethod
-    def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
-        pass
-
-    @abstractmethod
-    def publish_inline_comments(self, comments: list[dict]):
-        pass
-
-    @abstractmethod
     def publish_code_suggestions(self, code_suggestions: list) -> bool:
-        pass
-
-    @abstractmethod
-    def publish_labels(self, labels):
-        pass
-
-    @abstractmethod
-    def get_labels(self):
-        pass
-
-    @abstractmethod
-    def remove_initial_comment(self):
-        pass
-
-    @abstractmethod
-    def remove_comment(self, comment):
         pass
 
     @abstractmethod
@@ -117,11 +82,54 @@ class GitProvider(ABC):
         return description.split("## User Description:", 1)[1].strip()
 
     @abstractmethod
-    def get_issue_comments(self):
+    def get_repo_settings(self):
+        pass
+
+    def get_pr_id(self):
+        return ""
+
+    #### comments operations ####
+    @abstractmethod
+    def publish_comment(self, pr_comment: str, is_temporary: bool = False):
+        pass
+
+    def publish_persistent_comment(self, pr_comment: str, initial_header: str, update_header: bool):
+        self.publish_comment(pr_comment)
+
+    @abstractmethod
+    def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
         pass
 
     @abstractmethod
-    def get_repo_settings(self):
+    def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
+        pass
+
+    @abstractmethod
+    def publish_inline_comments(self, comments: list[dict]):
+        pass
+
+    @abstractmethod
+    def remove_initial_comment(self):
+        pass
+
+    @abstractmethod
+    def remove_comment(self, comment):
+        pass
+
+    @abstractmethod
+    def get_issue_comments(self):
+        pass
+
+    def get_comment_url(self, comment) -> str:
+        return ""
+
+    #### labels operations ####
+    @abstractmethod
+    def publish_labels(self, labels):
+        pass
+
+    @abstractmethod
+    def get_labels(self):
         pass
 
     @abstractmethod
@@ -132,11 +140,12 @@ class GitProvider(ABC):
     def remove_reaction(self, issue_comment_id: int, reaction_id: int) -> bool:
         pass
 
+    #### commits operations ####
     @abstractmethod
     def get_commit_messages(self):
         pass
 
-    def get_pr_id(self):
+    def get_latest_commit_url(self) -> str:
         return ""
 
 def get_main_pr_language(languages, files) -> str:
