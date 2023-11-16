@@ -329,8 +329,8 @@ class BitbucketServerProvider(GitProvider):
         return ""
 
     def get_commit_messages(self):
-        return ""  # not implemented yet
-    
+        def get_commit_messages(self):
+            raise NotImplementedError("Get commit messages function not implemented yet.")
     # bitbucket does not support labels
     def publish_description(self, pr_title: str, description: str):
         payload = json.dumps({
