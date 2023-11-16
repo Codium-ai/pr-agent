@@ -205,7 +205,7 @@ class BitbucketServerProvider(GitProvider):
         try:
             for comment in self.temp_comments:
                 self.remove_comment(comment)
-        except Exception as e:
+        except ValueError as e:
             get_logger().exception(f"Failed to remove temp comments, error: {e}")
 
     def remove_comment(self, comment):
