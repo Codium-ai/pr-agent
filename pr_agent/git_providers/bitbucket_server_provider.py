@@ -23,7 +23,7 @@ class BitbucketServerProvider(GitProvider):
         try:
             bearer = context.get("bitbucket_bearer_token", None)
             s.headers["Authorization"] = f"Bearer {bearer}"
-        except KeyError:
+        except Exception:
             s.headers[
                 "Authorization"
             ] = f'Bearer {get_settings().get("BITBUCKET.BEARER_TOKEN", None)}'
