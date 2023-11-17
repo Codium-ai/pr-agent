@@ -310,6 +310,7 @@ To use Google's Vertex AI platform and its associated models (chat-bison/codecha
 ``` 
 [config] # in configuration.toml
 model = "vertex_ai/codechat-bison"
+fallback_models="vertex_ai/codechat-bison"
 
 [vertexai] # in .secrets.toml
 vertex_project = "my-google-cloud-project"
