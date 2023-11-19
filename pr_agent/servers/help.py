@@ -1,6 +1,6 @@
 commands_text = "> **/review**: Request a review of your Pull Request.\n" \
                 "> **/describe**: Update the PR title and description based on the contents of the PR.\n" \
-                "> **/improve [--extended]**: Suggest improvements to the code in the PR. Extended mode provides a more thorough feedback.\n" \
+                "> **/improve [--extended]**: Suggest code improvements. Extended mode provides a higher quality feedback.\n" \
                 "> **/ask \\<QUESTION\\>**: Ask a question about the PR.\n" \
                 "> **/update_changelog**: Update the changelog based on the PR's contents.\n" \
                 "> **/add_docs**: Generate docstring for new components introduced in the PR.\n" \
