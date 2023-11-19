@@ -286,37 +286,39 @@ def _fix_key_value(key: str, value: str):
     return key, value
 
 
-def load_yaml(review_text: str) -> dict:
-    review_text = review_text.removeprefix('```yaml').rstrip('`')
+def load_yaml(response_text: str) -> dict:
+    response_text = response_text.removeprefix('```yaml').rstrip('`')
     try:
-        data = yaml.safe_load(review_text)
+        data = yaml.safe_load(response_text)
     except Exception as e:
         get_logger().error(f"Failed to parse AI prediction: {e}")
-        data = try_fix_yaml(review_text)
+        data = try_fix_yaml(response_text)
     return data
 
-def try_fix_yaml(review_text: str) -> dict:
-    review_text_lines = review_text.split('\n')
+def try_fix_yaml(response_text: str) -> dict:
+    response_text_lines = response_text.split('\n')
 
+    keys = ['relevant line:', 'suggestion content:', 'relevant file:']
     # first fallback - try to convert 'relevant line: ...' to relevant line: |-\n        ...'
-    review_text_lines_copy = review_text_lines.copy()
-    for i in range(0, len(review_text_lines_copy)):
-        if 'relevant line:' in review_text_lines_copy[i] and not '|-' in review_text_lines_copy[i]:
-            review_text_lines_copy[i] = review_text_lines_copy[i].replace('relevant line: ',
-                                                    'relevant line: |-\n        ')
+    response_text_lines_copy = response_text_lines.copy()
+    for i in range(0, len(response_text_lines_copy)):
+        for key in keys:
+            if key in response_text_lines_copy[i] and not '|-' in response_text_lines_copy[i]:
+                response_text_lines_copy[i] = response_text_lines_copy[i].replace(f'{key}: ',
+                                                                                  f'{key}: |-\n        ')
     try:
-        data = yaml.load('\n'.join(review_text_lines_copy), Loader=yaml.SafeLoader)
-        get_logger().info(f"Successfully parsed AI prediction after adding |-\n        to relevant line")
+        data = yaml.safe_load('\n'.join(response_text_lines_copy))
+        get_logger().info(f"Successfully parsed AI prediction after adding |-\n")
         return data
     except:
-        get_logger().debug(f"Failed to parse AI prediction after adding |-\n        to relevant line")
+        get_logger().debug(f"Failed to parse AI prediction after adding |-\n")
 
     # second fallback - try to remove last lines
     data = {}
-    for i in range(1, len(review_text_lines)):
-        review_text_lines_tmp = '\n'.join(review_text_lines[:-i])
+    for i in range(1, len(response_text_lines)):
+        response_text_lines_tmp = '\n'.join(response_text_lines[:-i])
         try:
-            data = yaml.load(review_text_lines_tmp, Loader=yaml.SafeLoader)
+            data = yaml.safe_load(response_text_lines_tmp,)
             get_logger().info(f"Successfully parsed AI prediction after removing {i} lines")
             break
         except:
