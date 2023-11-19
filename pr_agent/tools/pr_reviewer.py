@@ -249,11 +249,15 @@ class PRReviewer:
         # Add help text if not in CLI mode
         if not get_settings().get("CONFIG.CLI_MODE", False):
             markdown_text += "\n### How to use\n"
+            if self.git_provider.is_supported("gfm_markdown"):
+                markdown_text += "\n**<details><summary> Instructions**</summary>\n"
             bot_user = "[bot]" if get_settings().github_app.override_deployment_type else get_settings().github_app.bot_user
             if user and bot_user not in user:
                 markdown_text += bot_help_text(user)
             else:
                 markdown_text += actions_help_text
+            if self.git_provider.is_supported("gfm_markdown"):
+                markdown_text += "\n</details>\n"
 
         # Add custom labels from the review prediction (effort, security)
         self.set_review_labels(data)
