@@ -274,14 +274,7 @@ class PRReviewer:
         if get_settings().pr_reviewer.num_code_suggestions == 0:
             return
 
-        review_text = self.prediction.strip()
-        review_text = review_text.removeprefix('```yaml').rstrip('`')
-        try:
-            data = yaml.load(review_text, Loader=SafeLoader)
-        except Exception as e:
-            get_logger().error(f"Failed to parse AI prediction: {e}")
-            data = try_fix_yaml(review_text)
-
+        data = load_yaml(self.prediction.strip())
         comments: List[str] = []
         for suggestion in data.get('PR Feedback', {}).get('Code feedback', []):
             relevant_file = suggestion.get('relevant file', '').strip()
