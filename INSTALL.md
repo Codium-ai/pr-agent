@@ -1,5 +1,5 @@
 
-## Installation
+### Installation
 
 To get started with PR-Agent quickly, you first need to acquire two tokens:
 
