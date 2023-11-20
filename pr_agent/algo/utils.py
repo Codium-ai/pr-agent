@@ -304,14 +304,14 @@ def try_fix_yaml(response_text: str) -> dict:
     for i in range(0, len(response_text_lines_copy)):
         for key in keys:
             if key in response_text_lines_copy[i] and not '|-' in response_text_lines_copy[i]:
-                response_text_lines_copy[i] = response_text_lines_copy[i].replace(f'{key}: ',
-                                                                                  f'{key}: |-\n        ')
+                response_text_lines_copy[i] = response_text_lines_copy[i].replace(f'{key}',
+                                                                                  f'{key} |-\n        ')
     try:
         data = yaml.safe_load('\n'.join(response_text_lines_copy))
         get_logger().info(f"Successfully parsed AI prediction after adding |-\n")
         return data
     except:
-        get_logger().debug(f"Failed to parse AI prediction after adding |-\n")
+        get_logger().info(f"Failed to parse AI prediction after adding |-\n")
 
     # second fallback - try to remove last lines
     data = {}
