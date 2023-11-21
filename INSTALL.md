@@ -410,6 +410,8 @@ BITBUCKET_BEARER_TOKEN: <your token>
 
 You can get a Bitbucket token for your repository by following Repository Settings -> Security -> Access Tokens.
 
+Note that comments on a PR are not supported in Bitbucket Pipeline.
+
 
 ### Run using CodiumAI-hosted Bitbucket app
 
