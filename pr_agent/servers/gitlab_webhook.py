@@ -38,7 +38,7 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
         try:
             secret_dict = json.loads(secret)
             gitlab_token = secret_dict["gitlab_token"]
-            log_context["sender"] = secret_dict["id"]
+            log_context["sender"] = secret_dict.get("token_name", secret_dict.get("id", "unknown"))
             context["settings"] = copy.deepcopy(global_settings)
             context["settings"].gitlab.personal_access_token = gitlab_token
         except Exception as e:
