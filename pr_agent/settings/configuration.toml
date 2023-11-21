@@ -79,6 +79,7 @@ extra_instructions = ""
 # The type of deployment to create. Valid values are 'app' or 'user'.
 deployment_type = "user"
 ratelimit_retries = 5
+base_url = "https://api.github.com"
 
 [github_action]
 # auto_review = true    # set as env var in .github/workflows/pr-agent.yaml

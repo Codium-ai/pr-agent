@@ -405,7 +405,7 @@ class GithubProvider(GitProvider):
                 raise ValueError("GitHub app installation ID is required when using GitHub app deployment")
             auth = AppAuthentication(app_id=app_id, private_key=private_key,
                                      installation_id=self.installation_id)
-            return Github(app_auth=auth)
+            return Github(app_auth=auth, base_url=get_settings().github.base_url)
 
         if deployment_type == 'user':
             try:
@@ -414,7 +414,7 @@ class GithubProvider(GitProvider):
                 raise ValueError(
                     "GitHub token is required when using user deployment. See: "
                     "https://github.com/Codium-ai/pr-agent#method-2-run-from-source") from e
-            return Github(auth=Auth.Token(token))
+            return Github(auth=Auth.Token(token), base_url=get_settings().github.base_url)
 
     def _get_repo(self):
         if hasattr(self, 'repo_obj') and \
