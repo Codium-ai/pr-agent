@@ -282,7 +282,7 @@ def _fix_key_value(key: str, value: str):
     try:
         value = yaml.safe_load(value)
     except Exception as e:
-        get_logger().error(f"Failed to parse YAML for config override {key}={value}", exc_info=e)
+        get_logger().debug(f"Failed to parse YAML for config override {key}={value}", exc_info=e)
     return key, value
 
 
