@@ -37,9 +37,14 @@ To ignore files or directories, edit the **[ignore.toml](/pr_agent/settings/igno
  - `IGNORE.GLOB`
  - `IGNORE.REGEX`
 
-For example, to ignore python files in a PR, set:
+For example, to ignore python files in a PR with online usage, comment on a PR:
+`/review --ignore.glob=['*.py']`
 
-`ignore.glob = ['*.py']`
+To ignore python files in all PRs, set in a configuration file:
+```
+[ignore]
+glob = ['*.py']
+```
 
 #### git provider
 The [git_provider](pr_agent/settings/configuration.toml#L4) field in the configuration file determines the GIT provider that will be used by PR-Agent. Currently, the following providers are supported:
