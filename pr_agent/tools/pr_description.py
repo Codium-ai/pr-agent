@@ -91,7 +91,7 @@ class PRDescription:
             full_markdown_description = f"## Title\n\n{pr_title}\n\n___\n{pr_body}"
 
             if get_settings().config.publish_output:
-                get_logger().info(f"Pushing answer {self.pr_id}")
+                get_logger().info(f"Pushing description regarding {self.pr_id}")
                 if get_settings().pr_description.publish_description_as_comment:
                     self.git_provider.publish_comment(full_markdown_description)
                 else:
