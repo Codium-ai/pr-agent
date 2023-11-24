@@ -78,6 +78,7 @@ class PRDescription:
             if self.prediction:
                 self._prepare_data()
             else:
+                get_logger().error("Prediction failed to prepare", extra={"pr_id": self.pr_id})
                 return None
 
             pr_labels = []
