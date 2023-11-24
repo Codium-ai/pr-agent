@@ -74,7 +74,7 @@ class PRDescription:
 
             await retry_with_fallback_models(self._prepare_prediction)
 
-            get_logger().info(f"Preparing answer {self.pr_id}")
+            get_logger().info(f"Preparing description regarding {self.pr_id}")
             if self.prediction:
                 self._prepare_data()
             else:
