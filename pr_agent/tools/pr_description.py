@@ -74,11 +74,11 @@ class PRDescription:
 
             await retry_with_fallback_models(self._prepare_prediction)
 
-            get_logger().info("Preparing description regarding {self.pr_id}", extra={"pr_id": self.pr_id})
+            get_logger().info("Preparing description regarding {self.pr_id}")
             if self.prediction:
                 self._prepare_data()
             else:
-                get_logger().error(f"Prediction failed to prepare for PR {self.pr_id}", extra={"pr_id": self.pr_id})
+                get_logger().error(f"Prediction failed to prepare for PR {self.pr_id}")
                 return None
 
             pr_labels = []
@@ -92,7 +92,7 @@ class PRDescription:
             full_markdown_description = f"## Title\n\n{pr_title}\n\n___\n{pr_body}"
 
             if get_settings().config.publish_output:
-                get_logger().info(f"Pushing description regarding {self.pr_id}", extra={"pr_id": self.pr_id})
+                get_logger().info(f"Pushing description regarding {self.pr_id}")
                 if get_settings().pr_description.publish_description_as_comment:
                     self.git_provider.publish_comment(full_markdown_description)
                 else:
