@@ -1,6 +1,4 @@
-import difflib
 import json
-import re
 from typing import Optional, Tuple
 from urllib.parse import urlparse
 
@@ -26,7 +24,7 @@ class BitbucketServerProvider(GitProvider):
         except Exception:
             s.headers[
                 "Authorization"
-            ] = f'Bearer {get_settings().get("BITBUCKET.BEARER_TOKEN", None)}'
+            ] = f'Bearer {get_settings().get("BITBUCKET_SERVER.BEARER_TOKEN", None)}'
 
         s.headers["Content-Type"] = "application/json"
         self.headers = s.headers
@@ -44,7 +42,7 @@ class BitbucketServerProvider(GitProvider):
 
         self.bitbucket_server_url = self._parse_bitbucket_server(url=pr_url)
         self.bitbucket_client = Bitbucket(url=self.bitbucket_server_url,
-                                          token=get_settings().get("BITBUCKET.BEARER_TOKEN", None))
+                                          token=get_settings().get("BITBUCKET_SERVER.BEARER_TOKEN", None))
 
         if pr_url:
             self.set_pr(pr_url)
@@ -114,7 +112,7 @@ class BitbucketServerProvider(GitProvider):
             return False
 
     def is_supported(self, capability: str) -> bool:
-        if capability in ['get_issue_comments', 'publish_inline_comments', 'get_labels', 'gfm_markdown']:
+        if capability in ['get_issue_comments', 'get_labels', 'gfm_markdown']:
             return False
         return True
 
