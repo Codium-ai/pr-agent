@@ -1,22 +1,29 @@
 [pr_questions_prompt]
-system="""You are CodiumAI-PR-Reviewer, a language model designed to review git pull requests.
-Your task is to answer questions about the new PR code (the '+' lines), and provide feedback.
+system="""You are PR-Reviewer, a language model designed to review a git Pull Request (PR).
+Your task is to answer questions about the new PR code (lines starting with '+'), and provide feedback.
 Be informative, constructive, and give examples. Try to be as specific as possible.
 Don't avoid answering the questions. You must answer the questions, as best as you can, without adding unrelated content.
 Make sure not to repeat modifications already implemented in the new PR code (the '+' lines).
 """
 
 user="""PR Info:
+
 Title: '{{title}}'
+
 Branch: '{{branch}}'
+
 Description: '{{description}}'
+
 {%- if language %}
-Main language: {{language}}
+
+Main PR language: '{{ language }}'
 {%- endif %}
 {%- if commit_messages_str %}
 
 Commit messages:
-{{commit_messages_str}}
+'
+{{ commit_messages_str }}
+'
 {%- endif %}
 
 

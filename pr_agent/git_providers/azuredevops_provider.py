@@ -14,9 +14,8 @@ try:
 except ImportError:
     AZURE_DEVOPS_AVAILABLE = False
 
-from ..algo.pr_processing import clip_tokens
 from ..config_loader import get_settings
-from ..algo.utils import load_large_diff
+from ..algo.utils import load_large_diff, clip_tokens
 from ..algo.language_handler import is_valid_file
 from .git_provider import EDIT_TYPE, FilePatchInfo
 

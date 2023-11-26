@@ -6,9 +6,9 @@ from urllib.parse import urlparse
 
 from pr_agent.git_providers.codecommit_client import CodeCommitClient
 
-from ..algo.language_handler import is_valid_file, language_extension_map
 from ..algo.utils import load_large_diff
 from .git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
+from ..config_loader import get_settings
 from ..log import get_logger
 
 
@@ -269,6 +269,8 @@ class CodeCommitProvider(GitProvider):
         # where each dictionary item is a language name.
         # We build that language->extension dictionary here in main_extensions_flat.
         main_extensions_flat = {}
+        language_extension_map_org = get_settings().language_extension_map_org
+        language_extension_map = {k.lower(): v for k, v in language_extension_map_org.items()}
         for language, extensions in language_extension_map.items():
             for ext in extensions:
                 main_extensions_flat[ext] = language
