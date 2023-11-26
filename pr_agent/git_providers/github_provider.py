@@ -501,6 +501,15 @@ class GithubProvider(GitProvider):
 
         return ""
 
+    def get_line_link(self, relevant_file: str, relevant_line_start: int, relevant_line_end: int = None) -> str:
+        sha_file = hashlib.sha256(relevant_file.encode('utf-8')).hexdigest()
+        if relevant_line_end:
+            link = f"https://github.com/{self.repo}/pull/{self.pr_num}/files#diff-{sha_file}R{relevant_line_start}-R{relevant_line_end}"
+        else:
+            link = f"https://github.com/{self.repo}/pull/{self.pr_num}/files#diff-{sha_file}R{relevant_line_start}"
+        return link
+
+
     def get_pr_id(self):
         try:
             pr_id = f"{self.repo}/{self.pr_num}"

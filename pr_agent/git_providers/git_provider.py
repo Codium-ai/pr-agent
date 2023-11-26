@@ -89,6 +89,9 @@ class GitProvider(ABC):
     def get_pr_id(self):
         return ""
 
+    def get_line_link(self, relevant_file: str, relevant_line_start: int, relevant_line_end: int = None) -> str:
+        return ""
+
     #### comments operations ####
     @abstractmethod
     def publish_comment(self, pr_comment: str, is_temporary: bool = False):

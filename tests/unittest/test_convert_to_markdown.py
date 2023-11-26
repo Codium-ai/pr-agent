@@ -71,7 +71,7 @@ class TestConvertToMarkdown:
 - 📌 **Type of PR:** Test type\n\
 - 🧪 **Relevant tests added:** no\n\
 - ✨ **Focused PR:** Yes\n\
--  **General PR suggestions:** general suggestion...\n\n\n- **<details><summary> 🤖 Code feedback:**</summary>\n\n  - **Code example:**\n    - **Before:**\n        ```\n        Code before\n        ```\n    - **After:**\n        ```\n        Code after\n        ```\n\n  - **Code example:**\n    - **Before:**\n        ```\n        Code before 2\n        ```\n    - **After:**\n        ```\n        Code after 2\n        ```\n\n</details>\
+-  **General PR suggestions:** general suggestion...\n\n\n- <details><summary> 🤖 Code feedback:</summary>\n\n  - **Code example:**\n    - **Before:**\n        ```\n        Code before\n        ```\n    - **After:**\n        ```\n        Code after\n        ```\n\n  - **Code example:**\n    - **Before:**\n        ```\n        Code before 2\n        ```\n    - **After:**\n        ```\n        Code after 2\n        ```\n\n</details>\
 """
         assert convert_to_markdown(input_data).strip() == expected_output.strip()
 
