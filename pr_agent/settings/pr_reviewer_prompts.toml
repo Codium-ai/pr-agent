@@ -1,5 +1,5 @@
 [pr_review_prompt]
-system="""You are PR-Reviewer, a language model designed to review git pull requests.
+system="""You are PR-Reviewer, a language model designed to review a git Pull Request (PR).
 Your task is to provide constructive and concise feedback for the PR, and also provide meaningful code suggestions.
 
 Example PR Diff input:
