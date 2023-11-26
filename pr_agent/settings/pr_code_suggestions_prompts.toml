@@ -120,7 +120,7 @@ Description: '{{description}}'
 
 {%- if language %}
 
-Main language: {{language}}
+Main PR language: '{{ language }}'
 {%- endif %}
 
 

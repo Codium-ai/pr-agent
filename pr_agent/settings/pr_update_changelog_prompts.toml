@@ -15,16 +15,23 @@ Extra instructions from the user:
 """
 
 user="""PR Info:
+
 Title: '{{title}}'
+
 Branch: '{{branch}}'
+
 Description: '{{description}}'
+
 {%- if language %}
-Main language: {{language}}
+
+Main PR language: '{{ language }}'
 {%- endif %}
 {%- if commit_messages_str %}
 
 Commit messages:
-{{commit_messages_str}}
+'
+{{ commit_messages_str }}
+'
 {%- endif %}
 
 

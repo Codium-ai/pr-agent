@@ -51,12 +51,14 @@ Previous description: '{{description}}'
 Branch: '{{branch}}'
 {%- if language %}
 
-Main language: {{language}}
+Main PR language: '{{ language }}'
 {%- endif %}
 {%- if commit_messages_str %}
 
 Commit messages:
-{{commit_messages_str}}
+'
+{{ commit_messages_str }}
+'
 {%- endif %}
 
 

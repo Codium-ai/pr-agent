@@ -179,16 +179,23 @@ Don't repeat the prompt in the answer, and avoid outputting the 'type' and 'desc
 """
 
 user="""PR Info:
+
 Title: '{{title}}'
+
 Branch: '{{branch}}'
+
 Description: '{{description}}'
+
 {%- if language %}
-Main language: {{language}}
+
+Main PR language: '{{ language }}'
 {%- endif %}
 {%- if commit_messages_str %}
 
 Commit messages:
+'
 {{commit_messages_str}}
+'
 {%- endif %}
 
 {%- if question_str %}

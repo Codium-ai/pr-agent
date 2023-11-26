@@ -81,7 +81,9 @@ Main PR language: '{{ language }}'
 {%- if commit_messages_str %}
 
 Commit messages:
-{{commit_messages_str}}
+'
+{{ commit_messages_str }}
+'
 {%- endif %}
 
 
