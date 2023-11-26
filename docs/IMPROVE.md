@@ -36,8 +36,10 @@ Under the section 'pr_code_suggestions', the [configuration file](./../pr_agent/
 #### summarize mode
 - `summarize`: if set to true, the tool will summarize the PR code changes. Default is false.
 
-In this mode, instead of presenting commitable suggestions, the different suggestions will be combined into a single compact instruction, with a significant smaller PR footprint.
+In this mode, instead of presenting commitable suggestions, the different suggestions will be combined into a single compact comment, with a significant smaller PR footprint.
+
 For example:
+
 `/improve --pr_code_suggestions.summarize=true`
 
 <kbd><img src=./../pics/improved_summerize_open.png width="768"></kbd>
