@@ -1,7 +1,6 @@
 import copy
 import textwrap
 from typing import Dict, List
-import difflib
 from jinja2 import Environment, StrictUndefined
 
 from pr_agent.algo.ai_handler import AiHandler
@@ -250,15 +249,15 @@ class PRCodeSuggestions:
 
     def publish_summarizes_suggestions(self, data: Dict):
         try:
-            data_markdown = "## Code Suggestions\n\n"
+            data_markdown = "## PR Code Suggestions\n\n"
             for s in data['Code suggestions']:
                 code_snippet_link = self.git_provider.get_line_link(s['relevant file'], s['relevant lines start'],
                                                                     s['relevant lines end'])
+                data_markdown += f"\n💡 Suggestion:\n\n**{s['suggestion content']}**\n\n"
                 if code_snippet_link:
-                    data_markdown += f"📌 File:\n\n[{s['relevant file']} ({s['relevant lines start']}-{s['relevant lines end']})]({code_snippet_link})\n"
+                    data_markdown += f" File: [{s['relevant file']} ({s['relevant lines start']}-{s['relevant lines end']})]({code_snippet_link})\n"
                 else:
-                    data_markdown += f"📌 File:\n\n{s['relevant file']} ({s['relevant lines start']}-{s['relevant lines end']})\n"
-                data_markdown += f"\nSuggestion:\n\n**{s['suggestion content']}**\n\n"
+                    data_markdown += f"File: {s['relevant file']} ({s['relevant lines start']}-{s['relevant lines end']})\n"
                 if self.git_provider.is_supported("gfm_markdown"):
                     data_markdown += "<details> <summary> Example code:</summary>\n\n"
                     data_markdown += f"___\n\n"
