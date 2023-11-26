@@ -1,6 +1,6 @@
 # Improve Tool
 
-The `improve` tool scans the PR code changes, and automatically generate committable suggestions for improving the PR code.
+The `improve` tool scans the PR code changes, and automatically generates committable suggestions for improving the PR code.
 It can be invoked manually by commenting on any PR:
 ```
 /improve
@@ -17,7 +17,7 @@ An extended mode, which does not involve PR Compression and provides more compre
 /improve --extended
 ```
 Note that the extended mode divides the PR code changes into chunks, up to the token limits, where each chunk is handled separately (multiple calls to GPT-4).
-Hence, the total number of suggestions is proportional to the number of chunks, i.e. the size of the PR.
+Hence, the total number of suggestions is proportional to the number of chunks, i.e., the size of the PR.
 
 ### Configuration options
 
@@ -34,9 +34,9 @@ Under the section 'pr_code_suggestions', the [configuration file](./../pr_agent/
 - `final_clip_factor`: factor to remove suggestions with low confidence. Default is 0.9.
 
 #### summarize mode
-- `summarize`: if set to true, the tool will summarize the PR code changes. Default is false.
+- `summarize`: if set to true, the tool will present the code suggestions in a compact way. Default is false.
 
-In this mode, instead of presenting commitable suggestions, the different suggestions will be combined into a single compact comment, with a significant smaller PR footprint.
+In this mode, instead of presenting committable suggestions, the different suggestions will be combined into a single compact comment, with significantly smaller PR footprint.
 
 For example:
 
@@ -46,7 +46,7 @@ For example:
 
 #### A note on code suggestions quality
 
-- With current level of AI for code (GPT-4), mistakes can happen. Not all the suggestions will be perfect, and a user should not accept all of them automatically.
+- With the current level of AI for code (GPT-4), mistakes can happen. Not all the suggestions will be perfect, and a user should not accept all of them automatically.
 
 - Suggestions are not meant to be [simplistic](./../pr_agent/settings/pr_code_suggestions_prompts.toml#L34). Instead, they aim to give deep feedback and raise questions, ideas and thoughts to the user, who can then use his judgment, experience, and understanding of the code base.
 
