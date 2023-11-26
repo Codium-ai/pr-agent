@@ -25,6 +25,7 @@ There are several ways to use PR-Agent:
 **BitBucket specific methods**
 - [Run as a Bitbucket Pipeline](INSTALL.md#run-as-a-bitbucket-pipeline)
 - [Run on a hosted app](INSTALL.md#run-on-a-hosted-bitbucket-app)
+- [Bitbucket server and data center](INSTALL.md#bitbucket-server-and-data-center)
 ---
 
 ### Use Docker image (no installation required)
