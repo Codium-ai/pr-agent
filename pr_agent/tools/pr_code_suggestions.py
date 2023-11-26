@@ -260,7 +260,8 @@ class PRCodeSuggestions:
                     data_markdown += f"📌 File:\n\n{s['relevant file']} ({s['relevant lines start']}-{s['relevant lines end']})\n"
                 data_markdown += f"\nSuggestion:\n\n**{s['suggestion content']}**\n\n"
                 if self.git_provider.is_supported("gfm_markdown"):
-                    data_markdown += "<details> <summary> Example code:</summary>\n\n___\n\n"
+                    data_markdown += "<details> <summary> Example code:</summary>\n\n"
+                    data_markdown += f"___\n\n"
                 data_markdown += f"Existing code:\n```{self.main_language}\n{s['existing code']}\n```\n"
                 data_markdown += f"Improved code:\n```{self.main_language}\n{s['improved code']}\n```\n"
                 if self.git_provider.is_supported("gfm_markdown"):

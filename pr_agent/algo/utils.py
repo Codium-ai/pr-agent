@@ -58,7 +58,8 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
             emoji = emojis.get(key, "")
             if key.lower() == 'code feedback':
                 if gfm_supported:
-                    markdown_text += f"\n\n- **<details><summary> { emoji } Code feedback:**</summary>\n\n"
+                    markdown_text += f"\n\n- "
+                    markdown_text += f"<details><summary> { emoji } Code feedback:</summary>\n\n"
                 else:
                     markdown_text += f"\n\n- **{emoji} Code feedback:**\n\n"
             else:
@@ -99,9 +100,9 @@ def parse_code_suggestion(code_suggestions: dict, gfm_supported: bool=True) -> s
                 markdown_text += f"    - **{code_key}:**\n{code_str_indented}\n"
         else:
             if "relevant file" in sub_key.lower():
-                markdown_text += f"\n  - **{sub_key}:** {sub_value}\n"
+                markdown_text += f"\n  - **{sub_key}:** {sub_value}  \n"
             else:
-                markdown_text += f"   **{sub_key}:** {sub_value}\n"
+                markdown_text += f"   **{sub_key}:** {sub_value}  \n"
             if not gfm_supported:
                 if "relevant line" not in sub_key.lower(): # nicer presentation
                         # markdown_text = markdown_text.rstrip('\n') + "\\\n" # works for gitlab
