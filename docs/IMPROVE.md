@@ -33,6 +33,14 @@ Under the section 'pr_code_suggestions', the [configuration file](./../pr_agent/
 - `max_number_of_calls`: maximum number of chunks. Default is 5.
 - `final_clip_factor`: factor to remove suggestions with low confidence. Default is 0.9.
 
+#### summarize mode
+- `summarize`: if set to true, the tool will summarize the PR code changes. Default is false.
+In this mode, instead of presenting commitable suggestions, the different suggestions will be combined into a single compact instruction, with a significant smaller PR footprint.
+For example:
+`/improve --pr_code_suggestions.summarize=true`
+
+<kbd><img src=./../pics/improved_summerize_closed.png width="512"></kbd>
+<kbd><img src=./../pics/improved_summerize_open.png width="512"></kbd>
 
 #### A note on code suggestions quality
 

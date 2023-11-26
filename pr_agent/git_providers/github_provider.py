@@ -501,7 +501,6 @@ class GithubProvider(GitProvider):
 
         return ""
 
-
     def get_line_link(self, relevant_file: str, relevant_line_start: int, relevant_line_end: int = None) -> str:
         sha_file = hashlib.sha256(relevant_file.encode('utf-8')).hexdigest()
         if relevant_line_end:

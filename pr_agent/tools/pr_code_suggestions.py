@@ -255,9 +255,9 @@ class PRCodeSuggestions:
                                                                     s['relevant lines end'])
                 data_markdown += f"\n💡 Suggestion:\n\n**{s['suggestion content']}**\n\n"
                 if code_snippet_link:
-                    data_markdown += f" File: [{s['relevant file']} ({s['relevant lines start']}-{s['relevant lines end']})]({code_snippet_link})\n"
+                    data_markdown += f" File: [{s['relevant file']} ({s['relevant lines start']}-{s['relevant lines end']})]({code_snippet_link})\n\n"
                 else:
-                    data_markdown += f"File: {s['relevant file']} ({s['relevant lines start']}-{s['relevant lines end']})\n"
+                    data_markdown += f"File: {s['relevant file']} ({s['relevant lines start']}-{s['relevant lines end']})\n\n"
                 if self.git_provider.is_supported("gfm_markdown"):
                     data_markdown += "<details> <summary> Example code:</summary>\n\n"
                     data_markdown += f"___\n\n"
