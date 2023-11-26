@@ -1,7 +1,7 @@
 import copy
 import textwrap
 from typing import Dict, List
-
+import difflib
 from jinja2 import Environment, StrictUndefined
 
 from pr_agent.algo.ai_handler import AiHandler
@@ -55,9 +55,9 @@ class PRCodeSuggestions:
         try:
             get_logger().info('Generating code suggestions for PR...')
             if get_settings().config.publish_output:
-                self.git_provider.publish_comment("Preparing review...", is_temporary=True)
+                self.git_provider.publish_comment("Preparing suggestions...", is_temporary=True)
 
-            get_logger().info('Preparing PR review...')
+            get_logger().info('Preparing PR code suggestions...')
             if not self.is_extended:
                 await retry_with_fallback_models(self._prepare_prediction)
                 data = self._prepare_pr_code_suggestions()
@@ -73,29 +73,11 @@ class PRCodeSuggestions:
                 data['Code suggestions'] = await self.rank_suggestions(data['Code suggestions'])
 
             if get_settings().config.publish_output:
-                get_logger().info('Pushing PR review...')
+                get_logger().info('Pushing PR code suggestions...')
                 self.git_provider.remove_initial_comment()
                 if get_settings().pr_code_suggestions.summarize:
                     get_logger().info('Pushing summarize code suggestions...')
-                    data_markdown = "## Code suggestions\n\n"
-                    for s in data['Code suggestions']:
-                        import hashlib
-                        relevant_file = s['relevant file']
-                        sha_file = hashlib.sha256(relevant_file.encode('utf-8')).hexdigest()
-                        absolute_position_start = s['relevant lines start']
-                        absolute_position_end = s['relevant lines end']
-                        link = f"https://github.com/{self.git_provider.repo}/pull/{self.git_provider.pr_num}/files#diff-{sha_file}R{absolute_position_start}-R{absolute_position_end}"
-
-                        data_markdown += f"File:\n [{s['relevant file']}({absolute_position_start}-{absolute_position_end})]({link})\n"
-                        data_markdown += f"\nSuggestion:\n**{s['suggestion content']}**\n"
-                        data_markdown += "<details> <summary> Example code:</summary>\n"
-                        data_markdown += f"Existing code:\n```suggestion\n{s['existing code']}\n```\n"
-                        data_markdown += f"Improved code:\n```suggestion\n{s['improved code']}\n```\n"
-                        data_markdown += "</details>\n"
-                        data_markdown += "\n___\n\n"
-                    # data_markdown = convert_to_markdown(data)
-                    self.git_provider.publish_comment(data_markdown)
-                    aaa = 3
+                    self.publish_summarizes_suggestions(data)
                 else:
                     get_logger().info('Pushing inline code suggestions...')
                     self.push_inline_code_suggestions(data)
@@ -265,5 +247,27 @@ class PRCodeSuggestions:
             data_sorted = suggestion_list
 
         return data_sorted
+
+    def publish_summarizes_suggestions(self, data: Dict):
+        try:
+            data_markdown = "## Code Suggestions\n\n"
+            for s in data['Code suggestions']:
+                code_snippet_link = self.git_provider.get_line_link(s['relevant file'], s['relevant lines start'],
+                                                                    s['relevant lines end'])
+                if code_snippet_link:
+                    data_markdown += f"📌 File:\n[{s['relevant file']}({s['relevant lines start']}-{s['relevant lines end']})]({code_snippet_link})\n"
+                else:
+                    data_markdown += f"📌 File:\n{s['relevant file']}({s['relevant lines start']}-{s['relevant lines end']})\n"
+                data_markdown += f"\nSuggestion:\n**{s['suggestion content']}**\n"
+                if self.git_provider.is_supported("gfm_markdown"):
+                    data_markdown += "<details> <summary> Example code:</summary>\n\n___\n\n"
+                data_markdown += f"Existing code:\n```{self.main_language}\n{s['existing code']}\n```\n"
+                data_markdown += f"Improved code:\n```{self.main_language}\n{s['improved code']}\n```\n"
+                if self.git_provider.is_supported("gfm_markdown"):
+                    data_markdown += "</details>\n"
+                data_markdown += "\n___\n\n"
+            self.git_provider.publish_comment(data_markdown)
+        except Exception as e:
+            get_logger().info(f"Failed to publish summarized code suggestions, error: {e}")
 
 
