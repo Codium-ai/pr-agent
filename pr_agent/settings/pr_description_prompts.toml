@@ -73,7 +73,10 @@ Previous title: '{{title}}'
 
 {%- if description %}
 
-Previous description: '{{ description }}'
+Previous description:
+'
+{{ description }}
+'
 {%- endif %}
 
 Branch: '{{branch}}'
