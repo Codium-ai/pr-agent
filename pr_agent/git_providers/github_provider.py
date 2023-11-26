@@ -8,8 +8,8 @@ from retry import retry
 from starlette_context import context
 
 from ..algo.language_handler import is_valid_file
-from ..algo.pr_processing import clip_tokens, find_line_number_of_relevant_line_in_file
-from ..algo.utils import load_large_diff
+from ..algo.pr_processing import find_line_number_of_relevant_line_in_file
+from ..algo.utils import load_large_diff, clip_tokens
 from ..config_loader import get_settings
 from ..log import get_logger
 from ..servers.utils import RateLimitExceeded

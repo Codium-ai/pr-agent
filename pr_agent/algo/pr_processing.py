@@ -10,7 +10,7 @@ from github import RateLimitExceededException
 from pr_agent.algo.git_patch_processing import convert_to_hunks_with_lines_numbers, extend_patch, handle_patch_deletions
 from pr_agent.algo.language_handler import sort_files_by_main_languages
 from pr_agent.algo.file_filter import filter_ignored
-from pr_agent.algo.token_handler import TokenHandler, get_token_encoder
+from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.algo.utils import get_max_tokens
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers.git_provider import FilePatchInfo, GitProvider, EDIT_TYPE
@@ -324,35 +324,6 @@ def find_line_number_of_relevant_line_in_file(diff_files: List[FilePatchInfo],
                         absolute_position = start2 + delta - 1
                         break
     return position, absolute_position
-
-
-def clip_tokens(text: str, max_tokens: int) -> str:
-    """
-    Clip the number of tokens in a string to a maximum number of tokens.
-
-    Args:
-        text (str): The string to clip.
-        max_tokens (int): The maximum number of tokens allowed in the string.
-
-    Returns:
-        str: The clipped string.
-    """
-    if not text:
-        return text
-
-    try:
-        encoder = get_token_encoder()
-        num_input_tokens = len(encoder.encode(text))
-        if num_input_tokens <= max_tokens:
-            return text
-        num_chars = len(text)
-        chars_per_token = num_chars / num_input_tokens
-        num_output_chars = int(chars_per_token * max_tokens)
-        clipped_text = text[:num_output_chars]
-        return clipped_text
-    except Exception as e:
-        get_logger().warning(f"Failed to clip tokens: {e}")
-        return text
 
 
 def get_pr_multi_diffs(git_provider: GitProvider,
