@@ -75,8 +75,30 @@ class PRCodeSuggestions:
             if get_settings().config.publish_output:
                 get_logger().info('Pushing PR review...')
                 self.git_provider.remove_initial_comment()
-                get_logger().info('Pushing inline code suggestions...')
-                self.push_inline_code_suggestions(data)
+                if get_settings().pr_code_suggestions.summarize:
+                    get_logger().info('Pushing summarize code suggestions...')
+                    data_markdown = "## Code suggestions\n\n"
+                    for s in data['Code suggestions']:
+                        import hashlib
+                        relevant_file = s['relevant file']
+                        sha_file = hashlib.sha256(relevant_file.encode('utf-8')).hexdigest()
+                        absolute_position_start = s['relevant lines start']
+                        absolute_position_end = s['relevant lines end']
+                        link = f"https://github.com/{self.git_provider.repo}/pull/{self.git_provider.pr_num}/files#diff-{sha_file}R{absolute_position_start}-R{absolute_position_end}"
+
+                        data_markdown += f"File:\n [{s['relevant file']}({absolute_position_start}-{absolute_position_end})]({link})\n"
+                        data_markdown += f"\nSuggestion:\n**{s['suggestion content']}**\n"
+                        data_markdown += "<details> <summary> Example code:</summary>\n"
+                        data_markdown += f"Existing code:\n```suggestion\n{s['existing code']}\n```\n"
+                        data_markdown += f"Improved code:\n```suggestion\n{s['improved code']}\n```\n"
+                        data_markdown += "</details>\n"
+                        data_markdown += "\n___\n\n"
+                    # data_markdown = convert_to_markdown(data)
+                    self.git_provider.publish_comment(data_markdown)
+                    aaa = 3
+                else:
+                    get_logger().info('Pushing inline code suggestions...')
+                    self.push_inline_code_suggestions(data)
         except Exception as e:
             get_logger().error(f"Failed to generate code suggestions for PR, error: {e}")
 
