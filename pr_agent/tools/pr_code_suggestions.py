@@ -255,10 +255,10 @@ class PRCodeSuggestions:
                 code_snippet_link = self.git_provider.get_line_link(s['relevant file'], s['relevant lines start'],
                                                                     s['relevant lines end'])
                 if code_snippet_link:
-                    data_markdown += f"📌 File:\n[{s['relevant file']}({s['relevant lines start']}-{s['relevant lines end']})]({code_snippet_link})\n"
+                    data_markdown += f"📌 File:\n\n[{s['relevant file']} ({s['relevant lines start']}-{s['relevant lines end']})]({code_snippet_link})\n"
                 else:
-                    data_markdown += f"📌 File:\n{s['relevant file']}({s['relevant lines start']}-{s['relevant lines end']})\n"
-                data_markdown += f"\nSuggestion:\n**{s['suggestion content']}**\n"
+                    data_markdown += f"📌 File:\n\n{s['relevant file']} ({s['relevant lines start']}-{s['relevant lines end']})\n"
+                data_markdown += f"\nSuggestion:\n\n**{s['suggestion content']}**\n\n"
                 if self.git_provider.is_supported("gfm_markdown"):
                     data_markdown += "<details> <summary> Example code:</summary>\n\n___\n\n"
                 data_markdown += f"Existing code:\n```{self.main_language}\n{s['existing code']}\n```\n"
