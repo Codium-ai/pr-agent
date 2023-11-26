@@ -3,16 +3,17 @@ from typing import Optional, Tuple
 from urllib.parse import urlparse
 
 import requests
-from atlassian.bitbucket import Cloud
+from atlassian.bitbucket import Bitbucket
 from starlette_context import context
 
+from .git_provider import FilePatchInfo, GitProvider, EDIT_TYPE
 from ..algo.pr_processing import find_line_number_of_relevant_line_in_file
+from ..algo.utils import load_large_diff
 from ..config_loader import get_settings
 from ..log import get_logger
-from .git_provider import FilePatchInfo, GitProvider, EDIT_TYPE
 
 
-class BitbucketProvider(GitProvider):
+class BitbucketServerProvider(GitProvider):
     def __init__(
         self, pr_url: Optional[str] = None, incremental: Optional[bool] = False
     ):
@@ -23,10 +24,11 @@ class BitbucketProvider(GitProvider):
         except Exception:
             s.headers[
                 "Authorization"
-            ] = f'Bearer {get_settings().get("BITBUCKET.BEARER_TOKEN", None)}'
+            ] = f'Bearer {get_settings().get("BITBUCKET_SERVER.BEARER_TOKEN", None)}'
+
         s.headers["Content-Type"] = "application/json"
         self.headers = s.headers
-        self.bitbucket_client = Cloud(session=s)
+        self.bitbucket_server_url = None
         self.workspace_slug = None
         self.repo_slug = None
         self.repo = None
@@ -36,14 +38,18 @@ class BitbucketProvider(GitProvider):
         self.temp_comments = []
         self.incremental = incremental
         self.diff_files = None
+        self.bitbucket_pull_request_api_url = pr_url
+
+        self.bitbucket_server_url = self._parse_bitbucket_server(url=pr_url)
+        self.bitbucket_client = Bitbucket(url=self.bitbucket_server_url,
+                                          token=get_settings().get("BITBUCKET_SERVER.BEARER_TOKEN", None))
+
         if pr_url:
             self.set_pr(pr_url)
-        self.bitbucket_comment_api_url = self.pr._BitbucketBase__data["links"]["comments"]["href"]
-        self.bitbucket_pull_request_api_url = self.pr._BitbucketBase__data["links"]['self']['href']
 
     def get_repo_settings(self):
         try:
-            url = (f"https://api.bitbucket.org/2.0/repositories/{self.workspace_slug}/{self.repo_slug}/src/"
+            url = (f"{self.bitbucket_server_url}/projects/{self.workspace_slug}/repos/{self.repo_slug}/src/"
                    f"{self.pr.destination_branch}/.pr_agent.toml")
             response = requests.request("GET", url, headers=self.headers)
             if response.status_code == 404:  # not found
@@ -106,7 +112,7 @@ class BitbucketProvider(GitProvider):
             return False
 
     def is_supported(self, capability: str) -> bool:
-        if capability in ['get_issue_comments', 'publish_inline_comments', 'get_labels', 'gfm_markdown']:
+        if capability in ['get_issue_comments', 'get_labels', 'gfm_markdown']:
             return False
         return True
 
@@ -114,95 +120,102 @@ class BitbucketProvider(GitProvider):
         self.workspace_slug, self.repo_slug, self.pr_num = self._parse_pr_url(pr_url)
         self.pr = self._get_pr()
 
+    def get_file(self, path: str, commit_id: str):
+        file_content = ""
+        try:
+            file_content = self.bitbucket_client.get_content_of_file(self.workspace_slug,
+                                                                     self.repo_slug,
+                                                                     path,
+                                                                     commit_id)
+        except requests.HTTPError as e:
+            get_logger().debug(f"File {path} not found at commit id: {commit_id}")
+        return file_content
+
     def get_files(self):
-        return [diff.new.path for diff in self.pr.diffstat()]
+        changes = self.bitbucket_client.get_pull_requests_changes(self.workspace_slug, self.repo_slug, self.pr_num)
+        diffstat = [change["path"]['toString'] for change in changes]
+        return diffstat
 
     def get_diff_files(self) -> list[FilePatchInfo]:
         if self.diff_files:
             return self.diff_files
 
-        diffs = self.pr.diffstat()
-        diff_split = [
-            "diff --git%s" % x for x in self.pr.diff().split("diff --git") if x.strip()
-        ]
+        commits_in_pr = self.bitbucket_client.get_pull_requests_commits(
+            self.workspace_slug,
+            self.repo_slug,
+            self.pr_num
+        )
+
+        commit_list = list(commits_in_pr)
+        base_sha, head_sha = commit_list[0]['parents'][0]['id'], commit_list[-1]['id']
 
         diff_files = []
-        for index, diff in enumerate(diffs):
-            original_file_content_str = self._get_pr_file_content(
-                diff.old.get_data("links")
-            )
-            new_file_content_str = self._get_pr_file_content(diff.new.get_data("links"))
-            file_patch_canonic_structure = FilePatchInfo(
-                original_file_content_str,
-                new_file_content_str,
-                diff_split[index],
-                diff.new.path,
-            )
+        original_file_content_str = ""
+        new_file_content_str = ""
 
-            if diff.data['status'] == 'added':
-                file_patch_canonic_structure.edit_type = EDIT_TYPE.ADDED
-            elif diff.data['status'] == 'removed':
-                file_patch_canonic_structure.edit_type = EDIT_TYPE.DELETED
-            elif diff.data['status'] == 'modified':
-                file_patch_canonic_structure.edit_type = EDIT_TYPE.MODIFIED
-            elif diff.data['status'] == 'renamed':
-                file_patch_canonic_structure.edit_type = EDIT_TYPE.RENAMED
-            diff_files.append(file_patch_canonic_structure)
+        changes = self.bitbucket_client.get_pull_requests_changes(self.workspace_slug, self.repo_slug, self.pr_num)
+        for change in changes:
+            file_path = change['path']['toString']
+            match change['type']:
+                case 'ADD':
+                    edit_type = EDIT_TYPE.ADDED
+                    new_file_content_str = self.get_file(file_path, head_sha)
+                    if isinstance(new_file_content_str, (bytes, bytearray)):
+                        new_file_content_str = new_file_content_str.decode("utf-8")
+                    original_file_content_str = ""
+                case 'DELETE':
+                    edit_type = EDIT_TYPE.DELETED
+                    new_file_content_str = ""
+                    original_file_content_str = self.get_file(file_path, base_sha)
+                    if isinstance(original_file_content_str, (bytes, bytearray)):
+                        original_file_content_str = original_file_content_str.decode("utf-8")
+                case 'RENAME':
+                    edit_type = EDIT_TYPE.RENAMED
+                case _:
+                    edit_type = EDIT_TYPE.MODIFIED
+                    original_file_content_str = self.get_file(file_path, base_sha)
+                    if isinstance(original_file_content_str, (bytes, bytearray)):
+                        original_file_content_str = original_file_content_str.decode("utf-8")
+                    new_file_content_str = self.get_file(file_path, head_sha)
+                    if isinstance(new_file_content_str, (bytes, bytearray)):
+                        new_file_content_str = new_file_content_str.decode("utf-8")
 
+            patch = load_large_diff(file_path, new_file_content_str, original_file_content_str)
+
+            diff_files.append(
+                FilePatchInfo(
+                    original_file_content_str,
+                    new_file_content_str,
+                    patch,
+                    file_path,
+                    edit_type=edit_type,
+                )
+            )
 
         self.diff_files = diff_files
         return diff_files
 
-    def get_latest_commit_url(self):
-        return self.pr.data['source']['commit']['links']['html']['href']
-
-    def get_comment_url(self, comment):
-        return comment.data['links']['html']['href']
-
-    def publish_persistent_comment(self, pr_comment: str, initial_header: str, update_header: bool = True):
-        try:
-            for comment in self.pr.comments():
-                body = comment.raw
-                if initial_header in body:
-                    latest_commit_url = self.get_latest_commit_url()
-                    comment_url = self.get_comment_url(comment)
-                    if update_header:
-                        updated_header = f"{initial_header}\n\n### (review updated until commit {latest_commit_url})\n"
-                        pr_comment_updated = pr_comment.replace(initial_header, updated_header)
-                    else:
-                        pr_comment_updated = pr_comment
-                    get_logger().info(f"Persistent mode- updating comment {comment_url} to latest review message")
-                    d = {"content": {"raw": pr_comment_updated}}
-                    response = comment._update_data(comment.put(None, data=d))
-                    self.publish_comment(
-                        f"**[Persistent review]({comment_url})** updated to latest commit {latest_commit_url}")
-                    return
-        except Exception as e:
-            get_logger().exception(f"Failed to update persistent review, error: {e}")
-            pass
-        self.publish_comment(pr_comment)
-
     def publish_comment(self, pr_comment: str, is_temporary: bool = False):
-        comment = self.pr.comment(pr_comment)
-        if is_temporary:
-            self.temp_comments.append(comment["id"])
+        if not is_temporary:
+            self.bitbucket_client.add_pull_request_comment(self.workspace_slug, self.repo_slug, self.pr_num, pr_comment)
 
     def remove_initial_comment(self):
         try:
             for comment in self.temp_comments:
                 self.remove_comment(comment)
-        except Exception as e:
+        except ValueError as e:
             get_logger().exception(f"Failed to remove temp comments, error: {e}")
 
     def remove_comment(self, comment):
-        try:
-            self.pr.delete(f"comments/{comment}")
-        except Exception as e:
-            get_logger().exception(f"Failed to remove comment, error: {e}")
+        pass
 
     # funtion to create_inline_comment
     def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
-        position, absolute_position = find_line_number_of_relevant_line_in_file(self.get_diff_files(), relevant_file.strip('`'), relevant_line_in_file)
+        position, absolute_position = find_line_number_of_relevant_line_in_file(
+            self.get_diff_files(),
+            relevant_file.strip('`'),
+            relevant_line_in_file
+        )
         if position == -1:
             if get_settings().config.verbosity_level >= 2:
                 get_logger().info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
@@ -212,20 +225,20 @@ class BitbucketProvider(GitProvider):
         path = relevant_file.strip()
         return dict(body=body, path=path, position=absolute_position) if subject_type == "LINE" else {}
 
-
     def publish_inline_comment(self, comment: str, from_line: int, file: str):
-        payload = json.dumps( {
-            "content": {
-                "raw": comment,
-            },
-            "inline": {
-                "to": from_line,
-                "path": file
-            },
-        })
-        response = requests.request(
-            "POST", self.bitbucket_comment_api_url, data=payload, headers=self.headers
-        )
+        payload = {
+            "text": comment,
+            "severity": "NORMAL",
+            "anchor": {
+                "diffType": "EFFECTIVE",
+                "path": file,
+                "lineType": "ADDED",
+                "line": from_line,
+                "fileType": "TO"
+            }
+        }
+
+        response = requests.post(url=self._get_pr_comments_url(), json=payload, headers=self.headers)
         return response
 
     def generate_link_to_relevant_line_number(self, suggestion) -> str:
@@ -256,11 +269,10 @@ class BitbucketProvider(GitProvider):
         return self.pr.title
 
     def get_languages(self):
-        languages = {self._get_repo().get_data("language"): 0}
-        return languages
+        return {"yaml": 0}  # devops LOL
 
     def get_pr_branch(self):
-        return self.pr.source_branch
+        return self.pr.fromRef['displayId']
 
     def get_pr_description_full(self):
         return self.pr.description
@@ -280,23 +292,23 @@ class BitbucketProvider(GitProvider):
         return True
 
     @staticmethod
-    def _parse_pr_url(pr_url: str) -> Tuple[str, int]:
+    def _parse_bitbucket_server(url: str) -> str:
+        parsed_url = urlparse(url)
+        return f"{parsed_url.scheme}://{parsed_url.netloc}"
+
+    @staticmethod
+    def _parse_pr_url(pr_url: str) -> Tuple[str, str, int]:
         parsed_url = urlparse(pr_url)
-
-        if "bitbucket.org" not in parsed_url.netloc:
-            raise ValueError("The provided URL is not a valid Bitbucket URL")
-
         path_parts = parsed_url.path.strip("/").split("/")
-
-        if len(path_parts) < 4 or path_parts[2] != "pull-requests":
+        if len(path_parts) < 6 or path_parts[4] != "pull-requests":
             raise ValueError(
                 "The provided URL does not appear to be a Bitbucket PR URL"
             )
 
-        workspace_slug = path_parts[0]
-        repo_slug = path_parts[1]
+        workspace_slug = path_parts[1]
+        repo_slug = path_parts[3]
         try:
-            pr_number = int(path_parts[3])
+            pr_number = int(path_parts[5])
         except ValueError as e:
             raise ValueError("Unable to convert PR number to integer") from e
 
@@ -304,34 +316,27 @@ class BitbucketProvider(GitProvider):
 
     def _get_repo(self):
         if self.repo is None:
-            self.repo = self.bitbucket_client.workspaces.get(
-                self.workspace_slug
-            ).repositories.get(self.repo_slug)
+            self.repo = self.bitbucket_client.get_repo(self.workspace_slug, self.repo_slug)
         return self.repo
 
     def _get_pr(self):
-        return self._get_repo().pullrequests.get(self.pr_num)
+        pr = self.bitbucket_client.get_pull_request(self.workspace_slug, self.repo_slug, pull_request_id=self.pr_num)
+        return type('new_dict', (object,), pr)
 
     def _get_pr_file_content(self, remote_link: str):
         return ""
 
     def get_commit_messages(self):
-        return ""  # not implemented yet
-    
+        def get_commit_messages(self):
+            raise NotImplementedError("Get commit messages function not implemented yet.")
     # bitbucket does not support labels
     def publish_description(self, pr_title: str, description: str):
         payload = json.dumps({
             "description": description,
             "title": pr_title
+        })
 
-            })
-
-        response = requests.request("PUT", self.bitbucket_pull_request_api_url, headers=self.headers, data=payload)
-        try:
-            if response.status_code != 200:
-                get_logger().info(f"Failed to update description, error code: {response.status_code}")
-        except:
-            pass
+        response = requests.put(url=self.bitbucket_pull_request_api_url, headers=self.headers, data=payload)
         return response
 
     # bitbucket does not support labels
@@ -341,3 +346,6 @@ class BitbucketProvider(GitProvider):
     # bitbucket does not support labels
     def get_labels(self):
         pass
+
+    def _get_pr_comments_url(self):
+        return f"{self.bitbucket_server_url}/rest/api/latest/projects/{self.workspace_slug}/repos/{self.repo_slug}/pull-requests/{self.pr_num}/comments"

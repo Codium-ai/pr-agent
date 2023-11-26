@@ -13,6 +13,7 @@ Extra instructions from the user:
 '
 {% endif %}
 
+
 The output must be a YAML object equivalent to type $Labels, according to the following Pydantic definitions:
 '
 {%- if enable_custom_labels %}

@@ -46,10 +46,13 @@ class PRAgent:
         apply_repo_settings(pr_url)
 
         # Then, apply user specific settings if exists
-        request = request.replace("'", "\\'")
-        lexer = shlex.shlex(request, posix=True)
-        lexer.whitespace_split = True
-        action, *args = list(lexer)
+        if isinstance(request, str):
+            request = request.replace("'", "\\'")
+            lexer = shlex.shlex(request, posix=True)
+            lexer.whitespace_split = True
+            action, *args = list(lexer)
+        else:
+            action, *args = request
         args = update_settings_from_args(args)
 
         action = action.lstrip("/").lower()

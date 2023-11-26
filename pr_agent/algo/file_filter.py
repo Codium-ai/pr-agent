@@ -11,7 +11,12 @@ def filter_ignored(files):
     try:
         # load regex patterns, and translate glob patterns to regex
         patterns = get_settings().ignore.regex
-        patterns += [fnmatch.translate(glob) for glob in get_settings().ignore.glob]
+        if isinstance(patterns, str):
+            patterns = [patterns]
+        glob_setting = get_settings().ignore.glob
+        if isinstance(glob_setting, str): # --ignore.glob=[.*utils.py], --ignore.glob=.*utils.py
+            glob_setting = glob_setting.strip('[]').split(",")
+        patterns += [fnmatch.translate(glob) for glob in glob_setting]
 
         # compile all valid patterns
         compiled_patterns = []

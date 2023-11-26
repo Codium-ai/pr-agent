@@ -154,16 +154,28 @@ class GithubProvider(GitProvider):
     def publish_description(self, pr_title: str, pr_body: str):
         self.pr.edit(title=pr_title, body=pr_body)
 
-    def publish_persistent_comment(self, pr_comment: str, initial_text: str, updated_text: str):
+    def get_latest_commit_url(self) -> str:
+        return self.last_commit_id.html_url
+
+    def get_comment_url(self, comment) -> str:
+        return comment.html_url
+
+    def publish_persistent_comment(self, pr_comment: str, initial_header: str, update_header: bool = True):
         prev_comments = list(self.pr.get_issue_comments())
         for comment in prev_comments:
             body = comment.body
-            if body.startswith(initial_text):
-                if updated_text:
-                    pr_comment_updated = pr_comment.replace(initial_text, updated_text)
+            if body.startswith(initial_header):
+                latest_commit_url = self.get_latest_commit_url()
+                comment_url = self.get_comment_url(comment)
+                if update_header:
+                    updated_header = f"{initial_header}\n\n### (review updated until commit {latest_commit_url})\n"
+                    pr_comment_updated = pr_comment.replace(initial_header, updated_header)
                 else:
                     pr_comment_updated = pr_comment
+                get_logger().info(f"Persistent mode- updating comment {comment_url} to latest review message")
                 response = comment.edit(pr_comment_updated)
+                self.publish_comment(
+                    f"**[Persistent review]({comment_url})** updated to latest commit {latest_commit_url}")
                 return
         self.publish_comment(pr_comment)
 
@@ -393,7 +405,7 @@ class GithubProvider(GitProvider):
                 raise ValueError("GitHub app installation ID is required when using GitHub app deployment")
             auth = AppAuthentication(app_id=app_id, private_key=private_key,
                                      installation_id=self.installation_id)
-            return Github(app_auth=auth)
+            return Github(app_auth=auth, base_url=get_settings().github.base_url)
 
         if deployment_type == 'user':
             try:
@@ -402,7 +414,7 @@ class GithubProvider(GitProvider):
                 raise ValueError(
                     "GitHub token is required when using user deployment. See: "
                     "https://github.com/Codium-ai/pr-agent#method-2-run-from-source") from e
-            return Github(auth=Auth.Token(token))
+            return Github(auth=Auth.Token(token), base_url=get_settings().github.base_url)
 
     def _get_repo(self):
         if hasattr(self, 'repo_obj') and \

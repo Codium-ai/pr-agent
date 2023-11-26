@@ -27,6 +27,7 @@ class PRType(str, Enum):
 {%- if enable_custom_labels %}
 
 {{ custom_labels_class }}
+
 {%- endif %}
 
 class FileWalkthrough(BaseModel):

@@ -90,16 +90,19 @@ Code suggestions:
 Example output:
 ```yaml
 Code suggestions:
-  - relevant file: |-
-        src/file1.py
-    suggestion content: |-
-        Add a docstring to func1()
-    existing code: |-
-        def func1():
-    relevant lines start: 12
-    relevant lines end: 12
-    improved code: |-
-        ...
+- relevant file: |-
+    src/file1.py
+  suggestion content: |-
+    Add a docstring to func1()
+  existing code: |-
+    def func1():
+  relevant lines start: |-
+    12
+  relevant lines end: |-
+    12
+  improved code: |-
+    ...
+...
 ```
 
 
