@@ -1,11 +1,11 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from pr_agent.algo.language_handler import language_extension_map
 
 # enum EDIT_TYPE (ADDED, DELETED, MODIFIED, RENAMED)
 from enum import Enum
 from typing import Optional
 
+from pr_agent.config_loader import get_settings
 from pr_agent.log import get_logger
 
 
@@ -176,6 +176,9 @@ def get_main_pr_language(languages, files) -> str:
         # get the most common extension
         most_common_extension = '.' + max(set(extension_list), key=extension_list.count)
         try:
+            language_extension_map_org = get_settings().language_extension_map_org
+            language_extension_map = {k.lower(): v for k, v in language_extension_map_org.items()}
+
             if top_language in language_extension_map and most_common_extension in language_extension_map[top_language]:
                 main_language_str = top_language
             else:
