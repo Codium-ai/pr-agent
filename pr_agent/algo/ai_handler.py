@@ -55,7 +55,7 @@ class AiHandler:
             litellm.replicate_key = get_settings().replicate.key
         if get_settings().get("HUGGINGFACE.KEY", None):
             litellm.huggingface_key = get_settings().huggingface.key
-        if get_settings().get("HUGGINGFACE.API_BASE", None):
+        if get_settings().get("HUGGINGFACE.API_BASE", None) and 'huggingface' in get_settings().config.model:
             litellm.api_base = get_settings().huggingface.api_base
             self.api_base = get_settings().huggingface.api_base
         if get_settings().get("VERTEXAI.VERTEX_PROJECT", None):
@@ -109,6 +109,10 @@ class AiHandler:
                 )
             if self.azure:
                 model = 'azure/' + model
+            system = get_settings().get("CONFIG.MODEL_SYSTEM_PREFIX", "") + system + \
+                     get_settings().get("CONFIG.MODEL_SYSTEM_SUFFIX", "")
+            user = get_settings().get("CONFIG.MODEL_USER_PREFIX", "") + user + \
+                   get_settings().get("CONFIG.MODEL_USER_SUFFIX", "")
             messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
             response = await acompletion(
                 model=model,

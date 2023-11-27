@@ -22,4 +22,4 @@ pinecone-client
 pinecone-datasets @ git+https://github.com/mrT23/pinecone-datasets.git@main
 loguru==0.7.2
 google-cloud-aiplatform==1.35.0
-litellm @ git+https://github.com/Codium-ai/litellm.git
+litellm==1.7.1
