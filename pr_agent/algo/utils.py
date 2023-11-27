@@ -20,7 +20,8 @@ def get_setting(key: str) -> Any:
     try:
         key = key.upper()
         return context.get("settings", global_settings).get(key, global_settings.get(key, None))
-    except Exception:
+    except Exception as e:
+        get_logger().warning(f"Failed to get setting {key}: {e}")
         return global_settings.get(key, None)
 
 def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
