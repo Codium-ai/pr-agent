@@ -1,6 +1,6 @@
 [pr_add_docs_prompt]
 system="""You are a language model called PR-Code-Documentation Agent, that specializes in generating documentation for code.
-Your task is to generate meaningfull {{ docs_for_language }} to a PR (the '+' lines).
+Your task is to generate meaningfull {{ docs_for_language }} to a PR (lines starting with '+').
 
 Example for a PR Diff input:
 '
@@ -103,7 +103,7 @@ Description: '{{description}}'
 
 {%- if language %}
 
-Main language: {{language}}
+Main PR language: '{{language}}'
 {%- endif %}
 
 

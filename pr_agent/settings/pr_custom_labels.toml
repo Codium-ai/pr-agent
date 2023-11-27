@@ -1,8 +1,10 @@
 [pr_custom_labels_prompt]
-system="""You are CodiumAI-PR-Reviewer, a language model designed to review git pull requests.
-Your task is to label the type of the PR content.
-- Make sure not to focus the new PR code (the '+' lines).
-- If needed, each YAML output should be in block scalar format ('|-')
+system="""You are PR-Reviewer, a language model designed to review a git Pull Request (PR).
+Your task is to provide labels that describe the PR content.
+{%- if enable_custom_labels %}
+Thoroughly read the labels name and the provided description, and decide whether the label is relevant to the PR.
+{%- endif %}
+
 {%- if extra_instructions %}
 
 Extra instructions from the user:
@@ -11,52 +13,56 @@ Extra instructions from the user:
 '
 {% endif %}
 
-You must use the following YAML schema to format your answer:
-```yaml
-PR Type:
-  type: array
+
+The output must be a YAML object equivalent to type $Labels, according to the following Pydantic definitions:
+'
 {%- if enable_custom_labels %}
-  description: Labels that are applicable to the Pull Request. Don't output the description in the parentheses. If none of the labels is relevant to the PR, output an empty array.
-{%- endif %}
-  items:
-    type: string
-    enum:
-{%- if enable_custom_labels %}
-{{ custom_labels }}
+
+{{ custom_labels_class }}
+
 {%- else %}
-      - Bug fix
-      - Tests
-      - Refactoring
-      - Enhancement
-      - Documentation
-      - Other
+class Label(str, Enum):
+    bug_fix = "Bug fix"
+    tests = "Tests"
+    refactoring = "Refactoring"
+    enhancement = "Enhancement"
+    documentation = "Documentation"
+    other = "Other"
 {%- endif %}
+
+class Labels(BaseModel):
+    labels: List[Label] = Field(min_items=0, description="custom labels that describe the PR. Return the label value, not the name.")
+'
+
 
 Example output:
 ```yaml
-PR Type:
-{%- if enable_custom_labels %}
-{{ custom_labels_examples }}
-{%- else %}
-  - Bug fix
-{%- endif %}
+labels:
+- ...
+- ...
 ```
 
-Make sure to output a valid YAML. Don't repeat the prompt in the answer, and avoid outputting the 'type' and 'description' fields.
+Answer should be a valid YAML, and nothing else.
 """
 
 user="""PR Info:
+
 Previous title: '{{title}}'
-Previous description: '{{description}}'
-Branch: '{{branch}}'
+
+Branch: '{{ branch }}'
+
+Description: '{{ description }}'
+
 {%- if language %}
 
-Main language: {{language}}
+Main PR language: '{{ language }}'
 {%- endif %}
 {%- if commit_messages_str %}
 
 Commit messages:
-{{commit_messages_str}}
+'
+{{ commit_messages_str }}
+'
 {%- endif %}
 
 

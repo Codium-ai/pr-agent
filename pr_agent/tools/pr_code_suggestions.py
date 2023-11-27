@@ -1,7 +1,6 @@
 import copy
 import textwrap
 from typing import Dict, List
-
 from jinja2 import Environment, StrictUndefined
 
 from pr_agent.algo.ai_handler import AiHandler
@@ -55,9 +54,9 @@ class PRCodeSuggestions:
         try:
             get_logger().info('Generating code suggestions for PR...')
             if get_settings().config.publish_output:
-                self.git_provider.publish_comment("Preparing review...", is_temporary=True)
+                self.git_provider.publish_comment("Preparing suggestions...", is_temporary=True)
 
-            get_logger().info('Preparing PR review...')
+            get_logger().info('Preparing PR code suggestions...')
             if not self.is_extended:
                 await retry_with_fallback_models(self._prepare_prediction)
                 data = self._prepare_pr_code_suggestions()
@@ -73,10 +72,14 @@ class PRCodeSuggestions:
                 data['Code suggestions'] = await self.rank_suggestions(data['Code suggestions'])
 
             if get_settings().config.publish_output:
-                get_logger().info('Pushing PR review...')
+                get_logger().info('Pushing PR code suggestions...')
                 self.git_provider.remove_initial_comment()
-                get_logger().info('Pushing inline code suggestions...')
-                self.push_inline_code_suggestions(data)
+                if get_settings().pr_code_suggestions.summarize:
+                    get_logger().info('Pushing summarize code suggestions...')
+                    self.publish_summarizes_suggestions(data)
+                else:
+                    get_logger().info('Pushing inline code suggestions...')
+                    self.push_inline_code_suggestions(data)
         except Exception as e:
             get_logger().error(f"Failed to generate code suggestions for PR, error: {e}")
 
@@ -243,5 +246,28 @@ class PRCodeSuggestions:
             data_sorted = suggestion_list
 
         return data_sorted
+
+    def publish_summarizes_suggestions(self, data: Dict):
+        try:
+            data_markdown = "## PR Code Suggestions\n\n"
+            for s in data['Code suggestions']:
+                code_snippet_link = self.git_provider.get_line_link(s['relevant file'], s['relevant lines start'],
+                                                                    s['relevant lines end'])
+                data_markdown += f"\n💡 Suggestion:\n\n**{s['suggestion content']}**\n\n"
+                if code_snippet_link:
+                    data_markdown += f" File: [{s['relevant file']} ({s['relevant lines start']}-{s['relevant lines end']})]({code_snippet_link})\n\n"
+                else:
+                    data_markdown += f"File: {s['relevant file']} ({s['relevant lines start']}-{s['relevant lines end']})\n\n"
+                if self.git_provider.is_supported("gfm_markdown"):
+                    data_markdown += "<details> <summary> Example code:</summary>\n\n"
+                    data_markdown += f"___\n\n"
+                data_markdown += f"Existing code:\n```{self.main_language}\n{s['existing code']}\n```\n"
+                data_markdown += f"Improved code:\n```{self.main_language}\n{s['improved code']}\n```\n"
+                if self.git_provider.is_supported("gfm_markdown"):
+                    data_markdown += "</details>\n"
+                data_markdown += "\n___\n\n"
+            self.git_provider.publish_comment(data_markdown)
+        except Exception as e:
+            get_logger().info(f"Failed to publish summarized code suggestions, error: {e}")
 
 
