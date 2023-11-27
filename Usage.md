@@ -117,7 +117,7 @@ Any configuration value in [configuration file](pr_agent/settings/configuration.
 ### Working with GitHub App
 When running PR-Agent from GitHub App, the default [configuration file](pr_agent/settings/configuration.toml) from a pre-built docker will be initially loaded.
 
-By uploading a local `.pr_agent.toml` file to the root of the repo's main branch, you can edit and customize any configuration parameter.
+By uploading a local `.pr_agent.toml` file to the root of the repo's main branch, you can edit and customize any configuration parameter. Note that you need to upload `.pr_agent.toml` prior to creating a PR, in order for the configuration to take effect.
 
 For example, if you set in `.pr_agent.toml`:
 
