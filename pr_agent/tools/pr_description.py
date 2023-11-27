@@ -44,8 +44,7 @@ class PRDescription:
             "extra_instructions": get_settings().pr_description.extra_instructions,
             "commit_messages_str": self.git_provider.get_commit_messages(),
             "enable_custom_labels": get_settings().config.enable_custom_labels,
-            "custom_labels": "",
-            "custom_labels_examples": "",
+            "custom_labels_class": "",  # will be filled if necessary in 'set_custom_labels' function
         }
 
         self.user_description = self.git_provider.get_user_description()
@@ -175,16 +174,16 @@ class PRDescription:
         pr_types = []
 
         # If the 'PR Type' key is present in the dictionary, split its value by comma and assign it to 'pr_types'
-        if 'PR Labels' in self.data:
-            if type(self.data['PR Labels']) == list:
-                pr_types = self.data['PR Labels']
-            elif type(self.data['PR Labels']) == str:
-                pr_types = self.data['PR Labels'].split(',')
-        elif 'PR Type' in self.data:
-            if type(self.data['PR Type']) == list:
-                pr_types = self.data['PR Type']
-            elif type(self.data['PR Type']) == str:
-                pr_types = self.data['PR Type'].split(',')
+        if 'labels' in self.data:
+            if type(self.data['labels']) == list:
+                pr_types = self.data['labels']
+            elif type(self.data['labels']) == str:
+                pr_types = self.data['labels'].split(',')
+        elif 'type' in self.data:
+            if type(self.data['type']) == list:
+                pr_types = self.data['type']
+            elif type(self.data['type']) == str:
+                pr_types = self.data['type'].split(',')
         return pr_types
 
     def _prepare_pr_answer_with_markers(self) -> Tuple[str, str]:
@@ -196,12 +195,12 @@ class PRDescription:
         else:
             ai_header = ""
 
-        ai_type = self.data.get('PR Type')
+        ai_type = self.data.get('type')
         if ai_type and not re.search(r'<!--\s*pr_agent:type\s*-->', body):
             pr_type = f"{ai_header}{ai_type}"
             body = body.replace('pr_agent:type', pr_type)
 
-        ai_summary = self.data.get('PR Description')
+        ai_summary = self.data.get('description')
         if ai_summary and not re.search(r'<!--\s*pr_agent:summary\s*-->', body):
             summary = f"{ai_header}{ai_summary}"
             body = body.replace('pr_agent:summary', summary)
@@ -231,16 +230,16 @@ class PRDescription:
         # Iterate over the dictionary items and append the key and value to 'markdown_text' in a markdown format
         markdown_text = ""
         # Don't display 'PR Labels'
-        if 'PR Labels' in self.data and self.git_provider.is_supported("get_labels"):
-            self.data.pop('PR Labels')
+        if 'labels' in self.data and self.git_provider.is_supported("get_labels"):
+            self.data.pop('labels')
         if not get_settings().pr_description.enable_pr_type:
-            self.data.pop('PR Type')
+            self.data.pop('type')
         for key, value in self.data.items():
             markdown_text += f"## {key}\n\n"
             markdown_text += f"{value}\n\n"
 
         # Remove the 'PR Title' key from the dictionary
-        ai_title = self.data.pop('PR Title', self.vars["title"])
+        ai_title = self.data.pop('title', self.vars["title"])
         if get_settings().pr_description.keep_original_user_title:
             # Assign the original PR title to the 'title' variable
             title = self.vars["title"]
@@ -259,7 +258,7 @@ class PRDescription:
                     pr_body += "<details> <summary>files:</summary>\n\n"
                 for file in value:
                     filename = file['filename'].replace("'", "`")
-                    description = file['changes in file']
+                    description = file['changes_in_file']
                     pr_body += f'- `{filename}`: {description}\n'
                 if self.git_provider.is_supported("gfm_markdown"):
                     pr_body +="</details>\n"

@@ -43,9 +43,8 @@ class PRGenerateLabels:
             "use_bullet_points": get_settings().pr_description.use_bullet_points,
             "extra_instructions": get_settings().pr_description.extra_instructions,
             "commit_messages_str": self.git_provider.get_commit_messages(),
-            "custom_labels": "",
-            "custom_labels_examples": "",
             "enable_custom_labels": get_settings().config.enable_custom_labels,
+            "custom_labels_class": "",  # will be filled if necessary in 'set_custom_labels' function
         }
 
         # Initialize the token handler
@@ -148,6 +147,9 @@ class PRGenerateLabels:
             user=user_prompt
         )
 
+        if get_settings().config.verbosity_level >= 2:
+            get_logger().info(f"\nAI response:\n{response}")
+
         return response
 
     def _prepare_data(self):
@@ -159,11 +161,11 @@ class PRGenerateLabels:
     def _prepare_labels(self) -> List[str]:
         pr_types = []
 
-        # If the 'PR Type' key is present in the dictionary, split its value by comma and assign it to 'pr_types'
-        if 'PR Type' in self.data:
-            if type(self.data['PR Type']) == list:
-                pr_types = self.data['PR Type']
-            elif type(self.data['PR Type']) == str:
-                pr_types = self.data['PR Type'].split(',')
+        # If the 'labels' key is present in the dictionary, split its value by comma and assign it to 'pr_types'
+        if 'labels' in self.data:
+            if type(self.data['labels']) == list:
+                pr_types = self.data['labels']
+            elif type(self.data['labels']) == str:
+                pr_types = self.data['labels'].split(',')
 
         return pr_types
