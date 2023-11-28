@@ -254,7 +254,15 @@ class BitbucketProvider(GitProvider):
 
     def publish_inline_comments(self, comments: list[dict]):
         for comment in comments:
-            self.publish_inline_comment(comment['body'], comment['position'], comment['path'])
+            if 'position' in comment:
+                self.publish_inline_comment(comment['body'], comment['position'], comment['path'])
+            elif 'start_line' in comment: # multi-line comment
+                # note that bitbucket does not seem to support range - only a comment on a single line - https://community.developer.atlassian.com/t/api-post-endpoint-for-inline-pull-request-comments/60452
+                self.publish_inline_comment(comment['body'], comment['start_line'], comment['path'])
+            elif 'line' in comment: # single-line comment
+                self.publish_inline_comment(comment['body'], comment['line'], comment['path'])
+            else:
+                get_logger().error(f"Could not publish inline comment {comment}")
 
     def get_title(self):
         return self.pr.title
