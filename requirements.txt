@@ -14,7 +14,7 @@ GitPython==3.1.32
 PyYAML==6.0
 starlette-context==0.3.6
 litellm==0.12.5
-boto3==1.28.25
+boto3==1.33.1
 google-cloud-storage==2.10.0
 ujson==5.8.0
 azure-devops==7.1.0b3
