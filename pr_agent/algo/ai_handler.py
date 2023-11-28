@@ -63,9 +63,7 @@ class AiHandler:
                 "VERTEXAI.VERTEX_LOCATION", None
             )
         if get_settings().get("AWS.BEDROCK_REGION", None):
-            litellm.AmazonAnthropicConfig.max_tokens_to_sample = int(get_settings().get(
-                "AWS.CLAUDE_MAX_TOKENS_TO_SAMPLE", '2000'
-            ))
+            litellm.AmazonAnthropicConfig.max_tokens_to_sample = 2000
             self.aws_bedrock_client = boto3.client(
                 service_name="bedrock-runtime",
                 region_name=get_settings().aws.bedrock_region,
