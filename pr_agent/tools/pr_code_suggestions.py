@@ -119,6 +119,7 @@ class PRCodeSuggestions:
         code_suggestions = []
 
         if not data['Code suggestions']:
+            get_logger().info('No suggestions found to improve this PR.')
             return self.git_provider.publish_comment('No suggestions found to improve this PR.')
 
         for d in data['Code suggestions']:
