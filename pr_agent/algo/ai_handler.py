@@ -1,5 +1,6 @@
 import os
 
+import boto3
 import litellm
 import openai
 from litellm import acompletion
@@ -7,7 +8,6 @@ from openai.error import APIError, RateLimitError, Timeout, TryAgain
 from retry import retry
 from pr_agent.config_loader import get_settings
 from pr_agent.log import get_logger
-import boto3
 
 OPENAI_RETRIES = 5
 
