@@ -65,13 +65,13 @@ async def run_action():
         if action in ["opened", "reopened"]:
             pr_url = event_payload.get("pull_request", {}).get("url")
             if pr_url:
-                auto_review = os.environ.get('github_action.auto_review', None)
+                auto_review = get_settings().get('GITHUB_ACTION.AUTO_REVIEW', None)
                 if auto_review is None or (isinstance(auto_review, str) and auto_review.lower() == 'true'):
                     await PRReviewer(pr_url).run()
-                auto_describe = os.environ.get('github_action.auto_describe', None)
+                auto_describe = get_settings().get('GITHUB_ACTION.AUTO_DESCRIBE', None)
                 if isinstance(auto_describe, str) and auto_describe.lower() == 'true':
                     await PRDescription(pr_url).run()
-                auto_improve = os.environ.get('github_action.auto_improve', None)
+                auto_improve = get_settings().get('GITHUB_ACTION.AUTO_IMPROVE', None)
                 if isinstance(auto_improve, str) and auto_improve.lower() == 'true':
                     await PRCodeSuggestions(pr_url).run()
 

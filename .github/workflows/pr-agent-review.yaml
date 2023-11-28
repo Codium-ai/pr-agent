@@ -26,7 +26,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PINECONE.API_KEY: ${{ secrets.PINECONE_API_KEY }}
           PINECONE.ENVIRONMENT: ${{ secrets.PINECONE_ENVIRONMENT }}
-          github_action.auto_review: 'true'
-          github_action.auto_improve: 'true'
+          GITHUB_ACTION.AUTO_REVIEW: 'true'
+          GITHUB_ACTION.AUTO_IMPROVE: 'true'
 
 
