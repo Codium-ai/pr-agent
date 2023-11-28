@@ -392,11 +392,12 @@ class PRReviewer:
                     if security_concerns_bool:
                         review_labels.append('Possible security concern')
 
-                if review_labels:
-                    current_labels = self.git_provider.get_labels()
-                    current_labels_filtered = [label for label in current_labels if
-                                               not label.lower().startswith('review effort [1-5]:') and not label.lower().startswith(
-                                                   'possible security concern')]
+                current_labels = self.git_provider.get_labels()
+                current_labels_filtered = [label for label in current_labels if
+                                           not label.lower().startswith('review effort [1-5]:') and not label.lower().startswith(
+                                               'possible security concern')]
+                if current_labels or review_labels:
+                    get_logger().info(f"Setting review labels: {review_labels + current_labels_filtered}")
                     self.git_provider.publish_labels(review_labels + current_labels_filtered)
             except Exception as e:
                 get_logger().error(f"Failed to set review labels, error: {e}")
