@@ -290,7 +290,6 @@ def _fix_key_value(key: str, value: str):
 
 def load_yaml(response_text: str) -> dict:
     response_text = response_text.removeprefix('```yaml').rstrip('`')
-    response_text = response_text.strip().rstrip().removeprefix('{').removesuffix('}')
     try:
         data = yaml.safe_load(response_text)
     except Exception as e:
@@ -326,7 +325,15 @@ def try_fix_yaml(response_text: str) -> dict:
             break
         except:
             pass
-    return data
+    
+    # thrid fallback - try to remove leading and trailing curly brackets
+    response_text_copy = response_text.strip().rstrip().removeprefix('{').removesuffix('}')
+    try:
+        data = yaml.safe_load(response_text_copy,)
+        get_logger().info(f"Successfully parsed AI prediction after removing curly brackets")
+        return data
+    except:
+        pass
 
 
 def set_custom_labels(variables):
