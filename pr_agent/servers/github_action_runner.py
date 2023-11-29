@@ -21,6 +21,14 @@ def is_true(value: Union[str, bool]) -> bool:
     return False
 
 
+def get_setting_or_env(key: str, default: Union[str, bool] = None) -> Union[str, bool]:
+    try:
+        value = get_settings().get(key, default)
+    except AttributeError:  # TBD still need to debug why this happens on GitHub Actions
+        value = os.getenv(key, None) or os.getenv(key.upper(), None) or os.getenv(key.lower(), None)
+    return value
+
+
 async def run_action():
     # Get environment variables
     GITHUB_EVENT_NAME = os.environ.get('GITHUB_EVENT_NAME')
@@ -74,13 +82,13 @@ async def run_action():
         if action in ["opened", "reopened"]:
             pr_url = event_payload.get("pull_request", {}).get("url")
             if pr_url:
-                auto_review = get_settings().get('GITHUB_ACTION.AUTO_REVIEW', None)
+                auto_review = get_setting_or_env("GITHUB_ACTION.AUTO_REVIEW", None)
                 if auto_review is None or is_true(auto_review):
                     await PRReviewer(pr_url).run()
-                auto_describe = get_settings().get('GITHUB_ACTION.AUTO_DESCRIBE', None)
+                auto_describe = get_setting_or_env("GITHUB_ACTION.AUTO_DESCRIBE", None)
                 if is_true(auto_describe):
                     await PRDescription(pr_url).run()
-                auto_improve = get_settings().get('GITHUB_ACTION.AUTO_IMPROVE', None)
+                auto_improve = get_setting_or_env("GITHUB_ACTION.AUTO_IMPROVE", None)
                 if is_true(auto_improve):
                     await PRCodeSuggestions(pr_url).run()
 
