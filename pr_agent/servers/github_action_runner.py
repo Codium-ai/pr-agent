@@ -25,7 +25,7 @@ def get_setting_or_env(key: str, default: Union[str, bool] = None) -> Union[str,
     try:
         value = get_settings().get(key, default)
     except AttributeError:  # TBD still need to debug why this happens on GitHub Actions
-        value = os.getenv(key, None) or os.getenv(key.upper(), None) or os.getenv(key.lower(), None)
+        value = os.getenv(key, None) or os.getenv(key.upper(), None) or os.getenv(key.lower(), None) or default
     return value
 
 
