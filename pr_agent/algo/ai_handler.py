@@ -1,5 +1,6 @@
 import os
 
+import boto3
 import litellm
 import openai
 from litellm import acompletion
@@ -24,6 +25,7 @@ class AiHandler:
         Raises a ValueError if the OpenAI key is missing.
         """
         self.azure = False
+        self.aws_bedrock_client = None
 
         if get_settings().get("OPENAI.KEY", None):
             openai.api_key = get_settings().openai.key
@@ -59,6 +61,12 @@ class AiHandler:
             litellm.vertex_project = get_settings().vertexai.vertex_project
             litellm.vertex_location = get_settings().get(
                 "VERTEXAI.VERTEX_LOCATION", None
+            )
+        if get_settings().get("AWS.BEDROCK_REGION", None):
+            litellm.AmazonAnthropicConfig.max_tokens_to_sample = 2000
+            self.aws_bedrock_client = boto3.client(
+                service_name="bedrock-runtime",
+                region_name=get_settings().aws.bedrock_region,
             )
 
     @property
@@ -100,13 +108,16 @@ class AiHandler:
             if self.azure:
                 model = 'azure/' + model
             messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
-            response = await acompletion(
-                model=model,
-                deployment_id=deployment_id,
-                messages=messages,
-                temperature=temperature,
-                force_timeout=get_settings().config.ai_timeout
-            )
+            kwargs = {
+                "model": model,
+                "deployment_id": deployment_id,
+                "messages": messages,
+                "temperature": temperature,
+                "force_timeout": get_settings().config.ai_timeout,
+            }
+            if self.aws_bedrock_client:
+                kwargs["aws_bedrock_client"] = self.aws_bedrock_client
+            response = await acompletion(**kwargs)
         except (APIError, Timeout, TryAgain) as e:
             get_logger().error("Error during OpenAI inference: ", e)
             raise

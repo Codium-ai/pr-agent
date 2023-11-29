@@ -328,6 +328,23 @@ Your [application default credentials](https://cloud.google.com/docs/authenticat
 
 If you do want to set explicit credentials then you can use the `GOOGLE_APPLICATION_CREDENTIALS` environment variable set to a path to a json credentials file.
 
+#### Amazon Bedrock
+
+To use Amazon Bedrock and its foundational models, add the below configuration:
+
+``` 
+[config] # in configuration.toml
+model = "anthropic.claude-v2"
+fallback_models="anthropic.claude-instant-v1"
+
+[aws] # in .secrets.toml
+bedrock_region = "us-east-1"
+```
+
+Note that you have to add access to foundational models before using them. Please refer to [this document](https://docs.aws.amazon.com/bedrock/latest/userguide/setting-up.html) for more details.
+
+AWS session is automatically authenticated from your environment, but you can also explicitly set `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables.
+
 ### Working with large PRs
 
 The default mode of CodiumAI is to have a single call per tool, using GPT-4, which has a token limit of 8000 tokens.
