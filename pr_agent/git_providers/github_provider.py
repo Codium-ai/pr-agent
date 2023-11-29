@@ -327,7 +327,8 @@ class GithubProvider(GitProvider):
 
     def remove_reaction(self, issue_comment_id: int, reaction_id: int) -> bool:
         try:
-            self.pr.get_issue_comment(issue_comment_id).delete_reaction(reaction_id)
+            if reaction_id:
+                self.pr.get_issue_comment(issue_comment_id).delete_reaction(reaction_id)
             return True
         except Exception as e:
             get_logger().exception(f"Failed to remove eyes reaction, error: {e}")

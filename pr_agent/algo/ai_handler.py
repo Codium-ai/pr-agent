@@ -109,11 +109,18 @@ class AiHandler:
                 )
             if self.azure:
                 model = 'azure/' + model
+
             system = get_settings().get("CONFIG.MODEL_SYSTEM_PREFIX", "") + system + \
                      get_settings().get("CONFIG.MODEL_SYSTEM_SUFFIX", "")
+            suffix = ''
+            yaml_start = '```yaml'
+            if user.endswith(yaml_start):
+                user = user[:-len(yaml_start)]
+                suffix = '\n' + yaml_start + '\n'
             user = get_settings().get("CONFIG.MODEL_USER_PREFIX", "") + user + \
-                   get_settings().get("CONFIG.MODEL_USER_SUFFIX", "")
+                   get_settings().get("CONFIG.MODEL_USER_SUFFIX", "") + suffix
             messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
+            stop = get_settings().get("CONFIG.MODEL_STOP", None)
             response = await acompletion(
                 model=model,
                 deployment_id=deployment_id,
@@ -121,6 +128,7 @@ class AiHandler:
                 temperature=temperature,
                 force_timeout=get_settings().config.ai_timeout,
                 api_base=self.api_base,
+                stop=stop,
             )
         except (APIError, TryAgain) as e:
             get_logger().error("Error during OpenAI inference: ", e)
@@ -134,6 +142,11 @@ class AiHandler:
         if response is None or len(response["choices"]) == 0:
             raise TryAgain
         resp = response["choices"][0]["message"]["content"]
+        if stop:
+            for stop_word in stop:
+                if resp.endswith(stop_word):
+                    resp = resp[:-len(stop_word)]
+                    break
         finish_reason = response["choices"][0]["finish_reason"]
         usage = response.get("usage")
         get_logger().info(
