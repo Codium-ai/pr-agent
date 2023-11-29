@@ -157,10 +157,11 @@ jobs:
           OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
-2. Add the following secret to your repository under `Settings > Secrets`:
+2. Add the following secret to your repository under `Settings > Secrets and variables > Actions > New repository secret > Add secret`:
 
 ```
-OPENAI_KEY: <your key>
+Name = OPENAI_KEY
+Secret = <your key>
 ```
 
 The GITHUB_TOKEN secret is automatically created by GitHub.
