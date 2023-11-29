@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+from typing import Union
 
 from pr_agent.agent.pr_agent import PRAgent
 from pr_agent.config_loader import get_settings
@@ -10,6 +11,14 @@ from pr_agent.log import get_logger
 from pr_agent.tools.pr_code_suggestions import PRCodeSuggestions
 from pr_agent.tools.pr_description import PRDescription
 from pr_agent.tools.pr_reviewer import PRReviewer
+
+
+def is_true(value: Union[str, bool]) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.lower() == 'true'
+    return False
 
 
 async def run_action():
@@ -66,13 +75,13 @@ async def run_action():
             pr_url = event_payload.get("pull_request", {}).get("url")
             if pr_url:
                 auto_review = get_settings().get('GITHUB_ACTION.AUTO_REVIEW', None)
-                if auto_review is None or (isinstance(auto_review, str) and auto_review.lower() == 'true'):
+                if auto_review is None or is_true(auto_review):
                     await PRReviewer(pr_url).run()
                 auto_describe = get_settings().get('GITHUB_ACTION.AUTO_DESCRIBE', None)
-                if isinstance(auto_describe, str) and auto_describe.lower() == 'true':
+                if is_true(auto_describe):
                     await PRDescription(pr_url).run()
                 auto_improve = get_settings().get('GITHUB_ACTION.AUTO_IMPROVE', None)
-                if isinstance(auto_improve, str) and auto_improve.lower() == 'true':
+                if is_true(auto_improve):
                     await PRCodeSuggestions(pr_url).run()
 
     # Handle issue comment event
