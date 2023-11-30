@@ -455,6 +455,6 @@ docker push codiumai/pr-agent:bitbucket_server_webhook  # Push to your Docker re
 Navigate to `Projects` or `Repositories`, `Settings`, `Webhooks`, `Create Webhook`.
 Fill the name and URL, Authentication None select the Pull Request Opened checkbox to receive that event as webhook.
 
-The url should end with `/webhook`, for example: https://domain.com/webhook
+The URL should end with `/webhook`, for example: https://domain.com/webhook
 
 =======
