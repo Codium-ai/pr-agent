@@ -54,6 +54,7 @@ class PRReviewer:
             "description": self.git_provider.get_pr_description(),
             "language": self.main_language,
             "diff": "",  # empty diff for initial calculation
+            "require_pr_analysis": get_settings().pr_reviewer.require_pr_analysis_review,
             "require_score": get_settings().pr_reviewer.require_score_review,
             "require_tests": get_settings().pr_reviewer.require_tests_review,
             "require_security": get_settings().pr_reviewer.require_security_review,
@@ -119,7 +120,10 @@ class PRReviewer:
                 previous_review_comment = self._get_previous_review_comment()
 
                 # publish the review
-                if get_settings().pr_reviewer.persistent_comment and not self.incremental.is_incremental:
+                if ( get_settings().pr_reviewer.persistent_comment
+                and get_settings().pr_reviewer.require_pr_analysis_review
+                and not self.incremental.is_incremental
+                ):
                     self.git_provider.publish_persistent_comment(pr_comment,
                                                                  initial_header="## PR Analysis",
                                                                  update_header=True)

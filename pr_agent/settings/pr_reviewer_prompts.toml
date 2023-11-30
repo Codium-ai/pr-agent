@@ -43,6 +43,7 @@ Extra instructions from the user:
 
 You must use the following YAML schema to format your answer:
 ```yaml
+{%- if require_pr_analysis %}
 PR Analysis:
   Main theme:
     type: string
@@ -59,6 +60,7 @@ PR Analysis:
       - Enhancement
       - Documentation
       - Other
+{%- endif %}
 {%- if require_score %}
   Score:
     type: int
