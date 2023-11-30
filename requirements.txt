@@ -2,6 +2,7 @@ aiohttp==3.8.4
 atlassian-python-api==3.39.0
 azure-devops==7.1.0b3
 boto3==1.33.1
+dynaconf==3.1.12
 fastapi==0.99.0
 GitPython==3.1.32
 google-cloud-aiplatform==1.35.0
