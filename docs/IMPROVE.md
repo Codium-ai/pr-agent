@@ -44,7 +44,9 @@ For example:
 
 <kbd><img src=./../pics/improved_summerize_open.png width="768"></kbd>
 
-#### A note on code suggestions quality
+___
+
+### A note on code suggestions quality
 
 - With the current level of AI for code (GPT-4), mistakes can happen. Not all the suggestions will be perfect, and a user should not accept all of them automatically.
 
