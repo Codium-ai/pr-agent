@@ -18,7 +18,7 @@ Under the section 'pr_reviewer', the [configuration file](./../pr_agent/settings
 
 #### enable\\disable features
 - `require_focused_review`: if set to true, the tool will add a section - 'is the PR a focused one'. Default is false.
-- `require_pr_analysis_review`: if set to trye, the tool will add an initial comment with an alalysis and summary of the PR. Default is true.
+- `require_pr_analysis_review`: if set to true, the tool will add an initial comment with an analysis and summary of the PR. Default is true.
 - `require_score_review`: if set to true, the tool will add a section that scores the PR. Default is false.
 - `require_tests_review`: if set to true, the tool will add a section that checks if the PR contains tests. Default is true.
 - `require_security_review`: if set to true, the tool will add a section that checks if the PR contains security issues. Default is true.
