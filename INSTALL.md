@@ -157,10 +157,11 @@ jobs:
           OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
-2. Add the following secret to your repository under `Settings > Secrets`:
+2. Add the following secret to your repository under `Settings > Secrets and variables > Actions > New repository secret > Add secret`:
 
 ```
-OPENAI_KEY: <your key>
+Name = OPENAI_KEY
+Secret = <your key>
 ```
 
 The GITHUB_TOKEN secret is automatically created by GitHub.
@@ -454,6 +455,6 @@ docker push codiumai/pr-agent:bitbucket_server_webhook  # Push to your Docker re
 Navigate to `Projects` or `Repositories`, `Settings`, `Webhooks`, `Create Webhook`.
 Fill the name and URL, Authentication None select the Pull Request Opened checkbox to receive that event as webhook.
 
-The url should be ends with `/webhook`, example: https://domain.com/webhook
+The URL should end with `/webhook`, for example: https://domain.com/webhook
 
 =======
