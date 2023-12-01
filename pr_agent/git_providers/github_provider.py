@@ -60,6 +60,8 @@ class GithubProvider(GitProvider):
                     get_logger().info(f"Skipping merge commit {commit.commit.message}")
                     continue
                 self.file_set.update({file.filename: file for file in commit.files})
+        else:
+            raise ValueError("No previous review found")
 
     def get_commit_range(self):
         last_review_time = self.previous_review.created_at
