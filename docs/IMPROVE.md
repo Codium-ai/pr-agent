@@ -7,8 +7,8 @@ It can be invoked manually by commenting on any PR:
 ```
 For example:
 
-<kbd><img src=./../pics/improve_comment.png width="768"></kbd>
-<kbd><img src=./../pics/improve.png width="768"></kbd>
+<kbd><img src=https://codium.ai/images/pr_agent/improve_comment.png width="768"></kbd>
+<kbd><img src=https://codium.ai/images/pr_agent/improve.png width="768"></kbd>
 
 The `improve` tool can also be triggered automatically every time a new PR is opened. See examples for automatic triggers for [GitHub App](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#github-app-automatic-tools) and [GitHub Action](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#working-with-github-action)
 
@@ -42,7 +42,7 @@ For example:
 
 `/improve --pr_code_suggestions.summarize=true`
 
-<kbd><img src=./../pics/improved_summerize_open.png width="768"></kbd>
+<kbd><img src=https://codium.ai/images/pr_agent/improved_summerize_open.png width="768"></kbd>
 
 ___
 

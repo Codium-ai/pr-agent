@@ -7,8 +7,8 @@ It can be invoked manually by commenting on any PR:
 ```
 For example:
 
-<kbd><img src=./../pics/update_changelog_comment.png width="768"></kbd>
-<kbd><img src=./../pics/update_changelog.png width="768"></kbd>
+<kbd><img src=https://codium.ai/images/pr_agent/update_changelog_comment.png width="768"></kbd>
+<kbd><img src=https://codium.ai/images/pr_agent/update_changelog.png width="768"></kbd>
 
 
 ### Configuration options

@@ -9,10 +9,10 @@ For example:
 
 If we wish to add detect changes to SQL queries in a given PR, we can add the following custom label along with its description:
 
-<kbd><img src=./../pics/custom_labels_list.png width="768"></kbd>
+<kbd><img src=https://codium.ai/images/pr_agent/custom_labels_list.png width="768"></kbd>
 
 When running the `generate_labels` tool on a PR that includes changes in SQL queries, it will automatically suggest the custom label:
-<kbd><img src=./../pics/custom_label_published.png width="768"></kbd>
+<kbd><img src=https://codium.ai/images/pr_agent/custom_label_published.png width="768"></kbd>
 
 ### How to enable custom labels
 

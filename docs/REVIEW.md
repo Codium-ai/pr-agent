@@ -7,8 +7,8 @@ It can be invoked manually by commenting on any PR:
 ```
 For example:
 
-<kbd><img src=./../pics/review_comment.png width="768"></kbd>
-<kbd><img src=./../pics/review.png width="768"></kbd>
+<kbd><img src=https://codium.ai/images/pr_agent/review_comment.png width="768"></kbd>
+<kbd><img src=https://codium.ai/images/pr_agent/review.png width="768"></kbd>
 
 The `review` tool can also be triggered automatically every time a new PR is opened. See examples for automatic triggers for [GitHub App](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#github-app-automatic-tools) and [GitHub Action](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#working-with-github-action)
 
@@ -40,7 +40,7 @@ For an incremental review, which only considers changes since the last PR-Agent 
 ```
 Note that the incremental mode is only available for GitHub.
 
-<kbd><img src=./../pics/incremental_review.png width="768"></kbd>
+<kbd><img src=https://codium.ai/images/pr_agent/incremental_review.png width="768"></kbd>
 
 Under the section 'pr_reviewer', the [configuration file](./../pr_agent/settings/configuration.toml#L16) contains options to customize the 'review -i' tool.  
 These configurations can be used to control the rate at which the incremental review tool will create new review comments when invoked automatically, to prevent making too much noise in the PR.
@@ -63,9 +63,9 @@ By invoking:
 ```
 The tool will first ask the author questions about the PR, and will guide the review based on his answers.
 
-<kbd><img src=./../pics/reflection_questions.png width="768"></kbd>
-<kbd><img src=./../pics/reflection_answers.png width="768"></kbd>
-<kbd><img src=./../pics/reflection_insights.png width="768"></kbd>
+<kbd><img src=https://codium.ai/images/pr_agent/reflection_questions.png width="768"></kbd>
+<kbd><img src=https://codium.ai/images/pr_agent/reflection_answers.png width="768"></kbd>
+<kbd><img src=https://codium.ai/images/pr_agent/reflection_insights.png width="768"></kbd>
 
 
 #### A note on code suggestions quality
