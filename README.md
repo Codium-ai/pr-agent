@@ -2,8 +2,13 @@
 
 <div align="center">
 
-<img src="https://codium.ai/images/pr_agent/logo-dark.png#gh-dark-mode-only" width="330"/>
-<img src="https://codium.ai/images/pr_agent/logo-light.png#gh-light-mode-only" width="330"/><br/>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://codium.ai/images/pr_agent/logo-dark.png" width="330">
+  <source media="(prefers-color-scheme: light)" srcset="https://codium.ai/images/pr_agent/logo-light.png" width="330">
+  <img alt="logo">
+</picture>
+<br/>
 Making pull requests less painful with an AI agent
 </div>
 
