@@ -28,6 +28,7 @@ Under the section 'pr_description', the [configuration file](./../pr_agent/setti
 - `extra_instructions`: Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".
 - To enable `custom labels`, apply the configuration changes described [here](./GENERATE_CUSTOM_LABELS.md#configuration-changes)
 - `enable_pr_type`: if set to false, it will not show the `PR type` as a text value in the description content. Default is true.
+- `final_update_message`: if set to true, it will add a comment message [`PR Description updated to latest commit...`](https://github.com/Codium-ai/pr-agent/pull/499#issuecomment-1837412176) after finishing calling `/describe`. Default is true.
   
 ### Markers template
 
