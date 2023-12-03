@@ -2,8 +2,13 @@
 
 <div align="center">
 
-<img src="./pics/logo-dark.png#gh-dark-mode-only" width="330"/>
-<img src="./pics/logo-light.png#gh-light-mode-only" width="330"/><br/>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://codium.ai/images/pr_agent/logo-dark.png" width="330">
+  <source media="(prefers-color-scheme: light)" srcset="https://codium.ai/images/pr_agent/logo-light.png" width="330">
+  <img alt="logo">
+</picture>
+<br/>
 Making pull requests less painful with an AI agent
 </div>
 
@@ -174,7 +179,7 @@ There are several ways to use PR-Agent:
 
 The following diagram illustrates PR-Agent tools and their flow:
 
-![PR-Agent Tools](https://www.codium.ai/wp-content/uploads/2023/10/codiumai-diagram-v5.png)
+![PR-Agent Tools](https://codium.ai/images/pr_agent/diagram-v0.9.png)
 
 Check out the [PR Compression strategy](./PR_COMPRESSION.md) page for more details on how we convert a code diff to a manageable LLM prompt
 
@@ -220,8 +225,11 @@ See the [Release notes](./RELEASE_NOTES.md) for updates on the latest changes.
 
 ## Data Privacy
 
-If you use self-host PR-Agent, e.g. via CLI running on your computer, with your OpenAI API key, it is between you and OpenAI. You can read their API data privacy policy here:
+If you use a self-hosted PR-Agent with your OpenAI API key, it is between you and OpenAI. You can read their API data privacy policy here:
 https://openai.com/enterprise-privacy
+
+When using a PR-Agent app hosted by CodiumAI, we will not store any of your data, nor will we used it for training.
+You will also benefit from an OpenAI account with zero data retention.
 
 ## Links
 

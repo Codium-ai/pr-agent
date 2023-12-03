@@ -39,4 +39,4 @@ We use [tiktoken](https://github.com/openai/tiktoken) to tokenize the patches af
 4. If we haven't reached the max token length, add the `deleted files` to the prompt until the prompt reaches the max token length (hard stop), skip the rest of the patches.
 
 ### Example
-![](https://codium.ai/images/git_patch_logic.png)
+<kbd><img src=https://codium.ai/images/git_patch_logic.png width="768"></kbd>

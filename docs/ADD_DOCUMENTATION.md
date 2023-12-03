@@ -7,8 +7,8 @@ It can be invoked manually by commenting on any PR:
 ```
 For example:
 
-<kbd><img src=./../pics/add_docs_comment.png width="768"></kbd>
-<kbd><img src=./../pics/add_docs.png width="768"></kbd>
+<kbd><img src=https://codium.ai/images/pr_agent/add_docs_comment.png width="768"></kbd>
+<kbd><img src=https://codium.ai/images/pr_agent/add_docs.png width="768"></kbd>
 
 ### Configuration options
  - `docs_style`: The exact style of the documentation (for python docstring). you can choose between: `google`, `numpy`, `sphinx`, `restructuredtext`, `plain`. Default is `sphinx`.
