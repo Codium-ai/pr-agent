@@ -46,6 +46,7 @@ keep_original_user_title=false
 use_bullet_points=true
 extra_instructions = ""
 enable_pr_type=true
+final_update_message = true
 
 # markers
 use_description_markers=false

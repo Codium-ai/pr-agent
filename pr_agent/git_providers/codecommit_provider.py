@@ -61,6 +61,7 @@ class CodeCommitProvider(GitProvider):
         self.pr = None
         self.diff_files = None
         self.git_files = None
+        self.pr_url = pr_url
         if pr_url:
             self.set_pr(pr_url)
 

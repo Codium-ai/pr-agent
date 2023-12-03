@@ -31,6 +31,7 @@ class GithubProvider(GitProvider):
         self.diff_files = None
         self.git_files = None
         self.incremental = incremental
+        self.pr_url = pr_url
         if pr_url and 'pull' in pr_url:
             self.set_pr(pr_url)
             self.last_commit_id = list(self.pr.get_commits())[-1]
