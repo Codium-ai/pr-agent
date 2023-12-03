@@ -233,7 +233,7 @@ To use a different model than the default (GPT-4), you need to edit [configurati
 For models and environments not from OPENAI, you might need to provide additional keys and other parameters. See below for instructions.
 
 #### Azure
-To use Azure, set in your .secrets.toml:
+To use Azure, set in your `.secrets.toml` (working from CLI), or in the GitHub `Settings > Secrets and variables` (working from GitHub App or GitHub Action):
 ```
 api_key = "" # your azure api key
 api_type = "azure"
@@ -242,12 +242,11 @@ api_base = ""  # The base URL for your Azure OpenAI resource. e.g. "https://<you
 openai.deployment_id = ""  # The deployment name you chose when you deployed the engine
 ```
 
-and
+and set in your configuration file:
 ```
 [config]
 model="" # the OpenAI model you've deployed on Azure (e.g. gpt-3.5-turbo)
 ```
-in the configuration.toml
 
 #### Huggingface
 

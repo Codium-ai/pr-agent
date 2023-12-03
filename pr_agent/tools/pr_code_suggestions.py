@@ -251,22 +251,36 @@ class PRCodeSuggestions:
     def publish_summarizes_suggestions(self, data: Dict):
         try:
             data_markdown = "## PR Code Suggestions\n\n"
+
+            language_extension_map_org = get_settings().language_extension_map_org
+            extension_to_language = {}
+            for language, extensions in language_extension_map_org.items():
+                for ext in extensions:
+                    extension_to_language[ext] = language
+
             for s in data['Code suggestions']:
-                code_snippet_link = self.git_provider.get_line_link(s['relevant file'], s['relevant lines start'],
-                                                                    s['relevant lines end'])
-                data_markdown += f"\n💡 Suggestion:\n\n**{s['suggestion content']}**\n\n"
-                if code_snippet_link:
-                    data_markdown += f" File: [{s['relevant file']} ({s['relevant lines start']}-{s['relevant lines end']})]({code_snippet_link})\n\n"
-                else:
-                    data_markdown += f"File: {s['relevant file']} ({s['relevant lines start']}-{s['relevant lines end']})\n\n"
-                if self.git_provider.is_supported("gfm_markdown"):
-                    data_markdown += "<details> <summary> Example code:</summary>\n\n"
-                    data_markdown += f"___\n\n"
-                data_markdown += f"Existing code:\n```{self.main_language}\n{s['existing code']}\n```\n"
-                data_markdown += f"Improved code:\n```{self.main_language}\n{s['improved code']}\n```\n"
-                if self.git_provider.is_supported("gfm_markdown"):
-                    data_markdown += "</details>\n"
-                data_markdown += "\n___\n\n"
+                try:
+                    extension_s = s['relevant file'].rsplit('.')[-1]
+                    code_snippet_link = self.git_provider.get_line_link(s['relevant file'], s['relevant lines start'],
+                                                                        s['relevant lines end'])
+                    data_markdown += f"\n💡 Suggestion:\n\n**{s['suggestion content']}**\n\n"
+                    if code_snippet_link:
+                        data_markdown += f" File: [{s['relevant file']} ({s['relevant lines start']}-{s['relevant lines end']})]({code_snippet_link})\n\n"
+                    else:
+                        data_markdown += f"File: {s['relevant file']} ({s['relevant lines start']}-{s['relevant lines end']})\n\n"
+                    if self.git_provider.is_supported("gfm_markdown"):
+                        data_markdown += "<details> <summary> Example code:</summary>\n\n"
+                        data_markdown += f"___\n\n"
+                    language_name = "python"
+                    if extension_s and (extension_s in extension_to_language):
+                        language_name = extension_to_language[extension_s]
+                    data_markdown += f"Existing code:\n```{language_name}\n{s['existing code']}\n```\n"
+                    data_markdown += f"Improved code:\n```{language_name}\n{s['improved code']}\n```\n"
+                    if self.git_provider.is_supported("gfm_markdown"):
+                        data_markdown += "</details>\n"
+                    data_markdown += "\n___\n\n"
+                except Exception as e:
+                    get_logger().error(f"Could not parse suggestion: {s}, error: {e}")
             self.git_provider.publish_comment(data_markdown)
         except Exception as e:
             get_logger().info(f"Failed to publish summarized code suggestions, error: {e}")
