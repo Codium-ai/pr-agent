@@ -2,10 +2,10 @@
 system="""
 """
 
-user="""You are given a list of code suggestions to improve a git Pull Request (PR):
-'
+user="""You are given a list of code suggestions to improve a Git Pull Request (PR):
+======
 {{ suggestion_str|trim }}
-'
+======
 
 Your task is to sort the code suggestions by their order of importance, and return a list with sorting order.
 The sorting order is a list of pairs, where each pair contains the index of the suggestion in the original list.
