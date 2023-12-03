@@ -192,7 +192,7 @@ class GerritProvider(GitProvider):
         )
         self.repo = Repo(self.repo_path)
         assert self.repo
-
+        self.pr_url = base_url
         self.pr = PullRequestMimic(self.get_pr_title(), self.get_diff_files())
 
     def get_pr_title(self):

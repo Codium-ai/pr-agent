@@ -98,8 +98,14 @@ class PRDescription:
                     if get_settings().pr_description.publish_labels and self.git_provider.is_supported("get_labels"):
                         current_labels = self.git_provider.get_labels()
                         user_labels = get_user_labels(current_labels)
-
                         self.git_provider.publish_labels(pr_labels + user_labels)
+
+                    if (get_settings().pr_description.final_update_message and
+                            hasattr(self.git_provider, 'pr_url') and self.git_provider.pr_url):
+                        latest_commit_url = self.git_provider.get_latest_commit_url()
+                        if latest_commit_url:
+                            self.git_provider.publish_comment(
+                                f"**[PR Description]({self.git_provider.pr_url})** updated to latest commit ({latest_commit_url})")
                 self.git_provider.remove_initial_comment()
         except Exception as e:
             get_logger().error(f"Error generating PR description {self.pr_id}: {e}")
