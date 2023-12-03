@@ -8,7 +8,7 @@ It can be invoked manually by commenting on any PR:
 For example:
 
 <kbd><img src=./../pics/review_comment.png width="768"></kbd>
-<kbd><img src=./../pics/describe.png width="768"></kbd>
+<kbd><img src=./../pics/review.png width="768"></kbd>
 
 The `review` tool can also be triggered automatically every time a new PR is opened. See examples for automatic triggers for [GitHub App](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#github-app-automatic-tools) and [GitHub Action](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#working-with-github-action)
 
