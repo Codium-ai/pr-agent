@@ -383,7 +383,11 @@ def get_user_labels(current_labels: List[str] = None):
 
 def get_max_tokens(model):
     settings = get_settings()
-    max_tokens_model = MAX_TOKENS[model]
+    if model in MAX_TOKENS:
+        max_tokens_model = MAX_TOKENS[model]
+    else:
+        raise Exception(f"MAX_TOKENS must be set for model {model} in ./pr_agent/algo/__init__.py")
+
     if settings.config.max_model_tokens:
         max_tokens_model = min(settings.config.max_model_tokens, max_tokens_model)
         # get_logger().debug(f"limiting max tokens to {max_tokens_model}")
