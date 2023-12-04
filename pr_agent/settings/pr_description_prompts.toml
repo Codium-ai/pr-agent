@@ -39,8 +39,8 @@ class FileWalkthrough(BaseModel):
 
 {%- if enable_semantic_files_types %}
 class SemanticFileLabels(BaseModel):
-    label: str = Field(description="a semantic label that represents a type of code changes that occurred in the PR. Possible values (partial list): 'bug fix', 'tests', 'enhancement', 'documentation', 'error handling', 'configuration', 'logging', 'dependencies', 'new feature', ...")
-    files: List[str] = Field(description="a list of file names related to the chosen semantic label. A file may appear in multiple labels. Present the file full path, and nothing else.")
+    label: str = Field(description="a semantic label that represents a type of code changes that occurred in the PR. Possible values (partial list): 'bug fix', 'tests', 'enhancement', 'documentation', 'error handling', 'configuration changes', 'logging', 'dependencies', 'new feature', ...")
+    files: List[str] = Field(description="a list of file names related to the chosen semantic label. A file may appear in multiple labels. Present the file full path, and nothing else. Make sure the semantic label properly describes the type of changes in each file")
 {%- endif %}
 
 Class PRDescription(BaseModel):
