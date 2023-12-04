@@ -45,6 +45,8 @@ class PRDescription:
             "commit_messages_str": self.git_provider.get_commit_messages(),
             "enable_custom_labels": get_settings().config.enable_custom_labels,
             "custom_labels_class": "",  # will be filled if necessary in 'set_custom_labels' function
+            "enable_file_walkthrough": get_settings().pr_description.enable_file_walkthrough,
+            "enable_semantic_files_types": get_settings().pr_description.enable_semantic_files_types,
         }
 
         self.user_description = self.git_provider.get_user_description()
@@ -257,7 +259,10 @@ class PRDescription:
         # except for the items containing the word 'walkthrough'
         pr_body = ""
         for idx, (key, value) in enumerate(self.data.items()):
-            pr_body += f"## {key}:\n"
+            key_publish = key.rstrip(':').replace("_", " ").capitalize()
+            if key == 'pr_files_labels':
+                key_publish = 'PR Files Labels'
+            pr_body += f"## {key_publish}\n"
             if 'walkthrough' in key.lower():
                 # for filename, description in value.items():
                 if self.git_provider.is_supported("gfm_markdown"):
@@ -268,6 +273,27 @@ class PRDescription:
                     pr_body += f'- `{filename}`: {description}\n'
                 if self.git_provider.is_supported("gfm_markdown"):
                     pr_body +="</details>\n"
+            elif 'pr_files_labels' in key.lower():
+                pr_body += """\n| | Relevant Files """
+                for i in range(60):
+                    pr_body += "&nbsp; "
+                pr_body += """|\n|-----------|-------------|\n"""
+                for semantic_label in value:
+                    # for filename, description in value.items():
+                    if self.git_provider.is_supported("gfm_markdown"):
+                        # pr_body += f"<details> <summary>{semantic_label['label']}</summary>\n\n"
+                        pr_body += f"| **{semantic_label['label']}** | <details><summary>files:</summary><ul>"
+
+                    for file in semantic_label['files']:
+                        filename = file.replace("'", "`")
+                        # description = file['changes_in_file']
+                        # pr_body += f'- `{filename}`\n'
+                        if self.git_provider.is_supported("gfm_markdown"):
+                            pr_body += f"<li>{filename}</li>"
+                        else:
+                            pr_body += f'- `{filename}`\n'
+                    if self.git_provider.is_supported("gfm_markdown"):
+                        pr_body += "</ul></details>|\n"
             else:
                 # if the value is a list, join its items by comma
                 if type(value) == list:
