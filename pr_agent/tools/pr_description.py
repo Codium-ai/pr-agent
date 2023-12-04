@@ -261,7 +261,7 @@ class PRDescription:
         for idx, (key, value) in enumerate(self.data.items()):
             key_publish = key.rstrip(':').replace("_", " ").capitalize()
             if key == 'pr_files_labels':
-                key_publish = 'PR Files Labels'
+                key_publish = 'PR Changes Analysis'
             pr_body += f"## {key_publish}\n"
             if 'walkthrough' in key.lower():
                 # for filename, description in value.items():
@@ -279,9 +279,10 @@ class PRDescription:
                 pr_body += """|\n|-----------|-------------|\n"""
                 for semantic_label in value:
                     # for filename, description in value.items():
+                    s_label = semantic_label['label'].strip("'").strip('"')
                     if self.git_provider.is_supported("gfm_markdown"):
                         # pr_body += f"<details> <summary>{semantic_label['label']}</summary>\n\n"
-                        pr_body += f"| **{semantic_label['label']}** | <details><summary>files:</summary><ul>"
+                        pr_body += f"| **{s_label}** | <details><summary>files:</summary><ul>"
 
                     for file in semantic_label['files']:
                         filename = file.replace("'", "`")
@@ -290,6 +291,7 @@ class PRDescription:
 
                         # try to add line numbers link to code suggestions
                         if hasattr(self.git_provider, 'get_line_link'):
+                            filename = filename.strip()
                             link = self.git_provider.get_line_link(filename, relevant_line_start=-1)
                             if link:
                                 filename = f"[{filename}]({link})"
