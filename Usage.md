@@ -262,7 +262,7 @@ MAX_TOKENS = {
 e.g.
 MAX_TOKENS={
     ...,
-    "llama2": 4096
+    "ollama/llama2": 4096
 }
 
 
@@ -271,6 +271,8 @@ model = "ollama/llama2"
 
 [ollama] # in .secrets.toml
 api_base = ... # the base url for your huggingface inference endpoint
+# e.g. if running Ollama locally, you may use:
+api_base = "http://localhost:11434/"
 ```
 
 **Inference Endpoints**
