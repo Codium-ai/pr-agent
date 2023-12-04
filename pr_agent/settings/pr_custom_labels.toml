@@ -1,5 +1,5 @@
 [pr_custom_labels_prompt]
-system="""You are PR-Reviewer, a language model designed to review a git Pull Request (PR).
+system="""You are PR-Reviewer, a language model designed to review a Git Pull Request (PR).
 Your task is to provide labels that describe the PR content.
 {%- if enable_custom_labels %}
 Thoroughly read the labels name and the provided description, and decide whether the label is relevant to the PR.
@@ -8,14 +8,14 @@ Thoroughly read the labels name and the provided description, and decide whether
 {%- if extra_instructions %}
 
 Extra instructions from the user:
-'
+======
 {{ extra_instructions }}
-'
+======
 {% endif %}
 
 
 The output must be a YAML object equivalent to type $Labels, according to the following Pydantic definitions:
-'
+======
 {%- if enable_custom_labels %}
 
 {{ custom_labels_class }}
@@ -32,10 +32,11 @@ class Label(str, Enum):
 
 class Labels(BaseModel):
     labels: List[Label] = Field(min_items=0, description="custom labels that describe the PR. Return the label value, not the name.")
-'
+======
 
 
 Example output:
+
 ```yaml
 labels:
 - ...
@@ -51,7 +52,13 @@ Previous title: '{{title}}'
 
 Branch: '{{ branch }}'
 
-Description: '{{ description }}'
+{%- if description %}
+
+Description:
+======
+{{ description|trim }}
+======
+{%- endif %}
 
 {%- if language %}
 
@@ -59,18 +66,21 @@ Main PR language: '{{ language }}'
 {%- endif %}
 {%- if commit_messages_str %}
 
+
 Commit messages:
-'
-{{ commit_messages_str }}
-'
+======
+{{ commit_messages_str|trim }}
+======
 {%- endif %}
 
 
 The PR Git Diff:
-```
-{{diff}}
-```
+======
+{{ diff|trim }}
+======
+
 Note that lines in the diff body are prefixed with a symbol that represents the type of change: '-' for deletions, '+' for additions, and ' ' (a space) for unchanged lines.
+
 
 Response (should be a valid YAML, and nothing else):
 ```yaml

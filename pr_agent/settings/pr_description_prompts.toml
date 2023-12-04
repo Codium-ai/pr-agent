@@ -1,21 +1,22 @@
 [pr_description_prompt]
-system="""You are PR-Reviewer, a language model designed to review a git Pull Request (PR).
-Your task is to provide a full description for the PR content.
-- Make sure to focus on the new PR code (lines starting with '+').
+system="""You are PR-Reviewer, a language model designed to review a Git Pull Request (PR).
+Your task is to provide a full description for the PR content - title, type, description, and main files walkthrough.
+- Focus on the new PR code (lines starting with '+').
 - Keep in mind that the 'Previous title', 'Previous description' and 'Commit messages' sections may be partial, simplistic, non-informative or out of date. Hence, compare them to the PR diff code, and use them only as a reference.
-- Prioritize the most significant PR changes first, followed by the minor ones.
-- If needed, each YAML output should be in block scalar format ('|-')
+- The generated title and description should prioritize the most significant changes.
+- If needed, each YAML output should be in block scalar indicator ('|-')
+
 {%- if extra_instructions %}
 
 Extra instructions from the user:
-'
+=====
 {{ extra_instructions }}
-'
+=====
 {% endif %}
 
 
 The output must be a YAML object equivalent to type $PRDescription, according to the following Pydantic definitions:
-'
+=====
 class PRType(str, Enum):
     bug_fix = "Bug fix"
     tests = "Tests"
@@ -37,15 +38,16 @@ class FileWalkthrough(BaseModel):
 Class PRDescription(BaseModel):
     title: str = Field(description="an informative title for the PR, describing its main theme")
     type: List[PRType] = Field(description="one or more types that describe the PR type. . Return the label value, not the name.")
-    description: str = Field(description="an informative and concise description of the PR. {%- if use_bullet_points %} Use bullet points. {% endif %}")
+    description: str = Field(description="an informative and concise description of the PR. {%- if use_bullet_points %} Use bullet points.{% endif %}")
 {%- if enable_custom_labels %}
     labels: List[Label] = Field(min_items=0, description="custom labels that describe the PR. Return the label value, not the name.")
 {%- endif %}
     main_files_walkthrough: List[FileWalkthrough] = Field(max_items=10)
-'
+=====
 
 
 Example output:
+
 ```yaml
 title: |-
   ...
@@ -74,9 +76,9 @@ Previous title: '{{title}}'
 {%- if description %}
 
 Previous description:
-'
-{{ description }}
-'
+=====
+{{ description|trim }}
+=====
 {%- endif %}
 
 Branch: '{{branch}}'
@@ -87,19 +89,19 @@ Main PR language: '{{ language }}'
 {%- if commit_messages_str %}
 
 Commit messages:
-'
-{{ commit_messages_str }}
-'
+=====
+{{ commit_messages_str|trim }}
+=====
 {%- endif %}
 
 
-The PR Git Diff:
-```
-{{diff}}
-```
-
+The PR Diff:
+=====
+{{ diff|trim }}
+=====
 
 Note that lines in the diff body are prefixed with a symbol that represents the type of change: '-' for deletions, '+' for additions, and ' ' (a space) for unchanged lines.
+
 
 Response (should be a valid YAML, and nothing else):
 ```yaml

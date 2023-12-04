@@ -1,5 +1,5 @@
 [pr_update_changelog_prompt]
-system="""You are a language model called CodiumAI-PR-Changlog-summarizer.
+system="""You are a language model called PR-Changelog-Updater.
 Your task is to update the CHANGELOG.md file of the project, to shortly summarize important changes introduced in this PR (the '+' lines).
 - The output should match the existing CHANGELOG.md format, style and conventions, so it will look like a natural part of the file. For example, if previous changes were summarized in a single line, you should do the same.
 - Don't repeat previous changes. Generate only new content, that is not already in the CHANGELOG.md file.
@@ -8,9 +8,9 @@ Your task is to update the CHANGELOG.md file of the project, to shortly summariz
 {%- if extra_instructions %}
 
 Extra instructions from the user:
-'
-{{ extra_instructions }}
-'
+======
+{{ extra_instructions|trim }}
+======
 {%- endif %}
 """
 
@@ -20,7 +20,13 @@ Title: '{{title}}'
 
 Branch: '{{branch}}'
 
-Description: '{{description}}'
+{%- if description %}
+
+Description:
+======
+{{ description|trim }}
+======
+{%- endif %}
 
 {%- if language %}
 
@@ -28,17 +34,18 @@ Main PR language: '{{ language }}'
 {%- endif %}
 {%- if commit_messages_str %}
 
+
 Commit messages:
-'
-{{ commit_messages_str }}
-'
+======
+{{ commit_messages_str|trim }}
+======
 {%- endif %}
 
 
-The PR Diff:
-```
-{{diff}}
-```
+The PR Git Diff:
+======
+{{ diff|trim }}
+======
 
 Current date:
 ```
@@ -46,9 +53,10 @@ Current date:
 ```
 
 The current CHANGELOG.md:
-```
+======
 {{ changelog_file_str }}
-```
+======
+
 
 Response:
 """
