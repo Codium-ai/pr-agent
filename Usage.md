@@ -6,6 +6,7 @@
 - [Online usage](#online-usage)
 - [Working with GitHub App](#working-with-github-app)
 - [Working with GitHub Action](#working-with-github-action)
+- [Working with BitBucket App](#working-with-bitbucket-self-hosted-app)
 - [Changing a model](#changing-a-model)
 - [Working with large PRs](#working-with-large-prs)
 - [Appendix - additional configurations walkthrough](#appendix---additional-configurations-walkthrough)
@@ -225,6 +226,18 @@ For example, you can set an environment variable: `pr_description.add_original_u
 add_original_user_description = false
 ```
 
+### Working with BitBucket Self-Hosted App
+Similar to GitHub app, when running PR-Agent from BitBucket App, the default [configuration file](pr_agent/settings/configuration.toml) from a pre-built docker will be initially loaded.
+
+By uploading a local `.pr_agent.toml` file to the root of the repo's main branch, you can edit and customize any configuration parameter. Note that you need to upload `.pr_agent.toml` prior to creating a PR, in order for the configuration to take effect.
+
+For example, if your local `.pr_agent.toml` file contains:
+```
+[pr_reviewer]
+inline_code_comments = true
+```
+
+Each time you invoke a `/review` tool, it will use inline code comments.
 
 ### Changing a model
 
