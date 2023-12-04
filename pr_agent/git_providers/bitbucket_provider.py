@@ -229,7 +229,10 @@ class BitbucketProvider(GitProvider):
         return response
 
     def get_line_link(self, relevant_file: str, relevant_line_start: int, relevant_line_end: int = None) -> str:
-        link = f"{self.pr_url}/#L{relevant_file}T{relevant_line_start}"
+        if relevant_line_start == -1:
+            link = f"{self.pr_url}/#L{relevant_file}"
+        else:
+            link = f"{self.pr_url}/#L{relevant_file}T{relevant_line_start}"
         return link
 
     def generate_link_to_relevant_line_number(self, suggestion) -> str:

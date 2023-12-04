@@ -275,8 +275,7 @@ class PRDescription:
                     pr_body +="</details>\n"
             elif 'pr_files_labels' in key.lower():
                 pr_body += """\n| | Relevant Files """
-                for i in range(60):
-                    pr_body += "&nbsp; "
+                pr_body += "&nbsp; " * 60
                 pr_body += """|\n|-----------|-------------|\n"""
                 for semantic_label in value:
                     # for filename, description in value.items():
@@ -288,6 +287,12 @@ class PRDescription:
                         filename = file.replace("'", "`")
                         # description = file['changes_in_file']
                         # pr_body += f'- `{filename}`\n'
+
+                        # try to add line numbers link to code suggestions
+                        if hasattr(self.git_provider, 'get_line_link'):
+                            link = self.git_provider.get_line_link(filename, relevant_line_start=-1)
+                            if link:
+                                filename = f"[{filename}]({link})"
                         if self.git_provider.is_supported("gfm_markdown"):
                             pr_body += f"<li>{filename}</li>"
                         else:
@@ -296,7 +301,7 @@ class PRDescription:
                         pr_body += "</ul></details>|\n"
             else:
                 # if the value is a list, join its items by comma
-                if type(value) == list:
+                if isinstance(value, list):
                     value = ', '.join(v for v in value)
                 pr_body += f"{value}\n"
             if idx < len(self.data) - 1:

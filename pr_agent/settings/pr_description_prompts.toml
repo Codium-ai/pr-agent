@@ -38,9 +38,9 @@ class FileWalkthrough(BaseModel):
 {%- endif %}
 
 {%- if enable_semantic_files_types %}
-class SemanticLabelFiles(BaseModel):
-    label: PRType = Field(description="A label that represent a type of semantic code changes. Use the label value, not the name")
-    files: List[str] = Field(description="a list of files that are relevant to the label. A file may appear in multiple labels")
+class SemanticLabel(BaseModel):
+    label: Any(PRType, str) = Field(description="a semantic label that represents a type of code changes that occurred in the PR. You can use a label from the $PRType enum, or use additional custom labels that you define.")
+    files: List[str] = Field(description="a list of file names related to the semantic label. A file may appear in multiple labels. Present the file full path, and nothing else.")
 {%- endif %}
 
 Class PRDescription(BaseModel):
@@ -54,7 +54,7 @@ Class PRDescription(BaseModel):
     main_files_walkthrough: List[FileWalkthrough] = Field(max_items=10)
 {%- endif %}
 {%- if enable_semantic_files_types %}
-    pr_files_labels[SemanticLabelFiles]
+    pr_files_labels[List[SemanticLabel]] = Field(min_items=3, description="A list of semantic labels that describe the type of changes in the PR files.")
 {%- endif %}
 =====
 
