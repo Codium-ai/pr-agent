@@ -257,7 +257,8 @@ class PRDescription:
         # except for the items containing the word 'walkthrough'
         pr_body = ""
         for idx, (key, value) in enumerate(self.data.items()):
-            pr_body += f"## {key}:\n"
+            key_publish = key.strip(':').replace('_', ' ').capitalize()
+            pr_body += f"## {key_publish}\n"
             if 'walkthrough' in key.lower():
                 # for filename, description in value.items():
                 if self.git_provider.is_supported("gfm_markdown"):
