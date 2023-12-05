@@ -442,7 +442,7 @@ class GithubProvider(GitProvider):
     def publish_labels(self, pr_types):
         try:
             label_color_map = {"Bug fix": "1d76db", "Tests": "e99695", "Bug fix with tests": "c5def5",
-                               "Refactoring": "bfdadc", "Enhancement": "bfd4f2", "Documentation": "d4c5f9",
+                               "Enhancement": "bfd4f2", "Documentation": "d4c5f9",
                                "Other": "d1bcf9"}
             post_parameters = []
             for p in pr_types:
