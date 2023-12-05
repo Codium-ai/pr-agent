@@ -283,6 +283,8 @@ class PRDescription:
                     if self.git_provider.is_supported("gfm_markdown"):
                         # pr_body += f"<details> <summary>{semantic_label['label']}</summary>\n\n"
                         pr_body += f"| **{s_label}** | <details><summary>files:</summary><ul>"
+                    else:
+                        pr_body += f"| **{s_label}** | "
 
                     for file in semantic_label['files']:
                         filename = file.replace("'", "`")
@@ -298,9 +300,11 @@ class PRDescription:
                         if self.git_provider.is_supported("gfm_markdown"):
                             pr_body += f"<li>{filename}</li>"
                         else:
-                            pr_body += f'- `{filename}`\n'
+                            pr_body += f"{filename}  &emsp; &emsp;"
                     if self.git_provider.is_supported("gfm_markdown"):
                         pr_body += "</ul></details>|\n"
+                    else:
+                        pr_body += "|"
             else:
                 # if the value is a list, join its items by comma
                 if isinstance(value, list):
