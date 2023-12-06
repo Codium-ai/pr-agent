@@ -40,7 +40,7 @@ class FileWalkthrough(BaseModel):
 Class FileDescription(BaseModel):
     filename: str = Field(description="the relevant file full path")
     changes_summary: str = Field(description="minimal and concise summary of the changes in the relevant file")
-    label: str = Field(description="a single semantic label that represents a type of code changes that occurred in the File. Possible values (partial list): 'bug fix', 'tests', 'enhancement', 'documentation', 'error handling', 'configuration changes', 'dependencies', 'formating', 'miscellaneous', ...")
+    label: str = Field(description="a single semantic label that represents a type of code changes that occurred in the File. Possible values (partial list): 'bug fix', 'tests', 'enhancement', 'documentation', 'error handling', 'configuration changes', 'dependencies', 'formatting', 'miscellaneous', ...")
 {%- endif %}
 
 Class PRDescription(BaseModel):
