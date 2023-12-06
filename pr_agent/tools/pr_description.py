@@ -281,50 +281,9 @@ class PRDescription:
                     description = file['changes_in_file']
                     pr_body += f'- `{filename}`: {description}\n'
                 if self.git_provider.is_supported("gfm_markdown"):
-                    pr_body +="</details>\n"
+                    pr_body += "</details>\n"
             elif 'pr_files' in key.lower():
-                pr_body += """\n| | Relevant Files """
-                pr_body += "&nbsp; " * 70
-                pr_body += """|\n|-----------|-------------|\n"""
-                for semantic_label in value.keys():
-                    s_label = semantic_label.strip("'").strip('"')
-                    if self.git_provider.is_supported("gfm_markdown"):
-                        # pr_body += f"<details> <summary>{semantic_label['label']}</summary>\n\n"
-                        pr_body += f"| **{s_label}** | <details><summary>files:</summary><ul>"
-
-                    list_tuples = value[semantic_label]
-                    for filename, file_change_description in list_tuples:
-                        filename = filename.replace("'", "`")
-                        filename_publish = filename.split("/")[-1]
-                        filename_publish = f"**{filename_publish}**"
-                        diff_plus_minus = ""
-                        diff_files = self.git_provider.diff_files
-                        for f in diff_files:
-                            if f.filename.lower() == filename.lower():
-                                num_plus_lines = f.num_plus_lines
-                                num_minus_lines = f.num_minus_lines
-                                diff_plus_minus += f" ( +{num_plus_lines}/-{num_minus_lines} )"
-                                break
-
-                        # try to add line numbers link to code suggestions
-                        if hasattr(self.git_provider, 'get_line_link'):
-                            filename = filename.strip()
-                            link = self.git_provider.get_line_link(filename, relevant_line_start=-1)
-                            if link:
-                                diff_plus_minus = f"[{diff_plus_minus}]({link})"
-                                diff_plus_minus= f" <sup>{diff_plus_minus}</sup>"
-
-                        if diff_plus_minus:
-                            filename_publish += diff_plus_minus
-                        if self.git_provider.is_supported("gfm_markdown"):
-                            pr_body += f"<details><summary>{filename_publish}</summary>"
-                            file_change_description= self._insert_br_after_x_chars(file_change_description)
-                            if diff_plus_minus:
-                                pr_body += f"<ul>Changes summary:<br>**{file_change_description}**</ul></details>"
-                            else:
-                                pr_body += f"<ul>Changes summary:<br>**{file_change_description}**</ul></details>"
-                    if self.git_provider.is_supported("gfm_markdown"):
-                        pr_body += "</ul></details>|\n"
+                pr_body = self.process_pr_files_prediction(pr_body, value)
             else:
                 # if the value is a list, join its items by comma
                 if isinstance(value, list):
@@ -351,6 +310,59 @@ class PRDescription:
             except Exception as e:
                 get_logger().error(f"Error preparing file label dict {self.pr_id}: {e}")
                 pass
+
+    def process_pr_files_prediction(self, pr_body, value):
+        if not self.git_provider.is_supported("gfm_markdown"):
+            get_logger().info(f"Disabling semantic files types for {self.pr_id} since gfm_markdown is not supported")
+            return pr_body
+
+        try:
+            pr_body += """\n| | Relevant Files """
+            pr_body += "&nbsp; " * 70
+            pr_body += """|\n|-----------|-------------|\n"""
+            for semantic_label in value.keys():
+                s_label = semantic_label.strip("'").strip('"')
+                if self.git_provider.is_supported("gfm_markdown"):
+                    # pr_body += f"<details> <summary>{semantic_label['label']}</summary>\n\n"
+                    pr_body += f"| **{s_label}** | <details><summary>files:</summary><ul>"
+
+                list_tuples = value[semantic_label]
+                for filename, file_change_description in list_tuples:
+                    filename = filename.replace("'", "`")
+                    filename_publish = filename.split("/")[-1]
+                    filename_publish = f"**{filename_publish}**"
+                    diff_plus_minus = ""
+                    diff_files = self.git_provider.diff_files
+                    for f in diff_files:
+                        if f.filename.lower() == filename.lower():
+                            num_plus_lines = f.num_plus_lines
+                            num_minus_lines = f.num_minus_lines
+                            diff_plus_minus += f" ( +{num_plus_lines}/-{num_minus_lines} )"
+                            break
+
+                    # try to add line numbers link to code suggestions
+                    if hasattr(self.git_provider, 'get_line_link'):
+                        filename = filename.strip()
+                        link = self.git_provider.get_line_link(filename, relevant_line_start=-1)
+                        if link:
+                            diff_plus_minus = f"[{diff_plus_minus}]({link})"
+                            diff_plus_minus = f" <sup>{diff_plus_minus}</sup>"
+
+                    if diff_plus_minus:
+                        filename_publish += diff_plus_minus
+                    if self.git_provider.is_supported("gfm_markdown"):
+                        pr_body += f"<details><summary>{filename_publish}</summary>"
+                        file_change_description = self._insert_br_after_x_chars(file_change_description)
+                        if diff_plus_minus:
+                            pr_body += f"<ul>Changes summary:<br>**{file_change_description}**</ul></details>"
+                        else:
+                            pr_body += f"<ul>Changes summary:<br>**{file_change_description}**</ul></details>"
+                if self.git_provider.is_supported("gfm_markdown"):
+                    pr_body += "</ul></details>|\n"
+        except Exception as e:
+            get_logger().error(f"Error processing pr files to markdown {self.pr_id}: {e}")
+            pass
+        return pr_body
 
     def _insert_br_after_x_chars(self, text):
         """
