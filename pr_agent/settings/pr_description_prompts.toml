@@ -54,7 +54,7 @@ Class PRDescription(BaseModel):
     main_files_walkthrough: List[FileWalkthrough] = Field(max_items=10)
 {%- endif %}
 {%- if enable_semantic_files_types %}
-    pr_files[List[FileDescription]] = Field(max_items=15)
+    pr_files[List[FileDescription]] = Field(max_items=15")
 {%- endif %}
 =====
 
