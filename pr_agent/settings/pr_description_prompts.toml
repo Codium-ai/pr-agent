@@ -37,9 +37,10 @@ class FileWalkthrough(BaseModel):
 {%- endif %}
 
 {%- if enable_semantic_files_types %}
-class SemanticFileLabels(BaseModel):
-    label: str = Field(description="a semantic label that represents a type of code changes that occurred in the PR. Possible values (partial list): 'bug fix', 'tests', 'enhancement', 'documentation', 'error handling', 'configuration changes', 'dependencies', 'formating', 'miscellaneous', ...")
-    files: List[str] = Field(description="a list of file names related to the chosen semantic label. Present the file full path, and nothing else. A file should appear only in a single label, that best describes the type of changes in the file. If you are not sure, prefer a more general label.")
+Class FileDescription(BaseModel):
+    filename: str = Field(description="the relevant file full path")
+    changes_summary: str = Field(description="minimal and concise description of the important changes in the relevant file")
+    label: str = Field(description="a single semantic label that represents a type of code changes that occurred in the File. Possible values (partial list): 'bug fix', 'tests', 'enhancement', 'documentation', 'error handling', 'configuration changes', 'dependencies', 'formating', 'miscellaneous', ...")
 {%- endif %}
 
 Class PRDescription(BaseModel):
@@ -53,7 +54,7 @@ Class PRDescription(BaseModel):
     main_files_walkthrough: List[FileWalkthrough] = Field(max_items=10)
 {%- endif %}
 {%- if enable_semantic_files_types %}
-    pr_files_labels[List[SemanticFileLabels]] = Field(min_items=2, description="A list of semantic labels that describe the type of changes in the PR files.")
+    pr_files[List[FileDescription]] = Field(max_items=15)
 {%- endif %}
 =====
 
@@ -79,12 +80,12 @@ main_files_walkthrough:
 - ...
 {%- endif %}
 {%- if enable_semantic_files_types %}
-pr_files_labels:
-- label: ...
-  files:
-  - |
+pr_files:
+- filename: |
     ...
-  - |
+  changes_summary: |
+    ...
+  label: |
     ...
 ...
 {%- endif %}

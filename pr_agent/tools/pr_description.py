@@ -81,6 +81,19 @@ class PRDescription:
             else:
                 return None
 
+            self.file_label_dict = {}
+            for file in self.data['pr_files']:
+                try:
+                    filename = file['filename'].replace("'", "`").replace('"', '`')
+                    changes_summary = file['changes_summary']
+                    label = file['label']
+                    if label not in self.file_label_dict:
+                        self.file_label_dict[label] = []
+                    self.file_label_dict[label].append((filename, changes_summary))
+                except Exception as e:
+                    get_logger().error(f"Error preparing file label dict {self.pr_id}: {e}")
+                    pass
+
             pr_labels = []
             if get_settings().pr_description.publish_labels:
                 pr_labels = self._prepare_labels()
@@ -260,8 +273,8 @@ class PRDescription:
         pr_body = ""
         for idx, (key, value) in enumerate(self.data.items()):
             key_publish = key.rstrip(':').replace("_", " ").capitalize()
-            if key == 'pr_files_labels':
-                key_publish = 'PR Changes Analysis'
+            if key == 'pr_files':
+                value = self.file_label_dict
             pr_body += f"## {key_publish}\n"
             if 'walkthrough' in key.lower():
                 # for filename, description in value.items():
@@ -273,21 +286,21 @@ class PRDescription:
                     pr_body += f'- `{filename}`: {description}\n'
                 if self.git_provider.is_supported("gfm_markdown"):
                     pr_body +="</details>\n"
-            elif 'pr_files_labels' in key.lower():
+            elif 'pr_files' in key.lower():
                 pr_body += """\n| | Relevant Files """
-                pr_body += "&nbsp; " * 60
+                pr_body += "&nbsp; " * 70
                 pr_body += """|\n|-----------|-------------|\n"""
-                for semantic_label in value:
-                    # for filename, description in value.items():
-                    s_label = semantic_label['label'].strip("'").strip('"')
+                for semantic_label in value.keys():
+                    s_label = semantic_label.strip("'").strip('"')
                     if self.git_provider.is_supported("gfm_markdown"):
                         # pr_body += f"<details> <summary>{semantic_label['label']}</summary>\n\n"
                         pr_body += f"| **{s_label}** | <details><summary>files:</summary><ul>"
                     else:
                         pr_body += f"| **{s_label}** | "
 
-                    for file in semantic_label['files']:
-                        filename = file.replace("'", "`")
+                    list_tuples = value[semantic_label]
+                    for filename,file_change_description in list_tuples:
+                        filename = filename.replace("'", "`")
                         # description = file['changes_in_file']
                         # pr_body += f'- `{filename}`\n'
 
@@ -298,13 +311,14 @@ class PRDescription:
                             if link:
                                 filename = f"[{filename}]({link})"
                         if self.git_provider.is_supported("gfm_markdown"):
-                            pr_body += f"<li>{filename}</li>"
-                        else:
-                            pr_body += f"{filename}  &emsp; &emsp;"
+                            pr_body += f"<details><summary>{filename}</summary>"
+                            pr_body += f"<ul>Change summary:<br>**{file_change_description}**</ul></details>"
+                        # else:
+                        #     pr_body += f"{filename}  &emsp; &emsp;"
                     if self.git_provider.is_supported("gfm_markdown"):
                         pr_body += "</ul></details>|\n"
-                    else:
-                        pr_body += "|"
+                    # else:
+                    #     pr_body += "|"
             else:
                 # if the value is a list, join its items by comma
                 if isinstance(value, list):
