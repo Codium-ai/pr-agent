@@ -343,7 +343,7 @@ def set_custom_labels(variables):
     labels = get_settings().custom_labels
     if not labels:
         # set default labels
-        labels = ['Bug fix', 'Tests', 'Bug fix with tests', 'Refactoring', 'Enhancement', 'Documentation', 'Other']
+        labels = ['Bug fix', 'Tests', 'Bug fix with tests', 'Enhancement', 'Documentation', 'Other']
         labels_list = "\n      - ".join(labels) if labels else ""
         labels_list = f"      - {labels_list}" if labels_list else ""
         variables["custom_labels"] = labels_list
@@ -367,7 +367,7 @@ def get_user_labels(current_labels: List[str] = None):
             current_labels = []
         user_labels = []
         for label in current_labels:
-            if label.lower() in ['bug fix', 'tests', 'refactoring', 'enhancement', 'documentation', 'other']:
+            if label.lower() in ['bug fix', 'tests', 'enhancement', 'documentation', 'other']:
                 continue
             if get_settings().config.enable_custom_labels:
                 if label in get_settings().custom_labels:

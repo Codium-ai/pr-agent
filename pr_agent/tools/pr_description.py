@@ -30,6 +30,11 @@ class PRDescription:
         )
         self.pr_id = self.git_provider.get_pr_id()
 
+        if get_settings().pr_description.enable_semantic_files_types and not self.git_provider.is_supported(
+                "gfm_markdown"):
+            get_logger().debug(f"Disabling semantic files types for {self.pr_id}")
+            get_settings().pr_description.enable_semantic_files_types = False
+
         # Initialize the AI handler
         self.ai_handler = AiHandler()
     
@@ -45,6 +50,8 @@ class PRDescription:
             "commit_messages_str": self.git_provider.get_commit_messages(),
             "enable_custom_labels": get_settings().config.enable_custom_labels,
             "custom_labels_class": "",  # will be filled if necessary in 'set_custom_labels' function
+            "enable_file_walkthrough": get_settings().pr_description.enable_file_walkthrough,
+            "enable_semantic_files_types": get_settings().pr_description.enable_semantic_files_types,
         }
 
         self.user_description = self.git_provider.get_user_description()
@@ -78,6 +85,9 @@ class PRDescription:
                 self._prepare_data()
             else:
                 return None
+
+            if get_settings().pr_description.enable_semantic_files_types:
+                self._prepare_file_labels()
 
             pr_labels = []
             if get_settings().pr_description.publish_labels:
@@ -257,10 +267,13 @@ class PRDescription:
         # except for the items containing the word 'walkthrough'
         pr_body = ""
         for idx, (key, value) in enumerate(self.data.items()):
-            key_publish = key.strip(':').replace('_', ' ').capitalize()
+            if key == 'pr_files':
+                value = self.file_label_dict
+                key_publish = "PR changes summary"
+            else:
+                key_publish = key.rstrip(':').replace("_", " ").capitalize()
             pr_body += f"## {key_publish}\n"
             if 'walkthrough' in key.lower():
-                # for filename, description in value.items():
                 if self.git_provider.is_supported("gfm_markdown"):
                     pr_body += "<details> <summary>files:</summary>\n\n"
                 for file in value:
@@ -268,10 +281,12 @@ class PRDescription:
                     description = file['changes_in_file']
                     pr_body += f'- `{filename}`: {description}\n'
                 if self.git_provider.is_supported("gfm_markdown"):
-                    pr_body +="</details>\n"
+                    pr_body += "</details>\n"
+            elif 'pr_files' in key.lower():
+                pr_body = self.process_pr_files_prediction(pr_body, value)
             else:
                 # if the value is a list, join its items by comma
-                if type(value) == list:
+                if isinstance(value, list):
                     value = ', '.join(v for v in value)
                 pr_body += f"{value}\n"
             if idx < len(self.data) - 1:
@@ -281,3 +296,94 @@ class PRDescription:
             get_logger().info(f"title:\n{title}\n{pr_body}")
 
         return title, pr_body
+
+    def _prepare_file_labels(self):
+        self.file_label_dict = {}
+        for file in self.data['pr_files']:
+            try:
+                filename = file['filename'].replace("'", "`").replace('"', '`')
+                changes_summary = file['changes_summary']
+                label = file['label']
+                if label not in self.file_label_dict:
+                    self.file_label_dict[label] = []
+                self.file_label_dict[label].append((filename, changes_summary))
+            except Exception as e:
+                get_logger().error(f"Error preparing file label dict {self.pr_id}: {e}")
+                pass
+
+    def process_pr_files_prediction(self, pr_body, value):
+        if not self.git_provider.is_supported("gfm_markdown"):
+            get_logger().info(f"Disabling semantic files types for {self.pr_id} since gfm_markdown is not supported")
+            return pr_body
+
+        try:
+            pr_body += """\n| | Relevant Files """
+            pr_body += "&nbsp; " * 70
+            pr_body += """|\n|-----------|-------------|\n"""
+            for semantic_label in value.keys():
+                s_label = semantic_label.strip("'").strip('"')
+                if self.git_provider.is_supported("gfm_markdown"):
+                    # pr_body += f"<details> <summary>{semantic_label['label']}</summary>\n\n"
+                    pr_body += f"| **{s_label}** | <details><summary>files:</summary><ul>"
+
+                list_tuples = value[semantic_label]
+                for filename, file_change_description in list_tuples:
+                    filename = filename.replace("'", "`")
+                    filename_publish = filename.split("/")[-1]
+                    filename_publish = f"**{filename_publish}**"
+                    diff_plus_minus = ""
+                    diff_files = self.git_provider.diff_files
+                    for f in diff_files:
+                        if f.filename.lower() == filename.lower():
+                            num_plus_lines = f.num_plus_lines
+                            num_minus_lines = f.num_minus_lines
+                            diff_plus_minus += f" ( +{num_plus_lines}/-{num_minus_lines} )"
+                            break
+
+                    # try to add line numbers link to code suggestions
+                    if hasattr(self.git_provider, 'get_line_link'):
+                        filename = filename.strip()
+                        link = self.git_provider.get_line_link(filename, relevant_line_start=-1)
+                        if link:
+                            diff_plus_minus = f"[{diff_plus_minus}]({link})"
+                            diff_plus_minus = f" <sup>{diff_plus_minus}</sup>"
+
+                    if diff_plus_minus:
+                        filename_publish += diff_plus_minus
+                    if self.git_provider.is_supported("gfm_markdown"):
+                        pr_body += f"<details><summary>{filename_publish}</summary>"
+                        file_change_description = self._insert_br_after_x_chars(file_change_description)
+                        if diff_plus_minus:
+                            pr_body += f"<ul>Changes summary:<br>**{file_change_description}**</ul></details>"
+                        else:
+                            pr_body += f"<ul>Changes summary:<br>**{file_change_description}**</ul></details>"
+                if self.git_provider.is_supported("gfm_markdown"):
+                    pr_body += "</ul></details>|\n"
+        except Exception as e:
+            get_logger().error(f"Error processing pr files to markdown {self.pr_id}: {e}")
+            pass
+        return pr_body
+
+    def _insert_br_after_x_chars(self, text):
+        """
+        Insert <br> into a string after a word that increases its length above x characters.
+        """
+        x = 70
+        if len(text) < x:
+            return text
+
+        words = text.split(' ')
+        new_text = ""
+        current_length = 0
+
+        for word in words:
+            # Check if adding this word exceeds x characters
+            if current_length + len(word) > x:
+                new_text += "<br>"  # Insert line break
+                current_length = 0  # Reset counter
+
+            # Add the word to the new text
+            new_text += word + " "
+            current_length += len(word) + 1  # Add 1 for the space
+
+        return new_text.strip()  # Remove trailing space

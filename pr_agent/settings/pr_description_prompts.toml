@@ -20,7 +20,6 @@ The output must be a YAML object equivalent to type $PRDescription, according to
 class PRType(str, Enum):
     bug_fix = "Bug fix"
     tests = "Tests"
-    refactoring = "Refactoring"
     enhancement = "Enhancement"
     documentation = "Documentation"
     other = "Other"
@@ -31,18 +30,32 @@ class PRType(str, Enum):
 
 {%- endif %}
 
+{%- if enable_file_walkthrough %}
 class FileWalkthrough(BaseModel):
     filename: str = Field(description="the relevant file full path")
-    changes_in_file: str = Field(description="minimal and concise description of the changes in the relevant file")
+    changes_in_file: str = Field(description="minimal and concise summary of the changes in the relevant file")
+{%- endif %}
+
+{%- if enable_semantic_files_types %}
+Class FileDescription(BaseModel):
+    filename: str = Field(description="the relevant file full path")
+    changes_summary: str = Field(description="minimal and concise summary of the changes in the relevant file")
+    label: str = Field(description="a single semantic label that represents a type of code changes that occurred in the File. Possible values (partial list): 'bug fix', 'tests', 'enhancement', 'documentation', 'error handling', 'configuration changes', 'dependencies', 'formatting', 'miscellaneous', ...")
+{%- endif %}
 
 Class PRDescription(BaseModel):
     title: str = Field(description="an informative title for the PR, describing its main theme")
-    type: List[PRType] = Field(description="one or more types that describe the PR type. . Return the label value, not the name.")
+    type: List[PRType] = Field(description="one or more types that describe the PR type. Return the label value, not the name.")
     description: str = Field(description="an informative and concise description of the PR. {%- if use_bullet_points %} Use bullet points.{% endif %}")
 {%- if enable_custom_labels %}
     labels: List[Label] = Field(min_items=0, description="custom labels that describe the PR. Return the label value, not the name.")
 {%- endif %}
+{%- if enable_file_walkthrough %}
     main_files_walkthrough: List[FileWalkthrough] = Field(max_items=10)
+{%- endif %}
+{%- if enable_semantic_files_types %}
+    pr_files[List[FileDescription]] = Field(max_items=15")
+{%- endif %}
 =====
 
 
@@ -61,9 +74,21 @@ labels:
 {%- endif %}
 description: |-
   ...
+{%- if enable_file_walkthrough %}
 main_files_walkthrough:
 - ...
 - ...
+{%- endif %}
+{%- if enable_semantic_files_types %}
+pr_files:
+- filename: |
+    ...
+  changes_summary: |
+    ...
+  label: |
+    ...
+...
+{%- endif %}
 ```
 
 Answer should be a valid YAML, and nothing else. Each YAML output MUST be after a newline, with proper indent, and block scalar indicator ('|-')

@@ -26,6 +26,8 @@ class FilePatchInfo:
     tokens: int = -1
     edit_type: EDIT_TYPE = EDIT_TYPE.UNKNOWN
     old_filename: str = None
+    num_plus_lines: int = -1
+    num_minus_lines: int = -1
 
 
 class GitProvider(ABC):

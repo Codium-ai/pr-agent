@@ -46,13 +46,16 @@ keep_original_user_title=false
 use_bullet_points=true
 extra_instructions = ""
 enable_pr_type=true
+enable_file_walkthrough=false
+enable_semantic_files_types=true
 final_update_message = true
+
 
 # markers
 use_description_markers=false
 include_generated_by_header=true
 
-#custom_labels = ['Bug fix', 'Tests', 'Bug fix with tests', 'Refactoring', 'Enhancement', 'Documentation', 'Other']
+#custom_labels = ['Bug fix', 'Tests', 'Bug fix with tests', 'Enhancement', 'Documentation', 'Other']
 
 [pr_questions] # /ask #
 
