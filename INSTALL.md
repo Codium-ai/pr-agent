@@ -206,6 +206,7 @@ Allowing you to automate the review process on your private or public repositori
    - Set the following events:
      - Issue comment
      - Pull request
+     - Push (if you need to enable triggering on PR update)
 
 2. Generate a random secret for your app, and save it for later. For example, you can use:
 
