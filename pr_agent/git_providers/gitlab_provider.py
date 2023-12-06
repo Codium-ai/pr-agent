@@ -115,12 +115,20 @@ class GitLabProvider(GitProvider):
                 if not patch:
                     patch = load_large_diff(filename, new_file_content_str, original_file_content_str)
 
+
+                # count number of lines added and removed
+                patch_lines = patch.splitlines(keepends=True)
+                num_plus_lines = len([line for line in patch_lines if line.startswith('+')])
+                num_minus_lines = len([line for line in patch_lines if line.startswith('-')])
                 diff_files.append(
                     FilePatchInfo(original_file_content_str, new_file_content_str,
                                   patch=patch,
                                   filename=filename,
                                   edit_type=edit_type,
-                                  old_filename=None if diff['old_path'] == diff['new_path'] else diff['old_path']))
+                                  old_filename=None if diff['old_path'] == diff['new_path'] else diff['old_path'],
+                                  num_plus_lines=num_plus_lines,
+                                  num_minus_lines=num_minus_lines, ))
+
         self.diff_files = diff_files
         return diff_files
 

@@ -30,6 +30,11 @@ class PRDescription:
         )
         self.pr_id = self.git_provider.get_pr_id()
 
+        if get_settings().pr_description.enable_semantic_files_types and not self.git_provider.is_supported(
+                "gfm_markdown"):
+            get_logger().debug(f"Disabling semantic files types for {self.pr_id}")
+            get_settings().pr_description.enable_semantic_files_types = False
+
         # Initialize the AI handler
         self.ai_handler = AiHandler()
     
@@ -313,10 +318,11 @@ class PRDescription:
                             filename_publish += diff_plus_minus
                         if self.git_provider.is_supported("gfm_markdown"):
                             pr_body += f"<details><summary>{filename_publish}</summary>"
+                            file_change_description= self._insert_br_after_x_chars(file_change_description)
                             if diff_plus_minus:
-                                pr_body += f"<ul>Change summary:<br>**{file_change_description}**</ul></details>"
+                                pr_body += f"<ul>Changes summary:<br>**{file_change_description}**</ul></details>"
                             else:
-                                pr_body += f"<ul>Change summary:<br>**{file_change_description}**</ul></details>"
+                                pr_body += f"<ul>Changes summary:<br>**{file_change_description}**</ul></details>"
                     if self.git_provider.is_supported("gfm_markdown"):
                         pr_body += "</ul></details>|\n"
             else:
@@ -345,3 +351,27 @@ class PRDescription:
             except Exception as e:
                 get_logger().error(f"Error preparing file label dict {self.pr_id}: {e}")
                 pass
+
+    def _insert_br_after_x_chars(self, text):
+        """
+        Insert <br> into a string after a word that increases its length above x characters.
+        """
+        x = 70
+        if len(text) < x:
+            return text
+
+        words = text.split(' ')
+        new_text = ""
+        current_length = 0
+
+        for word in words:
+            # Check if adding this word exceeds x characters
+            if current_length + len(word) > x:
+                new_text += "<br>"  # Insert line break
+                current_length = 0  # Reset counter
+
+            # Add the word to the new text
+            new_text += word + " "
+            current_length += len(word) + 1  # Add 1 for the space
+
+        return new_text.strip()  # Remove trailing space
