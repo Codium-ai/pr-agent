@@ -325,7 +325,7 @@ class PRDescription:
             pr_body += """<tbody>"""
             for semantic_label in value.keys():
                 s_label = semantic_label.strip("'").strip('"')
-                pr_body += f"""<tr><td><strong>{s_label}</strong></td>"""
+                pr_body += f"""<tr><td><strong>{s_label.capitalize()}</strong></td>"""
                 list_tuples = value[semantic_label]
                 pr_body += f"""<td><details><summary>{len(list_tuples)} files</summary><table>"""
                 for filename, file_change_description in list_tuples:
