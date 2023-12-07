@@ -13,7 +13,7 @@ from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import GithubProvider, GitLabProvider, get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
 
-CHANGELOG_LINES = 35
+CHANGELOG_LINES = 45
 
 
 class PRUpdateChangelog:
