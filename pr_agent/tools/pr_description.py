@@ -317,9 +317,11 @@ class PRDescription:
             return pr_body
 
         try:
-            pr_body = ""
             pr_body += "<table>"
-            pr_body += """<thead><tr><th></th><th>Relevant Files</th></tr></thead>"""
+            header = f"Relevant Files"
+            delta = 65
+            header +="&nbsp; " * delta
+            pr_body += f"""<thead><tr><th></th><th>{header}</th></tr></thead>"""
             pr_body += """<tbody>"""
             for semantic_label in value.keys():
                 s_label = semantic_label.strip("'").strip('"')
@@ -330,13 +332,15 @@ class PRDescription:
                     filename = filename.replace("'", "`")
                     filename_publish = filename.split("/")[-1]
                     filename_publish = f"{filename_publish}"
+                    if len(filename_publish)< (delta-5):
+                        filename_publish += "&nbsp; " * ((delta-5) - len(filename_publish))
                     diff_plus_minus = ""
                     diff_files = self.git_provider.diff_files
                     for f in diff_files:
                         if f.filename.lower() == filename.lower():
                             num_plus_lines = f.num_plus_lines
                             num_minus_lines = f.num_minus_lines
-                            diff_plus_minus += f" ( +{num_plus_lines}/-{num_minus_lines} )"
+                            diff_plus_minus += f" (+{num_plus_lines}/-{num_minus_lines})"
                             break
 
                     # try to add line numbers link to code suggestions
@@ -345,24 +349,24 @@ class PRDescription:
                         filename = filename.strip()
                         link = self.git_provider.get_line_link(filename, relevant_line_start=-1)
 
-                    file_change_description = self._insert_br_after_x_chars(file_change_description)
+                    file_change_description = self._insert_br_after_x_chars(file_change_description, x=(delta-5))
                     pr_body += f"""
 <tr>
   <td>
     <details>
-      <summary><strong>{filename_publish}</strong> <sup><a href="{link}"> {diff_plus_minus}</a></sup></summary>
+      <summary><strong>{filename_publish}</strong></summary>
       <ul>
-        Changes summary:<br>
+        ({filename})<br><br>
         <strong>{file_change_description}</strong>
       </ul>
     </details>
   </td>
+  <td><a href="{link}"> {diff_plus_minus}</a></td>
+
 </tr>                    
 """
                 pr_body += """</table></details></td></tr>"""
             pr_body += """</tr></tbody></table>"""
-            print(pr_body)
-
 
         #     pr_body += """\n| | Relevant Files """
         #     pr_body += "&nbsp; " * 70
@@ -411,11 +415,10 @@ class PRDescription:
             pass
         return pr_body
 
-    def _insert_br_after_x_chars(self, text):
+    def _insert_br_after_x_chars(self, text, x=70):
         """
         Insert <br> into a string after a word that increases its length above x characters.
         """
-        x = 70
         if len(text) < x:
             return text
 
