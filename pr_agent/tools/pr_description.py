@@ -317,20 +317,19 @@ class PRDescription:
             return pr_body
 
         try:
-            pr_body += """\n| | Relevant Files """
-            pr_body += "&nbsp; " * 70
-            pr_body += """|\n|-----------|-------------|\n"""
+            pr_body = ""
+            pr_body += "<table>"
+            pr_body += """<thead><tr><th></th><th>Relevant Files</th></tr></thead>"""
+            pr_body += """<tbody>"""
             for semantic_label in value.keys():
                 s_label = semantic_label.strip("'").strip('"')
-                if self.git_provider.is_supported("gfm_markdown"):
-                    # pr_body += f"<details> <summary>{semantic_label['label']}</summary>\n\n"
-                    pr_body += f"| **{s_label}** | <details><summary>files:</summary><ul>"
-
+                pr_body += f"""<tr><td><strong>{s_label}</strong></td>"""
                 list_tuples = value[semantic_label]
+                pr_body += f"""<td><details><summary>{len(list_tuples)} files</summary><table>"""
                 for filename, file_change_description in list_tuples:
                     filename = filename.replace("'", "`")
                     filename_publish = filename.split("/")[-1]
-                    filename_publish = f"**{filename_publish}**"
+                    filename_publish = f"{filename_publish}"
                     diff_plus_minus = ""
                     diff_files = self.git_provider.diff_files
                     for f in diff_files:
@@ -341,24 +340,72 @@ class PRDescription:
                             break
 
                     # try to add line numbers link to code suggestions
+                    link = ""
                     if hasattr(self.git_provider, 'get_line_link'):
                         filename = filename.strip()
                         link = self.git_provider.get_line_link(filename, relevant_line_start=-1)
-                        if link:
-                            diff_plus_minus = f"[{diff_plus_minus}]({link})"
-                            diff_plus_minus = f" <sup>{diff_plus_minus}</sup>"
 
-                    if diff_plus_minus:
-                        filename_publish += diff_plus_minus
-                    if self.git_provider.is_supported("gfm_markdown"):
-                        pr_body += f"<details><summary>{filename_publish}</summary>"
-                        file_change_description = self._insert_br_after_x_chars(file_change_description)
-                        if diff_plus_minus:
-                            pr_body += f"<ul>Changes summary:<br>**{file_change_description}**</ul></details>"
-                        else:
-                            pr_body += f"<ul>Changes summary:<br>**{file_change_description}**</ul></details>"
-                if self.git_provider.is_supported("gfm_markdown"):
-                    pr_body += "</ul></details>|\n"
+                    file_change_description = self._insert_br_after_x_chars(file_change_description)
+                    pr_body += f"""
+<tr>
+  <td>
+    <details>
+      <summary><strong>{filename_publish}</strong> <sup><a href="{link}"> {diff_plus_minus}</a></sup></summary>
+      <ul>
+        Changes summary:<br>
+        <strong>{file_change_description}</strong>
+      </ul>
+    </details>
+  </td>
+</tr>                    
+"""
+                pr_body += """</table></details></td></tr>"""
+            pr_body += """</tr></tbody></table>"""
+            print(pr_body)
+
+
+        #     pr_body += """\n| | Relevant Files """
+        #     pr_body += "&nbsp; " * 70
+        #     pr_body += """|\n|-----------|-------------|\n"""
+        #     for semantic_label in value.keys():
+        #         s_label = semantic_label.strip("'").strip('"')
+        #         if self.git_provider.is_supported("gfm_markdown"):
+        #             # pr_body += f"<details> <summary>{semantic_label['label']}</summary>\n\n"
+        #             pr_body += f"| **{s_label}** | <details><summary>files:</summary><ul>"
+        #
+        #         list_tuples = value[semantic_label]
+        #         for filename, file_change_description in list_tuples:
+        #             filename = filename.replace("'", "`")
+        #             filename_publish = filename.split("/")[-1]
+        #             filename_publish = f"**{filename_publish}**"
+        #             diff_plus_minus = ""
+        #             diff_files = self.git_provider.diff_files
+        #             for f in diff_files:
+        #                 if f.filename.lower() == filename.lower():
+        #                     num_plus_lines = f.num_plus_lines
+        #                     num_minus_lines = f.num_minus_lines
+        #                     diff_plus_minus += f" ( +{num_plus_lines}/-{num_minus_lines} )"
+        #                     break
+        #
+        #             # try to add line numbers link to code suggestions
+        #             if hasattr(self.git_provider, 'get_line_link'):
+        #                 filename = filename.strip()
+        #                 link = self.git_provider.get_line_link(filename, relevant_line_start=-1)
+        #                 if link:
+        #                     diff_plus_minus = f"[{diff_plus_minus}]({link})"
+        #                     diff_plus_minus = f" <sup>{diff_plus_minus}</sup>"
+        #
+        #             if diff_plus_minus:
+        #                 filename_publish += diff_plus_minus
+        #             if self.git_provider.is_supported("gfm_markdown"):
+        #                 pr_body += f"<details><summary>{filename_publish}</summary>"
+        #                 file_change_description = self._insert_br_after_x_chars(file_change_description)
+        #                 if diff_plus_minus:
+        #                     pr_body += f"<ul>Changes summary:<br>**{file_change_description}**</ul></details>"
+        #                 else:
+        #                     pr_body += f"<ul>Changes summary:<br>**{file_change_description}**</ul></details>"
+        #         if self.git_provider.is_supported("gfm_markdown"):
+        #             pr_body += "</ul></details>|\n"
         except Exception as e:
             get_logger().error(f"Error processing pr files to markdown {self.pr_id}: {e}")
             pass
