@@ -356,7 +356,7 @@ class PRDescription:
     <details>
       <summary><strong>{filename_publish}</strong></summary>
       <ul>
-        ({filename})<br><br>
+        {filename}<br><br>
         <strong>{file_change_description}</strong>
       </ul>
     </details>
