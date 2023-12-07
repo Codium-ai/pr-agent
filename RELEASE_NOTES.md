@@ -1,3 +1,21 @@
+## [Version 0.11] - 2023-12-07
+- codiumai/pr-agent:0.11
+- codiumai/pr-agent:0.11-github_app
+- codiumai/pr-agent:0.11-bitbucket-app
+- codiumai/pr-agent:0.11-gitlab_webhook
+- codiumai/pr-agent:0.11-github_polling
+- codiumai/pr-agent:0.11-github_action
+
+### Added::Algo
+- New section in `/describe` tool - [PR changes walkthrough](https://github.com/Codium-ai/pr-agent/pull/509)
+- Improving PR Agent [prompts](https://github.com/Codium-ai/pr-agent/pull/501)
+- Persistent tools (`/review`, `/describe`) now send an [update message](https://github.com/Codium-ai/pr-agent/pull/499) after finishing
+- Add Amazon Bedrock [support](https://github.com/Codium-ai/pr-agent/pull/483)
+
+### Fixed
+- Update [dependencies](https://github.com/Codium-ai/pr-agent/pull/503) in requirements.txt for Python 3.12
+
+
 ## [Version 0.10] - 2023-11-15
 - codiumai/pr-agent:0.10
 - codiumai/pr-agent:0.10-github_app
