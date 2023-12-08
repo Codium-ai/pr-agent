@@ -5,6 +5,7 @@ from typing import List
 import openai
 import pandas as pd
 import pinecone
+import lancedb
 from pinecone_datasets import Dataset, DatasetMetadata
 from pydantic import BaseModel, Field
 
@@ -22,7 +23,7 @@ class PRSimilarIssue:
     def __init__(self, issue_url: str, args: list = None):
         if get_settings().config.git_provider != "github":
             raise Exception("Only github is supported for similar issue tool")
-
+        
         self.cli_mode = get_settings().CONFIG.CLI_MODE
         self.max_issues_to_scan = get_settings().pr_similar_issue.max_issues_to_scan
         self.issue_url = issue_url
@@ -35,75 +36,79 @@ class PRSimilarIssue:
         repo_name_for_index = self.repo_name_for_index = repo_obj.full_name.lower().replace('/', '-').replace('_/', '-')
         index_name = self.index_name = "codium-ai-pr-agent-issues"
 
-        # assuming pinecone api key and environment are set in secrets file
-        try:
-            api_key = get_settings().pinecone.api_key
-            environment = get_settings().pinecone.environment
-        except Exception:
-            if not self.cli_mode:
-                repo_name, original_issue_number = self.git_provider._parse_issue_url(self.issue_url.split('=')[-1])
-                issue_main = self.git_provider.repo_obj.get_issue(original_issue_number)
-                issue_main.create_comment("Please set pinecone api key and environment in secrets file")
-            raise Exception("Please set pinecone api key and environment in secrets file")
+        if get_settings().config.vectordb == "pinecone":
+            # assuming pinecone api key and environment are set in secrets file
+            try:
+                api_key = get_settings().pinecone.api_key
+                environment = get_settings().pinecone.environment
+            except Exception:
+                if not self.cli_mode:
+                    repo_name, original_issue_number = self.git_provider._parse_issue_url(self.issue_url.split('=')[-1])
+                    issue_main = self.git_provider.repo_obj.get_issue(original_issue_number)
+                    issue_main.create_comment("Please set pinecone api key and environment in secrets file")
+                raise Exception("Please set pinecone api key and environment in secrets file")
 
-        # check if index exists, and if repo is already indexed
-        run_from_scratch = False
-        if run_from_scratch:  # for debugging
+            # check if index exists, and if repo is already indexed
+            run_from_scratch = False
+            if run_from_scratch:  # for debugging
+                pinecone.init(api_key=api_key, environment=environment)
+                if index_name in pinecone.list_indexes():
+                    get_logger().info('Removing index...')
+                    pinecone.delete_index(index_name)
+                    get_logger().info('Done')
+
+            upsert = True
             pinecone.init(api_key=api_key, environment=environment)
-            if index_name in pinecone.list_indexes():
-                get_logger().info('Removing index...')
-                pinecone.delete_index(index_name)
-                get_logger().info('Done')
-
-        upsert = True
-        pinecone.init(api_key=api_key, environment=environment)
-        if not index_name in pinecone.list_indexes():
-            run_from_scratch = True
-            upsert = False
-        else:
-            if get_settings().pr_similar_issue.force_update_dataset:
-                upsert = True
+            if not index_name in pinecone.list_indexes():
+                run_from_scratch = True
+                upsert = False
             else:
-                pinecone_index = pinecone.Index(index_name=index_name)
-                res = pinecone_index.fetch([f"example_issue_{repo_name_for_index}"]).to_dict()
-                if res["vectors"]:
-                    upsert = False
-
-        if run_from_scratch or upsert:  # index the entire repo
-            get_logger().info('Indexing the entire repo...')
-
-            get_logger().info('Getting issues...')
-            issues = list(repo_obj.get_issues(state='all'))
-            get_logger().info('Done')
-            self._update_index_with_issues(issues, repo_name_for_index, upsert=upsert)
-        else:  # update index if needed
-            pinecone_index = pinecone.Index(index_name=index_name)
-            issues_to_update = []
-            issues_paginated_list = repo_obj.get_issues(state='all')
-            counter = 1
-            for issue in issues_paginated_list:
-                if issue.pull_request:
-                    continue
-                issue_str, comments, number = self._process_issue(issue)
-                issue_key = f"issue_{number}"
-                id = issue_key + "." + "issue"
-                res = pinecone_index.fetch([id]).to_dict()
-                is_new_issue = True
-                for vector in res["vectors"].values():
-                    if vector['metadata']['repo'] == repo_name_for_index:
-                        is_new_issue = False
-                        break
-                if is_new_issue:
-                    counter += 1
-                    issues_to_update.append(issue)
+                if get_settings().pr_similar_issue.force_update_dataset:
+                    upsert = True
                 else:
-                    break
+                    pinecone_index = pinecone.Index(index_name=index_name)
+                    res = pinecone_index.fetch([f"example_issue_{repo_name_for_index}"]).to_dict()
+                    if res["vectors"]:
+                        upsert = False
 
-            if issues_to_update:
-                get_logger().info(f'Updating index with {counter} new issues...')
-                self._update_index_with_issues(issues_to_update, repo_name_for_index, upsert=True)
-            else:
-                get_logger().info('No new issues to update')
+            if run_from_scratch or upsert:  # index the entire repo
+                get_logger().info('Indexing the entire repo...')
+
+                get_logger().info('Getting issues...')
+                issues = list(repo_obj.get_issues(state='all'))
+                get_logger().info('Done')
+                self._update_index_with_issues(issues, repo_name_for_index, upsert=upsert)
+            else:  # update index if needed
+                pinecone_index = pinecone.Index(index_name=index_name)
+                issues_to_update = []
+                issues_paginated_list = repo_obj.get_issues(state='all')
+                counter = 1
+                for issue in issues_paginated_list:
+                    if issue.pull_request:
+                        continue
+                    issue_str, comments, number = self._process_issue(issue)
+                    issue_key = f"issue_{number}"
+                    id = issue_key + "." + "issue"
+                    res = pinecone_index.fetch([id]).to_dict()
+                    is_new_issue = True
+                    for vector in res["vectors"].values():
+                        if vector['metadata']['repo'] == repo_name_for_index:
+                            is_new_issue = False
+                            break
+                    if is_new_issue:
+                        counter += 1
+                        issues_to_update.append(issue)
+                    else:
+                        break
+
+                if issues_to_update:
+                    get_logger().info(f'Updating index with {counter} new issues...')
+                    self._update_index_with_issues(issues_to_update, repo_name_for_index, upsert=True)
+                else:
+                    get_logger().info('No new issues to update')
+        
+        elif get_settings().config.vectordb == "lancedb":
+            self.db = lancedb.connect(get_settings().lancedb.uri)
 
     async def run(self):
         get_logger().info('Getting issue...')

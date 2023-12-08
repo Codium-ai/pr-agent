@@ -14,6 +14,7 @@ max_model_tokens = 32000 # Limits the maximum number of tokens that can be used 
 patch_extra_lines = 3
 secret_provider="google_cloud_storage"
 cli_mode=false
+vectordb = "lancedb"
 
 [pr_reviewer] # /review #
 # enable/disable features
@@ -167,3 +168,6 @@ max_issues_to_scan = 500
 # fill and place in .secrets.toml
 #api_key = ...
 # environment = "gcp-starter"
+
+[lancedb]
+uri = "./lancedb"
