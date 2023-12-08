@@ -206,6 +206,7 @@ Allowing you to automate the review process on your private or public repositori
    - Set the following events:
      - Issue comment
      - Pull request
+     - Push (if you need to enable triggering on PR update)
 
 2. Generate a random secret for your app, and save it for later. For example, you can use:
 
@@ -292,7 +293,8 @@ docker push codiumai/pr-agent:github_app  # Push to your Docker repository
     ```
 4. Create a lambda function that uses the uploaded image. Set the lambda timeout to be at least 3m.
 5. Configure the lambda function to have a Function URL.
-6. Go back to steps 8-9 of [Method 5](#run-as-a-github-app) with the function url as your Webhook URL.
+6. In the environment variables of the Lambda function, specify `AZURE_DEVOPS_CACHE_DIR` to a writable location such as /tmp. (see [link](https://github.com/Codium-ai/pr-agent/pull/450#issuecomment-1840242269))
+7. Go back to steps 8-9 of [Method 5](#run-as-a-github-app) with the function url as your Webhook URL.
     The Webhook URL would look like `https://<LAMBDA_FUNCTION_URL>/api/v1/github_webhooks`
 
 ---

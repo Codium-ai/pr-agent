@@ -8,10 +8,8 @@ enable_custom_labels=false
 #description = """Adds or modifies tests"""
 #[custom_labels."Bug fix with tests"]
 #description = """Fixes a bug in the code and adds or modifies tests"""
-#[custom_labels."Refactoring"]
-#description = """Code refactoring without changing functionality"""
 #[custom_labels."Enhancement"]
-#description = """Adds new features or functionality"""
+#description = """Adds new features or modifies existing ones"""
 #[custom_labels."Documentation"]
 #description = """Adds or modifies documentation"""
 #[custom_labels."Other"]

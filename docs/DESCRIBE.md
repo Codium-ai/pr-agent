@@ -1,6 +1,6 @@
 # Describe Tool
 
-The `describe` tool scans the PR code changes, and automatically generates PR description - title, type, summary, code walkthrough and labels.
+The `describe` tool scans the PR code changes, and automatically generates PR description - title, type, summary, walkthrough and labels.
 It can be invoked manually by commenting on any PR:
 ```
 /describe
@@ -26,9 +26,14 @@ Under the section 'pr_description', the [configuration file](./../pr_agent/setti
 - `keep_original_user_title`: if set to true, the tool will keep the original PR title, and won't change it. Default is false.
 
 - `extra_instructions`: Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".
+
 - To enable `custom labels`, apply the configuration changes described [here](./GENERATE_CUSTOM_LABELS.md#configuration-changes)
+
 - `enable_pr_type`: if set to false, it will not show the `PR type` as a text value in the description content. Default is true.
+
 - `final_update_message`: if set to true, it will add a comment message [`PR Description updated to latest commit...`](https://github.com/Codium-ai/pr-agent/pull/499#issuecomment-1837412176) after finishing calling `/describe`. Default is true.
+
+- `enable_semantic_files_types`: if set to true, "PR changes walkthrough" section will be generated. Default is true.
   
 ### Markers template
 

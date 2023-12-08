@@ -115,12 +115,20 @@ class GitLabProvider(GitProvider):
                 if not patch:
                     patch = load_large_diff(filename, new_file_content_str, original_file_content_str)
 
+
+                # count number of lines added and removed
+                patch_lines = patch.splitlines(keepends=True)
+                num_plus_lines = len([line for line in patch_lines if line.startswith('+')])
+                num_minus_lines = len([line for line in patch_lines if line.startswith('-')])
                 diff_files.append(
                     FilePatchInfo(original_file_content_str, new_file_content_str,
                                   patch=patch,
                                   filename=filename,
                                   edit_type=edit_type,
-                                  old_filename=None if diff['old_path'] == diff['new_path'] else diff['old_path']))
+                                  old_filename=None if diff['old_path'] == diff['new_path'] else diff['old_path'],
+                                  num_plus_lines=num_plus_lines,
+                                  num_minus_lines=num_minus_lines, ))
+
         self.diff_files = diff_files
         return diff_files
 
@@ -424,7 +432,9 @@ class GitLabProvider(GitProvider):
             return ""
 
     def get_line_link(self, relevant_file: str, relevant_line_start: int, relevant_line_end: int = None) -> str:
-        if relevant_line_end:
+        if relevant_line_start == -1:
+            link = f"https://gitlab.com/codiumai/pr-agent/-/blob/{self.mr.source_branch}/{relevant_file}?ref_type=heads"
+        elif relevant_line_end:
             link = f"https://gitlab.com/codiumai/pr-agent/-/blob/{self.mr.source_branch}/{relevant_file}?ref_type=heads#L{relevant_line_start}-L{relevant_line_end}"
         else:
             link = f"https://gitlab.com/codiumai/pr-agent/-/blob/{self.mr.source_branch}/{relevant_file}?ref_type=heads#L{relevant_line_start}"

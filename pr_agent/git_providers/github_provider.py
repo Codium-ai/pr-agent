@@ -143,8 +143,15 @@ class GithubProvider(GitProvider):
                 else:
                     get_logger().error(f"Unknown edit type: {file.status}")
                     edit_type = EDIT_TYPE.UNKNOWN
+
+                # count number of lines added and removed
+                patch_lines = patch.splitlines(keepends=True)
+                num_plus_lines = len([line for line in patch_lines if line.startswith('+')])
+                num_minus_lines = len([line for line in patch_lines if line.startswith('-')])
                 file_patch_canonical_structure = FilePatchInfo(original_file_content_str, new_file_content_str, patch,
-                                                               file.filename, edit_type=edit_type)
+                                                               file.filename, edit_type=edit_type,
+                                                               num_plus_lines=num_plus_lines,
+                                                               num_minus_lines=num_minus_lines,)
                 diff_files.append(file_patch_canonical_structure)
 
             self.diff_files = diff_files
@@ -442,7 +449,7 @@ class GithubProvider(GitProvider):
     def publish_labels(self, pr_types):
         try:
             label_color_map = {"Bug fix": "1d76db", "Tests": "e99695", "Bug fix with tests": "c5def5",
-                               "Refactoring": "bfdadc", "Enhancement": "bfd4f2", "Documentation": "d4c5f9",
+                               "Enhancement": "bfd4f2", "Documentation": "d4c5f9",
                                "Other": "d1bcf9"}
             post_parameters = []
             for p in pr_types:
@@ -506,7 +513,9 @@ class GithubProvider(GitProvider):
 
     def get_line_link(self, relevant_file: str, relevant_line_start: int, relevant_line_end: int = None) -> str:
         sha_file = hashlib.sha256(relevant_file.encode('utf-8')).hexdigest()
-        if relevant_line_end:
+        if relevant_line_start == -1:
+            link = f"https://github.com/{self.repo}/pull/{self.pr_num}/files#diff-{sha_file}"
+        elif relevant_line_end:
             link = f"https://github.com/{self.repo}/pull/{self.pr_num}/files#diff-{sha_file}R{relevant_line_start}-R{relevant_line_end}"
         else:
             link = f"https://github.com/{self.repo}/pull/{self.pr_num}/files#diff-{sha_file}R{relevant_line_start}"
