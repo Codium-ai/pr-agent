@@ -2,7 +2,7 @@ import copy
 
 from jinja2 import Environment, StrictUndefined
 
-from pr_agent.algo.ai_handler import AiHandler
+from pr_agent.algo.ai_handler import BaseAiHandler, AiHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.config_loader import get_settings
@@ -12,12 +12,12 @@ from pr_agent.log import get_logger
 
 
 class PRInformationFromUser:
-    def __init__(self, pr_url: str, args: list = None):
+    def __init__(self, pr_url: str, args: list = None, ai_handler: BaseAiHandler = AiHandler()):
         self.git_provider = get_git_provider()(pr_url)
         self.main_pr_language = get_main_pr_language(
             self.git_provider.get_languages(), self.git_provider.get_files()
         )
-        self.ai_handler = AiHandler()
+        self.ai_handler = ai_handler
         self.vars = {
             "title": self.git_provider.pr.title,
             "branch": self.git_provider.get_pr_branch(),
