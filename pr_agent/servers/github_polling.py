@@ -1,6 +1,4 @@
 import asyncio
-import logging
-import sys
 from datetime import datetime, timezone
 
 import aiohttp
@@ -8,9 +6,10 @@ import aiohttp
 from pr_agent.agent.pr_agent import PRAgent
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
+from pr_agent.log import LoggingFormat, get_logger, setup_logger
 from pr_agent.servers.help import bot_help_text
 
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+setup_logger(fmt=LoggingFormat.JSON)
 NOTIFICATION_URL = "https://api.github.com/notifications"
 
 
@@ -94,7 +93,7 @@ async def polling_loop():
                                             comment_body = comment['body'] if 'body' in comment else ''
                                             commenter_github_user = comment['user']['login'] \
                                                 if 'user' in comment else ''
-                                            logging.info(f"Commenter: {commenter_github_user}\nComment: {comment_body}")
+                                            get_logger().info(f"Commenter: {commenter_github_user}\nComment: {comment_body}")
                                             user_tag = "@" + user_id
                                             if user_tag not in comment_body:
                                                 continue
@@ -112,7 +111,7 @@ async def polling_loop():
                         print(f"Failed to fetch notifications. Status code: {response.status}")
 
             except Exception as e:
-                logging.error(f"Exception during processing of a notification: {e}")
+                get_logger().error(f"Exception during processing of a notification: {e}")
 
 
 if __name__ == '__main__':

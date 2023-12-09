@@ -43,18 +43,6 @@ class TestHandlePatchDeletions:
         assert handle_patch_deletions(patch, original_file_content_str, new_file_content_str,
                                       file_name) == patch.rstrip()
 
-    # Tests that handle_patch_deletions logs a message when verbosity_level is greater than 0
-    def test_handle_patch_deletions_happy_path_verbosity_level_greater_than_0(self, caplog):
-        patch = '--- a/file.py\n+++ b/file.py\n@@ -1,2 +1,2 @@\n-foo\n-bar\n+baz\n'
-        original_file_content_str = 'foo\nbar\n'
-        new_file_content_str = ''
-        file_name = 'file.py'
-        get_settings().config.verbosity_level = 1
-
-        with caplog.at_level(logging.INFO):
-            handle_patch_deletions(patch, original_file_content_str, new_file_content_str, file_name)
-            assert any("Processing file" in message for message in caplog.messages)
-
     # Tests that handle_patch_deletions returns 'File was deleted' when new_file_content_str is empty
     def test_handle_patch_deletions_edge_case_new_file_content_empty(self):
         patch = '--- a/file.py\n+++ b/file.py\n@@ -1,2 +1,2 @@\n-foo\n-bar\n'

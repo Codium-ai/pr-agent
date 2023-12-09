@@ -3,8 +3,7 @@ from typing import Dict
 
 from pr_agent.config_loader import get_settings
 
-language_extension_map_org = get_settings().language_extension_map_org
-language_extension_map = {k.lower(): v for k, v in language_extension_map_org.items()}
+
 
 # Bad Extensions, source: https://github.com/EleutherAI/github-downloader/blob/345e7c4cbb9e0dc8a0615fd995a08bf9d73b3fe6/download_repo_text.py  # noqa: E501
 bad_extensions = get_settings().bad_extensions.default
@@ -29,6 +28,8 @@ def sort_files_by_main_languages(languages: Dict, files: list):
     # languages_sorted = sorted(languages, key=lambda x: x[1], reverse=True)
     # get all extensions for the languages
     main_extensions = []
+    language_extension_map_org = get_settings().language_extension_map_org
+    language_extension_map = {k.lower(): v for k, v in language_extension_map_org.items()}
     for language in languages_sorted_list:
         if language.lower() in language_extension_map:
             main_extensions.append(language_extension_map[language.lower()])

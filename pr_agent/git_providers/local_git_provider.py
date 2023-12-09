@@ -1,4 +1,3 @@
-import logging
 from collections import Counter
 from pathlib import Path
 from typing import List
@@ -7,6 +6,7 @@ from git import Repo
 
 from pr_agent.config_loader import _find_repository_root, get_settings
 from pr_agent.git_providers.git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
+from pr_agent.log import get_logger
 
 
 class PullRequestMimic:
@@ -49,7 +49,7 @@ class LocalGitProvider(GitProvider):
         """
         Prepare the repository for PR-mimic generation.
         """
-        logging.debug('Preparing repository for PR-mimic generation...')
+        get_logger().debug('Preparing repository for PR-mimic generation...')
         if self.repo.is_dirty():
             raise ValueError('The repository is not in a clean state. Please commit or stash pending changes.')
         if self.target_branch_name not in self.repo.heads:
@@ -138,6 +138,9 @@ class LocalGitProvider(GitProvider):
         pass  # Not applicable to the local git provider, but required by the interface
 
     def remove_initial_comment(self):
+        pass  # Not applicable to the local git provider, but required by the interface
+
+    def remove_comment(self, comment):
         pass  # Not applicable to the local git provider, but required by the interface
 
     def get_languages(self):

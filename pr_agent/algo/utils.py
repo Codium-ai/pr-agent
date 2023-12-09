@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import difflib
 import json
-import logging
 import re
 import textwrap
 from datetime import datetime
@@ -10,7 +9,11 @@ from typing import Any, List
 
 import yaml
 from starlette_context import context
+
+from pr_agent.algo import MAX_TOKENS
+from pr_agent.algo.token_handler import get_token_encoder
 from pr_agent.config_loader import get_settings, global_settings
+from pr_agent.log import get_logger
 
 
 def get_setting(key: str) -> Any:
@@ -55,14 +58,15 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
             emoji = emojis.get(key, "")
             if key.lower() == 'code feedback':
                 if gfm_supported:
-                    markdown_text += f"\n\n- **<details><summary> { emoji } Code feedback:**</summary>\n\n"
+                    markdown_text += f"\n\n- "
+                    markdown_text += f"<details><summary> { emoji } Code feedback:</summary>\n\n"
                 else:
                     markdown_text += f"\n\n- **{emoji} Code feedback:**\n\n"
             else:
                 markdown_text += f"- {emoji} **{key}:**\n\n"
             for item in value:
                 if isinstance(item, dict) and key.lower() == 'code feedback':
-                    markdown_text += parse_code_suggestion(item)
+                    markdown_text += parse_code_suggestion(item, gfm_supported)
                 elif item:
                     markdown_text += f"  - {item}\n"
             if key.lower() == 'code feedback':
@@ -76,7 +80,7 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
     return markdown_text
 
 
-def parse_code_suggestion(code_suggestions: dict) -> str:
+def parse_code_suggestion(code_suggestions: dict, gfm_supported: bool=True) -> str:
     """
     Convert a dictionary of data into markdown format.
 
@@ -96,9 +100,13 @@ def parse_code_suggestion(code_suggestions: dict) -> str:
                 markdown_text += f"    - **{code_key}:**\n{code_str_indented}\n"
         else:
             if "relevant file" in sub_key.lower():
-                markdown_text += f"\n  - **{sub_key}:** {sub_value}\n"
+                markdown_text += f"\n  - **{sub_key}:** {sub_value}  \n"
             else:
-                markdown_text += f"   **{sub_key}:** {sub_value}\n"
+                markdown_text += f"   **{sub_key}:** {sub_value}  \n"
+            if not gfm_supported:
+                if "relevant line" not in sub_key.lower(): # nicer presentation
+                        # markdown_text = markdown_text.rstrip('\n') + "\\\n" # works for gitlab
+                        markdown_text = markdown_text.rstrip('\n') + "   \n"  # works for gitlab and bitbucker
 
     markdown_text += "\n"
     return markdown_text
@@ -156,7 +164,7 @@ def try_fix_json(review, max_iter=10, code_suggestions=False):
                 iter_count += 1
 
         if not valid_json:
-            logging.error("Unable to decode JSON response from AI")
+            get_logger().error("Unable to decode JSON response from AI")
             data = {}
 
     return data
@@ -227,7 +235,7 @@ def load_large_diff(filename, new_file_content_str: str, original_file_content_s
         diff = difflib.unified_diff(original_file_content_str.splitlines(keepends=True),
                                     new_file_content_str.splitlines(keepends=True))
         if get_settings().config.verbosity_level >= 2:
-            logging.warning(f"File was modified, but no patch was found. Manually creating patch: {filename}.")
+            get_logger().warning(f"File was modified, but no patch was found. Manually creating patch: {filename}.")
         patch = ''.join(diff)
     except Exception:
         pass
@@ -259,12 +267,12 @@ def update_settings_from_args(args: List[str]) -> List[str]:
                 vals = arg.split('=', 1)
                 if len(vals) != 2:
                     if len(vals) > 2: # --extended is a valid argument
-                        logging.error(f'Invalid argument format: {arg}')
+                        get_logger().error(f'Invalid argument format: {arg}')
                     other_args.append(arg)
                     continue
                 key, value = _fix_key_value(*vals)
                 get_settings().set(key, value)
-                logging.info(f'Updated setting {key} to: "{value}"')
+                get_logger().info(f'Updated setting {key} to: "{value}"')
             else:
                 other_args.append(arg)
     return other_args
@@ -276,28 +284,142 @@ def _fix_key_value(key: str, value: str):
     try:
         value = yaml.safe_load(value)
     except Exception as e:
-        logging.error(f"Failed to parse YAML for config override {key}={value}", exc_info=e)
+        get_logger().debug(f"Failed to parse YAML for config override {key}={value}", exc_info=e)
     return key, value
 
 
-def load_yaml(review_text: str) -> dict:
-    review_text = review_text.removeprefix('```yaml').rstrip('`')
+def load_yaml(response_text: str) -> dict:
+    response_text = response_text.removeprefix('```yaml').rstrip('`')
     try:
-        data = yaml.safe_load(review_text)
+        data = yaml.safe_load(response_text)
     except Exception as e:
-        logging.error(f"Failed to parse AI prediction: {e}")
-        data = try_fix_yaml(review_text)
+        get_logger().error(f"Failed to parse AI prediction: {e}")
+        data = try_fix_yaml(response_text)
     return data
 
-def try_fix_yaml(review_text: str) -> dict:
-    review_text_lines = review_text.split('\n')
+def try_fix_yaml(response_text: str) -> dict:
+    response_text_lines = response_text.split('\n')
+
+    keys = ['relevant line:', 'suggestion content:', 'relevant file:']
+    # first fallback - try to convert 'relevant line: ...' to relevant line: |-\n        ...'
+    response_text_lines_copy = response_text_lines.copy()
+    for i in range(0, len(response_text_lines_copy)):
+        for key in keys:
+            if key in response_text_lines_copy[i] and not '|-' in response_text_lines_copy[i]:
+                response_text_lines_copy[i] = response_text_lines_copy[i].replace(f'{key}',
+                                                                                  f'{key} |-\n        ')
+    try:
+        data = yaml.safe_load('\n'.join(response_text_lines_copy))
+        get_logger().info(f"Successfully parsed AI prediction after adding |-\n")
+        return data
+    except:
+        get_logger().info(f"Failed to parse AI prediction after adding |-\n")
+
+    # second fallback - try to remove last lines
     data = {}
-    for i in range(1, len(review_text_lines)):
-        review_text_lines_tmp = '\n'.join(review_text_lines[:-i])
+    for i in range(1, len(response_text_lines)):
+        response_text_lines_tmp = '\n'.join(response_text_lines[:-i])
         try:
-            data = yaml.load(review_text_lines_tmp, Loader=yaml.SafeLoader)
-            logging.info(f"Successfully parsed AI prediction after removing {i} lines")
+            data = yaml.safe_load(response_text_lines_tmp,)
+            get_logger().info(f"Successfully parsed AI prediction after removing {i} lines")
             break
         except:
             pass
-    return data
+    
+    # thrid fallback - try to remove leading and trailing curly brackets
+    response_text_copy = response_text.strip().rstrip().removeprefix('{').removesuffix('}')
+    try:
+        data = yaml.safe_load(response_text_copy,)
+        get_logger().info(f"Successfully parsed AI prediction after removing curly brackets")
+        return data
+    except:
+        pass
+
+
+def set_custom_labels(variables):
+    if not get_settings().config.enable_custom_labels:
+        return
+
+    labels = get_settings().custom_labels
+    if not labels:
+        # set default labels
+        labels = ['Bug fix', 'Tests', 'Bug fix with tests', 'Enhancement', 'Documentation', 'Other']
+        labels_list = "\n      - ".join(labels) if labels else ""
+        labels_list = f"      - {labels_list}" if labels_list else ""
+        variables["custom_labels"] = labels_list
+        return
+    #final_labels = ""
+    #for k, v in labels.items():
+    #    final_labels += f"      - {k} ({v['description']})\n"
+    #variables["custom_labels"] = final_labels
+    #variables["custom_labels_examples"] = f"      - {list(labels.keys())[0]}"
+    variables["custom_labels_class"] = "class Label(str, Enum):"
+    for k, v in labels.items():
+        description = v['description'].strip('\n').replace('\n', '\\n')
+        variables["custom_labels_class"] += f"\n    {k.lower().replace(' ', '_')} = '{k}' # {description}"
+
+def get_user_labels(current_labels: List[str] = None):
+    """
+    Only keep labels that has been added by the user
+    """
+    try:
+        if current_labels is None:
+            current_labels = []
+        user_labels = []
+        for label in current_labels:
+            if label.lower() in ['bug fix', 'tests', 'enhancement', 'documentation', 'other']:
+                continue
+            if get_settings().config.enable_custom_labels:
+                if label in get_settings().custom_labels:
+                    continue
+            user_labels.append(label)
+        if user_labels:
+            get_logger().info(f"Keeping user labels: {user_labels}")
+    except Exception as e:
+        get_logger().exception(f"Failed to get user labels: {e}")
+        return current_labels
+    return user_labels
+
+
+def get_max_tokens(model):
+    settings = get_settings()
+    if model in MAX_TOKENS:
+        max_tokens_model = MAX_TOKENS[model]
+    else:
+        raise Exception(f"MAX_TOKENS must be set for model {model} in ./pr_agent/algo/__init__.py")
+
+    if settings.config.max_model_tokens:
+        max_tokens_model = min(settings.config.max_model_tokens, max_tokens_model)
+        # get_logger().debug(f"limiting max tokens to {max_tokens_model}")
+    return max_tokens_model
+
+
+def clip_tokens(text: str, max_tokens: int, add_three_dots=True) -> str:
+    """
+    Clip the number of tokens in a string to a maximum number of tokens.
+
+    Args:
+        text (str): The string to clip.
+        max_tokens (int): The maximum number of tokens allowed in the string.
+        add_three_dots (bool, optional): A boolean indicating whether to add three dots at the end of the clipped
+    Returns:
+        str: The clipped string.
+    """
+    if not text:
+        return text
+
+    try:
+        encoder = get_token_encoder()
+        num_input_tokens = len(encoder.encode(text))
+        if num_input_tokens <= max_tokens:
+            return text
+        num_chars = len(text)
+        chars_per_token = num_chars / num_input_tokens
+        num_output_chars = int(chars_per_token * max_tokens)
+        clipped_text = text[:num_output_chars]
+        if add_three_dots:
+            clipped_text += "...(truncated)"
+        return clipped_text
+    except Exception as e:
+        get_logger().warning(f"Failed to clip tokens: {e}")
+        return text

@@ -1,4 +1,4 @@
-import logging
+import hashlib
 import re
 from typing import Optional, Tuple
 from urllib.parse import urlparse
@@ -7,12 +7,12 @@ import gitlab
 from gitlab import GitlabGetError
 
 from ..algo.language_handler import is_valid_file
-from ..algo.pr_processing import clip_tokens
-from ..algo.utils import load_large_diff
+from ..algo.pr_processing import find_line_number_of_relevant_line_in_file
+from ..algo.utils import load_large_diff, clip_tokens
 from ..config_loader import get_settings
 from .git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
+from ..log import get_logger
 
-logger = logging.getLogger()
 
 class DiffNotFoundError(Exception):
     """Raised when the diff for a merge request cannot be found."""
@@ -37,13 +37,14 @@ class GitLabProvider(GitProvider):
         self.diff_files = None
         self.git_files = None
         self.temp_comments = []
+        self.pr_url = merge_request_url
         self._set_merge_request(merge_request_url)
         self.RE_HUNK_HEADER = re.compile(
             r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@[ ]?(.*)")
         self.incremental = incremental
 
     def is_supported(self, capability: str) -> bool:
-        if capability in ['get_issue_comments', 'create_inline_comment', 'publish_inline_comments', 'gfm_markdown']:
+        if capability in ['get_issue_comments', 'create_inline_comment', 'publish_inline_comments']: # gfm_markdown is supported in gitlab !
             return False
         return True
 
@@ -58,7 +59,7 @@ class GitLabProvider(GitProvider):
         try:
             self.last_diff = self.mr.diffs.list(get_all=True)[-1]
         except IndexError as e:
-            logger.error(f"Could not get diff for merge request {self.id_mr}")
+            get_logger().error(f"Could not get diff for merge request {self.id_mr}")
             raise DiffNotFoundError(f"Could not get diff for merge request {self.id_mr}") from e
 
 
@@ -98,7 +99,7 @@ class GitLabProvider(GitProvider):
                     if isinstance(new_file_content_str, bytes):
                         new_file_content_str = bytes.decode(new_file_content_str, 'utf-8')
                 except UnicodeDecodeError:
-                    logging.warning(
+                    get_logger().warning(
                         f"Cannot decode file {diff['old_path']} or {diff['new_path']} in merge request {self.id_mr}")
 
                 edit_type = EDIT_TYPE.MODIFIED
@@ -114,12 +115,20 @@ class GitLabProvider(GitProvider):
                 if not patch:
                     patch = load_large_diff(filename, new_file_content_str, original_file_content_str)
 
+
+                # count number of lines added and removed
+                patch_lines = patch.splitlines(keepends=True)
+                num_plus_lines = len([line for line in patch_lines if line.startswith('+')])
+                num_minus_lines = len([line for line in patch_lines if line.startswith('-')])
                 diff_files.append(
                     FilePatchInfo(original_file_content_str, new_file_content_str,
                                   patch=patch,
                                   filename=filename,
                                   edit_type=edit_type,
-                                  old_filename=None if diff['old_path'] == diff['new_path'] else diff['old_path']))
+                                  old_filename=None if diff['old_path'] == diff['new_path'] else diff['old_path'],
+                                  num_plus_lines=num_plus_lines,
+                                  num_minus_lines=num_minus_lines, ))
+
         self.diff_files = diff_files
         return diff_files
 
@@ -134,7 +143,34 @@ class GitLabProvider(GitProvider):
             self.mr.description = pr_body
             self.mr.save()
         except Exception as e:
-            logging.exception(f"Could not update merge request {self.id_mr} description: {e}")
+            get_logger().exception(f"Could not update merge request {self.id_mr} description: {e}")
+
+    def get_latest_commit_url(self):
+        return self.mr.commits().next().web_url
+
+    def get_comment_url(self, comment):
+        return f"{self.mr.web_url}#note_{comment.id}"
+
+    def publish_persistent_comment(self, pr_comment: str, initial_header: str, update_header: bool = True):
+        try:
+            for comment in self.mr.notes.list(get_all=True)[::-1]:
+                if comment.body.startswith(initial_header):
+                    latest_commit_url = self.get_latest_commit_url()
+                    comment_url = self.get_comment_url(comment)
+                    if update_header:
+                        updated_header = f"{initial_header}\n\n### (review updated until commit {latest_commit_url})\n"
+                        pr_comment_updated = pr_comment.replace(initial_header, updated_header)
+                    else:
+                        pr_comment_updated = pr_comment
+                    get_logger().info(f"Persistent mode- updating comment {comment_url} to latest review message")
+                    response = self.mr.notes.update(comment.id, {'body': pr_comment_updated})
+                    self.publish_comment(
+                        f"**[Persistent review]({comment_url})** updated to latest commit {latest_commit_url}")
+                    return
+        except Exception as e:
+            get_logger().exception(f"Failed to update persistent review, error: {e}")
+            pass
+        self.publish_comment(pr_comment)
 
     def publish_comment(self, mr_comment: str, is_temporary: bool = False):
         comment = self.mr.notes.create({'body': mr_comment})
@@ -156,12 +192,12 @@ class GitLabProvider(GitProvider):
     def send_inline_comment(self,body: str,edit_type: str,found: bool,relevant_file: str,relevant_line_in_file: int,
                             source_line_no: int, target_file: str,target_line_no: int) -> None:
         if not found:
-            logging.info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
+            get_logger().info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
         else:
             # in order to have exact sha's we have to find correct diff for this change
             diff = self.get_relevant_diff(relevant_file, relevant_line_in_file)
             if diff is None:
-                logger.error(f"Could not get diff for merge request {self.id_mr}")
+                get_logger().error(f"Could not get diff for merge request {self.id_mr}")
                 raise DiffNotFoundError(f"Could not get diff for merge request {self.id_mr}")
             pos_obj = {'position_type': 'text',
                        'new_path': target_file.filename,
@@ -174,24 +210,23 @@ class GitLabProvider(GitProvider):
             else:
                 pos_obj['new_line'] = target_line_no - 1
                 pos_obj['old_line'] = source_line_no - 1
-            logging.debug(f"Creating comment in {self.id_mr} with body {body} and position {pos_obj}")
-            self.mr.discussions.create({'body': body,
-                                        'position': pos_obj})
+            get_logger().debug(f"Creating comment in {self.id_mr} with body {body} and position {pos_obj}")
+            self.mr.discussions.create({'body': body, 'position': pos_obj})
 
     def get_relevant_diff(self, relevant_file: str, relevant_line_in_file: int) -> Optional[dict]:
         changes = self.mr.changes()  # Retrieve the changes for the merge request once
         if not changes:
-            logging.error('No changes found for the merge request.')
+            get_logger().error('No changes found for the merge request.')
             return None
         all_diffs = self.mr.diffs.list(get_all=True)
         if not all_diffs:
-            logging.error('No diffs found for the merge request.')
+            get_logger().error('No diffs found for the merge request.')
             return None
         for diff in all_diffs:
             for change in changes['changes']:
                 if change['new_path'] == relevant_file and relevant_line_in_file in change['diff']:
                     return diff
-            logging.debug(
+            get_logger().debug(
                 f'No relevant diff found for {relevant_file} {relevant_line_in_file}. Falling back to last diff.')
         return self.last_diff  # fallback to last_diff if no relevant diff is found
 
@@ -226,7 +261,10 @@ class GitLabProvider(GitProvider):
                 self.send_inline_comment(body, edit_type, found, relevant_file, relevant_line_in_file, source_line_no,
                                          target_file, target_line_no)
             except Exception as e:
-                logging.exception(f"Could not publish code suggestion:\nsuggestion: {suggestion}\nerror: {e}")
+                get_logger().exception(f"Could not publish code suggestion:\nsuggestion: {suggestion}\nerror: {e}")
+
+        # note that we publish suggestions one-by-one. so, if one fails, the rest will still be published
+        return True
 
     def search_line(self, relevant_file, relevant_line_in_file):
         target_file = None
@@ -285,9 +323,15 @@ class GitLabProvider(GitProvider):
     def remove_initial_comment(self):
         try:
             for comment in self.temp_comments:
-                comment.delete()
+                self.remove_comment(comment)
         except Exception as e:
-            logging.exception(f"Failed to remove temp comments, error: {e}")
+            get_logger().exception(f"Failed to remove temp comments, error: {e}")
+
+    def remove_comment(self, comment):
+        try:
+            comment.delete()
+        except Exception as e:
+            get_logger().exception(f"Failed to remove comment, error: {e}")
 
     def get_title(self):
         return self.mr.title
@@ -307,7 +351,7 @@ class GitLabProvider(GitProvider):
 
     def get_repo_settings(self):
         try:
-            contents = self.gl.projects.get(self.id_project).files.get(file_path='.pr_agent.toml', ref=self.mr.source_branch)
+            contents = self.gl.projects.get(self.id_project).files.get(file_path='.pr_agent.toml', ref=self.mr.target_branch).decode()
             return contents
         except Exception:
             return ""
@@ -355,7 +399,7 @@ class GitLabProvider(GitProvider):
             self.mr.labels = list(set(pr_types))
             self.mr.save()
         except Exception as e:
-            logging.exception(f"Failed to publish labels, error: {e}")
+            get_logger().exception(f"Failed to publish labels, error: {e}")
 
     def publish_inline_comments(self, comments: list[dict]):
         pass
@@ -386,3 +430,37 @@ class GitLabProvider(GitProvider):
             return pr_id
         except:
             return ""
+
+    def get_line_link(self, relevant_file: str, relevant_line_start: int, relevant_line_end: int = None) -> str:
+        if relevant_line_start == -1:
+            link = f"https://gitlab.com/codiumai/pr-agent/-/blob/{self.mr.source_branch}/{relevant_file}?ref_type=heads"
+        elif relevant_line_end:
+            link = f"https://gitlab.com/codiumai/pr-agent/-/blob/{self.mr.source_branch}/{relevant_file}?ref_type=heads#L{relevant_line_start}-L{relevant_line_end}"
+        else:
+            link = f"https://gitlab.com/codiumai/pr-agent/-/blob/{self.mr.source_branch}/{relevant_file}?ref_type=heads#L{relevant_line_start}"
+        return link
+
+
+    def generate_link_to_relevant_line_number(self, suggestion) -> str:
+        try:
+            relevant_file = suggestion['relevant file'].strip('`').strip("'")
+            relevant_line_str = suggestion['relevant line']
+            if not relevant_line_str:
+                return ""
+
+            position, absolute_position = find_line_number_of_relevant_line_in_file \
+                (self.diff_files, relevant_file, relevant_line_str)
+
+            if absolute_position != -1:
+                # link to right file only
+                link = f"https://gitlab.com/codiumai/pr-agent/-/blob/{self.mr.source_branch}/{relevant_file}?ref_type=heads#L{absolute_position}"
+
+                # # link to diff
+                # sha_file = hashlib.sha1(relevant_file.encode('utf-8')).hexdigest()
+                # link = f"{self.pr.web_url}/diffs#{sha_file}_{absolute_position}_{absolute_position}"
+                return link
+        except Exception as e:
+            if get_settings().config.verbosity_level >= 2:
+                get_logger().info(f"Failed adding line link, error: {e}")
+
+        return ""

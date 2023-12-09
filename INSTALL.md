@@ -4,66 +4,74 @@
 To get started with PR-Agent quickly, you first need to acquire two tokens:
 
 1. An OpenAI key from [here](https://platform.openai.com/), with access to GPT-4.
-2. A GitHub personal access token (classic) with the repo scope.
+2. A GitHub\GitLab\BitBucket personal access token (classic) with the repo scope.
 
 There are several ways to use PR-Agent:
 
-- [Method 1: Use Docker image (no installation required)](INSTALL.md#method-1-use-docker-image-no-installation-required)
-- [Method 2: Run from source](INSTALL.md#method-2-run-from-source)
-- [Method 3: Run as a GitHub Action](INSTALL.md#method-3-run-as-a-github-action)
-- [Method 4: Run as a polling server](INSTALL.md#method-4-run-as-a-polling-server)
-- [Method 5: Run as a GitHub App](INSTALL.md#method-5-run-as-a-github-app)
-- [Method 6: Deploy as a Lambda Function](INSTALL.md#method-6---deploy-as-a-lambda-function)
-- [Method 7: AWS CodeCommit](INSTALL.md#method-7---aws-codecommit-setup)
-- [Method 8: Run a GitLab webhook server](INSTALL.md#method-8---run-a-gitlab-webhook-server)
-- [Method 9: Run as a Bitbucket Pipeline](INSTALL.md#method-9-run-as-a-bitbucket-pipeline)
+**Locally**
+- [Using Docker image (no installation required)](INSTALL.md#use-docker-image-no-installation-required)
+- [Run from source](INSTALL.md#run-from-source)
+
+**GitHub specific methods**
+- [Run as a GitHub Action](INSTALL.md#run-as-a-github-action)
+- [Run as a polling server](INSTALL.md#run-as-a-polling-server)
+- [Run as a GitHub App](INSTALL.md#run-as-a-github-app)
+- [Deploy as a Lambda Function](INSTALL.md#deploy-as-a-lambda-function)
+- [AWS CodeCommit](INSTALL.md#aws-codecommit-setup)
+
+**GitLab specific methods**
+- [Run a GitLab webhook server](INSTALL.md#run-a-gitlab-webhook-server)
+
+**BitBucket specific methods**
+- [Run as a Bitbucket Pipeline](INSTALL.md#run-as-a-bitbucket-pipeline)
+- [Run on a hosted app](INSTALL.md#run-on-a-hosted-bitbucket-app)
+- [Bitbucket server and data center](INSTALL.md#bitbucket-server-and-data-center)
 ---
 
-### Method 1: Use Docker image (no installation required)
+### Use Docker image (no installation required)
 
-To request a review for a PR, or ask a question about a PR, you can run directly from the Docker image. Here's how:
+A list of the relevant tools can be found in the [tools guide](./docs/TOOLS_GUIDE.md).
 
-1. To request a review for a PR, run the following command:
+To invoke a tool (for example `review`), you can run directly from the Docker image. Here's how:
 
-For GitHub:
+- For GitHub:
 ```
-docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent --pr_url <pr_url> review
+docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent:latest --pr_url <pr_url> review
 ```
-For GitLab:
+
+- For GitLab:
 ```
-docker run --rm -it -e OPENAI.KEY=<your key> -e CONFIG.GIT_PROVIDER=gitlab -e GITLAB.PERSONAL_ACCESS_TOKEN=<your token> codiumai/pr-agent --pr_url <pr_url> review
+docker run --rm -it -e OPENAI.KEY=<your key> -e CONFIG.GIT_PROVIDER=gitlab -e GITLAB.PERSONAL_ACCESS_TOKEN=<your token> codiumai/pr-agent:latest --pr_url <pr_url> review
 ```
+
+Note: If you have a dedicated GitLab instance, you need to specify the custom url as variable:
+```
+docker run --rm -it -e OPENAI.KEY=<your key> -e CONFIG.GIT_PROVIDER=gitlab -e GITLAB.PERSONAL_ACCESS_TOKEN=<your token> GITLAB.URL=<your gitlab instance url> codiumai/pr-agent:latest --pr_url <pr_url> review
+```
+
+- For BitBucket:
+```
+docker run --rm -it -e CONFIG.GIT_PROVIDER=bitbucket -e OPENAI.KEY=$OPENAI_API_KEY -e BITBUCKET.BEARER_TOKEN=$BITBUCKET_BEARER_TOKEN codiumai/pr-agent:latest --pr_url=<pr_url> review
+```
+
 For other git providers, update CONFIG.GIT_PROVIDER accordingly, and check the `pr_agent/settings/.secrets_template.toml` file for the environment variables expected names and values.
 
-2. To ask a question about a PR, run the following command:
+---
 
-```
-docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent --pr_url <pr_url> ask "<your question>"
-```
-Note: If you want to ensure you're running a specific version of the Docker image, consider using the image's digest. 
-The digest is a unique identifier for a specific version of an image. You can pull and run an image using its digest by referencing it like so: repository@sha256:digest. Always ensure you're using the correct and trusted digest for your operations.
 
-1. To request a review for a PR using a specific digest, run the following command:
+If you want to ensure you're running a specific version of the Docker image, consider using the image's digest:
 ```bash
 docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent@sha256:71b5ee15df59c745d352d84752d01561ba64b6d51327f97d46152f0c58a5f678 --pr_url <pr_url> review
 ```
 
-2. To ask a question about a PR using the same digest, run the following command:
-```bash
-docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent@sha256:71b5ee15df59c745d352d84752d01561ba64b6d51327f97d46152f0c58a5f678 --pr_url <pr_url> ask "<your question>"
+Or you can run a [specific released versions](./RELEASE_NOTES.md) of pr-agent, for example:
 ```
-
-Possible questions you can ask include:
-
-- What is the main theme of this PR?
-- Is the PR ready for merge?
-- What are the main changes in this PR?
-- Should this PR be split into smaller parts?
-- Can you compose a rhymed song about this PR?
+codiumai/pr-agent@v0.9
+```
 
 ---
 
-### Method 2: Run from source
+### Run from source
 
 1. Clone this repository:
 
@@ -89,17 +97,21 @@ chmod 600 pr_agent/settings/.secrets.toml
 
 ```
 export PYTHONPATH=[$PYTHONPATH:]<PATH to pr_agent folder>
-python3 -m pr_agent.cli --pr_url <pr_url> /review
-python3 -m pr_agent.cli --pr_url <pr_url> /ask <your question>
-python3 -m pr_agent.cli --pr_url <pr_url> /describe
-python3 -m pr_agent.cli --pr_url <pr_url> /improve
+python3 -m pr_agent.cli --pr_url <pr_url> review
+python3 -m pr_agent.cli --pr_url <pr_url> ask <your question>
+python3 -m pr_agent.cli --pr_url <pr_url> describe
+python3 -m pr_agent.cli --pr_url <pr_url> improve
+python3 -m pr_agent.cli --pr_url <pr_url> add_docs
+python3 -m pr_agent.cli --pr_url <pr_url> generate_labels
+python3 -m pr_agent.cli --issue_url <issue_url> similar_issue
+...
 ```
 
 ---
 
-### Method 3: Run as a GitHub Action
+### Run as a GitHub Action
 
-You can use our pre-built Github Action Docker image to run PR-Agent as a Github Action. 
+You can use our pre-built Github Action Docker image to run PR-Agent as a Github Action.
 
 1. Add the following file to your repository under `.github/workflows/pr_agent.yml`:
 
@@ -145,15 +157,16 @@ jobs:
           OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
-2. Add the following secret to your repository under `Settings > Secrets`:
+2. Add the following secret to your repository under `Settings > Secrets and variables > Actions > New repository secret > Add secret`:
 
 ```
-OPENAI_KEY: <your key>
+Name = OPENAI_KEY
+Secret = <your key>
 ```
 
 The GITHUB_TOKEN secret is automatically created by GitHub.
 
-3. Merge this change to your main branch. 
+3. Merge this change to your main branch.
 When you open your next PR, you should see a comment from `github-actions` bot with a review of your PR, and instructions on how to use the rest of the tools.
 
 4. You may configure PR-Agent by adding environment variables under the env section corresponding to any configurable property in the [configuration](pr_agent/settings/configuration.toml) file. Some examples:
@@ -167,10 +180,11 @@ When you open your next PR, you should see a comment from `github-actions` bot w
 
 ---
 
-### Method 4: Run as a polling server
-Request reviews by tagging your Github user on a PR
+### Run as a polling server
+Request reviews by tagging your GitHub user on a PR
 
-Follow steps 1-3 of method 2.
+Follow [steps 1-3](#run-as-a-github-action) of the GitHub Action setup.
+
 Run the following command to start the server:
 
 ```
@@ -179,7 +193,7 @@ python pr_agent/servers/github_polling.py
 
 ---
 
-### Method 5: Run as a GitHub App
+### Run as a GitHub App
 Allowing you to automate the review process on your private or public repositories.
 
 1. Create a GitHub App from the [Github Developer Portal](https://docs.github.com/en/developers/apps/creating-a-github-app).
@@ -192,6 +206,7 @@ Allowing you to automate the review process on your private or public repositori
    - Set the following events:
      - Issue comment
      - Pull request
+     - Push (if you need to enable triggering on PR update)
 
 2. Generate a random secret for your app, and save it for later. For example, you can use:
 
@@ -221,12 +236,12 @@ git clone https://github.com/Codium-ai/pr-agent.git
    - Copy your app's webhook secret to the webhook_secret field.
    - Set deployment_type to 'app' in [configuration.toml](./pr_agent/settings/configuration.toml)
 
-> The .secrets.toml file is not copied to the Docker image by default, and is only used for local development. 
+> The .secrets.toml file is not copied to the Docker image by default, and is only used for local development.
 > If you want to use the .secrets.toml file in your Docker image, you can add remove it from the .dockerignore file.
-> In most production environments, you would inject the secrets file as environment variables or as mounted volumes. 
+> In most production environments, you would inject the secrets file as environment variables or as mounted volumes.
 > For example, in order to inject a secrets file as a volume in a Kubernetes environment you can update your pod spec to include the following,
 > assuming you have a secret named `pr-agent-settings` with a key named `.secrets.toml`:
-``` 
+```
        volumes:
         - name: settings-volume
           secret:
@@ -260,13 +275,13 @@ docker push codiumai/pr-agent:github_app  # Push to your Docker repository
 9. Install the app by navigating to the "Install App" tab and selecting your desired repositories.
 
 > **Note:** When running PR-Agent from GitHub App, the default configuration file (configuration.toml) will be loaded.<br>
-> However, you can override the default tool parameters by uploading a local configuration file<br>
-> For more information please check out [CONFIGURATION.md](Usage.md#working-from-github-app-pre-built-repo)
+> However, you can override the default tool parameters by uploading a local configuration file `.pr_agent.toml`<br>
+> For more information please check out the [USAGE GUIDE](./Usage.md#working-with-github-app)
 ---
 
-### Method 6 - Deploy as a Lambda Function
+### Deploy as a Lambda Function
 
-1. Follow steps 1-5 of [Method 5](#method-5-run-as-a-github-app).
+1. Follow steps 1-5 of [Method 5](#run-as-a-github-app).
 2. Build a docker image that can be used as a lambda function
     ```shell
     docker buildx build --platform=linux/amd64 . -t codiumai/pr-agent:serverless -f docker/Dockerfile.lambda
@@ -278,12 +293,13 @@ docker push codiumai/pr-agent:github_app  # Push to your Docker repository
     ```
 4. Create a lambda function that uses the uploaded image. Set the lambda timeout to be at least 3m.
 5. Configure the lambda function to have a Function URL.
-6. Go back to steps 8-9 of [Method 5](#method-5-run-as-a-github-app) with the function url as your Webhook URL.
+6. In the environment variables of the Lambda function, specify `AZURE_DEVOPS_CACHE_DIR` to a writable location such as /tmp. (see [link](https://github.com/Codium-ai/pr-agent/pull/450#issuecomment-1840242269))
+7. Go back to steps 8-9 of [Method 5](#run-as-a-github-app) with the function url as your Webhook URL.
     The Webhook URL would look like `https://<LAMBDA_FUNCTION_URL>/api/v1/github_webhooks`
 
 ---
 
-### Method 7 - AWS CodeCommit Setup
+### AWS CodeCommit Setup
 
 Not all features have been added to CodeCommit yet.  As of right now, CodeCommit has been implemented to run the pr-agent CLI on the command line, using AWS credentials stored in environment variables.  (More features will be added in the future.)  The following is a set of instructions to have pr-agent do a review of your CodeCommit pull request from the command line:
 
@@ -322,7 +338,7 @@ Example IAM permissions to that user to allow access to CodeCommit:
                 "codecommit:PostComment*",
                 "codecommit:PutCommentReaction",
                 "codecommit:UpdatePullRequestDescription",
-                "codecommit:UpdatePullRequestTitle"                
+                "codecommit:UpdatePullRequestTitle"
             ],
             "Resource": "*"
         }
@@ -353,7 +369,7 @@ PYTHONPATH="/PATH/TO/PROJECTS/pr-agent" python pr_agent/cli.py \
 
 ---
 
-### Method 8 - Run a GitLab webhook server
+### Run a GitLab webhook server
 
 1. From the GitLab workspace or group, create an access token. Enable the "api" scope only.
 2. Generate a random secret for your app, and save it for later. For example, you can use:
@@ -361,73 +377,86 @@ PYTHONPATH="/PATH/TO/PROJECTS/pr-agent" python pr_agent/cli.py \
 ```
 WEBHOOK_SECRET=$(python -c "import secrets; print(secrets.token_hex(10))")
 ```
-3. Follow the instructions to build the Docker image, setup a secrets file and deploy on your own server from [Method 5](#method-5-run-as-a-github-app) steps 4-7.
+3. Follow the instructions to build the Docker image, setup a secrets file and deploy on your own server from [Method 5](#run-as-a-github-app) steps 4-7.
 4. In the secrets file, fill in the following:
     - Your OpenAI key.
     - In the [gitlab] section, fill in personal_access_token and shared_secret. The access token can be a personal access token, or a group or project access token.
     - Set deployment_type to 'gitlab' in [configuration.toml](./pr_agent/settings/configuration.toml)
-5. Create a webhook in GitLab. Set the URL to the URL of your app's server. Set the secret token to the generated secret from step 2. 
-In the "Trigger" section, check the ‘comments’ and ‘merge request events’ boxes. 
+5. Create a webhook in GitLab. Set the URL to the URL of your app's server. Set the secret token to the generated secret from step 2.
+In the "Trigger" section, check the ‘comments’ and ‘merge request events’ boxes.
 6. Test your installation by opening a merge request or commenting or a merge request using one of CodiumAI's commands.
 
 
 
-### Method 9: Run as a Bitbucket Pipeline
+### Run as a Bitbucket Pipeline
 
 
-You can use our pre-build Bitbucket-Pipeline docker image to run as Bitbucket-Pipeline.
+You can use the Bitbucket Pipeline system to run PR-Agent on every pull request open or update.
 
 1. Add the following file in your repository bitbucket_pipelines.yml
 
 ```yaml
-  pipelines:
+pipelines:
     pull-requests:
       '**':
         - step:
-            name: PR Agent Pipeline
-            caches:
-              - pip
-            image: python:3.8
+            name: PR Agent Review
+            image: python:3.10
             services:
               - docker
             script:
-              - git clone https://github.com/Codium-ai/pr-agent.git
-              - cd pr-agent
-              - docker build -t bitbucket_runner:latest -f Dockerfile.bitbucket_pipeline .
-              - docker run -e OPENAI_API_KEY=$OPENAI_API_KEY -e BITBUCKET_BEARER_TOKEN=$BITBUCKET_BEARER_TOKEN -e BITBUCKET_PR_ID=$BITBUCKET_PR_ID -e BITBUCKET_REPO_SLUG=$BITBUCKET_REPO_SLUG -e BITBUCKET_WORKSPACE=$BITBUCKET_WORKSPACE bitbucket_runner:latest
+              - docker run -e CONFIG.GIT_PROVIDER=bitbucket -e OPENAI.KEY=$OPENAI_API_KEY -e BITBUCKET.BEARER_TOKEN=$BITBUCKET_BEARER_TOKEN codiumai/pr-agent:latest --pr_url=https://bitbucket.org/$BITBUCKET_WORKSPACE/$BITBUCKET_REPO_SLUG/pull-requests/$BITBUCKET_PR_ID review
 ```
 
-2. Add the following secret to your repository under Repository settings > Pipelines > Repository variables.
+2. Add the following secure variables to your repository under Repository settings > Pipelines > Repository variables.
 OPENAI_API_KEY: <your key>
 BITBUCKET_BEARER_TOKEN: <your token>
 
-3. To get BITBUCKET_BEARER_TOKEN follow these steps
-  So here is my step by step tutorial
-  i) Insert your workspace name instead of {workspace_name} and go to the following link in order to create an OAuth consumer.
+You can get a Bitbucket token for your repository by following Repository Settings -> Security -> Access Tokens.
 
-      https://bitbucket.org/{workspace_name}/workspace/settings/api
-
-      set callback URL to http://localhost:8976 (doesn't need to be a real server there)
-      select permissions: repository -> read
-
-  ii) use consumer's Key as a {client_id} and open the following URL in the browser
-
-      https://bitbucket.org/site/oauth2/authorize?client_id={client_id}&response_type=code
-
-  iii)
-      after you press "Grant access" in the browser it will redirect you to
-
-      http://localhost:8976?code=<CODE>
-
-  iv) use the code from the previous step and consumer's Key as a {client_id}, and consumer's Secret as {client_secret}
-
-      curl -X POST -u "{client_id}:{client_secret}" \
-          https://bitbucket.org/site/oauth2/access_token \
-          -d grant_type=authorization_code \
-          -d code={code} \
+Note that comments on a PR are not supported in Bitbucket Pipeline.
 
 
-After completing this steps, you just to place this access token in the repository varibles.
+### Run using CodiumAI-hosted Bitbucket app
 
+Please contact <support@codium.ai> or visit [CodiumAI pricing page](https://www.codium.ai/pricing/) if you're interested in a hosted BitBucket app solution that provides full functionality including PR reviews and comment handling. It's based on the [bitbucket_app.py](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/git_providers/bitbucket_provider.py) implementation.
+
+
+### Bitbucket Server and Data Center
+
+Login into your on-prem instance of Bitbucket with your service account username and password.
+Navigate to `Manage account`, `HTTP Access tokens`, `Create Token`.
+Generate the token and add it to .secret.toml under `bitbucket_server` section
+
+```toml
+[bitbucket_server]
+bearer_token = "<your key>"
+```
+
+#### Run it as CLI
+
+Modify `configuration.toml`:
+
+```toml
+git_provider="bitbucket_server"
+```
+
+and pass the Pull request URL:
+```shell
+python cli.py --pr_url https://git.onpreminstanceofbitbucket.com/projects/PROJECT/repos/REPO/pull-requests/1 review
+```
+
+#### Run it as service
+
+To run pr-agent as webhook, build the docker image:
+```
+docker build . -t codiumai/pr-agent:bitbucket_server_webhook --target bitbucket_server_webhook -f docker/Dockerfile
+docker push codiumai/pr-agent:bitbucket_server_webhook  # Push to your Docker repository
+```
+
+Navigate to `Projects` or `Repositories`, `Settings`, `Webhooks`, `Create Webhook`.
+Fill the name and URL, Authentication None select the Pull Request Opened checkbox to receive that event as webhook.
+
+The URL should end with `/webhook`, for example: https://domain.com/webhook
 
 =======

@@ -1,16 +1,15 @@
-import logging
 import os
 import re
 from collections import Counter
 from typing import List, Optional, Tuple
 from urllib.parse import urlparse
 
-from ..algo.language_handler import is_valid_file, language_extension_map
-from ..algo.pr_processing import clip_tokens
-from ..algo.utils import load_large_diff
-from ..config_loader import get_settings
-from .git_provider import EDIT_TYPE, FilePatchInfo, GitProvider, IncrementalPR
 from pr_agent.git_providers.codecommit_client import CodeCommitClient
+
+from ..algo.utils import load_large_diff
+from .git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
+from ..config_loader import get_settings
+from ..log import get_logger
 
 
 class PullRequestCCMimic:
@@ -62,6 +61,7 @@ class CodeCommitProvider(GitProvider):
         self.pr = None
         self.diff_files = None
         self.git_files = None
+        self.pr_url = pr_url
         if pr_url:
             self.set_pr(pr_url)
 
@@ -166,7 +166,7 @@ class CodeCommitProvider(GitProvider):
 
     def publish_comment(self, pr_comment: str, is_temporary: bool = False):
         if is_temporary:
-            logging.info(pr_comment)
+            get_logger().info(pr_comment)
             return
 
         pr_comment = CodeCommitProvider._remove_markdown_html(pr_comment)
@@ -188,12 +188,12 @@ class CodeCommitProvider(GitProvider):
         for suggestion in code_suggestions:
             # Verify that each suggestion has the required keys
             if not all(key in suggestion for key in ["body", "relevant_file", "relevant_lines_start"]):
-                logging.warning(f"Skipping code suggestion #{counter}: Each suggestion must have 'body', 'relevant_file', 'relevant_lines_start' keys")
+                get_logger().warning(f"Skipping code suggestion #{counter}: Each suggestion must have 'body', 'relevant_file', 'relevant_lines_start' keys")
                 continue
        
             # Publish the code suggestion to CodeCommit
             try:
-                logging.debug(f"Code Suggestion #{counter} in file: {suggestion['relevant_file']}: {suggestion['relevant_lines_start']}")
+                get_logger().debug(f"Code Suggestion #{counter} in file: {suggestion['relevant_file']}: {suggestion['relevant_lines_start']}")
                 self.codecommit_client.publish_comment(
                     repo_name=self.repo_name,
                     pr_number=self.pr_num,
@@ -220,6 +220,9 @@ class CodeCommitProvider(GitProvider):
         return [""]  # not implemented yet
 
     def remove_initial_comment(self):
+        return ""  # not implemented yet
+
+    def remove_comment(self, comment):
         return ""  # not implemented yet
 
     def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
@@ -267,6 +270,8 @@ class CodeCommitProvider(GitProvider):
         # where each dictionary item is a language name.
         # We build that language->extension dictionary here in main_extensions_flat.
         main_extensions_flat = {}
+        language_extension_map_org = get_settings().language_extension_map_org
+        language_extension_map = {k.lower(): v for k, v in language_extension_map_org.items()}
         for language, extensions in language_extension_map.items():
             for ext in extensions:
                 main_extensions_flat[ext] = language
@@ -296,11 +301,11 @@ class CodeCommitProvider(GitProvider):
         return self.codecommit_client.get_file(self.repo_name, settings_filename, self.pr.source_commit, optional=True)
 
     def add_eyes_reaction(self, issue_comment_id: int) -> Optional[int]:
-        logging.info("CodeCommit provider does not support eyes reaction yet")
+        get_logger().info("CodeCommit provider does not support eyes reaction yet")
         return True
 
     def remove_reaction(self, issue_comment_id: int, reaction_id: int) -> bool:
-        logging.info("CodeCommit provider does not support removing reactions yet")
+        get_logger().info("CodeCommit provider does not support removing reactions yet")
         return True
 
     @staticmethod
@@ -366,7 +371,7 @@ class CodeCommitProvider(GitProvider):
         # TODO: implement support for multiple targets in one CodeCommit PR
         #       for now, we are only using the first target in the PR
         if len(response.targets) > 1:
-            logging.warning(
+            get_logger().warning(
                 "Multiple targets in one PR is not supported for CodeCommit yet. Continuing, using the first target only..."
             )
 

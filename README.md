@@ -2,13 +2,19 @@
 
 <div align="center">
 
-<img src="./pics/logo-dark.png#gh-dark-mode-only" width="330"/>
-<img src="./pics/logo-light.png#gh-light-mode-only" width="330"/><br/>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://codium.ai/images/pr_agent/logo-dark.png" width="330">
+  <source media="(prefers-color-scheme: light)" srcset="https://codium.ai/images/pr_agent/logo-light.png" width="330">
+  <img alt="logo">
+</picture>
+<br/>
 Making pull requests less painful with an AI agent
 </div>
 
 [![GitHub license](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/Codium-ai/pr-agent/blob/main/LICENSE)
 [![Discord](https://badgen.net/badge/icon/discord?icon=discord&label&color=purple)](https://discord.com/channels/1057273017547378788/1126104260430528613)
+[![Twitter](https://img.shields.io/twitter/follow/codiumai)](https://twitter.com/codiumai)
     <a href="https://github.com/Codium-ai/pr-agent/commits/main">
     <img alt="GitHub" src="https://img.shields.io/github/last-commit/Codium-ai/pr-agent/main?style=for-the-badge" height="20">
     </a>
@@ -27,14 +33,17 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 \
 ‣ **Update Changelog ([`/update_changelog`](./docs/UPDATE_CHANGELOG.md))**: Automatically updating the CHANGELOG.md file with the PR changes.
 \
-‣ **Find similar issue ([`/similar_issue`](./docs/SIMILAR_ISSUE.md))**: Automatically retrieves and presents similar issues
+‣ **Find Similar Issue ([`/similar_issue`](./docs/SIMILAR_ISSUE.md))**: Automatically retrieves and presents similar issues
+\
+‣ **Add Documentation ([`/add_docs`](./docs/ADD_DOCUMENTATION.md))**: Automatically adds documentation to un-documented functions/classes in the PR.
+\
+‣ **Generate Custom Labels ([`/generate_labels`](./docs/GENERATE_CUSTOM_LABELS.md))**: Automatically suggests custom labels based on the PR code changes.
 
+See the [Installation Guide](./INSTALL.md) for instructions how to install and run the tool on different platforms.
 
-See the [Usage Guide](./Usage.md) for instructions how to run the different tools from _CLI_, _online usage_, Or by _automatically triggering_ them when a new PR is opened.
+See the [Usage Guide](./Usage.md) for instructions how to run the different tools from _CLI_, _online usage_, or by _automatically triggering_ them when a new PR is opened.
 
 See the [Tools Guide](./docs/TOOLS_GUIDE.md) for detailed description of the different tools.
-
-See the [Release notes](./RELEASE_NOTES.md) for updates on the latest changes.
 
 <h3>Example results:</h3>
 </div>
@@ -104,13 +113,16 @@ See the [Release notes](./RELEASE_NOTES.md) for updates on the latest changes.
 |       |                                             | GitHub | Gitlab | Bitbucket | CodeCommit | Azure DevOps | Gerrit |
 |-------|---------------------------------------------|:------:|:------:|:---------:|:----------:|:----------:|:----------:|
 | TOOLS | Review                                      |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:    |
+|       | ⮑ Incremental                              |   :white_check_mark:    |       |           |       |          |     |
 |       | Ask                                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:          |   :white_check_mark:          | :white_check_mark: |  :white_check_mark:    |
 |       | Auto-Description                            |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |   :white_check_mark:    |   :white_check_mark:    | :white_check_mark:    |
 |       | Improve Code                                |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |   :white_check_mark:    |          |    :white_check_mark:    |
 |       | ⮑ Extended                             |   :white_check_mark:    |   :white_check_mark:    |        :white_check_mark:   |   :white_check_mark:    |          | :white_check_mark:    |
 |       | Reflect and Review                          |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |          |   :white_check_mark:    |    :white_check_mark:    |
-|       | Update CHANGELOG.md                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |          |          |       |
+|       | Update CHANGELOG.md                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |   :white_check_mark:    |          |       |
 |       | Find similar issue                          |   :white_check_mark:    |                         |                             |          |          |       |
+|       | Add Documentation                           |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |   :white_check_mark:    |          |    :white_check_mark:    |
+|       | Generate Labels                           |   :white_check_mark:    |   :white_check_mark:    |         |     |          |      |
 |       |                                             |        |        |      |      |      |
 | USAGE | CLI                                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |   :white_check_mark:    |   :white_check_mark:    |
 |       | App / webhook                               |   :white_check_mark:    |   :white_check_mark:    |           |          |          |
@@ -167,7 +179,7 @@ There are several ways to use PR-Agent:
 
 The following diagram illustrates PR-Agent tools and their flow:
 
-![PR-Agent Tools](https://www.codium.ai/wp-content/uploads/2023/07/codiumai-diagram-v4.jpg)
+![PR-Agent Tools](https://codium.ai/images/pr_agent/diagram-v0.9.png)
 
 Check out the [PR Compression strategy](./PR_COMPRESSION.md) page for more details on how we convert a code diff to a manageable LLM prompt
 
@@ -197,8 +209,11 @@ Here are some advantages of PR-Agent:
   - [x] Rank the PR (see [here](https://github.com/Codium-ai/pr-agent/pull/89))   
   - [ ] Enforcing CONTRIBUTING.md guidelines
   - [ ] Performance (are there any performance issues)
-  - [ ] Documentation (is the PR properly documented)
+  - [x] Documentation (is the PR properly documented)
   - [ ] ...
+
+See the [Release notes](./RELEASE_NOTES.md) for updates on the latest changes.
+
 
 ## Similar Projects
 
@@ -207,7 +222,15 @@ Here are some advantages of PR-Agent:
 - [openai-pr-reviewer](https://github.com/coderabbitai/openai-pr-reviewer)
 - [CodeReview BOT](https://github.com/anc95/ChatGPT-CodeReview)
 - [AI-Maintainer](https://github.com/merwanehamadi/AI-Maintainer)
-  
+
+## Data Privacy
+
+If you use a self-hosted PR-Agent with your OpenAI API key, it is between you and OpenAI. You can read their API data privacy policy here:
+https://openai.com/enterprise-privacy
+
+When using a PR-Agent app hosted by CodiumAI, we will not store any of your data, nor will we used it for training.
+You will also benefit from an OpenAI account with zero data retention.
+
 ## Links
 
 [![Join our Discord community](https://raw.githubusercontent.com/Codium-ai/codiumai-vscode-release/main/media/docs/Joincommunity.png)](https://discord.gg/kG35uSHDBc)

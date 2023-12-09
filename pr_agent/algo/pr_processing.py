@@ -1,27 +1,29 @@
 from __future__ import annotations
 
 import difflib
-import logging
 import re
 import traceback
 from typing import Any, Callable, List, Tuple
 
 from github import RateLimitExceededException
 
-from pr_agent.algo import MAX_TOKENS
 from pr_agent.algo.git_patch_processing import convert_to_hunks_with_lines_numbers, extend_patch, handle_patch_deletions
 from pr_agent.algo.language_handler import sort_files_by_main_languages
-from pr_agent.algo.token_handler import TokenHandler, get_token_encoder
+from pr_agent.algo.file_filter import filter_ignored
+from pr_agent.algo.token_handler import TokenHandler
+from pr_agent.algo.utils import get_max_tokens
 from pr_agent.config_loader import get_settings
-from pr_agent.git_providers.git_provider import FilePatchInfo, GitProvider
+from pr_agent.git_providers.git_provider import FilePatchInfo, GitProvider, EDIT_TYPE
+from pr_agent.log import get_logger
 
 DELETED_FILES_ = "Deleted files:\n"
 
-MORE_MODIFIED_FILES_ = "More modified files:\n"
+MORE_MODIFIED_FILES_ = "Additional modified files (insufficient token budget to process):\n"
+
+ADDED_FILES_ = "Additional added files (insufficient token budget to process):\n"
 
 OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD = 1000
 OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD = 600
-PATCH_EXTRA_LINES = 3
 
 def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler, model: str,
                 add_line_numbers_to_hunks: bool = False, disable_extra_lines: bool = False) -> str:
@@ -44,31 +46,37 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler, model: s
     """
 
     if disable_extra_lines:
-        global PATCH_EXTRA_LINES
         PATCH_EXTRA_LINES = 0
+    else:
+        PATCH_EXTRA_LINES = get_settings().config.patch_extra_lines
 
     try:
         diff_files = git_provider.get_diff_files()
     except RateLimitExceededException as e:
-        logging.error(f"Rate limit exceeded for git provider API. original message {e}")
+        get_logger().error(f"Rate limit exceeded for git provider API. original message {e}")
         raise
+
+    diff_files = filter_ignored(diff_files)
 
     # get pr languages
     pr_languages = sort_files_by_main_languages(git_provider.get_languages(), diff_files)
 
     # generate a standard diff string, with patch extension
-    patches_extended, total_tokens, patches_extended_tokens = pr_generate_extended_diff(pr_languages, token_handler,
-                                                               add_line_numbers_to_hunks)
+    patches_extended, total_tokens, patches_extended_tokens = pr_generate_extended_diff(
+        pr_languages, token_handler, add_line_numbers_to_hunks, patch_extra_lines=PATCH_EXTRA_LINES)
 
     # if we are under the limit, return the full diff
-    if total_tokens + OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD < MAX_TOKENS[model]:
+    if total_tokens + OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD < get_max_tokens(model):
         return "\n".join(patches_extended)
 
     # if we are over the limit, start pruning
-    patches_compressed, modified_file_names, deleted_file_names = \
+    patches_compressed, modified_file_names, deleted_file_names, added_file_names = \
         pr_generate_compressed_diff(pr_languages, token_handler, model, add_line_numbers_to_hunks)
 
     final_diff = "\n".join(patches_compressed)
+    if added_file_names:
+        added_list_str = ADDED_FILES_ + "\n".join(added_file_names)
+        final_diff = final_diff + "\n\n" + added_list_str
     if modified_file_names:
         modified_list_str = MORE_MODIFIED_FILES_ + "\n".join(modified_file_names)
         final_diff = final_diff + "\n\n" + modified_list_str
@@ -80,7 +88,8 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler, model: s
 
 def pr_generate_extended_diff(pr_languages: list,
                               token_handler: TokenHandler,
-                              add_line_numbers_to_hunks: bool) -> Tuple[list, int, list]:
+                              add_line_numbers_to_hunks: bool,
+                              patch_extra_lines: int = 0) -> Tuple[list, int, list]:
     """
     Generate a standard diff string with patch extension, while counting the number of tokens used and applying diff
     minimization techniques if needed.
@@ -102,7 +111,7 @@ def pr_generate_extended_diff(pr_languages: list,
                 continue
 
             # extend each patch with extra lines of context
-            extended_patch = extend_patch(original_file_content_str, patch, num_lines=PATCH_EXTRA_LINES)
+            extended_patch = extend_patch(original_file_content_str, patch, num_lines=patch_extra_lines)
             full_extended_patch = f"\n\n## {file.filename}\n\n{extended_patch}\n"
 
             if add_line_numbers_to_hunks:
@@ -118,7 +127,7 @@ def pr_generate_extended_diff(pr_languages: list,
 
 
 def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler, model: str,
-                                convert_hunks_to_line_numbers: bool) -> Tuple[list, list, list]:
+                                convert_hunks_to_line_numbers: bool) -> Tuple[list, list, list, list]:
     """
     Generate a compressed diff string for a pull request, using diff minimization techniques to reduce the number of
     tokens used.
@@ -144,6 +153,7 @@ def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler, mo
     """
 
     patches = []
+    added_files_list = []
     modified_files_list = []
     deleted_files_list = []
     # sort each one of the languages in top_langs by the number of tokens in the diff
@@ -161,7 +171,7 @@ def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler, mo
 
         # removing delete-only hunks
         patch = handle_patch_deletions(patch, original_file_content_str,
-                                       new_file_content_str, file.filename)
+                                       new_file_content_str, file.filename, file.edit_type)
         if patch is None:
             if not deleted_files_list:
                 total_tokens += token_handler.count_tokens(DELETED_FILES_)
@@ -175,21 +185,26 @@ def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler, mo
         new_patch_tokens = token_handler.count_tokens(patch)
 
         # Hard Stop, no more tokens
-        if total_tokens > MAX_TOKENS[model] - OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD:
-            logging.warning(f"File was fully skipped, no more tokens: {file.filename}.")
+        if total_tokens > get_max_tokens(model) - OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD:
+            get_logger().warning(f"File was fully skipped, no more tokens: {file.filename}.")
             continue
 
         # If the patch is too large, just show the file name
-        if total_tokens + new_patch_tokens > MAX_TOKENS[model] - OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD:
+        if total_tokens + new_patch_tokens > get_max_tokens(model) - OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD:
             # Current logic is to skip the patch if it's too large
             # TODO: Option for alternative logic to remove hunks from the patch to reduce the number of tokens
             #  until we meet the requirements
             if get_settings().config.verbosity_level >= 2:
-                logging.warning(f"Patch too large, minimizing it, {file.filename}")
-            if not modified_files_list:
-                total_tokens += token_handler.count_tokens(MORE_MODIFIED_FILES_)
-            modified_files_list.append(file.filename)
-            total_tokens += token_handler.count_tokens(file.filename) + 1
+                get_logger().warning(f"Patch too large, minimizing it, {file.filename}")
+            if file.edit_type == EDIT_TYPE.ADDED:
+                if not added_files_list:
+                    total_tokens += token_handler.count_tokens(ADDED_FILES_)
+                added_files_list.append(file.filename)
+            else:
+                if not modified_files_list:
+                    total_tokens += token_handler.count_tokens(MORE_MODIFIED_FILES_)
+                modified_files_list.append(file.filename)
+                total_tokens += token_handler.count_tokens(file.filename) + 1
             continue
 
         if patch:
@@ -200,9 +215,9 @@ def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler, mo
             patches.append(patch_final)
             total_tokens += token_handler.count_tokens(patch_final)
             if get_settings().config.verbosity_level >= 2:
-                logging.info(f"Tokens: {total_tokens}, last filename: {file.filename}")
+                get_logger().info(f"Tokens: {total_tokens}, last filename: {file.filename}")
 
-    return patches, modified_files_list, deleted_files_list
+    return patches, modified_files_list, deleted_files_list, added_files_list
 
 
 async def retry_with_fallback_models(f: Callable):
@@ -214,7 +229,7 @@ async def retry_with_fallback_models(f: Callable):
             get_settings().set("openai.deployment_id", deployment_id)
             return await f(model)
         except Exception as e:
-            logging.warning(
+            get_logger().warning(
                 f"Failed to generate prediction with {model}"
                 f"{(' from deployment ' + deployment_id) if deployment_id else ''}: "
                 f"{traceback.format_exc()}"
@@ -267,7 +282,7 @@ def find_line_number_of_relevant_line_in_file(diff_files: List[FilePatchInfo],
         r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@[ ]?(.*)")
 
     for file in diff_files:
-        if file.filename.strip() == relevant_file:
+        if file.filename and (file.filename.strip() == relevant_file):
             patch = file.patch
             patch_lines = patch.splitlines()
 
@@ -311,35 +326,6 @@ def find_line_number_of_relevant_line_in_file(diff_files: List[FilePatchInfo],
     return position, absolute_position
 
 
-def clip_tokens(text: str, max_tokens: int) -> str:
-    """
-    Clip the number of tokens in a string to a maximum number of tokens.
-
-    Args:
-        text (str): The string to clip.
-        max_tokens (int): The maximum number of tokens allowed in the string.
-
-    Returns:
-        str: The clipped string.
-    """
-    if not text:
-        return text
-
-    try:
-        encoder = get_token_encoder()
-        num_input_tokens = len(encoder.encode(text))
-        if num_input_tokens <= max_tokens:
-            return text
-        num_chars = len(text)
-        chars_per_token = num_chars / num_input_tokens
-        num_output_chars = int(chars_per_token * max_tokens)
-        clipped_text = text[:num_output_chars]
-        return clipped_text
-    except Exception as e:
-        logging.warning(f"Failed to clip tokens: {e}")
-        return text
-
-
 def get_pr_multi_diffs(git_provider: GitProvider,
                        token_handler: TokenHandler,
                        model: str,
@@ -347,24 +333,26 @@ def get_pr_multi_diffs(git_provider: GitProvider,
     """
     Retrieves the diff files from a Git provider, sorts them by main language, and generates patches for each file.
     The patches are split into multiple groups based on the maximum number of tokens allowed for the given model.
-    
+
     Args:
         git_provider (GitProvider): An object that provides access to Git provider APIs.
         token_handler (TokenHandler): An object that handles tokens in the context of a pull request.
         model (str): The name of the model.
         max_calls (int, optional): The maximum number of calls to retrieve diff files. Defaults to 5.
-    
+
     Returns:
         List[str]: A list of final diff strings, split into multiple groups based on the maximum number of tokens allowed for the given model.
-    
+
     Raises:
         RateLimitExceededException: If the rate limit for the Git provider API is exceeded.
     """
     try:
         diff_files = git_provider.get_diff_files()
     except RateLimitExceededException as e:
-        logging.error(f"Rate limit exceeded for git provider API. original message {e}")
+        get_logger().error(f"Rate limit exceeded for git provider API. original message {e}")
         raise
+
+    diff_files = filter_ignored(diff_files)
 
     # Sort files by main language
     pr_languages = sort_files_by_main_languages(git_provider.get_languages(), diff_files)
@@ -381,7 +369,7 @@ def get_pr_multi_diffs(git_provider: GitProvider,
     for file in sorted_files:
         if call_number > max_calls:
             if get_settings().config.verbosity_level >= 2:
-                logging.info(f"Reached max calls ({max_calls})")
+                get_logger().info(f"Reached max calls ({max_calls})")
             break
 
         original_file_content_str = file.base_file
@@ -391,26 +379,26 @@ def get_pr_multi_diffs(git_provider: GitProvider,
             continue
 
         # Remove delete-only hunks
-        patch = handle_patch_deletions(patch, original_file_content_str, new_file_content_str, file.filename)
+        patch = handle_patch_deletions(patch, original_file_content_str, new_file_content_str, file.filename, file.edit_type)
         if patch is None:
             continue
 
         patch = convert_to_hunks_with_lines_numbers(patch, file)
         new_patch_tokens = token_handler.count_tokens(patch)
-        if patch and (total_tokens + new_patch_tokens > MAX_TOKENS[model] - OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD):
+        if patch and (total_tokens + new_patch_tokens > get_max_tokens(model) - OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD):
             final_diff = "\n".join(patches)
             final_diff_list.append(final_diff)
             patches = []
             total_tokens = token_handler.prompt_tokens
             call_number += 1
             if get_settings().config.verbosity_level >= 2:
-                logging.info(f"Call number: {call_number}")
+                get_logger().info(f"Call number: {call_number}")
 
         if patch:
             patches.append(patch)
             total_tokens += new_patch_tokens
             if get_settings().config.verbosity_level >= 2:
-                logging.info(f"Tokens: {total_tokens}, last filename: {file.filename}")
+                get_logger().info(f"Tokens: {total_tokens}, last filename: {file.filename}")
 
     # Add the last chunk
     if patches:

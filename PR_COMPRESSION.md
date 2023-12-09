@@ -1,4 +1,4 @@
-# Git Patch Logic
+# PR Compression Strategy
 There are two scenarios:
 1. The PR is small enough to fit in a single prompt (including system and user prompt)
 2. The PR is too large to fit in a single prompt (including system and user prompt)
@@ -16,7 +16,7 @@ We prioritize the languages of the repo based on the following criteria:
 ## Small PR
 In this case, we can fit the entire PR in a single prompt:
 1. Exclude binary files and non code files (e.g. images, pdfs, etc)
-2. We Expand the surrounding context of each patch to 6 lines above and below the patch
+2. We Expand the surrounding context of each patch to 3 lines above and below the patch
 ## Large PR
 
 ### Motivation
@@ -25,7 +25,7 @@ We want to be able to pack as much information as possible in a single LMM promp
 
 
 
-#### PR compression strategy
+#### Compression strategy
 We prioritize additions over deletions:
  - Combine all deleted files into a single list (`deleted files`)
  - File patches are a list of hunks, remove all hunks of type deletion-only from the hunks in the file patch
@@ -39,4 +39,4 @@ We use [tiktoken](https://github.com/openai/tiktoken) to tokenize the patches af
 4. If we haven't reached the max token length, add the `deleted files` to the prompt until the prompt reaches the max token length (hard stop), skip the rest of the patches.
 
 ### Example
-![](https://codium.ai/images/git_patch_logic.png)
+<kbd><img src=https://codium.ai/images/git_patch_logic.png width="768"></kbd>

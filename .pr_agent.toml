@@ -1,0 +1,6 @@
+[pr_reviewer]
+enable_review_labels_effort = true
+
+
+[pr_code_suggestions]
+summarize=true

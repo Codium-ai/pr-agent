@@ -1,9 +1,10 @@
 import json
-import logging
 from typing import Optional, Tuple
 from urllib.parse import urlparse
 
 import os
+
+from ..log import get_logger
 
 AZURE_DEVOPS_AVAILABLE = True
 try:
@@ -13,9 +14,8 @@ try:
 except ImportError:
     AZURE_DEVOPS_AVAILABLE = False
 
-from ..algo.pr_processing import clip_tokens
 from ..config_loader import get_settings
-from ..algo.utils import load_large_diff
+from ..algo.utils import load_large_diff, clip_tokens
 from ..algo.language_handler import is_valid_file
 from .git_provider import EDIT_TYPE, FilePatchInfo
 
@@ -55,7 +55,7 @@ class AzureDevopsProvider:
                                                                  path=".pr_agent.toml")
             return contents
         except Exception as e:
-            logging.exception("get repo settings error")
+            get_logger().exception("get repo settings error")
             return ""
 
     def get_files(self):
@@ -100,14 +100,18 @@ class AzureDevopsProvider:
                     continue
 
                 version = GitVersionDescriptor(version=head_sha.commit_id, version_type='commit')
-                new_file_content_str = self.azure_devops_client.get_item(repository_id=self.repo_slug,
-                                                                         path=file,
-                                                                         project=self.workspace_slug,
-                                                                         version_descriptor=version,
-                                                                         download=False,
-                                                                         include_content=True)
+                try:
+                    new_file_content_str = self.azure_devops_client.get_item(repository_id=self.repo_slug,
+                                                                            path=file,
+                                                                            project=self.workspace_slug,
+                                                                            version_descriptor=version,
+                                                                            download=False,
+                                                                            include_content=True)
 
-                new_file_content_str = new_file_content_str.content
+                    new_file_content_str = new_file_content_str.content
+                except Exception as error:
+                    get_logger().error("Failed to retrieve new file content of %s at version %s. Error: %s", file, version, str(error))
+                    new_file_content_str = ""
 
                 edit_type = EDIT_TYPE.MODIFIED
                 if diff_types[file] == 'add':
@@ -118,13 +122,17 @@ class AzureDevopsProvider:
                     edit_type = EDIT_TYPE.RENAMED
 
                 version = GitVersionDescriptor(version=base_sha.commit_id, version_type='commit')
-                original_file_content_str = self.azure_devops_client.get_item(repository_id=self.repo_slug,
+                try:
+                    original_file_content_str = self.azure_devops_client.get_item(repository_id=self.repo_slug,
                                                                               path=file,
                                                                               project=self.workspace_slug,
                                                                               version_descriptor=version,
                                                                               download=False,
                                                                               include_content=True)
-                original_file_content_str = original_file_content_str.content
+                    original_file_content_str = original_file_content_str.content
+                except Exception as error:
+                    get_logger().error("Failed to retrieve original file content of %s at version %s. Error: %s", file, version, str(error))
+                    original_file_content_str = ""
 
                 patch = load_large_diff(file, new_file_content_str, original_file_content_str)
 
@@ -158,7 +166,7 @@ class AzureDevopsProvider:
                                                          pull_request_id=self.pr_num,
                                                          git_pull_request_to_update=updated_pr)
         except Exception as e:
-            logging.exception(f"Could not update pull request {self.pr_num} description: {e}")
+            get_logger().exception(f"Could not update pull request {self.pr_num} description: {e}")
 
     def remove_initial_comment(self):
         return ""  # not implemented yet
@@ -226,9 +234,6 @@ class AzureDevopsProvider:
     @staticmethod
     def _parse_pr_url(pr_url: str) -> Tuple[str, int]:
         parsed_url = urlparse(pr_url)
-
-        if 'azure.com' not in parsed_url.netloc:
-            raise ValueError("The provided URL is not a valid Azure DevOps URL")
 
         path_parts = parsed_url.path.strip('/').split('/')
 

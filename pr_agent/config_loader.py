@@ -14,6 +14,7 @@ global_settings = Dynaconf(
     settings_files=[join(current_dir, f) for f in [
         "settings/.secrets.toml",
         "settings/configuration.toml",
+        "settings/ignore.toml",
         "settings/language_extensions.toml",
         "settings/pr_reviewer_prompts.toml",
         "settings/pr_questions_prompts.toml",
@@ -22,7 +23,10 @@ global_settings = Dynaconf(
         "settings/pr_sort_code_suggestions_prompts.toml",
         "settings/pr_information_from_user_prompts.toml",
         "settings/pr_update_changelog_prompts.toml",
-        "settings_prod/.secrets.toml"
+        "settings/pr_custom_labels.toml",
+        "settings/pr_add_docs.toml",
+        "settings_prod/.secrets.toml",
+        "settings/custom_labels.toml"
     ]]
 )
 
