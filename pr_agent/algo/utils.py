@@ -80,7 +80,7 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
     return markdown_text
 
 
-def parse_code_suggestion(code_suggestions: dict, i:int, gfm_supported: bool=True) -> str:
+def parse_code_suggestion(code_suggestions: dict, i: int = 0, gfm_supported: bool = True) -> str:
     """
     Convert a dictionary of data into markdown format.
 
@@ -91,12 +91,10 @@ def parse_code_suggestion(code_suggestions: dict, i:int, gfm_supported: bool=Tru
         str: A string containing the markdown formatted text generated from the input dictionary.
     """
     markdown_text = ""
-    if i == 0:
-        markdown_text += "<hr>"
     if gfm_supported and 'relevant line' in code_suggestions:
-        # markdown_text=markdown_text.strip()
+        if i == 0:
+            markdown_text += "<hr>"
         markdown_text += '<table>'
-        relevant_file = ''
         for sub_key, sub_value in code_suggestions.items():
             try:
                 if sub_key.lower() == 'relevant file':
