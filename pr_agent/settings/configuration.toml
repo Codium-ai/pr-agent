@@ -1,5 +1,5 @@
 [config]
-model="gpt-4" # "gpt-4-1106-preview"
+model="gpt-4-1106-preview" # "gpt-4-1106-preview"
 fallback_models=["gpt-3.5-turbo-16k"]
 git_provider="github"
 publish_output=true
@@ -29,7 +29,7 @@ ask_and_reflect=false
 automatic_review=true
 remove_previous_review_comment=false
 persistent_comment=true
-extra_instructions = ""
+extra_instructions = "Escreva em português"
 # review labels
 enable_review_labels_security=true
 enable_review_labels_effort=false
@@ -39,12 +39,12 @@ minimal_commits_for_incremental_review=0
 minimal_minutes_for_incremental_review=0
 
 [pr_description] # /describe #
-publish_labels=true
+publish_labels=false
 publish_description_as_comment=false
 add_original_user_description=false
 keep_original_user_title=false
 use_bullet_points=true
-extra_instructions = ""
+extra_instructions = "Escreva em português"
 enable_pr_type=true
 enable_file_walkthrough=false
 enable_semantic_files_types=true
@@ -60,10 +60,10 @@ include_generated_by_header=true
 [pr_questions] # /ask #
 
 [pr_code_suggestions] # /improve #
-num_code_suggestions=4
+num_code_suggestions=5
 summarize = false
-extra_instructions = ""
-rank_suggestions = false
+extra_instructions = "Escreva em português"
+rank_suggestions = true
 # params for '/improve --extended' mode
 num_code_suggestions_per_chunk=8
 rank_extended_suggestions = true
@@ -71,7 +71,7 @@ max_number_of_calls = 5
 final_clip_factor = 0.9
 
 [pr_add_docs] # /add_docs #
-extra_instructions = ""
+extra_instructions = "Escreva em português"
 docs_style = "Sphinx Style" # "Google Style with Args, Returns, Attributes...etc", "Numpy Style", "Sphinx Style", "PEP257", "reStructuredText"
 
 [pr_update_changelog] # /update_changelog #
