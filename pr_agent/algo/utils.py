@@ -64,9 +64,9 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
                     markdown_text += f"\n\n- **{emoji} Code feedback:**\n\n"
             else:
                 markdown_text += f"- {emoji} **{key}:**\n\n"
-            for item in value:
+            for i, item in enumerate(value):
                 if isinstance(item, dict) and key.lower() == 'code feedback':
-                    markdown_text += parse_code_suggestion(item, gfm_supported)
+                    markdown_text += parse_code_suggestion(item, i, gfm_supported)
                 elif item:
                     markdown_text += f"  - {item}\n"
             if key.lower() == 'code feedback':
@@ -80,7 +80,7 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
     return markdown_text
 
 
-def parse_code_suggestion(code_suggestions: dict, gfm_supported: bool=True) -> str:
+def parse_code_suggestion(code_suggestions: dict, i:int, gfm_supported: bool=True) -> str:
     """
     Convert a dictionary of data into markdown format.
 
@@ -91,6 +91,8 @@ def parse_code_suggestion(code_suggestions: dict, gfm_supported: bool=True) -> s
         str: A string containing the markdown formatted text generated from the input dictionary.
     """
     markdown_text = ""
+    if i == 0:
+        markdown_text += "<hr>"
     if gfm_supported and 'relevant line' in code_suggestions:
         # markdown_text=markdown_text.strip()
         markdown_text += '<table>'
