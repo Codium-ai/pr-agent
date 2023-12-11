@@ -461,12 +461,16 @@ class GithubProvider(GitProvider):
         except Exception as e:
             get_logger().exception(f"Failed to publish labels, error: {e}")
 
-    def get_labels(self):
+    def get_pr_labels(self):
         try:
             return [label.name for label in self.pr.labels]
         except Exception as e:
             get_logger().exception(f"Failed to get labels, error: {e}")
             return []
+
+    def get_repo_labels(self):
+        labels = self.repo_obj.get_labels()
+        return [label for label in labels]
 
     def get_commit_messages(self):
         """

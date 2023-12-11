@@ -364,7 +364,7 @@ def try_fix_yaml(response_text: str) -> dict:
         pass
 
 
-def set_custom_labels(variables):
+def set_custom_labels(variables, git_provider=None):
     if not get_settings().config.enable_custom_labels:
         return
 
@@ -376,11 +376,8 @@ def set_custom_labels(variables):
         labels_list = f"      - {labels_list}" if labels_list else ""
         variables["custom_labels"] = labels_list
         return
-    #final_labels = ""
-    #for k, v in labels.items():
-    #    final_labels += f"      - {k} ({v['description']})\n"
-    #variables["custom_labels"] = final_labels
-    #variables["custom_labels_examples"] = f"      - {list(labels.keys())[0]}"
+
+    # Set custom labels
     variables["custom_labels_class"] = "class Label(str, Enum):"
     for k, v in labels.items():
         description = v['description'].strip('\n').replace('\n', '\\n')

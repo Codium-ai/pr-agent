@@ -106,7 +106,7 @@ class PRDescription:
                 else:
                     self.git_provider.publish_description(pr_title, pr_body)
                     if get_settings().pr_description.publish_labels and self.git_provider.is_supported("get_labels"):
-                        current_labels = self.git_provider.get_labels()
+                        current_labels = self.git_provider.get_pr_labels()
                         user_labels = get_user_labels(current_labels)
                         self.git_provider.publish_labels(pr_labels + user_labels)
 
@@ -158,7 +158,7 @@ class PRDescription:
         variables["diff"] = self.patches_diff  # update diff
 
         environment = Environment(undefined=StrictUndefined)
-        set_custom_labels(variables)
+        set_custom_labels(variables, self.git_provider)
         system_prompt = environment.from_string(get_settings().pr_description_prompt.system).render(variables)
         user_prompt = environment.from_string(get_settings().pr_description_prompt.user).render(variables)
 
