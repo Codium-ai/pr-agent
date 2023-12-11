@@ -408,7 +408,7 @@ class GitLabProvider(GitProvider):
     def publish_inline_comments(self, comments: list[dict]):
         pass
 
-    def get_labels(self):
+    def get_pr_labels(self):
         return self.mr.labels
 
     def get_commit_messages(self):
