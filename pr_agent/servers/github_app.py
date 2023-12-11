@@ -125,9 +125,13 @@ async def handle_request(body: Dict[str, Any], event: str):
             await _perform_commands("pr_commands", agent, body, api_url, log_context)
 
     # handle pull_request event with synchronize action - "push trigger" for new commits
-    elif event == 'pull_request' and action == 'synchronize' and get_settings().github_app.handle_push_trigger:
+    elif event == 'pull_request' and action == 'synchronize':
         pull_request, api_url = _check_pull_request_event(action, body, log_context, bot_user)
         if not (pull_request and api_url):
+            return {}
+
+        apply_repo_settings(api_url)
+        if not get_settings().github_app.handle_push_trigger:
             return {}
 
         # TODO: do we still want to get the list of commits to filter bot/merge commits?
