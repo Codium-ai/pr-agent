@@ -109,7 +109,7 @@ class PRSimilarIssue:
         
         elif get_settings().config.vectordb == "lancedb":
             self.db = lancedb.connect(get_settings().lancedb.uri)
-            
+            self.table = None
             # check if index exists, and if repo is already indexed
             run_from_scratch = False
             if run_from_scratch:  # for debugging
@@ -139,8 +139,8 @@ class PRSimilarIssue:
                 get_logger().info('Done')
 
                 self._update_table_with_issues(issues, repo_name_for_index, upsert=upsert)
-            else:  # update index if needed
-                pinecone_index = pinecone.Index(index_name=index_name)
+            else:  # update table if needed
+                table = self.db[index_name]
                 issues_to_update = []
                 issues_paginated_list = repo_obj.get_issues(state='all')
                 counter = 1
@@ -149,8 +149,8 @@ class PRSimilarIssue:
                         continue
                     issue_str, comments, number = self._process_issue(issue)
                     issue_key = f"issue_{number}"
-                    id = issue_key + "." + "issue"
-                    res = pinecone_index.fetch([id]).to_dict()
+                    issue_id = issue_key + "." + "issue"
+                    res = table.where(f"issue={issue_id}").to_list()
                     is_new_issue = True
                     for vector in res["vectors"].values():
                         if vector['metadata']['repo'] == repo_name_for_index:
@@ -164,9 +164,10 @@ class PRSimilarIssue:
 
                 if issues_to_update:
                     get_logger().info(f'Updating index with {counter} new issues...')
-                    self._update_index_with_issues(issues_to_update, repo_name_for_index, upsert=True)
+                    self._update_table_with_issues(issues_to_update, repo_name_for_index, ingest=True)
                 else:
                     get_logger().info('No new issues to update')
+    
     async def run(self):
         get_logger().info('Getting issue...')
         repo_name, original_issue_number = self.git_provider._parse_issue_url(self.issue_url.split('=')[-1])
@@ -402,25 +403,19 @@ class PRSimilarIssue:
                     embeds.append(res['data'][0]['embedding'])
                 except:
                     embeds.append([0] * 1536)
-        df["values"] = embeds
-        meta = DatasetMetadata.empty()
-        meta.dense_model.dimension = len(embeds[0])
-        ds = Dataset.from_pandas(df, meta)
+        df["vector"] = embeds
         get_logger().info('Done')
 
-        api_key = get_settings().pinecone.api_key
-        environment = get_settings().pinecone.environment
         if not ingest:
-            get_logger().info('Creating index from scratch...')
-            ds.to_pinecone_index(self.index_name, api_key=api_key, environment=environment)
+            get_logger().info('Creating table from scratch...')
+            self.table = self.db.create_table(self.index_name, data=df, mode="overwrite")
             time.sleep(15)  # wait for pinecone to finalize indexing before querying
         else:
-            get_logger().info('Upserting index...')
-            namespace = ""
-            batch_size: int = 100
-            concurrency: int = 10
-            pinecone.init(api_key=api_key, environment=environment)
-            ds._upsert_to_index(self.index_name, namespace, batch_size, concurrency)
+            get_logger().info('Ingesting in Table...')
+            if self.index_name not in self.db.table_names():
+                self.table.add(df)
+            else:
+                print(f"Table {self.index_name} doesn't exists!")
             time.sleep(5)  # wait for pinecone to finalize upserting before querying
         get_logger().info('Done')
 
