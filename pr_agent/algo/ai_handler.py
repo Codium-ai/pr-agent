@@ -11,7 +11,7 @@ from pr_agent.algo.base_ai_handler import BaseAiHandler
 OPENAI_RETRIES = 5
 
 
-class AiHandler(BaseAiHandler):
+class LiteLLMAiHandler(BaseAiHandler):
     """
     This class handles interactions with the OpenAI API for chat completions.
     It initializes the API key and other settings from a configuration file,
