@@ -21,7 +21,7 @@ Making pull requests less painful with an AI agent
 </div>
 <div style="text-align:left;">
 
-CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull requests faster and more efficiently. It automatically analyzes the pull request and can provide several types of commands:
+CodiumAI `PR-Agent` is an open-source tool for efficient pull request reviewing and handling. It automatically analyzes the pull request and can provide several types of commands:
 
 ‣ **Auto Description ([`/describe`](./docs/DESCRIBE.md))**: Automatically generating PR description - title, type, summary, code walkthrough and labels.
 \
@@ -33,17 +33,17 @@ CodiumAI `PR-Agent` is an open-source tool aiming to help developers review pull
 \
 ‣ **Update Changelog ([`/update_changelog`](./docs/UPDATE_CHANGELOG.md))**: Automatically updating the CHANGELOG.md file with the PR changes.
 \
-‣ **Find Similar Issue ([`/similar_issue`](./docs/SIMILAR_ISSUE.md))**: Automatically retrieves and presents similar issues
+‣ **Find Similar Issue ([`/similar_issue`](./docs/SIMILAR_ISSUE.md))**: Automatically retrieves and presents similar issues.
 \
 ‣ **Add Documentation ([`/add_docs`](./docs/ADD_DOCUMENTATION.md))**: Automatically adds documentation to un-documented functions/classes in the PR.
 \
 ‣ **Generate Custom Labels ([`/generate_labels`](./docs/GENERATE_CUSTOM_LABELS.md))**: Automatically suggests custom labels based on the PR code changes.
 
-See the [Installation Guide](./INSTALL.md) for instructions how to install and run the tool on different platforms.
+See the [Installation Guide](./INSTALL.md) for instructions on installing and running the tool on different git platforms.
 
-See the [Usage Guide](./Usage.md) for instructions how to run the different tools from _CLI_, _online usage_, or by _automatically triggering_ them when a new PR is opened.
+See the [Usage Guide](./Usage.md) for running the PR-Agent commands via different interfaces, including _CLI_, _online usage_, or by _automatically triggering_ them when a new PR is opened.
 
-See the [Tools Guide](./docs/TOOLS_GUIDE.md) for detailed description of the different tools.
+See the [Tools Guide](./docs/TOOLS_GUIDE.md) for detailed description of the different tools (tools are run via the commands).
 
 <h3>Example results:</h3>
 </div>
@@ -140,7 +140,7 @@ Review the [usage guide](./Usage.md) section for detailed instructions how to us
 
 ## Try it now
 
-You can try GPT-4 powered PR-Agent, on your public GitHub repository, instantly. Just mention `@CodiumAI-Agent` and add the desired command in any PR comment. The agent will generate a response based on your command.
+Try the GPT-4 powered PR-Agent instantly on _your public GitHub repository_. Just mention `@CodiumAI-Agent` and add the desired command in any PR comment. The agent will generate a response based on your command.
 For example, add a comment to any pull request with the following text:
 ```
 @CodiumAI-Agent /review
@@ -151,6 +151,7 @@ and the agent will respond with a review of your PR
 
 
 To set up your own PR-Agent, see the [Installation](#installation) section below.
+Note that when you set your own PR-Agent or use CodiumAI hosted PR-Agent, there is no need to mention `@CodiumAI-Agent ...`. Instead, directly start with the command, e.g., `/ask ...`.
 
 ---
 
