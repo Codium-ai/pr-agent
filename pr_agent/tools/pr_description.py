@@ -315,7 +315,6 @@ class PRDescription:
         if not self.git_provider.is_supported("gfm_markdown"):
             get_logger().info(f"Disabling semantic files types for {self.pr_id} since gfm_markdown is not supported")
             return pr_body
-
         try:
             pr_body += "<table>"
             header = f"Relevant files"
