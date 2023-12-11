@@ -39,9 +39,9 @@ CodiumAI `PR-Agent` is an open-source tool for efficient pull request reviewing 
 \
 ‣ **Generate Custom Labels ([`/generate_labels`](./docs/GENERATE_CUSTOM_LABELS.md))**: Automatically suggests custom labels based on the PR code changes.
 
-See the [Installation Guide](./INSTALL.md) for instructions how to install and run the tool on different git platforms.
+See the [Installation Guide](./INSTALL.md) for instructions on installing and running the tool on different git platforms.
 
-See the [Usage Guide](./Usage.md) for on running the PR-Agent commands via different interfaces, including _CLI_, _online usage_, or by _automatically triggering_ them when a new PR is opened.
+See the [Usage Guide](./Usage.md) for running the PR-Agent commands via different interfaces, including _CLI_, _online usage_, or by _automatically triggering_ them when a new PR is opened.
 
 See the [Tools Guide](./docs/TOOLS_GUIDE.md) for detailed description of the different tools (tools are run via the commands).
 
