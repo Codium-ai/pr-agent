@@ -290,7 +290,7 @@ class PRDescription:
                     value = ', '.join(v for v in value)
                 pr_body += f"{value}\n"
             if idx < len(self.data) - 1:
-                pr_body += "\n___\n"
+                pr_body += "\n\n___\n\n"
 
         if get_settings().config.verbosity_level >= 2:
             get_logger().info(f"title:\n{title}\n{pr_body}")
