@@ -1,8 +1,14 @@
-from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import SystemMessage, HumanMessage
+
+from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.config_loader import get_settings
 from pr_agent.log import get_logger
+
+from openai.error import APIError, RateLimitError, Timeout, TryAgain
+from retry import retry    
+
+OPENAI_RETRIES = 5
 
 class LangChainOpenAIHandler(BaseAiHandler):
     def __init__(self):
@@ -24,15 +30,14 @@ class LangChainOpenAIHandler(BaseAiHandler):
         Returns the deployment ID for the OpenAI API.
         """
         return get_settings().get("OPENAI.DEPLOYMENT_ID", None)
-    
+    @retry(exceptions=(APIError, Timeout, TryAgain, AttributeError, RateLimitError),
+           tries=OPENAI_RETRIES, delay=2, backoff=2, jitter=(1, 3))
     async def chat_completion(self, model: str, system: str, user: str, temperature: float = 0.2):
         try:
-            get_logger().info("model: ", model)
             messages=[SystemMessage(content=system), HumanMessage(content=user)]
             
             # get a chat completion from the formatted messages
             resp = self.chat(messages, model=model, temperature=temperature)
-            get_logger().info("AI response: ", resp.content)
             finish_reason="completed"
             return resp.content, finish_reason
         
