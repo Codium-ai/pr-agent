@@ -126,9 +126,13 @@ class PRSimilarIssue:
                 if get_settings().pr_similar_issue.force_update_dataset:
                     ingest = True
                 else:
-                    table = self.db[index_name]
-                    res = table.where(f"issue=example_issue_{repo_name_for_index}").to_list()
-                    if res["vector"]:
+                    self.table = self.db[index_name]
+                    # print(self.table.head())
+                    # print("Index: ", f"example_issue_{repo_name_for_index}")
+                    # print("Type Search: ", self.table.search().to_list())
+                    res = self.table.search().where(f"id='example_issue_{repo_name_for_index}'").to_list()
+                    print("result: ", res)
+                    if res[0].get("vector"):
                         ingest = False
 
             if run_from_scratch or ingest:  # indexing the entire repo
@@ -138,7 +142,7 @@ class PRSimilarIssue:
                 issues = list(repo_obj.get_issues(state='all'))
                 get_logger().info('Done')
 
-                self._update_table_with_issues(issues, repo_name_for_index, upsert=upsert)
+                self._update_table_with_issues(issues, repo_name_for_index, ingest=ingest)
             else:  # update table if needed
                 table = self.db[index_name]
                 issues_to_update = []
@@ -150,10 +154,10 @@ class PRSimilarIssue:
                     issue_str, comments, number = self._process_issue(issue)
                     issue_key = f"issue_{number}"
                     issue_id = issue_key + "." + "issue"
-                    res = table.where(f"issue={issue_id}").to_list()
+                    res = self.table.search().where(f"id='{issue_id}'").to_list()
                     is_new_issue = True
-                    for vector in res["vectors"].values():
-                        if vector['metadata']['repo'] == repo_name_for_index:
+                    for r in res:
+                        if r['metadata']['repo'] == repo_name_for_index:
                             is_new_issue = False
                             break
                     if is_new_issue:
@@ -179,36 +183,65 @@ class PRSimilarIssue:
         get_logger().info('Querying...')
         res = openai.Embedding.create(input=[issue_str], engine=MODEL)
         embeds = [record['embedding'] for record in res['data']]
-        pinecone_index = pinecone.Index(index_name=self.index_name)
-        res = pinecone_index.query(embeds[0],
-                                   top_k=5,
-                                   filter={"repo": self.repo_name_for_index},
-                                   include_metadata=True).to_dict()
+
         relevant_issues_number_list = []
         relevant_comment_number_list = []
         score_list = []
-        for r in res['matches']:
-            # skip example issue
-            if 'example_issue_' in r["id"]:
-                continue
+        
+        if get_settings().config.vectordb == "pinecone":
+            pinecone_index = pinecone.Index(index_name=self.index_name)
+            res = pinecone_index.query(embeds[0],
+                                    top_k=5,
+                                    filter={"repo": self.repo_name_for_index},
+                                    include_metadata=True).to_dict()
+        
+            for r in res['matches']:
+                # skip example issue
+                if 'example_issue_' in r["id"]:
+                    continue
 
-            try:
-                issue_number = int(r["id"].split('.')[0].split('_')[-1])
-            except:
-                get_logger().debug(f"Failed to parse issue number from {r['id']}")
-                continue
+                try:
+                    issue_number = int(r["id"].split('.')[0].split('_')[-1])
+                except:
+                    get_logger().debug(f"Failed to parse issue number from {r['id']}")
+                    continue
 
-            if original_issue_number == issue_number:
-                continue
-            if issue_number not in relevant_issues_number_list:
-                relevant_issues_number_list.append(issue_number)
-            if 'comment' in r["id"]:
-                relevant_comment_number_list.append(int(r["id"].split('.')[1].split('_')[-1]))
-            else:
-                relevant_comment_number_list.append(-1)
-            score_list.append(str("{:.2f}".format(r['score'])))
-        get_logger().info('Done')
+                if original_issue_number == issue_number:
+                    continue
+                if issue_number not in relevant_issues_number_list:
+                    relevant_issues_number_list.append(issue_number)
+                if 'comment' in r["id"]:
+                    relevant_comment_number_list.append(int(r["id"].split('.')[1].split('_')[-1]))
+                else:
+                    relevant_comment_number_list.append(-1)
+                score_list.append(str("{:.2f}".format(r['score'])))
+            get_logger().info('Done')
 
+        elif get_settings().config.vectordb == "lancedb":
+            res = self.table.search(embeds[0]).where(f"metadata.repo='{self.repo_name_for_index}'", prefilter=True).limit(5).to_list()
+        
+            for r in res:
+                # skip example issue
+                if 'example_issue_' in r["id"]:
+                    continue
+
+                try:
+                    issue_number = int(r["id"].split('.')[0].split('_')[-1])
+                except:
+                    get_logger().debug(f"Failed to parse issue number from {r['id']}")
+                    continue
+
+                if original_issue_number == issue_number:
+                    continue
+                if issue_number not in relevant_issues_number_list:
+                    relevant_issues_number_list.append(issue_number)
+                if 'comment' in r["id"]:
+                    relevant_comment_number_list.append(int(r["id"].split('.')[1].split('_')[-1]))
+                else:
+                    relevant_comment_number_list.append(-1)
+                score_list.append(str("{:.2f}".format(r['_distance'])))
+            get_logger().info('Done')
+        
         get_logger().info('Publishing response...')
         similar_issues_str = "### Similar Issues\n___\n\n"
         for i, issue_number_similar in enumerate(relevant_issues_number_list):
