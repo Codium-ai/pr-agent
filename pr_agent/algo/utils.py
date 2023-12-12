@@ -8,6 +8,9 @@ from datetime import datetime
 from typing import Any, List
 
 import yaml
+from pr_agent.algo.litellm_ai_handler import LiteLLMAiHandler
+from pr_agent.algo.base_ai_handler import BaseAiHandler
+from pr_agent.algo.openai_ai_handler import OpenAIHandler
 from starlette_context import context
 from pr_agent.config_loader import get_settings, global_settings
 from pr_agent.log import get_logger
@@ -304,3 +307,6 @@ def try_fix_yaml(review_text: str) -> dict:
         except:
             pass
     return data
+
+def get_ai_handler() -> BaseAiHandler:
+    return OpenAIHandler()

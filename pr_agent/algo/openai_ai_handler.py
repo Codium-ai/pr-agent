@@ -4,6 +4,7 @@ from openai.error import APIError, RateLimitError, Timeout, TryAgain
 from retry import retry
 
 from pr_agent.config_loader import get_settings
+from pr_agent.log import get_logger
 
 OPENAI_RETRIES = 5
 
@@ -37,14 +38,30 @@ class OpenAIHandler(BaseAiHandler):
     @retry(exceptions=(APIError, Timeout, TryAgain, AttributeError, RateLimitError),
            tries=OPENAI_RETRIES, delay=2, backoff=2, jitter=(1, 3))
     async def chat_completion(self, model: str, system: str, user: str, temperature: float = 0.2):
-        chat_completion = await openai.ChatCompletion.acreate(
-            model=model,
-            messages=[{
-                "role": "system",
-                "content": system
-            }, {
-                "role": "user",
-                "content": user            
-            }],
-        )
-        return chat_completion.choices[0].message.content
+        try:
+            deployment_id = self.deployment_id
+            get_logger().info("System: ", system)
+            get_logger().info("User: ", user)
+            messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
+
+            chat_completion = await openai.ChatCompletion.acreate(
+                model=model,
+                deployment_id=deployment_id,
+                messages=messages,
+                temperature=temperature,
+            )
+            resp = chat_completion["choices"][0]['message']['content']
+            finish_reason = chat_completion["choices"][0]["finish_reason"]
+            usage = chat_completion.get("usage")
+            get_logger().info("AI response", response=resp, messages=messages, finish_reason=finish_reason,
+                            model=model, usage=usage)
+            return resp, finish_reason       
+        except (APIError, Timeout, TryAgain) as e:
+            get_logger().error("Error during OpenAI inference: ", e)
+            raise
+        except (RateLimitError) as e:
+            get_logger().error("Rate limit error during OpenAI inference: ", e)
+            raise
+        except (Exception) as e:
+            get_logger().error("Unknown error during OpenAI inference: ", e)
+            raise TryAgain from e        

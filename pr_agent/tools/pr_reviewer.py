@@ -6,10 +6,10 @@ import yaml
 from jinja2 import Environment, StrictUndefined
 from yaml import SafeLoader
 
-from pr_agent.algo.litellm_ai_handler import BaseAiHandler, LiteLLMAiHandler
+from pr_agent.algo.base_ai_handler import BaseAiHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import convert_to_markdown, load_yaml, try_fix_yaml
+from pr_agent.algo.utils import convert_to_markdown, get_ai_handler, load_yaml, try_fix_yaml
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import IncrementalPR, get_main_pr_language
@@ -21,7 +21,7 @@ class PRReviewer:
     """
     The PRReviewer class is responsible for reviewing a pull request and generating feedback using an AI model.
     """
-    def __init__(self, pr_url: str, is_answer: bool = False, is_auto: bool = False, args: list = None, ai_handler: BaseAiHandler = LiteLLMAiHandler()):
+    def __init__(self, pr_url: str, is_answer: bool = False, is_auto: bool = False, args: list = None, ai_handler: BaseAiHandler = get_ai_handler()):
         """
         Initialize the PRReviewer object with the necessary attributes and objects to review a pull request.
 
