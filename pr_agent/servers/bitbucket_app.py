@@ -100,12 +100,12 @@ async def handle_github_webhooks(background_tasks: BackgroundTasks, request: Req
                         auto_review = get_setting_or_env("BITBUCKET_APP.AUTO_REVIEW", None)
                         if auto_review is None or is_true(auto_review):  # by default, auto review is enabled
                             await PRReviewer(pr_url).run()
-                        auto_describe = get_setting_or_env("BITBUCKET_APP.AUTO_DESCRIBE", None)
-                        if is_true(auto_describe):  # by default, auto describe is disabled
-                            await PRDescription(pr_url).run()
                         auto_improve = get_setting_or_env("BITBUCKET_APP.AUTO_IMPROVE", None)
                         if is_true(auto_improve):  # by default, auto improve is disabled
                             await PRCodeSuggestions(pr_url).run()
+                        auto_describe = get_setting_or_env("BITBUCKET_APP.AUTO_DESCRIBE", None)
+                        if is_true(auto_describe):  # by default, auto describe is disabled
+                            await PRDescription(pr_url).run()
                 # with get_logger().contextualize(**log_context):
                 #     await agent.handle_request(pr_url, "review")
             elif event == "pullrequest:comment_created":

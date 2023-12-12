@@ -240,9 +240,9 @@ inline_code_comments = true
 Each time you invoke a `/review` tool, it will use inline code comments.
 
 #### BitBucket Self-Hosted App automatic tools
-You can configure in your local `.pr_agent.toml` file conditions for which tools will **run automatically**.
+You can configure in your local `.pr_agent.toml` file which tools will **run automatically** when a new PR is opened.
 
-Specifically, start by setting the following environment variables:
+Specifically, set the following values:
 ```yaml
 [bitbucket_app]
 auto_review = true    # set as config var in .pr_agent.toml
@@ -250,7 +250,7 @@ auto_describe = true  # set as config var in .pr_agent.toml
 auto_improve = true   # set as config var in .pr_agent.toml
 ```
 
-`bitbucket_app.auto_review`, `bitbucket_app.auto_describe` and `bitbucket_app.auto_improve` are used to enable/disable automatic tools that run when a new PR is opened.
+`bitbucket_app.auto_review`, `bitbucket_app.auto_describe` and `bitbucket_app.auto_improve` are used to enable/disable automatic tools.
 If not set, the default option is that only the `review` tool will run automatically when a new PR is opened.
 
 ### Changing a model

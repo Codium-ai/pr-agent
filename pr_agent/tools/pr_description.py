@@ -102,6 +102,7 @@ class PRDescription:
             if get_settings().config.publish_output:
                 get_logger().info(f"Pushing answer {self.pr_id}")
                 if get_settings().pr_description.publish_description_as_comment:
+                    get_logger().info(f"Publishing answer as comment")
                     self.git_provider.publish_comment(full_markdown_description)
                 else:
                     self.git_provider.publish_description(pr_title, pr_body)
