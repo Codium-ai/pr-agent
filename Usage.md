@@ -254,7 +254,7 @@ auto_improve = true   # set as config var in .pr_agent.toml
 If not set, the default option is that only the `review` tool will run automatically when a new PR is opened.
 
 Note that due to limitations of the bitbucket platform, the `auto_describe` tool will be able to publish a PR description only as a comment. 
-In addition, some sections like `PR changes walkthrough`, will not appear, since they require the usage of collapsible sections, which are not supported by bitbucket.
+In addition, some subsections like `PR changes walkthrough` will not appear, since they require the usage of collapsible sections, which are not supported by bitbucket.
 
 ### Changing a model
 
