@@ -253,6 +253,9 @@ auto_improve = true   # set as config var in .pr_agent.toml
 `bitbucket_app.auto_review`, `bitbucket_app.auto_describe` and `bitbucket_app.auto_improve` are used to enable/disable automatic tools.
 If not set, the default option is that only the `review` tool will run automatically when a new PR is opened.
 
+Note that due to limitations of the bitbucket platform, the `auto_describe` tool will be able to publish a PR description only as a comment. 
+In addition, some sections like `PR changes walkthrough`, will not appear, since they require the usage of collapsible sections, which are not supported by bitbucket.
+
 ### Changing a model
 
 See [here](pr_agent/algo/__init__.py) for the list of available models.
