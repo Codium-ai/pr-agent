@@ -154,7 +154,6 @@ async def handle_uninstalled_webhooks(request: Request, response: Response):
 def start():
     get_settings().set("CONFIG.PUBLISH_OUTPUT_PROGRESS", False)
     get_settings().set("CONFIG.GIT_PROVIDER", "bitbucket")
-    get_settings().set("PR_DESCRIPTION.PUBLISH_DESCRIPTION_AS_COMMENT", True)
     middleware = [Middleware(RawContextMiddleware)]
     app = FastAPI(middleware=middleware)
     app.include_router(router)
