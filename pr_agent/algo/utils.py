@@ -11,7 +11,7 @@ import yaml
 from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAiHandler
 from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.ai_handlers.openai_ai_handler import OpenAIHandler
-from pr_agent.algo.ai_handlers.langchain_ai_handler import LangChainAIHandler
+from pr_agent.algo.ai_handlers.langchain_ai_handler import LangChainOpenAIHandler
 from starlette_context import context
 from pr_agent.config_loader import get_settings, global_settings
 from pr_agent.log import get_logger
@@ -310,4 +310,4 @@ def try_fix_yaml(review_text: str) -> dict:
     return data
 
 def get_ai_handler() -> BaseAiHandler:
-    return LangChainAIHandler()
+    return LangChainOpenAIHandler()
