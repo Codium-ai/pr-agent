@@ -8,9 +8,9 @@ from datetime import datetime
 from typing import Any, List
 
 import yaml
-from pr_agent.algo.litellm_ai_handler import LiteLLMAiHandler
-from pr_agent.algo.base_ai_handler import BaseAiHandler
-from pr_agent.algo.openai_ai_handler import OpenAIHandler
+from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAiHandler
+from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
+from pr_agent.algo.ai_handlers.openai_ai_handler import OpenAIHandler
 from starlette_context import context
 from pr_agent.config_loader import get_settings, global_settings
 from pr_agent.log import get_logger
