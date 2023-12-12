@@ -12,7 +12,7 @@ from pr_agent.config_loader import get_settings
 from pr_agent.log import get_logger
 
 OPENAI_RETRIES = 5
-chat = ChatOpenAI(openai_api_key = get_settings().openai.key, model="gpt-4")
+chat = ChatOpenAI(openai_api_key = get_settings().openai.key)
 
 class LangChainAIHandler(BaseAiHandler):
     def __init__(self):
@@ -35,7 +35,7 @@ class LangChainAIHandler(BaseAiHandler):
             messages=[SystemMessage(content=system), HumanMessage(content=user)]
             
             # get a chat completion from the formatted messages
-            resp = chat(messages)
+            resp = chat(messages, model=model, temperature=temperature)
             get_logger().info("AI response: ", resp.content)
             finish_reason="completed"
             return resp.content, finish_reason
