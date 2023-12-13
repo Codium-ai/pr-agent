@@ -16,7 +16,9 @@ from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.utils import apply_repo_settings
 from pr_agent.log import LoggingFormat, get_logger, setup_logger
 from pr_agent.servers.utils import verify_signature
+from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAiHandler
 
+litellm_ai_handler = LiteLLMAiHandler()
 setup_logger(fmt=LoggingFormat.JSON)
 
 router = APIRouter()
@@ -75,7 +77,7 @@ async def handle_request(body: Dict[str, Any], event: str):
     action = body.get("action")
     if not action:
         return {}
-    agent = PRAgent()
+    agent = PRAgent(ai_handler=litellm_ai_handler)
     bot_user = get_settings().github_app.bot_user
     sender = body.get("sender", {}).get("login")
     log_context = {"action": action, "event": event, "sender": sender, "server_type": "github_app"}

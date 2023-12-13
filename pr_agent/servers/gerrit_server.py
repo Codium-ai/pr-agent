@@ -12,7 +12,9 @@ from starlette_context.middleware import RawContextMiddleware
 from pr_agent.agent.pr_agent import PRAgent
 from pr_agent.config_loader import get_settings, global_settings
 from pr_agent.log import get_logger, setup_logger
+from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAiHandler
 
+litellm_ai_handler = LiteLLMAiHandler()
 setup_logger()
 router = APIRouter()
 
@@ -43,7 +45,7 @@ async def handle_gerrit_request(action: Action, item: Item):
                 status_code=400,
                 detail="msg is required for ask command"
             )
-    await PRAgent().handle_request(
+    await PRAgent(ai_handler=litellm_ai_handler).handle_request(
         f"{item.project}:{item.refspec}",
         f"/{item.msg.strip()}"
     )

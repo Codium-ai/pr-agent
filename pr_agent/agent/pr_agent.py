@@ -1,4 +1,5 @@
 import shlex
+from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 
 from pr_agent.algo.utils import update_settings_from_args
 from pr_agent.config_loader import get_settings
@@ -12,6 +13,7 @@ from pr_agent.tools.pr_questions import PRQuestions
 from pr_agent.tools.pr_reviewer import PRReviewer
 from pr_agent.tools.pr_similar_issue import PRSimilarIssue
 from pr_agent.tools.pr_update_changelog import PRUpdateChangelog
+import inspect
 
 command2class = {
     "auto_review": PRReviewer,
@@ -36,8 +38,16 @@ command2class = {
 commands = list(command2class.keys())
 
 class PRAgent:
-    def __init__(self):
+    def __init__(self, ai_handler: BaseAiHandler = None):
+        self.ai_handler = ai_handler
         pass
+    
+    def has_ai_handler_param(cls):
+        constructor = getattr(cls, "__init__", None)
+        if constructor is not None:
+            parameters = inspect.signature(constructor).parameters
+            return "ai_handler" in parameters
+        return False
 
     async def handle_request(self, pr_url, request, notify=None) -> bool:
         # First, apply repo specific settings if exists
@@ -56,13 +66,17 @@ class PRAgent:
         if action == "answer":
             if notify:
                 notify()
-            await PRReviewer(pr_url, is_answer=True, args=args).run()
+            await PRReviewer(pr_url, is_answer=True, args=args, ai_handler=self.ai_handler).run()
         elif action == "auto_review":
-            await PRReviewer(pr_url, is_auto=True, args=args).run()
+            await PRReviewer(pr_url, is_auto=True, args=args, ai_handler=self.ai_handler).run()
         elif action in command2class:
             if notify:
                 notify()
-            await command2class[action](pr_url, args=args).run()
+                
+            if(not self.has_ai_handler_param(command2class[action])):
+                await command2class[action](pr_url, args=args).run()
+            else 
+                await command2class[action](pr_url, ai_handler=self.ai_handler, args=args).run()
         else:
             return False
         return True

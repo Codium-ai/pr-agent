@@ -7,7 +7,7 @@ from jinja2 import Environment, StrictUndefined
 from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import load_yaml, get_ai_handler
+from pr_agent.algo.utils import load_yaml
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
@@ -15,7 +15,7 @@ from pr_agent.log import get_logger
 
 
 class PRAddDocs:
-    def __init__(self, pr_url: str, cli_mode=False, args: list = None, ai_handler: BaseAiHandler = get_ai_handler()):
+    def __init__(self, pr_url: str, cli_mode=False, args: list = None, ai_handler: BaseAiHandler = None):
 
         self.git_provider = get_git_provider()(pr_url)
         self.main_language = get_main_pr_language(
