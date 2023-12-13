@@ -59,14 +59,14 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
             if key.lower() == 'code feedback':
                 if gfm_supported:
                     markdown_text += f"\n\n- "
-                    markdown_text += f"<details><summary> { emoji } Code feedback:</summary>\n\n"
+                    markdown_text += f"<details><summary> { emoji } Code feedback:</summary>"
                 else:
                     markdown_text += f"\n\n- **{emoji} Code feedback:**\n\n"
             else:
                 markdown_text += f"- {emoji} **{key}:**\n\n"
-            for item in value:
+            for i, item in enumerate(value):
                 if isinstance(item, dict) and key.lower() == 'code feedback':
-                    markdown_text += parse_code_suggestion(item, gfm_supported)
+                    markdown_text += parse_code_suggestion(item, i, gfm_supported)
                 elif item:
                     markdown_text += f"  - {item}\n"
             if key.lower() == 'code feedback':
@@ -80,7 +80,7 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
     return markdown_text
 
 
-def parse_code_suggestion(code_suggestions: dict, gfm_supported: bool=True) -> str:
+def parse_code_suggestion(code_suggestions: dict, i: int = 0, gfm_supported: bool = True) -> str:
     """
     Convert a dictionary of data into markdown format.
 
@@ -91,24 +91,52 @@ def parse_code_suggestion(code_suggestions: dict, gfm_supported: bool=True) -> s
         str: A string containing the markdown formatted text generated from the input dictionary.
     """
     markdown_text = ""
-    for sub_key, sub_value in code_suggestions.items():
-        if isinstance(sub_value, dict):  # "code example"
-            markdown_text += f"  - **{sub_key}:**\n"
-            for code_key, code_value in sub_value.items():  # 'before' and 'after' code
-                code_str = f"```\n{code_value}\n```"
-                code_str_indented = textwrap.indent(code_str, '        ')
-                markdown_text += f"    - **{code_key}:**\n{code_str_indented}\n"
-        else:
-            if "relevant file" in sub_key.lower():
-                markdown_text += f"\n  - **{sub_key}:** {sub_value}  \n"
+    if gfm_supported and 'relevant line' in code_suggestions:
+        if i == 0:
+            markdown_text += "<hr>"
+        markdown_text += '<table>'
+        for sub_key, sub_value in code_suggestions.items():
+            try:
+                if sub_key.lower() == 'relevant file':
+                    relevant_file = sub_value.strip('`').strip('"').strip("'")
+                    markdown_text += f"<tr><td>{sub_key}</td><td>{relevant_file}</td></tr>"
+                    # continue
+                elif sub_key.lower() == 'suggestion':
+                    markdown_text += f"<tr><td>{sub_key} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td><strong>{sub_value}</strong></td></tr>"
+                elif sub_key.lower() == 'relevant line':
+                    markdown_text += f"<tr><td>relevant line</td>"
+                    sub_value_list = sub_value.split('](')
+                    relevant_line = sub_value_list[0].lstrip('`').lstrip('[')
+                    if len(sub_value_list) > 1:
+                        link = sub_value_list[1].rstrip(')').strip('`')
+                        markdown_text += f"<td><a href={link}>{relevant_line}</a></td>"
+                    else:
+                        markdown_text += f"<td>{relevant_line}</td>"
+                    markdown_text += "</tr>"
+            except Exception as e:
+                get_logger().exception(f"Failed to parse code suggestion: {e}")
+                pass
+        markdown_text += '</table>'
+        markdown_text += "<hr>"
+    else:
+        for sub_key, sub_value in code_suggestions.items():
+            if isinstance(sub_value, dict):  # "code example"
+                markdown_text += f"  - **{sub_key}:**\n"
+                for code_key, code_value in sub_value.items():  # 'before' and 'after' code
+                    code_str = f"```\n{code_value}\n```"
+                    code_str_indented = textwrap.indent(code_str, '        ')
+                    markdown_text += f"    - **{code_key}:**\n{code_str_indented}\n"
             else:
-                markdown_text += f"   **{sub_key}:** {sub_value}  \n"
-            if not gfm_supported:
-                if "relevant line" not in sub_key.lower(): # nicer presentation
+                if "relevant file" in sub_key.lower():
+                    markdown_text += f"\n  - **{sub_key}:** {sub_value}  \n"
+                else:
+                    markdown_text += f"   **{sub_key}:** {sub_value}  \n"
+                if not gfm_supported:
+                    if "relevant line" not in sub_key.lower():  # nicer presentation
                         # markdown_text = markdown_text.rstrip('\n') + "\\\n" # works for gitlab
                         markdown_text = markdown_text.rstrip('\n') + "   \n"  # works for gitlab and bitbucker
 
-    markdown_text += "\n"
+        markdown_text += "\n"
     return markdown_text
 
 
@@ -336,7 +364,7 @@ def try_fix_yaml(response_text: str) -> dict:
         pass
 
 
-def set_custom_labels(variables):
+def set_custom_labels(variables, git_provider=None):
     if not get_settings().config.enable_custom_labels:
         return
 
@@ -348,11 +376,8 @@ def set_custom_labels(variables):
         labels_list = f"      - {labels_list}" if labels_list else ""
         variables["custom_labels"] = labels_list
         return
-    #final_labels = ""
-    #for k, v in labels.items():
-    #    final_labels += f"      - {k} ({v['description']})\n"
-    #variables["custom_labels"] = final_labels
-    #variables["custom_labels_examples"] = f"      - {list(labels.keys())[0]}"
+
+    # Set custom labels
     variables["custom_labels_class"] = "class Label(str, Enum):"
     for k, v in labels.items():
         description = v['description'].strip('\n').replace('\n', '\\n')

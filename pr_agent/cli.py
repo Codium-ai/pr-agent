@@ -5,7 +5,9 @@ import os
 from pr_agent.agent.pr_agent import PRAgent, commands
 from pr_agent.config_loader import get_settings
 from pr_agent.log import setup_logger
+from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAiHandler
 
+litellm_ai_handler = LiteLLMAiHandler()
 setup_logger()
 
 
@@ -57,9 +59,9 @@ For example: 'python cli.py --pr_url=... review --pr_reviewer.extra_instructions
     command = args.command.lower()
     get_settings().set("CONFIG.CLI_MODE", True)
     if args.issue_url:
-        result = asyncio.run(PRAgent().handle_request(args.issue_url, [command] + args.rest))
+        result = asyncio.run(PRAgent(ai_handler=litellm_ai_handler).handle_request(args.issue_url, [command] + args.rest))
     else:
-        result = asyncio.run(PRAgent().handle_request(args.pr_url, [command] + args.rest))
+        result = asyncio.run(PRAgent(ai_handler=litellm_ai_handler).handle_request(args.pr_url, [command] + args.rest))
     if not result:
         parser.print_help()
 

@@ -8,7 +8,9 @@ from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.log import LoggingFormat, get_logger, setup_logger
 from pr_agent.servers.help import bot_help_text
+from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAiHandler
 
+litellm_ai_handler = LiteLLMAiHandler()
 setup_logger(fmt=LoggingFormat.JSON)
 NOTIFICATION_URL = "https://api.github.com/notifications"
 
@@ -34,7 +36,7 @@ async def polling_loop():
     last_modified = [None]
     git_provider = get_git_provider()()
     user_id = git_provider.get_user_id()
-    agent = PRAgent()
+    agent = PRAgent(ai_handler=litellm_ai_handler)
     get_settings().set("CONFIG.PUBLISH_OUTPUT_PROGRESS", False)
 
     try:

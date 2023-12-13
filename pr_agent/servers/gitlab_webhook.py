@@ -14,7 +14,9 @@ from pr_agent.agent.pr_agent import PRAgent
 from pr_agent.config_loader import get_settings, global_settings
 from pr_agent.log import LoggingFormat, get_logger, setup_logger
 from pr_agent.secret_providers import get_secret_provider
+from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAiHandler
 
+litellm_ai_handler = LiteLLMAiHandler()
 setup_logger(fmt=LoggingFormat.JSON)
 router = APIRouter()
 
@@ -26,7 +28,7 @@ def handle_request(background_tasks: BackgroundTasks, url: str, body: str, log_c
     log_context["event"] = "pull_request" if body == "/review" else "comment"
     log_context["api_url"] = url
     with get_logger().contextualize(**log_context):
-        background_tasks.add_task(PRAgent().handle_request, url, body)
+        background_tasks.add_task(PRAgent(ai_handler=litellm_ai_handler).handle_request, url, body)
 
 
 @router.post("/webhook")

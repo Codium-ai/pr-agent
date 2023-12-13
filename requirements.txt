@@ -23,3 +23,4 @@ starlette-context==0.3.6
 tiktoken==0.5.2
 ujson==5.8.0
 uvicorn==0.22.0
+langchain==0.0.349

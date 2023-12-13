@@ -4,7 +4,7 @@ from typing import List, Tuple
 
 from jinja2 import Environment, StrictUndefined
 
-from pr_agent.algo.ai_handler import BaseAiHandler, AiHandler
+from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.algo.utils import load_yaml, set_custom_labels, get_user_labels
@@ -15,7 +15,7 @@ from pr_agent.log import get_logger
 
 
 class PRDescription:
-    def __init__(self, pr_url: str, args: list = None, ai_handler: BaseAiHandler = AiHandler()):
+    def __init__(self, pr_url: str, args: list = None, ai_handler: BaseAiHandler = None):
         """
         Initialize the PRDescription object with the necessary attributes and objects for generating a PR description
         using an AI model.
