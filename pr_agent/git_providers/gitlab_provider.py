@@ -411,6 +411,9 @@ class GitLabProvider(GitProvider):
     def get_pr_labels(self):
         return self.mr.labels
 
+    def get_repo_labels(self):
+        return self.gl.projects.get(self.id_project).labels.list()
+
     def get_commit_messages(self):
         """
         Retrieves the commit messages of a pull request.
