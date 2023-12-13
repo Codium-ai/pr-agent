@@ -211,7 +211,11 @@ class GitLabProvider(GitProvider):
                 pos_obj['new_line'] = target_line_no - 1
                 pos_obj['old_line'] = source_line_no - 1
             get_logger().debug(f"Creating comment in {self.id_mr} with body {body} and position {pos_obj}")
-            self.mr.discussions.create({'body': body, 'position': pos_obj})
+            try:
+                self.mr.discussions.create({'body': body, 'position': pos_obj})
+            except Exception as e:
+                get_logger().debug(
+                    f"Failed to create comment in {self.id_mr} with position {pos_obj} (probably not a '+' line)")
 
     def get_relevant_diff(self, relevant_file: str, relevant_line_in_file: int) -> Optional[dict]:
         changes = self.mr.changes()  # Retrieve the changes for the merge request once
@@ -404,7 +408,7 @@ class GitLabProvider(GitProvider):
     def publish_inline_comments(self, comments: list[dict]):
         pass
 
-    def get_labels(self):
+    def get_pr_labels(self):
         return self.mr.labels
 
     def get_commit_messages(self):

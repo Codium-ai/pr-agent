@@ -344,7 +344,7 @@ class BitbucketServerProvider(GitProvider):
         pass
     
     # bitbucket does not support labels
-    def get_labels(self):
+    def get_pr_labels(self):
         pass
 
     def _get_pr_comments_url(self):

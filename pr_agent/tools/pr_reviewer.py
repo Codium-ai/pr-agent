@@ -394,7 +394,7 @@ class PRReviewer:
                     if security_concerns_bool:
                         review_labels.append('Possible security concern')
 
-                current_labels = self.git_provider.get_labels()
+                current_labels = self.git_provider.get_pr_labels()
                 current_labels_filtered = [label for label in current_labels if
                                            not label.lower().startswith('review effort [1-5]:') and not label.lower().startswith(
                                                'possible security concern')]

@@ -16,8 +16,13 @@ from starlette_context.middleware import RawContextMiddleware
 
 from pr_agent.agent.pr_agent import PRAgent
 from pr_agent.config_loader import get_settings, global_settings
+from pr_agent.git_providers.utils import apply_repo_settings
 from pr_agent.log import LoggingFormat, get_logger, setup_logger
 from pr_agent.secret_providers import get_secret_provider
+from pr_agent.servers.github_action_runner import get_setting_or_env, is_true
+from pr_agent.tools.pr_code_suggestions import PRCodeSuggestions
+from pr_agent.tools.pr_description import PRDescription
+from pr_agent.tools.pr_reviewer import PRReviewer
 from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAiHandler
 
 litellm_ai_handler = LiteLLMAiHandler()
@@ -91,8 +96,20 @@ async def handle_github_webhooks(background_tasks: BackgroundTasks, request: Req
                 pr_url = data["data"]["pullrequest"]["links"]["html"]["href"]
                 log_context["api_url"] = pr_url
                 log_context["event"] = "pull_request"
-                with get_logger().contextualize(**log_context):
-                    await agent.handle_request(pr_url, "review")
+                if pr_url:
+                    with get_logger().contextualize(**log_context):
+                        apply_repo_settings(pr_url)
+                        auto_review = get_setting_or_env("BITBUCKET_APP.AUTO_REVIEW", None)
+                        if auto_review is None or is_true(auto_review):  # by default, auto review is enabled
+                            await PRReviewer(pr_url).run()
+                        auto_improve = get_setting_or_env("BITBUCKET_APP.AUTO_IMPROVE", None)
+                        if is_true(auto_improve):  # by default, auto improve is disabled
+                            await PRCodeSuggestions(pr_url).run()
+                        auto_describe = get_setting_or_env("BITBUCKET_APP.AUTO_DESCRIBE", None)
+                        if is_true(auto_describe):  # by default, auto describe is disabled
+                            await PRDescription(pr_url).run()
+                # with get_logger().contextualize(**log_context):
+                #     await agent.handle_request(pr_url, "review")
             elif event == "pullrequest:comment_created":
                 pr_url = data["data"]["pullrequest"]["links"]["html"]["href"]
                 log_context["api_url"] = pr_url
@@ -139,7 +156,6 @@ async def handle_uninstalled_webhooks(request: Request, response: Response):
 def start():
     get_settings().set("CONFIG.PUBLISH_OUTPUT_PROGRESS", False)
     get_settings().set("CONFIG.GIT_PROVIDER", "bitbucket")
-    get_settings().set("PR_DESCRIPTION.PUBLISH_DESCRIPTION_AS_COMMENT", True)
     middleware = [Middleware(RawContextMiddleware)]
     app = FastAPI(middleware=middleware)
     app.include_router(router)

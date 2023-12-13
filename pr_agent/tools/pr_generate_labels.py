@@ -82,7 +82,7 @@ class PRGenerateLabels:
             if get_settings().config.publish_output:
                 get_logger().info(f"Pushing labels {self.pr_id}")
 
-                current_labels = self.git_provider.get_labels()
+                current_labels = self.git_provider.get_pr_labels()
                 user_labels = get_user_labels(current_labels)
                 pr_labels = pr_labels + user_labels
 
@@ -132,7 +132,7 @@ class PRGenerateLabels:
         variables["diff"] = self.patches_diff  # update diff
 
         environment = Environment(undefined=StrictUndefined)
-        set_custom_labels(variables)
+        set_custom_labels(variables, self.git_provider)
         system_prompt = environment.from_string(get_settings().pr_custom_labels_prompt.system).render(variables)
         user_prompt = environment.from_string(get_settings().pr_custom_labels_prompt.user).render(variables)
 

@@ -102,11 +102,12 @@ class PRDescription:
             if get_settings().config.publish_output:
                 get_logger().info(f"Pushing answer {self.pr_id}")
                 if get_settings().pr_description.publish_description_as_comment:
+                    get_logger().info(f"Publishing answer as comment")
                     self.git_provider.publish_comment(full_markdown_description)
                 else:
                     self.git_provider.publish_description(pr_title, pr_body)
                     if get_settings().pr_description.publish_labels and self.git_provider.is_supported("get_labels"):
-                        current_labels = self.git_provider.get_labels()
+                        current_labels = self.git_provider.get_pr_labels()
                         user_labels = get_user_labels(current_labels)
                         self.git_provider.publish_labels(pr_labels + user_labels)
 
@@ -158,7 +159,7 @@ class PRDescription:
         variables["diff"] = self.patches_diff  # update diff
 
         environment = Environment(undefined=StrictUndefined)
-        set_custom_labels(variables)
+        set_custom_labels(variables, self.git_provider)
         system_prompt = environment.from_string(get_settings().pr_description_prompt.system).render(variables)
         user_prompt = environment.from_string(get_settings().pr_description_prompt.user).render(variables)
 
@@ -290,7 +291,7 @@ class PRDescription:
                     value = ', '.join(v for v in value)
                 pr_body += f"{value}\n"
             if idx < len(self.data) - 1:
-                pr_body += "\n___\n"
+                pr_body += "\n\n___\n\n"
 
         if get_settings().config.verbosity_level >= 2:
             get_logger().info(f"title:\n{title}\n{pr_body}")
@@ -315,7 +316,6 @@ class PRDescription:
         if not self.git_provider.is_supported("gfm_markdown"):
             get_logger().info(f"Disabling semantic files types for {self.pr_id} since gfm_markdown is not supported")
             return pr_body
-
         try:
             pr_body += "<table>"
             header = f"Relevant files"

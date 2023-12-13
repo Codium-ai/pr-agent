@@ -143,6 +143,12 @@ magic_word = "AutoReview"
 # Polling interval
 polling_interval_seconds = 30
 
+[bitbucket_app]
+#auto_review = true    # set as config var in .pr_agent.toml
+#auto_describe = true  # set as config var in .pr_agent.toml
+#auto_improve = true   # set as config var in .pr_agent.toml
+
+
 [local]
 # LocalGitProvider settings - uncomment to use paths other than default
 # description_path= "path/to/description.md"
@@ -170,3 +176,4 @@ max_issues_to_scan = 500
 # fill and place in .secrets.toml
 #api_key = ...
 # environment = "gcp-starter"
+

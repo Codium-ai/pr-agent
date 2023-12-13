@@ -207,7 +207,7 @@ class GerritProvider(GitProvider):
         Comment = namedtuple('Comment', ['body'])
         return Comments([Comment(c['message']) for c in reversed(comments)])
 
-    def get_labels(self):
+    def get_pr_labels(self):
         raise NotImplementedError(
             'Getting labels is not implemented for the gerrit provider')
 
