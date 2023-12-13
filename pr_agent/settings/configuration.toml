@@ -1,6 +1,6 @@
 [config]
-model="gpt-4-1106-preview" # "gpt-4-1106-preview"
-fallback_models=["gpt-3.5-turbo-16k"]
+model="gpt-3.5-turbo" # "gpt-4-1106-preview"
+fallback_models=["gpt-3.5-turbo"]
 git_provider="github"
 publish_output=true
 publish_output_progress=true
@@ -10,7 +10,7 @@ use_repo_settings_file=true
 ai_timeout=180
 max_description_tokens = 500
 max_commits_tokens = 500
-max_model_tokens = 32000 # Limits the maximum number of tokens that can be used by any model, regardless of the model's default capabilities.
+max_model_tokens = 4000 # Limits the maximum number of tokens that can be used by any model, regardless of the model's default capabilities.
 patch_extra_lines = 3
 secret_provider="google_cloud_storage"
 cli_mode=false
