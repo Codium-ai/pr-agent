@@ -4,6 +4,7 @@ from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.utils import update_settings_from_args
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers.utils import apply_repo_settings
+from pr_agent.log import get_logger
 from pr_agent.tools.pr_add_docs import PRAddDocs
 from pr_agent.tools.pr_code_suggestions import PRCodeSuggestions
 from pr_agent.tools.pr_config import PRConfig
@@ -42,7 +43,7 @@ class PRAgent:
         self.ai_handler = ai_handler
         pass
     
-    def has_ai_handler_param(cls):
+    def has_ai_handler_param(cls: object):
         constructor = getattr(cls, "__init__", None)
         if constructor is not None:
             parameters = inspect.signature(constructor).parameters
@@ -73,9 +74,10 @@ class PRAgent:
             if notify:
                 notify()
                 
-            if(not self.has_ai_handler_param(command2class[action])):
+            get_logger().info(f"Class: {command2class[action]}")
+            if(not self.has_ai_handler_param(cls=command2class[action])):
                 await command2class[action](pr_url, args=args).run()
-            else 
+            else:
                 await command2class[action](pr_url, ai_handler=self.ai_handler, args=args).run()
         else:
             return False
