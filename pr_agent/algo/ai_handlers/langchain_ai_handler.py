@@ -1,5 +1,8 @@
-from langchain.chat_models import ChatOpenAI
-from langchain.schema import SystemMessage, HumanMessage
+try:
+    from langchain.chat_models import ChatOpenAI
+    from langchain.schema import SystemMessage, HumanMessage
+except: # we don't enforce langchain as a dependency, so if it's not installed, just move on
+    pass
 
 from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.config_loader import get_settings
