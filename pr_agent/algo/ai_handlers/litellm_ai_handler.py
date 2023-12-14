@@ -6,13 +6,14 @@ import openai
 from litellm import acompletion
 from openai.error import APIError, RateLimitError, Timeout, TryAgain
 from retry import retry
+from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.config_loader import get_settings
 from pr_agent.log import get_logger
 
 OPENAI_RETRIES = 5
 
 
-class AiHandler:
+class LiteLLMAIHandler(BaseAiHandler):
     """
     This class handles interactions with the OpenAI API for chat completions.
     It initializes the API key and other settings from a configuration file,

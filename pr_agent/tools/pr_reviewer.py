@@ -7,7 +7,8 @@ import yaml
 from jinja2 import Environment, StrictUndefined
 from yaml import SafeLoader
 
-from pr_agent.algo.ai_handler import AiHandler
+from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
+from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAIHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.algo.utils import convert_to_markdown, load_yaml, try_fix_yaml, set_custom_labels, get_user_labels
@@ -22,13 +23,16 @@ class PRReviewer:
     """
     The PRReviewer class is responsible for reviewing a pull request and generating feedback using an AI model.
     """
-    def __init__(self, pr_url: str, is_answer: bool = False, is_auto: bool = False, args: list = None):
+    def __init__(self, pr_url: str, is_answer: bool = False, is_auto: bool = False, args: list = None,
+                 ai_handler: BaseAiHandler = LiteLLMAIHandler()):
         """
         Initialize the PRReviewer object with the necessary attributes and objects to review a pull request.
 
         Args:
             pr_url (str): The URL of the pull request to be reviewed.
             is_answer (bool, optional): Indicates whether the review is being done in answer mode. Defaults to False.
+            is_auto (bool, optional): Indicates whether the review is being done in automatic mode. Defaults to False.
+            ai_handler (BaseAiHandler): The AI handler to be used for the review. Defaults to None.
             args (list, optional): List of arguments passed to the PRReviewer class. Defaults to None.
         """
         self.parse_args(args) # -i command
@@ -43,7 +47,7 @@ class PRReviewer:
 
         if self.is_answer and not self.git_provider.is_supported("get_issue_comments"):
             raise Exception(f"Answer mode is not supported for {get_settings().config.git_provider} for now")
-        self.ai_handler = AiHandler()
+        self.ai_handler = ai_handler
         self.patches_diff = None
         self.prediction = None
 

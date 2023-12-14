@@ -1,8 +1,11 @@
 import shlex
+from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
+from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAIHandler
 
 from pr_agent.algo.utils import update_settings_from_args
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers.utils import apply_repo_settings
+from pr_agent.log import get_logger
 from pr_agent.tools.pr_add_docs import PRAddDocs
 from pr_agent.tools.pr_code_suggestions import PRCodeSuggestions
 from pr_agent.tools.pr_config import PRConfig
@@ -38,8 +41,8 @@ command2class = {
 commands = list(command2class.keys())
 
 class PRAgent:
-    def __init__(self):
-        pass
+    def __init__(self, ai_handler: BaseAiHandler = LiteLLMAIHandler()):
+        self.ai_handler = ai_handler
 
     async def handle_request(self, pr_url, request, notify=None) -> bool:
         # First, apply repo specific settings if exists
@@ -61,13 +64,14 @@ class PRAgent:
         if action == "answer":
             if notify:
                 notify()
-            await PRReviewer(pr_url, is_answer=True, args=args).run()
+            await PRReviewer(pr_url, is_answer=True, args=args, ai_handler=self.ai_handler).run()
         elif action == "auto_review":
-            await PRReviewer(pr_url, is_auto=True, args=args).run()
+            await PRReviewer(pr_url, is_auto=True, args=args, ai_handler=self.ai_handler).run()
         elif action in command2class:
             if notify:
                 notify()
-            await command2class[action](pr_url, args=args).run()
+                
+            await command2class[action](pr_url, ai_handler=self.ai_handler, args=args).run()
         else:
             return False
         return True
