@@ -14,7 +14,7 @@ from pr_agent.log import get_logger
 
 
 class PRCodeSuggestions:
-    def __init__(self, pr_url: str, cli_mode=False, args: list = None, ai_handler: BaseAiHandler = None ):
+    def __init__(self, pr_url: str, cli_mode=False, args: list = None, ai_handler: BaseAiHandler = None):
 
         self.git_provider = get_git_provider()(pr_url)
         self.main_language = get_main_pr_language(

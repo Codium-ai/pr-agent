@@ -11,8 +11,6 @@ from pr_agent.log import get_logger
 from pr_agent.tools.pr_code_suggestions import PRCodeSuggestions
 from pr_agent.tools.pr_description import PRDescription
 from pr_agent.tools.pr_reviewer import PRReviewer
-from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAiHandler
-litellm_ai_handler = LiteLLMAiHandler()
 
 def is_true(value: Union[str, bool]) -> bool:
     if isinstance(value, bool):
@@ -111,9 +109,9 @@ async def run_action():
                     comment_id = event_payload.get("comment", {}).get("id")
                     provider = get_git_provider()(pr_url=url)
                     if is_pr:
-                        await PRAgent(ai_handler=litellm_ai_handler).handle_request(url, body, notify=lambda: provider.add_eyes_reaction(comment_id))
+                        await PRAgent().handle_request(url, body, notify=lambda: provider.add_eyes_reaction(comment_id))
                     else:
-                        await PRAgent(ai_handler=litellm_ai_handler).handle_request(url, body)
+                        await PRAgent().handle_request(url, body)
 
 
 if __name__ == '__main__':

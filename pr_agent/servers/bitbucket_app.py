@@ -23,9 +23,7 @@ from pr_agent.servers.github_action_runner import get_setting_or_env, is_true
 from pr_agent.tools.pr_code_suggestions import PRCodeSuggestions
 from pr_agent.tools.pr_description import PRDescription
 from pr_agent.tools.pr_reviewer import PRReviewer
-from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAiHandler
 
-litellm_ai_handler = LiteLLMAiHandler()
 setup_logger(fmt=LoggingFormat.JSON)
 router = APIRouter()
 secret_provider = get_secret_provider()
@@ -91,7 +89,7 @@ async def handle_github_webhooks(background_tasks: BackgroundTasks, request: Req
             context['bitbucket_bearer_token'] = bearer_token
             context["settings"] = copy.deepcopy(global_settings)
             event = data["event"]
-            agent = PRAgent(ai_handler=litellm_ai_handler)
+            agent = PRAgent()
             if event == "pullrequest:created":
                 pr_url = data["data"]["pullrequest"]["links"]["html"]["href"]
                 log_context["api_url"] = pr_url
