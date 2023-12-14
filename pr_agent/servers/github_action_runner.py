@@ -12,6 +12,7 @@ from pr_agent.tools.pr_code_suggestions import PRCodeSuggestions
 from pr_agent.tools.pr_description import PRDescription
 from pr_agent.tools.pr_reviewer import PRReviewer
 
+
 def is_true(value: Union[str, bool]) -> bool:
     if isinstance(value, bool):
         return value

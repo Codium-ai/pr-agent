@@ -71,7 +71,6 @@ class PRAgent:
             if notify:
                 notify()
                 
-            get_logger().info(f"Class: {command2class[action]}")
             await command2class[action](pr_url, ai_handler=self.ai_handler, args=args).run()
         else:
             return False
