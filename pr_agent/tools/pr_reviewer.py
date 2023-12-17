@@ -1,6 +1,7 @@
 import copy
 import datetime
 from collections import OrderedDict
+from functools import partial
 from typing import List, Tuple
 
 import yaml
@@ -24,7 +25,7 @@ class PRReviewer:
     The PRReviewer class is responsible for reviewing a pull request and generating feedback using an AI model.
     """
     def __init__(self, pr_url: str, is_answer: bool = False, is_auto: bool = False, args: list = None,
-                 ai_handler: BaseAiHandler = LiteLLMAIHandler()):
+                 ai_handler: partial[BaseAiHandler,] = LiteLLMAIHandler):
         """
         Initialize the PRReviewer object with the necessary attributes and objects to review a pull request.
 
@@ -47,7 +48,7 @@ class PRReviewer:
 
         if self.is_answer and not self.git_provider.is_supported("get_issue_comments"):
             raise Exception(f"Answer mode is not supported for {get_settings().config.git_provider} for now")
-        self.ai_handler = ai_handler
+        self.ai_handler = ai_handler()
         self.patches_diff = None
         self.prediction = None
 

@@ -1,5 +1,6 @@
 import copy
 import re
+from functools import partial
 from typing import List, Tuple
 
 from jinja2 import Environment, StrictUndefined
@@ -17,7 +18,7 @@ from pr_agent.log import get_logger
 
 class PRDescription:
     def __init__(self, pr_url: str, args: list = None,
-                 ai_handler: BaseAiHandler = LiteLLMAIHandler()):
+                 ai_handler: partial[BaseAiHandler,] = LiteLLMAIHandler):
         """
         Initialize the PRDescription object with the necessary attributes and objects for generating a PR description
         using an AI model.
@@ -38,7 +39,7 @@ class PRDescription:
             get_settings().pr_description.enable_semantic_files_types = False
 
         # Initialize the AI handler
-        self.ai_handler = ai_handler
+        self.ai_handler = ai_handler()
     
         # Initialize the variables dictionary
         self.vars = {

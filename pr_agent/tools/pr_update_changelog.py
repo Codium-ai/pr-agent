@@ -1,5 +1,6 @@
 import copy
 from datetime import date
+from functools import partial
 from time import sleep
 from typing import Tuple
 
@@ -18,7 +19,7 @@ CHANGELOG_LINES = 50
 
 
 class PRUpdateChangelog:
-    def __init__(self, pr_url: str, cli_mode=False, args=None, ai_handler: BaseAiHandler = LiteLLMAIHandler()):
+    def __init__(self, pr_url: str, cli_mode=False, args=None, ai_handler: partial[BaseAiHandler,] = LiteLLMAIHandler):
 
         self.git_provider = get_git_provider()(pr_url)
         self.main_language = get_main_pr_language(
@@ -26,7 +27,7 @@ class PRUpdateChangelog:
         )
         self.commit_changelog = get_settings().pr_update_changelog.push_changelog_changes
         self._get_changlog_file()  # self.changelog_file_str
-        self.ai_handler = ai_handler
+        self.ai_handler = ai_handler()
         self.patches_diff = None
         self.prediction = None
         self.cli_mode = cli_mode

@@ -1,5 +1,6 @@
 import copy
 import textwrap
+from functools import partial
 from typing import Dict, List
 from jinja2 import Environment, StrictUndefined
 
@@ -16,7 +17,7 @@ from pr_agent.log import get_logger
 
 class PRCodeSuggestions:
     def __init__(self, pr_url: str, cli_mode=False, args: list = None,
-                 ai_handler: BaseAiHandler = LiteLLMAIHandler()):
+                 ai_handler: partial[BaseAiHandler,] = LiteLLMAIHandler):
 
         self.git_provider = get_git_provider()(pr_url)
         self.main_language = get_main_pr_language(
@@ -33,7 +34,7 @@ class PRCodeSuggestions:
         else:
             num_code_suggestions = get_settings().pr_code_suggestions.num_code_suggestions
 
-        self.ai_handler = ai_handler
+        self.ai_handler = ai_handler()
         self.patches_diff = None
         self.prediction = None
         self.cli_mode = cli_mode
