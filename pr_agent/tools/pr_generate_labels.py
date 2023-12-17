@@ -1,5 +1,6 @@
 import copy
 import re
+from functools import partial
 from typing import List, Tuple
 
 from jinja2 import Environment, StrictUndefined
@@ -17,7 +18,7 @@ from pr_agent.log import get_logger
 
 class PRGenerateLabels:
     def __init__(self, pr_url: str, args: list = None,
-                 ai_handler: BaseAiHandler = LiteLLMAIHandler()):
+                 ai_handler: partial[BaseAiHandler,] = LiteLLMAIHandler):
         """
         Initialize the PRGenerateLabels object with the necessary attributes and objects for generating labels
         corresponding to the PR using an AI model.
@@ -33,7 +34,7 @@ class PRGenerateLabels:
         self.pr_id = self.git_provider.get_pr_id()
 
         # Initialize the AI handler
-        self.ai_handler = ai_handler
+        self.ai_handler = ai_handler()
     
         # Initialize the variables dictionary
         self.vars = {

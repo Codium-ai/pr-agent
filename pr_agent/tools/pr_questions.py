@@ -1,4 +1,5 @@
 import copy
+from functools import partial
 
 from jinja2 import Environment, StrictUndefined
 
@@ -13,13 +14,13 @@ from pr_agent.log import get_logger
 
 
 class PRQuestions:
-    def __init__(self, pr_url: str, args=None, ai_handler: BaseAiHandler = LiteLLMAIHandler()):
+    def __init__(self, pr_url: str, args=None, ai_handler: partial[BaseAiHandler,] = LiteLLMAIHandler):
         question_str = self.parse_args(args)
         self.git_provider = get_git_provider()(pr_url)
         self.main_pr_language = get_main_pr_language(
             self.git_provider.get_languages(), self.git_provider.get_files()
         )
-        self.ai_handler = ai_handler
+        self.ai_handler = ai_handler()
         self.question_str = question_str
         self.vars = {
             "title": self.git_provider.pr.title,
