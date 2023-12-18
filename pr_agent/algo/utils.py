@@ -379,9 +379,15 @@ def set_custom_labels(variables, git_provider=None):
 
     # Set custom labels
     variables["custom_labels_class"] = "class Label(str, Enum):"
+    counter = 0
+    labels_minimal_to_labels_dict = {}
     for k, v in labels.items():
-        description = v['description'].strip('\n').replace('\n', '\\n')
-        variables["custom_labels_class"] += f"\n    {k.lower().replace(' ', '_')} = '{k}' # {description}"
+        description = "'" + v['description'].strip('\n').replace('\n', '\\n') + "'"
+        # variables["custom_labels_class"] += f"\n    {k.lower().replace(' ', '_')} = '{k}' # {description}"
+        variables["custom_labels_class"] += f"\n    {k.lower().replace(' ', '_')} = {description}"
+        labels_minimal_to_labels_dict[k.lower().replace(' ', '_')] = k
+        counter += 1
+    variables["labels_minimal_to_labels_dict"] = labels_minimal_to_labels_dict
 
 def get_user_labels(current_labels: List[str] = None):
     """

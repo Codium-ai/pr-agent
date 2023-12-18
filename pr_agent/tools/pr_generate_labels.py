@@ -136,6 +136,7 @@ class PRGenerateLabels:
 
         environment = Environment(undefined=StrictUndefined)
         set_custom_labels(variables, self.git_provider)
+        self.variables = variables
         system_prompt = environment.from_string(get_settings().pr_custom_labels_prompt.system).render(variables)
         user_prompt = environment.from_string(get_settings().pr_custom_labels_prompt.user).render(variables)
 
@@ -170,5 +171,15 @@ class PRGenerateLabels:
                 pr_types = self.data['labels']
             elif type(self.data['labels']) == str:
                 pr_types = self.data['labels'].split(',')
+
+        # convert lowercase labels to original case
+        try:
+            if "labels_minimal_to_labels_dict" in self.variables:
+                d: dict = self.variables["labels_minimal_to_labels_dict"]
+                for i, label_i in enumerate(pr_types):
+                    if label_i in d:
+                        pr_types[i] = d[label_i]
+        except Exception as e:
+            get_logger().error(f"Error converting labels to original case {self.pr_id}: {e}")
 
         return pr_types

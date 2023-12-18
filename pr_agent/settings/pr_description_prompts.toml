@@ -37,6 +37,7 @@ class FileWalkthrough(BaseModel):
 {%- endif %}
 
 {%- if enable_semantic_files_types %}
+
 Class FileDescription(BaseModel):
     filename: str = Field(description="the relevant file full path")
     changes_summary: str = Field(description="minimal and concise summary of the changes in the relevant file")
@@ -48,7 +49,7 @@ Class PRDescription(BaseModel):
     type: List[PRType] = Field(description="one or more types that describe the PR type. Return the label value, not the name.")
     description: str = Field(description="an informative and concise description of the PR. {%- if use_bullet_points %} Use bullet points.{% endif %}")
 {%- if enable_custom_labels %}
-    labels: List[Label] = Field(min_items=0, description="custom labels that describe the PR. Return the label value, not the name.")
+    labels: List[Label] =  Field(min_items=0, description="choose the relevant custom labels that describe the PR content, and return their keys. Use the value field of the Label object to better understand the label meaning.")
 {%- endif %}
 {%- if enable_file_walkthrough %}
     main_files_walkthrough: List[FileWalkthrough] = Field(max_items=10)
@@ -69,8 +70,10 @@ type:
 - ...
 {%- if enable_custom_labels %}
 labels:
-- ...
-- ...
+- |
+  ...
+- |
+  ...
 {%- endif %}
 description: |-
   ...
