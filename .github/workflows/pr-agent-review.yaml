@@ -5,8 +5,9 @@
 name: PR-Agent
 
 on:
-  pull_request:
-  issue_comment:
+# pull_request:
+# issue_comment:
+  workflow_dispatch:
 
 permissions:
   issues: write
