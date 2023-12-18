@@ -328,7 +328,7 @@ def load_yaml(response_text: str) -> dict:
 def try_fix_yaml(response_text: str) -> dict:
     response_text_lines = response_text.split('\n')
 
-    keys = ['relevant line:', 'suggestion content:', 'relevant file:']
+    keys = ['relevant line:', 'suggestion content:', 'relevant file:', 'existing code:', 'improved code:']
     # first fallback - try to convert 'relevant line: ...' to relevant line: |-\n        ...'
     response_text_lines_copy = response_text_lines.copy()
     for i in range(0, len(response_text_lines_copy)):
