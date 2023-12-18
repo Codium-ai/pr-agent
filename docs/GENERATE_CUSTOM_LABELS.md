@@ -24,7 +24,8 @@ To enable custom labels, you need to apply the [configuration changes](#configur
 #### 2. GitHub Action and GitHub App
 To enable custom labels, you need to apply the [configuration changes](#configuration-changes) to the local `.pr_agent.toml` file in you repository.
 
-#### 3. Git provider's native labels page (Pr-Agent Pro feature :gem:) 
+#### 3. Git provider's native labels page 
+> This feature is available only in Pr-Agent Pro :gem:
 To enable custom labels, you can add/edit the custom labels in the Git provider's native labels page. For example, in GitHub, you can add/edit the labels in the Labels page:   
 a. Go to the Labels page:
 * Github : https://github.com/{owner}/{repo}/labels, or click on the "Labels" tab in the issues or PRs page.
