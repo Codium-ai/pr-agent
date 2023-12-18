@@ -23,6 +23,7 @@ b. Add/edit the custom labels. It should be formatted as follows:
 * Description: Start the description of with prefix `pr_agent:`, for example: `pr_agent: Description of when AI should suggest this label`.<br>
 The description should be comprehensive and detailed, indicating when to add the desired label.
 <kbd><img src=https://codium.ai/images/pr_agent/add_native_custom_labels.png width="880"></kbd>
+
 c. Now the custom labels will be included in the `generate_labels` tool.
 
 *This feature is supported in GitHub and GitLab.
