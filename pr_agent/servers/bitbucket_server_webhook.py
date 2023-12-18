@@ -34,7 +34,7 @@ async def handle_webhook(background_tasks: BackgroundTasks, request: Request):
     data = await request.json()
     get_logger().info(json.dumps(data))
 
-    webhook_secret = getattr(get_settings().bitbucket_server, "webhook_secret", None)
+    webhook_secret = get_settings().get("BITBUCKET_SERVER.WEBHOOK_SECRET", None)
     if webhook_secret:
         body_bytes = await request.body()
         signature_header = request.headers.get("x-hub-signature", None)
