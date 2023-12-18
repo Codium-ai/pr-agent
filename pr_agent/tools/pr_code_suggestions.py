@@ -109,6 +109,9 @@ class PRCodeSuggestions:
         response, finish_reason = await self.ai_handler.chat_completion(model=model, temperature=0.2,
                                                                         system=system_prompt, user=user_prompt)
 
+        if get_settings().config.verbosity_level >= 2:
+            get_logger().info(f"\nAI response:\n{response}")
+
         return response
 
     def _prepare_pr_code_suggestions(self) -> Dict:
