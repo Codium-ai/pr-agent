@@ -14,29 +14,29 @@ If we wish to add detect changes to SQL queries in a given PR, we can add the fo
 When running the `generate_labels` tool on a PR that includes changes in SQL queries, it will automatically suggest the custom label:
 <kbd><img src=https://codium.ai/images/pr_agent/custom_label_published.png width="768"></kbd>
 
+Note that in addition to the dedicated tool `generate_labels`, the custom labels will also be used by the `describe` tool.
+
 ### How to enable custom labels
+There are 3 ways to enable custom labels:
 
-Note that in addition to the dedicated tool `generate_labels`, the custom labels will also be used by the `review` and `describe` tools.
+#### 1. CLI (local configuration file)
+When working from CLI, you need to apply the [configuration changes](#configuration-changes) to the [custom_labels file](./../pr_agent/settings/custom_labels.toml):
 
-#### 1. CLI
-To enable custom labels, you need to apply the [configuration changes](#configuration-changes) to the [custom_labels file](./../pr_agent/settings/custom_labels.toml):
-
-#### 2. GitHub Action and GitHub App
+#### 2. Repo configuration file
 To enable custom labels, you need to apply the [configuration changes](#configuration-changes) to the local `.pr_agent.toml` file in you repository.
 
-#### 3. Git provider's native labels page 
-> This feature is available only in Pr-Agent Pro :gem:
-To enable custom labels, you can add/edit the custom labels in the Git provider's native labels page. For example, in GitHub, you can add/edit the labels in the Labels page:   
-a. Go to the Labels page:
-* Github : https://github.com/{owner}/{repo}/labels, or click on the "Labels" tab in the issues or PRs page.
-* GitLab : https://gitlab.com/{owner}/{repo}/-/labels, or click on "Manage" -> "Labels" on the left menu.
+#### 3. Handle custom labels from the Repo's labels page :gem:
+> This feature is available only in PR-Agent Pro 
+* GitHub : `https://github.com/{owner}/{repo}/labels`, or click on the "Labels" tab in the issues or PRs page.
+* GitLab : `https://gitlab.com/{owner}/{repo}/-/labels`, or click on "Manage" -> "Labels" on the left menu.
 
 b. Add/edit the custom labels. It should be formatted as follows:
 * Label name: The name of the custom label.
-* Description: Description of with prefix `pr_agent:`, for example: `pr_agent: Description of when AI should suggest this label`.
-<kbd><img src=https://codium.ai/images/pr_agent/add_native_custom_labels.png width="768"></kbd>
-
+* Description: Start the description of with prefix `pr_agent:`, for example: `pr_agent: Description of when AI should suggest this label`.<br>
+The description should be comprehensive and detailed, indicating when to add the desired label.
+<kbd><img src=https://codium.ai/images/pr_agent/add_native_custom_labels.png width="880"></kbd>
 c. Now the custom labels will be included in the `generate_labels` tool.
+
 *This feature is supported in GitHub and GitLab.
 
 #### Configuration changes
