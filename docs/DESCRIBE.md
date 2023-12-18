@@ -13,6 +13,21 @@ For example:
 
 The `describe` tool can also be triggered automatically every time a new PR is opened. See examples for automatic triggers for [GitHub App](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#github-app-automatic-tools) and [GitHub Action](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#working-with-github-action)
 
+### Handle custom labels from the Repo's labels page :gem:
+> This feature is available only in PR-Agent Pro 
+* GitHub : `https://github.com/{owner}/{repo}/labels`, or click on the "Labels" tab in the issues or PRs page.
+* GitLab : `https://gitlab.com/{owner}/{repo}/-/labels`, or click on "Manage" -> "Labels" on the left menu.
+
+b. Add/edit the custom labels. It should be formatted as follows:
+* Label name: The name of the custom label.
+* Description: Start the description of with prefix `pr_agent:`, for example: `pr_agent: Description of when AI should suggest this label`.<br>
+The description should be comprehensive and detailed, indicating when to add the desired label.
+<kbd><img src=https://codium.ai/images/pr_agent/add_native_custom_labels.png width="880"></kbd>
+
+c. Now the custom labels will be included in the `generate_labels` tool.
+
+*This feature is supported in GitHub and GitLab.
+
 ### Configuration options
 
 Under the section 'pr_description', the [configuration file](./../pr_agent/settings/configuration.toml#L28) contains options to customize the 'describe' tool:
