@@ -317,6 +317,12 @@ def _fix_key_value(key: str, value: str):
 
 
 def load_yaml(response_text: str) -> dict:
+    # remove everything before the first ```yaml
+    snipet_pattern = r'```(yaml)?[\s\S]*?```'
+    snipet = re.search(snipet_pattern, response_text)
+    if snipet:
+        response_text = snipet.group()
+
     response_text = response_text.removeprefix('```yaml').rstrip('`')
     try:
         data = yaml.safe_load(response_text)
