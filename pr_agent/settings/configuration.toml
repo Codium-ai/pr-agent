@@ -164,6 +164,11 @@ polling_interval_seconds = 30
 # token to authenticate in the patch server
 # patch_server_token = ""
 
+[bitbucket_server]
+# URL to the BitBucket Server instance
+# url = "https://git.bitbucket.com"
+url = ""
+
 [litellm]
 #use_client = false
 
