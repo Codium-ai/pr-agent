@@ -19,6 +19,19 @@ class TestTryFixYaml:
         expected_output = {"relevant line": "value: 3"}
         assert try_fix_yaml(review_text) == expected_output
 
+    # The function extracts YAML snippet
+    def test_extract_snippet(self):
+        review_text = '''\
+Here is the answer in YAML format:
+
+```yaml
+name: John Smith
+age: 35
+```
+'''
+        expected_output = {'name': 'John Smith', 'age': 35}
+        assert try_fix_yaml(review_text) == expected_output
+
     # The function removes the last line(s) of the YAML string and successfully parses the YAML string.
     def test_remove_last_line(self):
         review_text = "key: value\nextra invalid line\n"

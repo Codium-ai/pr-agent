@@ -15,18 +15,6 @@ class TestLoadYaml:
         expected_output = {'name': 'John Smith', 'age': 35}
         assert load_yaml(yaml_str) == expected_output
 
-    def test_load_valid_yaml_with_description(self):
-        yaml_str = '''\
-Here is the answer in YAML format:
-
-```yaml
-name: John Smith
-age: 35
-```
-'''
-        expected_output = {'name': 'John Smith', 'age': 35}
-        assert load_yaml(yaml_str) == expected_output
-
     def test_load_invalid_yaml1(self):
         yaml_str = \
 '''\
