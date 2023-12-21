@@ -362,7 +362,7 @@ def try_fix_yaml(response_text: str) -> dict:
         try:
             data = yaml.safe_load(response_text_lines_tmp,)
             get_logger().info(f"Successfully parsed AI prediction after removing {i} lines")
-            break
+            return data
         except:
             pass
     
