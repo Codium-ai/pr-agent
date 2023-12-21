@@ -371,8 +371,9 @@ class PRDescription:
       <summary><strong>{filename_publish}</strong></summary>
       <ul>
         {filename}<br><br>
-        <strong>{file_change_description}</strong>
-      </ul>
+
+**{file_change_description}**
+</ul>
     </details>
   </td>
   <td><a href="{link}"> {diff_plus_minus}</a></td>

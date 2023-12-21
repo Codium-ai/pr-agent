@@ -5,6 +5,7 @@ Your task is to provide a full description for the PR content - title, type, des
 - Keep in mind that the 'Previous title', 'Previous description' and 'Commit messages' sections may be partial, simplistic, non-informative or out of date. Hence, compare them to the PR diff code, and use them only as a reference.
 - The generated title and description should prioritize the most significant changes.
 - If needed, each YAML output should be in block scalar indicator ('|-')
+- When quoting variables or names from the code, use backticks (`) instead of single quote (').
 
 {%- if extra_instructions %}
 
