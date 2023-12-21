@@ -326,7 +326,7 @@ def load_yaml(response_text: str, keys_fix_yaml: List[str] = []) -> dict:
     return data
 
 
-def try_fix_yaml(response_text: str, keys_fix_yaml: List[str]) -> dict:
+def try_fix_yaml(response_text: str, keys_fix_yaml: List[str] = []) -> dict:
     response_text_lines = response_text.split('\n')
 
     keys = ['relevant line:', 'suggestion content:', 'relevant file:', 'existing code:', 'improved code:']
