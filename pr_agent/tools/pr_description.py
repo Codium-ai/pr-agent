@@ -48,7 +48,6 @@ class PRDescription:
             "description": self.git_provider.get_pr_description(full=False),
             "language": self.main_pr_language,
             "diff": "",  # empty diff for initial calculation
-            "use_bullet_points": get_settings().pr_description.use_bullet_points,
             "extra_instructions": get_settings().pr_description.extra_instructions,
             "commit_messages_str": self.git_provider.get_commit_messages(),
             "enable_custom_labels": get_settings().config.enable_custom_labels,
@@ -186,6 +185,18 @@ class PRDescription:
     def _prepare_data(self):
         # Load the AI prediction data into a dictionary
         self.data = load_yaml(self.prediction.strip())
+
+        # re-order keys
+        if 'title' in self.data:
+            self.data['title'] = self.data.pop('title')
+        if 'type' in self.data:
+            self.data['type'] = self.data.pop('type')
+        if 'labels' in self.data:
+            self.data['labels'] = self.data.pop('labels')
+        if 'description' in self.data:
+            self.data['description'] = self.data.pop('description')
+        if 'pr_files' in self.data:
+            self.data['pr_files'] = self.data.pop('pr_files')
 
         if get_settings().pr_description.add_original_user_description and self.user_description:
             self.data["User Description"] = self.user_description

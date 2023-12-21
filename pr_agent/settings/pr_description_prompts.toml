@@ -50,12 +50,12 @@ Class FileDescription(BaseModel):
 {%- endif %}
 
 Class PRDescription(BaseModel):
+    type: List[PRType] = Field(description="one or more types that describe the PR content. Return the label value, not the name.")
 {%- if enable_semantic_files_types %}
     pr_files[List[FileDescription]] = Field(max_items=15, description="a list of the files in the PR, and their changes summary.")
 {%- endif %}
+    description: str = Field(description="an informative and concise description of the PR. Use bullet points. Display first the most significant changes.")
     title: str = Field(description="an informative title for the PR, describing its main theme")
-    type: List[PRType] = Field(description="one or more types that describe the PR type. Return the label value, not the name.")
-    description: str = Field(description="an informative and concise description of the PR. {%- if use_bullet_points %} Use bullet points.{% endif %}")
 {%- if enable_custom_labels %}
     labels: List[Label] =  Field(min_items=0, description="choose the relevant custom labels that describe the PR content, and return their keys. Use the value field of the Label object to better understand the label meaning.")
 {%- endif %}
@@ -65,6 +65,9 @@ Class PRDescription(BaseModel):
 Example output:
 
 ```yaml
+type:
+- ...
+- ...
 {%- if enable_semantic_files_types %}
 pr_files:
 - filename: |
@@ -75,11 +78,10 @@ pr_files:
     ...
 ...
 {%- endif %}
+description: |-
+  ...
 title: |-
   ...
-type:
-- ...
-- ...
 {%- if enable_custom_labels %}
 labels:
 - |
@@ -87,8 +89,6 @@ labels:
 - |
   ...
 {%- endif %}
-description: |-
-  ...
 ```
 
 Answer should be a valid YAML, and nothing else. Each YAML output MUST be after a newline, with proper indent, and block scalar indicator ('|-')
