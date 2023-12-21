@@ -343,18 +343,30 @@ def try_fix_yaml(response_text: str) -> dict:
     except:
         get_logger().info(f"Failed to parse AI prediction after adding |-\n")
 
-    # second fallback - try to remove last lines
+    # second fallback - try to extract only range from first ```yaml to ````
+    snippet_pattern = r'```(yaml)?[\s\S]*?```'
+    snippet = re.search(snippet_pattern, '\n'.join(response_text_lines_copy))
+    if snippet:
+        snippet_text = snippet.group()
+        try:
+            data = yaml.safe_load(snippet_text.removeprefix('```yaml').rstrip('`'))
+            get_logger().info(f"Successfully parsed AI prediction after extracting yaml snippet")
+            return data
+        except:
+            pass
+
+    # thrid fallback - try to remove last lines
     data = {}
     for i in range(1, len(response_text_lines)):
         response_text_lines_tmp = '\n'.join(response_text_lines[:-i])
         try:
             data = yaml.safe_load(response_text_lines_tmp,)
             get_logger().info(f"Successfully parsed AI prediction after removing {i} lines")
-            break
+            return data
         except:
             pass
     
-    # thrid fallback - try to remove leading and trailing curly brackets
+    # fourth fallback - try to remove leading and trailing curly brackets
     response_text_copy = response_text.strip().rstrip().removeprefix('{').removesuffix('}')
     try:
         data = yaml.safe_load(response_text_copy,)
