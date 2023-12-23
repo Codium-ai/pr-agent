@@ -32,6 +32,7 @@ Code suggestions guidelines:
 - Avoid making suggestions that have already been implemented in the PR code. For example, if you want to add logs, or change a variable to const, or anything else, make sure it isn't already in the PR code.
 - Don't suggest to add docstring, type hints, or comments.
 - Suggestions should focus on the new code added in the PR diff (lines starting with '+')
+- When quoting variables or names from the code, use backticks (`) instead of single quote (').
 {%- endif %}
 
 {%- if extra_instructions %}
