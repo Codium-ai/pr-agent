@@ -102,7 +102,7 @@ def parse_code_suggestion(code_suggestions: dict, i: int = 0, gfm_supported: boo
                     markdown_text += f"<tr><td>{sub_key}</td><td>{relevant_file}</td></tr>"
                     # continue
                 elif sub_key.lower() == 'suggestion':
-                    markdown_text += f"<tr><td>{sub_key} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td><strong>{sub_value}</strong></td></tr>"
+                    markdown_text += f"<tr><td>{sub_key} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td><strong>\n\n{sub_value}</strong></td></tr>"
                 elif sub_key.lower() == 'relevant line':
                     markdown_text += f"<tr><td>relevant line</td>"
                     sub_value_list = sub_value.split('](')
