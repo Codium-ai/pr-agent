@@ -380,11 +380,6 @@ class GerritProvider(GitProvider):
             'Publishing inline comments is not implemented for the gerrit '
             'provider')
 
-    def create_inline_comment(self, body: str, relevant_file: str,
-                              relevant_line_in_file: str):
-        raise NotImplementedError(
-            'Creating inline comments is not implemented for the gerrit '
-            'provider')
 
     def publish_labels(self, labels):
         # Not applicable to the local git provider,

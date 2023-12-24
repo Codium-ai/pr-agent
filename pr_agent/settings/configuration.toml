@@ -62,6 +62,7 @@ include_generated_by_header=true
 [pr_code_suggestions] # /improve #
 num_code_suggestions=4
 summarize = false
+include_improved_code = true
 extra_instructions = ""
 rank_suggestions = false
 # params for '/improve --extended' mode

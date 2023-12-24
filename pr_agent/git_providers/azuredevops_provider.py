@@ -174,9 +174,6 @@ class AzureDevopsProvider:
     def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
         raise NotImplementedError("Azure DevOps provider does not support publishing inline comment yet")
 
-    def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
-        raise NotImplementedError("Azure DevOps provider does not support creating inline comments yet")
-
     def publish_inline_comments(self, comments: list[dict]):
         raise NotImplementedError("Azure DevOps provider does not support publishing inline comments yet")
 

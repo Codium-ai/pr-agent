@@ -121,9 +121,6 @@ class LocalGitProvider(GitProvider):
     def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
         raise NotImplementedError('Publishing inline comments is not implemented for the local git provider')
 
-    def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
-        raise NotImplementedError('Creating inline comments is not implemented for the local git provider')
-
     def publish_inline_comments(self, comments: list[dict]):
         raise NotImplementedError('Publishing inline comments is not implemented for the local git provider')
 

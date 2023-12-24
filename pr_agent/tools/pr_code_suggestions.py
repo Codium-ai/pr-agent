@@ -116,7 +116,8 @@ class PRCodeSuggestions:
 
     def _prepare_pr_code_suggestions(self) -> Dict:
         review = self.prediction.strip()
-        data = load_yaml(review, keys_fix_yaml=["relevant_file", "suggestion_content", "existing_code", "improved_code"])
+        data = load_yaml(review,
+                         keys_fix_yaml=["relevant_file", "suggestion_content", "existing_code", "improved_code"])
         if isinstance(data, list):
             data = {'code_suggestions': data}
 
@@ -126,7 +127,8 @@ class PRCodeSuggestions:
             if suggestion['existing_code'] != suggestion['improved_code']:
                 suggestion_list.append(suggestion)
             else:
-                get_logger().debug(f"Skipping suggestion {i + 1}, because existing code is equal to improved code {suggestion['existing_code']}")
+                get_logger().debug(
+                    f"Skipping suggestion {i + 1}, because existing code is equal to improved code {suggestion['existing_code']}")
         data['code_suggestions'] = suggestion_list
 
         return data
@@ -147,23 +149,40 @@ class PRCodeSuggestions:
                 relevant_lines_end = int(d['relevant_lines_end'])
                 content = d['suggestion_content'].rstrip()
                 new_code_snippet = d['improved_code'].rstrip()
+                label = d['label'].strip()
 
                 if new_code_snippet:
                     new_code_snippet = self.dedent_code(relevant_file, relevant_lines_start, new_code_snippet)
 
-                body = f"**Suggestion:** {content}\n```suggestion\n" + new_code_snippet + "\n```"
-                code_suggestions.append({'body': body, 'relevant_file': relevant_file,
-                                         'relevant_lines_start': relevant_lines_start,
-                                         'relevant_lines_end': relevant_lines_end})
+                if get_settings().pr_code_suggestions.include_improved_code:
+                    body = f"**Suggestion:** {content} [{label}]\n```suggestion\n" + new_code_snippet + "\n```"
+                    code_suggestions.append({'body': body, 'relevant_file': relevant_file,
+                                             'relevant_lines_start': relevant_lines_start,
+                                             'relevant_lines_end': relevant_lines_end})
+                else:
+                    if self.git_provider.is_supported("create_inline_comment"):
+                        body = f"**Suggestion:** {content} [{label}]"
+                        comment = self.git_provider.create_inline_comment(body, relevant_file, "",
+                                                                          absolute_position=relevant_lines_end)
+                        if comment:
+                            code_suggestions.append(comment)
+                    else:
+                        get_logger().error("Inline comments are not supported by the git provider")
             except Exception:
                 if get_settings().config.verbosity_level >= 2:
                     get_logger().info(f"Could not parse suggestion: {d}")
 
-        is_successful = self.git_provider.publish_code_suggestions(code_suggestions)
+        if get_settings().pr_code_suggestions.include_improved_code:
+            is_successful = self.git_provider.publish_code_suggestions(code_suggestions)
+        else:
+            is_successful = self.git_provider.publish_inline_comments(code_suggestions)
         if not is_successful:
             get_logger().info("Failed to publish code suggestions, trying to publish each suggestion separately")
             for code_suggestion in code_suggestions:
-                self.git_provider.publish_code_suggestions([code_suggestion])
+                if get_settings().pr_code_suggestions.include_improved_code:
+                    self.git_provider.publish_code_suggestions([code_suggestion])
+                else:
+                    self.git_provider.publish_inline_comments([code_suggestion])
 
     def dedent_code(self, relevant_file, relevant_lines_start, new_code_snippet):
         try:  # dedent code snippet
@@ -275,7 +294,7 @@ class PRCodeSuggestions:
                     code_snippet_link = self.git_provider.get_line_link(s['relevant_file'], s['relevant_lines_start'],
                                                                         s['relevant_lines_end'])
                     label = s['label'].strip()
-                    data_markdown += f"\n💡 Type: [{label}]\n\n**{s['suggestion_content'].rstrip().rstrip()}**\n\n"
+                    data_markdown += f"\n💡 [{label}]\n\n**{s['suggestion_content'].rstrip().rstrip()}**\n\n"
                     if code_snippet_link:
                         data_markdown += f" File: [{s['relevant_file']} ({s['relevant_lines_start']}-{s['relevant_lines_end']})]({code_snippet_link})\n\n"
                     else:
@@ -296,5 +315,3 @@ class PRCodeSuggestions:
             self.git_provider.publish_comment(data_markdown)
         except Exception as e:
             get_logger().info(f"Failed to publish summarized code suggestions, error: {e}")
-
-
