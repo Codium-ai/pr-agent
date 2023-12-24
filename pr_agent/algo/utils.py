@@ -102,7 +102,7 @@ def parse_code_suggestion(code_suggestions: dict, i: int = 0, gfm_supported: boo
                     markdown_text += f"<tr><td>{sub_key}</td><td>{relevant_file}</td></tr>"
                     # continue
                 elif sub_key.lower() == 'suggestion':
-                    markdown_text += f"<tr><td>{sub_key} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td><strong>{sub_value}</strong></td></tr>"
+                    markdown_text += f"<tr><td>{sub_key} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td><strong>\n\n{sub_value}</strong></td></tr>"
                 elif sub_key.lower() == 'relevant line':
                     markdown_text += f"<tr><td>relevant line</td>"
                     sub_value_list = sub_value.split('](')
@@ -316,19 +316,21 @@ def _fix_key_value(key: str, value: str):
     return key, value
 
 
-def load_yaml(response_text: str) -> dict:
+def load_yaml(response_text: str, keys_fix_yaml: List[str] = []) -> dict:
     response_text = response_text.removeprefix('```yaml').rstrip('`')
     try:
         data = yaml.safe_load(response_text)
     except Exception as e:
         get_logger().error(f"Failed to parse AI prediction: {e}")
-        data = try_fix_yaml(response_text)
+        data = try_fix_yaml(response_text, keys_fix_yaml=keys_fix_yaml)
     return data
 
-def try_fix_yaml(response_text: str) -> dict:
+
+def try_fix_yaml(response_text: str, keys_fix_yaml: List[str] = []) -> dict:
     response_text_lines = response_text.split('\n')
 
     keys = ['relevant line:', 'suggestion content:', 'relevant file:', 'existing code:', 'improved code:']
+    keys = keys + keys_fix_yaml
     # first fallback - try to convert 'relevant line: ...' to relevant line: |-\n        ...'
     response_text_lines_copy = response_text_lines.copy()
     for i in range(0, len(response_text_lines_copy)):
@@ -343,18 +345,19 @@ def try_fix_yaml(response_text: str) -> dict:
     except:
         get_logger().info(f"Failed to parse AI prediction after adding |-\n")
 
-    # second fallback - try to remove last lines
-    data = {}
-    for i in range(1, len(response_text_lines)):
-        response_text_lines_tmp = '\n'.join(response_text_lines[:-i])
+    # second fallback - try to extract only range from first ```yaml to ````
+    snippet_pattern = r'```(yaml)?[\s\S]*?```'
+    snippet = re.search(snippet_pattern, '\n'.join(response_text_lines_copy))
+    if snippet:
+        snippet_text = snippet.group()
         try:
-            data = yaml.safe_load(response_text_lines_tmp,)
-            get_logger().info(f"Successfully parsed AI prediction after removing {i} lines")
-            break
+            data = yaml.safe_load(snippet_text.removeprefix('```yaml').rstrip('`'))
+            get_logger().info(f"Successfully parsed AI prediction after extracting yaml snippet")
+            return data
         except:
             pass
-    
-    # thrid fallback - try to remove leading and trailing curly brackets
+
+     # third fallback - try to remove leading and trailing curly brackets
     response_text_copy = response_text.strip().rstrip().removeprefix('{').removesuffix('}')
     try:
         data = yaml.safe_load(response_text_copy,)
@@ -362,6 +365,17 @@ def try_fix_yaml(response_text: str) -> dict:
         return data
     except:
         pass
+
+    # fourth fallback - try to remove last lines
+    data = {}
+    for i in range(1, len(response_text_lines)):
+        response_text_lines_tmp = '\n'.join(response_text_lines[:-i])
+        try:
+            data = yaml.safe_load(response_text_lines_tmp,)
+            get_logger().info(f"Successfully parsed AI prediction after removing {i} lines")
+            return data
+        except:
+            pass
 
 
 def set_custom_labels(variables, git_provider=None):

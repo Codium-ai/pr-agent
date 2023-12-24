@@ -201,8 +201,10 @@ class BitbucketProvider(GitProvider):
             get_logger().exception(f"Failed to remove comment, error: {e}")
 
     # funtion to create_inline_comment
-    def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
-        position, absolute_position = find_line_number_of_relevant_line_in_file(self.get_diff_files(), relevant_file.strip('`'), relevant_line_in_file)
+    def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str, absolute_position: int = None):
+        position, absolute_position = find_line_number_of_relevant_line_in_file(self.get_diff_files(),
+                                                                            relevant_file.strip('`'),
+                                                                            relevant_line_in_file, absolute_position)
         if position == -1:
             if get_settings().config.verbosity_level >= 2:
                 get_logger().info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
