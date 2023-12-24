@@ -49,18 +49,18 @@ Extra instructions from the user:
 ======
 {%- endif %}
 
-The output must be a YAML object equivalent to type $PRCodeSuggestins, according to the following Pydantic definitions:
+The output must be a YAML object equivalent to type PRCodeSuggestions, according to the following Pydantic definitions:
 =====
 class CodeSuggestion(BaseModel):
     relevant_file: str = Field(description="the relevant file full path")
-    suggestion_content: str = Field(description="a concrete suggestion for meaningfully improving the new code introduced in the PR")
-    existing_code: str = Field(description="a code snippet showing the relevant code lines from a '__new hunk__' section. It must be contiguous, correctly formatted and indented, and without line numbers.")
-    relevant_lines_start: int = Field(description="The relevant line number, from a '__new hunk__' section, where the suggestion starts (inclusive). Should be derived from the hunk line numbers, and correspond to the 'existing code' snippet above.")
-    relevant_lines_end: int = Field(description="The relevant line number, from a '__new hunk__' section, where the suggestion ends (inclusive). Should be derived from the hunk line numbers, and correspond to the 'existing code' snippet above.")
-    improved_code: str = Field(description="a new code snippet that can be used to replace the relevant lines in '__new hunk__' code. Replacement suggestions should be complete, correctly formatted and indented, and without line numbers.")
-    label: str = Field(description="a single label for the suggestion, to help the user understand the suggestion type. For example: 'security', 'bug', 'performance', 'enhancement', 'possible issue', 'best practice', 'maintainability', etc. Other labels are also allowed.")
+    suggestion_content: str = Field(description="an actionable suggestion for meaningfully improving the new code introduced in the PR")
+    existing_code: str = Field(description="a code snippet, showing the relevant code lines from a '__new hunk__' section. It must be contiguous, correctly formatted and indented, and without line numbers")
+    relevant_lines_start: int = Field(description="The relevant line number, from a '__new hunk__' section, where the suggestion starts (inclusive). Should be derived from the hunk line numbers, and correspond to the 'existing code' snippet above")
+    relevant_lines_end: int = Field(description="The relevant line number, from a '__new hunk__' section, where the suggestion ends (inclusive). Should be derived from the hunk line numbers, and correspond to the 'existing code' snippet above")
+    improved_code: str = Field(description="a new code snippet, that can be used to replace the relevant lines in '__new hunk__' code. Replacement suggestions should be complete, correctly formatted and indented, and without line numbers")
+    label: str = Field(description="a single label for the suggestion, to help the user understand the suggestion type. For example: 'security', 'bug', 'performance', 'enhancement', 'possible issue', 'best practice', 'maintainability', etc. Other labels are also allowed")
 
-class PRCodeSuggestins(BaseModel):
+class PRCodeSuggestions(BaseModel):
     code_suggestions: List[CodeSuggestion]
 =====
 
