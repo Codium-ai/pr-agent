@@ -50,14 +50,14 @@ See the [Tools Guide](./docs/TOOLS_GUIDE.md) for detailed description of the dif
 
 <h3>Example results:</h3>
 </div>
-<h4><a href="https://github.com/Codium-ai/pr-agent/pull/530">/describe:</a></h4>
+<h4><a href="https://github.com/Codium-ai/pr-agent/pull/530">/describe</a></h4>
 <div align="center">
 <p float="center">
 <img src="https://www.codium.ai/images/pr_agent/describe_short_main.png" width="800">
 </p>
 </div>
 
-<h4><a href="https://github.com/Codium-ai/pr-agent/pull/472#discussion_r1435819374">/improve:</a></h4>
+<h4><a href="https://github.com/Codium-ai/pr-agent/pull/472#discussion_r1435819374">/improve</a></h4>
 
 <div align="center">
 <p float="center">
@@ -68,7 +68,7 @@ See the [Tools Guide](./docs/TOOLS_GUIDE.md) for detailed description of the dif
 
 </div>
 
-<h4><a href="https://github.com/Codium-ai/pr-agent/pull/530">/generate_labels:</a></h4>
+<h4><a href="https://github.com/Codium-ai/pr-agent/pull/530">/generate_labels</a></h4>
 <div align="center">
 <p float="center">
 <kbd><img src="https://www.codium.ai/images/pr_agent/geneare_custom_labels_main_short.png" width="300"></kbd>

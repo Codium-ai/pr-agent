@@ -1,4 +1,4 @@
-# Analyze Tool💎
+# Analyze Tool 💎
 The `analyze` tool combines static code analysis with LLM capabilities to provide a comprehensive analysis of the PR code changes.
 
 The tool scans the PR code changes, find the code components (methods, functions, classes) that changed, and summarizes the changes in each component.
