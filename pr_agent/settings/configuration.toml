@@ -79,6 +79,8 @@ docs_style = "Sphinx Style" # "Google Style with Args, Returns, Attributes...etc
 push_changelog_changes=false
 extra_instructions = ""
 
+[pr_analyze] # /analyze #
+
 [pr_config] # /config #
 
 [github]
