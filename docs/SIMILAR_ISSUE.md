@@ -12,7 +12,15 @@ For example:
 
 Note that to perform retrieval, the `similar_issue` tool indexes all the repo previous issues (once).
 
-To enable usage of the '**similar issue**' tool, you need to set the following keys in `.secrets.toml` (or in the relevant environment variables):
+
+**Select VectorDBs** by changing `pr_similar_issue` parameter in `configuration.toml` file 
+
+2 VectorDBs are available to switch in
+1. LanceDB
+2. Pinecone
+
+To enable usage of the '**similar issue**' tool for Pinecone, you need to set the following keys in `.secrets.toml` (or in the relevant environment variables):
+
 ```
 [pinecone]
 api_key = "..."
