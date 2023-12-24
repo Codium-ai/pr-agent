@@ -441,14 +441,14 @@ class PRSimilarIssue:
         if not ingest:
             get_logger().info('Creating table from scratch...')
             self.table = self.db.create_table(self.index_name, data=df, mode="overwrite")
-            time.sleep(15)  # wait for pinecone to finalize indexing before querying
+            time.sleep(15)  
         else:
             get_logger().info('Ingesting in Table...')
             if self.index_name not in self.db.table_names():
                 self.table.add(df)
             else:
                 get_logger().info(f"Table {self.index_name} doesn't exists!")
-            time.sleep(5)  # wait for pinecone to finalize upserting before querying
+            time.sleep(5)  
         get_logger().info('Done')
 
 
