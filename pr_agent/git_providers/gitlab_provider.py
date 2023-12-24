@@ -183,7 +183,7 @@ class GitLabProvider(GitProvider):
         self.send_inline_comment(body, edit_type, found, relevant_file, relevant_line_in_file, source_line_no,
                                  target_file, target_line_no)
 
-    def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
+    def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str, absolute_position: int = None):
         raise NotImplementedError("Gitlab provider does not support creating inline comments yet")
 
     def create_inline_comments(self, comments: list[dict]):

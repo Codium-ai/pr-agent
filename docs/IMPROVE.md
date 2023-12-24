@@ -26,6 +26,7 @@ Under the section 'pr_code_suggestions', the [configuration file](./../pr_agent/
 - `num_code_suggestions`: number of code suggestions provided by the 'improve' tool. Default is 4.
 - `extra_instructions`: Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".
 - `rank_suggestions`: if set to true, the tool will rank the suggestions, based on importance. Default is false.
+- `include_improved_code`: if set to true, the tool will include an improved code implementation in the suggestion. Default is true.
 
 #### params for '/improve --extended' mode
 - `num_code_suggestions_per_chunk`: number of code suggestions provided by the 'improve' tool, per chunk. Default is 8.

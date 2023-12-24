@@ -106,9 +106,9 @@ class GitProvider(ABC):
     def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
         pass
 
-    @abstractmethod
-    def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
-        pass
+    def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str,
+                              absolute_position: int = None):
+        raise NotImplementedError("This git provider does not support creating inline comments yet")
 
     @abstractmethod
     def publish_inline_comments(self, comments: list[dict]):
