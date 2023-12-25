@@ -179,9 +179,12 @@ url = ""
 skip_comments = false
 force_update_dataset = false
 max_issues_to_scan = 500
+vectordb = "pinecone"
 
 [pinecone]
 # fill and place in .secrets.toml
 #api_key = ...
 # environment = "gcp-starter"
 
+[lancedb]
+uri = "./lancedb"
