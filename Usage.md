@@ -7,8 +7,6 @@
 - [Working with GitHub App](#working-with-github-app)
 - [Working with GitHub Action](#working-with-github-action)
 - [Working with BitBucket App](#working-with-bitbucket-self-hosted-app)
-- [Changing a model](#changing-a-model)
-- [Working with large PRs](#working-with-large-prs)
 - [Appendix - additional configurations walkthrough](#appendix---additional-configurations-walkthrough)
 
 ### Introduction
@@ -25,10 +23,36 @@ GitHub App and GitHub Action also enable to run PR-Agent specific tool automatic
 
 
 #### The configuration file
-The different tools and sub-tools used by CodiumAI PR-Agent are adjustable via the **[configuration file](pr_agent/settings/configuration.toml)**.
+- The different tools and sub-tools used by CodiumAI PR-Agent are adjustable via the **[configuration file](pr_agent/settings/configuration.toml)**.
 In addition to general configuration options, each tool has its own configurations. For example, the `review` tool will use parameters from the [pr_reviewer](/pr_agent/settings/configuration.toml#L16) section in the configuration file.
 
-The [Tools Guide](./docs/TOOLS_GUIDE.md) provides a detailed description of the different tools and their configurations.
+- The [Tools Guide](./docs/TOOLS_GUIDE.md) provides a detailed description of the different tools and their configurations.
+
+
+- By uploading a local `.pr_agent.toml` file to the root of the repo's main branch, you can edit and customize any configuration parameter. Note that you need to upload `.pr_agent.toml` prior to creating a PR, in order for the configuration to take effect.
+
+For example, if you set in `.pr_agent.toml`:
+
+```
+[pr_reviewer]
+extra_instructions="""\
+- instruction a
+- instruction b
+...
+"""
+```
+
+Then you can give a list of extra instructions to the `review` tool.
+
+
+#### Global configuration file 💎
+
+If you create a repo called `pr-agent-settings` in your **organization**, it's configuration file `.pr_agent.toml` will be used as a global configuration file for any repo in your organization.
+Parameters from a local `.pr_agent.toml` file, in a specific repo, will override the global configuration parameters.
+
+For example, in the GitHub organization `Codium-ai`:
+- The repo [`https://github.com/Codium-ai/pr-agent-settings`](https://github.com/Codium-ai/pr-agent-settings/blob/main/.pr_agent.toml) contains a `.pr_agent.toml` file that serves as a global configuration file for all the repos in the GitHub organization `Codium-ai`.
+- The repo [`https://github.com/Codium-ai/pr-agent`](https://github.com/Codium-ai/pr-agent/blob/main/.pr_agent.toml) inherits the global configuration file from `pr-agent-settings`.
 
 #### Ignoring files from analysis
 In some cases, you may want to exclude specific files or directories from the analysis performed by CodiumAI PR-Agent. This can be useful, for example, when you have files that are generated automatically or files that shouldn't be reviewed, like vendored code.
@@ -52,18 +76,6 @@ The [git_provider](pr_agent/settings/configuration.toml#L4) field in the configu
 `
 "github", "gitlab", "azure", "codecommit", "local", "gerrit"
 `
-
-[//]: # (** online usage:**)
-
-[//]: # (Options that are available in the configuration file can be specified at run time when calling actions. Two examples:)
-
-[//]: # (```)
-
-[//]: # (- /review --pr_reviewer.extra_instructions="focus on the file: ...")
-
-[//]: # (- /describe --pr_description.add_original_user_description=false -pr_description.extra_instructions="make sure to mention: ...")
-
-[//]: # (```)
 
 ### Working from a local repo (CLI)
 When running from your local repo (CLI), your local configuration file will be used.
@@ -256,13 +268,34 @@ If not set, the default option is that only the `review` tool will run automatic
 Note that due to limitations of the bitbucket platform, the `auto_describe` tool will be able to publish a PR description only as a comment. 
 In addition, some subsections like `PR changes walkthrough` will not appear, since they require the usage of collapsible sections, which are not supported by bitbucket.
 
-### Changing a model
+### Appendix - additional configurations walkthrough
+
+
+#### Extra instructions
+All PR-Agent tools have a parameter called `extra_instructions`, that enables to add free-text extra instructions. Example usage:
+```
+/update_changelog --pr_update_changelog.extra_instructions="Make sure to update also the version ..."
+```
+
+#### Working with large PRs
+
+The default mode of CodiumAI is to have a single call per tool, using GPT-4, which has a token limit of 8000 tokens.
+This mode provide a very good speed-quality-cost tradeoff, and can handle most PRs successfully.
+When the PR is above the token limit, it employs a [PR Compression strategy](./PR_COMPRESSION.md).
+
+However, for very large PRs, or in case you want to emphasize quality over speed and cost, there are 2 possible solutions:
+1) [Use a model](#changing-a-model) with larger context, like GPT-32K, or claude-100K. This solution will be applicable for all the tools.
+2) For the `/improve` tool, there is an ['extended' mode](./docs/IMPROVE.md) (`/improve --extended`),
+which divides the PR to chunks, and process each chunk separately. With this mode, regardless of the model, no compression will be done (but for large PRs, multiple model calls may occur)
+
+
+#### Changing a model
 
 See [here](pr_agent/algo/__init__.py) for the list of available models.
 To use a different model than the default (GPT-4), you need to edit [configuration file](pr_agent/settings/configuration.toml#L2).
 For models and environments not from OPENAI, you might need to provide additional keys and other parameters. See below for instructions.
 
-#### Azure
+##### Azure
 To use Azure, set in your `.secrets.toml` (working from CLI), or in the GitHub `Settings > Secrets and variables` (working from GitHub App or GitHub Action):
 ```
 api_key = "" # your azure api key
@@ -278,7 +311,7 @@ and set in your configuration file:
 model="" # the OpenAI model you've deployed on Azure (e.g. gpt-3.5-turbo)
 ```
 
-#### Huggingface
+##### Huggingface
 
 **Local**
 You can run Huggingface models locally through either [VLLM](https://docs.litellm.ai/docs/providers/vllm) or [Ollama](https://docs.litellm.ai/docs/providers/ollama)
@@ -327,7 +360,7 @@ api_base = ... # the base url for your huggingface inference endpoint
 ```
 (you can obtain a Llama2 key from [here](https://replicate.com/replicate/llama-2-70b-chat/api))
 
-#### Replicate
+##### Replicate
 
 To use Llama2 model with Replicate, for example, set:
 ```
@@ -341,7 +374,7 @@ key = ...
 
 Also review the [AiHandler](pr_agent/algo/ai_handler.py) file for instruction how to set keys for other models.
 
-#### Vertex AI
+##### Vertex AI
 
 To use Google's Vertex AI platform and its associated models (chat-bison/codechat-bison) set:
 
@@ -359,7 +392,7 @@ Your [application default credentials](https://cloud.google.com/docs/authenticat
 
 If you do want to set explicit credentials then you can use the `GOOGLE_APPLICATION_CREDENTIALS` environment variable set to a path to a json credentials file.
 
-#### Amazon Bedrock
+##### Amazon Bedrock
 
 To use Amazon Bedrock and its foundational models, add the below configuration:
 
@@ -376,25 +409,6 @@ Note that you have to add access to foundational models before using them. Pleas
 
 AWS session is automatically authenticated from your environment, but you can also explicitly set `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables.
 
-### Working with large PRs
-
-The default mode of CodiumAI is to have a single call per tool, using GPT-4, which has a token limit of 8000 tokens.
-This mode provide a very good speed-quality-cost tradeoff, and can handle most PRs successfully.
-When the PR is above the token limit, it employs a [PR Compression strategy](./PR_COMPRESSION.md).
-
-However, for very large PRs, or in case you want to emphasize quality over speed and cost, there are 2 possible solutions:
-1) [Use a model](#changing-a-model) with larger context, like GPT-32K, or claude-100K. This solution will be applicable for all the tools.
-2) For the `/improve` tool, there is an ['extended' mode](./docs/IMPROVE.md) (`/improve --extended`),
-which divides the PR to chunks, and process each chunk separately. With this mode, regardless of the model, no compression will be done (but for large PRs, multiple model calls may occur)
-
-### Appendix - additional configurations walkthrough
-
-
-#### Extra instructions
-All PR-Agent tools have a parameter called `extra_instructions`, that enables to add free-text extra instructions. Example usage:
-```
-/update_changelog --pr_update_changelog.extra_instructions="Make sure to update also the version ..."
-```
 
 #### Patch Extra Lines
 By default, around any change in your PR, git patch provides 3 lines of context above and below the change.
