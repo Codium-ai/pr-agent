@@ -58,10 +58,10 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
             emoji = emojis.get(key, "")
             if key.lower() == 'code feedback':
                 if gfm_supported:
-                    markdown_text += f"\n\n- "
-                    markdown_text += f"<details><summary> { emoji } Code feedback:</summary>"
+                    markdown_text += f"\n\n"
+                    markdown_text += f"<details><summary> <strong>{ emoji } Code feedback:</strong></summary>"
                 else:
-                    markdown_text += f"\n\n- **{emoji} Code feedback:**\n\n"
+                    markdown_text += f"\n\n**{emoji} Code feedback:**\n\n"
             else:
                 markdown_text += f"- {emoji} **{key}:**\n\n"
             for i, item in enumerate(value):
@@ -76,7 +76,13 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
                     markdown_text += "\n\n"
         elif value != 'n/a':
             emoji = emojis.get(key, "")
-            markdown_text += f"- {emoji} **{key}:** {value}\n"
+            if key.lower() == 'general suggestions':
+                if gfm_supported:
+                    markdown_text += f"\n\n<strong>{emoji} General suggestions:</strong> {value}\n"
+                else:
+                    markdown_text += f"{emoji} **General suggestions:** {value}\n"
+            else:
+                markdown_text += f"- {emoji} **{key}:** {value}\n"
     return markdown_text
 
 

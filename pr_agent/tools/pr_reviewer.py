@@ -251,18 +251,15 @@ class PRReviewer:
         markdown_text = convert_to_markdown(data, self.git_provider.is_supported("gfm_markdown"))
         user = self.git_provider.get_user_id()
 
-        # Add help text if not in CLI mode
-        if not get_settings().get("CONFIG.CLI_MODE", False):
-            markdown_text += "\n### How to use\n"
-            if self.git_provider.is_supported("gfm_markdown"):
-                markdown_text += "\n <details> <summary> Instructions</summary>\n\n"
+        # Add help text if gfm_markdown is supported
+        if self.git_provider.is_supported("gfm_markdown"):
+            markdown_text += "\n\n<details> <summary><strong>✨ Usage tips:</strong></summary><hr> \n\n"
             bot_user = "[bot]" if get_settings().github_app.override_deployment_type else get_settings().github_app.bot_user
-            if user and bot_user not in user:
+            if user and bot_user not in user and not get_settings().get("CONFIG.CLI_MODE", False):
                 markdown_text += bot_help_text(user)
             else:
                 markdown_text += actions_help_text
-            if self.git_provider.is_supported("gfm_markdown"):
-                markdown_text += "\n</details>\n"
+            markdown_text += "\n</details>\n"
 
         # Add custom labels from the review prediction (effort, security)
         self.set_review_labels(data)
@@ -398,9 +395,12 @@ class PRReviewer:
                         review_labels.append('Possible security concern')
 
                 current_labels = self.git_provider.get_pr_labels()
-                current_labels_filtered = [label for label in current_labels if
-                                           not label.lower().startswith('review effort [1-5]:') and not label.lower().startswith(
-                                               'possible security concern')]
+                if current_labels:
+                    current_labels_filtered = [label for label in current_labels if
+                                               not label.lower().startswith('review effort [1-5]:') and not label.lower().startswith(
+                                                   'possible security concern')]
+                else:
+                    current_labels_filtered = []
                 if current_labels or review_labels:
                     get_logger().info(f"Setting review labels: {review_labels + current_labels_filtered}")
                     self.git_provider.publish_labels(review_labels + current_labels_filtered)
