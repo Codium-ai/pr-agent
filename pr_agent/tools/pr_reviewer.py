@@ -251,11 +251,11 @@ class PRReviewer:
         markdown_text = convert_to_markdown(data, self.git_provider.is_supported("gfm_markdown"))
         user = self.git_provider.get_user_id()
 
-        # Add help text if not in CLI mode, and gfm_markdown is supported
+        # Add help text if gfm_markdown is supported
         if self.git_provider.is_supported("gfm_markdown"):
             markdown_text += "\n\n<details> <summary><strong>✨ Usage tips:</strong></summary><hr> \n\n"
             bot_user = "[bot]" if get_settings().github_app.override_deployment_type else get_settings().github_app.bot_user
-            if user and bot_user not in user:
+            if user and bot_user not in user and not get_settings().get("CONFIG.CLI_MODE", False):
                 markdown_text += bot_help_text(user)
             else:
                 markdown_text += actions_help_text
