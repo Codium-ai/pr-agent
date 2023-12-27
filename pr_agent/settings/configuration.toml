@@ -38,6 +38,7 @@ enable_review_labels_effort=false
 require_all_thresholds_for_incremental_review=false
 minimal_commits_for_incremental_review=0
 minimal_minutes_for_incremental_review=0
+enable_help_text=true # Help text is eanabled by default
 
 [pr_description] # /describe #
 publish_labels=true
