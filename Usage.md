@@ -143,7 +143,7 @@ Then you will overwrite the default number of code suggestions to 1.
 
 #### GitHub app automatic tools
 The [github_app](pr_agent/settings/configuration.toml#L76) section defines GitHub app-specific configurations.  
-In this section you can define configurations to control the conditions for which tools will **run automatically**.  
+In this section, you can define configurations to control the conditions for which tools will **run automatically**.  
 
 ##### GitHub app automatic tools for PR actions
 The GitHub app can respond to the following actions on a PR:
@@ -159,11 +159,11 @@ The configuration parameter `pr_commands` defines the list of tools that will be
 handle_pr_actions = ['opened', 'reopened', 'ready_for_review', 'review_requested']
 pr_commands = [
     "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true",
-    "/auto_review",
+    "/review",
 ]
 ```
-This means that when a new PR is opened/reopened or marked as ready for review, PR-Agent will run the `describe` and `auto_review` tools.  
-For the describe tool, the `add_original_user_description` and `keep_original_user_title` parameters will be set to true.
+This means that when a new PR is opened/reopened or marked as ready for review, PR-Agent will run the `describe` and `review` tools.  
+For the `describe` tool, the `add_original_user_description` and `keep_original_user_title` parameters will be set to true.
 
 You can override the default tool parameters by uploading a local configuration file called `.pr_agent.toml` to the root of your repo.
 For example, if your local `.pr_agent.toml` file contains:
@@ -190,12 +190,12 @@ The configuration parameter `push_commands` defines the list of tools that will 
 handle_push_trigger = true
 push_commands = [
     "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true",
-    "/auto_review -i --pr_reviewer.remove_previous_review_comment=true",
+    "/review -i --pr_reviewer.remove_previous_review_comment=true",
 ]
 ```
-This means that when new code is pushed to the PR, the PR-Agent will run the `describe` and incremental `auto_review` tools.  
-For the describe tool, the `add_original_user_description` and `keep_original_user_title` parameters will be set to true.  
-For the `auto_review` tool, it will run in incremental mode, and the `remove_previous_review_comment` parameter will be set to true.
+This means that when new code is pushed to the PR, the PR-Agent will run the `describe` and incremental `review` tools.  
+For the `describe` tool, the `add_original_user_description` and `keep_original_user_title` parameters will be set to true.  
+For the `review` tool, it will run in incremental mode, and the `remove_previous_review_comment` parameter will be set to true.
 
 Much like the configurations for `pr_commands`, you can override the default tool parameters by uploading a local configuration file to the root of your repo.
 
