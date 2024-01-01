@@ -29,6 +29,9 @@ Under the section 'pr_reviewer', the [configuration file](./../pr_agent/settings
 - `remove_previous_review_comment`: if set to true, the tool will remove the previous review comment before adding a new one. Default is false.
 - `persistent_comment`: if set to true, the review comment will be persistent, meaning that every new review request will edit the previous one. Default is true.
 - `extra_instructions`: Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".
+#### SOC2 compliance 💎
+- `require_soc2_review`: if set to true, the tool will add a section that checks if the PR description includes a link to a ticket in a project management system (e.g., Jira, Asana, Trello, etc.), as required by SOC2 compliance. Default is false.
+- `soc2_ticket_prompt`: The prompt to be used for the SOC2 ticket review. Default is "Does the PR description include a link to ticket in a project management system (e.g., Jira, Asana, Trello, etc.) ?". Edit this field if your compliance requirements are different.
 #### review labels
 - `enable_review_labels_security`: if set to true, the tool will publish a 'possible security issue' label if it detects a security issue. Default is true.
 - `enable_review_labels_effort`: if set to true, the tool will publish a 'Review effort [1-5]: x' label. Default is false.
