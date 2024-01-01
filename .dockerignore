@@ -3,3 +3,4 @@ pr_agent/settings/.secrets.toml
 pics/
 pr_agent.egg-info/
 build/
+__pycache__/
