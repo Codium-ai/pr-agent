@@ -1,11 +1,13 @@
-FROM public.ecr.aws/lambda/python:3.10
+ARG PYTHON_VERSION=3.10
+FROM public.ecr.aws/lambda/python:$PYTHON_VERSION
 
 RUN yum update -y && \
     yum install -y gcc python3-devel && \
     yum clean all
+RUN pip install poetry
 
 ADD pyproject.toml .
-RUN pip install . && rm pyproject.toml
+RUN poetry install && rm pyproject.toml
 RUN pip install mangum==0.17.0
 COPY pr_agent/ ${LAMBDA_TASK_ROOT}/pr_agent/
 
