@@ -25,12 +25,15 @@ RUN poetry export -f requirements.txt -o requirements-dev.txt --only=dev
 
 FROM python:$PYTHON_VERSION as base
 
+ARG UID=1000
+ARG GID=1000
+
 ENV PYTHONPATH=/usr/app/
 ENV VIRTUAL_ENV=/usr/app/.venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # Create and use non-root user
-RUN groupadd -g 1000 -r pr_agent && useradd -m -g pr_agent -u 1000 pr_agent
+RUN groupadd -g $GID -r pr_agent && useradd -m -g $GID -u $UID pr_agent
 
 WORKDIR /usr/app
 COPY --chown=pr_agent:pr_agent --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
