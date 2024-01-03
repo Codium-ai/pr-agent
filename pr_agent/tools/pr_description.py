@@ -297,7 +297,7 @@ class PRDescription:
                 value = self.file_label_dict
                 key_publish = "PR changes walkthrough"
             else:
-                key_publish = key.rstrip(':').replace("_", " ").capitalize()
+                key_publish = key.rstrip(':').replace("_", " ").title()
             pr_body += f"## {key_publish}\n"
             if 'walkthrough' in key.lower():
                 if self.git_provider.is_supported("gfm_markdown"):
