@@ -69,6 +69,7 @@ Code Documentation:
         - after
       description: |-
         The {{ docs_for_language }} placement relative to the relevant line (code component).
+        For example, in Python the docs are placed after the function signature, but in Java they are placed before.
     documentation:
       type: string
       description: |-
