@@ -17,7 +17,7 @@ maintainers = [
 ]
 description = "CodiumAI PR-Agent is an open-source tool to automatically analyze a pull request and provide several types of feedback"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 keywords = ["ai", "tool", "developer", "review", "agent"]
 license = {file = "LICENSE", name = "Apache 2.0 License"}
 classifiers = [
