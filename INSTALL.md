@@ -77,12 +77,13 @@ codiumai/pr-agent@v0.9
 
 ```
 git clone https://github.com/Codium-ai/pr-agent.git
+cd pr-agent
 ```
 
 2. Install the requirements in your favorite virtual environment:
 
 ```
-pip install -r requirements.txt
+poetry install
 ```
 
 3. Copy the secrets template file and fill in your OpenAI key and your GitHub user token:
@@ -96,14 +97,14 @@ chmod 600 pr_agent/settings/.secrets.toml
 4. Add the pr_agent folder to your PYTHONPATH, then run the cli.py script:
 
 ```
-export PYTHONPATH=[$PYTHONPATH:]<PATH to pr_agent folder>
-python3 -m pr_agent.cli --pr_url <pr_url> review
-python3 -m pr_agent.cli --pr_url <pr_url> ask <your question>
-python3 -m pr_agent.cli --pr_url <pr_url> describe
-python3 -m pr_agent.cli --pr_url <pr_url> improve
-python3 -m pr_agent.cli --pr_url <pr_url> add_docs
-python3 -m pr_agent.cli --pr_url <pr_url> generate_labels
-python3 -m pr_agent.cli --issue_url <issue_url> similar_issue
+poetry shell
+python -m pr_agent.cli --pr_url <pr_url> review
+python -m pr_agent.cli --pr_url <pr_url> ask <your question>
+python -m pr_agent.cli --pr_url <pr_url> describe
+python -m pr_agent.cli --pr_url <pr_url> improve
+python -m pr_agent.cli --pr_url <pr_url> add_docs
+python -m pr_agent.cli --pr_url <pr_url> generate_labels
+python -m pr_agent.cli --issue_url <issue_url> similar_issue
 ...
 ```
 
