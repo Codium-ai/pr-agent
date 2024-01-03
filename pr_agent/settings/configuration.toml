@@ -71,6 +71,10 @@ include_improved_code = true
 extra_instructions = ""
 rank_suggestions = false
 # params for '/improve --extended' mode
+auto_extended_mode=true
+auto_extended_mode_min_files=1
+auto_extended_mode_min_additions=500
+auto_extended_mode_min_deletions=0
 num_code_suggestions_per_chunk=8
 rank_extended_suggestions = true
 max_number_of_calls = 5

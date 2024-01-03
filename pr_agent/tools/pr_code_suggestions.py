@@ -26,7 +26,7 @@ class PRCodeSuggestions:
 
         # extended mode
         try:
-            self.is_extended = any(["extended" in arg for arg in args])
+            self.is_extended = self._get_is_extended(args or [])
         except:
             self.is_extended = False
         if self.is_extended:
@@ -205,6 +205,21 @@ class PRCodeSuggestions:
                 get_logger().info(f"Could not dedent code snippet for file {relevant_file}, error: {e}")
 
         return new_code_snippet
+
+    def _get_is_extended(self, args: list[str]) -> bool:
+        """Check if extended mode should be enabled by the `--extended` flag or automatically according to the PR"""
+        if any(["extended" in arg for arg in args]):
+            get_logger().info("Extended mode is enabled by the `--extended` flag")
+            return True
+        if (
+            get_settings().pr_code_suggestions.auto_extended_mode
+            and self.git_provider.pr.changed_files >= get_settings().pr_code_suggestions.auto_extended_mode_min_files
+            and self.git_provider.pr.additions >= get_settings().pr_code_suggestions.auto_extended_mode_min_additions
+            and self.git_provider.pr.deletions >= get_settings().pr_code_suggestions.auto_extended_mode_min_deletions
+        ):
+            get_logger().info("Extended mode is enabled automatically based on the PR size")
+            return True
+        return False
 
     async def _prepare_prediction_extended(self, model: str) -> dict:
         get_logger().info('Getting PR diff...')
