@@ -286,8 +286,14 @@ class PRCodeSuggestions:
                 data_sorted[importance_order - 1] = suggestion_list[suggestion_number - 1]
 
             if get_settings().pr_code_suggestions.final_clip_factor != 1:
-                new_len = int(0.5 + len(data_sorted) * get_settings().pr_code_suggestions.final_clip_factor)
-                data_sorted = data_sorted[:new_len]
+                max_len = max(
+                    len(data_sorted),
+                    get_settings().pr_code_suggestions.num_code_suggestions,
+                    get_settings().pr_code_suggestions.num_code_suggestions_per_chunk,
+                )
+                new_len = int(0.5 + max_len * get_settings().pr_code_suggestions.final_clip_factor)
+                if new_len < len(data_sorted):
+                    data_sorted = data_sorted[:new_len]
         except Exception as e:
             if get_settings().config.verbosity_level >= 1:
                 get_logger().info(f"Could not sort suggestions, error: {e}")
