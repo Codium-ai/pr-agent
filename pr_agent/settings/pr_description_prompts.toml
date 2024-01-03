@@ -35,23 +35,18 @@ class PRType(str, Enum):
 
 {%- endif %}
 
-{%- if enable_file_walkthrough %}
-class FileWalkthrough(BaseModel):
-    filename: str = Field(description="the relevant file full path")
-    changes_in_file: str = Field(description="minimal and concise summary of the changes in the relevant file")
-{%- endif %}
-
-{%- if enable_semantic_files_types %}
-
+{%- if enable_semantic_files_types or enable_file_walkthrough %}
 Class FileDescription(BaseModel):
     filename: str = Field(description="the relevant file full path")
     changes_summary: str = Field(description="minimal and concise summary of the changes in the relevant file")
+{%- if enable_semantic_files_types %}
     label: str = Field(description="a single semantic label that represents a type of code changes that occurred in the File. Possible values (partial list): 'bug fix', 'tests', 'enhancement', 'documentation', 'error handling', 'configuration changes', 'dependencies', 'formatting', 'miscellaneous', ...")
+{%- endif %}
 {%- endif %}
 
 Class PRDescription(BaseModel):
     type: List[PRType] = Field(description="one or more types that describe the PR content. Return the label value, not the name.")
-{%- if enable_semantic_files_types %}
+{%- if enable_semantic_files_types or enable_file_walkthrough %}
     pr_files[List[FileDescription]] = Field(max_items=15, description="a list of the files in the PR, and their changes summary.")
 {%- endif %}
     description: str = Field(description="an informative and concise description of the PR. Use bullet points. Display first the most significant changes.")
@@ -68,14 +63,16 @@ Example output:
 type:
 - ...
 - ...
-{%- if enable_semantic_files_types %}
+{%- if enable_semantic_files_types or enable_file_walkthrough %}
 pr_files:
 - filename: |
     ...
   changes_summary: |
     ...
+{%- if enable_semantic_files_types %}
   label: |
     ...
+{%- endif %}
 ...
 {%- endif %}
 description: |-

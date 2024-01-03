@@ -1,6 +1,7 @@
 import copy
 import re
 from functools import partial
+from itertools import chain
 from typing import List, Tuple
 
 from jinja2 import Environment, StrictUndefined
@@ -88,7 +89,7 @@ class PRDescription:
             else:
                 return None
 
-            if get_settings().pr_description.enable_semantic_files_types:
+            if get_settings().pr_description.enable_semantic_files_types or get_settings().pr_description.enable_file_walkthrough:
                 self._prepare_file_labels()
 
             pr_labels = []
@@ -248,12 +249,12 @@ class PRDescription:
             body = body.replace('pr_agent:summary', summary)
 
         if not re.search(r'<!--\s*pr_agent:walkthrough\s*-->', body):
-            ai_walkthrough = self.data.get('PR Main Files Walkthrough')
+            ai_walkthrough = self.data.get('pr_files')
             if ai_walkthrough:
                 walkthrough = str(ai_header)
                 for file in ai_walkthrough:
                     filename = file['filename'].replace("'", "`")
-                    description = file['changes in file'].replace("'", "`")
+                    description = file['changes_summary'].replace("'", "`")
                     walkthrough += f'- `{filename}`: {description}\n'
 
                 body = body.replace('pr_agent:walkthrough', walkthrough)
@@ -295,20 +296,11 @@ class PRDescription:
         for idx, (key, value) in enumerate(self.data.items()):
             if key == 'pr_files':
                 value = self.file_label_dict
-                key_publish = "PR changes walkthrough"
+                key_publish = "Changes Walkthrough" if get_settings().pr_description.enable_semantic_files_types else "Files Walkthrough"
             else:
                 key_publish = key.rstrip(':').replace("_", " ").capitalize()
             pr_body += f"## {key_publish}\n"
-            if 'walkthrough' in key.lower():
-                if self.git_provider.is_supported("gfm_markdown"):
-                    pr_body += "<details> <summary>files:</summary>\n\n"
-                for file in value:
-                    filename = file['filename'].replace("'", "`")
-                    description = file['changes_in_file']
-                    pr_body += f'- `{filename}`: {description}\n'
-                if self.git_provider.is_supported("gfm_markdown"):
-                    pr_body += "</details>\n"
-            elif 'pr_files' in key.lower():
+            if 'pr_files' in key.lower():
                 pr_body = self.process_pr_files_prediction(pr_body, value)
             else:
                 # if the value is a list, join its items by comma
@@ -329,7 +321,7 @@ class PRDescription:
             try:
                 filename = file['filename'].replace("'", "`").replace('"', '`')
                 changes_summary = file['changes_summary']
-                label = file['label']
+                label = file.get('label')
                 if label not in self.file_label_dict:
                     self.file_label_dict[label] = []
                 self.file_label_dict[label].append((filename, changes_summary))
@@ -338,8 +330,18 @@ class PRDescription:
                 pass
 
     def process_pr_files_prediction(self, pr_body, value):
-        if not self.git_provider.is_supported("gfm_markdown"):
+        if get_settings().pr_description.enable_semantic_files_types and not self.git_provider.is_supported("gfm_markdown"):
             get_logger().info(f"Disabling semantic files types for {self.pr_id} since gfm_markdown is not supported")
+            get_settings().pr_description.enable_file_walkthrough = True
+        if get_settings().pr_description.enable_file_walkthrough:
+            if self.git_provider.is_supported("gfm_markdown"):
+                pr_body += "<details> <summary>files:</summary>\n\n"
+            for filename, description in chain(*value.values()):
+                pr_body += f'- `{filename}`: {description}\n'
+            if self.git_provider.is_supported("gfm_markdown"):
+                pr_body += "</details>\n"
+            return pr_body
+        if not (get_settings().pr_description.enable_file_walkthrough or get_settings().pr_description.enable_semantic_files_types):
             return pr_body
         try:
             pr_body += "<table>"
