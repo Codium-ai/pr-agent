@@ -35,12 +35,6 @@ class PRType(str, Enum):
 
 {%- endif %}
 
-{%- if enable_file_walkthrough %}
-class FileWalkthrough(BaseModel):
-    filename: str = Field(description="the relevant file full path")
-    changes_in_file: str = Field(description="minimal and concise summary of the changes in the relevant file")
-{%- endif %}
-
 {%- if enable_semantic_files_types %}
 
 Class FileDescription(BaseModel):

@@ -52,7 +52,6 @@ class PRDescription:
             "commit_messages_str": self.git_provider.get_commit_messages(),
             "enable_custom_labels": get_settings().config.enable_custom_labels,
             "custom_labels_class": "",  # will be filled if necessary in 'set_custom_labels' function
-            "enable_file_walkthrough": get_settings().pr_description.enable_file_walkthrough,
             "enable_semantic_files_types": get_settings().pr_description.enable_semantic_files_types,
         }
 
@@ -251,16 +250,15 @@ class PRDescription:
             summary = f"{ai_header}{ai_summary}"
             body = body.replace('pr_agent:summary', summary)
 
-        if not re.search(r'<!--\s*pr_agent:walkthrough\s*-->', body):
-            ai_walkthrough = self.data.get('PR Main Files Walkthrough')
-            if ai_walkthrough:
-                walkthrough = str(ai_header)
-                for file in ai_walkthrough:
-                    filename = file['filename'].replace("'", "`")
-                    description = file['changes in file'].replace("'", "`")
-                    walkthrough += f'- `{filename}`: {description}\n'
-
-                body = body.replace('pr_agent:walkthrough', walkthrough)
+        ai_walkthrough = self.data.get('pr_files')
+        if ai_walkthrough and not re.search(r'<!--\s*pr_agent:walkthrough\s*-->', body):
+            try:
+                walkthrough_gfm = ""
+                walkthrough_gfm = self.process_pr_files_prediction(walkthrough_gfm, self.file_label_dict)
+                body = body.replace('pr_agent:walkthrough', walkthrough_gfm)
+            except Exception as e:
+                get_logger().error(f"Failing to process walkthrough {self.pr_id}: {e}")
+                body = body.replace('pr_agent:walkthrough', "")
 
         return title, body
 
@@ -299,7 +297,7 @@ class PRDescription:
         for idx, (key, value) in enumerate(self.data.items()):
             if key == 'pr_files':
                 value = self.file_label_dict
-                key_publish = "PR changes walkthrough"
+                key_publish = "Changes walkthrough"
             else:
                 key_publish = key.rstrip(':').replace("_", " ").capitalize()
             pr_body += f"## {key_publish}\n"
@@ -333,7 +331,7 @@ class PRDescription:
             try:
                 filename = file['filename'].replace("'", "`").replace('"', '`')
                 changes_summary = file['changes_summary']
-                label = file['label']
+                label = file.get('label')
                 if label not in self.file_label_dict:
                     self.file_label_dict[label] = []
                 self.file_label_dict[label].append((filename, changes_summary))
@@ -342,6 +340,9 @@ class PRDescription:
                 pass
 
     def process_pr_files_prediction(self, pr_body, value):
+        use_collapsible_file_list = get_settings().pr_description.collapsible_file_list
+        if use_collapsible_file_list == "adaptive":
+            use_collapsible_file_list = len(value) > 8
         if not self.git_provider.is_supported("gfm_markdown"):
             get_logger().info(f"Disabling semantic files types for {self.pr_id} since gfm_markdown is not supported")
             return pr_body
@@ -356,7 +357,11 @@ class PRDescription:
                 s_label = semantic_label.strip("'").strip('"')
                 pr_body += f"""<tr><td><strong>{s_label.capitalize()}</strong></td>"""
                 list_tuples = value[semantic_label]
-                pr_body += f"""<td><details><summary>{len(list_tuples)} files</summary><table>"""
+
+                if use_collapsible_file_list:
+                    pr_body += f"""<td><details><summary>{len(list_tuples)} files</summary><table>"""
+                else:
+                    pr_body += f"""<td><table>"""
                 for filename, file_change_description in list_tuples:
                     filename = filename.replace("'", "`")
                     filename_publish = filename.split("/")[-1]
@@ -395,7 +400,10 @@ class PRDescription:
 
 </tr>                    
 """
-                pr_body += """</table></details></td></tr>"""
+                if use_collapsible_file_list:
+                    pr_body += """</table></details></td></tr>"""
+                else:
+                    pr_body += """</table></td></tr>"""
             pr_body += """</tr></tbody></table>"""
 
         except Exception as e:
