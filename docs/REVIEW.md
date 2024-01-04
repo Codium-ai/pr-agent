@@ -64,7 +64,7 @@ By invoking:
 ```
 /reflect_and_review
 ```
-The tool will first ask the author questions about the PR, and will guide the review based on his answers.
+The tool will first ask the author questions about the PR, and will guide the review based on their answers.
 
 <kbd><img src=https://codium.ai/images/pr_agent/reflection_questions.png width="768"></kbd>
 <kbd><img src=https://codium.ai/images/pr_agent/reflection_answers.png width="768"></kbd>
@@ -75,7 +75,7 @@ The tool will first ask the author questions about the PR, and will guide the re
 
 - With current level of AI for code (GPT-4), mistakes can happen. Not all the suggestions will be perfect, and a user should not accept all of them automatically.
 
-- Suggestions are not meant to be [simplistic](./../pr_agent/settings/pr_reviewer_prompts.toml#L29). Instead, they aim to give deep feedback and raise questions, ideas and thoughts to the user, who can then use his judgment, experience, and understanding of the code base.
+- Suggestions are not meant to be [simplistic](./../pr_agent/settings/pr_reviewer_prompts.toml#L29). Instead, they aim to give deep feedback and raise questions, ideas and thoughts to the user, who can then use their judgment, experience, and understanding of the code base.
 
 - Recommended to use the 'extra_instructions' field to guide the model to suggestions that are more relevant to the specific needs of the project.
 
