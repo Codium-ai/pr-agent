@@ -7,7 +7,7 @@ class PRConfig:
     """
     The PRConfig class is responsible for listing all configuration options available for the user.
     """
-    def __init__(self, pr_url: str, args=None):
+    def __init__(self, pr_url: str, args=None, ai_handler=None):
         """
         Initialize the PRConfig object with the necessary attributes and objects to comment on a pull request.
 
