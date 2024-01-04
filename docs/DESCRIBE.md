@@ -48,7 +48,8 @@ Under the section 'pr_description', the [configuration file](./../pr_agent/setti
 
 - `final_update_message`: if set to true, it will add a comment message [`PR Description updated to latest commit...`](https://github.com/Codium-ai/pr-agent/pull/499#issuecomment-1837412176) after finishing calling `/describe`. Default is true.
 
-- `enable_semantic_files_types`: if set to true, "PR changes walkthrough" section will be generated. Default is true.
+- `enable_semantic_files_types`: if set to true, "Changes walkthrough" section will be generated. Default is true.
+- `collapsible_file_list`: if set to true, the file list in the "Changes walkthrough" section will be collapsible. If set to "adaptive", the file list will be collapsible only if there are more than 8 files. Default is "adaptive".
   
 ### Markers template
 
