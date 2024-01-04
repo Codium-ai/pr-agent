@@ -29,10 +29,7 @@ Under the section 'pr_code_suggestions', the [configuration file](./../pr_agent/
 - `include_improved_code`: if set to true, the tool will include an improved code implementation in the suggestion. Default is true.
 
 #### params for '/improve --extended' mode
-- `auto_extended_mode`: enable extended mode automatically for large PRs. Default is true.
-- `auto_extended_mode_min_files`: minimum number of files in the PR to automatically enable extended mode. Default is 1.
-- `auto_extended_mode_min_additions`: minimum number of line additions in the PR to automatically enable extended mode. Default is 500.
-- `auto_extended_mode_min_deletions`: minimum number of line deletions in the PR to automatically enable extended mode. Default is 0.
+- `auto_extended_mode`: enable extended mode automatically (no need for the `--extended` option). Default is false.
 - `num_code_suggestions_per_chunk`: number of code suggestions provided by the 'improve' tool, per chunk. Default is 8.
 - `rank_extended_suggestions`: if set to true, the tool will rank the suggestions, based on importance. Default is true.
 - `max_number_of_calls`: maximum number of chunks. Default is 5.

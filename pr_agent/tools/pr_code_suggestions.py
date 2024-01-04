@@ -207,17 +207,12 @@ class PRCodeSuggestions:
         return new_code_snippet
 
     def _get_is_extended(self, args: list[str]) -> bool:
-        """Check if extended mode should be enabled by the `--extended` flag or automatically according to the PR"""
+        """Check if extended mode should be enabled by the `--extended` flag or automatically according to the configuration"""
         if any(["extended" in arg for arg in args]):
             get_logger().info("Extended mode is enabled by the `--extended` flag")
             return True
-        if (
-            get_settings().pr_code_suggestions.auto_extended_mode
-            and self.git_provider.pr.changed_files >= get_settings().pr_code_suggestions.auto_extended_mode_min_files
-            and self.git_provider.pr.additions >= get_settings().pr_code_suggestions.auto_extended_mode_min_additions
-            and self.git_provider.pr.deletions >= get_settings().pr_code_suggestions.auto_extended_mode_min_deletions
-        ):
-            get_logger().info("Extended mode is enabled automatically based on the PR size")
+        if get_settings().pr_code_suggestions.auto_extended_mode:
+            get_logger().info("Extended mode is enabled automatically based on the configuration toggle")
             return True
         return False
 
