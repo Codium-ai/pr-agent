@@ -246,16 +246,15 @@ class PRDescription:
             summary = f"{ai_header}{ai_summary}"
             body = body.replace('pr_agent:summary', summary)
 
-        if not re.search(r'<!--\s*pr_agent:walkthrough\s*-->', body):
-            ai_walkthrough = self.data.get('PR changes walkthrough')
-            if ai_walkthrough:
-                walkthrough = str(ai_header)
-                for file in ai_walkthrough:
-                    filename = file['filename'].replace("'", "`")
-                    description = file['changes_summary'].replace("'", "`")
-                    walkthrough += f'- `{filename}`: {description}\n'
-
-                body = body.replace('pr_agent:walkthrough', walkthrough)
+        ai_walkthrough = self.data.get('pr_files')
+        if ai_walkthrough and not re.search(r'<!--\s*pr_agent:walkthrough\s*-->', body):
+            try:
+                walkthrough_gfm = ""
+                walkthrough_gfm = self.process_pr_files_prediction(walkthrough_gfm, self.file_label_dict)
+                body = body.replace('pr_agent:walkthrough', walkthrough_gfm)
+            except Exception as e:
+                get_logger().error(f"Failing to process walkthrough {self.pr_id}: {e}")
+                body = body.replace('pr_agent:walkthrough', "")
 
         return title, body
 
