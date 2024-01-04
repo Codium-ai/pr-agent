@@ -293,7 +293,7 @@ class PRDescription:
         for idx, (key, value) in enumerate(self.data.items()):
             if key == 'pr_files':
                 value = self.file_label_dict
-                key_publish = "PR changes walkthrough"
+                key_publish = "Changes walkthrough"
             else:
                 key_publish = key.rstrip(':').replace("_", " ").capitalize()
             pr_body += f"## {key_publish}\n"
@@ -336,6 +336,9 @@ class PRDescription:
                 pass
 
     def process_pr_files_prediction(self, pr_body, value):
+        use_collapsible_file_list = get_settings().pr_description.collapsible_file_list
+        if use_collapsible_file_list == "adaptive":
+            use_collapsible_file_list = len(value) > 8
         if not self.git_provider.is_supported("gfm_markdown"):
             get_logger().info(f"Disabling semantic files types for {self.pr_id} since gfm_markdown is not supported")
             return pr_body
@@ -350,7 +353,11 @@ class PRDescription:
                 s_label = semantic_label.strip("'").strip('"')
                 pr_body += f"""<tr><td><strong>{s_label.capitalize()}</strong></td>"""
                 list_tuples = value[semantic_label]
-                pr_body += f"""<td><details><summary>{len(list_tuples)} files</summary><table>"""
+
+                if use_collapsible_file_list:
+                    pr_body += f"""<td><details><summary>{len(list_tuples)} files</summary><table>"""
+                else:
+                    pr_body += f"""<td><table>"""
                 for filename, file_change_description in list_tuples:
                     filename = filename.replace("'", "`")
                     filename_publish = filename.split("/")[-1]
@@ -389,7 +396,10 @@ class PRDescription:
 
 </tr>                    
 """
-                pr_body += """</table></details></td></tr>"""
+                if use_collapsible_file_list:
+                    pr_body += """</table></details></td></tr>"""
+                else:
+                    pr_body += """</table></td></tr>"""
             pr_body += """</tr></tbody></table>"""
 
         except Exception as e:
