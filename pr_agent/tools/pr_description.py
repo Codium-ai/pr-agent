@@ -186,7 +186,12 @@ class PRDescription:
         # Load the AI prediction data into a dictionary
         self.data = load_yaml(self.prediction.strip())
 
+        if get_settings().pr_description.add_original_user_description and self.user_description:
+            self.data["User Description"] = self.user_description + "\n\n___\n\n"
+
         # re-order keys
+        if 'User Description' in self.data:
+            self.data['User Description'] = self.data.pop('User Description')
         if 'title' in self.data:
             self.data['title'] = self.data.pop('title')
         if 'type' in self.data:
@@ -198,8 +203,7 @@ class PRDescription:
         if 'pr_files' in self.data:
             self.data['pr_files'] = self.data.pop('pr_files')
 
-        if get_settings().pr_description.add_original_user_description and self.user_description:
-            self.data["User Description"] = self.user_description
+
 
 
     def _prepare_labels(self) -> List[str]:

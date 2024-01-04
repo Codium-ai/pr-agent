@@ -81,8 +81,13 @@ class GitProvider(ABC):
         # return nothing (empty string) because it means there is no user description
         if "## User Description:" not in description:
             return ""
-        # otherwise, extract the original user description from the existing pr-agent description and return it
-        return description.split("## User Description:", 1)[1].strip()
+
+        # # otherwise, extract the original user description from the existing pr-agent description and return it
+        # return description.split("## User Description:", 1)[1].strip()
+
+        # the 'user description' is in the beginning. extract it
+        return description.split("\n\n___", 1)[0].strip()
+
 
     @abstractmethod
     def get_repo_settings(self):
