@@ -52,7 +52,6 @@ class PRDescription:
             "commit_messages_str": self.git_provider.get_commit_messages(),
             "enable_custom_labels": get_settings().config.enable_custom_labels,
             "custom_labels_class": "",  # will be filled if necessary in 'set_custom_labels' function
-            "enable_file_walkthrough": get_settings().pr_description.enable_file_walkthrough,
             "enable_semantic_files_types": get_settings().pr_description.enable_semantic_files_types,
         }
 
@@ -248,12 +247,12 @@ class PRDescription:
             body = body.replace('pr_agent:summary', summary)
 
         if not re.search(r'<!--\s*pr_agent:walkthrough\s*-->', body):
-            ai_walkthrough = self.data.get('PR Main Files Walkthrough')
+            ai_walkthrough = self.data.get('PR changes walkthrough')
             if ai_walkthrough:
                 walkthrough = str(ai_header)
                 for file in ai_walkthrough:
                     filename = file['filename'].replace("'", "`")
-                    description = file['changes in file'].replace("'", "`")
+                    description = file['changes_summary'].replace("'", "`")
                     walkthrough += f'- `{filename}`: {description}\n'
 
                 body = body.replace('pr_agent:walkthrough', walkthrough)
@@ -329,7 +328,7 @@ class PRDescription:
             try:
                 filename = file['filename'].replace("'", "`").replace('"', '`')
                 changes_summary = file['changes_summary']
-                label = file['label']
+                label = file.get('label')
                 if label not in self.file_label_dict:
                     self.file_label_dict[label] = []
                 self.file_label_dict[label].append((filename, changes_summary))

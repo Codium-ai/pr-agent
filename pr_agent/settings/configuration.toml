@@ -51,7 +51,6 @@ keep_original_user_title=false
 use_bullet_points=true
 extra_instructions = ""
 enable_pr_type=true
-enable_file_walkthrough=false
 enable_semantic_files_types=true
 final_update_message = true
 
