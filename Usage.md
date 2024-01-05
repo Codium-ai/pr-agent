@@ -2,12 +2,12 @@
 
 ### Table of Contents
 - [Introduction](#introduction)
-- [Working from a local repo (CLI)](#working-from-a-local-repo-cli)
-- [Online usage](#online-usage)
-- [Working with GitHub App](#working-with-github-app)
-- [Working with GitHub Action](#working-with-github-action)
-- [Working with BitBucket App](#working-with-bitbucket-self-hosted-app)
-- [Appendix - additional configurations walkthrough](#appendix---additional-configurations-walkthrough)
+- [Local Repo (CLI)](#working-from-a-local-repo-cli)
+- [Online Usage](#online-usage)
+- [GitHub App](#working-with-github-app)
+- [GitHub Action](#working-with-github-action)
+- [BitBucket App](#working-with-bitbucket-self-hosted-app)
+- [Additional Configurations Walkthrough](#appendix---additional-configurations-walkthrough)
 
 ### Introduction
 

@@ -111,7 +111,7 @@ duplicate_requests_cache_ttl = 60  # in seconds
 handle_pr_actions = ['opened', 'reopened', 'ready_for_review', 'review_requested']
 pr_commands = [
     "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true",
-    "/auto_review",
+    "/review",
 ]
 # settings for "pull_request" event with "synchronize" action - used to detect and handle push triggers for new commits
 handle_push_trigger = false
