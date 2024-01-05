@@ -53,7 +53,7 @@ See the [Tools Guide](./docs/TOOLS_GUIDE.md) for detailed description of the dif
 - [Features overview](#features-overview)
 - [Try it now](#try-it-now)
 - [Installation](#installation)
-- [PR-Agent Pro 💎](#pr-agent-pro)
+- [PR-Agent Pro 💎](#pr-agent-pro-)
 - [How it works](#how-it-works)
 - [Why use PR-Agent?](#why-use-pr-agent)
 
@@ -125,7 +125,7 @@ See the [Tools Guide](./docs/TOOLS_GUIDE.md) for detailed description of the dif
 </div>
 
 
-## Features Overview
+## Features overview
 `PR-Agent` offers extensive pull request functionalities across various git providers:
 |       |                                             | GitHub | Gitlab | Bitbucket |
 |-------|---------------------------------------------|:------:|:------:|:---------:|
@@ -232,7 +232,7 @@ Here are some advantages of PR-Agent:
 - We support **multiple git providers** (GitHub, Gitlab, Bitbucket), **multiple ways** to use the tool (CLI, GitHub Action, GitHub App, Docker, ...), and **multiple models** (GPT-4, GPT-3.5, Anthropic, Cohere, Llama2).
 
 
-## Data Privacy
+## Data privacy
 
 If you host PR-Agent with your OpenAI API key, it is between you and OpenAI. You can read their API data privacy policy here:
 https://openai.com/enterprise-privacy
