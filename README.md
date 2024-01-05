@@ -48,7 +48,16 @@ See the [Usage Guide](./Usage.md) for running the PR-Agent commands via differen
 
 See the [Tools Guide](./docs/TOOLS_GUIDE.md) for detailed description of the different tools (tools are run via the commands).
 
-<h3>Example results:</h3>
+## Table of Contents
+- [Example results](#example-results)
+- [Features overview](#features-overview)
+- [Try it now](#try-it-now)
+- [Installation](#installation)
+- [PR-Agent Pro 💎](#pr-agent-pro)
+- [How it works](#how-it-works)
+- [Why use PR-Agent?](#why-use-pr-agent)
+
+## Example results
 </div>
 <h4><a href="https://github.com/Codium-ai/pr-agent/pull/530">/describe</a></h4>
 <div align="center">
@@ -112,22 +121,17 @@ See the [Tools Guide](./docs/TOOLS_GUIDE.md) for detailed description of the dif
 [//]: # (</div>)
 <div align="left">
 
-## Table of Contents
-- [Overview](#overview)
-- [Try it now](#try-it-now)
-- [Installation](#installation)
-- [How it works](#how-it-works)
-- [Why use PR-Agent?](#why-use-pr-agent)
+
 </div>
 
 
-## Overview
+## Features Overview
 `PR-Agent` offers extensive pull request functionalities across various git providers:
 |       |                                             | GitHub | Gitlab | Bitbucket |
 |-------|---------------------------------------------|:------:|:------:|:---------:|
 | TOOLS | Review                                      |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |
 |       | ⮑ Incremental                              |   :white_check_mark:    |                         |                            |
-|       | ⮑ SOC2 Compliance 💎                       |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |
+|       | ⮑ [SOC2 Compliance](https://github.com/Codium-ai/pr-agent/blob/main/docs/REVIEW.md#soc2-ticket-compliance-) 💎                       |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |
 |       | Ask                                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |
 |       | Describe                                    |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |
 |       | Improve                                     |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |
@@ -135,9 +139,9 @@ See the [Tools Guide](./docs/TOOLS_GUIDE.md) for detailed description of the dif
 |       | Reflect and Review                          |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |
 |       | Update CHANGELOG.md                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |
 |       | Find Similar Issue                          |   :white_check_mark:    |                         |                             |
-|       | Add PR Documentation 💎                     |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |
-|       | Generate Custom Labels 💎                   |   :white_check_mark:    |   :white_check_mark:    |         |
-|       | Analyze PR Components 💎                    |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:      |
+|       | [Add PR Documentation](https://github.com/Codium-ai/pr-agent/blob/main/docs/ADD_DOCUMENTATION.md) 💎                     |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |
+|       | [Generate Custom Labels](https://github.com/Codium-ai/pr-agent/blob/main/docs/DESCRIBE.md#handle-custom-labels-from-the-repos-labels-page-gem) 💎                   |   :white_check_mark:    |   :white_check_mark:    |         |
+|       | [Analyze PR Components](https://github.com/Codium-ai/pr-agent/blob/main/docs/Analyze.md) 💎                    |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:      |
 |       |                                             |        |        |      |
 | USAGE | CLI                                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |
 |       | App / webhook                               |   :white_check_mark:    |   :white_check_mark:    |           |
@@ -149,8 +153,8 @@ See the [Tools Guide](./docs/TOOLS_GUIDE.md) for detailed description of the dif
 |       | Adaptive and token-aware<br />file patch fitting |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:     |
 |       | Multiple models support |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       | :white_check_mark: |
 |       | Incremental PR review |   :white_check_mark:    |      |      |
-|       | Static code analysis 💎 |   :white_check_mark:    |   :white_check_mark:     |    :white_check_mark:    |
-|       | Global configuration 💎 |   :white_check_mark:    |   :white_check_mark:     |    :white_check_mark:    |
+|       | [Static code analysis](https://github.com/Codium-ai/pr-agent/blob/main/docs/Analyze.md) 💎 |   :white_check_mark:    |   :white_check_mark:     |    :white_check_mark:    |
+|       | [Global configuration](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#global-configuration-file-) 💎 |   :white_check_mark:    |   :white_check_mark:     |    :white_check_mark:    |
 
 
 - 💎 means this feature is available only in [PR-Agent Pro](https://www.codium.ai/pricing/)
@@ -174,9 +178,6 @@ Note that when you set your own PR-Agent or use CodiumAI hosted PR-Agent, there 
 ---
 
 ## Installation
-When you sign up to [PR-Agent-Pro 💎](https://www.codium.ai/pricing/), you will get access to a hosted PR-Agent, which is regularly updated with the latest features and abilities. This is the easiest way to use PR-Agent.
-
-
 To use your own version of PR-Agent, you first need to acquire two tokens:
 
 1. An OpenAI key from [here](https://platform.openai.com/), with access to GPT-4.
@@ -195,6 +196,21 @@ There are several ways to use PR-Agent:
 - [Method 7: AWS CodeCommit](INSTALL.md#method-7---aws-codecommit-setup)
 - [Method 8: Run a GitLab webhook server](INSTALL.md#method-8---run-a-gitlab-webhook-server)
 - [Method 9: Run as a Bitbucket Pipeline](INSTALL.md#method-9-run-as-a-bitbucket-pipeline)
+
+## PR-Agent Pro 💎
+[PR-Agent Pro](https://www.codium.ai/pricing/) is a hosted version of PR-Agent, provided by CodiumAI. It is available for a monthly fee, and provides the following benefits:
+1. **Self-hosting** - We take care of everything for you - hosting, models, regular updates, and more. Installation is as simple as signing up and adding the PR-Agent app to your GitHub\BitBucket repo.
+2. **Improved privacy** - No data will be stored or used to train models. PR-Agent Pro will employ zero data retention, and will use an OpenAI account with zero data retention.
+3. **Improved support** - PR-Agent Pro users will receive priority support, and will be able to request new features and capabilities.
+4. **Extra features** -In addition to the benefits listed above, PR-Agent Pro will emphasize more customization, and the usage of static code analysis, in addition to LLM logic, to improve results. It has the following additional feature:
+    - [**SOC2 compliance check**](https://github.com/Codium-ai/pr-agent/blob/main/docs/REVIEW.md#soc2-ticket-compliance-)
+    - [**PR documentation**](https://github.com/Codium-ai/pr-agent/blob/main/docs/ADD_DOCUMENTATION.md)
+    - [**Custom labels**](https://github.com/Codium-ai/pr-agent/blob/main/docs/DESCRIBE.md#handle-custom-labels-from-the-repos-labels-page-gem)
+    - [**Global configuration**](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#global-configuration-file-)
+    - [**Analyze PR components**](https://github.com/Codium-ai/pr-agent/blob/main/docs/Analyze.md)
+    - **Custom Code Suggestions** [WIP]
+    - **Chat on Specific Code Lines** [WIP]
+
 
 ## How it works
 
@@ -221,7 +237,7 @@ Here are some advantages of PR-Agent:
 If you host PR-Agent with your OpenAI API key, it is between you and OpenAI. You can read their API data privacy policy here:
 https://openai.com/enterprise-privacy
 
-When using PR-Agent-Pro 💎, hosted by CodiumAI, we will not store any of your data, nor will we used it for training.
+When using PR-Agent Pro 💎, hosted by CodiumAI, we will not store any of your data, nor will we used it for training.
 You will also benefit from an OpenAI account with zero data retention.
 
 ## Links
