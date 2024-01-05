@@ -26,7 +26,7 @@ class PRCodeSuggestions:
 
         # extended mode
         try:
-            self.is_extended = any(["extended" in arg for arg in args])
+            self.is_extended = self._get_is_extended(args or [])
         except:
             self.is_extended = False
         if self.is_extended:
@@ -206,6 +206,16 @@ class PRCodeSuggestions:
 
         return new_code_snippet
 
+    def _get_is_extended(self, args: list[str]) -> bool:
+        """Check if extended mode should be enabled by the `--extended` flag or automatically according to the configuration"""
+        if any(["extended" in arg for arg in args]):
+            get_logger().info("Extended mode is enabled by the `--extended` flag")
+            return True
+        if get_settings().pr_code_suggestions.auto_extended_mode:
+            get_logger().info("Extended mode is enabled automatically based on the configuration toggle")
+            return True
+        return False
+
     async def _prepare_prediction_extended(self, model: str) -> dict:
         get_logger().info('Getting PR diff...')
         patches_diff_list = get_pr_multi_diffs(self.git_provider, self.token_handler, model,
@@ -271,8 +281,14 @@ class PRCodeSuggestions:
                 data_sorted[importance_order - 1] = suggestion_list[suggestion_number - 1]
 
             if get_settings().pr_code_suggestions.final_clip_factor != 1:
-                new_len = int(0.5 + len(data_sorted) * get_settings().pr_code_suggestions.final_clip_factor)
-                data_sorted = data_sorted[:new_len]
+                max_len = max(
+                    len(data_sorted),
+                    get_settings().pr_code_suggestions.num_code_suggestions,
+                    get_settings().pr_code_suggestions.num_code_suggestions_per_chunk,
+                )
+                new_len = int(0.5 + max_len * get_settings().pr_code_suggestions.final_clip_factor)
+                if new_len < len(data_sorted):
+                    data_sorted = data_sorted[:new_len]
         except Exception as e:
             if get_settings().config.verbosity_level >= 1:
                 get_logger().info(f"Could not sort suggestions, error: {e}")

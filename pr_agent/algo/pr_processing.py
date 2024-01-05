@@ -226,6 +226,11 @@ async def retry_with_fallback_models(f: Callable):
     # try each (model, deployment_id) pair until one is successful, otherwise raise exception
     for i, (model, deployment_id) in enumerate(zip(all_models, all_deployments)):
         try:
+            if get_settings().config.verbosity_level >= 2:
+                get_logger().debug(
+                    f"Generating prediction with {model}"
+                    f"{(' from deployment ' + deployment_id) if deployment_id else ''}"
+                )
             get_settings().set("openai.deployment_id", deployment_id)
             return await f(model)
         except Exception as e:

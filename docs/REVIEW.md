@@ -29,9 +29,10 @@ Under the section 'pr_reviewer', the [configuration file](./../pr_agent/settings
 - `remove_previous_review_comment`: if set to true, the tool will remove the previous review comment before adding a new one. Default is false.
 - `persistent_comment`: if set to true, the review comment will be persistent, meaning that every new review request will edit the previous one. Default is true.
 - `extra_instructions`: Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".
-#### SOC2 compliance 💎
-- `require_soc2_review`: if set to true, the tool will add a section that checks if the PR description includes a link to a ticket in a project management system (e.g., Jira, Asana, Trello, etc.), as required by SOC2 compliance. Default is false.
-- `soc2_ticket_prompt`: The prompt to be used for the SOC2 ticket review. Default is "Does the PR description include a link to ticket in a project management system (e.g., Jira, Asana, Trello, etc.) ?". Edit this field if your compliance requirements are different.
+#### SOC2 ticket compliance 💎
+This sub-tool checks if the PR description properly contains a ticket to a project management system (e.g., Jira, Asana, Trello, etc.), as required by SOC2 compliance. If not, it will add a label to the PR: "Missing SOC2 ticket".
+- `require_soc2_review`: If set to true, the SOC2 ticket checker sub-tool will be enabled. Default is false.
+- `soc2_ticket_prompt`: The prompt for the SOC2 ticket review. Default is: `Does the PR description include a link to ticket in a project management system (e.g., Jira, Asana, Trello, etc.) ?`. Edit this field if your compliance requirements are different.
 #### review labels
 - `enable_review_labels_security`: if set to true, the tool will publish a 'possible security issue' label if it detects a security issue. Default is true.
 - `enable_review_labels_effort`: if set to true, the tool will publish a 'Review effort [1-5]: x' label. Default is false.
@@ -64,7 +65,7 @@ By invoking:
 ```
 /reflect_and_review
 ```
-The tool will first ask the author questions about the PR, and will guide the review based on his answers.
+The tool will first ask the author questions about the PR, and will guide the review based on their answers.
 
 <kbd><img src=https://codium.ai/images/pr_agent/reflection_questions.png width="768"></kbd>
 <kbd><img src=https://codium.ai/images/pr_agent/reflection_answers.png width="768"></kbd>
@@ -75,7 +76,7 @@ The tool will first ask the author questions about the PR, and will guide the re
 
 - With current level of AI for code (GPT-4), mistakes can happen. Not all the suggestions will be perfect, and a user should not accept all of them automatically.
 
-- Suggestions are not meant to be [simplistic](./../pr_agent/settings/pr_reviewer_prompts.toml#L29). Instead, they aim to give deep feedback and raise questions, ideas and thoughts to the user, who can then use his judgment, experience, and understanding of the code base.
+- Suggestions are not meant to be [simplistic](./../pr_agent/settings/pr_reviewer_prompts.toml#L29). Instead, they aim to give deep feedback and raise questions, ideas and thoughts to the user, who can then use their judgment, experience, and understanding of the code base.
 
 - Recommended to use the 'extra_instructions' field to guide the model to suggestions that are more relevant to the specific needs of the project.
 

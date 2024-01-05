@@ -70,6 +70,7 @@ include_improved_code = true
 extra_instructions = ""
 rank_suggestions = false
 # params for '/improve --extended' mode
+auto_extended_mode=false
 num_code_suggestions_per_chunk=8
 rank_extended_suggestions = true
 max_number_of_calls = 5
