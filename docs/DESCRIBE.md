@@ -123,9 +123,9 @@ the tool will replace every marker of the form `pr_agent:marker_name` in the PR 
 Note that when markers are enabled, if the original PR description does not contain any markers, the tool will not alter the description at all.
 
 ### Custom labels
-The default labels of the describe tool are quite generic, since they are meant to be used in any repo. The default labels are: [`Bug fix`, `Tests`, `Enhancement`, `Documentation`, `Other`].
+The default labels of the describe tool are quite generic, since they are meant to be used in any repo: [`Bug fix`, `Tests`, `Enhancement`, `Documentation`, `Other`].
 
-If you specify custom labels in the repo's labels page, you can get tailored labels for your repo and use cases.
+If you specify custom labels in the repo's labels page, you can get tailored labels for your use cases.
 Examples for custom labels:
 - `Main topic:performence` -  pr_agent:The main topic of this PR is performance
 - `New endpoint` -  pr_agent:A new endpoint was added in this PR
@@ -135,4 +135,4 @@ Examples for custom labels:
 
 The list above is eclectic, and aims to give an idea of different possibilities. Define the custom labels that are relevant for your repo and use cases.
 Note that Labels are not mutually exclusive, so you can add multiple label categories.
-Make sure to provide detailed well-phrased description for each label, so the tool will know when to suggest it.
+Make sure to provide proper title, and detailed and well-phrased description for each label, so the tool will know when to suggest it.
