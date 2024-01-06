@@ -49,7 +49,7 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
     }
 
     for key, value in output_data.items():
-        if value is None or value == '' or value == {}:
+        if value is None or value == '' or value == {} or value == []:
             continue
         if isinstance(value, dict):
             markdown_text += f"## {key}\n\n"
