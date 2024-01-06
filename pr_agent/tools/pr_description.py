@@ -340,9 +340,15 @@ class PRDescription:
                 pass
 
     def process_pr_files_prediction(self, pr_body, value):
+        # logic for using collapsible file list
         use_collapsible_file_list = get_settings().pr_description.collapsible_file_list
+        num_files = 0
+        if value:
+            for semantic_label in value.keys():
+                num_files += len(value[semantic_label])
         if use_collapsible_file_list == "adaptive":
-            use_collapsible_file_list = len(value) > 8
+            use_collapsible_file_list = num_files > 8
+
         if not self.git_provider.is_supported("gfm_markdown"):
             get_logger().info(f"Disabling semantic files types for {self.pr_id} since gfm_markdown is not supported")
             return pr_body
