@@ -3,18 +3,9 @@
 ## Table of Contents
 - [Overview](#overview)
   - [Configuration options](#configuration-options)
-    - [enable\disable features](#enabledisable-features)
-    - [general options](#general-options)
-    - [SOC2 ticket compliance 💎](#soc2-ticket-compliance-)
-    - [review labels](#review-labels)
   - [Incremental Mode](#incremental-mode)
   - [PR Reflection](#pr-reflection)
 - [Usage Tips](#usage-tips)
-    - [General guidelines](#general-guidelines)
-    - [Code suggestions](#code-suggestions)
-    - [Automation](#automation)
-    - [Auto-labels](#auto-labels)
-    - [Extra instructions](#extra-instructions)
 
 ## Overview
 The `review` tool scans the PR code changes, and automatically generates a PR review.
@@ -31,7 +22,7 @@ ___
 
 ### Configuration options
 
-To edit [configurations](./../pr_agent/settings/configuration.toml#L16)  related to the review tool (`pr_reviewer` section), use the following template:
+To edit [configurations](./../pr_agent/settings/configuration.toml#L19)  related to the review tool (`pr_reviewer` section), use the following template:
 ```
 /review --pr_reviewer.some_config1=... --pr_reviewer.some_config2=...
 ```
@@ -56,7 +47,7 @@ This sub-tool checks if the PR description properly contains a ticket to a proje
 - `enable_review_labels_effort`: if set to true, the tool will publish a 'Review effort [1-5]: x' label. Default is false.
 
 ###  Incremental Mode
-Incremental review, which only considers changes since the last PR-Agent review. this can be useful when working on the PR in an iterative manner, and you want to focus on the changes since the last review instead of reviewing the entire PR again.
+Incremental review only considers changes since the last PR-Agent review. This can be useful when working on the PR in an iterative manner, and you want to focus on the changes since the last review instead of reviewing the entire PR again.
 For invoking the incremental mode, the following command can be used:
 ```
 /review -i
@@ -65,7 +56,7 @@ Note that the incremental mode is only available for GitHub.
 
 <kbd><img src=https://codium.ai/images/pr_agent/incremental_review.png width="768"></kbd>
 
-Under the section 'pr_reviewer', the [configuration file](./../pr_agent/settings/configuration.toml#L16) contains options to customize the 'review -i' tool.  
+Under the section 'pr_reviewer', the [configuration file](./../pr_agent/settings/configuration.toml#L19) contains options to customize the 'review -i' tool.  
 These configurations can be used to control the rate at which the incremental review tool will create new review comments when invoked automatically, to prevent making too much noise in the PR.
 - `minimal_commits_for_incremental_review`: Minimal number of commits since the last review that are required to create incremental review.
 If there are less than the specified number of commits since the last review, the tool will not perform any action.
@@ -103,18 +94,18 @@ ___
 5) [Extra instructions](#extra-instructions)
 
 ### General guidelines
-The `review` tool contain collection of possible feedbacks about a PR.
-It is highly recommended to review the [Configuration options](#configuration-options) section, and choose the relevant options for your use case.
+The `review` tool provides a collection of possible feedbacks about a PR.
+It is recommended to review the [Configuration options](#configuration-options) section, and choose the relevant options for your use case.
 
 Some of the feature that are disabled by default are quite useful, and should be considered for enabling. For example: 
-For example, `require_score_review`, `require_soc2_review`, `enable_review_labels_effort`, and more.
+`require_score_review`, `require_soc2_review`, `enable_review_labels_effort`, and more.
 
-On the other hand, if you find one of the enabled features to be irrelevant for your use case, you can disable it. No default configuration can fit all use cases.
+On the other hand, if you find one of the enabled features to be irrelevant for your use case, disable it. No default configuration can fit all use cases.
 
 ### Code suggestions
 The `review` tool provides several type of feedbacks, one of them is code suggestions.
 If you are interested **only** in the code suggestions, it is recommended to use the [`improve`](./IMPROVE.md) feature instead, since it dedicated only to code suggestions, and usually gives better results.
-Use the `review` tool if you want to get a more comprehensive feedback about the PR.
+Use the `review` tool if you want to get a more comprehensive feedback, which includes code suggestions as well.
 
 ### Automation
 - When you first install the app, the [default mode](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#github-app-automatic-tools) for the `review` tool is:
@@ -126,14 +117,16 @@ Edit this field to enable/disable the tool, or to change the used configurations
 
 ### Auto-labels
 The `review` tool can auto-generate two specific types of labels for a PR:
-- a 'possible security issue' label if it detects a security issue (`enable_review_labels_security` flag)
-- a 'Review effort [1-5]: x' label, where x is the estimated effort to review the PR (`enable_review_labels_effort` flag)
-Both modes are recommended.
+- a `possible security issue` label if it detects a security issue (`enable_review_labels_security` flag)
+- a `Review effort [1-5]: x` label, where x is the estimated effort to review the PR (`enable_review_labels_effort` flag)
+
+Both modes are useful, and we recommended to enable them.
 
 ### Extra instructions
 Extra instruction are important.
-The `review` tool can be configured with extra instructions, which can be used to guide the model to feedback more relevant to the specific needs of the project.
-Be specific, clear, and concise in the instructions. With extra instructions, you are the prompter. Specify the relevant sub-tool, 
+The `review` tool can be configured with extra instructions, which can be used to guide the model to feedback tailored to the needs of your project.
+
+Be specific, clear, and concise in the instructions. With extra instructions, you are the prompter. Specify the relevant sub-tool, and the relevant aspects of the PR that you want to emphasize.
 
 Examples for extra instructions:
 ```

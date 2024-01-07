@@ -23,7 +23,7 @@ ___
 ___
   
 ### Configuration options
-To edit [configurations](./../pr_agent/settings/configuration.toml#L28) related to the describe tool (`pr_description` section), use the following template:
+To edit [configurations](./../pr_agent/settings/configuration.toml#L46) related to the describe tool (`pr_description` section), use the following template:
 ```
 /describe --pr_description.some_config1=... --pr_description.some_config2=...
 ```
@@ -102,20 +102,20 @@ The marker `pr_agent:type` will be replaced with the PR type, `pr_agent:summary`
 ### Automation
 - When you first install the app, the [default mode](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#github-app-automatic-tools) for the describe tool is:
 ```
-pr_commands = ["describe --pr_description.add_original_user_description=true 
+pr_commands = ["/describe --pr_description.add_original_user_description=true 
                          --pr_description.keep_original_user_title=true", ...]
 ```
 meaning the `describe` tool will run automatically on every PR, will keep the original title, and will add the original user description above the generated description. <br> This default is quite conservative, and strikes a good balance between automation and control:
 If you want more automation, just give the PR a title, and the tool will auto-write a full description; If you want more control, you can add a detailed description, and the tool will add the complementary description below it.
 - For maximal automation, you can change the default mode to:
 ```
-pr_commands = ["describe --pr_description.add_original_user_description=false 
+pr_commands = ["/describe --pr_description.add_original_user_description=false 
                          --pr_description.keep_original_user_title=true", ...]
 ```
 so the title will be auto-generated as well.
 - Markers are an alternative way to control the generated description, to give maximal control to the user. If you set:
 ```
-pr_commands = ["describe --pr_description.use_description_markers=true", ...]
+pr_commands = ["/describe --pr_description.use_description_markers=true", ...]
 ```
 the tool will replace every marker of the form `pr_agent:marker_name` in the PR description with the relevant content, where `marker_name` is one of the following:
   - `type`: the PR type.
