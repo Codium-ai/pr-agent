@@ -102,15 +102,16 @@ The marker `pr_agent:type` will be replaced with the PR type, `pr_agent:summary`
 ### Automation
 - When you first install the app, the [default mode](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#github-app-automatic-tools) for the describe tool is:
 ```
-pr_commands = ["/describe --pr_description.add_original_user_description=true 
-                         --pr_description.keep_original_user_title=true", ...]
+pr_commands = ["/describe --pr_description.add_original_user_description=true" 
+                         "--pr_description.keep_original_user_title=true", ...]
 ```
-meaning the `describe` tool will run automatically on every PR, will keep the original title, and will add the original user description above the generated description. <br> This default is quite conservative, and strikes a good balance between automation and control:
+meaning the `describe` tool will run automatically on every PR, will keep the original title, and will add the original user description above the generated description. 
+<br> This default settings aim to strike a good balance between automation and control:
 If you want more automation, just give the PR a title, and the tool will auto-write a full description; If you want more control, you can add a detailed description, and the tool will add the complementary description below it.
 - For maximal automation, you can change the default mode to:
 ```
-pr_commands = ["/describe --pr_description.add_original_user_description=false 
-                         --pr_description.keep_original_user_title=true", ...]
+pr_commands = ["/describe --pr_description.add_original_user_description=false" 
+                         "--pr_description.keep_original_user_title=true", ...]
 ```
 so the title will be auto-generated as well.
 - Markers are an alternative way to control the generated description, to give maximal control to the user. If you set:
@@ -127,14 +128,14 @@ Note that when markers are enabled, if the original PR description does not cont
 ### Custom labels
 The default labels of the describe tool are quite generic, since they are meant to be used in any repo: [`Bug fix`, `Tests`, `Enhancement`, `Documentation`, `Other`].
 
-If you specify custom labels in the repo's labels page, you can get tailored labels for your use cases.
+If you specify [custom labels](#handle-custom-labels-from-the-repos-labels-page-gem) in the repo's labels page, you can get tailored labels for your use cases.
 Examples for custom labels:
-- `Main topic:performence` -  pr_agent:The main topic of this PR is performance
+- `Main topic:performance` -  pr_agent:The main topic of this PR is performance
 - `New endpoint` -  pr_agent:A new endpoint was added in this PR
 - `SQL query` -  pr_agent:A new SQL query was added in this PR
 - `Dockerfile changes` - pr_agent:The PR contains changes in the Dockerfile
 - ...
 
-The list above is eclectic, and aims to give an idea of different possibilities. Define the custom labels that are relevant for your repo and use cases.
+The list above is eclectic, and aims to give an idea of different possibilities. Define custom labels that are relevant for your repo and use cases.
 Note that Labels are not mutually exclusive, so you can add multiple label categories.
-Make sure to provide proper title, and detailed and well-phrased description for each label, so the tool will know when to suggest it.
+<br>Make sure to provide proper title, and a detailed and well-phrased description for each label, so the tool will know when to suggest it.

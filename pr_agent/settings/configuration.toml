@@ -52,6 +52,7 @@ use_bullet_points=true
 extra_instructions = ""
 enable_pr_type=true
 final_update_message = true
+enable_help_text=true
 ## changes walkthrough section
 enable_semantic_files_types=true
 collapsible_file_list='adaptive' # true, false, 'adaptive'
