@@ -99,6 +99,7 @@ class PRDescription:
             else:
                 pr_title, pr_body,  = self._prepare_pr_answer()
             full_markdown_description = f"## Title\n\n{pr_title}\n\n___\n{pr_body}"
+            get_logger().debug(f"full_markdown_description:\n{full_markdown_description}")
 
             if get_settings().config.publish_output:
                 get_logger().info(f"Pushing answer {self.pr_id}")
@@ -164,10 +165,6 @@ class PRDescription:
         self.variables = variables
         system_prompt = environment.from_string(get_settings().pr_description_prompt.system).render(variables)
         user_prompt = environment.from_string(get_settings().pr_description_prompt.user).render(variables)
-
-        if get_settings().config.verbosity_level >= 2:
-            get_logger().info(f"\nSystem prompt:\n{system_prompt}")
-            get_logger().info(f"\nUser prompt:\n{user_prompt}")
 
         response, finish_reason = await self.ai_handler.chat_completion(
             model=model,
