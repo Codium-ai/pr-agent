@@ -103,9 +103,9 @@ class PRReviewer:
         """
 
         try:
-            if self.is_auto and not get_settings().pr_reviewer.automatic_review:
-                get_logger().info(f'Automatic review is disabled {self.pr_url}')
-                return None
+            # if self.is_auto and not get_settings().pr_reviewer.automatic_review:
+            #     get_logger().info(f'Automatic review is disabled {self.pr_url}')
+            #     return None
             if self.incremental.is_incremental and not self._can_run_incremental_review():
                 return None
 
