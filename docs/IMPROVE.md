@@ -35,11 +35,12 @@ Hence, the total number of suggestions is proportional to the number of chunks, 
 
 ### Configuration options
 
-To edit [configurations](./../pr_agent/settings/configuration.toml#L46) related to the improve tool (`pr_code_suggestions` section), use the following template:
+To edit [configurations](./../pr_agent/settings/configuration.toml#L66) related to the improve tool (`pr_code_suggestions` section), use the following template:
 ```
 /improve --pr_code_suggestions.some_config1=... --pr_code_suggestions.some_config2=...
 ```
 
+#### General options
 - `num_code_suggestions`: number of code suggestions provided by the 'improve' tool. Default is 4.
 - `extra_instructions`: Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".
 - `rank_suggestions`: if set to true, the tool will rank the suggestions, based on importance. Default is false.
@@ -52,7 +53,7 @@ To edit [configurations](./../pr_agent/settings/configuration.toml#L46) related 
 - `max_number_of_calls`: maximum number of chunks. Default is 5.
 - `final_clip_factor`: factor to remove suggestions with low confidence. Default is 0.9.
 
-### Summarize mode
+#### Summarize mode
 In this mode, instead of presenting committable suggestions, the different suggestions will be combined into a single compact comment, with significantly smaller PR footprint.
 
 To invoke the summarize mode, use the following command:
