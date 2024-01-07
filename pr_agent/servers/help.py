@@ -34,7 +34,7 @@ To edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agen
         # extra instructions
         output += "<tr><td><details> <summary><strong> Utilizing extra instructions</strong></summary><hr>\n\n"
         output += '''\
-The `review` tool can be configured with extra instructions, which can be used to guide the model to feedback tailored to the needs of your project.
+The `review` tool can be configured with extra instructions, which can be used to guide the model to a feedback tailored to the needs of your project.
 
 Be specific, clear, and concise in the instructions. With extra instructions, you are the prompter. Specify the relevant sub-tool, and the relevant aspects of the PR that you want to emphasize.
 
@@ -43,7 +43,7 @@ Examples for extra instructions:
 [pr_reviewer] # /review #
 extra_instructions="""
 In the code feedback section, emphasize the following:
-- Does the code logic covers relevant edge cases?
+- Does the code logic cover relevant edge cases?
 - Is the code logic clear and easy to understand?
 - Is the code logic efficient?
 ...
@@ -56,7 +56,7 @@ Use triple quotes to write multi-line instructions. Use bullet points to make th
         # automation
         output += "<tr><td><details> <summary><strong> How to enable\\disable automation</strong></summary><hr>\n\n"
         output += """\
-- When you first install the github app, the [default mode](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#github-app-automatic-tools) for the `review` tool is:
+- When you first install PR-Agent app, the [default mode](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#github-app-automatic-tools) for the `review` tool is:
 ```
 pr_commands = ["/review", ...]
 ```
@@ -78,8 +78,18 @@ Use the `review` tool if you want to get a more comprehensive feedback, which in
         output += "<tr><td><details> <summary><strong> Auto-labels</strong></summary><hr>\n\n"
         output+="""\
 The `review` tool can auto-generate two specific types of labels for a PR:
-- a `possible security issue` label, if it detects a [security issue](https://github.com/Codium-ai/pr-agent/blob/tr/user_description/pr_agent/settings/pr_reviewer_prompts.toml#L136) (`enable_review_labels_security` flag)
+- a `possible security issue` label, that detects possible [security issues](https://github.com/Codium-ai/pr-agent/blob/tr/user_description/pr_agent/settings/pr_reviewer_prompts.toml#L136) (`enable_review_labels_security` flag)
 - a `Review effort [1-5]: x` label, where x is the estimated effort to review the PR (`enable_review_labels_effort` flag)
+"""
+        output += "\n\n</details></td></tr>\n\n"
+
+        # extra sub-tools
+        output += "<tr><td><details> <summary><strong> Extra sub-tools</strong></summary><hr>\n\n"
+        output += """\
+The `review` tool provides a collection of possible feedbacks about a PR.
+It is recommended to review the [possible options](https://github.com/Codium-ai/pr-agent/blob/main/docs/REVIEW.md#enabledisable-features), and choose the ones relevant for your use case.
+Some of the feature that are disabled by default are quite useful, and should be considered for enabling. For example: 
+`require_score_review`, `require_soc2_review`, `enable_review_labels_effort`, and more.
 """
         output += "\n\n</details></td></tr>\n\n"
 
@@ -90,7 +100,7 @@ The `review` tool can auto-generate two specific types of labels for a PR:
 
         output += "</table>"
 
-        output += f"\n\nSee the [review usage](https://github.com/Codium-ai/pr-agent/blob/main/docs/REVIEW.md) page for a comprehensive guide on all the available configurations.\n\n"
+        output += f"\n\nSee the [review usage](https://github.com/Codium-ai/pr-agent/blob/main/docs/REVIEW.md) page for a comprehensive guide on using this tool.\n\n"
 
         return output
 

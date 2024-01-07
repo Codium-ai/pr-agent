@@ -79,7 +79,7 @@ Examples for extra instructions:
 [pr_code_suggestions] # /improve #
 extra_instructions="""
 Emphasize the following aspects:
-- Does the code logic covers relevant edge cases?
+- Does the code logic cover relevant edge cases?
 - Is the code logic clear and easy to understand?
 - Is the code logic efficient?
 ...
