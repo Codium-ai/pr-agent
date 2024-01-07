@@ -1,8 +1,8 @@
 # Describe Tool
 ## Table of Contents
 - [Overview](#overview)
-  - [Handle custom labels from the Repo's labels page :gem:](#handle-custom-labels-from-the-repos-labels-page-gem)
   - [Configuration options](#configuration-options)
+  - [Handle custom labels from the Repo's labels page :gem:](#handle-custom-labels-from-the-repos-labels-page-gem)
   - [Markers template](#markers-template)
 - [Usage Tips](#usage-tips)
   - [Automation](#automation)
@@ -16,31 +16,14 @@ The tool can be triggered automatically every time a new PR is [opened](https://
 /describe
 ```
 For example:
-
+___
 <kbd><img src=https://codium.ai/images/pr_agent/describe_comment.png width="768"></kbd>
-
+___
 <kbd><img src=https://codium.ai/images/pr_agent/describe.png width="768"></kbd>
-
-
-### Handle custom labels from the Repo's labels page :gem:
-> This feature is available only in PR-Agent Pro 
-
-You can control  the custom labels that will be suggested by the `describe` tool, from the repo's labels page:
-
-* GitHub : go to `https://github.com/{owner}/{repo}/labels` (or click on the "Labels" tab in the issues or PRs page)
-* GitLab : go to `https://gitlab.com/{owner}/{repo}/-/labels` (or click on "Manage" -> "Labels" on the left menu)
-
-Now add/edit the custom labels. they should be formatted as follows:
-* Label name: The name of the custom label.
-* Description: Start the description of with prefix `pr_agent:`, for example: `pr_agent: Description of when AI should suggest this label`.<br>
-
-The description should be comprehensive and detailed, indicating when to add the desired label. For example:
-<kbd><img src=https://codium.ai/images/pr_agent/add_native_custom_labels.png width="880"></kbd>
-
+___
   
 ### Configuration options
-To edit [configurations](./../pr_agent/settings/configuration.toml#L28) related to the describe tool, use the following template:
-
+To edit [configurations](./../pr_agent/settings/configuration.toml#L46) related to the describe tool (`pr_description` section), use the following template:
 ```
 /describe --pr_description.some_config1=... --pr_description.some_config2=...
 ```
@@ -65,6 +48,23 @@ To edit [configurations](./../pr_agent/settings/configuration.toml#L28) related 
 - `enable_semantic_files_types`: if set to true, "Changes walkthrough" section will be generated. Default is true.
 - `collapsible_file_list`: if set to true, the file list in the "Changes walkthrough" section will be collapsible. If set to "adaptive", the file list will be collapsible only if there are more than 8 files. Default is "adaptive".
   
+
+### Handle custom labels from the Repo's labels page :gem:
+> This feature is available only in PR-Agent Pro 
+
+You can control  the custom labels that will be suggested by the `describe` tool, from the repo's labels page:
+
+* GitHub : go to `https://github.com/{owner}/{repo}/labels` (or click on the "Labels" tab in the issues or PRs page)
+* GitLab : go to `https://gitlab.com/{owner}/{repo}/-/labels` (or click on "Manage" -> "Labels" on the left menu)
+
+Now add/edit the custom labels. they should be formatted as follows:
+* Label name: The name of the custom label.
+* Description: Start the description of with prefix `pr_agent:`, for example: `pr_agent: Description of when AI should suggest this label`.<br>
+
+The description should be comprehensive and detailed, indicating when to add the desired label. For example:
+<kbd><img src=https://codium.ai/images/pr_agent/add_native_custom_labels.png width="880"></kbd>
+
+
 ### Markers template
 To enable markers, set `pr_description.use_description_markers=true`.
 markers enable to easily integrate user's content and auto-generated content, with a template-like mechanism.
@@ -97,17 +97,20 @@ The marker `pr_agent:type` will be replaced with the PR type, `pr_agent:summary`
 
 
 ## Usage Tips
+1)  [Automation](#automation)
+2) [Custom labels](#custom-labels)
 ### Automation
 - When you first install the app, the [default mode](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#github-app-automatic-tools) for the describe tool is:
 ```
 pr_commands = ["/describe --pr_description.add_original_user_description=true" 
                          "--pr_description.keep_original_user_title=true", ...]
 ```
-meaning the `describe` tool will run automatically on every PR, will keep the original title, and will add the original user description above the generated description. <br> This default is quite conservative, and strikes a good balance between automation and control:
+meaning the `describe` tool will run automatically on every PR, will keep the original title, and will add the original user description above the generated description. 
+<br> This default settings aim to strike a good balance between automation and control:
 If you want more automation, just give the PR a title, and the tool will auto-write a full description; If you want more control, you can add a detailed description, and the tool will add the complementary description below it.
 - For maximal automation, you can change the default mode to:
 ```
-pr_commands = ["/describe --pr_description.add_original_user_description=false"
+pr_commands = ["/describe --pr_description.add_original_user_description=false" 
                          "--pr_description.keep_original_user_title=true", ...]
 ```
 so the title will be auto-generated as well.
@@ -133,6 +136,6 @@ Examples for custom labels:
 - `Dockerfile changes` - pr_agent:The PR contains changes in the Dockerfile
 - ...
 
-The list above is eclectic, and aims to give an idea of different possibilities. Define the custom labels that are relevant for your repo and use cases.
+The list above is eclectic, and aims to give an idea of different possibilities. Define custom labels that are relevant for your repo and use cases.
 Note that Labels are not mutually exclusive, so you can add multiple label categories.
 Make sure to provide proper title, and detailed and well-phrased description for each label, so the tool will know when to suggest it.
