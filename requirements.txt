@@ -1,5 +1,5 @@
 aiohttp==3.9.1
-atlassian-python-api==3.39.0
+atlassian-python-api==3.41.4
 azure-devops==7.1.0b3
 boto3==1.33.6
 dynaconf==3.2.4
