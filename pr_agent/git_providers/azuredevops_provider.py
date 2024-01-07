@@ -1,8 +1,6 @@
-import json
+import os
 from typing import Optional, Tuple
 from urllib.parse import urlparse
-
-import os
 
 from ..log import get_logger
 
@@ -16,7 +14,7 @@ try:
         GitVersionDescriptor,
         GitPullRequest,
     )
-except ImportError:
+except ImportError as e:
     AZURE_DEVOPS_AVAILABLE = False
 
 from ..algo.language_handler import is_valid_file
@@ -27,22 +25,118 @@ from .git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
 
 class AzureDevopsProvider(GitProvider):
     def publish_code_suggestions(self, code_suggestions: list) -> bool:
-        pass
+        """
+        Publishes code suggestions as comments on the PR.
+        """
+        post_parameters_list = []
+        for suggestion in code_suggestions:
+            body = suggestion['body']
+            relevant_file = suggestion['relevant_file']
+            relevant_lines_start = suggestion['relevant_lines_start']
+            relevant_lines_end = suggestion['relevant_lines_end']
+
+            if not relevant_lines_start or relevant_lines_start == -1:
+                if get_settings().config.verbosity_level >= 2:
+                    get_logger().exception(
+                        f"Failed to publish code suggestion, relevant_lines_start is {relevant_lines_start}")
+                continue
+
+            if relevant_lines_end < relevant_lines_start:
+                if get_settings().config.verbosity_level >= 2:
+                    get_logger().exception(f"Failed to publish code suggestion, "
+                                           f"relevant_lines_end is {relevant_lines_end} and "
+                                           f"relevant_lines_start is {relevant_lines_start}")
+                continue
+
+            if relevant_lines_end > relevant_lines_start:
+                post_parameters = {
+                    "body": body,
+                    "path": relevant_file,
+                    "line": relevant_lines_end,
+                    "start_line": relevant_lines_start,
+                    "start_side": "RIGHT",
+                }
+            else:  # API is different for single line comments
+                post_parameters = {
+                    "body": body,
+                    "path": relevant_file,
+                    "line": relevant_lines_start,
+                    "side": "RIGHT",
+                }
+            post_parameters_list.append(post_parameters)
+
+        try:
+            for post_parameters in post_parameters_list:
+                comment = Comment(content=post_parameters["body"], comment_type=1)
+                thread = CommentThread(comments=[comment],
+                                       thread_context={
+                                           "filePath": post_parameters["path"],
+                                           "rightFileStart": {
+                                               "line": post_parameters["start_line"],
+                                               "offset": 1,
+                                           },
+                                           "rightFileEnd": {
+                                               "line": post_parameters["line"],
+                                               "offset": 1,
+                                           },
+                                       })
+                self.azure_devops_client.create_thread(
+                    comment_thread=thread,
+                    project=self.workspace_slug,
+                    repository_id=self.repo_slug,
+                    pull_request_id=self.pr_num
+                )
+                if get_settings().config.verbosity_level >= 2:
+                    get_logger().info(
+                        f"Published code suggestion on {self.pr_num} at {post_parameters['path']}"
+                    )
+            return True
+        except Exception as e:
+            if get_settings().config.verbosity_level >= 2:
+                get_logger().error(f"Failed to publish code suggestion, error: {e}")
+            return False
 
     def get_pr_description_full(self) -> str:
         pass
 
     def remove_comment(self, comment):
-        pass
+        try:
+            self.azure_devops_client.delete_comment(
+                repository_id=self.repo_slug,
+                pull_request_id=self.pr_num,
+                thread_id=comment["thread_id"],
+                comment_id=comment["comment_id"],
+                project=self.workspace_slug,
+            )
+        except Exception as e:
+            get_logger().exception(f"Failed to remove comment, error: {e}")
 
-    def publish_labels(self, labels):
-        pass
+    def publish_labels(self, pr_types):
+        try:
+            for pr_type in pr_types:
+                self.azure_devops_client.create_pull_request_label(
+                    label={"name": pr_type},
+                    project=self.workspace_slug,
+                    repository_id=self.repo_slug,
+                    pull_request_id=self.pr_num,
+                )
+        except Exception as e:
+            get_logger().exception(f"Failed to publish labels, error: {e}")
 
     def get_pr_labels(self):
-        pass
+        try:
+            labels = self.azure_devops_client.get_pull_request_labels(
+                project=self.workspace_slug,
+                repository_id=self.repo_slug,
+                pull_request_id=self.pr_num,
+            )
+            return [label.name for label in labels]
+        except Exception as e:
+            get_logger().exception(f"Failed to get labels, error: {e}")
+            return []
 
     def __init__(
-        self, pr_url: Optional[str] = None, incremental: Optional[bool] = False
+            self, pr_url: Optional[str] = None, incremental: Optional[bool] = False
     ):
         if not AZURE_DEVOPS_AVAILABLE:
             raise ImportError(
@@ -66,8 +160,6 @@ class AzureDevopsProvider(GitProvider):
             "get_issue_comments",
             "create_inline_comment",
             "publish_inline_comments",
-            "get_labels",
-            "remove_initial_comment",
         ]:
             return False
         return True
@@ -94,9 +186,9 @@ class AzureDevopsProvider(GitProvider):
     def get_files(self):
         files = []
         for i in self.azure_devops_client.get_pull_request_commits(
-            project=self.workspace_slug,
-            repository_id=self.repo_slug,
-            pull_request_id=self.pr_num,
+                project=self.workspace_slug,
+                repository_id=self.repo_slug,
+                pull_request_id=self.pr_num,
         ):
             changes_obj = self.azure_devops_client.get_changes(
                 project=self.workspace_slug,
@@ -225,7 +317,7 @@ class AzureDevopsProvider(GitProvider):
         )
         if is_temporary:
             self.temp_comments.append(
-                {"thread_id": thread_response.id, "comment_id": comment.id}
+                {"thread_id": thread_response.id, "comment_id": thread_response.comments[0].id}
             )
 
     def publish_description(self, pr_title: str, pr_body: str):
@@ -245,10 +337,14 @@ class AzureDevopsProvider(GitProvider):
             )
 
     def remove_initial_comment(self):
-        return ""  # not implemented yet
+        try:
+            for comment in self.temp_comments:
+                self.remove_comment(comment)
+        except Exception as e:
+            get_logger().exception(f"Failed to remove temp comments, error: {e}")
 
     def publish_inline_comment(
-        self, body: str, relevant_file: str, relevant_line_in_file: str
+            self, body: str, relevant_file: str, relevant_line_in_file: str
     ):
         raise NotImplementedError(
             "Azure DevOps provider does not support publishing inline comment yet"
