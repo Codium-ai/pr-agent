@@ -6,6 +6,11 @@
   - [Incremental Mode](#incremental-mode)
   - [PR Reflection](#pr-reflection)
 - [Usage Tips](#usage-tips)
+  - [General guidelines](#general-guidelines)
+  - [Code suggestions](#code-suggestions)
+  - [Automation](#automation)
+  - [Auto-labels](#auto-labels)
+  - [Extra instructions](#extra-instructions)
 
 ## Overview
 The `review` tool scans the PR code changes, and automatically generates a PR review.
