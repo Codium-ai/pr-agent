@@ -130,14 +130,14 @@ Be specific, clear, and concise in the instructions. With extra instructions, yo
 
 Examples for extra instructions:
 ```
-pr_commands = ['/review --pr_reviewer.extra_instructions="""
+[pr_reviewer] # /review #
+extra_instructions="""
 In the code feedback section, emphasize the following:
 - Does the code logic covers relevant edge cases?
 - Is the code logic clear and easy to understand?
 - Is the code logic efficient?
 ...
-"""\
-']
+"""
 ```
 Use triple quotes to write multi-line instructions. Use bullet points to make the instructions more readable.
 
