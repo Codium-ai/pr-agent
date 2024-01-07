@@ -14,7 +14,7 @@
 
 ## Overview
 The `review` tool scans the PR code changes, and automatically generates a PR review.
-The tool can be triggered automatically every time a new PR is [opened](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#github-app-automatic-tools), or it can be invoked manually by commenting on any PR:
+The tool can be triggered automatically every time a new PR is [opened](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#github-app-automatic-tools), or can be invoked manually by commenting on any PR:
 ```
 /review
 ```
@@ -122,7 +122,7 @@ Edit this field to enable/disable the tool, or to change the used configurations
 
 ### Auto-labels
 The `review` tool can auto-generate two specific types of labels for a PR:
-- a `possible security issue` label if it detects a security issue (`enable_review_labels_security` flag)
+- a `possible security issue` label if it detects a [security issue](https://github.com/Codium-ai/pr-agent/blob/tr/user_description/pr_agent/settings/pr_reviewer_prompts.toml#L136) (`enable_review_labels_security` flag)
 - a `Review effort [1-5]: x` label, where x is the estimated effort to review the PR (`enable_review_labels_effort` flag)
 
 Both modes are useful, and we recommended to enable them.
