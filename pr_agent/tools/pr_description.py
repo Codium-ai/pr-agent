@@ -166,6 +166,10 @@ class PRDescription:
         system_prompt = environment.from_string(get_settings().pr_description_prompt.system).render(variables)
         user_prompt = environment.from_string(get_settings().pr_description_prompt.user).render(variables)
 
+        if get_settings().config.verbosity_level >= 2:
+            get_logger().info(f"\nSystem prompt:\n{system_prompt}")
+            get_logger().info(f"\nUser prompt:\n{user_prompt}")
+
         response, finish_reason = await self.ai_handler.chat_completion(
             model=model,
             temperature=0.2,
