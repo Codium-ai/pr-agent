@@ -46,14 +46,14 @@ See the [Installation Guide](./INSTALL.md) for instructions on installing and ru
 
 See the [Usage Guide](./Usage.md) for running the PR-Agent commands via different interfaces, including _CLI_, _online usage_, or by _automatically triggering_ them when a new PR is opened.
 
-See the [Tools Guide](./docs/TOOLS_GUIDE.md) for detailed description of the different tools (tools are run via the commands).
+See the [Tools Guide](./docs/TOOLS_GUIDE.md) for a detailed description of the different tools (tools are run via the commands).
 
 ## Table of Contents
 - [Example results](#example-results)
 - [Features overview](#features-overview)
 - [Try it now](#try-it-now)
 - [Installation](#installation)
-- [PR-Agent Pro 💎](#pr-agent-pro)
+- [PR-Agent Pro 💎](#pr-agent-pro-)
 - [How it works](#how-it-works)
 - [Why use PR-Agent?](#why-use-pr-agent)
 
@@ -65,7 +65,7 @@ See the [Tools Guide](./docs/TOOLS_GUIDE.md) for detailed description of the dif
 <img src="https://www.codium.ai/images/pr_agent/describe_short_main.png" width="800">
 </p>
 </div>
-
+<hr>
 <h4><a href="https://github.com/Codium-ai/pr-agent/pull/472#discussion_r1435819374">/improve</a></h4>
 
 <div align="center">
@@ -76,7 +76,7 @@ See the [Tools Guide](./docs/TOOLS_GUIDE.md) for detailed description of the dif
 </p>
 
 </div>
-
+<hr>
 <h4><a href="https://github.com/Codium-ai/pr-agent/pull/530">/generate_labels</a></h4>
 <div align="center">
 <p float="center">
@@ -123,9 +123,9 @@ See the [Tools Guide](./docs/TOOLS_GUIDE.md) for detailed description of the dif
 
 
 </div>
+<hr>
 
-
-## Features Overview
+## Features overview
 `PR-Agent` offers extensive pull request functionalities across various git providers:
 |       |                                             | GitHub | Gitlab | Bitbucket |
 |-------|---------------------------------------------|:------:|:------:|:---------:|
@@ -202,7 +202,7 @@ There are several ways to use PR-Agent:
 1. **Self-hosting** - We take care of everything for you - hosting, models, regular updates, and more. Installation is as simple as signing up and adding the PR-Agent app to your GitHub\BitBucket repo.
 2. **Improved privacy** - No data will be stored or used to train models. PR-Agent Pro will employ zero data retention, and will use an OpenAI account with zero data retention.
 3. **Improved support** - PR-Agent Pro users will receive priority support, and will be able to request new features and capabilities.
-4. **Extra features** -In addition to the benefits listed above, PR-Agent Pro will emphasize more customization, and the usage of static code analysis, in addition to LLM logic, to improve results. It has the following additional feature:
+4. **Extra features** -In addition to the benefits listed above, PR-Agent Pro will emphasize more customization, and the usage of static code analysis, in addition to LLM logic, to improve results. It has the following additional features:
     - [**SOC2 compliance check**](https://github.com/Codium-ai/pr-agent/blob/main/docs/REVIEW.md#soc2-ticket-compliance-)
     - [**PR documentation**](https://github.com/Codium-ai/pr-agent/blob/main/docs/ADD_DOCUMENTATION.md)
     - [**Custom labels**](https://github.com/Codium-ai/pr-agent/blob/main/docs/DESCRIBE.md#handle-custom-labels-from-the-repos-labels-page-gem)
@@ -222,7 +222,7 @@ Check out the [PR Compression strategy](./PR_COMPRESSION.md) page for more detai
 
 ## Why use PR-Agent?
 
-A reasonable question that can be asked is: `"Why use PR-Agent? What make it stand out from existing tools?"`
+A reasonable question that can be asked is: `"Why use PR-Agent? What makes it stand out from existing tools?"`
 
 Here are some advantages of PR-Agent:
 
@@ -232,12 +232,12 @@ Here are some advantages of PR-Agent:
 - We support **multiple git providers** (GitHub, Gitlab, Bitbucket), **multiple ways** to use the tool (CLI, GitHub Action, GitHub App, Docker, ...), and **multiple models** (GPT-4, GPT-3.5, Anthropic, Cohere, Llama2).
 
 
-## Data Privacy
+## Data privacy
 
 If you host PR-Agent with your OpenAI API key, it is between you and OpenAI. You can read their API data privacy policy here:
 https://openai.com/enterprise-privacy
 
-When using PR-Agent Pro 💎, hosted by CodiumAI, we will not store any of your data, nor will we used it for training.
+When using PR-Agent Pro 💎, hosted by CodiumAI, we will not store any of your data, nor will we use it for training.
 You will also benefit from an OpenAI account with zero data retention.
 
 ## Links
