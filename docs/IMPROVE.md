@@ -3,7 +3,7 @@
 ## Table of Contents
 - [Overview](#overview)
   - [Configuration options](#configuration-options)
-  - [summarize mode](#summarize-mode)
+  - [Summarize mode](#summarize-mode)
 - [Usage Tips](#usage-tips)
     - [Extra instructions](#extra-instructions)
     - [PR footprint - regular vs summarize mode](#pr-footprint---regular-vs-summarize-mode)
@@ -15,11 +15,15 @@ The tool can be triggered automatically every time a new PR is [opened](https://
 ```
 /improve
 ```
+
 For example:
 
 <kbd><img src=https://codium.ai/images/pr_agent/improve_comment.png width="768"></kbd>
+
 ---
+
 <kbd><img src=https://codium.ai/images/pr_agent/improve.png width="768"></kbd>
+
 ---
 
 An extended mode, which does not involve PR Compression and provides more comprehensive suggestions, can be invoked by commenting on any PR:
@@ -31,7 +35,7 @@ Hence, the total number of suggestions is proportional to the number of chunks, 
 
 ### Configuration options
 
-To edit [configurations](./../pr_agent/settings/configuration.toml#46) related to the improve tool (`pr_code_suggestions` section), use the following template:
+To edit [configurations](./../pr_agent/settings/configuration.toml#L46) related to the improve tool (`pr_code_suggestions` section), use the following template:
 ```
 /improve --pr_code_suggestions.some_config1=... --pr_code_suggestions.some_config2=...
 ```
@@ -48,7 +52,7 @@ To edit [configurations](./../pr_agent/settings/configuration.toml#46) related t
 - `max_number_of_calls`: maximum number of chunks. Default is 5.
 - `final_clip_factor`: factor to remove suggestions with low confidence. Default is 0.9.
 
-### summarize mode
+### Summarize mode
 In this mode, instead of presenting committable suggestions, the different suggestions will be combined into a single compact comment, with significantly smaller PR footprint.
 
 To invoke the summarize mode, use the following command:
@@ -57,6 +61,7 @@ To invoke the summarize mode, use the following command:
 ```
 
 For example:
+
 <kbd><img src=https://codium.ai/images/pr_agent/improved_summerize_open.png width="768"></kbd>
 
 ___
@@ -65,6 +70,7 @@ ___
 
 ### Extra instructions
 Extra instructions are very important for the `imrpove` tool, since they enable you to guide the model to suggestions that are more relevant to the specific needs of the project.
+
 Be specific, clear, and concise in the instructions. With extra instructions, you are the prompter. Specify relevant aspects that you want the model to focus on.
 
 Examples for extra instructions:
