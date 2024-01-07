@@ -271,7 +271,40 @@ class GithubProvider(GitProvider):
         except Exception as e:
             if get_settings().config.verbosity_level >= 2:
                 get_logger().error(f"Failed to publish code suggestion, error: {e}")
-            return False
+            if getattr(e, "status", None) == 422 and getattr(e, "data", {}).get("message", None) == "Unprocessable Entity":
+                pass  # trying to find the bad comment
+            else:
+                return False
+        try:
+            import time
+            verified_comments = []
+            invalid_comments = []
+            for comment in post_parameters_list:
+                time.sleep(1)  # for avoiding secondary rate limit
+                try:
+                    headers, data = self.pr._requester.requestJsonAndCheck(
+                        "POST", f"{self.pr.url}/reviews", input=dict(commit_id=self.last_commit_id.sha, comments=[comment])
+                    )
+                    pending_review_id = data["id"]
+                    verified_comments.append(comment)
+                except Exception as e:
+                    invalid_comments.append((comment, e))
+                    pending_review_id = None
+                if pending_review_id is not None:
+                    try:
+                        self.pr._requester.requestJsonAndCheck("DELETE", f"{self.pr.url}/reviews/{pending_review_id}")
+                    except Exception as e:
+                        pass
+            if verified_comments:
+                self.pr.create_review(commit=self.last_commit_id, comments=verified_comments)
+            if invalid_comments:
+                if get_settings().config.verbosity_level >= 2:
+                    get_logger().error(f"Invalid comments: {invalid_comments}")
+            return True
+        except Exception as e:
+            if get_settings().config.verbosity_level >= 2:
+                get_logger().error(f"Failed to publish code suggestion fallback, error: {e}")
+        return False
 
     def remove_initial_comment(self):
         try:
