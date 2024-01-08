@@ -108,6 +108,7 @@ class PRDescription:
 
             # final markdown description
             full_markdown_description = f"## Title\n\n{pr_title}\n\n___\n{pr_body}"
+            get_logger().debug(f"full_markdown_description:\n{full_markdown_description}")
 
             if get_settings().config.publish_output:
                 get_logger().info(f"Pushing answer {self.pr_id}")
