@@ -7,7 +7,6 @@ from pr_agent.agent.pr_agent import PRAgent
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.log import LoggingFormat, get_logger, setup_logger
-from pr_agent.servers.help import bot_help_text
 
 setup_logger(fmt=LoggingFormat.JSON)
 NOTIFICATION_URL = "https://api.github.com/notifications"
@@ -104,8 +103,6 @@ async def polling_loop():
                                                                                  notify=lambda: git_provider.add_eyes_reaction(comment_id))  # noqa E501
                                             if not success:
                                                 git_provider.set_pr(pr_url)
-                                                git_provider.publish_comment("### How to use PR-Agent\n" +
-                                                                             bot_help_text(user_id))
 
                     elif response.status != 304:
                         print(f"Failed to fetch notifications. Status code: {response.status}")
