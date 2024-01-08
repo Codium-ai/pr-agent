@@ -229,7 +229,6 @@ class GithubProvider(GitProvider):
                 get_logger().error(f"Failed to publish inline comments, error: {e}")
             if (
                 getattr(e, "status", None) == 422
-                and getattr(e, "data", {}).get("message", None) == "Unprocessable Entity"
                 and get_settings().github.publish_inline_comments_fallback_with_verification
             ):
                 pass  # continue to try _publish_inline_comments_fallback_with_verification
