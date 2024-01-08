@@ -279,7 +279,7 @@ class PRDescription:
         if not get_settings().pr_description.enable_pr_type:
             self.data.pop('type')
         for key, value in self.data.items():
-            markdown_text += f"## {key}\n\n"
+            markdown_text += f"## **{key}**\n\n"
             markdown_text += f"{value}\n\n"
 
         # Remove the 'PR Title' key from the dictionary
@@ -300,7 +300,7 @@ class PRDescription:
                 key_publish = "Changes walkthrough"
             else:
                 key_publish = key.rstrip(':').replace("_", " ").capitalize()
-            pr_body += f"## {key_publish}\n"
+            pr_body += f"## **{key_publish}**\n"
             if 'walkthrough' in key.lower():
                 if self.git_provider.is_supported("gfm_markdown"):
                     pr_body += "<details> <summary>files:</summary>\n\n"
