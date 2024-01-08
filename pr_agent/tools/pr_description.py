@@ -104,7 +104,7 @@ class PRDescription:
             if self.git_provider.is_supported("gfm_markdown") and get_settings().pr_description.enable_help_text:
                 pr_body += "<hr>\n\n<details> <summary><strong>✨ Usage guide:</strong></summary><hr> \n\n"
                 pr_body += HelpMessage.get_describe_usage_guide()
-                pr_body += "\n></details>\n"
+                pr_body += "\n</details>\n"
 
             # final markdown description
             full_markdown_description = f"## Title\n\n{pr_title}\n\n___\n{pr_body}"
