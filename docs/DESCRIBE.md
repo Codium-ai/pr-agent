@@ -130,7 +130,7 @@ The default labels of the describe tool are quite generic, since they are meant 
 
 If you specify [custom labels](#handle-custom-labels-from-the-repos-labels-page-gem) in the repo's labels page, you can get tailored labels for your use cases.
 Examples for custom labels:
-- `Main topic:performence` -  pr_agent:The main topic of this PR is performance
+- `Main topic:performance` -  pr_agent:The main topic of this PR is performance
 - `New endpoint` -  pr_agent:A new endpoint was added in this PR
 - `SQL query` -  pr_agent:A new SQL query was added in this PR
 - `Dockerfile changes` - pr_agent:The PR contains changes in the Dockerfile
@@ -138,4 +138,4 @@ Examples for custom labels:
 
 The list above is eclectic, and aims to give an idea of different possibilities. Define custom labels that are relevant for your repo and use cases.
 Note that Labels are not mutually exclusive, so you can add multiple label categories.
-<br>Make sure to provide proper title, and detailed and well-phrased description for each label, so the tool will know when to suggest it.
+<br>Make sure to provide proper title, and a detailed and well-phrased description for each label, so the tool will know when to suggest it.

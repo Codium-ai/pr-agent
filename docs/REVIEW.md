@@ -122,14 +122,14 @@ Edit this field to enable/disable the tool, or to change the used configurations
 
 ### Auto-labels
 The `review` tool can auto-generate two specific types of labels for a PR:
-- a `possible security issue` label if it detects a [security issue](https://github.com/Codium-ai/pr-agent/blob/tr/user_description/pr_agent/settings/pr_reviewer_prompts.toml#L136) (`enable_review_labels_security` flag)
+- a `possible security issue` label that detects a possible [security issue](https://github.com/Codium-ai/pr-agent/blob/tr/user_description/pr_agent/settings/pr_reviewer_prompts.toml#L136) (`enable_review_labels_security` flag)
 - a `Review effort [1-5]: x` label, where x is the estimated effort to review the PR (`enable_review_labels_effort` flag)
 
 Both modes are useful, and we recommended to enable them.
 
 ### Extra instructions
 Extra instruction are important.
-The `review` tool can be configured with extra instructions, which can be used to guide the model to feedback tailored to the needs of your project.
+The `review` tool can be configured with extra instructions, which can be used to guide the model to a feedback tailored to the needs of your project.
 
 Be specific, clear, and concise in the instructions. With extra instructions, you are the prompter. Specify the relevant sub-tool, and the relevant aspects of the PR that you want to emphasize.
 
@@ -138,7 +138,7 @@ Examples for extra instructions:
 [pr_reviewer] # /review #
 extra_instructions="""
 In the code feedback section, emphasize the following:
-- Does the code logic covers relevant edge cases?
+- Does the code logic cover relevant edge cases?
 - Is the code logic clear and easy to understand?
 - Is the code logic efficient?
 ...
