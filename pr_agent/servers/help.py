@@ -22,11 +22,17 @@ class HelpMessage:
     @staticmethod
     def get_review_usage_guide():
         output ="**Overview:**\n"
-        output +="The `review` tool scans the PR code changes, and generates a PR review. The tool can be triggered automatically every time a new PR is opened, or can be invoked manually by commenting on any PR.\n"
+        output +="The `review` tool scans the PR code changes, and generates a PR review. The tool can be triggered [automatically][automatically](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#github-app-automatic-tools) every time a new PR is opened, or can be invoked manually by commenting on any PR.\n"
         output +="""\
-To edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L19)  related to the review tool (`pr_reviewer` section), use the following template:
+When commenting, to edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L19) related to the review tool (`pr_reviewer` section), use the following template:
 ```
 /review --pr_reviewer.some_config1=... --pr_reviewer.some_config2=...
+```
+With a [configuration file](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#working-with-github-app), use the following template:
+```
+[pr_reviewer]
+some_config1=...
+some_config2=...
 ```
     """
         output +="\n\n<table>"
@@ -110,12 +116,18 @@ Some of the feature that are disabled by default are quite useful, and should be
     def get_describe_usage_guide():
         output = "**Overview:**\n"
         output += "The `describe` tool scans the PR code changes, and generates a description for the PR - title, type, summary, walkthrough and labels. "
-        output += "The tool can be triggered automatically every time a new PR is opened, or can be invoked manually by commenting on a PR.\n"
+        output += "The tool can be triggered [automatically](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#github-app-automatic-tools) every time a new PR is opened, or can be invoked manually by commenting on a PR.\n"
         output += """\
-To edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L46) related to the describe tool (`pr_description` section), use the following template:
 
+When commenting, to edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L46) related to the describe tool (`pr_description` section), use the following template:
 ```
 /describe --pr_description.some_config1=... --pr_description.some_config2=...
+```
+With a [configuration file](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#working-with-github-app), use the following template:
+```
+[pr_description]
+some_config1=...
+some_config2=...
 ```
 """
         output += "\n\n<table>"
