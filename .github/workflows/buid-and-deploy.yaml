@@ -69,7 +69,8 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: "{{defaultContext}}:docker"
+          context: .
+          file: ./docker/Dockerfile
           push: true
           tags: ${{ env.REGISTRY }}/${{ steps.get_repo.outputs.name }}:${{ steps.version_tag.outputs.version_tag }}
           target: github_app
