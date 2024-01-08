@@ -14,6 +14,7 @@ from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
 from pr_agent.log import get_logger
+from pr_agent.servers.help import HelpMessage
 
 
 class PRDescription:
@@ -98,6 +99,14 @@ class PRDescription:
                 pr_title, pr_body = self._prepare_pr_answer_with_markers()
             else:
                 pr_title, pr_body,  = self._prepare_pr_answer()
+
+            # Add help text if gfm_markdown is supported
+            if self.git_provider.is_supported("gfm_markdown") and get_settings().pr_description.enable_help_text:
+                pr_body += "<hr>\n\n<details> <summary><strong>✨ Usage guide:</strong></summary><hr> \n\n"
+                pr_body += HelpMessage.get_describe_usage_guide()
+                pr_body += "\n</details>\n"
+
+            # final markdown description
             full_markdown_description = f"## Title\n\n{pr_title}\n\n___\n{pr_body}"
             get_logger().debug(f"full_markdown_description:\n{full_markdown_description}")
 
