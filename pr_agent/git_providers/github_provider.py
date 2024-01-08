@@ -247,7 +247,6 @@ class GithubProvider(GitProvider):
         then publish all the remaining valid comments in a single review.
         """
         import time
-
         verified_comments = []
         invalid_comments = []
         for comment in comments:
