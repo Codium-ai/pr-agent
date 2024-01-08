@@ -222,7 +222,57 @@ class GithubProvider(GitProvider):
         return dict(body=body, path=path, position=position) if subject_type == "LINE" else {}
 
     def publish_inline_comments(self, comments: list[dict]):
-        self.pr.create_review(commit=self.last_commit_id, comments=comments)
+        try:
+            self.pr.create_review(commit=self.last_commit_id, comments=comments)
+        except Exception as e:
+            if get_settings().config.verbosity_level >= 2:
+                get_logger().error(f"Failed to publish inline comments, error: {e}")
+            if (
+                getattr(e, "status", None) == 422
+                and getattr(e, "data", {}).get("message", None) == "Unprocessable Entity"
+                and get_settings().github.publish_inline_comments_fallback_with_verification
+            ):
+                pass  # continue to try _publish_inline_comments_fallback_with_verification
+            else:
+                raise e
+        try:
+            self._publish_inline_comments_fallback_with_verification(comments)
+        except Exception as e:
+            if get_settings().config.verbosity_level >= 2:
+                get_logger().error(f"Failed to publish inline code comments fallback, error: {e}")
+            raise e
+
+    def _publish_inline_comments_fallback_with_verification(self, comments):
+        """
+        Check each inline comment separately against the GitHub API and discard of invalid comments,
+        then publish all the remaining valid comments in a single review.
+        """
+        import time
+
+        verified_comments = []
+        invalid_comments = []
+        for comment in comments:
+            time.sleep(1)  # for avoiding secondary rate limit
+            try:
+                headers, data = self.pr._requester.requestJsonAndCheck(
+                    "POST", f"{self.pr.url}/reviews", input=dict(commit_id=self.last_commit_id.sha, comments=[comment])
+                )
+                pending_review_id = data["id"]
+                verified_comments.append(comment)
+            except Exception as e:
+                invalid_comments.append((comment, e))
+                pending_review_id = None
+            if pending_review_id is not None:
+                try:
+                    self.pr._requester.requestJsonAndCheck("DELETE", f"{self.pr.url}/reviews/{pending_review_id}")
+                except Exception as e:
+                    pass
+        if invalid_comments and get_settings().config.verbosity_level >= 2:
+            get_logger().error(f"Dropped {len(invalid_comments)} invalid comments: {invalid_comments}")
+        if verified_comments:
+            self.pr.create_review(commit=self.last_commit_id, comments=verified_comments)
+        elif get_settings().config.verbosity_level >= 2:
+            get_logger().error("Dropped all comments - no verified comments left to publish")
 
     def publish_code_suggestions(self, code_suggestions: list) -> bool:
         """
@@ -266,45 +316,12 @@ class GithubProvider(GitProvider):
             post_parameters_list.append(post_parameters)
 
         try:
-            self.pr.create_review(commit=self.last_commit_id, comments=post_parameters_list)
+            self.publish_inline_comments(post_parameters_list)
             return True
         except Exception as e:
             if get_settings().config.verbosity_level >= 2:
                 get_logger().error(f"Failed to publish code suggestion, error: {e}")
-            if getattr(e, "status", None) == 422 and getattr(e, "data", {}).get("message", None) == "Unprocessable Entity":
-                pass  # trying to find the bad comment
-            else:
-                return False
-        try:
-            import time
-            verified_comments = []
-            invalid_comments = []
-            for comment in post_parameters_list:
-                time.sleep(1)  # for avoiding secondary rate limit
-                try:
-                    headers, data = self.pr._requester.requestJsonAndCheck(
-                        "POST", f"{self.pr.url}/reviews", input=dict(commit_id=self.last_commit_id.sha, comments=[comment])
-                    )
-                    pending_review_id = data["id"]
-                    verified_comments.append(comment)
-                except Exception as e:
-                    invalid_comments.append((comment, e))
-                    pending_review_id = None
-                if pending_review_id is not None:
-                    try:
-                        self.pr._requester.requestJsonAndCheck("DELETE", f"{self.pr.url}/reviews/{pending_review_id}")
-                    except Exception as e:
-                        pass
-            if verified_comments:
-                self.pr.create_review(commit=self.last_commit_id, comments=verified_comments)
-            if invalid_comments:
-                if get_settings().config.verbosity_level >= 2:
-                    get_logger().error(f"Invalid comments: {invalid_comments}")
-            return True
-        except Exception as e:
-            if get_settings().config.verbosity_level >= 2:
-                get_logger().error(f"Failed to publish code suggestion fallback, error: {e}")
-        return False
+            return False
 
     def remove_initial_comment(self):
         try:
