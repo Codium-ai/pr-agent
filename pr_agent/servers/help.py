@@ -189,7 +189,7 @@ Make sure to provide proper title, and a detailed and well-phrased description f
     def get_ask_usage_guide():
         output = "**Overview:**\n"
         output += """\
-The [`ask` tool](https://github.com/Codium-ai/pr-agent/blob/main/docs/ASK.md] answers questions about the PR, based on the PR code changes. Note that the tool does not have "memory" of previous questions, and answers each question independently.
+The `ask` tool answers questions about the PR, based on the PR code changes. Note that the tool does not have "memory" of previous questions, and answers each question independently.
 It can be invoked manually by commenting on any PR:
 ```
 /ask "..."
@@ -204,6 +204,6 @@ It can be invoked manually by commenting on any PR:
 
         output += "</table>"
 
-        output += f"\n\nSee the [review usage](https://github.com/Codium-ai/pr-agent/blob/main/docs/REVIEW.md) page for a comprehensive guide on using this tool.\n\n"
+        output += f"\n\nSee the [ask usage](https://github.com/Codium-ai/pr-agent/blob/main/docs/ASK.md) page for a comprehensive guide on using this tool.\n\n"
 
         return output
