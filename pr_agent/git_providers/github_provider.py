@@ -241,11 +241,27 @@ class GithubProvider(GitProvider):
                 get_logger().error(f"Failed to publish inline code comments fallback, error: {e}")
             raise e
 
-    def _publish_inline_comments_fallback_with_verification(self, comments):
+    def _publish_inline_comments_fallback_with_verification(self, comments: list[dict]):
         """
         Check each inline comment separately against the GitHub API and discard of invalid comments,
         then publish all the remaining valid comments in a single review.
+        For invalid comments, also try removing the suggestion part and posting the comment just on the first line.
         """
+        verified_comments, invalid_comments = self._verify_inline_comments(comments)
+        if invalid_comments and get_settings().github.try_fix_invalid_inline_comments:
+            fixed_comments = self._try_fix_invalid_inline_comments([comment for comment, _ in invalid_comments])
+            verified_fixed_comments, invalid_fixed_comments = self._verify_inline_comments(fixed_comments)
+            verified_comments += verified_fixed_comments
+            invalid_comments += invalid_fixed_comments
+        if invalid_comments and get_settings().config.verbosity_level >= 2:
+            get_logger().error(f"Dropped {len(invalid_comments)} invalid comments: {invalid_comments}")
+        if verified_comments:
+            self.pr.create_review(commit=self.last_commit_id, comments=verified_comments)
+        elif get_settings().config.verbosity_level >= 2:
+            get_logger().error("Dropped all comments - no verified comments left to publish")
+
+    def _verify_inline_comments(self, comments: list[dict]) -> tuple[list[dict], list[tuple[dict, Exception]]]:
+        """Very each comment against the GitHub API and return 2 lists: 1 of verified and 1 of invalid comments"""
         import time
         verified_comments = []
         invalid_comments = []
@@ -265,12 +281,33 @@ class GithubProvider(GitProvider):
                     self.pr._requester.requestJsonAndCheck("DELETE", f"{self.pr.url}/reviews/{pending_review_id}")
                 except Exception as e:
                     pass
-        if invalid_comments and get_settings().config.verbosity_level >= 2:
-            get_logger().error(f"Dropped {len(invalid_comments)} invalid comments: {invalid_comments}")
-        if verified_comments:
-            self.pr.create_review(commit=self.last_commit_id, comments=verified_comments)
-        elif get_settings().config.verbosity_level >= 2:
-            get_logger().error("Dropped all comments - no verified comments left to publish")
+        return verified_comments, invalid_comments
+
+    def _try_fix_invalid_inline_comments(self, invalid_comments: list[dict]) -> list[dict]:
+        """
+        Try fixing invalid comments by removing the suggestion part and setting the comment just on the first line.
+        Return only comments that have been modified in some way.
+        This is a best-effort attempt to fix invalid comments, and should be verified accordingly.
+        """
+        import copy
+        fixed_comments = []
+        for comment in invalid_comments:
+            try:
+                fixed_comment = copy.copy(comment)  # avoid modifying the original comment dict for later logging
+                if "suggestion```" in comment["body"]:
+                    fixed_comment["body"] = comment["body"].split("suggestion```")[0]
+                if "start_line" in comment:
+                    fixed_comment["line"] = comment["start_line"]
+                    del fixed_comment["start_line"]
+                if "start_side" in comment:
+                    fixed_comment["side"] = comment["start_side"]
+                    del fixed_comment["start_side"]
+                if fixed_comment != comment:
+                    fixed_comments.append(fixed_comment)
+            except Exception as e:
+                if get_settings().config.verbosity_level >= 2:
+                    get_logger().error(f"Failed to fix inline comment, error: {e}")
+        return fixed_comments
 
     def publish_code_suggestions(self, code_suggestions: list) -> bool:
         """
