@@ -75,7 +75,7 @@ Edit this field to enable/disable the tool, or to change the used configurations
         output += "<tr><td><details> <summary><strong> About the 'Code feedback' section</strong></summary><hr>\n\n"
         output+="""\
 The `review` tool provides several type of feedbacks, one of them is code suggestions.
-If you are interested **only** in the code suggestions, it is recommended to use the [`improve`](./IMPROVE.md) feature instead, since it dedicated only to code suggestions, and usually gives better results.
+If you are interested **only** in the code suggestions, it is recommended to use the [`improve`](https://github.com/Codium-ai/pr-agent/blob/main/docs/IMPROVE.md) feature instead, since it dedicated only to code suggestions, and usually gives better results.
 Use the `review` tool if you want to get a more comprehensive feedback, which includes code suggestions as well.
 """
         output += "\n\n</details></td></tr>\n\n"
@@ -182,5 +182,28 @@ Make sure to provide proper title, and a detailed and well-phrased description f
         output += "</table>"
 
         output += f"\n\nSee the [describe usage](https://github.com/Codium-ai/pr-agent/blob/main/docs/DESCRIBE.md) page for a comprehensive guide on using this tool.\n\n"
+
+        return output
+
+    @staticmethod
+    def get_ask_usage_guide():
+        output = "**Overview:**\n"
+        output += """\
+The [`ask` tool](https://github.com/Codium-ai/pr-agent/blob/main/docs/ASK.md] answers questions about the PR, based on the PR code changes. Note that the tool does not have "memory" of previous questions, and answers each question independently.
+It can be invoked manually by commenting on any PR:
+```
+/ask "..."
+```        
+        """
+        output += "\n\n<table>"
+
+        # general
+        output += "\n\n<tr><td><details> <summary><strong> More PR-Agent commands</strong></summary><hr> \n\n"
+        output += HelpMessage.get_general_bot_help_text()
+        output += "\n\n</details></td></tr>\n\n"
+
+        output += "</table>"
+
+        output += f"\n\nSee the [review usage](https://github.com/Codium-ai/pr-agent/blob/main/docs/REVIEW.md) page for a comprehensive guide on using this tool.\n\n"
 
         return output
