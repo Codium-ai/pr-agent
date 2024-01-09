@@ -178,21 +178,22 @@ Make sure to provide proper title, and a detailed and well-phrased description f
         # extra instructions
         output += "<tr><td><details> <summary><strong> Utilizing extra instructions</strong></summary><hr>\n\n"
         output += '''\
-        The `describe` tool can be configured with extra instructions, which can be used to guide the model to a produce a description with the relevant content or style.
+The `describe` tool can be configured with extra instructions, to guide the model to a feedback tailored to the needs of your project.
 
-        Be specific, clear, and concise in the instructions. With extra instructions, you are the prompter. Notice that the general structure of the description is already defined by the tool, and cannot be changed.
-        What you can change is the content content or style of each sub-section of the description.
+Be specific, clear, and concise in the instructions. With extra instructions, you are the prompter. Notice that the general structure of the description is fixed, and cannot be changed. Extra instructions can change the content or style of each sub-section of the PR description.
 
-        Examples for extra instructions:
-        ```
-        [pr_description] 
-        extra_instructions="""
-        - the title section should be in the following format: <PR type>: <PR summary>
-        - ...
-        """
-        ```
-        Use triple quotes to write multi-line instructions. Use bullet points to make the instructions more readable.
-                '''
+Examples for extra instructions:
+```
+[pr_description] 
+extra_instructions="""
+- the PR title should be in the format: '<PR type>: <PR summary>'
+- ...
+"""
+```
+Use triple quotes to write multi-line instructions. Use bullet points to make the instructions more readable.
+'''
+        output += "\n\n</details></td></tr>\n\n"
+
 
         # general
         output += "\n\n<tr><td><details> <summary><strong> More PR-Agent commands</strong></summary><hr> \n\n"

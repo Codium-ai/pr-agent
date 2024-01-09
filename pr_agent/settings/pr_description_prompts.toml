@@ -15,7 +15,7 @@ Your task is to provide a full description for the PR content - files walkthroug
 
 Extra instructions from the user:
 =====
-{{ extra_instructions }}
+{{extra_instructions}}
 =====
 {% endif %}
 
