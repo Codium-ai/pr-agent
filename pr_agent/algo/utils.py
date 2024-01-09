@@ -116,7 +116,7 @@ def parse_code_suggestion(code_suggestions: dict, i: int = 0, gfm_supported: boo
                     relevant_line = sub_value_list[0].lstrip('`').lstrip('[')
                     if len(sub_value_list) > 1:
                         link = sub_value_list[1].rstrip(')').strip('`')
-                        markdown_text += f"<td><a href={link}>{relevant_line}</a></td>"
+                        markdown_text += f"<td><a href='{link}'>{relevant_line}</a></td>"
                     else:
                         markdown_text += f"<td>{relevant_line}</td>"
                     markdown_text += "</tr>"
