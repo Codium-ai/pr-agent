@@ -189,11 +189,13 @@ Make sure to provide proper title, and a detailed and well-phrased description f
     def get_ask_usage_guide():
         output = "**Overview:**\n"
         output += """\
-The `ask` tool answers questions about the PR, based on the PR code changes. Note that the tool does not have "memory" of previous questions, and answers each question independently.
+The `ask` tool answers questions about the PR, based on the PR code changes.
 It can be invoked manually by commenting on any PR:
 ```
 /ask "..."
-```        
+```
+
+Note that the tool does not have "memory" of previous questions, and answers each question independently.        
         """
         output += "\n\n<table>"
 
