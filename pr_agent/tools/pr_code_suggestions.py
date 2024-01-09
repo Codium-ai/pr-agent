@@ -45,6 +45,7 @@ class PRCodeSuggestions:
             "language": self.main_language,
             "diff": "",  # empty diff for initial calculation
             "num_code_suggestions": num_code_suggestions,
+            "summarize_mode": get_settings().pr_code_suggestions.summarize,
             "extra_instructions": get_settings().pr_code_suggestions.extra_instructions,
             "commit_messages_str": self.git_provider.get_commit_messages(),
         }

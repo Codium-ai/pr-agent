@@ -156,6 +156,7 @@ Note that when markers are enabled, if the original PR description does not cont
 """
         output += "\n\n</details></td></tr>\n\n"
 
+        # custom labels
         output += "<tr><td><details> <summary><strong> Custom labels </strong></summary><hr>\n\n"
         output += """\
 The default labels of the `describe` tool are quite generic: [`Bug fix`, `Tests`, `Enhancement`, `Documentation`, `Other`].
@@ -173,6 +174,25 @@ Note that Labels are not mutually exclusive, so you can add multiple label categ
 Make sure to provide proper title, and a detailed and well-phrased description for each label, so the tool will know when to suggest it.        
 """
         output += "\n\n</details></td></tr>\n\n"
+
+        # extra instructions
+        output += "<tr><td><details> <summary><strong> Utilizing extra instructions</strong></summary><hr>\n\n"
+        output += '''\
+        The `describe` tool can be configured with extra instructions, which can be used to guide the model to a produce a description with the relevant content or style.
+
+        Be specific, clear, and concise in the instructions. With extra instructions, you are the prompter. Notice that the general structure of the description is already defined by the tool, and cannot be changed.
+        What you can change is the content content or style of each sub-section of the description.
+
+        Examples for extra instructions:
+        ```
+        [pr_description] 
+        extra_instructions="""
+        - the title section should be in the following format: <PR type>: <PR summary>
+        - ...
+        """
+        ```
+        Use triple quotes to write multi-line instructions. Use bullet points to make the instructions more readable.
+                '''
 
         # general
         output += "\n\n<tr><td><details> <summary><strong> More PR-Agent commands</strong></summary><hr> \n\n"

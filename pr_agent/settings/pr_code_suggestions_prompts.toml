@@ -39,6 +39,9 @@ Specific instructions:
 - Provide the exact line numbers range (inclusive) for each suggestion.
 - Assume there is additional relevant code, that is not included in the diff.
 - When quoting variables or names from the code, use backticks (`) instead of single quote (').
+{%- if summarize_mode %}
+- If needed, use abbreviations for the 'existing code' and 'improved code' snippets, to keep the output short.
+{%- endif %}
 
 
 {%- if extra_instructions %}
