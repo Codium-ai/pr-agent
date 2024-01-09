@@ -186,7 +186,8 @@ Examples for extra instructions:
 ```
 [pr_description] 
 extra_instructions="""
-- the PR title should be in the format: '<PR type>: <PR summary>'
+- The PR title should be in the format: '<PR type>: <title>'
+- The title should be short and concise (up to 10 words)
 - ...
 """
 ```
