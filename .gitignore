@@ -6,3 +6,4 @@ dist/
 *.egg-info/
 build/
 review.md
+.DS_Store
