@@ -3,8 +3,8 @@
 
 To get started with PR-Agent quickly, you first need to acquire two tokens:
 
-1. An OpenAI key from [here](https://platform.openai.com/), with access to GPT-4.
-2. A GitHub\GitLab\BitBucket personal access token (classic) with the repo scope.
+1. An OpenAI key from [here](https://platform.openai.com/api-keys), with access to GPT-4.
+2. A GitHub\GitLab\BitBucket personal access token (classic), with the repo scope. [GitHub from [here](https://github.com/settings/tokens)]
 
 There are several ways to use PR-Agent:
 
@@ -79,10 +79,11 @@ codiumai/pr-agent@v0.9
 git clone https://github.com/Codium-ai/pr-agent.git
 ```
 
-2. Install the requirements in your favorite virtual environment:
+2. Navigate to the `/pr-agent` folder and install the requirements in your favorite virtual environment:
 
+*Tip: make sure Rust is installed and in your `PATH`, instructions: https://rustup.rs*
 ```
-pip install -r requirements.txt
+pip install -e .
 ```
 
 3. Copy the secrets template file and fill in your OpenAI key and your GitHub user token:
@@ -93,10 +94,9 @@ chmod 600 pr_agent/settings/.secrets.toml
 # Edit .secrets.toml file
 ```
 
-4. Add the pr_agent folder to your PYTHONPATH, then run the cli.py script:
+4. Run the cli.py script:
 
 ```
-export PYTHONPATH=[$PYTHONPATH:]<PATH to pr_agent folder>
 python3 -m pr_agent.cli --pr_url <pr_url> review
 python3 -m pr_agent.cli --pr_url <pr_url> ask <your question>
 python3 -m pr_agent.cli --pr_url <pr_url> describe
@@ -105,6 +105,11 @@ python3 -m pr_agent.cli --pr_url <pr_url> add_docs
 python3 -m pr_agent.cli --pr_url <pr_url> generate_labels
 python3 -m pr_agent.cli --issue_url <issue_url> similar_issue
 ...
+```
+
+[Optional] Add the pr_agent folder to your PYTHONPATH
+```
+export PYTHONPATH=$PYTHONPATH:<PATH to pr_agent folder>
 ```
 
 ---
