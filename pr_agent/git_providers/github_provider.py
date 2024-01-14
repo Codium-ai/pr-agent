@@ -222,26 +222,29 @@ class GithubProvider(GitProvider):
         path = relevant_file.strip()
         return dict(body=body, path=path, position=position) if subject_type == "LINE" else {}
 
-    def publish_inline_comments(self, comments: list[dict]):
+    def publish_inline_comments(self, comments: list[dict], disable_fallback: bool = False):
         try:
             # publish all comments in a single message
             self.pr.create_review(commit=self.last_commit_id, comments=comments)
         except Exception as e:
             if get_settings().config.verbosity_level >= 2:
-                get_logger().error(f"Failed to publish inline comments, error: {e}")
+                get_logger().error(f"Failed to publish inline comments")
+
             if (
                 getattr(e, "status", None) == 422
                 and get_settings().github.publish_inline_comments_fallback_with_verification
+                and not disable_fallback
             ):
                 pass  # continue to try _publish_inline_comments_fallback_with_verification
             else:
                 raise e
-        try:
-            self._publish_inline_comments_fallback_with_verification(comments)
-        except Exception as e:
-            if get_settings().config.verbosity_level >= 2:
-                get_logger().error(f"Failed to publish inline code comments fallback, error: {e}")
-            raise e
+
+            try:
+                self._publish_inline_comments_fallback_with_verification(comments)
+            except Exception as e:
+                if get_settings().config.verbosity_level >= 2:
+                    get_logger().error(f"Failed to publish inline code comments fallback, error: {e}")
+                raise e
 
     def _publish_inline_comments_fallback_with_verification(self, comments: list[dict]):
         """
@@ -249,44 +252,69 @@ class GithubProvider(GitProvider):
         then publish all the remaining valid comments in a single review.
         For invalid comments, also try removing the suggestion part and posting the comment just on the first line.
         """
-        verified_comments, invalid_comments = self._verify_inline_comments(comments)
-        if invalid_comments and get_settings().github.try_fix_invalid_inline_comments:
-            fixed_comments = self._try_fix_invalid_inline_comments([comment for comment, _ in invalid_comments])
-            verified_fixed_comments, invalid_fixed_comments = self._verify_inline_comments(fixed_comments)
-            verified_comments += verified_fixed_comments
-            invalid_comments += invalid_fixed_comments
-        if invalid_comments and get_settings().config.verbosity_level >= 2:
-            get_logger().error(f"Dropped {len(invalid_comments)} invalid comments: {invalid_comments}")
-        if verified_comments:
-            self.pr.create_review(commit=self.last_commit_id, comments=verified_comments)
-        elif get_settings().config.verbosity_level >= 2:
-            get_logger().error("Dropped all comments - no verified comments left to publish")
+        verified_comments, invalid_comments = self._verify_code_comments(comments)
 
-    def _verif_comment(self, comment: dict):
+        # publish as a group verified comments
+        if verified_comments:
+            try:
+                self.pr.create_review(commit=self.last_commit_id, comments=verified_comments)
+            except:
+                pass
+
+        # try to publish one by one invalid comments, as a one-line comment
+        if invalid_comments and get_settings().github.try_fix_invalid_inline_comments:
+            fixed_comments_as_one_liner = self._try_fix_invalid_inline_comments(
+                [comment for comment, _ in invalid_comments])
+            for comment in fixed_comments_as_one_liner:
+                try:
+                    self.publish_inline_comments([comment], disable_fallback=True)
+                    if get_settings().config.verbosity_level >= 2:
+                        get_logger().info(f"Published invalid comment as a single line comment: {comment}")
+                except:
+                    if get_settings().config.verbosity_level >= 2:
+                        get_logger().error(f"Failed to publish invalid comment as a single line comment: {comment}")
+
+        # verified_comments, invalid_comments = self._verify_inline_comments(comments)
+        # if invalid_comments and get_settings().github.try_fix_invalid_inline_comments:
+        #     fixed_comments = self._try_fix_invalid_inline_comments([comment for comment, _ in invalid_comments])
+        #     verified_fixed_comments, invalid_fixed_comments = self._verify_inline_comments(fixed_comments)
+        #     verified_comments += verified_fixed_comments
+        #     invalid_comments += invalid_fixed_comments
+        # if invalid_comments and get_settings().config.verbosity_level >= 2:
+        #     get_logger().error(f"Dropped {len(invalid_comments)} invalid comments: {invalid_comments}")
+        # if verified_comments:
+        #     self.pr.create_review(commit=self.last_commit_id, comments=verified_comments)
+        # elif get_settings().config.verbosity_level >= 2:
+        #     get_logger().error("Dropped all comments - no verified comments left to publish")
+
+    def _verify_code_comment(self, comment: dict):
         is_verified = False
         e = None
         try:
+            # event ="" # By leaving this blank, you set the review action state to PENDING
+            input = dict(commit_id=self.last_commit_id.sha, comments=[comment])
             headers, data = self.pr._requester.requestJsonAndCheck(
-                "POST", f"{self.pr.url}/reviews", input=dict(commit_id=self.last_commit_id.sha, comments=[comment])
-            )
+                "POST", f"{self.pr.url}/reviews", input=input)
             pending_review_id = data["id"]
             is_verified = True
-        except Exception as e:
+        except Exception as err:
             is_verified = False
             pending_review_id = None
+            e = err
         if pending_review_id is not None:
             try:
                 self.pr._requester.requestJsonAndCheck("DELETE", f"{self.pr.url}/reviews/{pending_review_id}")
-            except Exception as e:
+            except Exception:
                 pass
         return is_verified, e
-    def _verify_inline_comments(self, comments: list[dict]) -> tuple[list[dict], list[tuple[dict, Exception]]]:
+
+    def _verify_code_comments(self, comments: list[dict]) -> tuple[list[dict], list[tuple[dict, Exception]]]:
         """Very each comment against the GitHub API and return 2 lists: 1 of verified and 1 of invalid comments"""
         verified_comments = []
         invalid_comments = []
         for comment in comments:
             time.sleep(1)  # for avoiding secondary rate limit
-            is_verified, e = self._verif_comment(comment)
+            is_verified, e = self._verify_code_comment(comment)
             if is_verified:
                 verified_comments.append(comment)
             else:
