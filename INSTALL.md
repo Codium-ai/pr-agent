@@ -81,10 +81,11 @@ git clone https://github.com/Codium-ai/pr-agent.git
 
 2. Navigate to the `/pr-agent` folder and install the requirements in your favorite virtual environment:
 
-*Tip: make sure Rust is installed and in your `PATH`, instructions: https://rustup.rs*
 ```
 pip install -e .
 ```
+
+*Note: If you get an error related to Rust in the dependency installation then make sure Rust is installed and in your `PATH`, instructions: https://rustup.rs*
 
 3. Copy the secrets template file and fill in your OpenAI key and your GitHub user token:
 
