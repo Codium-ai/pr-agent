@@ -1,3 +1,4 @@
+import time
 import hashlib
 from datetime import datetime
 from typing import Optional, Tuple
@@ -223,6 +224,7 @@ class GithubProvider(GitProvider):
 
     def publish_inline_comments(self, comments: list[dict]):
         try:
+            # publish all comments in a single message
             self.pr.create_review(commit=self.last_commit_id, comments=comments)
         except Exception as e:
             if get_settings().config.verbosity_level >= 2:
@@ -260,27 +262,35 @@ class GithubProvider(GitProvider):
         elif get_settings().config.verbosity_level >= 2:
             get_logger().error("Dropped all comments - no verified comments left to publish")
 
+    def _verif_comment(self, comment: dict):
+        is_verified = False
+        e = None
+        try:
+            headers, data = self.pr._requester.requestJsonAndCheck(
+                "POST", f"{self.pr.url}/reviews", input=dict(commit_id=self.last_commit_id.sha, comments=[comment])
+            )
+            pending_review_id = data["id"]
+            is_verified = True
+        except Exception as e:
+            is_verified = False
+            pending_review_id = None
+        if pending_review_id is not None:
+            try:
+                self.pr._requester.requestJsonAndCheck("DELETE", f"{self.pr.url}/reviews/{pending_review_id}")
+            except Exception as e:
+                pass
+        return is_verified, e
     def _verify_inline_comments(self, comments: list[dict]) -> tuple[list[dict], list[tuple[dict, Exception]]]:
         """Very each comment against the GitHub API and return 2 lists: 1 of verified and 1 of invalid comments"""
-        import time
         verified_comments = []
         invalid_comments = []
         for comment in comments:
             time.sleep(1)  # for avoiding secondary rate limit
-            try:
-                headers, data = self.pr._requester.requestJsonAndCheck(
-                    "POST", f"{self.pr.url}/reviews", input=dict(commit_id=self.last_commit_id.sha, comments=[comment])
-                )
-                pending_review_id = data["id"]
+            is_verified, e = self._verif_comment(comment)
+            if is_verified:
                 verified_comments.append(comment)
-            except Exception as e:
+            else:
                 invalid_comments.append((comment, e))
-                pending_review_id = None
-            if pending_review_id is not None:
-                try:
-                    self.pr._requester.requestJsonAndCheck("DELETE", f"{self.pr.url}/reviews/{pending_review_id}")
-                except Exception as e:
-                    pass
         return verified_comments, invalid_comments
 
     def _try_fix_invalid_inline_comments(self, invalid_comments: list[dict]) -> list[dict]:
