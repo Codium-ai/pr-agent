@@ -13,6 +13,7 @@ from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
 from pr_agent.log import get_logger
+from pr_agent.tools.pr_description import insert_br_after_x_chars
 
 
 class PRCodeSuggestions:
@@ -55,37 +56,39 @@ class PRCodeSuggestions:
                                           get_settings().pr_code_suggestions_prompt.user)
 
     async def run(self):
-        try:
-            get_logger().info('Generating code suggestions for PR...')
-            if get_settings().config.publish_output:
-                self.git_provider.publish_comment("Preparing suggestions...", is_temporary=True)
-
-            get_logger().info('Preparing PR code suggestions...')
-            if not self.is_extended:
-                await retry_with_fallback_models(self._prepare_prediction)
-                data = self._prepare_pr_code_suggestions()
-            else:
-                data = await retry_with_fallback_models(self._prepare_prediction_extended)
-            if (not data) or (not 'code_suggestions' in data):
-                get_logger().info('No code suggestions found for PR.')
-                return
-
-            if (not self.is_extended and get_settings().pr_code_suggestions.rank_suggestions) or \
-                    (self.is_extended and get_settings().pr_code_suggestions.rank_extended_suggestions):
-                get_logger().info('Ranking Suggestions...')
-                data['code_suggestions'] = await self.rank_suggestions(data['code_suggestions'])
-
-            if get_settings().config.publish_output:
-                get_logger().info('Pushing PR code suggestions...')
-                self.git_provider.remove_initial_comment()
-                if get_settings().pr_code_suggestions.summarize:
-                    get_logger().info('Pushing summarize code suggestions...')
-                    self.publish_summarizes_suggestions(data)
-                else:
-                    get_logger().info('Pushing inline code suggestions...')
-                    self.push_inline_code_suggestions(data)
-        except Exception as e:
-            get_logger().error(f"Failed to generate code suggestions for PR, error: {e}")
+        data = {'code_suggestions': [{'relevant_file': 'pr_agent/tools/pr_update_changelog.py', 'suggestion_content': 'The `get_git_provider()` function is called twice in the `__init__` method of `PRUpdateChangelog` class. It would be more efficient to call this function once and store the result in a variable, then use this variable in the conditional statements.\n', 'existing_code': 'if isinstance(self.git_provider, GithubProvider):\n    self.git_provider = get_git_provider()(pr_url)\nelif isinstance(self.git_provider, GitLabProvider):\n    self.git_provider = get_git_provider()(pr_url, incremental=True)\n', 'improved_code': 'git_provider = get_git_provider()\nif isinstance(self.git_provider, GithubProvider):\n    self.git_provider = git_provider(pr_url)\nelif isinstance(self.git_provider, GitLabProvider):\n    self.git_provider = git_provider(pr_url, incremental=True)\n', 'relevant_lines_start': 22, 'relevant_lines_end': 25, 'label': 'performance'}, {'relevant_file': 'pr_agent/tools/pr_update_changelog.py', 'suggestion_content': 'The `run` method of `PRUpdateChangelog` class has duplicate code for `GithubProvider` and `GitLabProvider`. This can be refactored to a separate method that accepts a `git_provider` as an argument, reducing code duplication.\n', 'existing_code': 'if isinstance(self.git_provider, GithubProvider):\n    if get_settings().config.publish_output:\n        self.git_provider.publish_comment("Preparing changelog updates...", is_temporary=True)\nelif isinstance(self.git_provider, GitLabProvider):\n    # Add code for preparing changelog updates for GitLabProvider\n    pass\n', 'improved_code': 'def prepare_changelog_updates(self, git_provider):\n    if get_settings().config.publish_output:\n        git_provider.publish_comment("Preparing changelog updates...", is_temporary=True)\n\nif isinstance(self.git_provider, GithubProvider):\n    self.prepare_changelog_updates(self.git_provider)\nelif isinstance(self.git_provider, GitLabProvider):\n    # Add code for preparing changelog updates for GitLabProvider\n    pass\n', 'relevant_lines_start': 55, 'relevant_lines_end': 60, 'label': 'maintainability'}, {'relevant_file': 'pr_agent/tools/pr_update_changelog.py', 'suggestion_content': 'The `assert` statement in the `run` method of `PRUpdateChangelog` class can be replaced with a more descriptive exception. This would provide a more meaningful error message if the condition is not met.\n', 'existing_code': 'assert type(self.git_provider) in [GithubProvider, GitLabProvider], "Currently only Github and GitLab are supported"\n', 'improved_code': 'if type(self.git_provider) not in [GithubProvider, GitLabProvider]:\n    raise ValueError("Unsupported git provider. Currently only Github and GitLab are supported.")\n', 'relevant_lines_start': 52, 'relevant_lines_end': 52, 'label': 'enhancement'}, {'relevant_file': 'pr_agent/tools/pr_update_changelog.py', 'suggestion_content': 'The `CHANGELOG_LINES` constant is defined at the global scope but is only used within the `PRUpdateChangelog` class. It would be more appropriate to define it as a class attribute.\n', 'existing_code': 'CHANGELOG_LINES = 25\n', 'improved_code': 'class PRUpdateChangelog:\n    CHANGELOG_LINES = 25\n    ...\n', 'relevant_lines_start': 16, 'relevant_lines_end': 16, 'label': 'best practice'}, {'relevant_file': '.github/ISSUE_TEMPLATE/sweep-bugfix.yml', 'suggestion_content': 'The `id` attribute for the second textarea is `description2`, which is not very descriptive. Consider using a more meaningful `id`.\n', 'existing_code': 'id: description2\n', 'improved_code': 'id: additional_details\n', 'relevant_lines_start': 13, 'relevant_lines_end': 13, 'label': 'enhancement'}, {'relevant_file': '.github/ISSUE_TEMPLATE/sweep-feature.yml', 'suggestion_content': 'The `description` attribute for the textarea is "More details for Sweep", which is not very descriptive. Consider providing a more specific description.\n', 'existing_code': 'description: More details for Sweep\n', 'improved_code': 'description: Please provide more details about the feature you want to test.\n', 'relevant_lines_start': 10, 'relevant_lines_end': 10, 'label': 'enhancement'}, {'relevant_file': '.github/ISSUE_TEMPLATE/sweep-refactor.yml', 'suggestion_content': 'The `placeholder` attribute for the textarea is "We are migrating this function to ... version because ...", which is not very clear. Consider providing a more specific placeholder.\n', 'existing_code': 'placeholder: We are migrating this function to ... version because ...\n', 'improved_code': 'placeholder: We are migrating this function to version 2.0 because it provides better performance.\n', 'relevant_lines_start': 11, 'relevant_lines_end': 11, 'label': 'enhancement'}]}
+        self.publish_summarizes_suggestions(data)
+        # try:
+        #     get_logger().info('Generating code suggestions for PR...')
+        #     if get_settings().config.publish_output:
+        #         self.git_provider.publish_comment("Preparing suggestions...", is_temporary=True)
+        #
+        #     get_logger().info('Preparing PR code suggestions...')
+        #     if not self.is_extended:
+        #         await retry_with_fallback_models(self._prepare_prediction)
+        #         data = self._prepare_pr_code_suggestions()
+        #     else:
+        #         data = await retry_with_fallback_models(self._prepare_prediction_extended)
+        #     if (not data) or (not 'code_suggestions' in data):
+        #         get_logger().info('No code suggestions found for PR.')
+        #         return
+        #
+        #     if (not self.is_extended and get_settings().pr_code_suggestions.rank_suggestions) or \
+        #             (self.is_extended and get_settings().pr_code_suggestions.rank_extended_suggestions):
+        #         get_logger().info('Ranking Suggestions...')
+        #         data['code_suggestions'] = await self.rank_suggestions(data['code_suggestions'])
+        #
+        #     if get_settings().config.publish_output:
+        #         get_logger().info('Pushing PR code suggestions...')
+        #         self.git_provider.remove_initial_comment()
+        #         if get_settings().pr_code_suggestions.summarize:
+        #             get_logger().info('Pushing summarize code suggestions...')
+        #             self.publish_summarizes_suggestions(data)
+        #         else:
+        #             get_logger().info('Pushing inline code suggestions...')
+        #             self.push_inline_code_suggestions(data)
+        # except Exception as e:
+        #     get_logger().error(f"Failed to generate code suggestions for PR, error: {e}")
 
     async def _prepare_prediction(self, model: str):
         get_logger().info('Getting PR diff...')
@@ -299,7 +302,7 @@ class PRCodeSuggestions:
 
     def publish_summarizes_suggestions(self, data: Dict):
         try:
-            data_markdown = "## PR Code Suggestions\n\n"
+            pr_body = "## PR Code Suggestions\n\n"
 
             language_extension_map_org = get_settings().language_extension_map_org
             extension_to_language = {}
@@ -307,30 +310,96 @@ class PRCodeSuggestions:
                 for ext in extensions:
                     extension_to_language[ext] = language
 
-            for s in data['code_suggestions']:
-                try:
-                    extension_s = s['relevant_file'].rsplit('.')[-1]
-                    code_snippet_link = self.git_provider.get_line_link(s['relevant_file'], s['relevant_lines_start'],
-                                                                        s['relevant_lines_end'])
-                    label = s['label'].strip()
-                    data_markdown += f"\n💡 [{label}]\n\n**{s['suggestion_content'].rstrip().rstrip()}**\n\n"
-                    if code_snippet_link:
-                        data_markdown += f" File: [{s['relevant_file']} ({s['relevant_lines_start']}-{s['relevant_lines_end']})]({code_snippet_link})\n\n"
-                    else:
-                        data_markdown += f"File: {s['relevant_file']} ({s['relevant_lines_start']}-{s['relevant_lines_end']})\n\n"
-                    if self.git_provider.is_supported("gfm_markdown"):
-                        data_markdown += "<details> <summary> Example code:</summary>\n\n"
-                        data_markdown += f"___\n\n"
+            pr_body += "<table>"
+            header = f"Suggestions"
+            delta = 65
+            header += "&nbsp; " * delta
+            pr_body += f"""<thead><tr><th></th><th>{header}</th></tr></thead>"""
+            pr_body += """<tbody>"""
+            suggestions_labels = dict()
+            # add all suggestions related to to each label
+            for suggestion in data['code_suggestions']:
+                label = suggestion['label'].strip().strip("'").strip('"')
+                if label not in suggestions_labels:
+                    suggestions_labels[label] = []
+                suggestions_labels[label].append(suggestion)
+
+            for label, suggestions in suggestions_labels.items():
+                pr_body += f"""<tr><td><strong>{label}</strong></td>"""
+                pr_body += f"""<td><table>"""
+                for suggestion in suggestions:
+
+                    relevant_file = suggestion['relevant_file'].strip()
+                    relevant_lines_start = int(suggestion['relevant_lines_start'])
+                    relevant_lines_end = int(suggestion['relevant_lines_end'])
+                    code_snippet_link = self.git_provider.get_line_link(relevant_file, relevant_lines_start,
+                                                                        relevant_lines_end)
+                    # add html table for each suggestion
+
+                    suggestion_content = suggestion['suggestion_content'].rstrip().rstrip()
+                    suggestion_content = insert_br_after_x_chars(suggestion_content, 90)
+                    # pr_body += f"<tr><td><details><summary>{suggestion_content}</summary>"
+                    existing_code = suggestion['existing_code'].rstrip()
+                    improved_code = suggestion['improved_code'].rstrip()
                     language_name = "python"
+                    extension_s = suggestion['relevant_file'].rsplit('.')[-1]
                     if extension_s and (extension_s in extension_to_language):
                         language_name = extension_to_language[extension_s]
-                    data_markdown += f"Existing code:\n```{language_name}\n{s['existing_code'].rstrip()}\n```\n"
-                    data_markdown += f"Improved code:\n```{language_name}\n{s['improved_code'].rstrip()}\n```\n"
+                    example_code = ""
                     if self.git_provider.is_supported("gfm_markdown"):
-                        data_markdown += "</details>\n"
-                    data_markdown += "\n___\n\n"
-                except Exception as e:
-                    get_logger().error(f"Could not parse suggestion: {s}, error: {e}")
-            self.git_provider.publish_comment(data_markdown)
+                        example_code = "<details> <summary> Example code:</summary>\n\n"
+                        example_code += f"___\n\n"
+                    example_code += f"Existing code:\n```{language_name}\n{existing_code}\n```\n"
+                    example_code += f"Improved code:\n```{language_name}\n{improved_code}\n```\n"
+                    if self.git_provider.is_supported("gfm_markdown"):
+                        example_code += "</details>\n"
+                    pr_body += f"""
+<tr>
+  <td>
+  
+  
+**{suggestion_content}**
+    
+[{relevant_file} [{relevant_lines_start}-{relevant_lines_end}]]({code_snippet_link})
+
+{example_code}
+  </td>
+
+</tr>                    
+"""
+                pr_body += """</table></td></tr>"""
+            pr_body += """</tr></tbody></table>"""
+            # for s in data['code_suggestions']:
+            #     try:
+            #         extension_s = s['relevant_file'].rsplit('.')[-1]
+            #         code_snippet_link = self.git_provider.get_line_link(s['relevant_file'], s['relevant_lines_start'],
+            #                                                             s['relevant_lines_end'])
+            #         label = s['label'].strip()
+            #         data_markdown += f"\n💡 [{label}]\n\n**{s['suggestion_content'].rstrip().rstrip()}**\n\n"
+            #         if code_snippet_link:
+            #             data_markdown += f" File: [{s['relevant_file']} ({s['relevant_lines_start']}-{s['relevant_lines_end']})]({code_snippet_link})\n\n"
+            #         else:
+            #             data_markdown += f"File: {s['relevant_file']} ({s['relevant_lines_start']}-{s['relevant_lines_end']})\n\n"
+            #         if self.git_provider.is_supported("gfm_markdown"):
+            #             data_markdown += "<details> <summary> Example code:</summary>\n\n"
+            #             data_markdown += f"___\n\n"
+            #         language_name = "python"
+            #         if extension_s and (extension_s in extension_to_language):
+            #             language_name = extension_to_language[extension_s]
+            #         data_markdown += f"Existing code:\n```{language_name}\n{s['existing_code'].rstrip()}\n```\n"
+            #         data_markdown += f"Improved code:\n```{language_name}\n{s['improved_code'].rstrip()}\n```\n"
+            #         if self.git_provider.is_supported("gfm_markdown"):
+            #             data_markdown += "</details>\n"
+            #         data_markdown += "\n___\n\n"
+            #
+            #         pr_body += f"""<tr><td><b>{label}</b></td><td><a href="{code_snippet_link}">{s['relevant_file']}</a></td></tr>"""
+            #         # in the right side of the table, add two collapsable sections with the existing and improved code
+            #         pr_body += f"""<tr><td></td><td><details><summary>Existing code</summary><pre><code>{s['existing_code'].rstrip()}</code></pre></details></td></tr>"""
+            #         pr_body += f"""<tr><td></td><td><details><summary>Improved code</summary><pre><code>{s['improved_code'].rstrip()}</code></pre></details></td></tr>"""
+            #
+            #
+            #     except Exception as e:
+            #         get_logger().error(f"Could not parse suggestion: {s}, error: {e}")
+            self.git_provider.publish_comment(pr_body)
         except Exception as e:
             get_logger().info(f"Failed to publish summarized code suggestions, error: {e}")
