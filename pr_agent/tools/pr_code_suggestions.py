@@ -326,7 +326,9 @@ class PRCodeSuggestions:
 
             for label, suggestions in suggestions_labels.items():
                 pr_body += f"""<tr><td><strong>{label}</strong></td>"""
-                pr_body += f"""<td><table>"""
+                pr_body += f"""<td>"""
+                pr_body += f"""<details><summary>{len(suggestions)} suggestions</summary>"""
+                pr_body += f"""<table>"""
                 for suggestion in suggestions:
 
                     relevant_file = suggestion['relevant_file'].strip()
@@ -367,7 +369,10 @@ class PRCodeSuggestions:
 
 </tr>                    
 """
-                pr_body += """</table></td></tr>"""
+
+                pr_body += """</table>"""
+                pr_body += "</details>"
+                pr_body += """</td></tr>"""
             pr_body += """</tr></tbody></table>"""
             # for s in data['code_suggestions']:
             #     try:
