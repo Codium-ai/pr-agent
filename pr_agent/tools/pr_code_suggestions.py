@@ -8,7 +8,7 @@ from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAIHandler
 from pr_agent.algo.pr_processing import get_pr_diff, get_pr_multi_diffs, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import load_yaml
+from pr_agent.algo.utils import load_yaml, replace_code_tags
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
@@ -327,7 +327,7 @@ class PRCodeSuggestions:
             for label, suggestions in suggestions_labels.items():
                 pr_body += f"""<tr><td><strong>{label}</strong></td>"""
                 pr_body += f"""<td>"""
-                pr_body += f"""<details><summary>{len(suggestions)} suggestions</summary>"""
+                # pr_body += f"""<details><summary>{len(suggestions)} suggestions</summary>"""
                 pr_body += f"""<table>"""
                 for suggestion in suggestions:
 
@@ -344,83 +344,43 @@ class PRCodeSuggestions:
                     # add html table for each suggestion
 
                     suggestion_content = suggestion['suggestion_content'].rstrip().rstrip()
+                    # backticks
+                    suggestion_content = replace_code_tags(suggestion_content)
+
                     suggestion_content = insert_br_after_x_chars(suggestion_content, 90)
                     # pr_body += f"<tr><td><details><summary>{suggestion_content}</summary>"
                     existing_code = suggestion['existing_code'].rstrip()+"\n"
                     improved_code = suggestion['improved_code'].rstrip()+"\n"
-                    language_name = "python"
-                    diff = difflib.unified_diff(existing_code.split('\n'),
-                                                improved_code.split('\n'))
-                    patch_orig = "\n".join(diff)
-                    print(patch_orig)
-                    patch = "\n".join(patch_orig.splitlines()[5:]).strip('\n')
-                    extension_s = suggestion['relevant_file'].rsplit('.')[-1]
-                    if extension_s and (extension_s in extension_to_language):
-                        language_name = extension_to_language[extension_s]
 
-                    if len(suggestions) > 1:
-                        example_code = "<details> <summary>Preview code:</summary>\n\n"
-                    else:
-                        example_code = ""
-                    example_code += f"___\n\n"
-                    if len(suggestions) == 1:
-                        example_code +="Preview code:\n"
+                    diff = difflib.unified_diff(existing_code.split('\n'),
+                                                improved_code.split('\n'), n=999)
+                    patch_orig = "\n".join(diff)
+                    patch = "\n".join(patch_orig.splitlines()[5:]).strip('\n')
+
+                    example_code = ""
                     example_code += f"```diff\n{patch}\n```\n"
-                    # example_code += f"Existing code:\n```{language_name}\n{existing_code}\n```\n"
-                    # example_code += f"Improved code:\n```{language_name}\n{improved_code}\n```\n"
-                    if len(suggestions) > 1:
-                        example_code += "</details>\n"
+
+                    pr_body += f"""<tr><td>"""
+                    suggestion_summary = suggestion['one_sentence_summary'].strip()
+                    suggestion_summary= suggestion_summary + max((77-len(suggestion_summary)), 0)*"&nbsp;"
+                    pr_body += f"""\n\n<details><summary>{suggestion_summary}</summary>\n\n___\n\n"""
 
                     pr_body += f"""
-<tr>
-  <td>
   
   
 **{suggestion_content}**
     
 [{relevant_file} {range_str}]({code_snippet_link})
 
-{example_code}
-  </td>
-
-</tr>                    
+{example_code}                   
 """
+                    pr_body += f"</details>"
+                    pr_body += f"</td></tr>"
 
                 pr_body += """</table>"""
-                pr_body += "</details>"
+                # pr_body += "</details>"
                 pr_body += """</td></tr>"""
             pr_body += """</tr></tbody></table>"""
-            # for s in data['code_suggestions']:
-            #     try:
-            #         extension_s = s['relevant_file'].rsplit('.')[-1]
-            #         code_snippet_link = self.git_provider.get_line_link(s['relevant_file'], s['relevant_lines_start'],
-            #                                                             s['relevant_lines_end'])
-            #         label = s['label'].strip()
-            #         data_markdown += f"\n💡 [{label}]\n\n**{s['suggestion_content'].rstrip().rstrip()}**\n\n"
-            #         if code_snippet_link:
-            #             data_markdown += f" File: [{s['relevant_file']} ({s['relevant_lines_start']}-{s['relevant_lines_end']})]({code_snippet_link})\n\n"
-            #         else:
-            #             data_markdown += f"File: {s['relevant_file']} ({s['relevant_lines_start']}-{s['relevant_lines_end']})\n\n"
-            #         if self.git_provider.is_supported("gfm_markdown"):
-            #             data_markdown += "<details> <summary> Example code:</summary>\n\n"
-            #             data_markdown += f"___\n\n"
-            #         language_name = "python"
-            #         if extension_s and (extension_s in extension_to_language):
-            #             language_name = extension_to_language[extension_s]
-            #         data_markdown += f"Existing code:\n```{language_name}\n{s['existing_code'].rstrip()}\n```\n"
-            #         data_markdown += f"Improved code:\n```{language_name}\n{s['improved_code'].rstrip()}\n```\n"
-            #         if self.git_provider.is_supported("gfm_markdown"):
-            #             data_markdown += "</details>\n"
-            #         data_markdown += "\n___\n\n"
-            #
-            #         pr_body += f"""<tr><td><b>{label}</b></td><td><a href="{code_snippet_link}">{s['relevant_file']}</a></td></tr>"""
-            #         # in the right side of the table, add two collapsable sections with the existing and improved code
-            #         pr_body += f"""<tr><td></td><td><details><summary>Existing code</summary><pre><code>{s['existing_code'].rstrip()}</code></pre></details></td></tr>"""
-            #         pr_body += f"""<tr><td></td><td><details><summary>Improved code</summary><pre><code>{s['improved_code'].rstrip()}</code></pre></details></td></tr>"""
-            #
-            #
-            #     except Exception as e:
-            #         get_logger().error(f"Could not parse suggestion: {s}, error: {e}")
             self.git_provider.publish_comment(pr_body)
         except Exception as e:
             get_logger().info(f"Failed to publish summarized code suggestions, error: {e}")

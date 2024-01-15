@@ -47,14 +47,15 @@ Extra instructions from the user:
 ======
 {%- endif %}
 
-The output must be a YAML object equivalent to type PRCodeSuggestions, according to the following Pydantic definitions:
+The output must be a YAML object equivalent to type $PRCodeSuggestions, according to the following Pydantic definitions:
 =====
 class CodeSuggestion(BaseModel):
     relevant_file: str = Field(description="the relevant file full path")
     suggestion_content: str = Field(description="an actionable suggestion for meaningfully improving the new code introduced in the PR")
 {%- if summarize_mode %}
-    existing_code: str = Field(description="a short code snippet from a '__new hunk__' section to illustrate the relevant existing code. Don't show the line numbers. Shorten parts of the code ('...') if needed")
-    improved_code: str = Field(description="a short code snippet to illustrate the improved code, after applying the suggestion. Shorten parts of the code ('...') if needed")
+    existing_code: str = Field(description="a short code snippet from a '__new hunk__' section to illustrate the relevant existing code. Don't show the line numbers.")
+    improved_code: str = Field(description="a short code snippet to illustrate the improved code, after applying the suggestion.")
+    one_sentence_summary:str = Field(description="a short summary of the suggestion action, in a single sentence. Focus on the 'what'. Be general, and avoid method or variable names.")
 {%- else %}
     existing_code: str = Field(description="a code snippet, demonstrating the relevant code lines from a '__new hunk__' section. It must be contiguous, correctly formatted and indented, and without line numbers")
     improved_code: str = Field(description="a new code snippet, that can be used to replace the relevant lines in '__new hunk__' code. Replacement suggestions should be complete, correctly formatted and indented, and without line numbers")
@@ -75,12 +76,23 @@ code_suggestions:
     src/file1.py
   suggestion_content: |-
     Add a docstring to func1()
+{%- if summarize_mode %}
+  existing_code: |-
+    def func1():
+  improved_code: |-
+    ...
+  one_sentence_summary: |-
+    ...
+  relevant_lines_start: 12
+  relevant_lines_end: 12
+{%- else %}
   existing_code: |-
     def func1():
   relevant_lines_start: 12
   relevant_lines_end: 12
   improved_code: |-
     ...
+{%- endif %}
   label: |-
     ...
 ```
