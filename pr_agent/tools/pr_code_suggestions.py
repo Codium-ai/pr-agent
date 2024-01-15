@@ -14,7 +14,7 @@ from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
 from pr_agent.log import get_logger
 from pr_agent.tools.pr_description import insert_br_after_x_chars
-
+import difflib
 
 class PRCodeSuggestions:
     def __init__(self, pr_url: str, cli_mode=False, args: list = None,
@@ -312,7 +312,7 @@ class PRCodeSuggestions:
 
             pr_body += "<table>"
             header = f"Suggestions"
-            delta = 65
+            delta = 77
             header += "&nbsp; " * delta
             pr_body += f"""<thead><tr><th></th><th>{header}</th></tr></thead>"""
             pr_body += """<tbody>"""
@@ -334,6 +334,11 @@ class PRCodeSuggestions:
                     relevant_file = suggestion['relevant_file'].strip()
                     relevant_lines_start = int(suggestion['relevant_lines_start'])
                     relevant_lines_end = int(suggestion['relevant_lines_end'])
+                    range_str = ""
+                    if relevant_lines_start == relevant_lines_end:
+                        range_str = f"[{relevant_lines_start}]"
+                    else:
+                        range_str = f"[{relevant_lines_start}-{relevant_lines_end}]"
                     code_snippet_link = self.git_provider.get_line_link(relevant_file, relevant_lines_start,
                                                                         relevant_lines_end)
                     # add html table for each suggestion
@@ -341,20 +346,31 @@ class PRCodeSuggestions:
                     suggestion_content = suggestion['suggestion_content'].rstrip().rstrip()
                     suggestion_content = insert_br_after_x_chars(suggestion_content, 90)
                     # pr_body += f"<tr><td><details><summary>{suggestion_content}</summary>"
-                    existing_code = suggestion['existing_code'].rstrip()
-                    improved_code = suggestion['improved_code'].rstrip()
+                    existing_code = suggestion['existing_code'].rstrip()+"\n"
+                    improved_code = suggestion['improved_code'].rstrip()+"\n"
                     language_name = "python"
+                    diff = difflib.unified_diff(existing_code.split('\n'),
+                                                improved_code.split('\n'))
+                    patch_orig = "\n".join(diff)
+                    print(patch_orig)
+                    patch = "\n".join(patch_orig.splitlines()[5:]).strip('\n')
                     extension_s = suggestion['relevant_file'].rsplit('.')[-1]
                     if extension_s and (extension_s in extension_to_language):
                         language_name = extension_to_language[extension_s]
-                    example_code = ""
-                    if self.git_provider.is_supported("gfm_markdown"):
-                        example_code = "<details> <summary> Example code:</summary>\n\n"
-                        example_code += f"___\n\n"
-                    example_code += f"Existing code:\n```{language_name}\n{existing_code}\n```\n"
-                    example_code += f"Improved code:\n```{language_name}\n{improved_code}\n```\n"
-                    if self.git_provider.is_supported("gfm_markdown"):
+
+                    if len(suggestions) > 1:
+                        example_code = "<details> <summary>Preview code:</summary>\n\n"
+                    else:
+                        example_code = ""
+                    example_code += f"___\n\n"
+                    if len(suggestions) == 1:
+                        example_code +="Preview code:\n"
+                    example_code += f"```diff\n{patch}\n```\n"
+                    # example_code += f"Existing code:\n```{language_name}\n{existing_code}\n```\n"
+                    # example_code += f"Improved code:\n```{language_name}\n{improved_code}\n```\n"
+                    if len(suggestions) > 1:
                         example_code += "</details>\n"
+
                     pr_body += f"""
 <tr>
   <td>
@@ -362,7 +378,7 @@ class PRCodeSuggestions:
   
 **{suggestion_content}**
     
-[{relevant_file} [{relevant_lines_start}-{relevant_lines_end}]]({code_snippet_link})
+[{relevant_file} {range_str}]({code_snippet_link})
 
 {example_code}
   </td>
