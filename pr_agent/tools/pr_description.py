@@ -399,7 +399,7 @@ class PRDescription:
                         filename = filename.strip()
                         link = self.git_provider.get_line_link(filename, relevant_line_start=-1)
 
-                    file_change_description = self._insert_br_after_x_chars(file_change_description, x=(delta - 5))
+                    file_change_description = insert_br_after_x_chars(file_change_description, x=(delta - 5))
                     pr_body += f"""
 <tr>
   <td>
@@ -427,25 +427,25 @@ class PRDescription:
             pass
         return pr_body
 
-    def _insert_br_after_x_chars(self, text, x=70):
-        """
-        Insert <br> into a string after a word that increases its length above x characters.
-        """
-        if len(text) < x:
-            return text
+def insert_br_after_x_chars(text, x=70):
+    """
+    Insert <br> into a string after a word that increases its length above x characters.
+    """
+    if len(text) < x:
+        return text
 
-        words = text.split(' ')
-        new_text = ""
-        current_length = 0
+    words = text.split(' ')
+    new_text = ""
+    current_length = 0
 
-        for word in words:
-            # Check if adding this word exceeds x characters
-            if current_length + len(word) > x:
-                new_text += "<br>"  # Insert line break
-                current_length = 0  # Reset counter
+    for word in words:
+        # Check if adding this word exceeds x characters
+        if current_length + len(word) > x:
+            new_text += "<br>"  # Insert line break
+            current_length = 0  # Reset counter
 
-            # Add the word to the new text
-            new_text += word + " "
-            current_length += len(word) + 1  # Add 1 for the space
+        # Add the word to the new text
+        new_text += word + " "
+        current_length += len(word) + 1  # Add 1 for the space
 
-        return new_text.strip()  # Remove trailing space
+    return new_text.strip()  # Remove trailing space

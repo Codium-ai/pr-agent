@@ -475,3 +475,12 @@ def clip_tokens(text: str, max_tokens: int, add_three_dots=True) -> str:
     except Exception as e:
         get_logger().warning(f"Failed to clip tokens: {e}")
         return text
+
+def replace_code_tags(text):
+    """
+    Replace odd instances of ` with <code> and even instances of ` with </code>
+    """
+    parts = text.split('`')
+    for i in range(1, len(parts), 2):
+        parts[i] = '<code>' + parts[i] + '</code>'
+    return ''.join(parts)
