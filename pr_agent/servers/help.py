@@ -231,3 +231,86 @@ Note that the tool does not have "memory" of previous questions, and answers eac
         output += f"\n\nSee the [ask usage](https://github.com/Codium-ai/pr-agent/blob/main/docs/ASK.md) page for a comprehensive guide on using this tool.\n\n"
 
         return output
+
+
+    @staticmethod
+    def get_improve_usage_guide():
+        output = "**Overview:**\n"
+        output += "The improve tool scans the PR code changes, and automatically generates suggestions for improving the PR code. "
+        output += "The tool can be triggered [automatically](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#github-app-automatic-tools) every time a new PR is opened, or can be invoked manually by commenting on a PR.\n"
+        output += """\
+When commenting, to edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L69) related to the improve tool (`pr_code_suggestions` section), use the following template:
+
+```
+/improve --pr_code_suggestions.some_config1=... --pr_code_suggestions.some_config2=...
+```
+
+With a [configuration file](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#working-with-github-app), use the following template:
+
+```
+[pr_code_suggestions]
+some_config1=...
+some_config2=...
+```
+    
+"""
+        output += "\n\n<table>"
+
+        # automation
+        output += "<tr><td><details> <summary><strong> Enabling\\disabling automation </strong></summary><hr>\n\n"
+        output += """\
+When you first install the app, the [default mode](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#github-app-automatic-tools) for the improve tool is:
+
+```
+pr_commands = ["/improve --pr_code_suggestions.summarize=true", ...]
+```
+
+meaning the `improve` tool will run automatically on every PR, with summarization enabled. Delete this line to disable the tool from running automatically.
+"""
+        output += "\n\n</details></td></tr>\n\n"
+
+        # extra instructions
+        output += "<tr><td><details> <summary><strong> Utilizing extra instructions</strong></summary><hr>\n\n"
+        output += '''\
+Extra instructions are very important for the `improve` tool, since they enable to guide the model to suggestions that are more relevant to the specific needs of the project.
+
+Be specific, clear, and concise in the instructions. With extra instructions, you are the prompter. Specify relevant aspects that you want the model to focus on.
+
+Examples for extra instructions:
+
+```
+[pr_code_suggestions] # /improve #
+extra_instructions="""
+Emphasize the following aspects:
+- Does the code logic cover relevant edge cases?
+- Is the code logic clear and easy to understand?
+- Is the code logic efficient?
+...
+"""
+```
+
+Use triple quotes to write multi-line instructions. Use bullet points to make the instructions more readable.
+    '''
+        output += "\n\n</details></td></tr>\n\n"
+
+        # suggestions quality
+        output += "\n\n<tr><td><details> <summary><strong> A note on code suggestions quality</strong></summary><hr> \n\n"
+        output += """\
+- While the current AI for code is getting better and better (GPT-4), it's not flawless. Not all the suggestions will be perfect, and a user should not accept all of them automatically.
+- Suggestions are not meant to be simplistic. Instead, they aim to give deep feedback and raise questions, ideas and thoughts to the user, who can then use his judgment, experience, and understanding of the code base.
+- Recommended to use the 'extra_instructions' field to guide the model to suggestions that are more relevant to the specific needs of the project.
+- Best quality will be obtained by using 'improve --extended' mode.
+
+"""
+        output += "\n\n</details></td></tr>\n\n"\
+
+        # general
+        output += "\n\n<tr><td><details> <summary><strong> More PR-Agent commands</strong></summary><hr> \n\n"
+        output += HelpMessage.get_general_bot_help_text()
+        output += "\n\n</details></td></tr>\n\n"
+
+        output += "</table>"
+
+        output += f"\n\nSee the [improve usage](https://github.com/Codium-ai/pr-agent/blob/main/docs/IMPROVE.md) page for a more comprehensive guide on using this tool.\n\n"
+
+        return output
