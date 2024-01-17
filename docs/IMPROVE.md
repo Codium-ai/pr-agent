@@ -19,11 +19,12 @@ The tool can be triggered automatically every time a new PR is [opened](https://
 ### Summarized vs commitable code suggestions
 
 The code suggestions can appear as a single comment (`pr_code_suggestions.summarize=true`):
+___
 <kbd><img src=https://codium.ai/images/pr_agent/code_suggestions_as_comment.png width="768"></kbd>
+___
 
 Or as a separate commitable code comment for each suggestion:
-
-
+___
 <kbd><img src=https://codium.ai/images/pr_agent/improve.png width="768"></kbd>
 
 ---
@@ -50,7 +51,8 @@ To edit [configurations](./../pr_agent/settings/configuration.toml#L66) related 
 - `extra_instructions`: Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".
 - `rank_suggestions`: if set to true, the tool will rank the suggestions, based on importance. Default is false.
 - `include_improved_code`: if set to true, the tool will include an improved code implementation in the suggestion. Default is true.
-
+- `summarize`: if set to true, the tool will display the suggestions in a single comment. Default is false.
+- `enable_help_text`: if set to true, the tool will display a help text in the comment. Default is true.
 #### params for '/improve --extended' mode
 - `auto_extended_mode`: enable extended mode automatically (no need for the `--extended` option). Default is false.
 - `num_code_suggestions_per_chunk`: number of code suggestions provided by the 'improve' tool, per chunk. Default is 8.
