@@ -10,21 +10,24 @@
     - [A note on code suggestions quality](#a-note-on-code-suggestions-quality)
 
 ## Overview
-The `improve` tool scans the PR code changes, and automatically generates committable suggestions for improving the PR code.
+The `improve` tool scans the PR code changes, and automatically generates suggestions for improving the PR code.
 The tool can be triggered automatically every time a new PR is [opened](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#github-app-automatic-tools), or it can be invoked manually by commenting on any PR:
 ```
 /improve
 ```
 
-For example:
+The suggestions can appear as a collapsible comment (pr_code_suggestions.summarize=true):
+<kbd><img src=https://codium.ai/images/pr_agent/code_suggestions_as_comment.png width="768"></kbd>
 
-<kbd><img src=https://codium.ai/images/pr_agent/improve_comment.png width="768"></kbd>
+Or as a separate commitable comment for each suggestion:
 
----
 
 <kbd><img src=https://codium.ai/images/pr_agent/improve.png width="768"></kbd>
 
 ---
+Note that  a collapsible comment has a significantly smaller PR footprint.
+
+### Extended mode
 
 An extended mode, which does not involve PR Compression and provides more comprehensive suggestions, can be invoked by commenting on any PR:
 ```
@@ -53,19 +56,6 @@ To edit [configurations](./../pr_agent/settings/configuration.toml#L66) related 
 - `max_number_of_calls`: maximum number of chunks. Default is 5.
 - `final_clip_factor`: factor to remove suggestions with low confidence. Default is 0.9.
 
-#### Summarize mode
-In this mode, instead of presenting committable suggestions, the different suggestions will be combined into a single compact comment, with significantly smaller PR footprint.
-
-To invoke the summarize mode, use the following command:
-```
-/improve --pr_code_suggestions.summarize=true
-```
-
-For example:
-
-<kbd><img src=https://codium.ai/images/pr_agent/improved_summerize_open.png width="768"></kbd>
-
-___
 
 ## Usage Tips
 
@@ -86,10 +76,6 @@ Emphasize the following aspects:
 """
 ```
 Use triple quotes to write multi-line instructions. Use bullet points to make the instructions more readable.
-
-### PR footprint - regular vs summarize mode
-The default mode of the `improve` tool provides committable suggestions. This mode as a high PR footprint, since each suggestion is a separate comment you need to resolve.
-If you prefer something more compact, use the [`summarize`](#summarize-mode) mode, which combines all the suggestions into a single comment.
 
 ### A note on code suggestions quality
 
