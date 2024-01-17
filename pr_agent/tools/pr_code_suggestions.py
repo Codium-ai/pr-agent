@@ -80,15 +80,14 @@ class PRCodeSuggestions:
             if get_settings().config.publish_output:
                 get_logger().info('Pushing PR code suggestions...')
                 self.git_provider.remove_initial_comment()
-                if get_settings().pr_code_suggestions.summarize:
+                if get_settings().pr_code_suggestions.summarize and self.git_provider.is_supported("gfm_markdown"):
                     get_logger().info('Pushing summarize code suggestions...')
 
                     # generate summarized suggestions
                     pr_body = self.generate_summarized_suggestions(data)
 
                     # add usage guide
-                    if self.git_provider.is_supported(
-                            "gfm_markdown") and get_settings().pr_code_suggestions.enable_help_text:
+                    if get_settings().pr_code_suggestions.enable_help_text:
                         pr_body += "<hr>\n\n<details> <summary><strong>✨ Usage guide:</strong></summary><hr> \n\n"
                         pr_body += HelpMessage.get_improve_usage_guide()
                         pr_body += "\n</details>\n"
