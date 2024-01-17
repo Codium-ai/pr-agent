@@ -2,6 +2,7 @@
 ## Table of Contents
 - [Overview](#overview)
   - [Configuration options](#configuration-options)
+  - [Inline file summary 💎](#inline-file-summary-)
   - [Handle custom labels from the Repo's labels page :gem:](#handle-custom-labels-from-the-repos-labels-page-gem)
   - [Markers template](#markers-template)
 - [Usage Tips](#usage-tips)
