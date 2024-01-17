@@ -16,16 +16,18 @@ The tool can be triggered automatically every time a new PR is [opened](https://
 /improve
 ```
 
-The suggestions can appear as a collapsible comment (pr_code_suggestions.summarize=true):
+### Summarized vs commitable code suggestions
+
+The code suggestions can appear as a single comment (`pr_code_suggestions.summarize=true`):
 <kbd><img src=https://codium.ai/images/pr_agent/code_suggestions_as_comment.png width="768"></kbd>
 
-Or as a separate commitable comment for each suggestion:
+Or as a separate commitable code comment for each suggestion:
 
 
 <kbd><img src=https://codium.ai/images/pr_agent/improve.png width="768"></kbd>
 
 ---
-Note that  a collapsible comment has a significantly smaller PR footprint.
+Note that  a single comment has a significantly smaller PR footprint. We recommend this mode for most cases.
 
 ### Extended mode
 
