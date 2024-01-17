@@ -28,7 +28,8 @@ ___
 <kbd><img src=https://codium.ai/images/pr_agent/improve.png width="768"></kbd>
 
 ---
-Note that  a single comment has a significantly smaller PR footprint. We recommend this mode for most cases.
+Note that a single comment has a significantly smaller PR footprint. We recommend this mode for most cases.
+Also note that collapsible are not supported in _Bitbucket_. Hence, the suggestions are presented there as code comments.
 
 ### Extended mode
 
