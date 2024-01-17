@@ -19,6 +19,29 @@ Making pull requests less painful with an AI agent
     <img alt="GitHub" src="https://img.shields.io/github/last-commit/Codium-ai/pr-agent/main?style=for-the-badge" height="20">
     </a>
 </div>
+
+## News and Updates
+### Jan 18, 2024
+We are very happy to share our new paper:
+**"Code Generation with AlphaCodium: From Prompt Engineering to Flow Engineering".** 
+
+Go checkout our official implementation [here](https://github.com/Codium-ai/AlphaCodium)
+
+### Jan 17, 2024
+- The `improve` tool now can present suggestion in a nice collapsible format, which significantly reduces the PR footprint. See [here](https://github.com/Codium-ai/pr-agent/blob/main/docs/IMPROVE.md#summarized-vs-commitable-code-suggestions) for more details. 
+- To accompany the improved interface of the  `improve` tool, we change the [default automation settings](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L116) of our GithupApp to:
+```
+pr_commands = [
+    "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true",
+    "/review --pr_reviewer.num_code_suggestions=0",
+    "/improve --pr_code_suggestions.summarize=true",
+]
+```
+meaning that by default, for each PR the `describe`, `review`, and `improve` tools will be triggered automatically, and the `improve` tool will present the suggestions in a single comment.  
+You can of course overwrite these defaults by adding a `.pr_agent.toml` file to your repo. See [here](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#working-with-github-app).
+
+
+## Overview
 <div style="text-align:left;">
 
 CodiumAI PR-Agent is an open-source tool to help efficiently review and handle pull requests. It automatically analyzes the pull request and can provide several types of commands:
