@@ -55,7 +55,7 @@ To enable inline file summary, set `pr_description.inline_file_summary=true` in 
 When the feature is enabled, PR-Agent Pro will add a collapsable summary of each file change in the "Files changed" tab.
 This will enable you to quickly understand the changes in each file, while reviewing the code changes (diff view).
 
-<kbd><img src=https://codium.ai/images/pr_agent/diffview_changes.png width="768"></kbd>
+<kbd><img src=https://codium.ai/images/pr_agent/diffview_changes.png width="1024"></kbd>
 
 *Note that this feature is currently available only for GitHub.
 
