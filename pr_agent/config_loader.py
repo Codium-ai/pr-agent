@@ -34,7 +34,7 @@ global_settings = Dynaconf(
 def get_settings():
     try:
         return context["settings"]
-    except Exception:
+    except Exception as e:
         return global_settings
 
 
@@ -44,7 +44,7 @@ def _find_repository_root() -> Path:
     Identify project root directory by recursively searching for the .git directory in the parent directories.
     """
     cwd = Path.cwd().resolve()
-    no_way_up = False
+    no_way_up = True
     while not no_way_up:
         no_way_up = cwd == cwd.parent
         if (cwd / ".git").is_dir():
