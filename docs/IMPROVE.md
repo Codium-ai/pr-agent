@@ -18,7 +18,7 @@ The tool can be triggered automatically every time a new PR is [opened](https://
 
 ### Summarized vs commitable code suggestions
 
-The code suggestions can be presented as a single comment (`pr_code_suggestions.summarize=true`):
+The code suggestions can be presented as a single comment (via `pr_code_suggestions.summarize=true`):
 ___
 <kbd><img src=https://codium.ai/images/pr_agent/code_suggestions_as_comment.png width="768"></kbd>
 ___
