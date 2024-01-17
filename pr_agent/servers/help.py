@@ -236,7 +236,7 @@ Note that the tool does not have "memory" of previous questions, and answers eac
     @staticmethod
     def get_improve_usage_guide():
         output = "**Overview:**\n"
-        output += "The improve tool scans the PR code changes, and automatically generates suggestions for improving the PR code. "
+        output += "The `improve` tool scans the PR code changes, and automatically generates suggestions for improving the PR code. "
         output += "The tool can be triggered [automatically](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#github-app-automatic-tools) every time a new PR is opened, or can be invoked manually by commenting on a PR.\n"
         output += """\
 When commenting, to edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L69) related to the improve tool (`pr_code_suggestions` section), use the following template:
