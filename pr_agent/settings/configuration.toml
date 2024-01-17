@@ -72,6 +72,7 @@ summarize = false
 include_improved_code = true
 extra_instructions = ""
 rank_suggestions = false
+enable_help_text=true
 # params for '/improve --extended' mode
 auto_extended_mode=false
 num_code_suggestions_per_chunk=8

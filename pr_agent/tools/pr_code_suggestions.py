@@ -13,6 +13,7 @@ from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
 from pr_agent.log import get_logger
+from pr_agent.servers.help import HelpMessage
 from pr_agent.tools.pr_description import insert_br_after_x_chars
 import difflib
 
@@ -81,7 +82,18 @@ class PRCodeSuggestions:
                 self.git_provider.remove_initial_comment()
                 if get_settings().pr_code_suggestions.summarize:
                     get_logger().info('Pushing summarize code suggestions...')
-                    self.publish_summarizes_suggestions(data)
+
+                    # generate summarized suggestions
+                    pr_body = self.generate_summarized_suggestions(data)
+
+                    # add usage guide
+                    if self.git_provider.is_supported(
+                            "gfm_markdown") and get_settings().pr_code_suggestions.enable_help_text:
+                        pr_body += "<hr>\n\n<details> <summary><strong>✨ Usage guide:</strong></summary><hr> \n\n"
+                        pr_body += HelpMessage.get_improve_usage_guide()
+                        pr_body += "\n</details>\n"
+
+                    self.git_provider.publish_comment(pr_body)
                 else:
                     get_logger().info('Pushing inline code suggestions...')
                     self.push_inline_code_suggestions(data)
@@ -298,7 +310,7 @@ class PRCodeSuggestions:
 
         return data_sorted
 
-    def publish_summarizes_suggestions(self, data: Dict):
+    def generate_summarized_suggestions(self, data: Dict) -> str:
         try:
             pr_body = "## PR Code Suggestions\n\n"
 
@@ -379,6 +391,7 @@ class PRCodeSuggestions:
                 # pr_body += "</details>"
                 pr_body += """</td></tr>"""
             pr_body += """</tr></tbody></table>"""
-            self.git_provider.publish_comment(pr_body)
+            return pr_body
         except Exception as e:
             get_logger().info(f"Failed to publish summarized code suggestions, error: {e}")
+            return ""
