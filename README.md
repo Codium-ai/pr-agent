@@ -20,6 +20,17 @@ Making pull requests less painful with an AI agent
     </a>
 </div>
 
+## Table of Contents
+- [News and Updates](#news-and-updates)
+- [Overview](#overview)
+- [Example results](#example-results)
+- [Features overview](#features-overview)
+- [Try it now](#try-it-now)
+- [Installation](#installation)
+- [PR-Agent Pro 💎](#pr-agent-pro-)
+- [How it works](#how-it-works)
+- [Why use PR-Agent?](#why-use-pr-agent)
+  
 ## News and Updates
 ### Jan 18, 2024
 We are very happy to share our new paper:
@@ -72,14 +83,6 @@ See the [Usage Guide](./Usage.md) for running the PR-Agent commands via differen
 
 See the [Tools Guide](./docs/TOOLS_GUIDE.md) for a detailed description of the different tools (tools are run via the commands).
 
-## Table of Contents
-- [Example results](#example-results)
-- [Features overview](#features-overview)
-- [Try it now](#try-it-now)
-- [Installation](#installation)
-- [PR-Agent Pro 💎](#pr-agent-pro-)
-- [How it works](#how-it-works)
-- [Why use PR-Agent?](#why-use-pr-agent)
 
 ## Example results
 </div>
