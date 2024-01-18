@@ -68,6 +68,8 @@ class PRCodeSuggestions:
                 data = self._prepare_pr_code_suggestions()
             else:
                 data = await retry_with_fallback_models(self._prepare_prediction_extended)
+
+
             if (not data) or (not 'code_suggestions' in data):
                 get_logger().info('No code suggestions found for PR.')
                 return
@@ -330,7 +332,7 @@ class PRCodeSuggestions:
             pr_body += f"""<thead><tr><th></th><th>{header}</th></tr></thead>"""
             pr_body += """<tbody>"""
             suggestions_labels = dict()
-            # add all suggestions related to to each label
+            # add all suggestions related to each label
             for suggestion in data['code_suggestions']:
                 label = suggestion['label'].strip().strip("'").strip('"')
                 if label not in suggestions_labels:
