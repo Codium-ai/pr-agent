@@ -86,6 +86,7 @@ class PRDescription:
             if self.prediction:
                 self._prepare_data()
             else:
+                self.git_provider.remove_initial_comment()
                 return None
 
             if get_settings().pr_description.enable_semantic_files_types:
@@ -135,26 +136,17 @@ class PRDescription:
         return ""
 
     async def _prepare_prediction(self, model: str) -> None:
-        """
-        Prepare the AI prediction for the PR description based on the provided model.
-
-        Args:
-            model (str): The name of the model to be used for generating the prediction.
-
-        Returns:
-            None
-
-        Raises:
-            Any exceptions raised by the 'get_pr_diff' and '_get_prediction' functions.
-
-        """
         if get_settings().pr_description.use_description_markers and 'pr_agent:' not in self.user_description:
             return None
 
         get_logger().info(f"Getting PR diff {self.pr_id}")
         self.patches_diff = get_pr_diff(self.git_provider, self.token_handler, model)
-        get_logger().info(f"Getting AI prediction {self.pr_id}")
-        self.prediction = await self._get_prediction(model)
+        if self.patches_diff:
+            get_logger().info(f"Getting AI prediction {self.pr_id}")
+            self.prediction = await self._get_prediction(model)
+        else:
+            get_logger().error(f"Error getting PR diff {self.pr_id}")
+            self.prediction = None
 
     async def _get_prediction(self, model: str) -> str:
         """
