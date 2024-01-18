@@ -313,6 +313,10 @@ class PRCodeSuggestions:
         try:
             pr_body = "## PR Code Suggestions\n\n"
 
+            if len(data.get('code_suggestions', [])) == 0:
+                pr_body += "No suggestions found to improve this PR."
+                return pr_body
+
             language_extension_map_org = get_settings().language_extension_map_org
             extension_to_language = {}
             for language, extensions in language_extension_map_org.items():
