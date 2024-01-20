@@ -230,14 +230,11 @@ class GithubProvider(GitProvider):
             if get_settings().config.verbosity_level >= 2:
                 get_logger().error(f"Failed to publish inline comments")
 
-            if (
-                getattr(e, "status", None) == 422
-                and get_settings().github.publish_inline_comments_fallback_with_verification
-                and not disable_fallback
-            ):
+            if (getattr(e, "status", None) == 422
+                    and get_settings().github.publish_inline_comments_fallback_with_verification and not disable_fallback):
                 pass  # continue to try _publish_inline_comments_fallback_with_verification
             else:
-                raise e
+                raise e # will end up with publishing the comments one by one
 
             try:
                 self._publish_inline_comments_fallback_with_verification(comments)
@@ -273,19 +270,6 @@ class GithubProvider(GitProvider):
                 except:
                     if get_settings().config.verbosity_level >= 2:
                         get_logger().error(f"Failed to publish invalid comment as a single line comment: {comment}")
-
-        # verified_comments, invalid_comments = self._verify_inline_comments(comments)
-        # if invalid_comments and get_settings().github.try_fix_invalid_inline_comments:
-        #     fixed_comments = self._try_fix_invalid_inline_comments([comment for comment, _ in invalid_comments])
-        #     verified_fixed_comments, invalid_fixed_comments = self._verify_inline_comments(fixed_comments)
-        #     verified_comments += verified_fixed_comments
-        #     invalid_comments += invalid_fixed_comments
-        # if invalid_comments and get_settings().config.verbosity_level >= 2:
-        #     get_logger().error(f"Dropped {len(invalid_comments)} invalid comments: {invalid_comments}")
-        # if verified_comments:
-        #     self.pr.create_review(commit=self.last_commit_id, comments=verified_comments)
-        # elif get_settings().config.verbosity_level >= 2:
-        #     get_logger().error("Dropped all comments - no verified comments left to publish")
 
     def _verify_code_comment(self, comment: dict):
         is_verified = False
