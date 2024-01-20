@@ -98,6 +98,8 @@ extra_instructions = ""
 deployment_type = "user"
 ratelimit_retries = 5
 base_url = "https://api.github.com"
+publish_inline_comments_fallback_with_verification = true
+try_fix_invalid_inline_comments = true
 
 [github_action]
 # auto_review = true    # set as env var in .github/workflows/pr-agent.yaml
