@@ -315,7 +315,7 @@ class GithubProvider(GitProvider):
         fixed_comments = []
         for comment in invalid_comments:
             try:
-                fixed_comment = copy.copy(comment)  # avoid modifying the original comment dict for later logging
+                fixed_comment = copy.deepcopy(comment)  # avoid modifying the original comment dict for later logging
                 if "```suggestion" in comment["body"]:
                     fixed_comment["body"] = comment["body"].split("```suggestion")[0]
                 if "start_line" in comment:
