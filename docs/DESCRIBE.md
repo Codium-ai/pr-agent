@@ -20,7 +20,7 @@ For example:
 ___
 <kbd><img src=https://codium.ai/images/pr_agent/describe_comment.png width="768"></kbd>
 ___
-<kbd><img src=https://codium.ai/images/pr_agent/describe.png width="768"></kbd>
+<kbd><img src=https://codium.ai/images/pr_agent/describe_new.png width="768"></kbd>
 ___
   
 ### Configuration options

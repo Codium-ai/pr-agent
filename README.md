@@ -89,7 +89,7 @@ See the [Tools Guide](./docs/TOOLS_GUIDE.md) for a detailed description of the d
 <h4><a href="https://github.com/Codium-ai/pr-agent/pull/530">/describe</a></h4>
 <div align="center">
 <p float="center">
-<img src="https://www.codium.ai/images/pr_agent/describe_short_main.png" width="800">
+<img src="https://www.codium.ai/images/pr_agent/describe_new_short_main.png" width="800">
 </p>
 </div>
 <hr>
