@@ -1,4 +1,4 @@
-# Custom Suggestions Tool
+# Custom Suggestions Tool 💎
 
 ## Table of Contents
 - [Overview](#overview)
