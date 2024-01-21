@@ -8,7 +8,7 @@
 
 ## Overview
 The `custom_suggestions` tool scans the PR code changes, and automatically generates custom suggestions for improving the PR code.
-It shares similarities with the `imrpove` tool, but with one main difference: the `custom_suggestions` tool will only propose suggestion that follow specific guidelines defined by the prompt in: `pr_custom_suggestions.prompt` configuration.
+It shares similarities with the `improve` tool, but with one main difference: the `custom_suggestions` tool will only propose suggestion that follow specific guidelines defined by the prompt in: `pr_custom_suggestions.prompt` configuration.
 
 The tool can be triggered [automatically](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#github-app-automatic-tools) every time a new PR is opened, or can be invoked manually by commenting on a PR.
 
@@ -57,6 +57,9 @@ ___
 ___
 
 ## Configuration options
+
 `prompt`: the prompt for the tool. Should be a multi-line string.
+
 `num_code_suggestions`: number of code suggestions provided by the 'custom_suggestions' tool. Default is 4.
+
 `enable_help_text`: if set to true, the tool will display a help text in the comment. Default is true.
