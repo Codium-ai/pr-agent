@@ -333,10 +333,11 @@ class PRDescription:
             try:
                 filename = file['filename'].replace("'", "`").replace('"', '`')
                 changes_summary = file['changes_summary']
+                changes_title = file['changes_title'].strip()
                 label = file.get('label')
                 if label not in self.file_label_dict:
                     self.file_label_dict[label] = []
-                self.file_label_dict[label].append((filename, changes_summary))
+                self.file_label_dict[label].append((filename, changes_title, changes_summary))
             except Exception as e:
                 get_logger().error(f"Error preparing file label dict {self.pr_id}: {e}")
                 pass
@@ -357,9 +358,9 @@ class PRDescription:
         try:
             pr_body += "<table>"
             header = f"Relevant files"
-            delta = 65
-            header += "&nbsp; " * delta
-            pr_body += f"""<thead><tr><th></th><th>{header}</th></tr></thead>"""
+            delta = 77
+            # header += "&nbsp; " * delta
+            pr_body += f"""<thead><tr><th></th><th align="left">{header}</th></tr></thead>"""
             pr_body += """<tbody>"""
             for semantic_label in value.keys():
                 s_label = semantic_label.strip("'").strip('"')
@@ -370,19 +371,24 @@ class PRDescription:
                     pr_body += f"""<td><details><summary>{len(list_tuples)} files</summary><table>"""
                 else:
                     pr_body += f"""<td><table>"""
-                for filename, file_change_description in list_tuples:
+                for filename, file_changes_title, file_change_description in list_tuples:
                     filename = filename.replace("'", "`")
                     filename_publish = filename.split("/")[-1]
-                    filename_publish = f"{filename_publish}"
-                    if len(filename_publish) < (delta - 5):
-                        filename_publish += "&nbsp; " * ((delta - 5) - len(filename_publish))
+                    file_changes_title_br = insert_br_after_x_chars(file_changes_title, x=(delta - 5),
+                                                                    new_line_char="\n\n")
+                    file_changes_title_extended = file_changes_title_br.strip() + "</code>"
+                    if len(file_changes_title_extended) < (delta - 5):
+                        file_changes_title_extended += "&nbsp; " * ((delta - 5) - len(file_changes_title_extended))
+                    filename_publish = f"<strong>{filename_publish}</strong><dd><code>{file_changes_title_extended}</dd>"
                     diff_plus_minus = ""
+                    delta_nbsp = ""
                     diff_files = self.git_provider.diff_files
                     for f in diff_files:
                         if f.filename.lower() == filename.lower():
                             num_plus_lines = f.num_plus_lines
                             num_minus_lines = f.num_minus_lines
                             diff_plus_minus += f"+{num_plus_lines}/-{num_minus_lines}"
+                            delta_nbsp = "&nbsp; " * max(0, (8 - len(diff_plus_minus)))
                             break
 
                     # try to add line numbers link to code suggestions
@@ -391,21 +397,19 @@ class PRDescription:
                         filename = filename.strip()
                         link = self.git_provider.get_line_link(filename, relevant_line_start=-1)
 
-                    file_change_description = insert_br_after_x_chars(file_change_description, x=(delta - 5))
+                    file_change_description_br = insert_br_after_x_chars(file_change_description, x=(delta - 5))
                     pr_body += f"""
 <tr>
   <td>
     <details>
-      <summary><strong>{filename_publish}</strong></summary>
-      <ul>
-        {filename}<br><br>
+      <summary>{filename_publish}</summary>
+<hr>
 
-**{file_change_description}**
-</ul>
+{filename}
+{file_change_description_br}
     </details>
   </td>
-  <td><a href="{link}"> {diff_plus_minus}</a></td>
-
+  <td><a href="{link}">{diff_plus_minus}</a>{delta_nbsp}</td>
 </tr>                    
 """
                 if use_collapsible_file_list:
@@ -419,25 +423,48 @@ class PRDescription:
             pass
         return pr_body
 
-def insert_br_after_x_chars(text, x=70):
+def insert_br_after_x_chars(text, x=70, new_line_char="<br> "):
     """
     Insert <br> into a string after a word that increases its length above x characters.
     """
     if len(text) < x:
         return text
 
-    words = text.split(' ')
+    lines = text.splitlines()
+    words = []
+    for i,line in enumerate(lines):
+        words += line.split(' ')
+        if i<len(lines)-1:
+            words[-1] += "\n"
+
+
+    # words = text.split(' ')
+
     new_text = ""
     current_length = 0
-
+    is_inside_code = False
     for word in words:
         # Check if adding this word exceeds x characters
         if current_length + len(word) > x:
-            new_text += "<br>"  # Insert line break
-            current_length = 0  # Reset counter
+            if not is_inside_code:
+                new_text += f"{new_line_char} "  # Insert line break
+                current_length = 0  # Reset counter
+            else:
+                new_text += f"`{new_line_char} `"
+        # check if inside <code> tag
+        if word.startswith("`") and not is_inside_code and not word.endswith("`"):
+            is_inside_code = True
+        if word.endswith("`"):
+            is_inside_code = False
 
         # Add the word to the new text
-        new_text += word + " "
+        if word.endswith("\n"):
+            new_text += word
+        else:
+            new_text += word + " "
         current_length += len(word) + 1  # Add 1 for the space
 
+
+        if word.endswith("\n"):
+            current_length = 0
     return new_text.strip()  # Remove trailing space
