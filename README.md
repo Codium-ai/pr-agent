@@ -32,11 +32,8 @@ Making pull requests less painful with an AI agent
 - [Why use PR-Agent?](#why-use-pr-agent)
   
 ## News and Updates
-### Jan 18, 2024
-We are very happy to share our new paper:
-**"Code Generation with AlphaCodium: From Prompt Engineering to Flow Engineering".** 
-
-Go checkout our official implementation [here](https://github.com/Codium-ai/AlphaCodium)
+### Jan 21, 2024
+- 💎 Custom suggestions - A new tool, `/custom_suggestions`, was added to PR-Agent Pro. The tool will only propose suggestion that follow specific guidelines defined by a prompt given by the user. See [here](https://github.com/Codium-ai/pr-agent/blob/main/docs/CUSTOM_SUGGESTIONS.md) for more details.
 
 ### Jan 17, 2024
 - 💎 Inline file summary - The `describe` tool has a new option `--pr_description.inline_file_summary`, which allows to add a summary of each file changes to the Diffview page. See [here](https://github.com/Codium-ai/pr-agent/blob/main/docs/DESCRIBE.md#inline-file-summary-)
@@ -164,6 +161,7 @@ See the [Tools Guide](./docs/TOOLS_GUIDE.md) for a detailed description of the d
 |       | ⮑ [Inline file summary](https://github.com/Codium-ai/pr-agent/blob/main/docs/DESCRIBE.md#inline-file-summary-) 💎                       |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |
 |       | Improve                                     |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |
 |       | ⮑ Extended                                 |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |
+|       | [Custom_suggestions](https://github.com/Codium-ai/pr-agent/blob/main/docs/CUSTOM_SUGGESTIONS.md)         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |
 |       | Reflect and Review                          |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |
 |       | Update CHANGELOG.md                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |
 |       | Find Similar Issue                          |   :white_check_mark:    |                         |                             |
