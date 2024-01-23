@@ -182,9 +182,9 @@ For enhanced user experience, the `describe` tool can add file summaries directl
 This will enable you to quickly understand the changes in each file, while reviewing the code changes (diffs).
 
 To enable inline file summary, set `pr_description.inline_file_summary` in the configuration file, possible values are:
-- 'table': File changes walkthrough table will be displayed on the top of the "Files changed" tab, in addition to the "Conversation" tab.
-- true: A collapsable file comment with changes title and a changes summary for each file in the PR.
-- false: File changes walkthrough will be added only to the "Conversation" tab.
+- `'table'`: File changes walkthrough table will be displayed on the top of the "Files changed" tab, in addition to the "Conversation" tab.
+- `true`: A collapsable file comment with changes title and a changes summary for each file in the PR.
+- `false` (default): File changes walkthrough will be added only to the "Conversation" tab.
 """
         # extra instructions
         output += "<tr><td><details> <summary><strong> Utilizing extra instructions</strong></summary><hr>\n\n"
