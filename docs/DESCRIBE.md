@@ -50,12 +50,15 @@ To edit [configurations](./../pr_agent/settings/configuration.toml#L46) related 
 - `collapsible_file_list`: if set to true, the file list in the "Changes walkthrough" section will be collapsible. If set to "adaptive", the file list will be collapsible only if there are more than 8 files. Default is "adaptive".
   
 ### Inline file summary 💎
-To enable inline file summary, set `pr_description.inline_file_summary=true` in the configuration file.
+> This feature is available only in PR-Agent Pro
 
-When the feature is enabled, PR-Agent Pro will add a collapsable summary of each file change in the "Files changed" tab.
 This will enable you to quickly understand the changes in each file, while reviewing the code changes (diff view).
-
+To enable inline file summary, set `pr_description.inline_file_summary` in the configuration file, possible values are:
+- `'table'`: File changes walkthrough table will be displayed on the top of the "Files changed" tab, in addition to the "Conversation" tab.
+<kbd><img src=https://codium.ai/images/pr_agent/diffview-table.png width="1024"></kbd>
+- `true`: A collapsable file comment with changes title and a changes summary for each file in the PR.
 <kbd><img src=https://codium.ai/images/pr_agent/diffview_changes.png width="1024"></kbd>
+- `false` (`default`): File changes walkthrough will be added only to the "Conversation" tab.
 
 *Note that this feature is currently available only for GitHub.
 
