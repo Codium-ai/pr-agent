@@ -37,8 +37,8 @@ Making pull requests less painful with an AI agent
 See [here](https://github.com/Codium-ai/pr-agent/blob/main/docs/CUSTOM_SUGGESTIONS.md) for more details.
 
 ### Jan 17, 2024
-- 💎 Inline file summary - The `describe` tool has a new option, `--pr_description.inline_file_summary`, which allows adding a summary of each file change to the Diffview page. See [here](https://github.com/Codium-ai/pr-agent/blob/main/docs/DESCRIBE.md#inline-file-summary-)
-- The `improve` tool now can present suggestions in a nice collapsible format, which significantly reduces the PR footprint. See [here](https://github.com/Codium-ai/pr-agent/blob/main/docs/IMPROVE.md#summarized-vs-commitable-code-suggestions) for more details. 
+- 💎 Inline file summary - The `describe` tool has a new option `--pr_description.inline_file_summary`, which allows to add a summary of each file changes to the Diffview page. See [here](https://github.com/Codium-ai/pr-agent/blob/main/docs/DESCRIBE.md#inline-file-summary-)
+- The `improve` tool can now present suggestions in a nice collapsible format, which significantly reduces the PR footprint. See [here](https://github.com/Codium-ai/pr-agent/blob/main/docs/IMPROVE.md#summarized-vs-commitable-code-suggestions) for more details. 
 - To accompany the improved interface of the  `improve` tool, we change the [default automation settings](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L116) of our GithupApp to:
 ```
 pr_commands = [
