@@ -144,7 +144,7 @@ class PRCodeSuggestions:
         # remove invalid suggestions
         suggestion_list = []
         for i, suggestion in enumerate(data['code_suggestions']):
-            if (get_settings().pr_code_suggestions.include_improved_code and suggestion['existing_code'] != suggestion['improved_code']) or not get_settings().pr_code_suggestions.include_improved_code:
+            if 'improved_code' in suggestion and suggestion['existing_code'] != suggestion['improved_code']:
                 suggestion_list.append(suggestion)
             else:
                 get_logger().debug(
