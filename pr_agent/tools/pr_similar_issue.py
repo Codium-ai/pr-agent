@@ -5,7 +5,6 @@ from typing import List
 import openai
 import pandas as pd
 import pinecone
-import lancedb
 from pinecone_datasets import Dataset, DatasetMetadata
 from pydantic import BaseModel, Field
 
@@ -108,6 +107,7 @@ class PRSimilarIssue:
                     get_logger().info('No new issues to update')
         
         elif get_settings().pr_similar_issue.vectordb == "lancedb":
+            import lancedb # import lancedb only if needed
             self.db = lancedb.connect(get_settings().lancedb.uri)
             self.table = None
 

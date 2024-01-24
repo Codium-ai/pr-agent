@@ -36,7 +36,7 @@ persistent_comment=true
 extra_instructions = ""
 # review labels
 enable_review_labels_security=true
-enable_review_labels_effort=false
+enable_review_labels_effort=true
 # specific configurations for incremental review (/review -i)
 require_all_thresholds_for_incremental_review=false
 minimal_commits_for_incremental_review=0
@@ -69,8 +69,7 @@ enable_help_text=true
 
 [pr_code_suggestions] # /improve #
 num_code_suggestions=4
-summarize = false
-include_improved_code = true
+summarize = true
 extra_instructions = ""
 rank_suggestions = false
 enable_help_text=true

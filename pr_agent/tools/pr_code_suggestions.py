@@ -169,35 +169,19 @@ class PRCodeSuggestions:
                 if new_code_snippet:
                     new_code_snippet = self.dedent_code(relevant_file, relevant_lines_start, new_code_snippet)
 
-                if get_settings().pr_code_suggestions.include_improved_code:
-                    body = f"**Suggestion:** {content} [{label}]\n```suggestion\n" + new_code_snippet + "\n```"
-                    code_suggestions.append({'body': body, 'relevant_file': relevant_file,
+                body = f"**Suggestion:** {content} [{label}]\n```suggestion\n" + new_code_snippet + "\n```"
+                code_suggestions.append({'body': body, 'relevant_file': relevant_file,
                                              'relevant_lines_start': relevant_lines_start,
                                              'relevant_lines_end': relevant_lines_end})
-                else:
-                    if self.git_provider.is_supported("create_inline_comment"):
-                        body = f"**Suggestion:** {content} [{label}]"
-                        comment = self.git_provider.create_inline_comment(body, relevant_file, "",
-                                                                          absolute_position=relevant_lines_end)
-                        if comment:
-                            code_suggestions.append(comment)
-                    else:
-                        get_logger().error("Inline comments are not supported by the git provider")
             except Exception:
                 if get_settings().config.verbosity_level >= 2:
                     get_logger().info(f"Could not parse suggestion: {d}")
 
-        if get_settings().pr_code_suggestions.include_improved_code:
-            is_successful = self.git_provider.publish_code_suggestions(code_suggestions)
-        else:
-            is_successful = self.git_provider.publish_inline_comments(code_suggestions)
+        is_successful = self.git_provider.publish_code_suggestions(code_suggestions)
         if not is_successful:
             get_logger().info("Failed to publish code suggestions, trying to publish each suggestion separately")
             for code_suggestion in code_suggestions:
-                if get_settings().pr_code_suggestions.include_improved_code:
-                    self.git_provider.publish_code_suggestions([code_suggestion])
-                else:
-                    self.git_provider.publish_inline_comments([code_suggestion])
+                self.git_provider.publish_code_suggestions([code_suggestion])
 
     def dedent_code(self, relevant_file, relevant_lines_start, new_code_snippet):
         try:  # dedent code snippet
