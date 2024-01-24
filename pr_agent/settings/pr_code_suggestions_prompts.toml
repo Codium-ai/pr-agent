@@ -81,8 +81,10 @@ code_suggestions:
 {%- if summarize_mode %}
   existing_code: |-
     def func1():
+  {%- if include_improved_code %}
   improved_code: |-
     ...
+  {%- endif %}
   one_sentence_summary: |-
     ...
   relevant_lines_start: 12

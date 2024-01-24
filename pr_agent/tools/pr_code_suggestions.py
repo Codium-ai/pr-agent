@@ -351,16 +351,17 @@ class PRCodeSuggestions:
 
                     suggestion_content = insert_br_after_x_chars(suggestion_content, 90)
                     # pr_body += f"<tr><td><details><summary>{suggestion_content}</summary>"
-                    existing_code = suggestion['existing_code'].rstrip()+"\n"
-                    improved_code = suggestion['improved_code'].rstrip()+"\n"
+                    if get_settings().pr_code_suggestions.include_improved_code:
+                        existing_code = suggestion['existing_code'].rstrip()+"\n"
+                        improved_code = suggestion['improved_code'].rstrip()+"\n"
 
-                    diff = difflib.unified_diff(existing_code.split('\n'),
-                                                improved_code.split('\n'), n=999)
-                    patch_orig = "\n".join(diff)
-                    patch = "\n".join(patch_orig.splitlines()[5:]).strip('\n')
+                        diff = difflib.unified_diff(existing_code.split('\n'),
+                                                    improved_code.split('\n'), n=999)
+                        patch_orig = "\n".join(diff)
+                        patch = "\n".join(patch_orig.splitlines()[5:]).strip('\n')
 
-                    example_code = ""
-                    example_code += f"```diff\n{patch}\n```\n"
+                        example_code = ""
+                        example_code += f"```diff\n{patch}\n```\n"
 
                     pr_body += f"""<tr><td>"""
                     suggestion_summary = suggestion['one_sentence_summary'].strip()
