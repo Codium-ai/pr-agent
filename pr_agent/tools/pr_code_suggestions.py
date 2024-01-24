@@ -169,15 +169,16 @@ class PRCodeSuggestions:
                 relevant_lines_end = int(d['relevant_lines_end'])
                 content = d['suggestion_content'].rstrip()
                 label = d['label'].strip()
+                body = f"**Suggestion:** {content} [{label}]\n"
 
                 if get_settings().pr_code_suggestions.include_improved_code:
                     new_code_snippet = d['improved_code'].rstrip()
-                    if new_code_snippet:
-                        new_code_snippet = self.dedent_code(relevant_file, relevant_lines_start, new_code_snippet)
-                    body = f"**Suggestion:** {content} [{label}]\n```suggestion\n" + new_code_snippet + "\n```"
-                    code_suggestions.append({'body': body, 'relevant_file': relevant_file,
-                                             'relevant_lines_start': relevant_lines_start,
-                                             'relevant_lines_end': relevant_lines_end})
+                    new_code_snippet = self.dedent_code(relevant_file, relevant_lines_start, new_code_snippet)
+                    body += f"```suggestion\n" + new_code_snippet + "\n```"
+
+                code_suggestions.append({'body': body, 'relevant_file': relevant_file,
+                                            'relevant_lines_start': relevant_lines_start,
+                                            'relevant_lines_end': relevant_lines_end})
             except Exception:
                 if get_settings().config.verbosity_level >= 2:
                     get_logger().info(f"Could not parse suggestion: {d}")
