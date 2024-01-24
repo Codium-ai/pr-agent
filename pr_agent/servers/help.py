@@ -95,7 +95,7 @@ The `review` tool can auto-generate two specific types of labels for a PR:
 The `review` tool provides a collection of possible feedbacks about a PR.
 It is recommended to review the [possible options](https://github.com/Codium-ai/pr-agent/blob/main/docs/REVIEW.md#enabledisable-features), and choose the ones relevant for your use case.
 Some of the feature that are disabled by default are quite useful, and should be considered for enabling. For example: 
-`require_score_review`, `require_soc2_ticket`, `enable_review_labels_effort`, and more.
+`require_score_review`, `require_soc2_ticket`, and more.
 """
         output += "\n\n</details></td></tr>\n\n"
 

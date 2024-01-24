@@ -49,7 +49,7 @@ This sub-tool checks if the PR description properly contains a ticket to a proje
 - `soc2_ticket_prompt`: The prompt for the SOC2 ticket review. Default is: `Does the PR description include a link to ticket in a project management system (e.g., Jira, Asana, Trello, etc.) ?`. Edit this field if your compliance requirements are different.
 #### Adding PR labels
 - `enable_review_labels_security`: if set to true, the tool will publish a 'possible security issue' label if it detects a security issue. Default is true.
-- `enable_review_labels_effort`: if set to true, the tool will publish a 'Review effort [1-5]: x' label. Default is false.
+- `enable_review_labels_effort`: if set to true, the tool will publish a 'Review effort [1-5]: x' label. Default is true.
 
 ###  Incremental Mode
 Incremental review only considers changes since the last PR-Agent review. This can be useful when working on the PR in an iterative manner, and you want to focus on the changes since the last review instead of reviewing the entire PR again.
@@ -103,7 +103,7 @@ The `review` tool provides a collection of possible feedbacks about a PR.
 It is recommended to review the [Configuration options](#configuration-options) section, and choose the relevant options for your use case.
 
 Some of the feature that are disabled by default are quite useful, and should be considered for enabling. For example: 
-`require_score_review`, `require_soc2_ticket`, `enable_review_labels_effort`, and more.
+`require_score_review`, `require_soc2_ticket`, and more.
 
 On the other hand, if you find one of the enabled features to be irrelevant for your use case, disable it. No default configuration can fit all use cases.
 
