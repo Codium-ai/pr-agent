@@ -30,7 +30,7 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
         output_data (dict): A dictionary containing data to be converted to markdown format.
     Returns:
         str: The markdown formatted text generated from the input dictionary.
-    """    
+    """
     markdown_text = ""
 
     emojis = {
@@ -336,7 +336,11 @@ def load_yaml(response_text: str, keys_fix_yaml: List[str] = []) -> dict:
 def try_fix_yaml(response_text: str, keys_fix_yaml: List[str] = []) -> dict:
     response_text_lines = response_text.split('\n')
 
-    keys = ['relevant line:', 'suggestion content:', 'relevant file:', 'existing code:', 'improved code:']
+    keys = ['relevant line:', 'suggestion content:', 'relevant file:']
+    if 'existing_code' in keys_fix_yaml:
+        keys.append('existing code:')
+    if 'improved_code' in keys_fix_yaml:
+        keys.append('improved code:')
     keys = keys + keys_fix_yaml
     # first fallback - try to convert 'relevant line: ...' to relevant line: |-\n        ...'
     response_text_lines_copy = response_text_lines.copy()

@@ -52,6 +52,7 @@ The output must be a YAML object equivalent to type $PRCodeSuggestions, accordin
 class CodeSuggestion(BaseModel):
     relevant_file: str = Field(description="the relevant file full path")
     suggestion_content: str = Field(description="an actionable suggestion for meaningfully improving the new code introduced in the PR")
+{%- if include_improved_code %}
 {%- if summarize_mode %}
     existing_code: str = Field(description="a short code snippet from a '__new hunk__' section to illustrate the relevant existing code. Don't show the line numbers.")
     improved_code: str = Field(description="a short code snippet to illustrate the improved code, after applying the suggestion.")
@@ -59,6 +60,7 @@ class CodeSuggestion(BaseModel):
 {%- else %}
     existing_code: str = Field(description="a code snippet, demonstrating the relevant code lines from a '__new hunk__' section. It must be contiguous, correctly formatted and indented, and without line numbers")
     improved_code: str = Field(description="a new code snippet, that can be used to replace the relevant lines in '__new hunk__' code. Replacement suggestions should be complete, correctly formatted and indented, and without line numbers")
+{%- endif %}
 {%- endif %}
     relevant_lines_start: int = Field(description="The relevant line number, from a '__new hunk__' section, where the suggestion starts (inclusive). Should be derived from the hunk line numbers, and correspond to the 'existing code' snippet above")
     relevant_lines_end: int = Field(description="The relevant line number, from a '__new hunk__' section, where the suggestion ends (inclusive). Should be derived from the hunk line numbers, and correspond to the 'existing code' snippet above")
@@ -88,8 +90,10 @@ code_suggestions:
 {%- else %}
   existing_code: |-
     def func1():
+{%- endif %}
   relevant_lines_start: 12
   relevant_lines_end: 12
+{%- if include_improved_code %}
   improved_code: |-
     ...
 {%- endif %}

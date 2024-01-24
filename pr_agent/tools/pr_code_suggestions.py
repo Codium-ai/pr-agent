@@ -48,6 +48,7 @@ class PRCodeSuggestions:
             "diff": "",  # empty diff for initial calculation
             "num_code_suggestions": num_code_suggestions,
             "summarize_mode": get_settings().pr_code_suggestions.summarize,
+            "include_improved_code": get_settings().pr_code_suggestions.include_improved_code,
             "extra_instructions": get_settings().pr_code_suggestions.extra_instructions,
             "commit_messages_str": self.git_provider.get_commit_messages(),
         }
@@ -131,15 +132,19 @@ class PRCodeSuggestions:
 
     def _prepare_pr_code_suggestions(self) -> Dict:
         review = self.prediction.strip()
-        data = load_yaml(review,
-                         keys_fix_yaml=["relevant_file", "suggestion_content", "existing_code", "improved_code"])
+        keys_fix_yaml=["relevant_file", "suggestion_content"]
+        if get_settings().pr_code_suggestions.include_improved_code:
+            keys_fix_yaml.append("existing_code")
+            keys_fix_yaml.append("improved_code")
+
+        data = load_yaml(review, keys_fix_yaml=keys_fix_yaml)
         if isinstance(data, list):
             data = {'code_suggestions': data}
 
         # remove invalid suggestions
         suggestion_list = []
         for i, suggestion in enumerate(data['code_suggestions']):
-            if suggestion['existing_code'] != suggestion['improved_code']:
+            if (get_settings().pr_code_suggestions.include_improved_code and suggestion['existing_code'] != suggestion['improved_code']) or not get_settings().pr_code_suggestions.include_improved_code:
                 suggestion_list.append(suggestion)
             else:
                 get_logger().debug(
@@ -163,13 +168,12 @@ class PRCodeSuggestions:
                 relevant_lines_start = int(d['relevant_lines_start'])  # absolute position
                 relevant_lines_end = int(d['relevant_lines_end'])
                 content = d['suggestion_content'].rstrip()
-                new_code_snippet = d['improved_code'].rstrip()
                 label = d['label'].strip()
 
-                if new_code_snippet:
-                    new_code_snippet = self.dedent_code(relevant_file, relevant_lines_start, new_code_snippet)
-
                 if get_settings().pr_code_suggestions.include_improved_code:
+                    new_code_snippet = d['improved_code'].rstrip()
+                    if new_code_snippet:
+                        new_code_snippet = self.dedent_code(relevant_file, relevant_lines_start, new_code_snippet)
                     body = f"**Suggestion:** {content} [{label}]\n```suggestion\n" + new_code_snippet + "\n```"
                     code_suggestions.append({'body': body, 'relevant_file': relevant_file,
                                              'relevant_lines_start': relevant_lines_start,
