@@ -70,6 +70,7 @@ enable_help_text=true
 [pr_code_suggestions] # /improve #
 num_code_suggestions=4
 summarize = true
+include_improved_code = false
 extra_instructions = ""
 rank_suggestions = false
 enable_help_text=true
