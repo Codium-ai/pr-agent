@@ -50,6 +50,9 @@ pr_commands = [
 Meaning that by default, for each PR the `describe`, `review`, and `improve` tools will be triggered automatically, and the `improve` tool will present the suggestions in a single comment.  
 You can of course overwrite these defaults by adding a `.pr_agent.toml` file to your repo. See [here](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#working-with-github-app).
 
+### Jan 10, 2024
+[LanceDB](https://lancedb.com/) is now supported as a locally hosted VectorDB for the `similar_issue` tool. See [here](./docs/SIMILAR_ISSUE.md) for more details.
+
 
 ## Overview
 <div style="text-align:left;">

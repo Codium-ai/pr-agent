@@ -45,7 +45,7 @@ To edit [configurations](./../pr_agent/settings/configuration.toml#L19)  related
 - `require_estimate_effort_to_review`: if set to true, the tool will add a section that estimates thed effort needed to review the PR. Default is true.
 #### SOC2 ticket compliance 💎
 This sub-tool checks if the PR description properly contains a ticket to a project management system (e.g., Jira, Asana, Trello, etc.), as required by SOC2 compliance. If not, it will add a label to the PR: "Missing SOC2 ticket".
-- `require_soc2_review`: If set to true, the SOC2 ticket checker sub-tool will be enabled. Default is false.
+- `require_soc2_ticket`: If set to true, the SOC2 ticket checker sub-tool will be enabled. Default is false.
 - `soc2_ticket_prompt`: The prompt for the SOC2 ticket review. Default is: `Does the PR description include a link to ticket in a project management system (e.g., Jira, Asana, Trello, etc.) ?`. Edit this field if your compliance requirements are different.
 #### Adding PR labels
 - `enable_review_labels_security`: if set to true, the tool will publish a 'possible security issue' label if it detects a security issue. Default is true.
@@ -103,7 +103,7 @@ The `review` tool provides a collection of possible feedbacks about a PR.
 It is recommended to review the [Configuration options](#configuration-options) section, and choose the relevant options for your use case.
 
 Some of the feature that are disabled by default are quite useful, and should be considered for enabling. For example: 
-`require_score_review`, `require_soc2_review`, `enable_review_labels_effort`, and more.
+`require_score_review`, `require_soc2_ticket`, `enable_review_labels_effort`, and more.
 
 On the other hand, if you find one of the enabled features to be irrelevant for your use case, disable it. No default configuration can fit all use cases.
 
