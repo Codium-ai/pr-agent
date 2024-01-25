@@ -190,7 +190,8 @@ class PRCodeSuggestions:
             original_initial_line = None
             for file in self.diff_files:
                 if file.filename.strip() == relevant_file:
-                    original_initial_line = file.head_file.splitlines()[relevant_lines_start - 1]
+                    if file.head_file:  # in bitbucket, head_file is empty. toDo: fix this
+                        original_initial_line = file.head_file.splitlines()[relevant_lines_start - 1]
                     break
             if original_initial_line:
                 suggested_initial_line = new_code_snippet.splitlines()[0]
