@@ -190,7 +190,7 @@ See the [Tools Guide](./docs/TOOLS_GUIDE.md) for a detailed description of the d
 
 
 - 💎 means this feature is available only in [PR-Agent Pro](https://www.codium.ai/pricing/)
-- Support for additional git providers is described in [here](./docs/Full_enviroments.md) 
+- Support for additional git providers is described in [here](./docs/Full_environments.md)
 
 ## Try it now
 
