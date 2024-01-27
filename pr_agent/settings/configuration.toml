@@ -47,7 +47,7 @@ enable_help_text=true # Determines whether to include help text in the PR review
 publish_labels=true
 publish_description_as_comment=false
 add_original_user_description=true
-keep_original_user_title=false
+keep_original_user_title=true
 use_bullet_points=true
 extra_instructions = ""
 enable_pr_type=true
@@ -100,7 +100,7 @@ base_url = "https://api.github.com"
 publish_inline_comments_fallback_with_verification = true
 try_fix_invalid_inline_comments = true
 
-[github_action]
+[github_action_config]
 # auto_review = true    # set as env var in .github/workflows/pr-agent.yaml
 # auto_describe = true  # set as env var in .github/workflows/pr-agent.yaml
 # auto_improve = true   # set as env var in .github/workflows/pr-agent.yaml
