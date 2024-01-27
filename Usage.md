@@ -142,8 +142,7 @@ num_code_suggestions=1
 Then you will overwrite the default number of code suggestions to 1.
 
 #### GitHub app automatic tools
-The [github_app](pr_agent/settings/configuration.toml#L76) section defines GitHub app-specific configurations.  
-In this section, you can define configurations to control the conditions for which tools will **run automatically**.  
+The [github_app](pr_agent/settings/configuration.toml#L108) section defines GitHub app specific configurations.  
 
 ##### GitHub app automatic tools for PR actions 
 The configuration parameter `pr_commands` defines the list of tools that will be **run automatically** when a new PR is opened.
@@ -222,7 +221,7 @@ Specifically, start by setting the following environment variables:
         github_action_config.auto_improve: "false" # enable\disable auto improve
 ```
 `github_action_config.auto_review`, `github_action_config.auto_describe` and `github_action_config.auto_improve` are used to enable/disable automatic tools that run when a new PR is opened.
-If not set, the default option is that only the `review` tool will run automatically when a new PR is opened.
+If not set, the default configuration is for all three tools to run automatically when a new PR is opened.
 
 Note that you can give additional config parameters by adding environment variables to `.github/workflows/pr_agent.yml`, or by using a `.pr_agent.toml` file in the root of your repo, similar to the GitHub App usage.
 

@@ -48,7 +48,7 @@ Examples for extra instructions:
 ```
 [pr_reviewer] # /review #
 extra_instructions="""
-In the code feedback section, emphasize the following:
+In the 'general suggestions' section, emphasize the following:
 - Does the code logic cover relevant edge cases?
 - Is the code logic clear and easy to understand?
 - Is the code logic efficient?
@@ -71,14 +71,14 @@ Edit this field to enable/disable the tool, or to change the used configurations
         """
         output += "\n\n</details></td></tr>\n\n"
 
-        # code feedback
-        output += "<tr><td><details> <summary><strong> About the 'Code feedback' section</strong></summary><hr>\n\n"
-        output+="""\
-The `review` tool provides several type of feedbacks, one of them is code suggestions.
-If you are interested **only** in the code suggestions, it is recommended to use the [`improve`](https://github.com/Codium-ai/pr-agent/blob/main/docs/IMPROVE.md) feature instead, since it dedicated only to code suggestions, and usually gives better results.
-Use the `review` tool if you want to get a more comprehensive feedback, which includes code suggestions as well.
-"""
-        output += "\n\n</details></td></tr>\n\n"
+#         # code feedback
+#         output += "<tr><td><details> <summary><strong> About the 'Code feedback' section</strong></summary><hr>\n\n"
+#         output+="""\
+# The `review` tool provides several type of feedbacks, one of them is code suggestions.
+# If you are interested **only** in the code suggestions, it is recommended to use the [`improve`](https://github.com/Codium-ai/pr-agent/blob/main/docs/IMPROVE.md) feature instead, since it dedicated only to code suggestions, and usually gives better results.
+# Use the `review` tool if you want to get a more comprehensive feedback, which includes code suggestions as well.
+# """
+#         output += "\n\n</details></td></tr>\n\n"
 
         # auto-labels
         output += "<tr><td><details> <summary><strong> Auto-labels</strong></summary><hr>\n\n"
@@ -309,8 +309,9 @@ Use triple quotes to write multi-line instructions. Use bullet points to make th
         output += """\
 - While the current AI for code is getting better and better (GPT-4), it's not flawless. Not all the suggestions will be perfect, and a user should not accept all of them automatically.
 - Suggestions are not meant to be simplistic. Instead, they aim to give deep feedback and raise questions, ideas and thoughts to the user, who can then use his judgment, experience, and understanding of the code base.
-- Recommended to use the 'extra_instructions' field to guide the model to suggestions that are more relevant to the specific needs of the project.
-- Best quality will be obtained by using 'improve --extended' mode.
+- Recommended to use the 'extra_instructions' field to guide the model to suggestions that are more relevant to the specific needs of the project, or use the [custom suggestions :gem:](https://github.com/Codium-ai/pr-agent/blob/main/docs/CUSTOM_SUGGESTIONS.md) tool
+- With large PRs, best quality will be obtained by using 'improve --extended' mode.
+
 
 """
         output += "\n\n</details></td></tr>\n\n"\
