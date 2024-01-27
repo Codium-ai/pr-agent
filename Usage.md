@@ -221,7 +221,7 @@ Specifically, start by setting the following environment variables:
         github_action_config.auto_improve: "false" # enable\disable auto improve
 ```
 `github_action_config.auto_review`, `github_action_config.auto_describe` and `github_action_config.auto_improve` are used to enable/disable automatic tools that run when a new PR is opened.
-If not set, the default option is that all three tools will run automatically when a new PR is opened.
+If not set, the default configuration is for all three tools to run automatically when a new PR is opened.
 
 Note that you can give additional config parameters by adding environment variables to `.github/workflows/pr_agent.yml`, or by using a `.pr_agent.toml` file in the root of your repo, similar to the GitHub App usage.
 
