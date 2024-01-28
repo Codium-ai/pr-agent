@@ -32,6 +32,9 @@ Making pull requests less painful with an AI agent
 - [Why use PR-Agent?](#why-use-pr-agent)
   
 ## News and Updates
+### Jan 28, 2024
+- 💎 Test - A new tool, [`/test component_name`](https://github.com/Codium-ai/pr-agent/blob/main/docs/TEST.md), was added to PR-Agent Pro. The tool will generate tests for a selected component, based on the PR code changes.
+- 💎 Analyze - The [`/analyze`](https://github.com/Codium-ai/pr-agent/blob/main/docs/Analyze.md) tool was updated and simplified. It now presents a summary of the code components that were changed in the PR.
 ### Jan 21, 2024
 - 💎 Custom suggestions - A new tool, `/custom_suggestions`, was added to PR-Agent Pro. The tool will propose only suggestions that follow specific guidelines defined by the user. 
 See [here](https://github.com/Codium-ai/pr-agent/blob/main/docs/CUSTOM_SUGGESTIONS.md) for more details.
@@ -168,6 +171,7 @@ See the [Tools Guide](./docs/TOOLS_GUIDE.md) for a detailed description of the d
 |       | Improve                                     |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |
 |       | ⮑ Extended                                 |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |
 |       | [Custom Suggestions](https://github.com/Codium-ai/pr-agent/blob/main/docs/CUSTOM_SUGGESTIONS.md) 💎        |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |
+|       | [Test](https://github.com/Codium-ai/pr-agent/blob/main/docs/Test.md) 💎        |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |
 |       | Reflect and Review                          |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |
 |       | Update CHANGELOG.md                         |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |
 |       | Find Similar Issue                          |   :white_check_mark:    |                         |                             |
