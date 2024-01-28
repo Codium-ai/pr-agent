@@ -81,6 +81,8 @@ CodiumAI PR-Agent is an open-source tool to help efficiently review and handle p
 ‣ **Analyze 💎 ([`/analyze`](./docs/Analyze.md))**: Automatically analyzes the PR, and presents changes walkthrough for each component.
 \
 ‣ **Custom Suggestions 💎 ([`/custom_suggestions`](./docs/CUSTOM_SUGGESTIONS.md))**: Automatically generates custom suggestions for improving the PR code, based on specific guidelines defined by the user.
+\
+‣ **Generate Tests 💎 ([`/test component_name`](./docs/TEST.md))**: Automatically generates unit tests for a selected component, based on the PR code changes.
 
 
 See the [Installation Guide](./INSTALL.md) for instructions on installing and running the tool on different git platforms.
