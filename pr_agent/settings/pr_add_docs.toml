@@ -5,7 +5,7 @@ Your task is to generate {{ docs_for_language }} for code components in the PR D
 
 Example for the PR Diff format:
 ======
-## src/file1.py
+## file: 'src/file1.py'
 
 @@ -12,3 +12,4 @@ def func1():
 __new hunk__
@@ -18,7 +18,6 @@ __old hunk__
 -code line that was removed in the PR
  code line2 that remained unchanged in the PR
 
-
 @@ ... @@ def func2():
 __new hunk__
 ...
@@ -26,7 +25,7 @@ __old hunk__
 ...
 
 
-## src/file2.py
+## file: 'src/file2.py'
 ...
 ======
 

@@ -209,9 +209,9 @@ def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler, mo
 
         if patch:
             if not convert_hunks_to_line_numbers:
-                patch_final = f"## {file.filename}\n\n{patch}\n"
+                patch_final = f"\n\n## file: '{file.filename.strip()}\n\n{patch.strip()}\n'"
             else:
-                patch_final = patch
+                patch_final = "\n\n" + patch.strip()
             patches.append(patch_final)
             total_tokens += token_handler.count_tokens(patch_final)
             if get_settings().config.verbosity_level >= 2:
@@ -374,6 +374,13 @@ def get_pr_multi_diffs(git_provider: GitProvider,
     sorted_files = []
     for lang in pr_languages:
         sorted_files.extend(sorted(lang['files'], key=lambda x: x.tokens, reverse=True))
+
+
+    # try first a single run with standard diff string, with patch extension, and no deletions
+    patches_extended, total_tokens, patches_extended_tokens = pr_generate_extended_diff(
+        pr_languages, token_handler, add_line_numbers_to_hunks=True)
+    if total_tokens + OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD < get_max_tokens(model):
+        return ["\n".join(patches_extended)]
 
     patches = []
     final_diff_list = []

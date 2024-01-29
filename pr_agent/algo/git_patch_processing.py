@@ -181,7 +181,7 @@ __old hunk__
            ...
     """
     
-    patch_with_lines_str = f"\n\n## {file.filename}\n"
+    patch_with_lines_str = f"\n\n## file: '{file.filename.strip()}'\n"
     patch_lines = patch.splitlines()
     RE_HUNK_HEADER = re.compile(
         r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@[ ]?(.*)")
@@ -202,11 +202,11 @@ __old hunk__
                 if new_content_lines:
                     if prev_header_line:
                         patch_with_lines_str += f'\n{prev_header_line}\n'
-                    patch_with_lines_str += '__new hunk__\n'
+                    patch_with_lines_str = patch_with_lines_str.rstrip()+'\n__new hunk__\n'
                     for i, line_new in enumerate(new_content_lines):
                         patch_with_lines_str += f"{start2 + i} {line_new}\n"
                 if old_content_lines:
-                    patch_with_lines_str += '__old hunk__\n'
+                    patch_with_lines_str = patch_with_lines_str.rstrip()+'\n__old hunk__\n'
                     for line_old in old_content_lines:
                         patch_with_lines_str += f"{line_old}\n"
                 new_content_lines = []
@@ -236,11 +236,11 @@ __old hunk__
     if match and new_content_lines:
         if new_content_lines:
             patch_with_lines_str += f'\n{header_line}\n'
-            patch_with_lines_str += '\n__new hunk__\n'
+            patch_with_lines_str = patch_with_lines_str.rstrip()+ '\n__new hunk__\n'
             for i, line_new in enumerate(new_content_lines):
                 patch_with_lines_str += f"{start2 + i} {line_new}\n"
         if old_content_lines:
-            patch_with_lines_str += '\n__old hunk__\n'
+            patch_with_lines_str = patch_with_lines_str.rstrip() + '\n__old hunk__\n'
             for line_old in old_content_lines:
                 patch_with_lines_str += f"{line_old}\n"
 
