@@ -91,10 +91,13 @@ extra_instructions = ""
 [pr_analyze] # /analyze #
 
 [pr_test] # /test #
-testing_framework = "" # specify the testing framework you want to use
-num_tests=3 # number of tests to generate. max 5.
-avoid_mocks=true # if true, the generated tests will prefer to use real objects instead of mocks
 extra_instructions = ""
+testing_framework = "" # specify the testing framework you want to use
+num_tests=3            # number of tests to generate. max 5.
+avoid_mocks=true       # if true, the generated tests will prefer to use real objects instead of mocks
+file = ""              # in case there are several components with the same name, you can specify the relevant file
+class_name = ""        # in case there are several methods with the same name in the same file, you can specify the relevant class name
+enable_help_text=true
 
 [pr_config] # /config #
 
