@@ -226,7 +226,7 @@ class PRCodeSuggestions:
         for i, patches_diff in enumerate(patches_diff_list):
             get_logger().info(f"Processing chunk {i + 1} of {len(patches_diff_list)}")
             self.patches_diff = patches_diff
-            prediction = await self._get_prediction(model)
+            prediction = await self._get_prediction(model) # toDo: parallelize
             prediction_list.append(prediction)
         self.prediction_list = prediction_list
 
@@ -258,6 +258,9 @@ class PRCodeSuggestions:
         for suggestion in data:
             suggestion_list.append(suggestion)
         data_sorted = [[]] * len(suggestion_list)
+
+        if len(suggestion_list ) == 1:
+            return suggestion_list
 
         try:
             suggestion_str = ""
