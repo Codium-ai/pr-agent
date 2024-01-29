@@ -93,7 +93,6 @@ CodiumAI PR-Agent is an open-source tool to help efficiently review and handle p
 |       | [Global configuration](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#global-configuration-file-) 💎                           |   :white_check_mark:    |   :white_check_mark:     |    :white_check_mark:    |
 - 💎 means this feature is available only in [PR-Agent Pro](https://www.codium.ai/pricing/)
 - Support for additional git providers is described in [here](./docs/Full_environments.md)
-- 
 ___
 
 ‣ **Auto Description ([`/describe`](./docs/DESCRIBE.md))**: Automatically generating PR description - title, type, summary, code walkthrough and labels.
@@ -115,7 +114,8 @@ ___
 ‣ **Analyze 💎 ([`/analyze`](./docs/Analyze.md))**: Automatically analyzes the PR, and presents changes walkthrough for each component.
 \
 ‣ **Custom Suggestions 💎 ([`/custom_suggestions`](./docs/CUSTOM_SUGGESTIONS.md))**: Automatically generates custom suggestions for improving the PR code, based on specific guidelines defined by the user.
-
+\
+‣ **Generate Tests 💎 ([`/test component_name`](./docs/TEST.md))**: Automatically generates unit tests for a selected component, based on the PR code changes.
 
 See the [Installation Guide](./INSTALL.md) for instructions on installing and running the tool on different git platforms.
 
