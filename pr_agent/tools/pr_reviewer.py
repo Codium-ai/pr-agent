@@ -98,14 +98,7 @@ class PRReviewer:
         self.incremental = IncrementalPR(is_incremental)
 
     async def run(self) -> None:
-        """
-        Review the pull request and generate feedback.
-        """
-
         try:
-            # if self.is_auto and not get_settings().pr_reviewer.automatic_review:
-            #     get_logger().info(f'Automatic review is disabled {self.pr_url}')
-            #     return None
             if self.incremental.is_incremental and not self._can_run_incremental_review():
                 return None
 
@@ -115,6 +108,9 @@ class PRReviewer:
                 self.git_provider.publish_comment("Preparing review...", is_temporary=True)
 
             await retry_with_fallback_models(self._prepare_prediction)
+            if not self.prediction:
+                self.git_provider.remove_initial_comment()
+                return None
 
             get_logger().info('Preparing PR review...')
             pr_comment = self._prepare_pr_review()
@@ -141,19 +137,14 @@ class PRReviewer:
             get_logger().error(f"Failed to review PR: {e}")
 
     async def _prepare_prediction(self, model: str) -> None:
-        """
-        Prepare the AI prediction for the pull request review.
-
-        Args:
-            model: A string representing the AI model to be used for the prediction.
-
-        Returns:
-            None
-        """
         get_logger().info('Getting PR diff...')
         self.patches_diff = get_pr_diff(self.git_provider, self.token_handler, model)
-        get_logger().info('Getting AI prediction...')
-        self.prediction = await self._get_prediction(model)
+        if self.patches_diff:
+            get_logger().info('Getting AI prediction...')
+            self.prediction = await self._get_prediction(model)
+        else:
+            get_logger().error(f"Error getting PR diff")
+            self.prediction = None
 
     async def _get_prediction(self, model: str) -> str:
         """

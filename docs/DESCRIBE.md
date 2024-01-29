@@ -2,6 +2,7 @@
 ## Table of Contents
 - [Overview](#overview)
   - [Configuration options](#configuration-options)
+  - [Inline file summary 💎](#inline-file-summary-)
   - [Handle custom labels from the Repo's labels page :gem:](#handle-custom-labels-from-the-repos-labels-page-gem)
   - [Markers template](#markers-template)
 - [Usage Tips](#usage-tips)
@@ -19,7 +20,7 @@ For example:
 ___
 <kbd><img src=https://codium.ai/images/pr_agent/describe_comment.png width="768"></kbd>
 ___
-<kbd><img src=https://codium.ai/images/pr_agent/describe.png width="768"></kbd>
+<kbd><img src=https://codium.ai/images/pr_agent/describe_new.png width="768"></kbd>
 ___
   
 ### Configuration options
@@ -48,6 +49,19 @@ To edit [configurations](./../pr_agent/settings/configuration.toml#L46) related 
 - `enable_semantic_files_types`: if set to true, "Changes walkthrough" section will be generated. Default is true.
 - `collapsible_file_list`: if set to true, the file list in the "Changes walkthrough" section will be collapsible. If set to "adaptive", the file list will be collapsible only if there are more than 8 files. Default is "adaptive".
   
+### Inline file summary 💎
+> This feature is available only in PR-Agent Pro
+
+This will enable you to quickly understand the changes in each file, while reviewing the code changes (diff view).
+To enable inline file summary, set `pr_description.inline_file_summary` in the configuration file, possible values are:
+- `'table'`: File changes walkthrough table will be displayed on the top of the "Files changed" tab, in addition to the "Conversation" tab.
+<kbd><img src=https://codium.ai/images/pr_agent/diffview-table.png width="1024"></kbd>
+- `true`: A collapsable file comment with changes title and a changes summary for each file in the PR.
+<kbd><img src=https://codium.ai/images/pr_agent/diffview_changes.png width="1024"></kbd>
+- `false` (`default`): File changes walkthrough will be added only to the "Conversation" tab.
+
+*Note that this feature is currently available only for GitHub.
+
 
 ### Handle custom labels from the Repo's labels page :gem:
 > This feature is available only in PR-Agent Pro 

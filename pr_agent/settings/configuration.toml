@@ -1,5 +1,5 @@
 [config]
-model="gpt-4" # "gpt-4-1106-preview"
+model="gpt-4" # "gpt-4-0125-preview"
 fallback_models=["gpt-3.5-turbo-16k"]
 git_provider="github"
 publish_output=true
@@ -36,7 +36,7 @@ persistent_comment=true
 extra_instructions = ""
 # review labels
 enable_review_labels_security=true
-enable_review_labels_effort=false
+enable_review_labels_effort=true
 # specific configurations for incremental review (/review -i)
 require_all_thresholds_for_incremental_review=false
 minimal_commits_for_incremental_review=0
@@ -47,7 +47,7 @@ enable_help_text=true # Determines whether to include help text in the PR review
 publish_labels=true
 publish_description_as_comment=false
 add_original_user_description=true
-keep_original_user_title=false
+keep_original_user_title=true
 use_bullet_points=true
 extra_instructions = ""
 enable_pr_type=true
@@ -56,6 +56,7 @@ enable_help_text=true
 ## changes walkthrough section
 enable_semantic_files_types=true
 collapsible_file_list='adaptive' # true, false, 'adaptive'
+inline_file_summary=false # false, true, 'table'
 # markers
 use_description_markers=false
 include_generated_by_header=true
@@ -63,13 +64,15 @@ include_generated_by_header=true
 #custom_labels = ['Bug fix', 'Tests', 'Bug fix with tests', 'Enhancement', 'Documentation', 'Other']
 
 [pr_questions] # /ask #
+enable_help_text=true
+
 
 [pr_code_suggestions] # /improve #
 num_code_suggestions=4
-summarize = false
-include_improved_code = true
+summarize = true
 extra_instructions = ""
 rank_suggestions = false
+enable_help_text=true
 # params for '/improve --extended' mode
 auto_extended_mode=false
 num_code_suggestions_per_chunk=8
@@ -87,6 +90,12 @@ extra_instructions = ""
 
 [pr_analyze] # /analyze #
 
+[pr_test] # /test #
+testing_framework = "" # specify the testing framework you want to use
+num_tests=3 # number of tests to generate. max 5.
+avoid_mocks=true # if true, the generated tests will prefer to use real objects instead of mocks
+extra_instructions = ""
+
 [pr_config] # /config #
 
 [github]
@@ -94,8 +103,10 @@ extra_instructions = ""
 deployment_type = "user"
 ratelimit_retries = 5
 base_url = "https://api.github.com"
+publish_inline_comments_fallback_with_verification = true
+try_fix_invalid_inline_comments = true
 
-[github_action]
+[github_action_config]
 # auto_review = true    # set as env var in .github/workflows/pr-agent.yaml
 # auto_describe = true  # set as env var in .github/workflows/pr-agent.yaml
 # auto_improve = true   # set as env var in .github/workflows/pr-agent.yaml
@@ -112,7 +123,8 @@ duplicate_requests_cache_ttl = 60  # in seconds
 handle_pr_actions = ['opened', 'reopened', 'ready_for_review', 'review_requested']
 pr_commands = [
     "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true",
-    "/review",
+    "/review --pr_reviewer.num_code_suggestions=0",
+    "/improve --pr_code_suggestions.summarize=true",
 ]
 # settings for "pull_request" event with "synchronize" action - used to detect and handle push triggers for new commits
 handle_push_trigger = false

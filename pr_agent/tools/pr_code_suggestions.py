@@ -8,12 +8,14 @@ from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAIHandler
 from pr_agent.algo.pr_processing import get_pr_diff, get_pr_multi_diffs, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import load_yaml
+from pr_agent.algo.utils import load_yaml, replace_code_tags
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
 from pr_agent.log import get_logger
-
+from pr_agent.servers.help import HelpMessage
+from pr_agent.tools.pr_description import insert_br_after_x_chars
+import difflib
 
 class PRCodeSuggestions:
     def __init__(self, pr_url: str, cli_mode=False, args: list = None,
@@ -45,6 +47,7 @@ class PRCodeSuggestions:
             "language": self.main_language,
             "diff": "",  # empty diff for initial calculation
             "num_code_suggestions": num_code_suggestions,
+            "summarize_mode": get_settings().pr_code_suggestions.summarize,
             "extra_instructions": get_settings().pr_code_suggestions.extra_instructions,
             "commit_messages_str": self.git_provider.get_commit_messages(),
         }
@@ -65,6 +68,8 @@ class PRCodeSuggestions:
                 data = self._prepare_pr_code_suggestions()
             else:
                 data = await retry_with_fallback_models(self._prepare_prediction_extended)
+
+
             if (not data) or (not 'code_suggestions' in data):
                 get_logger().info('No code suggestions found for PR.')
                 return
@@ -77,9 +82,19 @@ class PRCodeSuggestions:
             if get_settings().config.publish_output:
                 get_logger().info('Pushing PR code suggestions...')
                 self.git_provider.remove_initial_comment()
-                if get_settings().pr_code_suggestions.summarize:
+                if get_settings().pr_code_suggestions.summarize and self.git_provider.is_supported("gfm_markdown"):
                     get_logger().info('Pushing summarize code suggestions...')
-                    self.publish_summarizes_suggestions(data)
+
+                    # generate summarized suggestions
+                    pr_body = self.generate_summarized_suggestions(data)
+
+                    # add usage guide
+                    if get_settings().pr_code_suggestions.enable_help_text:
+                        pr_body += "<hr>\n\n<details> <summary><strong>✨ Usage guide:</strong></summary><hr> \n\n"
+                        pr_body += HelpMessage.get_improve_usage_guide()
+                        pr_body += "\n</details>\n"
+
+                    self.git_provider.publish_comment(pr_body)
                 else:
                     get_logger().info('Pushing inline code suggestions...')
                     self.push_inline_code_suggestions(data)
@@ -154,35 +169,19 @@ class PRCodeSuggestions:
                 if new_code_snippet:
                     new_code_snippet = self.dedent_code(relevant_file, relevant_lines_start, new_code_snippet)
 
-                if get_settings().pr_code_suggestions.include_improved_code:
-                    body = f"**Suggestion:** {content} [{label}]\n```suggestion\n" + new_code_snippet + "\n```"
-                    code_suggestions.append({'body': body, 'relevant_file': relevant_file,
+                body = f"**Suggestion:** {content} [{label}]\n```suggestion\n" + new_code_snippet + "\n```"
+                code_suggestions.append({'body': body, 'relevant_file': relevant_file,
                                              'relevant_lines_start': relevant_lines_start,
                                              'relevant_lines_end': relevant_lines_end})
-                else:
-                    if self.git_provider.is_supported("create_inline_comment"):
-                        body = f"**Suggestion:** {content} [{label}]"
-                        comment = self.git_provider.create_inline_comment(body, relevant_file, "",
-                                                                          absolute_position=relevant_lines_end)
-                        if comment:
-                            code_suggestions.append(comment)
-                    else:
-                        get_logger().error("Inline comments are not supported by the git provider")
             except Exception:
                 if get_settings().config.verbosity_level >= 2:
                     get_logger().info(f"Could not parse suggestion: {d}")
 
-        if get_settings().pr_code_suggestions.include_improved_code:
-            is_successful = self.git_provider.publish_code_suggestions(code_suggestions)
-        else:
-            is_successful = self.git_provider.publish_inline_comments(code_suggestions)
+        is_successful = self.git_provider.publish_code_suggestions(code_suggestions)
         if not is_successful:
             get_logger().info("Failed to publish code suggestions, trying to publish each suggestion separately")
             for code_suggestion in code_suggestions:
-                if get_settings().pr_code_suggestions.include_improved_code:
-                    self.git_provider.publish_code_suggestions([code_suggestion])
-                else:
-                    self.git_provider.publish_inline_comments([code_suggestion])
+                self.git_provider.publish_code_suggestions([code_suggestion])
 
     def dedent_code(self, relevant_file, relevant_lines_start, new_code_snippet):
         try:  # dedent code snippet
@@ -191,7 +190,8 @@ class PRCodeSuggestions:
             original_initial_line = None
             for file in self.diff_files:
                 if file.filename.strip() == relevant_file:
-                    original_initial_line = file.head_file.splitlines()[relevant_lines_start - 1]
+                    if file.head_file:  # in bitbucket, head_file is empty. toDo: fix this
+                        original_initial_line = file.head_file.splitlines()[relevant_lines_start - 1]
                     break
             if original_initial_line:
                 suggested_initial_line = new_code_snippet.splitlines()[0]
@@ -296,9 +296,13 @@ class PRCodeSuggestions:
 
         return data_sorted
 
-    def publish_summarizes_suggestions(self, data: Dict):
+    def generate_summarized_suggestions(self, data: Dict) -> str:
         try:
-            data_markdown = "## PR Code Suggestions\n\n"
+            pr_body = "## PR Code Suggestions\n\n"
+
+            if len(data.get('code_suggestions', [])) == 0:
+                pr_body += "No suggestions found to improve this PR."
+                return pr_body
 
             language_extension_map_org = get_settings().language_extension_map_org
             extension_to_language = {}
@@ -306,30 +310,78 @@ class PRCodeSuggestions:
                 for ext in extensions:
                     extension_to_language[ext] = language
 
-            for s in data['code_suggestions']:
-                try:
-                    extension_s = s['relevant_file'].rsplit('.')[-1]
-                    code_snippet_link = self.git_provider.get_line_link(s['relevant_file'], s['relevant_lines_start'],
-                                                                        s['relevant_lines_end'])
-                    label = s['label'].strip()
-                    data_markdown += f"\n💡 [{label}]\n\n**{s['suggestion_content'].rstrip().rstrip()}**\n\n"
-                    if code_snippet_link:
-                        data_markdown += f" File: [{s['relevant_file']} ({s['relevant_lines_start']}-{s['relevant_lines_end']})]({code_snippet_link})\n\n"
+            pr_body += "<table>"
+            header = f"Suggestions"
+            delta = 77
+            header += "&nbsp; " * delta
+            pr_body += f"""<thead><tr><th></th><th>{header}</th></tr></thead>"""
+            pr_body += """<tbody>"""
+            suggestions_labels = dict()
+            # add all suggestions related to each label
+            for suggestion in data['code_suggestions']:
+                label = suggestion['label'].strip().strip("'").strip('"')
+                if label not in suggestions_labels:
+                    suggestions_labels[label] = []
+                suggestions_labels[label].append(suggestion)
+
+            for label, suggestions in suggestions_labels.items():
+                pr_body += f"""<tr><td><strong>{label}</strong></td>"""
+                pr_body += f"""<td>"""
+                # pr_body += f"""<details><summary>{len(suggestions)} suggestions</summary>"""
+                pr_body += f"""<table>"""
+                for suggestion in suggestions:
+
+                    relevant_file = suggestion['relevant_file'].strip()
+                    relevant_lines_start = int(suggestion['relevant_lines_start'])
+                    relevant_lines_end = int(suggestion['relevant_lines_end'])
+                    range_str = ""
+                    if relevant_lines_start == relevant_lines_end:
+                        range_str = f"[{relevant_lines_start}]"
                     else:
-                        data_markdown += f"File: {s['relevant_file']} ({s['relevant_lines_start']}-{s['relevant_lines_end']})\n\n"
-                    if self.git_provider.is_supported("gfm_markdown"):
-                        data_markdown += "<details> <summary> Example code:</summary>\n\n"
-                        data_markdown += f"___\n\n"
-                    language_name = "python"
-                    if extension_s and (extension_s in extension_to_language):
-                        language_name = extension_to_language[extension_s]
-                    data_markdown += f"Existing code:\n```{language_name}\n{s['existing_code'].rstrip()}\n```\n"
-                    data_markdown += f"Improved code:\n```{language_name}\n{s['improved_code'].rstrip()}\n```\n"
-                    if self.git_provider.is_supported("gfm_markdown"):
-                        data_markdown += "</details>\n"
-                    data_markdown += "\n___\n\n"
-                except Exception as e:
-                    get_logger().error(f"Could not parse suggestion: {s}, error: {e}")
-            self.git_provider.publish_comment(data_markdown)
+                        range_str = f"[{relevant_lines_start}-{relevant_lines_end}]"
+                    code_snippet_link = self.git_provider.get_line_link(relevant_file, relevant_lines_start,
+                                                                        relevant_lines_end)
+                    # add html table for each suggestion
+
+                    suggestion_content = suggestion['suggestion_content'].rstrip().rstrip()
+
+                    suggestion_content = insert_br_after_x_chars(suggestion_content, 90)
+                    # pr_body += f"<tr><td><details><summary>{suggestion_content}</summary>"
+                    existing_code = suggestion['existing_code'].rstrip()+"\n"
+                    improved_code = suggestion['improved_code'].rstrip()+"\n"
+
+                    diff = difflib.unified_diff(existing_code.split('\n'),
+                                                improved_code.split('\n'), n=999)
+                    patch_orig = "\n".join(diff)
+                    patch = "\n".join(patch_orig.splitlines()[5:]).strip('\n')
+
+                    example_code = ""
+                    example_code += f"```diff\n{patch}\n```\n"
+
+                    pr_body += f"""<tr><td>"""
+                    suggestion_summary = suggestion['one_sentence_summary'].strip()
+                    if '`' in suggestion_summary:
+                        suggestion_summary = replace_code_tags(suggestion_summary)
+                    suggestion_summary = suggestion_summary + max((77-len(suggestion_summary)), 0)*"&nbsp;"
+                    pr_body += f"""\n\n<details><summary>{suggestion_summary}</summary>\n\n___\n\n"""
+
+                    pr_body += f"""
+  
+  
+**{suggestion_content}**
+    
+[{relevant_file} {range_str}]({code_snippet_link})
+
+{example_code}                   
+"""
+                    pr_body += f"</details>"
+                    pr_body += f"</td></tr>"
+
+                pr_body += """</table>"""
+                # pr_body += "</details>"
+                pr_body += """</td></tr>"""
+            pr_body += """</tr></tbody></table>"""
+            return pr_body
         except Exception as e:
             get_logger().info(f"Failed to publish summarized code suggestions, error: {e}")
+            return ""

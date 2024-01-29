@@ -11,6 +11,7 @@ from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
 from pr_agent.log import get_logger
+from pr_agent.servers.help import HelpMessage
 
 
 class PRQuestions:
@@ -52,6 +53,11 @@ class PRQuestions:
         await retry_with_fallback_models(self._prepare_prediction)
         get_logger().info('Preparing answer...')
         pr_comment = self._prepare_pr_answer()
+        if self.git_provider.is_supported("gfm_markdown") and get_settings().pr_questions.enable_help_text:
+            pr_comment += "<hr>\n\n<details> <summary><strong>✨ Usage guide:</strong></summary><hr> \n\n"
+            pr_comment += HelpMessage.get_ask_usage_guide()
+            pr_comment += "\n</details>\n"
+
         if get_settings().config.publish_output:
             get_logger().info('Pushing answer...')
             self.git_provider.publish_comment(pr_comment)

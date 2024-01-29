@@ -116,7 +116,7 @@ def parse_code_suggestion(code_suggestions: dict, i: int = 0, gfm_supported: boo
                     relevant_line = sub_value_list[0].lstrip('`').lstrip('[')
                     if len(sub_value_list) > 1:
                         link = sub_value_list[1].rstrip(')').strip('`')
-                        markdown_text += f"<td><a href={link}>{relevant_line}</a></td>"
+                        markdown_text += f"<td><a href='{link}'>{relevant_line}</a></td>"
                     else:
                         markdown_text += f"<td>{relevant_line}</td>"
                     markdown_text += "</tr>"
@@ -475,3 +475,12 @@ def clip_tokens(text: str, max_tokens: int, add_three_dots=True) -> str:
     except Exception as e:
         get_logger().warning(f"Failed to clip tokens: {e}")
         return text
+
+def replace_code_tags(text):
+    """
+    Replace odd instances of ` with <code> and even instances of ` with </code>
+    """
+    parts = text.split('`')
+    for i in range(1, len(parts), 2):
+        parts[i] = '<code>' + parts[i] + '</code>'
+    return ''.join(parts)
