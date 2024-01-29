@@ -253,6 +253,8 @@ class PRCodeSuggestions:
         """
 
         suggestion_list = []
+        if not data:
+            return suggestion_list
         for suggestion in data:
             suggestion_list.append(suggestion)
         data_sorted = [[]] * len(suggestion_list)

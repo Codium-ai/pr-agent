@@ -4,7 +4,7 @@ Your task is to provide meaningful and actionable code suggestions, to improve t
 
 Example for the PR Diff format:
 ======
-## src/file1.py
+## file: 'src/file1.py'
 
 @@ ... @@ def func1():
 __new hunk__
@@ -16,7 +16,6 @@ __old hunk__
 -old code line2 that was removed in the PR
  code line3 that remained unchanged in the PR
 
-
 @@ ... @@ def func2():
 __new hunk__
 ...
@@ -24,7 +23,7 @@ __old hunk__
 ...
 
 
-## src/file2.py
+## file: 'src/file2.py'
 ...
 ======
 

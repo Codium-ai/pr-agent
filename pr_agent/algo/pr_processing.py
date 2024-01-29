@@ -209,9 +209,9 @@ def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler, mo
 
         if patch:
             if not convert_hunks_to_line_numbers:
-                patch_final = f"## {file.filename}\n\n{patch}\n"
+                patch_final = f"\n\n## file: '{file.filename.strip()}\n\n{patch.strip()}\n'"
             else:
-                patch_final = patch
+                patch_final = "\n\n" + patch.strip()
             patches.append(patch_final)
             total_tokens += token_handler.count_tokens(patch_final)
             if get_settings().config.verbosity_level >= 2:
