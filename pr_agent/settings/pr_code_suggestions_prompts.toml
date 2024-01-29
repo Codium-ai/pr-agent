@@ -51,6 +51,7 @@ The output must be a YAML object equivalent to type $PRCodeSuggestions, accordin
 =====
 class CodeSuggestion(BaseModel):
     relevant_file: str = Field(description="the relevant file full path")
+    language: str = Field(description="the code language of the relevant file")
     suggestion_content: str = Field(description="an actionable suggestion for meaningfully improving the new code introduced in the PR")
 {%- if summarize_mode %}
     existing_code: str = Field(description="a short code snippet from a '__new hunk__' section to illustrate the relevant existing code. Don't show the line numbers.")
@@ -74,6 +75,8 @@ Example output:
 code_suggestions:
 - relevant_file: |-
     src/file1.py
+  language: |-
+    python
   suggestion_content: |-
     Add a docstring to func1()
 {%- if summarize_mode %}
@@ -104,11 +107,6 @@ Each YAML output MUST be after a newline, indented, with block scalar indicator 
 user="""PR Info:
 
 Title: '{{title}}'
-
-{%- if language %}
-
-Main PR language: '{{ language }}'
-{%- endif %}
 
 
 The PR Diff:

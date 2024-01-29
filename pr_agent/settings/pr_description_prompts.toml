@@ -39,6 +39,7 @@ class PRType(str, Enum):
 
 Class FileDescription(BaseModel):
     filename: str = Field(description="the relevant file full path")
+    language: str = Field(description="the relevant file language")
     changes_summary: str = Field(description="concise summary of the changes in the relevant file, in bullet points (1-4 bullet points).")
     changes_title: str = Field(description="an informative title for the changes in the files, describing its main theme (5-10 words).")
     label: str = Field(description="a single semantic label that represents a type of code changes that occurred in the File. Possible values (partial list): 'bug fix', 'tests', 'enhancement', 'documentation', 'error handling', 'configuration changes', 'dependencies', 'formatting', 'miscellaneous', ...")
@@ -66,6 +67,8 @@ type:
 {%- if enable_semantic_files_types %}
 pr_files:
 - filename: |
+    ...
+  language: |
     ...
   changes_summary: |
     ...
@@ -104,10 +107,7 @@ Previous description:
 {%- endif %}
 
 Branch: '{{branch}}'
-{%- if language %}
 
-Main PR language: '{{ language }}'
-{%- endif %}
 {%- if commit_messages_str %}
 
 Commit messages:

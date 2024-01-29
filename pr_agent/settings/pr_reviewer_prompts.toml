@@ -115,6 +115,9 @@ PR Feedback:
       relevant file:
         type: string
         description: the relevant file full path
+      language:
+        type: string
+        description: the language of the relevant file
       suggestion:
         type: string
         description: |-
@@ -166,6 +169,8 @@ PR Feedback:
   Code feedback:
     - relevant file: |-
         directory/xxx.py
+      language: |-
+        python
       suggestion: |-
         xxx [important]
       relevant line: |-
@@ -195,10 +200,6 @@ Description:
 ======
 {%- endif %}
 
-{%- if language %}
-
-Main PR language: '{{ language }}'
-{%- endif %}
 {%- if commit_messages_str %}
 
 Commit messages:
