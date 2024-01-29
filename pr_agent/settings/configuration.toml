@@ -1,10 +1,10 @@
 [config]
-model="gpt-4" # "gpt-4-1106-preview"
+model="gpt-4" # "gpt-4-0125-preview"
 fallback_models=["gpt-3.5-turbo-16k"]
 git_provider="github"
 publish_output=true
 publish_output_progress=true
-verbosity_level=0 # 0,1,2
+verbosity_level=2 # 0,1,2
 use_extra_bad_extensions=false
 use_repo_settings_file=true
 use_global_settings_file=true
