@@ -8,6 +8,6 @@
 - [ADD DOCUMENTATION](./ADD_DOCUMENTATION.md) 💎
 - [GENERATE CUSTOM LABELS](./GENERATE_CUSTOM_LABELS.md) 💎
 - [Analyze](./Analyze.md) 💎
-- [Test](./Test.md) 💎
+- [Test](./TEST.md) 💎
 
-See the **[installation guide](/INSTALL.md)** for instructions on how to setup PR-Agent.
+See the **[installation guide](/INSTALL.md)** for instructions on setting up PR-Agent.
