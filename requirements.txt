@@ -14,7 +14,7 @@ msrest==0.7.1
 openai==0.27.8
 pinecone-client
 pinecone-datasets @ git+https://github.com/mrT23/pinecone-datasets.git@main
-lancedb==0.3.4
+lancedb==0.5.1
 pytest==7.4.0
 PyGithub==1.59.*
 PyYAML==6.0.1
