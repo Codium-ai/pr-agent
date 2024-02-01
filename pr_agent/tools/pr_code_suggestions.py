@@ -8,7 +8,7 @@ from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAIHandler
 from pr_agent.algo.pr_processing import get_pr_diff, get_pr_multi_diffs, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import load_yaml, replace_code_tags
+from pr_agent.algo.utils import load_yaml, replace_code_tags, ModelType
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
@@ -25,6 +25,14 @@ class PRCodeSuggestions:
         self.main_language = get_main_pr_language(
             self.git_provider.get_languages(), self.git_provider.get_files()
         )
+
+        # limit context specifically for the improve command, which has hard input to parse:
+        if get_settings().pr_code_suggestions.max_context_tokens:
+            MAX_CONTEXT_TOKENS_IMPROVE = get_settings().pr_code_suggestions.max_context_tokens
+            if get_settings().config.max_model_tokens > MAX_CONTEXT_TOKENS_IMPROVE:
+                get_logger().info(f"Setting max_model_tokens to {MAX_CONTEXT_TOKENS_IMPROVE} for PR improve")
+                get_settings().config.max_model_tokens = MAX_CONTEXT_TOKENS_IMPROVE
+
 
         # extended mode
         try:
@@ -64,10 +72,10 @@ class PRCodeSuggestions:
 
             get_logger().info('Preparing PR code suggestions...')
             if not self.is_extended:
-                await retry_with_fallback_models(self._prepare_prediction)
+                await retry_with_fallback_models(self._prepare_prediction, ModelType.TURBO)
                 data = self._prepare_pr_code_suggestions()
             else:
-                data = await retry_with_fallback_models(self._prepare_prediction_extended)
+                data = await retry_with_fallback_models(self._prepare_prediction_extended, ModelType.TURBO)
 
 
             if (not data) or (not 'code_suggestions' in data):

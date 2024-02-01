@@ -11,7 +11,7 @@ from pr_agent.algo.git_patch_processing import convert_to_hunks_with_lines_numbe
 from pr_agent.algo.language_handler import sort_files_by_main_languages
 from pr_agent.algo.file_filter import filter_ignored
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import get_max_tokens
+from pr_agent.algo.utils import get_max_tokens, ModelType
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers.git_provider import FilePatchInfo, GitProvider, EDIT_TYPE
 from pr_agent.log import get_logger
@@ -220,8 +220,8 @@ def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler, mo
     return patches, modified_files_list, deleted_files_list, added_files_list
 
 
-async def retry_with_fallback_models(f: Callable):
-    all_models = _get_all_models()
+async def retry_with_fallback_models(f: Callable, model_type: ModelType = ModelType.REGULAR):
+    all_models = _get_all_models(model_type)
     all_deployments = _get_all_deployments(all_models)
     # try each (model, deployment_id) pair until one is successful, otherwise raise exception
     for i, (model, deployment_id) in enumerate(zip(all_models, all_deployments)):
@@ -243,8 +243,11 @@ async def retry_with_fallback_models(f: Callable):
                 raise  # Re-raise the last exception
 
 
-def _get_all_models() -> List[str]:
-    model = get_settings().config.model
+def _get_all_models(model_type: ModelType = ModelType.REGULAR) -> List[str]:
+    if model_type == ModelType.TURBO:
+        model = get_settings().config.model_turbo
+    else:
+        model = get_settings().config.model
     fallback_models = get_settings().config.fallback_models
     if not isinstance(fallback_models, list):
         fallback_models = [m.strip() for m in fallback_models.split(",")]

@@ -1,5 +1,6 @@
 [config]
 model="gpt-4" # "gpt-4-0125-preview"
+model_turbo="gpt-4-0125-preview"
 fallback_models=["gpt-3.5-turbo-16k"]
 git_provider="github"
 publish_output=true
@@ -68,17 +69,18 @@ enable_help_text=true
 
 
 [pr_code_suggestions] # /improve #
+max_context_tokens=8000
 num_code_suggestions=4
 summarize = true
 extra_instructions = ""
 rank_suggestions = false
 enable_help_text=true
 # params for '/improve --extended' mode
-auto_extended_mode=false
-num_code_suggestions_per_chunk=8
-rank_extended_suggestions = true
-max_number_of_calls = 5
-final_clip_factor = 0.9
+auto_extended_mode=true
+num_code_suggestions_per_chunk=5
+rank_extended_suggestions = false
+max_number_of_calls = 3
+final_clip_factor = 0.8
 
 [pr_add_docs] # /add_docs #
 extra_instructions = ""

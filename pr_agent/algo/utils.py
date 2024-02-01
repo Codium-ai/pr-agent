@@ -5,6 +5,7 @@ import json
 import re
 import textwrap
 from datetime import datetime
+from enum import Enum
 from typing import Any, List
 
 import yaml
@@ -15,6 +16,9 @@ from pr_agent.algo.token_handler import get_token_encoder
 from pr_agent.config_loader import get_settings, global_settings
 from pr_agent.log import get_logger
 
+class ModelType(str, Enum):
+    REGULAR = "regular"
+    TURBO = "turbo"
 
 def get_setting(key: str) -> Any:
     try:
