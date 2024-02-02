@@ -31,29 +31,23 @@ Making pull requests less painful with an AI agent
 - [Why use PR-Agent?](#why-use-pr-agent)
   
 ## News and Updates
+### Feb 2, 2024
+We are excited to introduce "PR Actions" 💎:
+
+<kbd>
+
+[<img src="https://www.codium.ai/images/pr_agent/pr_actions.png" width="768"/>](https://www.codium.ai/images/pr_agent/pr-actions.mp4)
+
+</kbd>
+
+(click on the image to see a video demonstration)
+
 ### Jan 28, 2024
 - 💎 Test - A new tool, [`/test component_name`](https://github.com/Codium-ai/pr-agent/blob/main/docs/TEST.md), was added to PR-Agent Pro. The tool will generate tests for a selected component, based on the PR code changes.
 - 💎 Analyze - The [`/analyze`](https://github.com/Codium-ai/pr-agent/blob/main/docs/Analyze.md) tool was updated and simplified. It now presents a summary of the code components that were changed in the PR.
 ### Jan 21, 2024
 - 💎 Custom suggestions - A new tool, `/custom_suggestions`, was added to PR-Agent Pro. The tool will propose only suggestions that follow specific guidelines defined by the user. 
 See [here](https://github.com/Codium-ai/pr-agent/blob/main/docs/CUSTOM_SUGGESTIONS.md) for more details.
-
-### Jan 17, 2024
-- 💎 Inline file summary - The `describe` tool has a new option `--pr_description.inline_file_summary`, which allows to add a summary of each file changes to the Diffview page. See [here](https://github.com/Codium-ai/pr-agent/blob/main/docs/DESCRIBE.md#inline-file-summary-)
-- The `improve` tool can now present suggestions in a nice collapsible format, which significantly reduces the PR footprint. See [here](https://github.com/Codium-ai/pr-agent/blob/main/docs/IMPROVE.md#summarized-vs-commitable-code-suggestions) for more details. 
-- To accompany the improved interface of the  `improve` tool, we change the [default automation settings](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L116) of our GithupApp to:
-```
-pr_commands = [
-    "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true",
-    "/review --pr_reviewer.num_code_suggestions=0",
-    "/improve --pr_code_suggestions.summarize=true",
-]
-```
-Meaning that by default, for each PR the `describe`, `review`, and `improve` tools will be triggered automatically, and the `improve` tool will present the suggestions in a single comment.  
-You can of course overwrite these defaults by adding a `.pr_agent.toml` file to your repo. See [here](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#working-with-github-app).
-
-### Jan 10, 2024
-[LanceDB](https://lancedb.com/) is now supported as a locally hosted VectorDB for the `similar_issue` tool. See [here](./docs/SIMILAR_ISSUE.md) for more details.
 
 
 ## Overview
@@ -78,7 +72,7 @@ CodiumAI PR-Agent is an open-source tool to help efficiently review and handle p
 |       | Find Similar Issue                                                                                                                       |   :white_check_mark:    |                         |                             |
 |       | [Add PR Documentation](https://github.com/Codium-ai/pr-agent/blob/main/docs/ADD_DOCUMENTATION.md) 💎                                     |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:        |
 |       | [Custom Labels](https://github.com/Codium-ai/pr-agent/blob/main/docs/DESCRIBE.md#handle-custom-labels-from-the-repos-labels-page-gem) 💎 |   :white_check_mark:    |   :white_check_mark:    |         |
-|       | [Analyze](https://github.com/Codium-ai/pr-agent/blob/main/docs/Analyze.md) 💎                                                            |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:      |
+|       | [Analyze](https://github.com/Codium-ai/pr-agent/blob/main/docs/Analyze.md) 💎                                                            |   :white_check_mark:    |   :white_check_mark:    |        |
 |       |                                                                                                                                          |        |        |      |
 | USAGE | CLI                                                                                                                                      |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       |
 |       | App / webhook                                                                                                                            |   :white_check_mark:    |   :white_check_mark:    |  :white_check_mark:     |
@@ -91,6 +85,8 @@ CodiumAI PR-Agent is an open-source tool to help efficiently review and handle p
 |       | Multiple models support                                                                                                                  |   :white_check_mark:    |   :white_check_mark:    |   :white_check_mark:       | :white_check_mark: |
 |       | [Static code analysis](https://github.com/Codium-ai/pr-agent/blob/main/docs/Analyze.md) 💎                                               |   :white_check_mark:    |   :white_check_mark:     |    :white_check_mark:    |
 |       | [Global configuration](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#global-configuration-file-) 💎                           |   :white_check_mark:    |   :white_check_mark:     |    :white_check_mark:    |
+|       | [PR Actions](https://www.codium.ai/images/pr_agent/pr-actions.mp4) 💎                                     |   :white_check_mark:    |        |        |
+
 - 💎 means this feature is available only in [PR-Agent Pro](https://www.codium.ai/pricing/)
 - Support for additional git providers is described in [here](./docs/Full_environments.md)
 ___
