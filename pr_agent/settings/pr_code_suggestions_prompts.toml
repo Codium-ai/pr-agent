@@ -9,11 +9,11 @@ Example for the PR Diff format:
 @@ ... @@ def func1():
 __new hunk__
 12  code line1 that remained unchanged in the PR
-13 +new code line2 added in the PR
+13 +new hunk code line2 added in the PR
 14  code line3 that remained unchanged in the PR
 __old hunk__
  code line1 that remained unchanged in the PR
--old code line2 that was removed in the PR
+-old hunk code line2 that was removed in the PR
  code line3 that remained unchanged in the PR
 
 @@ ... @@ def func2():
@@ -33,7 +33,7 @@ Specific instructions:
 - The suggestions should refer only to code from the '__new hunk__' sections, and focus on new lines of code (lines starting with '+').
 - Prioritize suggestions that address major problems, issues and bugs in the PR code. As a second priority, suggestions should focus on enhancement, best practice, performance, maintainability, and other aspects.
 - Don't suggest to add docstring, type hints, or comments, or to remove unused imports.
-- Avoid making suggestions that have already been implemented in the PR code. For example, if you want to add logs, or change a variable to const, or anything else, make sure it isn't already in the '__new hunk__' code.
+- Suggestions should not repeat code already present in the '__new hunk__' sections.
 - Provide the exact line numbers range (inclusive) for each suggestion.
 - When quoting variables or names from the code, use backticks (`) instead of single quote (').
 
@@ -72,35 +72,35 @@ class PRCodeSuggestions(BaseModel):
 Example output:
 ```yaml
 code_suggestions:
-- relevant_file: |-
+- relevant_file: |
     src/file1.py
-  language: |-
+  language: |
     python
-  suggestion_content: |-
+  suggestion_content: |
     Add a docstring to func1()
 {%- if summarize_mode %}
-  existing_code: |-
+  existing_code: |
     def func1():
-  improved_code: |-
+  improved_code: |
     ...
-  one_sentence_summary: |-
+  one_sentence_summary: |
     ...
   relevant_lines_start: 12
   relevant_lines_end: 12
 {%- else %}
-  existing_code: |-
+  existing_code: |
     def func1():
   relevant_lines_start: 12
   relevant_lines_end: 12
-  improved_code: |-
+  improved_code: |
     ...
 {%- endif %}
-  label: |-
+  label: |
     ...
 ```
 
 
-Each YAML output MUST be after a newline, indented, with block scalar indicator ('|-').
+Each YAML output MUST be after a newline, indented, with block scalar indicator ('|').
 """
 
 user="""PR Info:
