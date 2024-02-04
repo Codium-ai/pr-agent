@@ -409,7 +409,7 @@ def get_pr_multi_diffs(git_provider: GitProvider,
         patch = convert_to_hunks_with_lines_numbers(patch, file)
         new_patch_tokens = token_handler.count_tokens(patch)
 
-        if patch and new_patch_tokens > get_max_tokens(model) - OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD:
+        if patch and (token_handler.prompt_tokens + new_patch_tokens) > get_max_tokens(model) - OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD:
             get_logger().warning(f"Patch too large, skipping: {file.filename}")
             continue
 
