@@ -411,7 +411,10 @@ class PRDescription:
 
 {filename}
 {file_change_description_br}
-    </details>
+
+
+</details>
+    
   </td>
   <td><a href="{link}">{diff_plus_minus}</a>{delta_nbsp}</td>
 </tr>                    
