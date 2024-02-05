@@ -1,33 +1,11 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 
 # enum EDIT_TYPE (ADDED, DELETED, MODIFIED, RENAMED)
-from enum import Enum
 from typing import Optional
 
 from pr_agent.config_loader import get_settings
+from pr_agent.algo.types import FilePatchInfo
 from pr_agent.log import get_logger
-
-
-class EDIT_TYPE(Enum):
-    ADDED = 1
-    DELETED = 2
-    MODIFIED = 3
-    RENAMED = 4
-    UNKNOWN = 5
-
-
-@dataclass
-class FilePatchInfo:
-    base_file: str
-    head_file: str
-    patch: str
-    filename: str
-    tokens: int = -1
-    edit_type: EDIT_TYPE = EDIT_TYPE.UNKNOWN
-    old_filename: str = None
-    num_plus_lines: int = -1
-    num_minus_lines: int = -1
 
 
 class GitProvider(ABC):

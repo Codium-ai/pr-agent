@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-import difflib
-import re
 import traceback
-from typing import Any, Callable, List, Tuple
+from typing import Callable, List, Tuple
 
 from github import RateLimitExceededException
 
@@ -13,7 +11,8 @@ from pr_agent.algo.file_filter import filter_ignored
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.algo.utils import get_max_tokens, ModelType
 from pr_agent.config_loader import get_settings
-from pr_agent.git_providers.git_provider import FilePatchInfo, GitProvider, EDIT_TYPE
+from pr_agent.git_providers.git_provider import GitProvider
+from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
 from pr_agent.log import get_logger
 
 DELETED_FILES_ = "Deleted files:\n"
@@ -268,78 +267,6 @@ def _get_all_deployments(all_models: List[str]) -> List[str]:
     else:
         all_deployments = [deployment_id] * len(all_models)
     return all_deployments
-
-
-def find_line_number_of_relevant_line_in_file(diff_files: List[FilePatchInfo],
-                                              relevant_file: str,
-                                              relevant_line_in_file: str,
-                                              absolute_position: int = None) -> Tuple[int, int]:
-    position = -1
-    if absolute_position is None:
-        absolute_position = -1
-    re_hunk_header = re.compile(
-        r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@[ ]?(.*)")
-
-    for file in diff_files:
-        if file.filename and (file.filename.strip() == relevant_file):
-            patch = file.patch
-            patch_lines = patch.splitlines()
-            delta = 0
-            start1, size1, start2, size2 = 0, 0, 0, 0
-            if absolute_position != -1: # matching absolute to relative
-                for i, line in enumerate(patch_lines):
-                    # new hunk
-                    if line.startswith('@@'):
-                        delta = 0
-                        match = re_hunk_header.match(line)
-                        start1, size1, start2, size2 = map(int, match.groups()[:4])
-                    elif not line.startswith('-'):
-                        delta += 1
-
-                    #
-                    absolute_position_curr = start2 + delta - 1
-
-                    if absolute_position_curr == absolute_position:
-                        position = i
-                        break
-            else:
-                # try to find the line in the patch using difflib, with some margin of error
-                matches_difflib: list[str | Any] = difflib.get_close_matches(relevant_line_in_file,
-                                                                             patch_lines, n=3, cutoff=0.93)
-                if len(matches_difflib) == 1 and matches_difflib[0].startswith('+'):
-                    relevant_line_in_file = matches_difflib[0]
-
-
-                for i, line in enumerate(patch_lines):
-                    if line.startswith('@@'):
-                        delta = 0
-                        match = re_hunk_header.match(line)
-                        start1, size1, start2, size2 = map(int, match.groups()[:4])
-                    elif not line.startswith('-'):
-                        delta += 1
-
-                    if relevant_line_in_file in line and line[0] != '-':
-                        position = i
-                        absolute_position = start2 + delta - 1
-                        break
-
-                if position == -1 and relevant_line_in_file[0] == '+':
-                    no_plus_line = relevant_line_in_file[1:].lstrip()
-                    for i, line in enumerate(patch_lines):
-                        if line.startswith('@@'):
-                            delta = 0
-                            match = re_hunk_header.match(line)
-                            start1, size1, start2, size2 = map(int, match.groups()[:4])
-                        elif not line.startswith('-'):
-                            delta += 1
-
-                        if no_plus_line in line and line[0] != '-':
-                            # The model might add a '+' to the beginning of the relevant_line_in_file even if originally
-                            # it's a context line
-                            position = i
-                            absolute_position = start2 + delta - 1
-                            break
-    return position, absolute_position
 
 
 def get_pr_multi_diffs(git_provider: GitProvider,

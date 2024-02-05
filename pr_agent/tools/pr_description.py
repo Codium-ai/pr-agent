@@ -9,7 +9,7 @@ from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAIHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import load_yaml, set_custom_labels, get_user_labels
+from pr_agent.algo.utils import load_yaml, set_custom_labels, get_user_labels, ModelType
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
@@ -80,7 +80,7 @@ class PRDescription:
             if get_settings().config.publish_output:
                 self.git_provider.publish_comment("Preparing PR description...", is_temporary=True)
 
-            await retry_with_fallback_models(self._prepare_prediction)
+            await retry_with_fallback_models(self._prepare_prediction, ModelType.TURBO) # turbo model because larger context
 
             get_logger().info(f"Preparing answer {self.pr_id}")
             if self.prediction:
@@ -363,7 +363,7 @@ class PRDescription:
         try:
             pr_body += "<table>"
             header = f"Relevant files"
-            delta = 77
+            delta = 75
             # header += "&nbsp; " * delta
             pr_body += f"""<thead><tr><th></th><th align="left">{header}</th></tr></thead>"""
             pr_body += """<tbody>"""
@@ -379,8 +379,7 @@ class PRDescription:
                 for filename, file_changes_title, file_change_description in list_tuples:
                     filename = filename.replace("'", "`")
                     filename_publish = filename.split("/")[-1]
-                    file_changes_title_br = insert_br_after_x_chars(file_changes_title, x=(delta - 5),
-                                                                    new_line_char="\n\n")
+                    file_changes_title_br = insert_br_after_x_chars(file_changes_title, x=(delta - 5))
                     file_changes_title_extended = file_changes_title_br.strip() + "</code>"
                     if len(file_changes_title_extended) < (delta - 5):
                         file_changes_title_extended += "&nbsp; " * ((delta - 5) - len(file_changes_title_extended))
@@ -428,48 +427,74 @@ class PRDescription:
             pass
         return pr_body
 
-def insert_br_after_x_chars(text, x=70, new_line_char="<br> "):
+def insert_br_after_x_chars(text, x=70):
     """
     Insert <br> into a string after a word that increases its length above x characters.
+    Use proper HTML tags for code and new lines.
     """
     if len(text) < x:
         return text
 
-    lines = text.splitlines()
+    # replace odd instances of ` with <code> and even instances of ` with </code>
+    text = replace_code_tags(text)
+
+    # convert list items to <li>
+    if text.startswith("- "):
+        text = "<li>" + text[2:]
+    text = text.replace("\n- ", '<br><li> ').replace("\n - ", '<br><li> ')
+
+    # convert new lines to <br>
+    text = text.replace("\n", '<br>')
+
+    # split text into lines
+    lines = text.split('<br>')
     words = []
-    for i,line in enumerate(lines):
+    for i, line in enumerate(lines):
         words += line.split(' ')
-        if i<len(lines)-1:
-            words[-1] += "\n"
+        if i < len(lines) - 1:
+            words[-1] += "<br>"
 
+    def count_chars_without_html(string):
+        if '<' not in string:
+            return len(string)
+        no_html_string = re.sub('<[^>]+>', '', string)
+        return len(no_html_string)
 
-    # words = text.split(' ')
-
-    new_text = ""
-    current_length = 0
+    new_text = []
     is_inside_code = False
+    current_length = 0
     for word in words:
-        # Check if adding this word exceeds x characters
-        if current_length + len(word) > x:
-            if not is_inside_code:
-                new_text += f"{new_line_char} "  # Insert line break
-                current_length = 0  # Reset counter
-            else:
-                new_text += f"`{new_line_char} `"
-        # check if inside <code> tag
-        if word.startswith("`") and not is_inside_code and not word.endswith("`"):
+        is_saved_word = False
+        if word == "<code>" or word == "</code>" or word == "<li>" or word == "<br>":
+            is_saved_word = True
+        if "<code>" in word:
             is_inside_code = True
-        if word.endswith("`"):
+        if  "</code>" in word:
             is_inside_code = False
 
-        # Add the word to the new text
-        if word.endswith("\n"):
-            new_text += word
-        else:
-            new_text += word + " "
-        current_length += len(word) + 1  # Add 1 for the space
+        len_word = count_chars_without_html(word)
+        if not is_saved_word and (current_length + len_word > x):
+            if is_inside_code:
+                new_text.append("</code><br><code>")
+            else:
+                new_text.append("<br>")
+            current_length = 0  # Reset counter
+        new_text.append(word + " ")
 
+        if not is_saved_word:
+            current_length += len_word + 1  # Add 1 for the space
 
-        if word.endswith("\n"):
+        if word == "<li>" or word == "<br>":
             current_length = 0
-    return new_text.strip()  # Remove trailing space
+
+    return ''.join(new_text).strip()
+
+def replace_code_tags(text):
+    """
+    Replace odd instances of ` with <code> and even instances of ` with </code>
+    """
+    parts = text.split('`')
+    for i in range(1, len(parts), 2):
+        parts[i] = '<code>' + parts[i] + '</code>'
+    return ''.join(parts)
+

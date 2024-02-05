@@ -325,7 +325,7 @@ class PRCodeSuggestions:
 
             pr_body += "<table>"
             header = f"Suggestions"
-            delta = 77
+            delta = 75
             header += "&nbsp; " * delta
             pr_body += f"""<thead><tr><th></th><th>{header}</th></tr></thead>"""
             pr_body += """<tbody>"""
