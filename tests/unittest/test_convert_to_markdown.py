@@ -98,13 +98,11 @@ class TestConvertToMarkdown:
 
 class TestBR:
     def test_br1(self):
-        file_change_description = '- Created a new class `ColorPaletteResourcesCollection` in the namespace `Avalonia.Themes.Fluent`.\n- The class extends `AvaloniaDictionary<ThemeVariant, ColorPaletteResources>` and implements `IResourceProvider`.\n- The class includes methods for handling theme variants, resource retrieval, owner management, and property change events.'
+        file_change_description = '- Imported `FilePatchInfo` and `EDIT_TYPE` from `pr_agent.algo.types` instead of `pr_agent.git_providers.git_provider`.'
         file_change_description_br = insert_br_after_x_chars(file_change_description)
-        expected_output=('<li>Created a new class <code>ColorPaletteResourcesCollection</code> <br>in the namespace '
-                         '<code>Avalonia.Themes.Fluent</code>.<br> <li> The class extends <code>AvaloniaDictionary'
-                         '<ThemeVariant, <br>ColorPaletteResources></code> and implements <br><code>IResourceProvider'
-                         '</code>.<br> <li> The class includes methods for handling theme variants, resource <br>'
-                         'retrieval, owner management, and property change events.')
+        expected_output = ('<li>Imported <code>FilePatchInfo</code> and <code>EDIT_TYPE</code> from '
+                           '<code>pr_agent.algo.types</code> instead <br>of '
+                           '<code>pr_agent.git_providers.git_provider</code>.')
         assert file_change_description_br == expected_output
         # print("-----")
         # print(file_change_description_br)
@@ -113,9 +111,10 @@ class TestBR:
         file_change_description = ('- Created a - new -class `ColorPaletteResourcesCollection ColorPaletteResourcesCollection '
                                    'ColorPaletteResourcesCollection ColorPaletteResourcesCollection`')
         file_change_description_br = insert_br_after_x_chars(file_change_description)
-        expected_output = ('<li>Created a - new -class <code>ColorPaletteResourcesCollection '
-                           '<br>ColorPaletteResourcesCollection ColorPaletteResourcesCollection '
-                           '<br>ColorPaletteResourcesCollection</code>')
+        expected_output = ('<li>Created a - new -class <code>ColorPaletteResourcesCollection </code><br><code>'
+                           'ColorPaletteResourcesCollection ColorPaletteResourcesCollection <br>'
+                           'ColorPaletteResourcesCollection</code>')
         assert file_change_description_br == expected_output
         # print("-----")
         # print(file_change_description_br)
+

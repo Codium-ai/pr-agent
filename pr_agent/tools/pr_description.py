@@ -363,7 +363,7 @@ class PRDescription:
         try:
             pr_body += "<table>"
             header = f"Relevant files"
-            delta = 77
+            delta = 75
             # header += "&nbsp; " * delta
             pr_body += f"""<thead><tr><th></th><th align="left">{header}</th></tr></thead>"""
             pr_body += """<tbody>"""
@@ -454,6 +454,10 @@ def insert_br_after_x_chars(text, x=70):
         if i < len(lines) - 1:
             words[-1] += "<br>"
 
+    def count_chars_without_html(string):
+        no_html_string = re.sub('<[^>]+>', '', string)
+        return len(no_html_string)
+
     new_text = []
     is_inside_code = False
     current_length = 0
@@ -461,12 +465,13 @@ def insert_br_after_x_chars(text, x=70):
         is_saved_word = False
         if word == "<code>" or word == "</code>" or word == "<li>" or word == "<br>":
             is_saved_word = True
-        if word == "<code>":
+        if "<code>" in word:
             is_inside_code = True
-        elif word == "</code>":
+        if  "</code>" in word:
             is_inside_code = False
 
-        if not is_saved_word and (current_length + len(word) > x):
+        len_word = count_chars_without_html(word)
+        if not is_saved_word and (current_length + len_word > x):
             if is_inside_code:
                 new_text.append("</code><br><code>")
             else:
@@ -475,7 +480,7 @@ def insert_br_after_x_chars(text, x=70):
         new_text.append(word + " ")
 
         if not is_saved_word:
-            current_length += len(word) + 1  # Add 1 for the space
+            current_length += len_word + 1  # Add 1 for the space
 
         if word == "<li>" or word == "<br>":
             current_length = 0
