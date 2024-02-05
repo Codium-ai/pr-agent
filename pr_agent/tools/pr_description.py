@@ -9,7 +9,7 @@ from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAIHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import load_yaml, set_custom_labels, get_user_labels
+from pr_agent.algo.utils import load_yaml, set_custom_labels, get_user_labels, ModelType
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
@@ -80,7 +80,7 @@ class PRDescription:
             if get_settings().config.publish_output:
                 self.git_provider.publish_comment("Preparing PR description...", is_temporary=True)
 
-            await retry_with_fallback_models(self._prepare_prediction)
+            await retry_with_fallback_models(self._prepare_prediction, ModelType.TURBO) # turbo model because larger context
 
             get_logger().info(f"Preparing answer {self.pr_id}")
             if self.prediction:
@@ -455,6 +455,8 @@ def insert_br_after_x_chars(text, x=70):
             words[-1] += "<br>"
 
     def count_chars_without_html(string):
+        if '<' not in string:
+            return len(string)
         no_html_string = re.sub('<[^>]+>', '', string)
         return len(no_html_string)
 

@@ -9,11 +9,11 @@ verbosity_level=0 # 0,1,2
 use_extra_bad_extensions=false
 use_repo_settings_file=true
 use_global_settings_file=true
-ai_timeout=180
+ai_timeout=90
 max_description_tokens = 500
 max_commits_tokens = 500
 max_model_tokens = 32000 # Limits the maximum number of tokens that can be used by any model, regardless of the model's default capabilities.
-patch_extra_lines = 3
+patch_extra_lines = 1
 secret_provider="google_cloud_storage"
 cli_mode=false
 
