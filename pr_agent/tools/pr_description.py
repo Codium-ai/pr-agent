@@ -415,6 +415,7 @@ class PRDescription:
 
 </details>
     
+
   </td>
   <td><a href="{link}">{diff_plus_minus}</a>{delta_nbsp}</td>
 </tr>                    
@@ -470,10 +471,6 @@ def insert_br_after_x_chars(text, x=70):
         is_saved_word = False
         if word == "<code>" or word == "</code>" or word == "<li>" or word == "<br>":
             is_saved_word = True
-        if "<code>" in word:
-            is_inside_code = True
-        if  "</code>" in word:
-            is_inside_code = False
 
         len_word = count_chars_without_html(word)
         if not is_saved_word and (current_length + len_word > x):
@@ -490,6 +487,10 @@ def insert_br_after_x_chars(text, x=70):
         if word == "<li>" or word == "<br>":
             current_length = 0
 
+        if "<code>" in word:
+            is_inside_code = True
+        if "</code>" in word:
+            is_inside_code = False
     return ''.join(new_text).strip()
 
 def replace_code_tags(text):
