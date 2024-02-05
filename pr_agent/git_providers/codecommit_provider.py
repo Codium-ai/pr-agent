@@ -5,9 +5,9 @@ from typing import List, Optional, Tuple
 from urllib.parse import urlparse
 
 from pr_agent.git_providers.codecommit_client import CodeCommitClient
-
+from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
 from ..algo.utils import load_large_diff
-from .git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
+from .git_provider import GitProvider
 from ..config_loader import get_settings
 from ..log import get_logger
 

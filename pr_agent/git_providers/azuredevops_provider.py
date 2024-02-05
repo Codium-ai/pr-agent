@@ -6,7 +6,8 @@ from ..log import get_logger
 from ..algo.language_handler import is_valid_file
 from ..algo.utils import clip_tokens, load_large_diff
 from ..config_loader import get_settings
-from .git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
+from .git_provider import GitProvider
+from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
 
 AZURE_DEVOPS_AVAILABLE = True
 

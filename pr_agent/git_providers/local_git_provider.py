@@ -5,7 +5,8 @@ from typing import List
 from git import Repo
 
 from pr_agent.config_loader import _find_repository_root, get_settings
-from pr_agent.git_providers.git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
+from pr_agent.git_providers.git_provider import GitProvider
+from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
 from pr_agent.log import get_logger
 
 

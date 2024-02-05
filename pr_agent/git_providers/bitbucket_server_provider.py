@@ -6,9 +6,9 @@ import requests
 from atlassian.bitbucket import Bitbucket
 from starlette_context import context
 
-from .git_provider import FilePatchInfo, GitProvider, EDIT_TYPE
-from ..algo.pr_processing import find_line_number_of_relevant_line_in_file
-from ..algo.utils import load_large_diff
+from .git_provider import GitProvider
+from pr_agent.algo.types import FilePatchInfo
+from ..algo.utils import load_large_diff, find_line_number_of_relevant_line_in_file
 from ..config_loader import get_settings
 from ..log import get_logger
 
