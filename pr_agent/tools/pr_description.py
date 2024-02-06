@@ -133,7 +133,7 @@ class PRDescription:
                         latest_commit_url = self.git_provider.get_latest_commit_url()
                         if latest_commit_url:
                             self.git_provider.publish_comment(
-                                f"**[PR Description]({self.git_provider.pr_url})** updated to latest commit ({latest_commit_url})")
+                                f"**[PR Description]({self.git_provider.get_pr_url()})** updated to latest commit ({latest_commit_url})")
                 self.git_provider.remove_initial_comment()
         except Exception as e:
             get_logger().error(f"Error generating PR description {self.pr_id}: {e}")
