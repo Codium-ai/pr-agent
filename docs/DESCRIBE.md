@@ -55,6 +55,7 @@ To edit [configurations](./../pr_agent/settings/configuration.toml#L46) related 
 This will enable you to quickly understand the changes in each file while reviewing the code changes (diff view).
 
 To add the walkthrough table to the "Files changed" tab, you can click on the checkbox that appears PR Description status message below the main PR Description:
+
 <kbd><img src=https://codium.ai/images/pr_agent/add_table_checkbox.png width="512"></kbd>
 
 If you prefer to have the file summaries appear in the "Files changed" tab on every PR, change the `pr_description.inline_file_summary` parameter in the configuration file, possible values are:
