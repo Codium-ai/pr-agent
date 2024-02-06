@@ -163,11 +163,11 @@ enable_auto_approval = true
 (this specific flag cannot be set with a command line argument, only in the configuration file, committed to the repository)
 
 
-After enabling, by invoking:
+After enabling, by commenting on a PR:
 ```
 /review auto_approve
 ```
-The tool will automatically approve the PR, and add a comment with the approval.
+PR-Agent will automatically approve the PR, and add a comment with the approval.
 
 
 You can also enable auto-approval only if the PR meets certain requirements, such as that the `estimated_review_effort` label is equal or below a certain threshold, by adjusting the flag:
