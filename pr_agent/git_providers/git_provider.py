@@ -171,6 +171,11 @@ class GitProvider(ABC):
     def get_latest_commit_url(self) -> str:
         return ""
 
+    def auto_approve(self) -> bool:
+        return False
+
+
+
 def get_main_pr_language(languages, files) -> str:
     """
     Get the main language of the commit. Return an empty string if cannot determine.
@@ -238,7 +243,6 @@ def get_main_pr_language(languages, files) -> str:
         pass
 
     return main_language_str
-
 
 class IncrementalPR:
     def __init__(self, is_incremental: bool = False):

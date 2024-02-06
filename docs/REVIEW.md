@@ -11,6 +11,7 @@
   - [Automation](#automation)
   - [Auto-labels](#auto-labels)
   - [Extra instructions](#extra-instructions)
+  - [Auto-approval](#auto-approval)
 
 ## Overview
 The `review` tool scans the PR code changes, and automatically generates a PR review.
@@ -50,6 +51,9 @@ This sub-tool checks if the PR description properly contains a ticket to a proje
 #### Adding PR labels
 - `enable_review_labels_security`: if set to true, the tool will publish a 'possible security issue' label if it detects a security issue. Default is true.
 - `enable_review_labels_effort`: if set to true, the tool will publish a 'Review effort [1-5]: x' label. Default is true.
+#### Auto-approval
+- `enable_auto_approval`: if set to true, the tool will approve the PR when invoked with the 'auto_approve' command. Default is false. This flag can be changed only from configuration file.
+- `maximal_review_effort`: maximal effort level for auto-approval. If the PR's estimated review effort is above this threshold, the auto-approval will not run. Default is 5.
 
 ###  Incremental Mode
 Incremental review only considers changes since the last PR-Agent review. This can be useful when working on the PR in an iterative manner, and you want to focus on the changes since the last review instead of reviewing the entire PR again.
@@ -97,6 +101,7 @@ ___
 3) [Automation](#automation)
 4) [Auto-labels](#auto-labels)
 5) [Extra instructions](#extra-instructions)
+6) [Auto-approval](#auto-approval)
 
 ### General guidelines
 The `review` tool provides a collection of possible feedbacks about a PR.
@@ -146,3 +151,27 @@ In the code feedback section, emphasize the following:
 ```
 Use triple quotes to write multi-line instructions. Use bullet points to make the instructions more readable.
 
+
+### Auto-approval
+PR-Agent can approve a PR when a specific comment is invoked, given that this ability was enabled in the configuration file.
+
+To ensure safety, the auto-approval feature is disabled by default. To enable auto-approval, you need to actively set in a pre-defined configuration file the following:
+```
+[pr_reviewer]
+enable_auto_approval = true
+```
+(this specific flag cannot be set with a command line argument, only in the configuration file, committed to the repository)
+
+
+After enabling, by invoking:
+```
+/review auto_approve
+```
+The tool will automatically approve the PR, and add a comment with the approval.
+
+
+You can also enable auto-approval only if the PR meets certain requirements, such as that the `estimated_review_effort` is equal or below a certain threshold, by adjusting the flag:
+```
+[pr_reviewer]
+maximal_review_effort = 5
+```

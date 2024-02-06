@@ -643,3 +643,13 @@ class GithubProvider(GitProvider):
             return pr_id
         except:
             return ""
+
+    def auto_approve(self) -> bool:
+        try:
+            res = self.pr.create_review(event="APPROVE")
+            if res.state == "APPROVED":
+                return True
+            return False
+        except Exception as e:
+            get_logger().exception(f"Failed to auto-approve, error: {e}")
+            return False

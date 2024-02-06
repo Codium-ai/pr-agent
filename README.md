@@ -31,6 +31,9 @@ Making pull requests less painful with an AI agent
 - [Why use PR-Agent?](#why-use-pr-agent)
   
 ## News and Updates
+### Feb 6, 2024
+A new feature was added to the `review` tool - [Auto-approved PRs](./docs/REVIEW.md#auto-approved-prs). If enabled, this feature enables to automatically approve PRs that meet specific criteria, by commenting on a PR: `/review auto_approve`.
+
 ### Feb 2, 2024
 We are excited to introduce "PR Actions" 💎:
 

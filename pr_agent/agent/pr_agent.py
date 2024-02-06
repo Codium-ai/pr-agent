@@ -45,6 +45,7 @@ commands = list(command2class.keys())
 class PRAgent:
     def __init__(self, ai_handler: partial[BaseAiHandler,] = LiteLLMAIHandler):
         self.ai_handler = ai_handler # will be initialized in run_action
+        self.forbidden_cli_args = ['enable_auto_approval']
 
     async def handle_request(self, pr_url, request, notify=None) -> bool:
         # First, apply repo specific settings if exists
@@ -58,6 +59,13 @@ class PRAgent:
             action, *args = list(lexer)
         else:
             action, *args = request
+
+        if args:
+            for forbidden_arg in self.forbidden_cli_args:
+                for arg in args:
+                    if forbidden_arg in arg:
+                        get_logger().error(f"CLI argument '{forbidden_arg}' is forbidden")
+                        return False
         args = update_settings_from_args(args)
 
         action = action.lstrip("/").lower()
