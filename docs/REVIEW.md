@@ -11,7 +11,7 @@
   - [Automation](#automation)
   - [Auto-labels](#auto-labels)
   - [Extra instructions](#extra-instructions)
-  - [Auto-approval](#auto-approval)
+  - [Auto-approval](#auto-approval-1)
 
 ## Overview
 The `review` tool scans the PR code changes, and automatically generates a PR review.
@@ -153,7 +153,7 @@ Use triple quotes to write multi-line instructions. Use bullet points to make th
 
 
 ### Auto-approval
-PR-Agent can approve a PR when a specific comment is invoked, given that this ability was enabled in the configuration file.
+PR-Agent can approve a PR when a specific comment is invoked.
 
 To ensure safety, the auto-approval feature is disabled by default. To enable auto-approval, you need to actively set in a pre-defined configuration file the following:
 ```
@@ -170,7 +170,7 @@ After enabling, by invoking:
 The tool will automatically approve the PR, and add a comment with the approval.
 
 
-You can also enable auto-approval only if the PR meets certain requirements, such as that the `estimated_review_effort` is equal or below a certain threshold, by adjusting the flag:
+You can also enable auto-approval only if the PR meets certain requirements, such as that the `estimated_review_effort` label is equal or below a certain threshold, by adjusting the flag:
 ```
 [pr_reviewer]
 maximal_review_effort = 5
