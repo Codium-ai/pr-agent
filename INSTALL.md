@@ -14,7 +14,6 @@ There are several ways to use PR-Agent:
 
 **GitHub specific methods**
 - [Run as a GitHub Action](INSTALL.md#run-as-a-github-action)
-- [Run as a polling server](INSTALL.md#run-as-a-polling-server)
 - [Run as a GitHub App](INSTALL.md#run-as-a-github-app)
 - [Deploy as a Lambda Function](INSTALL.md#deploy-as-a-lambda-function)
 - [AWS CodeCommit](INSTALL.md#aws-codecommit-setup)
@@ -182,19 +181,6 @@ When you open your next PR, you should see a comment from `github-actions` bot w
         OPENAI.ORG: "<Your organization name under your OpenAI account>"
         PR_REVIEWER.REQUIRE_TESTS_REVIEW: "false" # Disable tests review
         PR_CODE_SUGGESTIONS.NUM_CODE_SUGGESTIONS: 6 # Increase number of code suggestions
-```
-
----
-
-### Run as a polling server
-Request reviews by tagging your GitHub user on a PR
-
-Follow [steps 1-3](#run-as-a-github-action) of the GitHub Action setup.
-
-Run the following command to start the server:
-
-```
-python pr_agent/servers/github_polling.py
 ```
 
 ---

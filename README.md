@@ -217,17 +217,19 @@ To use your own version of PR-Agent, you first need to acquire two tokens:
 
 There are several ways to use PR-Agent:
 
-- [Method 1: Use Docker image (no installation required)](INSTALL.md#method-1-use-docker-image-no-installation-required)
-- [Method 2: Run from source](INSTALL.md#method-2-run-from-source)
-- [Method 3: Run as a GitHub Action](INSTALL.md#method-3-run-as-a-github-action)
-- [Method 4: Run as a polling server](INSTALL.md#method-4-run-as-a-polling-server)
-  - Request reviews by tagging your GitHub user on a PR
-- [Method 5: Run as a GitHub App](INSTALL.md#method-5-run-as-a-github-app)
-  - Allowing you to automate the review process on your private or public repositories
-- [Method 6: Deploy as a Lambda Function](INSTALL.md#method-6---deploy-as-a-lambda-function)
-- [Method 7: AWS CodeCommit](INSTALL.md#method-7---aws-codecommit-setup)
-- [Method 8: Run a GitLab webhook server](INSTALL.md#method-8---run-a-gitlab-webhook-server)
-- [Method 9: Run as a Bitbucket Pipeline](INSTALL.md#method-9-run-as-a-bitbucket-pipeline)
+**Locally**
+- [Use Docker image (no installation required)](./INSTALL.md#use-docker-image-no-installation-required)
+- [Run from source](./INSTALL.md#run-from-source)
+
+**GitHub specific methods**
+- [Run as a GitHub Action](./INSTALL.md#run-as-a-github-action)
+- [Run as a GitHub App](./INSTALL.md#run-as-a-github-app)
+
+**GitLab specific methods**
+- [Run a GitLab webhook server](./INSTALL.md#run-a-gitlab-webhook-server)
+
+**BitBucket specific methods**
+- [Run as a Bitbucket Pipeline](./INSTALL.md#run-as-a-bitbucket-pipeline)
 
 ## PR-Agent Pro 💎
 [PR-Agent Pro](https://www.codium.ai/pricing/) is a hosted version of PR-Agent, provided by CodiumAI. It is available for a monthly fee, and provides the following benefits:
