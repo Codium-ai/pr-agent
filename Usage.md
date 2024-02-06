@@ -100,7 +100,7 @@ python -m pr_agent.cli --pr_url=<pr_url>  /review --pr_reviewer.extra_instructio
 (2) You can print results locally, without publishing them, by setting in `configuration.toml`:
 ```
 [config]
-publish_output=true
+publish_output=false
 verbosity_level=2
 ```
 This is useful for debugging or experimenting with different tools.
