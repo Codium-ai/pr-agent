@@ -52,20 +52,23 @@ To edit [configurations](./../pr_agent/settings/configuration.toml#L46) related 
 ### Inline file summary 💎
 > This feature is available only in PR-Agent Pro
 
-This will enable you to quickly understand the changes in each file while reviewing the code changes (diff view).
+This feature will enable you to quickly understand the changes in each file while reviewing the code changes (diff view).
 
 To add the walkthrough table to the "Files changed" tab, you can click on the checkbox that appears PR Description status message below the main PR Description:
 
 <kbd><img src=https://codium.ai/images/pr_agent/add_table_checkbox.png width="512"></kbd>
 
 If you prefer to have the file summaries appear in the "Files changed" tab on every PR, change the `pr_description.inline_file_summary` parameter in the configuration file, possible values are:
+
 - `'table'`: File changes walkthrough table will be displayed on the top of the "Files changed" tab, in addition to the "Conversation" tab.
-<kbd><img src=https://codium.ai/images/pr_agent/diffview-table.png width="1024"></kbd>
+<kbd><img src=https://codium.ai/images/pr_agent/diffview-table.png width="768"></kbd>
+
 - `true`: A collapsable file comment with changes title and a changes summary for each file in the PR.
-<kbd><img src=https://codium.ai/images/pr_agent/diffview_changes.png width="1024"></kbd>
+<kbd><img src=https://codium.ai/images/pr_agent/diffview_changes.png width="768"></kbd>
+
 - `false` (`default`): File changes walkthrough will be added only to the "Conversation" tab.
 
-*Note that this feature is currently available only for GitHub.
+Note that this feature is currently available only for GitHub.
 
 
 ### Handle custom labels from the Repo's labels page :gem:
@@ -86,7 +89,7 @@ The description should be comprehensive and detailed, indicating when to add the
 
 ### Markers template
 To enable markers, set `pr_description.use_description_markers=true`.
-markers enable to easily integrate user's content and auto-generated content, with a template-like mechanism.
+Markers enable to easily integrate user's content and auto-generated content, with a template-like mechanism.
 
 For example, if the PR original description was:
 ```
