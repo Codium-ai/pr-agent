@@ -82,8 +82,9 @@ enable_help_text=true
 # params for '/improve --extended' mode
 auto_extended_mode=true
 num_code_suggestions_per_chunk=5
-rank_extended_suggestions = false
 max_number_of_calls = 3
+parallel_calls = true
+rank_extended_suggestions = false
 final_clip_factor = 0.8
 
 [pr_add_docs] # /add_docs #
