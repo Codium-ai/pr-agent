@@ -240,7 +240,7 @@ class PRCodeSuggestions:
             prediction_list = []
             for i, patches_diff in enumerate(patches_diff_list):
                 get_logger().info(f"Processing chunk {i + 1} of {len(patches_diff_list)}")
-                prediction = await self._get_prediction(model, patches_diff)  # toDo: parallelize
+                prediction = await self._get_prediction(model, patches_diff)
                 prediction_list.append(prediction)
 
         data = {}
