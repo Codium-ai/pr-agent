@@ -42,7 +42,6 @@ To edit [configurations](./../pr_agent/settings/configuration.toml#L19)  related
 - `require_focused_review`: if set to true, the tool will add a section - 'is the PR a focused one'. Default is false.
 - `require_score_review`: if set to true, the tool will add a section that scores the PR. Default is false.
 - `require_tests_review`: if set to true, the tool will add a section that checks if the PR contains tests. Default is true.
-- `require_security_review`: if set to true, the tool will add a section that checks if the PR contains security issues. Default is true.
 - `require_estimate_effort_to_review`: if set to true, the tool will add a section that estimates the effort needed to review the PR. Default is true.
 #### SOC2 ticket compliance 💎
 This sub-tool checks if the PR description properly contains a ticket to a project management system (e.g., Jira, Asana, Trello, etc.), as required by SOC2 compliance. If not, it will add a label to the PR: "Missing SOC2 ticket".

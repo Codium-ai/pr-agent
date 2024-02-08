@@ -49,7 +49,6 @@ class TestConvertToMarkdown:
             'Main theme': 'Test',
             'Type of PR': 'Test type',
             'Relevant tests added': 'no',
-            'Unrelated changes': 'n/a',  # won't be included in the output
             'Focused PR': 'Yes',
             'General PR suggestions': 'general suggestion...',
             'Code feedback': [
@@ -87,7 +86,6 @@ class TestConvertToMarkdown:
             'Main theme': {},
             'Type of PR': {},
             'Relevant tests added': {},
-            'Unrelated changes': {},
             'Focused PR': {},
             'General PR suggestions': {},
             'Code suggestions': {}

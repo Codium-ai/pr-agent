@@ -246,8 +246,8 @@ class BitbucketServerProvider(GitProvider):
 
     def generate_link_to_relevant_line_number(self, suggestion) -> str:
         try:
-            relevant_file = suggestion['relevant file'].strip('`').strip("'")
-            relevant_line_str = suggestion['relevant line']
+            relevant_file = suggestion['relevant_file'].strip('`').strip("'")
+            relevant_line_str = suggestion['relevant_line']
             if not relevant_line_str:
                 return ""
 

@@ -91,7 +91,7 @@ labels:
 {%- endif %}
 ```
 
-Answer should be a valid YAML, and nothing else. Each YAML output MUST be after a newline, with proper indent, and block scalar indicator ('|-')
+Answer should be a valid YAML, and nothing else. Each YAML output MUST be after a newline, with proper indent, and block scalar indicator ('|')
 """
 
 user="""PR Info:

@@ -43,121 +43,71 @@ Extra instructions from the user:
 {% endif %}
 
 
-You must use the following YAML schema to format your answer:
-```yaml
-PR Review:
+The output must be a YAML object equivalent to type $PRReview, according to the following Pydantic definitions:
+=====
+class Review(BaseModel)
+{%- if require_estimate_effort_to_review %}
+    estimated_effort_to_review_[1-5]: str = Field(description="Estimate, on a scale of 1-5 (inclusive), the time and effort required to review this PR by an experienced and knowledgeable developer. 1 means short and easy review , 5 means long and hard review. Take into account the size, complexity, quality, and the needed changes of the PR code diff. Explain your answer in a short and concise manner.")
+{%- endif %}
 {%- if require_score %}
-  Score:
-    type: int
-    description: |-
-      Rate this PR on a scale of 0-100 (inclusive), where 0 means the worst
-      possible PR code, and 100 means PR code of the highest quality, without
-      any bugs or performance issues, that is ready to be merged immediately and
-      run in production at scale.
+    score: str = Field(description="Rate this PR on a scale of 0-100 (inclusive), where 0 means the worst possible PR code, and 100 means PR code of the highest quality, without any bugs or performance issues, that is ready to be merged immediately and run in production at scale.")
 {%- endif %}
 {%- if require_tests %}
-  Relevant tests added:
-    type: string
-    description: yes\\no question: does this PR have relevant tests ?
+    relevant_tests_added: str = Field(description="yes\\no question: does this PR have relevant tests ?")
 {%- endif %}
 {%- if question_str %}
-  Insights from user's answer:
-    type: string
-    description: |-
-      shortly summarize the insights you gained from the user's answers to the questions
+    insights_from_user_answers: str = Field(description="shortly summarize the insights you gained from the user's answers to the questions")
 {%- endif %}
 {%- if require_focused %}
-  Focused PR:
-    type: string
-    description: |-
-      Is this a focused PR, in the sense that all the PR code diff changes are
-      united under a single focused theme ? If the theme is too broad, or the PR
-      code diff changes are too scattered, then the PR is not focused. Explain
-      your answer shortly.
+    focused_pr: str = Field(description="Is this a focused PR, in the sense that all the PR code diff changes are united under a single focused theme ? If the theme is too broad, or the PR code diff changes are too scattered, then the PR is not focused. Explain your answer shortly.")
 {%- endif %}
-{%- if require_estimate_effort_to_review %}
-  Estimated effort to review [1-5]:
-    type: string
-    description: >-
-      Estimate, on a scale of 1-5 (inclusive), the time and effort required to review this PR by an experienced and knowledgeable developer. 1 means short and easy review , 5 means long and hard review.
-      Take into account the size, complexity, quality, and the needed changes of the PR code diff.
-      Explain your answer shortly (1-2 sentences). Use the format: '1, because ...'
-{%- endif %}
-{%- if num_code_suggestions > 0 or require_security %}
-PR Feedback:
-{% endif %}
-{%- if num_code_suggestions > 0 %}
-  Code feedback:
-    type: array
-    maxItems: {{ num_code_suggestions }}
-    uniqueItems: true
-    items:
-      relevant file:
-        type: string
-        description: the relevant file full path
-      language:
-        type: string
-        description: the language of the relevant file
-      suggestion:
-        type: string
-        description: |-
-          a concrete suggestion for meaningfully improving the new PR code.
-          Also describe how, specifically, the suggestion can be applied to new PR code.
-          Add tags with importance measure that matches each suggestion ('important' or 'medium').
-          Do not make suggestions for updating or adding docstrings, renaming PR title and description, or linter like.
-      relevant line:
-        type: string
-        description: |-
-          a single code line taken from the relevant file, to which the suggestion applies.
-          The code line should start with a '+'.
-          Make sure to output the line exactly as it appears in the relevant file
-{%- endif %}
-{%- if require_security %}
-  Security concerns:
-    type: string
-    description: >-
-      does this PR code introduce possible vulnerabilities such as exposure of sensitive information (e.g., API keys, secrets, passwords), or security concerns like SQL injection, XSS, CSRF, and others ? Answer 'No' if there are no possible issues.
-      Answer 'Yes, because ...' if there are security concerns or issues. Explain your answer shortly.
-{%- endif %}
-```
+    possible_issues: str = Field(description="Does this PR code introduce clear issues, bugs, or performance concerns ? Answer 'No' if there are no clear issues. Answer 'Yes, ...' if there are issues, and explain your answer shortly.")
+    security_concerns: str = Field(description="does this PR code introduce possible vulnerabilities such as exposure of sensitive information (e.g., API keys, secrets, passwords), or security concerns like SQL injection, XSS, CSRF, and others ? Answer 'No' if there are no possible issues. Answer 'Yes, because ...' if there are security concerns or issues. Explain your answer shortly.")
+
+class CodeSuggestion(BaseModel)
+    relevant_file: str = Field(description="the relevant file full path")
+    language: str = Field(description="the language of the relevant file")
+    suggestion: str = Field(description="a concrete suggestion for meaningfully improving the new PR code. Also describe how, specifically, the suggestion can be applied to new PR code. Add tags with importance measure that matches each suggestion ('important' or 'medium'). Do not make suggestions for updating or adding docstrings, renaming PR title and description, or linter like.")
+    relevant_line: str = Field(description="a single code line taken from the relevant file, to which the suggestion applies. The code line should start with a '+'. Make sure to output the line exactly as it appears in the relevant file")
+
+class PRReview(BaseModel)
+    review: Review
+    code_feedback: List[CodeSuggestion]
 
 Example output:
 ```yaml
-PR Review:
-{%- if require_score %}
-  Score: 89
-{%- endif %}
-  Relevant tests added: |-
-    No
-{%- if require_focused %}
-  Focused PR: no, because ...
-{%- endif %}
+review:
 {%- if require_estimate_effort_to_review %}
-  Estimated effort to review [1-5]: |-
+  estimated_effort_to_review_[1-5]: |
     3, because ...
 {%- endif %}
-{%- if num_code_suggestions > 0 or require_security %}
-PR Feedback:
-{% endif %}
-{%- if num_code_suggestions > 0 %}
-  Code feedback:
-    - relevant file: |-
-        directory/xxx.py
-      language: |-
-        python
-      suggestion: |-
-        xxx [important]
-      relevant line: |-
-        xxx
-    ...
+{%- if require_score %}
+  score: 89
 {%- endif %}
-{%- if require_security %}
-  Security concerns: No
+  relevant_tests_added: |
+    No
+{%- if require_focused %}
+  focused_pr: |
+    no, because ...
+{%- endif %}
+  possible_issues: |
+    No
+  security_concerns: |
+    No
+{%- if num_code_suggestions > 0 %}
+code_feedback
+- relevant_file: |
+    directory/xxx.py
+  language: |
+    python
+  suggestion: |
+    xxx [important]
+  relevant_line: |
+    xxx
 {%- endif %}
 ```
 
-Each YAML output MUST be after a newline, indented, with block scalar indicator ('|-').
-Don't repeat the prompt in the answer, and avoid outputting the 'type' and 'description' fields.
+Answer should be a valid YAML, and nothing else. Each YAML output MUST be after a newline, with proper indent, and block scalar indicator ('|')
 """
 
 user="""PR Info:
