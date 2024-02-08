@@ -128,7 +128,7 @@ class PRReviewer:
                 # publish the review
                 if get_settings().pr_reviewer.persistent_comment and not self.incremental.is_incremental:
                     self.git_provider.publish_persistent_comment(pr_comment,
-                                                                 initial_header="## PR Analysis",
+                                                                 initial_header="## PR Review",
                                                                  update_header=True)
                 else:
                     self.git_provider.publish_comment(pr_comment)
@@ -198,9 +198,9 @@ class PRReviewer:
         if security_concerns is not None:
             del pr_feedback['Security concerns']
             if type(security_concerns) == bool and security_concerns == False:
-                data.setdefault('PR Analysis', {})['Security concerns'] = 'No security concerns found'
+                data.setdefault('PR Review', {})['Security concerns'] = 'No security concerns found'
             else:
-                data.setdefault('PR Analysis', {})['Security concerns'] = security_concerns
+                data.setdefault('PR Review', {})['Security concerns'] = security_concerns
 
         #
         if 'Code feedback' in pr_feedback:
@@ -376,12 +376,12 @@ class PRReviewer:
             try:
                 review_labels = []
                 if get_settings().pr_reviewer.enable_review_labels_effort:
-                    estimated_effort = data['PR Analysis']['Estimated effort to review [1-5]']
+                    estimated_effort = data['PR Review']['Estimated effort to review [1-5]']
                     estimated_effort_number = int(estimated_effort.split(',')[0])
                     if 1 <= estimated_effort_number <= 5: # 1, because ...
                         review_labels.append(f'Review effort [1-5]: {estimated_effort_number}')
                 if get_settings().pr_reviewer.enable_review_labels_security:
-                    security_concerns = data['PR Analysis']['Security concerns'] # yes, because ...
+                    security_concerns = data['PR Review']['Security concerns'] # yes, because ...
                     security_concerns_bool = 'yes' in security_concerns.lower() or 'true' in security_concerns.lower()
                     if security_concerns_bool:
                         review_labels.append('Possible security concern')
