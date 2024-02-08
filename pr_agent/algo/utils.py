@@ -52,6 +52,10 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
     markdown_text += f"## PR Review\n\n"
     markdown_text += "<table>\n<tr>\n"
     markdown_text += """<td> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>PR&nbsp;feedback</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </td> <td></td></tr>"""
+
+    if not output_data or not output_data.get('review', {}):
+        return ""
+
     for key, value in output_data['review'].items():
         if value is None or value == '' or value == {} or value == []:
             continue
