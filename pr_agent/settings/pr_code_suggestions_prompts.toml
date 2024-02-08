@@ -4,18 +4,17 @@ Your task is to provide meaningful and actionable code suggestions, to improve t
 
 Example for the PR Diff format:
 ======
-## src/file1.py
+## file: 'src/file1.py'
 
 @@ ... @@ def func1():
 __new hunk__
 12  code line1 that remained unchanged in the PR
-13 +new code line2 added in the PR
+13 +new hunk code line2 added in the PR
 14  code line3 that remained unchanged in the PR
 __old hunk__
  code line1 that remained unchanged in the PR
--old code line2 that was removed in the PR
+-old hunk code line2 that was removed in the PR
  code line3 that remained unchanged in the PR
-
 
 @@ ... @@ def func2():
 __new hunk__
@@ -24,7 +23,7 @@ __old hunk__
 ...
 
 
-## src/file2.py
+## file: 'src/file2.py'
 ...
 ======
 
@@ -34,7 +33,7 @@ Specific instructions:
 - The suggestions should refer only to code from the '__new hunk__' sections, and focus on new lines of code (lines starting with '+').
 - Prioritize suggestions that address major problems, issues and bugs in the PR code. As a second priority, suggestions should focus on enhancement, best practice, performance, maintainability, and other aspects.
 - Don't suggest to add docstring, type hints, or comments, or to remove unused imports.
-- Avoid making suggestions that have already been implemented in the PR code. For example, if you want to add logs, or change a variable to const, or anything else, make sure it isn't already in the '__new hunk__' code.
+- Suggestions should not repeat code already present in the '__new hunk__' sections.
 - Provide the exact line numbers range (inclusive) for each suggestion.
 - When quoting variables or names from the code, use backticks (`) instead of single quote (').
 
@@ -51,6 +50,7 @@ The output must be a YAML object equivalent to type $PRCodeSuggestions, accordin
 =====
 class CodeSuggestion(BaseModel):
     relevant_file: str = Field(description="the relevant file full path")
+    language: str = Field(description="the code language of the relevant file")
     suggestion_content: str = Field(description="an actionable suggestion for meaningfully improving the new code introduced in the PR")
 {%- if summarize_mode %}
     existing_code: str = Field(description="a short code snippet from a '__new hunk__' section to illustrate the relevant existing code. Don't show the line numbers.")
@@ -72,43 +72,40 @@ class PRCodeSuggestions(BaseModel):
 Example output:
 ```yaml
 code_suggestions:
-- relevant_file: |-
+- relevant_file: |
     src/file1.py
-  suggestion_content: |-
+  language: |
+    python
+  suggestion_content: |
     Add a docstring to func1()
 {%- if summarize_mode %}
-  existing_code: |-
+  existing_code: |
     def func1():
-  improved_code: |-
+  improved_code: |
     ...
-  one_sentence_summary: |-
+  one_sentence_summary: |
     ...
   relevant_lines_start: 12
   relevant_lines_end: 12
 {%- else %}
-  existing_code: |-
+  existing_code: |
     def func1():
   relevant_lines_start: 12
   relevant_lines_end: 12
-  improved_code: |-
+  improved_code: |
     ...
 {%- endif %}
-  label: |-
+  label: |
     ...
 ```
 
 
-Each YAML output MUST be after a newline, indented, with block scalar indicator ('|-').
+Each YAML output MUST be after a newline, indented, with block scalar indicator ('|').
 """
 
 user="""PR Info:
 
 Title: '{{title}}'
-
-{%- if language %}
-
-Main PR language: '{{ language }}'
-{%- endif %}
 
 
 The PR Diff:

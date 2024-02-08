@@ -5,7 +5,7 @@ The review should focus on new code added in the PR diff (lines starting with '+
 
 Example PR Diff:
 ======
-## src/file1.py
+## file: 'src/file1.py'
 
 @@ -12,5 +12,5 @@ def func1():
 code line 1 that remained unchanged in the PR
@@ -14,12 +14,11 @@ code line 2 that remained unchanged in the PR
 +code line added in the PR
 code line 3 that remained unchanged in the PR
 
-
 @@ ... @@ def func2():
 ...
 
 
-## src/file2.py
+## file: 'src/file2.py'
 ...
 ======
 
@@ -96,6 +95,9 @@ PR Feedback:
       relevant file:
         type: string
         description: the relevant file full path
+      language:
+        type: string
+        description: the language of the relevant file
       suggestion:
         type: string
         description: |-
@@ -141,6 +143,8 @@ PR Feedback:
   Code feedback:
     - relevant file: |-
         directory/xxx.py
+      language: |-
+        python
       suggestion: |-
         xxx [important]
       relevant line: |-
@@ -170,10 +174,6 @@ Description:
 ======
 {%- endif %}
 
-{%- if language %}
-
-Main PR language: '{{ language }}'
-{%- endif %}
 {%- if commit_messages_str %}
 
 Commit messages:

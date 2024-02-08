@@ -1,5 +1,6 @@
 [config]
-model="gpt-4" # "gpt-4-1106-preview"
+model="gpt-4" # "gpt-4-0125-preview"
+model_turbo="gpt-4-0125-preview"
 fallback_models=["gpt-3.5-turbo-16k"]
 git_provider="github"
 publish_output=true
@@ -8,11 +9,11 @@ verbosity_level=0 # 0,1,2
 use_extra_bad_extensions=false
 use_repo_settings_file=true
 use_global_settings_file=true
-ai_timeout=180
+ai_timeout=90
 max_description_tokens = 500
 max_commits_tokens = 500
 max_model_tokens = 32000 # Limits the maximum number of tokens that can be used by any model, regardless of the model's default capabilities.
-patch_extra_lines = 3
+patch_extra_lines = 1
 secret_provider="google_cloud_storage"
 cli_mode=false
 
@@ -42,12 +43,16 @@ require_all_thresholds_for_incremental_review=false
 minimal_commits_for_incremental_review=0
 minimal_minutes_for_incremental_review=0
 enable_help_text=true # Determines whether to include help text in the PR review. Enabled by default.
+# auto approval
+enable_auto_approval=false
+maximal_review_effort=5
+
 
 [pr_description] # /describe #
 publish_labels=true
 publish_description_as_comment=false
 add_original_user_description=true
-keep_original_user_title=false
+keep_original_user_title=true
 use_bullet_points=true
 extra_instructions = ""
 enable_pr_type=true
@@ -68,17 +73,19 @@ enable_help_text=true
 
 
 [pr_code_suggestions] # /improve #
+max_context_tokens=8000
 num_code_suggestions=4
 summarize = true
 extra_instructions = ""
 rank_suggestions = false
 enable_help_text=true
 # params for '/improve --extended' mode
-auto_extended_mode=false
-num_code_suggestions_per_chunk=8
-rank_extended_suggestions = true
-max_number_of_calls = 5
-final_clip_factor = 0.9
+auto_extended_mode=true
+num_code_suggestions_per_chunk=5
+max_number_of_calls = 3
+parallel_calls = true
+rank_extended_suggestions = false
+final_clip_factor = 0.8
 
 [pr_add_docs] # /add_docs #
 extra_instructions = ""
@@ -90,6 +97,15 @@ extra_instructions = ""
 
 [pr_analyze] # /analyze #
 
+[pr_test] # /test #
+extra_instructions = ""
+testing_framework = "" # specify the testing framework you want to use
+num_tests=3            # number of tests to generate. max 5.
+avoid_mocks=true       # if true, the generated tests will prefer to use real objects instead of mocks
+file = ""              # in case there are several components with the same name, you can specify the relevant file
+class_name = ""        # in case there are several methods with the same name in the same file, you can specify the relevant class name
+enable_help_text=true
+
 [pr_config] # /config #
 
 [github]
@@ -100,7 +116,7 @@ base_url = "https://api.github.com"
 publish_inline_comments_fallback_with_verification = true
 try_fix_invalid_inline_comments = true
 
-[github_action]
+[github_action_config]
 # auto_review = true    # set as env var in .github/workflows/pr-agent.yaml
 # auto_describe = true  # set as env var in .github/workflows/pr-agent.yaml
 # auto_improve = true   # set as env var in .github/workflows/pr-agent.yaml

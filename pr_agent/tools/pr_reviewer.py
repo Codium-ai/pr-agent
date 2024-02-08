@@ -36,6 +36,7 @@ class PRReviewer:
             ai_handler (BaseAiHandler): The AI handler to be used for the review. Defaults to None.
             args (list, optional): List of arguments passed to the PRReviewer class. Defaults to None.
         """
+        self.args = args
         self.parse_args(args) # -i command
 
         self.git_provider = get_git_provider()(pr_url, incremental=self.incremental)
@@ -100,6 +101,11 @@ class PRReviewer:
     async def run(self) -> None:
         try:
             if self.incremental.is_incremental and not self._can_run_incremental_review():
+                return None
+
+            if isinstance(self.args, list) and self.args and self.args[0] == 'auto_approve':
+                get_logger().info(f'Auto approve flow PR: {self.pr_url} ...')
+                self.auto_approve_logic()
                 return None
 
             get_logger().info(f'Reviewing PR: {self.pr_url} ...')
@@ -392,3 +398,30 @@ class PRReviewer:
                     self.git_provider.publish_labels(review_labels + current_labels_filtered)
             except Exception as e:
                 get_logger().error(f"Failed to set review labels, error: {e}")
+
+    def auto_approve_logic(self):
+        """
+        Auto-approve a pull request if it meets the conditions for auto-approval.
+        """
+        if get_settings().pr_reviewer.enable_auto_approval:
+            maximal_review_effort = get_settings().pr_reviewer.maximal_review_effort
+            if maximal_review_effort < 5:
+                current_labels = self.git_provider.get_pr_labels()
+                for label in current_labels:
+                    if label.lower().startswith('review effort [1-5]:'):
+                        effort = int(label.split(':')[1].strip())
+                        if effort > maximal_review_effort:
+                            get_logger().info(
+                                f"Auto-approve error: PR review effort ({effort}) is higher than the maximal review effort "
+                                f"({maximal_review_effort}) allowed")
+                            self.git_provider.publish_comment(
+                                f"Auto-approve error: PR review effort ({effort}) is higher than the maximal review effort "
+                                f"({maximal_review_effort}) allowed")
+                            return
+            is_auto_approved = self.git_provider.auto_approve()
+            if is_auto_approved:
+                get_logger().info("Auto-approved PR")
+                self.git_provider.publish_comment("Auto-approved PR")
+        else:
+            get_logger().info("Auto-approval option is disabled")
+            self.git_provider.publish_comment("Auto-approval option for PR-Agent is disabled")

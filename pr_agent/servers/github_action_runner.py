@@ -82,14 +82,23 @@ async def run_action():
         if action in ["opened", "reopened"]:
             pr_url = event_payload.get("pull_request", {}).get("url")
             if pr_url:
+                # legacy - supporting both GITHUB_ACTION and GITHUB_ACTION_CONFIG
                 auto_review = get_setting_or_env("GITHUB_ACTION.AUTO_REVIEW", None)
+                if auto_review is None:
+                    auto_review = get_setting_or_env("GITHUB_ACTION_CONFIG.AUTO_REVIEW", None)
+                auto_describe = get_setting_or_env("GITHUB_ACTION.AUTO_DESCRIBE", None)
+                if auto_describe is None:
+                    auto_describe = get_setting_or_env("GITHUB_ACTION_CONFIG.AUTO_DESCRIBE", None)
+                auto_improve = get_setting_or_env("GITHUB_ACTION.AUTO_IMPROVE", None)
+                if auto_improve is None:
+                    auto_improve = get_setting_or_env("GITHUB_ACTION_CONFIG.AUTO_IMPROVE", None)
+
+                # invoke by default all three tools
+                if auto_describe is None or is_true(auto_describe):
+                    await PRDescription(pr_url).run()
                 if auto_review is None or is_true(auto_review):
                     await PRReviewer(pr_url).run()
-                auto_describe = get_setting_or_env("GITHUB_ACTION.AUTO_DESCRIBE", None)
-                if is_true(auto_describe):
-                    await PRDescription(pr_url).run()
-                auto_improve = get_setting_or_env("GITHUB_ACTION.AUTO_IMPROVE", None)
-                if is_true(auto_improve):
+                if auto_improve is None or is_true(auto_improve):
                     await PRCodeSuggestions(pr_url).run()
 
     # Handle issue comment event

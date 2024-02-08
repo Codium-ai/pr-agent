@@ -1,3 +1,4 @@
+import asyncio
 import copy
 import textwrap
 from functools import partial
@@ -8,7 +9,7 @@ from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAIHandler
 from pr_agent.algo.pr_processing import get_pr_diff, get_pr_multi_diffs, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import load_yaml, replace_code_tags
+from pr_agent.algo.utils import load_yaml, replace_code_tags, ModelType
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
@@ -25,6 +26,14 @@ class PRCodeSuggestions:
         self.main_language = get_main_pr_language(
             self.git_provider.get_languages(), self.git_provider.get_files()
         )
+
+        # limit context specifically for the improve command, which has hard input to parse:
+        if get_settings().pr_code_suggestions.max_context_tokens:
+            MAX_CONTEXT_TOKENS_IMPROVE = get_settings().pr_code_suggestions.max_context_tokens
+            if get_settings().config.max_model_tokens > MAX_CONTEXT_TOKENS_IMPROVE:
+                get_logger().info(f"Setting max_model_tokens to {MAX_CONTEXT_TOKENS_IMPROVE} for PR improve")
+                get_settings().config.max_model_tokens = MAX_CONTEXT_TOKENS_IMPROVE
+
 
         # extended mode
         try:
@@ -64,10 +73,10 @@ class PRCodeSuggestions:
 
             get_logger().info('Preparing PR code suggestions...')
             if not self.is_extended:
-                await retry_with_fallback_models(self._prepare_prediction)
+                await retry_with_fallback_models(self._prepare_prediction, ModelType.TURBO)
                 data = self._prepare_pr_code_suggestions()
             else:
-                data = await retry_with_fallback_models(self._prepare_prediction_extended)
+                data = await retry_with_fallback_models(self._prepare_prediction_extended, ModelType.TURBO)
 
 
             if (not data) or (not 'code_suggestions' in data):
@@ -103,18 +112,18 @@ class PRCodeSuggestions:
 
     async def _prepare_prediction(self, model: str):
         get_logger().info('Getting PR diff...')
-        self.patches_diff = get_pr_diff(self.git_provider,
+        patches_diff = get_pr_diff(self.git_provider,
                                         self.token_handler,
                                         model,
                                         add_line_numbers_to_hunks=True,
                                         disable_extra_lines=True)
 
         get_logger().info('Getting AI prediction...')
-        self.prediction = await self._get_prediction(model)
+        self.prediction = await self._get_prediction(model, patches_diff)
 
-    async def _get_prediction(self, model: str):
+    async def _get_prediction(self, model: str, patches_diff: str):
         variables = copy.deepcopy(self.vars)
-        variables["diff"] = self.patches_diff  # update diff
+        variables["diff"] = patches_diff  # update diff
         environment = Environment(undefined=StrictUndefined)
         system_prompt = environment.from_string(get_settings().pr_code_suggestions_prompt.system).render(variables)
         user_prompt = environment.from_string(get_settings().pr_code_suggestions_prompt.user).render(variables)
@@ -190,7 +199,8 @@ class PRCodeSuggestions:
             original_initial_line = None
             for file in self.diff_files:
                 if file.filename.strip() == relevant_file:
-                    original_initial_line = file.head_file.splitlines()[relevant_lines_start - 1]
+                    if file.head_file:  # in bitbucket, head_file is empty. toDo: fix this
+                        original_initial_line = file.head_file.splitlines()[relevant_lines_start - 1]
                     break
             if original_initial_line:
                 suggested_initial_line = new_code_snippet.splitlines()[0]
@@ -220,14 +230,18 @@ class PRCodeSuggestions:
         patches_diff_list = get_pr_multi_diffs(self.git_provider, self.token_handler, model,
                                                max_calls=get_settings().pr_code_suggestions.max_number_of_calls)
 
-        get_logger().info('Getting multi AI predictions...')
-        prediction_list = []
-        for i, patches_diff in enumerate(patches_diff_list):
-            get_logger().info(f"Processing chunk {i + 1} of {len(patches_diff_list)}")
-            self.patches_diff = patches_diff
-            prediction = await self._get_prediction(model)
-            prediction_list.append(prediction)
-        self.prediction_list = prediction_list
+        # parallelize calls to AI:
+        if get_settings().pr_code_suggestions.parallel_calls:
+            get_logger().info('Getting multi AI predictions in parallel...')
+            prediction_list = await asyncio.gather(*[self._get_prediction(model, patches_diff) for patches_diff in patches_diff_list])
+            self.prediction_list = prediction_list
+        else:
+            get_logger().info('Getting multi AI predictions...')
+            prediction_list = []
+            for i, patches_diff in enumerate(patches_diff_list):
+                get_logger().info(f"Processing chunk {i + 1} of {len(patches_diff_list)}")
+                prediction = await self._get_prediction(model, patches_diff)
+                prediction_list.append(prediction)
 
         data = {}
         for prediction in prediction_list:
@@ -252,9 +266,14 @@ class PRCodeSuggestions:
         """
 
         suggestion_list = []
+        if not data:
+            return suggestion_list
         for suggestion in data:
             suggestion_list.append(suggestion)
         data_sorted = [[]] * len(suggestion_list)
+
+        if len(suggestion_list ) == 1:
+            return suggestion_list
 
         try:
             suggestion_str = ""
@@ -311,7 +330,7 @@ class PRCodeSuggestions:
 
             pr_body += "<table>"
             header = f"Suggestions"
-            delta = 77
+            delta = 75
             header += "&nbsp; " * delta
             pr_body += f"""<thead><tr><th></th><th>{header}</th></tr></thead>"""
             pr_body += """<tbody>"""

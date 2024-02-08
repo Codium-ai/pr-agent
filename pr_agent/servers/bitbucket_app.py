@@ -26,7 +26,8 @@ from pr_agent.tools.pr_reviewer import PRReviewer
 
 setup_logger(fmt=LoggingFormat.JSON)
 router = APIRouter()
-secret_provider = get_secret_provider()
+secret_provider = get_secret_provider() if get_settings().get("CONFIG.SECRET_PROVIDER") else None
+
 
 async def get_bearer_token(shared_secret: str, client_key: str):
     try:
