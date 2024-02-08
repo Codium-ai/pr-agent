@@ -38,14 +38,17 @@ PR Feedback:
         assert load_yaml(yaml_str) == expected_output
 
     def test_load_invalid_yaml2(self):
-        yaml_str = '''\
+            yaml_str = '''\
 - relevant file: src/app.py:
   suggestion content: The print statement is outside inside the if __name__ ==: \
   '''
-        with pytest.raises(ScannerError):
-            yaml.safe_load(yaml_str)
+            with pytest.raises(ScannerError):
+                yaml.safe_load(yaml_str)
 
-        expected_output =[{'relevant_file': 'src/app.py:',
-  'suggestion content': 'The print statement is outside inside the if __name__ ==:   '}]
-        assert load_yaml(yaml_str) == expected_output
+            expected_output = [{'relevant file': 'src/app.py:',
+                                'suggestion content': 'The print statement is outside inside the if __name__ ==:   '}]
+            assert load_yaml(yaml_str) == expected_output
+
+
+
 
