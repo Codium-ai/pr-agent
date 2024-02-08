@@ -60,7 +60,7 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
             if key.lower() == 'pr review':
                 markdown_text += f"## {key}\n\n"
                 markdown_text += "<table>\n<tr>\n"
-                markdown_text += """<td> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>feedback</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </td> <td></td></tr>"""
+                markdown_text += """<td> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Feedback</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </td> <td></td></tr>"""
 
             markdown_text += convert_to_markdown(value, gfm_supported)
             markdown_text += "\n</table>\n"
