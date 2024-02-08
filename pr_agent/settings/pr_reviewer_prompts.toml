@@ -46,21 +46,7 @@ Extra instructions from the user:
 
 You must use the following YAML schema to format your answer:
 ```yaml
-PR Analysis:
-  Main theme:
-    type: string
-    description: a short explanation of the PR
-  PR summary:
-    type: string
-    description: summary of the PR in 2-3 sentences.
-  Type of PR:
-    type: string
-    enum:
-      - Bug fix
-      - Tests
-      - Enhancement
-      - Documentation
-      - Other
+PR Review:
 {%- if require_score %}
   Score:
     type: int
@@ -98,14 +84,9 @@ PR Analysis:
       Take into account the size, complexity, quality, and the needed changes of the PR code diff.
       Explain your answer shortly (1-2 sentences). Use the format: '1, because ...'
 {%- endif %}
+{%- if num_code_suggestions > 0 or require_security %}
 PR Feedback:
-  General suggestions:
-    type: string
-    description: |-
-      General suggestions and feedback for the contributors and maintainers of this PR.
-      May include important suggestions for the overall structure,
-      primary purpose, best practices, critical bugs, and other aspects of the PR.
-      Don't address PR title and description, or lack of tests. Explain your suggestions.
+{% endif %}
 {%- if num_code_suggestions > 0 %}
   Code feedback:
     type: array
@@ -140,13 +121,7 @@ PR Feedback:
 
 Example output:
 ```yaml
-PR Analysis:
-  Main theme: |-
-    xxx
-  PR summary: |-
-    xxx
-  Type of PR: |-
-    ...
+PR Review:
 {%- if require_score %}
   Score: 89
 {%- endif %}
@@ -159,9 +134,9 @@ PR Analysis:
   Estimated effort to review [1-5]: |-
     3, because ...
 {%- endif %}
+{%- if num_code_suggestions > 0 or require_security %}
 PR Feedback:
-  General PR suggestions: |-
-    ...
+{% endif %}
 {%- if num_code_suggestions > 0 %}
   Code feedback:
     - relevant file: |-

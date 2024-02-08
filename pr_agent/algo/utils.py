@@ -52,8 +52,13 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
         if value is None or value == '' or value == {} or value == []:
             continue
         if isinstance(value, dict):
-            markdown_text += f"## {key}\n\n"
+            if key.lower() == 'pr review':
+                markdown_text += f"## {key}\n\n"
+                markdown_text += "<table>\n<tr>\n"
+                markdown_text += """<td> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>feedback</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </td> <td></td></tr>"""
+
             markdown_text += convert_to_markdown(value, gfm_supported)
+            markdown_text += "\n</table>\n"
         elif isinstance(value, list):
             emoji = emojis.get(key, "")
             if key.lower() == 'code feedback':
@@ -82,7 +87,8 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
                 else:
                     markdown_text += f"{emoji} **General suggestions:** {value}\n"
             else:
-                markdown_text += f"- {emoji} **{key}:** {value}\n"
+                markdown_text += f"<tr><td> {emoji} {key}</td><td> {value}</td></tr>\n"
+
     return markdown_text
 
 
