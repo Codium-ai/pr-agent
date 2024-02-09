@@ -41,11 +41,13 @@ PR Feedback:
         yaml_str = '''\
 - relevant file: src/app.py:
   suggestion content: The print statement is outside inside the if __name__ ==: \
-  '''
+'''
         with pytest.raises(ScannerError):
             yaml.safe_load(yaml_str)
 
-        expected_output =[{'relevant file': 'src/app.py:',
-  'suggestion content': 'The print statement is outside inside the if __name__ ==:   '}]
+        expected_output = [{'relevant file': 'src/app.py:', 'suggestion content': 'The print statement is outside inside the if __name__ ==: '}]
         assert load_yaml(yaml_str) == expected_output
+
+
+
 

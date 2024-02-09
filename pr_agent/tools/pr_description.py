@@ -377,7 +377,7 @@ class PRDescription:
                 else:
                     pr_body += f"""<td><table>"""
                 for filename, file_changes_title, file_change_description in list_tuples:
-                    filename = filename.replace("'", "`")
+                    filename = filename.replace("'", "`").rstrip()
                     filename_publish = filename.split("/")[-1]
                     file_changes_title_br = insert_br_after_x_chars(file_changes_title, x=(delta - 5))
                     file_changes_title_extended = file_changes_title_br.strip() + "</code>"

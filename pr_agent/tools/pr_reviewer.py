@@ -12,7 +12,8 @@ from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAIHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import convert_to_markdown, load_yaml, try_fix_yaml, set_custom_labels, get_user_labels
+from pr_agent.algo.utils import convert_to_markdown, load_yaml, try_fix_yaml, set_custom_labels, get_user_labels, \
+    ModelType
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import IncrementalPR, get_main_pr_language
@@ -62,7 +63,6 @@ class PRReviewer:
             "diff": "",  # empty diff for initial calculation
             "require_score": get_settings().pr_reviewer.require_score_review,
             "require_tests": get_settings().pr_reviewer.require_tests_review,
-            "require_security": get_settings().pr_reviewer.require_security_review,
             "require_focused": get_settings().pr_reviewer.require_focused_review,
             "require_estimate_effort_to_review": get_settings().pr_reviewer.require_estimate_effort_to_review,
             'num_code_suggestions': get_settings().pr_reviewer.num_code_suggestions,
@@ -113,7 +113,7 @@ class PRReviewer:
             if get_settings().config.publish_output:
                 self.git_provider.publish_comment("Preparing review...", is_temporary=True)
 
-            await retry_with_fallback_models(self._prepare_prediction)
+            await retry_with_fallback_models(self._prepare_prediction, model_type=ModelType.TURBO)
             if not self.prediction:
                 self.git_provider.remove_initial_comment()
                 return None
@@ -128,7 +128,7 @@ class PRReviewer:
                 # publish the review
                 if get_settings().pr_reviewer.persistent_comment and not self.incremental.is_incremental:
                     self.git_provider.publish_persistent_comment(pr_comment,
-                                                                 initial_header="## PR Analysis",
+                                                                 initial_header="## PR Review",
                                                                  update_header=True)
                 else:
                     self.git_provider.publish_comment(pr_comment)
@@ -192,41 +192,30 @@ class PRReviewer:
         """
         data = load_yaml(self.prediction.strip())
 
-        # Move 'Security concerns' key to 'PR Analysis' section for better display
-        pr_feedback = data.get('PR Feedback', {})
-        security_concerns = pr_feedback.get('Security concerns')
-        if security_concerns is not None:
-            del pr_feedback['Security concerns']
-            if type(security_concerns) == bool and security_concerns == False:
-                data.setdefault('PR Analysis', {})['Security concerns'] = 'No security concerns found'
-            else:
-                data.setdefault('PR Analysis', {})['Security concerns'] = security_concerns
-
-        #
-        if 'Code feedback' in pr_feedback:
-            code_feedback = pr_feedback['Code feedback']
+        if 'code_feedback' in data:
+            code_feedback = data['code_feedback']
 
             # Filter out code suggestions that can be submitted as inline comments
             if get_settings().pr_reviewer.inline_code_comments:
-                del pr_feedback['Code feedback']
+                del data['code_feedback']
             else:
                 for suggestion in code_feedback:
-                    if ('relevant file' in suggestion) and (not suggestion['relevant file'].startswith('``')):
-                        suggestion['relevant file'] = f"``{suggestion['relevant file']}``"
+                    if ('relevant_file' in suggestion) and (not suggestion['relevant_file'].startswith('``')):
+                        suggestion['relevant_file'] = f"``{suggestion['relevant_file']}``"
 
-                    if 'relevant line' not in suggestion:
-                        suggestion['relevant line'] = ''
+                    if 'relevant_line' not in suggestion:
+                        suggestion['relevant_line'] = ''
 
-                    relevant_line_str = suggestion['relevant line'].split('\n')[0]
+                    relevant_line_str = suggestion['relevant_line'].split('\n')[0]
 
                     # removing '+'
-                    suggestion['relevant line'] = relevant_line_str.lstrip('+').strip()
+                    suggestion['relevant_line'] = relevant_line_str.lstrip('+').strip()
 
                     # try to add line numbers link to code suggestions
                     if hasattr(self.git_provider, 'generate_link_to_relevant_line_number'):
                         link = self.git_provider.generate_link_to_relevant_line_number(suggestion)
                         if link:
-                            suggestion['relevant line'] = f"[{suggestion['relevant line']}]({link})"
+                            suggestion['relevant_line'] = f"[{suggestion['relevant_line']}]({link})"
                     else:
                         pass
 
@@ -272,11 +261,13 @@ class PRReviewer:
         if get_settings().pr_reviewer.num_code_suggestions == 0:
             return
 
-        data = load_yaml(self.prediction.strip())
+        data = load_yaml(self.prediction.strip(),
+                         keys_fix_yaml=["estimated_effort_to_review_[1-5]:", "security_concerns:", "possible_issues:",
+                                        "relevant_file:", "relevant_line:", "suggestion:"])
         comments: List[str] = []
         for suggestion in data.get('PR Feedback', {}).get('Code feedback', []):
-            relevant_file = suggestion.get('relevant file', '').strip()
-            relevant_line_in_file = suggestion.get('relevant line', '').strip()
+            relevant_file = suggestion.get('relevant_file', '').strip()
+            relevant_line_in_file = suggestion.get('relevant_line', '').strip()
             content = suggestion.get('suggestion', '')
             if not relevant_file or not relevant_line_in_file or not content:
                 get_logger().info("Skipping inline comment with missing file/line/content")
@@ -376,12 +367,12 @@ class PRReviewer:
             try:
                 review_labels = []
                 if get_settings().pr_reviewer.enable_review_labels_effort:
-                    estimated_effort = data['PR Analysis']['Estimated effort to review [1-5]']
+                    estimated_effort = data['review']['estimated_effort_to_review_[1-5]']
                     estimated_effort_number = int(estimated_effort.split(',')[0])
                     if 1 <= estimated_effort_number <= 5: # 1, because ...
                         review_labels.append(f'Review effort [1-5]: {estimated_effort_number}')
                 if get_settings().pr_reviewer.enable_review_labels_security:
-                    security_concerns = data['PR Analysis']['Security concerns'] # yes, because ...
+                    security_concerns = data['review']['security_concerns'] # yes, because ...
                     security_concerns_bool = 'yes' in security_concerns.lower() or 'true' in security_concerns.lower()
                     if security_concerns_bool:
                         review_labels.append('Possible security concern')

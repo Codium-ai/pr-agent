@@ -45,56 +45,33 @@ Additional aspects:
 class TestConvertToMarkdown:
     # Tests that the function works correctly with a simple dictionary input
     def test_simple_dictionary_input(self):
-        input_data = {
-            'Main theme': 'Test',
-            'Type of PR': 'Test type',
-            'Relevant tests added': 'no',
-            'Unrelated changes': 'n/a',  # won't be included in the output
-            'Focused PR': 'Yes',
-            'General PR suggestions': 'general suggestion...',
-            'Code feedback': [
-                {
-                    'Code example': {
-                        'Before': 'Code before',
-                        'After': 'Code after'
-                    }
-                },
-                {
-                    'Code example': {
-                        'Before': 'Code before 2',
-                        'After': 'Code after 2'
-                    }
-                }
-            ]
-        }
-        expected_output = """\
-- 🎯 **Main theme:** Test\n\
-- 📌 **Type of PR:** Test type\n\
-- 🧪 **Relevant tests added:** no\n\
-- ✨ **Focused PR:** Yes\n\
--  **General PR suggestions:** general suggestion...\n\n\n<details><summary> <strong>🤖 Code feedback:</strong></summary>  - **Code example:**\n    - **Before:**\n        ```\n        Code before\n        ```\n    - **After:**\n        ```\n        Code after\n        ```\n\n  - **Code example:**\n    - **Before:**\n        ```\n        Code before 2\n        ```\n    - **After:**\n        ```\n        Code after 2\n        ```\n\n</details>\
-"""
+        input_data = {'review': {
+            'estimated_effort_to_review_[1-5]': '1, because the changes are minimal and straightforward, focusing on a single functionality addition.\n',
+            'relevant_tests_added': 'No\n', 'possible_issues': 'No\n', 'security_concerns': 'No\n'}, 'code_feedback': [
+            {'relevant_file': '``pr_agent/git_providers/git_provider.py\n``', 'language': 'python\n',
+             'suggestion': "Consider raising an exception or logging a warning when 'pr_url' attribute is not found. This can help in debugging issues related to the absence of 'pr_url' in instances where it's expected. [important]\n",
+             'relevant_line': '[return ""](https://github.com/Codium-ai/pr-agent-pro/pull/102/files#diff-52d45f12b836f77ed1aef86e972e65404634ea4e2a6083fb71a9b0f9bb9e062fR199)'}]}
+
+        expected_output = '## PR Review\n\n<table>\n<tr>\n<td> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>PR&nbsp;feedback</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </td> <td></td></tr><tr><td> ⏱️ Estimated effort to review [1-5]</td><td>\n\n1, because the changes are minimal and straightforward, focusing on a single functionality addition.\n\n\n</td></tr>\n<tr><td> 🧪 Relevant tests added</td><td>\n\nNo\n\n\n</td></tr>\n<tr><td> 🔍 Possible issues</td><td>\n\nNo\n\n\n</td></tr>\n<tr><td> 🔒 Security concerns</td><td>\n\nNo\n\n\n</td></tr>\n</table>\n\n\n<details><summary> <strong>Code feedback:</strong></summary>\n\n<hr><table><tr><td>relevant file</td><td>pr_agent/git_providers/git_provider.py\n</td></tr><tr><td>suggestion &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td>\n\n<strong>\n\nConsider raising an exception or logging a warning when \'pr_url\' attribute is not found. This can help in debugging issues related to the absence of \'pr_url\' in instances where it\'s expected. [important]\n\n</strong>\n</td></tr><tr><td>relevant line</td><td><a href=\'https://github.com/Codium-ai/pr-agent-pro/pull/102/files#diff-52d45f12b836f77ed1aef86e972e65404634ea4e2a6083fb71a9b0f9bb9e062fR199\'>return ""</a></td></tr></table><hr>\n\n</details>'
+
         assert convert_to_markdown(input_data).strip() == expected_output.strip()
 
     # Tests that the function works correctly with an empty dictionary input
     def test_empty_dictionary_input(self):
         input_data = {}
-        expected_output = ""
-        assert convert_to_markdown(input_data).strip() == expected_output.strip()
 
-    def test_dictionary_input_containing_only_empty_dictionaries(self):
-        input_data = {
-            'Main theme': {},
-            'Type of PR': {},
-            'Relevant tests added': {},
-            'Unrelated changes': {},
-            'Focused PR': {},
-            'General PR suggestions': {},
-            'Code suggestions': {}
-        }
         expected_output = ''
+
+
         assert convert_to_markdown(input_data).strip() == expected_output.strip()
 
+    def test_dictionary_with_empty_dictionaries(self):
+        input_data = {'review': {}, 'code_feedback': [{}]}
+
+        expected_output = ''
+
+
+        assert convert_to_markdown(input_data).strip() == expected_output.strip()
 
 class TestBR:
     def test_br1(self):
@@ -108,8 +85,9 @@ class TestBR:
         # print(file_change_description_br)
 
     def test_br2(self):
-        file_change_description = ('- Created a - new -class `ColorPaletteResourcesCollection ColorPaletteResourcesCollection '
-                                   'ColorPaletteResourcesCollection ColorPaletteResourcesCollection`')
+        file_change_description = (
+            '- Created a - new -class `ColorPaletteResourcesCollection ColorPaletteResourcesCollection '
+            'ColorPaletteResourcesCollection ColorPaletteResourcesCollection`')
         file_change_description_br = insert_br_after_x_chars(file_change_description)
         expected_output = ('<li>Created a - new -class <code>ColorPaletteResourcesCollection </code><br><code>'
                            'ColorPaletteResourcesCollection ColorPaletteResourcesCollection '
