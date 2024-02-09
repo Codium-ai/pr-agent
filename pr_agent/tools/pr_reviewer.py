@@ -261,7 +261,9 @@ class PRReviewer:
         if get_settings().pr_reviewer.num_code_suggestions == 0:
             return
 
-        data = load_yaml(self.prediction.strip())
+        data = load_yaml(self.prediction.strip(),
+                         keys_fix_yaml=["estimated_effort_to_review_[1-5]:", "security_concerns:", "possible_issues:",
+                                        "relevant_file:", "relevant_line:", "suggestion:"])
         comments: List[str] = []
         for suggestion in data.get('PR Feedback', {}).get('Code feedback', []):
             relevant_file = suggestion.get('relevant_file', '').strip()
