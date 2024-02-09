@@ -65,7 +65,7 @@ class Review(BaseModel)
 {%- if require_focused %}
     focused_pr: str = Field(description="Is this a focused PR, in the sense that all the PR code diff changes are united under a single focused theme ? If the theme is too broad, or the PR code diff changes are too scattered, then the PR is not focused. Explain your answer shortly.")
 {%- endif %}
-    possible_issues: str = Field(description="Does this PR code introduce clear issues, bugs, or performance concerns ? Answer 'No' if there are no clear issues. Answer 'Yes, ...' if there are issues, and explain your answer shortly.")
+    possible_issues: str = possible_issues: str = Field(description="Does this PR code introduce clear issues, bugs, or performance concerns ? Answer 'No' if there are no clear issues. If there are issues, describe them shortly, in bullet points. Be specific, and give examples if possible.")
     security_concerns: str = Field(description="does this PR code introduce possible vulnerabilities such as exposure of sensitive information (e.g., API keys, secrets, passwords), or security concerns like SQL injection, XSS, CSRF, and others ? Answer 'No' if there are no possible issues. Answer 'Yes, because ...' if there are security concerns or issues. Explain your answer. Be specific and give examples if possible")
 {%- if num_code_suggestions > 0 %}
 
