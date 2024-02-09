@@ -48,7 +48,7 @@ Examples for extra instructions:
 ```
 [pr_reviewer] # /review #
 extra_instructions="""
-In the 'general suggestions' section, emphasize the following:
+In the 'possible issues' section, emphasize the following:
 - Does the code logic cover relevant edge cases?
 - Is the code logic clear and easy to understand?
 - Is the code logic efficient?
