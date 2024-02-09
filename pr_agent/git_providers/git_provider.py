@@ -168,6 +168,11 @@ class GitProvider(ABC):
     def get_commit_messages(self):
         pass
 
+    def get_pr_url(self) -> str:
+        if hasattr(self, 'pr_url'):
+            return self.pr_url
+        return ""
+
     def get_latest_commit_url(self) -> str:
         return ""
 
