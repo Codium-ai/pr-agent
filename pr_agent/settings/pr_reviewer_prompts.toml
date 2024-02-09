@@ -57,7 +57,7 @@ class Review(BaseModel)
     score: str = Field(description="Rate this PR on a scale of 0-100 (inclusive), where 0 means the worst possible PR code, and 100 means PR code of the highest quality, without any bugs or performance issues, that is ready to be merged immediately and run in production at scale.")
 {%- endif %}
 {%- if require_tests %}
-    relevant_tests_added: str = Field(description="yes\\no question: does this PR have relevant tests ?")
+    relevant_tests: str = Field(description="yes\\no question: does this PR have relevant tests added or updated ?")
 {%- endif %}
 {%- if question_str %}
     insights_from_user_answers: str = Field(description="shortly summarize the insights you gained from the user's answers to the questions")
@@ -66,8 +66,7 @@ class Review(BaseModel)
     focused_pr: str = Field(description="Is this a focused PR, in the sense that all the PR code diff changes are united under a single focused theme ? If the theme is too broad, or the PR code diff changes are too scattered, then the PR is not focused. Explain your answer shortly.")
 {%- endif %}
     possible_issues: str = Field(description="Does this PR code introduce clear issues, bugs, or performance concerns ? Answer 'No' if there are no clear issues. Answer 'Yes, ...' if there are issues, and explain your answer shortly.")
-    security_concerns: str = Field(description="does this PR code introduce possible vulnerabilities such as exposure of sensitive information (e.g., API keys, secrets, passwords), or security concerns like SQL injection, XSS, CSRF, and others ? Answer 'No' if there are no possible issues. Answer 'Yes, because ...' if there are security concerns or issues. Explain your answer shortly.")
-
+    security_concerns: str = Field(description="does this PR code introduce possible vulnerabilities such as exposure of sensitive information (e.g., API keys, secrets, passwords), or security concerns like SQL injection, XSS, CSRF, and others ? Answer 'No' if there are no possible issues. Answer 'Yes, because ...' if there are security concerns or issues. Explain your answer. Be specific and give examples if possible")
 {%- if num_code_suggestions > 0 %}
 
 class CodeSuggestion(BaseModel)
@@ -99,7 +98,7 @@ review:
 {%- if require_score %}
   score: 89
 {%- endif %}
-  relevant_tests_added: |
+  relevant_tests: |
     No
 {%- if require_focused %}
   focused_pr: |

@@ -40,7 +40,7 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
     emojis = {
         "Possible issues": "🔍",
         "Score": "🏅",
-        "Relevant tests added": "🧪",
+        "Relevant tests": "🧪",
         "Focused PR": "✨",
         "Security concerns": "🔒",
         "Insights from user's answers": "📝",
