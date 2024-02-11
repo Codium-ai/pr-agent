@@ -381,6 +381,9 @@ class GithubProvider(GitProvider):
                 get_logger().error(f"Failed to publish code suggestion, error: {e}")
             return False
 
+    def edit_comment(self, comment, body: str):
+        comment.edit(body=body)
+
     def remove_initial_comment(self):
         try:
             for comment in getattr(self.pr, 'comments_list', []):
@@ -394,9 +397,6 @@ class GithubProvider(GitProvider):
             comment.delete()
         except Exception as e:
             get_logger().exception(f"Failed to remove comment, error: {e}")
-
-    def edit_comment(self, comment, body: str):
-        comment.edit(body=body)
 
     def get_title(self):
         return self.pr.title

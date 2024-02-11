@@ -179,11 +179,7 @@ class GitLabProvider(GitProvider):
         return comment
 
     def edit_comment(self, comment, body: str):
-        try:
-            comment.body = body
-            comment.save()
-        except Exception as e:
-            get_logger().exception(f"Failed to edit comment, error: {e}")
+        self.mr.notes.update(comment.id,{'body': body} )
 
     def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
         edit_type, found, source_line_no, target_file, target_line_no = self.search_line(relevant_file,
