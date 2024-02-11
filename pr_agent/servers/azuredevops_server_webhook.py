@@ -107,7 +107,10 @@ async def handle_webhook(background_tasks: BackgroundTasks, request: Request):
         status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "webhook triggerd successfully"})
     )
 
-        
+@router.get("/")
+async def root():
+    return {"status": "ok"}
+    
 def start():
     app = FastAPI(middleware=[Middleware(RawContextMiddleware)])
     app.include_router(router)
