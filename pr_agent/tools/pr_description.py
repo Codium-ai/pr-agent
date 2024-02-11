@@ -431,12 +431,20 @@ class PRDescription:
             pass
         return pr_body
 
+
+def count_chars_without_html(string):
+    if '<' not in string:
+        return len(string)
+    no_html_string = re.sub('<[^>]+>', '', string)
+    return len(no_html_string)
+
+
 def insert_br_after_x_chars(text, x=70):
     """
     Insert <br> into a string after a word that increases its length above x characters.
     Use proper HTML tags for code and new lines.
     """
-    if len(text) < x:
+    if count_chars_without_html(text) < x:
         return text
 
     # replace odd instances of ` with <code> and even instances of ` with </code>
@@ -457,12 +465,6 @@ def insert_br_after_x_chars(text, x=70):
         words += line.split(' ')
         if i < len(lines) - 1:
             words[-1] += "<br>"
-
-    def count_chars_without_html(string):
-        if '<' not in string:
-            return len(string)
-        no_html_string = re.sub('<[^>]+>', '', string)
-        return len(no_html_string)
 
     new_text = []
     is_inside_code = False
