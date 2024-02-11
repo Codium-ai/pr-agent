@@ -47,17 +47,23 @@ async def handle_webhook(background_tasks: BackgroundTasks, request: Request):
             status_code=status.HTTP_401_UNAUTHORIZED,
             content=json.dumps({"message": "unauthorized"}),
         )
-
+    actions = []
     if data["eventType"] == "git.pullrequest.created": 
-        body = "review"
         # API V1 (latest)
         pr_url = data["resource"]["_links"]["web"]["href"].replace("_apis/git/repositories", "_git")
+        if get_settings().get("github_action_config").get("auto_review") == True:
+            actions.append("review")
+        if get_settings().get("github_action_config").get("auto_improve") == True:
+            actions.append("improve")
+        if get_settings().get("github_action_config").get("describe") == True:
+            actions.append("describe")
+            
     elif data["eventType"] == "ms.vss-code.git-pullrequest-comment-event":
         if available_commands_rgx.match(data["resource"]["comment"]["content"]):
             if(data["resourceVersion"] == "2.0"):
                 repo = data["resource"]["pullRequest"]["repository"]["webUrl"]
                 pr_url = f'{repo}/pullrequest/{data["resource"]["pullRequest"]["pullRequestId"]}'
-                body = data["resource"]["comment"]["content"]
+                actions = [data["resource"]["comment"]["content"]]
             else: 
                 # API V1 not supported as it does not contain the PR URL
                 return JSONResponse(
@@ -77,17 +83,18 @@ async def handle_webhook(background_tasks: BackgroundTasks, request: Request):
     log_context["event"] = data["eventType"]
     log_context["api_url"] = pr_url
     
-    try:
-        handle_request(background_tasks, pr_url, body, log_context)
-        return JSONResponse(
-            status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"})
-        )
-    except Exception as e:
-        get_logger().error("Azure DevOps Trigger failed. Error:" + str(e))
-        return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content=json.dumps({"message": "Internal server error"}),
-        )
+    for action in actions:
+        try:
+            handle_request(background_tasks, pr_url, action, log_context)
+        except Exception as e:
+            get_logger().error("Azure DevOps Trigger failed. Error:" + str(e))
+            return JSONResponse(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                content=json.dumps({"message": "Internal server error"}),
+            )
+    return JSONResponse(
+        status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "webhook triggerd successfully"})
+    )
 
 # currently only basic auth is supported with azure webhooks
 # for this reason, https must be enabled to ensure the credentials are not sent in clear text
