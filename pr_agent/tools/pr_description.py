@@ -379,11 +379,11 @@ class PRDescription:
                 for filename, file_changes_title, file_change_description in list_tuples:
                     filename = filename.replace("'", "`").rstrip()
                     filename_publish = filename.split("/")[-1]
-                    file_changes_title_br = insert_br_after_x_chars(file_changes_title, x=(delta - 5))
-                    file_changes_title_extended = file_changes_title_br.strip() + "</code>"
-                    if len(file_changes_title_extended) < (delta - 5):
-                        file_changes_title_extended += "&nbsp; " * ((delta - 5) - len(file_changes_title_extended))
-                    filename_publish = f"<strong>{filename_publish}</strong><dd><code>{file_changes_title_extended}</dd>"
+                    file_changes_title_code = f"<code>{file_changes_title}</code>"
+                    file_changes_title_code_br = insert_br_after_x_chars(file_changes_title_code, x=(delta - 5)).strip()
+                    if len(file_changes_title_code_br) < (delta - 5):
+                        file_changes_title_code_br += "&nbsp; " * ((delta - 5) - len(file_changes_title_code_br))
+                    filename_publish = f"<strong>{filename_publish}</strong><dd>{file_changes_title_code_br}</dd>"
                     diff_plus_minus = ""
                     delta_nbsp = ""
                     diff_files = self.git_provider.diff_files
