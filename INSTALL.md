@@ -126,6 +126,8 @@ on:
     types:
       - opened
       - reopened
+      - ready_for_review
+      - review_requested
 
   issue_comment:
     types:
@@ -154,6 +156,8 @@ on:
     types:
       - opened
       - reopened
+      - ready_for_review
+      - review_requested
 
   issue_comment:
     types:
