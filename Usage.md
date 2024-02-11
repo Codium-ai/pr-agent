@@ -451,3 +451,5 @@ For webhook security, configure the webhook username and password on both the se
 webhook_username = "<basic auth user>"
 webhook_password = "<basic auth password>"
 ```
+> :warning: **Ensure that the webhook endpoint is only accessible over HTTPS** to mitigate the risk of credential interception when using basic authentication.
+

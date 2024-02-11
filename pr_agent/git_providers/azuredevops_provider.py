@@ -326,7 +326,8 @@ class AzureDevopsProvider(GitProvider):
 
     def publish_description(self, pr_title: str, pr_body: str):
         if len(pr_body) > MEX_PR_DESCRIPTION_LENGTH:
-            pr_body = pr_body[:MEX_PR_DESCRIPTION_LENGTH]
+            trunction_message = " ... (description truncated due to length limit)" 
+            pr_body = pr_body[:MEX_PR_DESCRIPTION_LENGTH - len(trunction_message)] + trunction_message
             get_logger().warning(
                 "PR description exceeds the maximum character limit of 4000. Truncating the description."
             )

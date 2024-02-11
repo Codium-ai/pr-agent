@@ -91,6 +91,7 @@ async def handle_webhook(background_tasks: BackgroundTasks, request: Request):
         )
 
 # currently only basic auth is supported with azure webhooks
+# for this reason, https must be enabled to ensure the credentials are not sent in clear text
 def validate_basic_auth(request: Request):
     auth = request.headers.get("Authorization")
     if not auth:
