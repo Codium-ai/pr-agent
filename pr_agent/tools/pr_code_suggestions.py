@@ -65,11 +65,16 @@ class PRCodeSuggestions:
                                           get_settings().pr_code_suggestions_prompt.system,
                                           get_settings().pr_code_suggestions_prompt.user)
 
+        self.progress = f"## Generating PR code suggestions\n\n"
+        self.progress += f"""\nWork in progress ...<br>\n<img src="https://codium.ai/images/pr_agent/dual_ball_loading-crop.gif" width=48>"""
+        self.progress_response = None
+
     async def run(self):
         try:
             get_logger().info('Generating code suggestions for PR...')
+
             if get_settings().config.publish_output:
-                self.git_provider.publish_comment("Preparing suggestions...", is_temporary=True)
+                self.progress_response = self.git_provider.publish_comment(self.progress)
 
             get_logger().info('Preparing PR code suggestions...')
             if not self.is_extended:
@@ -103,12 +108,20 @@ class PRCodeSuggestions:
                         pr_body += HelpMessage.get_improve_usage_guide()
                         pr_body += "\n</details>\n"
 
-                    self.git_provider.publish_comment(pr_body)
+                    if self.progress_response:
+                        self.git_provider.edit_comment(self.progress_response, body=pr_body)
+                    else:
+                        self.git_provider.publish_comment(pr_body)
+
                 else:
                     get_logger().info('Pushing inline code suggestions...')
                     self.push_inline_code_suggestions(data)
+                    if self.progress_response:
+                        self.progress_response.delete()
         except Exception as e:
             get_logger().error(f"Failed to generate code suggestions for PR, error: {e}")
+            if self.progress_response:
+                self.progress_response.delete()
 
     async def _prepare_prediction(self, model: str):
         get_logger().info('Getting PR diff...')
@@ -162,7 +175,10 @@ class PRCodeSuggestions:
 
         if not data['code_suggestions']:
             get_logger().info('No suggestions found to improve this PR.')
-            return self.git_provider.publish_comment('No suggestions found to improve this PR.')
+            if self.progress_response:
+                return self.git_provider.edit_comment(self.progress_response, body='No suggestions found to improve this PR.')
+            else:
+                return self.git_provider.publish_comment('No suggestions found to improve this PR.')
 
         for d in data['code_suggestions']:
             try:
