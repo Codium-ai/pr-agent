@@ -395,6 +395,9 @@ class GithubProvider(GitProvider):
         except Exception as e:
             get_logger().exception(f"Failed to remove comment, error: {e}")
 
+    def edit_comment(self, comment, body: str):
+        comment.edit(body=body)
+
     def get_title(self):
         return self.pr.title
 
