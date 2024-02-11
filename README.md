@@ -36,7 +36,7 @@ The `review` tool has been revamped, aiming to make the feedback clearer and mor
 
 <kbd>
 
-[<img src="https://www.codium.ai/images/pr_agent/review_reworked.png" width="512"/>](https://www.codium.ai/images/pr_agent/pr-actions.mp4)
+<img src="https://www.codium.ai/images/pr_agent/review_reworked.png" width="512">
 
 </kbd>
 
