@@ -5,9 +5,9 @@
 import json
 import os
 import re
-
 import uvicorn
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter, Depends, FastAPI
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.encoders import jsonable_encoder
 from starlette import status
 from starlette.background import BackgroundTasks
@@ -19,7 +19,6 @@ from starlette_context.middleware import RawContextMiddleware
 from pr_agent.agent.pr_agent import PRAgent, command2class
 from pr_agent.config_loader import get_settings
 from pr_agent.log import get_logger
-import base64
 
 router = APIRouter()
 available_commands_rgx = re.compile(r"^\/(" + "|".join(command2class.keys()) + r")\s*")
@@ -93,14 +92,20 @@ async def handle_webhook(background_tasks: BackgroundTasks, request: Request):
 # currently only basic auth is supported with azure webhooks
 # for this reason, https must be enabled to ensure the credentials are not sent in clear text
 def validate_basic_auth(request: Request):
-    auth = request.headers.get("Authorization")
-    if not auth:
-        return False
-    if not auth.startswith("Basic "):
-        return False
-    decoded_auth = base64.b64decode(auth.split(" ")[1]).decode()
-    username, password = decoded_auth.split(":")
-    return username == WEBHOOK_USERNAME and password == WEBHOOK_PASSWORD
+    try:
+        auth = request.headers.get("Authorization")
+        if not auth:
+            return False
+        if not auth.startswith("Basic "):
+            return False
+        security = HTTPBasic()
+        credentials: HTTPBasicCredentials = Depends(security)
+        username = credentials.username
+        password = credentials.password
+        return username == WEBHOOK_USERNAME and password == WEBHOOK_PASSWORD
+    except:
+        get_logger().error("Failed to validate basic auth")
+        return False 
 
 def start():
     app = FastAPI(middleware=[Middleware(RawContextMiddleware)])
