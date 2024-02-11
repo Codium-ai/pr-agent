@@ -66,7 +66,7 @@ async def handle_webhook(background_tasks: BackgroundTasks, request: Request):
             actions.append("review")
         if get_settings().get("github_action_config").get("auto_improve") == True:
             actions.append("improve")
-        if get_settings().get("github_action_config").get("describe") == True:
+        if get_settings().get("github_action_config").get("auto_describe") == True:
             actions.append("describe")
             
     elif data["eventType"] == "ms.vss-code.git-pullrequest-comment-event":
