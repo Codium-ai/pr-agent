@@ -2,12 +2,13 @@ import os
 from typing import Optional, Tuple
 from urllib.parse import urlparse
 
+from pr_agent.algo.pr_processing import find_line_number_of_relevant_line_in_file
+
 from ..log import get_logger
 from ..algo.language_handler import is_valid_file
 from ..algo.utils import clip_tokens, load_large_diff
 from ..config_loader import get_settings
-from .git_provider import GitProvider
-from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
+from .git_provider import EDIT_TYPE, FilePatchInfo, GitProvider
 
 AZURE_DEVOPS_AVAILABLE = True
 
@@ -163,11 +164,61 @@ class AzureDevopsProvider(GitProvider):
     def is_supported(self, capability: str) -> bool:
         if capability in [
             "get_issue_comments",
-            "create_inline_comment",
-            "publish_inline_comments",
         ]:
             return False
         return True
+
+    
+    def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
+        self.publish_inline_comments([self.create_inline_comment(body, relevant_file, relevant_line_in_file)])
+
+    def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str,
+                              absolute_position: int = None):
+        position, absolute_position = find_line_number_of_relevant_line_in_file(self.get_diff_files(),
+                                                                                relevant_file.strip('`'),
+                                                                                relevant_line_in_file,
+                                                                                absolute_position)
+        if position == -1:
+            if get_settings().config.verbosity_level >= 2:
+                get_logger().info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
+            subject_type = "FILE"
+        else:
+            subject_type = "LINE"
+        path = relevant_file.strip()
+        return dict(body=body, path=path, position=position, absolute_position=absolute_position) if subject_type == "LINE" else {}
+
+    def publish_inline_comments(self, comments: list[dict], disable_fallback: bool = False):
+        try:
+            for comment in comments:
+                comment_obj = Comment(content=comment["body"], comment_type=1)
+                thread = CommentThread(comments=[comment_obj],
+                                       thread_context={
+                                           "filePath": comment["path"],
+                                           "rightFileStart": {
+                                               "line": comment["absolute_position"],
+                                               "offset": 1, # TODO
+                                           },
+                                           "rightFileEnd": {
+                                               "line": comment["absolute_position"],
+                                               "offset": 1,
+                                           },
+                                       },
+                                       status="active")
+                self.azure_devops_client.create_thread(
+                    comment_thread=thread,
+                    project=self.workspace_slug,
+                    repository_id=self.repo_slug,
+                    pull_request_id=self.pr_num
+                )
+                if get_settings().config.verbosity_level >= 2:
+                    get_logger().info(
+                        f"Published code suggestion on {self.pr_num} at {comment_obj['path']}"
+                    )
+            return True
+        except Exception as e:
+            if get_settings().config.verbosity_level >= 2:
+                get_logger().error(f"Failed to publish code suggestion, error: {e}")
+            return False
 
     def set_pr(self, pr_url: str):
         self.workspace_slug, self.repo_slug, self.pr_num = self._parse_pr_url(pr_url)
@@ -347,18 +398,6 @@ class AzureDevopsProvider(GitProvider):
                 self.remove_comment(comment)
         except Exception as e:
             get_logger().exception(f"Failed to remove temp comments, error: {e}")
-
-    def publish_inline_comment(
-            self, body: str, relevant_file: str, relevant_line_in_file: str
-    ):
-        raise NotImplementedError(
-            "Azure DevOps provider does not support publishing inline comment yet"
-        )
-
-    def publish_inline_comments(self, comments: list[dict]):
-        raise NotImplementedError(
-            "Azure DevOps provider does not support publishing inline comments yet"
-        )
 
     def get_title(self):
         return self.pr.title
