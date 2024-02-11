@@ -26,6 +26,10 @@ FROM base as gitlab_webhook
 ADD pr_agent pr_agent
 CMD ["python", "pr_agent/servers/gitlab_webhook.py"]
 
+FROM base as azure_devops_webhook
+ADD pr_agent pr_agent
+CMD ["python", "pr_agent/servers/azuredevops_server_webhook.py"]
+
 FROM base as test
 ADD requirements-dev.txt .
 RUN pip install -r requirements-dev.txt && rm requirements-dev.txt
