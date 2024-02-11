@@ -74,7 +74,10 @@ class PRCodeSuggestions:
             get_logger().info('Generating code suggestions for PR...')
 
             if get_settings().config.publish_output:
-                self.progress_response = self.git_provider.publish_comment(self.progress)
+                if self.git_provider.is_supported("gfm_markdown"):
+                    self.progress_response = self.git_provider.publish_comment(self.progress)
+                else:
+                    self.git_provider.publish_comment("Preparing suggestions...", is_temporary=True)
 
             get_logger().info('Preparing PR code suggestions...')
             if not self.is_extended:
