@@ -441,3 +441,16 @@ And use the following settings (you have to replace the values) in .secrets.toml
 org = "https://dev.azure.com/YOUR_ORGANIZATION/"
 pat = "YOUR_PAT_TOKEN"
 ```
+
+##### Azure DevOps webhook
+To allow triggering from azure webhook, you need to manually [add webhook](https://learn.microsoft.com/en-us/azure/devops/service-hooks/services/webhooks?view=azure-devops) 
+of type "Pull request created" to trigger a review, or "Pull request commented on" to trigger any supported comment with /<command> <args> comment on the relevant PR.
+note the for "Pull request commented on" trigger, only API v2.0 is supported.
+
+To use webhook security, you need to configure webhook user name and password, both on the server and azure devops webhook.
+These will be sent as basic Auth data by thewebhook with each request:
+```
+[azuredevops_server]
+webhook_username = "<basic auth user>"
+webhook_password = "<basic auth password>"
+```

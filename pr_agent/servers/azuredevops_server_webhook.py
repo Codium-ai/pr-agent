@@ -23,7 +23,7 @@ import base64
 
 router = APIRouter()
 available_commands_rgx = re.compile(r"^\/(" + "|".join(command2class.keys()) + r")\s*")
-azuredevops_server = get_settings().get("azure_devops")
+azuredevops_server = get_settings().get("azure_devops_server")
 WEBHOOK_USERNAME = azuredevops_server.get("webhook_username")
 WEBHOOK_PASSWORD = azuredevops_server.get("webhook_password")
 
