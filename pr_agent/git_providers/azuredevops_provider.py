@@ -10,6 +10,7 @@ from .git_provider import GitProvider
 from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
 
 AZURE_DEVOPS_AVAILABLE = True
+MEX_PR_DESCRIPTION_LENGTH = 4000-1
 
 try:
     # noinspection PyUnresolvedReferences
@@ -324,6 +325,11 @@ class AzureDevopsProvider(GitProvider):
             )
 
     def publish_description(self, pr_title: str, pr_body: str):
+        if len(pr_body) > MEX_PR_DESCRIPTION_LENGTH:
+            pr_body = pr_body[:MEX_PR_DESCRIPTION_LENGTH]
+            get_logger().warning(
+                "PR description exceeds the maximum character limit of 4000. Truncating the description."
+            )
         try:
             updated_pr = GitPullRequest()
             updated_pr.title = pr_title
