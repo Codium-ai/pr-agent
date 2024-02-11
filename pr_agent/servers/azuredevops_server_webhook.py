@@ -5,8 +5,9 @@
 import json
 import os
 import re
+import secrets
 import uvicorn
-from fastapi import APIRouter, Depends, FastAPI
+from fastapi import APIRouter, Depends, FastAPI, HTTPException
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.encoders import jsonable_encoder
 from starlette import status
@@ -19,7 +20,11 @@ from starlette_context.middleware import RawContextMiddleware
 from pr_agent.agent.pr_agent import PRAgent, command2class
 from pr_agent.config_loader import get_settings
 from pr_agent.log import get_logger
+from fastapi import Request, Depends
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from pr_agent.log import get_logger
 
+security = HTTPBasic()
 router = APIRouter()
 available_commands_rgx = re.compile(r"^\/(" + "|".join(command2class.keys()) + r")\s*")
 azuredevops_server = get_settings().get("azure_devops_server")
@@ -35,18 +40,24 @@ def handle_request(
         background_tasks.add_task(PRAgent().handle_request, url, body)
 
 
-@router.post("/")
+# currently only basic auth is supported with azure webhooks
+# for this reason, https must be enabled to ensure the credentials are not sent in clear text
+def authorize(credentials: HTTPBasicCredentials = Depends(security)):
+        is_user_ok = secrets.compare_digest(credentials.username, WEBHOOK_USERNAME)
+        is_pass_ok = secrets.compare_digest(credentials.password, WEBHOOK_PASSWORD)
+        if not (is_user_ok and is_pass_ok):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail='Incorrect username or password.',
+                headers={'WWW-Authenticate': 'Basic'},
+            )
+        
+@router.post("/", dependencies=[Depends(authorize)])
 async def handle_webhook(background_tasks: BackgroundTasks, request: Request):
     log_context = {"server_type": "azuredevops_server"}
     data = await request.json()
     get_logger().info(json.dumps(data))
 
-    if not validate_basic_auth(request):
-        get_logger().error("Unauthorized webhook request")
-        return JSONResponse(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            content=json.dumps({"message": "unauthorized"}),
-        )
     actions = []
     if data["eventType"] == "git.pullrequest.created": 
         # API V1 (latest)
@@ -96,24 +107,7 @@ async def handle_webhook(background_tasks: BackgroundTasks, request: Request):
         status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "webhook triggerd successfully"})
     )
 
-# currently only basic auth is supported with azure webhooks
-# for this reason, https must be enabled to ensure the credentials are not sent in clear text
-def validate_basic_auth(request: Request):
-    try:
-        auth = request.headers.get("Authorization")
-        if not auth:
-            return False
-        if not auth.startswith("Basic "):
-            return False
-        security = HTTPBasic()
-        credentials: HTTPBasicCredentials = Depends(security)
-        username = credentials.username
-        password = credentials.password
-        return username == WEBHOOK_USERNAME and password == WEBHOOK_PASSWORD
-    except:
-        get_logger().error("Failed to validate basic auth")
-        return False 
-
+        
 def start():
     app = FastAPI(middleware=[Middleware(RawContextMiddleware)])
     app.include_router(router)
