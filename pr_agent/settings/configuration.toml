@@ -16,6 +16,8 @@ max_model_tokens = 32000 # Limits the maximum number of tokens that can be used 
 patch_extra_lines = 1
 secret_provider="google_cloud_storage"
 cli_mode=false
+ai_disclaimer_title=""  # Pro feature, title for a collapsible disclaimer to AI outputs
+ai_disclaimer=""  # Pro feature, full text for the AI disclaimer
 
 [pr_reviewer] # /review #
 # enable/disable features
