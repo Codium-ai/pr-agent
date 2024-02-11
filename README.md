@@ -31,6 +31,15 @@ Making pull requests less painful with an AI agent
 - [Why use PR-Agent?](#why-use-pr-agent)
   
 ## News and Updates
+### Feb 11, 2024
+The `review` tool has been revamped, aiming to make the feedback clearer and more relevant, and better compliment the `improve` tool.
+
+<kbd>
+
+[<img src="https://www.codium.ai/images/pr_agent/review_reworked.png" width="512"/>](https://www.codium.ai/images/pr_agent/pr-actions.mp4)
+
+</kbd>
+
 ### Feb 6, 2024
 A new feature was added to the `review` tool - [Auto-approve PRs](./docs/REVIEW.md#auto-approval-1). If enabled, this feature enables to automatically approve PRs that meet specific criteria, by commenting on a PR: `/review auto_approve`.
 
@@ -39,7 +48,7 @@ We are excited to introduce "PR Actions" 💎:
 
 <kbd>
 
-[<img src="https://www.codium.ai/images/pr_agent/pr_actions.png" width="768"/>](https://www.codium.ai/images/pr_agent/pr-actions.mp4)
+[<img src="https://www.codium.ai/images/pr_agent/pr_actions.png" width="512"/>](https://www.codium.ai/images/pr_agent/pr-actions.mp4)
 
 </kbd>
 
