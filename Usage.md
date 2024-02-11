@@ -442,13 +442,10 @@ org = "https://dev.azure.com/YOUR_ORGANIZATION/"
 pat = "YOUR_PAT_TOKEN"
 ```
 
-##### Azure DevOps webhook
-To allow triggering from azure webhook, you need to manually [add webhook](https://learn.microsoft.com/en-us/azure/devops/service-hooks/services/webhooks?view=azure-devops) 
-of type "Pull request created" to trigger a review, or "Pull request commented on" to trigger any supported comment with /<command> <args> comment on the relevant PR.
-note the for "Pull request commented on" trigger, only API v2.0 is supported.
+##### Azure DevOps Webhook
+To trigger from an Azure webhook, you need to manually [add a webhook](https://learn.microsoft.com/en-us/azure/devops/service-hooks/services/webhooks?view=azure-devops). Use the "Pull request created" type to trigger a review, or "Pull request commented on" to trigger any supported comment with /<command> <args> comment on the relevant PR. Note that for the "Pull request commented on" trigger, only API v2.0 is supported.
 
-To use webhook security, you need to configure webhook user name and password, both on the server and azure devops webhook.
-These will be sent as basic Auth data by thewebhook with each request:
+For webhook security, configure the webhook username and password on both the server and Azure DevOps webhook. These will be sent as basic Auth data by the webhook with each request:
 ```
 [azuredevops_server]
 webhook_username = "<basic auth user>"
