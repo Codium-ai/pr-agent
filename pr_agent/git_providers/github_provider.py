@@ -202,6 +202,7 @@ class GithubProvider(GitProvider):
         if not hasattr(self.pr, 'comments_list'):
             self.pr.comments_list = []
         self.pr.comments_list.append(response)
+        return response
 
     def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
         self.publish_inline_comments([self.create_inline_comment(body, relevant_file, relevant_line_in_file)])
