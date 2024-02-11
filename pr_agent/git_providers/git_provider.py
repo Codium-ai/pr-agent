@@ -41,6 +41,9 @@ class GitProvider(ABC):
     def get_pr_description_full(self) -> str:
         pass
 
+    def edit_comment(self, comment, body: str):
+        pass
+
     def get_pr_description(self, *, full: bool = True) -> str:
         from pr_agent.config_loader import get_settings
         from pr_agent.algo.utils import clip_tokens

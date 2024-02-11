@@ -187,6 +187,13 @@ class BitbucketProvider(GitProvider):
         comment = self.pr.comment(pr_comment)
         if is_temporary:
             self.temp_comments.append(comment["id"])
+        return comment
+
+    def edit_comment(self, comment, body: str):
+        try:
+            comment.update(body)
+        except Exception as e:
+            get_logger().exception(f"Failed to update comment, error: {e}")
 
     def remove_initial_comment(self):
         try:
