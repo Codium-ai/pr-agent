@@ -460,18 +460,23 @@ class AzureDevopsProvider(GitProvider):
     @staticmethod
     def _parse_pr_url(pr_url: str) -> Tuple[str, str, int]:
         parsed_url = urlparse(pr_url)
-
         path_parts = parsed_url.path.strip("/").split("/")
 
-        if len(path_parts) < 6 or path_parts[4] != "pullrequest":
+        # support legacy urls
+        # https://learn.microsoft.com/en-us/azure/devops/extend/develop/work-with-urls?view=azure-devops&tabs=http
+        path_offset = 0
+        if "visualstudio" in pr_url:
+            path_offset = 1
+            
+        if len(path_parts) < (6 - path_offset) or path_parts[4 - path_offset] != "pullrequest":
             raise ValueError(
                 "The provided URL does not appear to be a Azure DevOps PR URL"
             )
 
-        workspace_slug = path_parts[1]
-        repo_slug = path_parts[3]
+        workspace_slug = path_parts[1 - path_offset]
+        repo_slug = path_parts[3 - path_offset]
         try:
-            pr_number = int(path_parts[5])
+            pr_number = int(path_parts[5 - path_offset])
         except ValueError as e:
             raise ValueError("Unable to convert PR number to integer") from e
 
