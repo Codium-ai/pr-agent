@@ -69,7 +69,7 @@ async def handle_webhook(background_tasks: BackgroundTasks, request: Request):
         if get_settings().get("github_action_config").get("auto_describe") == True:
             actions.append("describe")
             
-    elif data["eventType"] == "ms.vss-code.git-pullrequest-comment-event":
+    elif data["eventType"] == "ms.vss-code.git-pullrequest-comment-event" and "content" in data["resource"]["comment"]:
         if available_commands_rgx.match(data["resource"]["comment"]["content"]):
             if(data["resourceVersion"] == "2.0"):
                 repo = data["resource"]["pullRequest"]["repository"]["webUrl"]
@@ -87,7 +87,7 @@ async def handle_webhook(background_tasks: BackgroundTasks, request: Request):
             )
     else:
         return JSONResponse(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_204_NO_CONTENT,
             content=json.dumps({"message": "Unsupported event"}),
         )
 
@@ -104,7 +104,7 @@ async def handle_webhook(background_tasks: BackgroundTasks, request: Request):
                 content=json.dumps({"message": "Internal server error"}),
             )
     return JSONResponse(
-        status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "webhook triggerd successfully"})
+        status_code=status.HTTP_202_ACCEPTED, content=jsonable_encoder({"message": "webhook triggerd successfully"})
     )
 
 @router.get("/")
