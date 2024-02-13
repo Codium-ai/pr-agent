@@ -49,8 +49,9 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
     }
     markdown_text = ""
     markdown_text += f"## PR Review\n\n"
-    markdown_text += "<table>\n<tr>\n"
-    markdown_text += """<td> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>PR&nbsp;feedback</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </td> <td></td></tr>"""
+    if gfm_supported:
+        markdown_text += "<table>\n<tr>\n"
+        markdown_text += """<td> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>PR&nbsp;feedback</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </td> <td></td></tr>"""
 
     if not output_data or not output_data.get('review', {}):
         return ""
@@ -60,8 +61,12 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
             continue
         key_nice = key.replace('_', ' ').capitalize()
         emoji = emojis.get(key_nice, "")
-        markdown_text += f"<tr><td> {emoji} {key_nice}</td><td>\n\n{value}\n\n</td></tr>\n"
-    markdown_text += "</table>\n"
+        if gfm_supported:
+            markdown_text += f"<tr><td> {emoji} {key_nice}</td><td>\n\n{value}\n\n</td></tr>\n"
+        else:
+            markdown_text += f"{emoji} **{key_nice}:** {value}\n\n"
+    if gfm_supported:
+        markdown_text += "</table>\n"
 
     if 'code_feedback' in output_data:
         if gfm_supported:
