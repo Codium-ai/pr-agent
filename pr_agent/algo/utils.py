@@ -64,7 +64,10 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
         if gfm_supported:
             markdown_text += f"<tr><td> {emoji} {key_nice}</td><td>\n\n{value}\n\n</td></tr>\n"
         else:
-            markdown_text += f"{emoji} **{key_nice}:** {value}\n\n"
+            if len(value.split()) > 1:
+                markdown_text += f"{emoji} **{key_nice}:**\n\n {value}\n\n"
+            else:
+                markdown_text += f"{emoji} **{key_nice}:** {value}\n\n"
     if gfm_supported:
         markdown_text += "</table>\n"
 
