@@ -27,9 +27,9 @@ from pr_agent.log import get_logger
 security = HTTPBasic()
 router = APIRouter()
 available_commands_rgx = re.compile(r"^\/(" + "|".join(command2class.keys()) + r")\s*")
-azuredevops_server = get_settings().get("azure_devops_server")
-WEBHOOK_USERNAME = azuredevops_server.get("webhook_username")
-WEBHOOK_PASSWORD = azuredevops_server.get("webhook_password")
+azure_devops_server = get_settings().get("azure_devops_server")
+WEBHOOK_USERNAME = azure_devops_server.get("webhook_username")
+WEBHOOK_PASSWORD = azure_devops_server.get("webhook_password")
 
 def handle_request(
     background_tasks: BackgroundTasks, url: str, body: str, log_context: dict
@@ -54,7 +54,7 @@ def authorize(credentials: HTTPBasicCredentials = Depends(security)):
         
 @router.post("/", dependencies=[Depends(authorize)])
 async def handle_webhook(background_tasks: BackgroundTasks, request: Request):
-    log_context = {"server_type": "azuredevops_server"}
+    log_context = {"server_type": "azure_devops_server"}
     data = await request.json()
     get_logger().info(json.dumps(data))
 
