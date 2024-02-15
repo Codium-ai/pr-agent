@@ -15,7 +15,6 @@ from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
 from pr_agent.log import get_logger
-from pr_agent.servers.ai_disclaimer import AiDisclaimer
 from pr_agent.servers.help import HelpMessage
 
 
