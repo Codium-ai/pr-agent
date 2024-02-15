@@ -266,7 +266,7 @@ def extract_hunk_lines_from_patch(patch: str, file_name, line_start, line_end, s
             skip_hunk = False
             selected_lines_num = 0
             header_line = line
-            patch_with_lines_str += f'\n{header_line}\n'
+
             match = RE_HUNK_HEADER.match(line)
 
             res = list(match.groups())
@@ -289,6 +289,7 @@ def extract_hunk_lines_from_patch(patch: str, file_name, line_start, line_end, s
                 if not (start2 <= line_start <= start2 + size2):
                     skip_hunk = True
                     continue
+            patch_with_lines_str += f'\n{header_line}\n'
 
         elif not skip_hunk:
             if side.lower() == 'right' and line_start <= start2 + selected_lines_num <= line_end:
@@ -296,6 +297,7 @@ def extract_hunk_lines_from_patch(patch: str, file_name, line_start, line_end, s
             if side.lower() == 'left' and start1 <= selected_lines_num + start1 <= line_end:
                 selected_lines += line + '\n'
             patch_with_lines_str += line + '\n'
-            selected_lines_num += 1
+            if not line.startswith('-'): # currently we don't support /ask line for deleted lines
+                selected_lines_num += 1
 
     return patch_with_lines_str.rstrip(), selected_lines.rstrip()
