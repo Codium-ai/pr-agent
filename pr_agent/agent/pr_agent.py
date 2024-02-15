@@ -69,20 +69,21 @@ class PRAgent:
         args = update_settings_from_args(args)
 
         action = action.lstrip("/").lower()
-        if action == "reflect_and_review":
-            get_settings().pr_reviewer.ask_and_reflect = True
-        if action == "answer":
-            if notify:
-                notify()
-            await PRReviewer(pr_url, is_answer=True, args=args, ai_handler=self.ai_handler).run()
-        elif action == "auto_review":
-            await PRReviewer(pr_url, is_auto=True, args=args, ai_handler=self.ai_handler).run()
-        elif action in command2class:
-            if notify:
-                notify()
-                
-            await command2class[action](pr_url, ai_handler=self.ai_handler, args=args).run()
-        else:
-            return False
-        return True
+        with get_logger().contextualize(command=action):
+            if action == "reflect_and_review":
+                get_settings().pr_reviewer.ask_and_reflect = True
+            if action == "answer":
+                if notify:
+                    notify()
+                await PRReviewer(pr_url, is_answer=True, args=args, ai_handler=self.ai_handler).run()
+            elif action == "auto_review":
+                await PRReviewer(pr_url, is_auto=True, args=args, ai_handler=self.ai_handler).run()
+            elif action in command2class:
+                if notify:
+                    notify()
+
+                await command2class[action](pr_url, ai_handler=self.ai_handler, args=args).run()
+            else:
+                return False
+            return True
 
