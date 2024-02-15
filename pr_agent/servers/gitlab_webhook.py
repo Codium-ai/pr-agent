@@ -64,7 +64,25 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
             mr = data['merge_request']
             url = mr.get('url')
             body = data.get('object_attributes', {}).get('note')
+            if data.get('object_attributes', {}).get('type') == 'DiffNote' and '/ask' in body:
+                line_range_ = data['object_attributes']['position']['line_range']
+
+                # if line_range_['start']['type'] == 'new':
+                start_line = line_range_['start']['new_line']
+                end_line = line_range_['end']['new_line']
+                # else:
+                #     start_line = line_range_['start']['old_line']
+                #     end_line = line_range_['end']['old_line']
+
+                question = body.replace('/ask', '').strip()
+                path = data['object_attributes']['position']['new_path']
+                side = 'RIGHT'# if line_range_['start']['type'] == 'new' else 'LEFT'
+                comment_id = data['object_attributes']["discussion_id"]
+                get_logger().info(f"Handling line comment")
+                body = f"/ask_line --line_start={start_line} --line_end={end_line} --side={side} --file_name={path} --comment_id={comment_id} {question}"
+
             handle_request(background_tasks, url, body, log_context)
+
     return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
 
 

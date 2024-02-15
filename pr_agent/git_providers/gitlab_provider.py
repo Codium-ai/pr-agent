@@ -181,6 +181,11 @@ class GitLabProvider(GitProvider):
     def edit_comment(self, comment, body: str):
         self.mr.notes.update(comment.id,{'body': body} )
 
+    def reply_to_comment_from_comment_id(self, comment_id: int, body: str):
+        discussion = self.mr.discussions.get(comment_id)
+        discussion.notes.create({'body': body})
+        self.mr.notes.create({'body': body, 'in_reply_to_discussion_id': comment_id})
+
     def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
         edit_type, found, source_line_no, target_file, target_line_no = self.search_line(relevant_file,
                                                                                          relevant_line_in_file)
