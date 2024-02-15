@@ -171,7 +171,7 @@ class GithubProvider(GitProvider):
     def get_comment_url(self, comment) -> str:
         return comment.html_url
 
-    def publish_persistent_comment(self, pr_comment: str, initial_header: str, update_header: bool = True):
+    def publish_persistent_comment(self, pr_comment: str, initial_header: str, update_header: bool = True, name='review'):
         prev_comments = list(self.pr.get_issue_comments())
         for comment in prev_comments:
             body = comment.body
@@ -179,14 +179,14 @@ class GithubProvider(GitProvider):
                 latest_commit_url = self.get_latest_commit_url()
                 comment_url = self.get_comment_url(comment)
                 if update_header:
-                    updated_header = f"{initial_header}\n\n### (review updated until commit {latest_commit_url})\n"
+                    updated_header = f"{initial_header}\n\n### ({name.capitalize()} updated until commit {latest_commit_url})\n"
                     pr_comment_updated = pr_comment.replace(initial_header, updated_header)
                 else:
                     pr_comment_updated = pr_comment
                 get_logger().info(f"Persistent mode- updating comment {comment_url} to latest review message")
                 response = comment.edit(pr_comment_updated)
                 self.publish_comment(
-                    f"**[Persistent review]({comment_url})** updated to latest commit {latest_commit_url}")
+                    f"**[Persistent {name}]({comment_url})** updated to latest commit {latest_commit_url}")
                 return
         self.publish_comment(pr_comment)
 
