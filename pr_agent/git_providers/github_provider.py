@@ -384,6 +384,16 @@ class GithubProvider(GitProvider):
     def edit_comment(self, comment, body: str):
         comment.edit(body=body)
 
+    def reply_to_comment_from_comment_id(self, comment_id: int, body: str):
+        try:
+            # self.pr.get_issue_comment(comment_id).edit(body)
+            headers, data_patch = self.pr._requester.requestJsonAndCheck(
+                "POST", f"https://api.github.com/repos/{self.repo}/pulls/{self.pr_num}/comments/{comment_id}/replies",
+                input={"body": body}
+            )
+        except Exception as e:
+            get_logger().exception(f"Failed to reply comment, error: {e}")
+
     def remove_initial_comment(self):
         try:
             for comment in getattr(self.pr, 'comments_list', []):
@@ -448,6 +458,13 @@ class GithubProvider(GitProvider):
             return reaction.id
         except Exception as e:
             get_logger().exception(f"Failed to add eyes reaction, error: {e}")
+            try:
+                headers, data_patch = self.pr._requester.requestJsonAndCheck(
+                    "POST", f"https://api.github.com/repos/{self.repo}/pulls/comments/{issue_comment_id}/reactions",
+                    input={"content": "eyes"}
+                )
+            except:
+                pass
             return None
 
     def remove_reaction(self, issue_comment_id: int, reaction_id: int) -> bool:

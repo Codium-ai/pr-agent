@@ -100,6 +100,9 @@ async def handle_request(body: Dict[str, Any], event: str):
             api_url = body["issue"]["pull_request"]["url"]
         elif "comment" in body and "pull_request_url" in body["comment"]:
             api_url = body["comment"]["pull_request_url"]
+            if 'subject_type' in body["comment"] and body["comment"]["subject_type"] == "line":
+                comment_body = await handle_line_comments(action, body, comment_body, event)
+
         else:
             return {}
         log_context["api_url"] = api_url
@@ -188,6 +191,23 @@ async def handle_request(body: Dict[str, Any], event: str):
 
     get_logger().info("event or action does not require handling")
     return {}
+
+
+async def handle_line_comments(action, body, comment_body, event):
+    # handle line comments
+    start_line = body["comment"]["start_line"]
+    end_line = body["comment"]["line"]
+    start_line = end_line if not start_line else start_line
+    question = comment_body.replace('/ask', '').strip()
+    diff_hunk = body["comment"]["diff_hunk"]
+    get_settings().set("ask_diff_hunk", diff_hunk)
+    path = body["comment"]["path"]
+    side = body["comment"]["side"]
+    comment_id = body["comment"]["id"]
+    if '/ask' in comment_body:
+        get_logger().info(f"Handling line comment because of event={event} and action={action}")
+        comment_body = f"/ask_line --line_start={start_line} --line_end={end_line} --side={side} --file_name={path} --comment_id={comment_id} {question}"
+    return comment_body
 
 
 def _check_pull_request_event(action: str, body: dict, log_context: dict, bot_user: str) -> Tuple[Dict[str, Any], str]:
