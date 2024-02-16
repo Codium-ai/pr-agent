@@ -210,6 +210,8 @@ def _check_pull_request_event(action: str, body: dict, log_context: dict, bot_us
 async def _perform_commands(commands_conf: str, agent: PRAgent, body: dict, api_url: str, log_context: dict):
     apply_repo_settings(api_url)
     commands = get_settings().get(f"github_app.{commands_conf}")
+    if isinstance(commands, str):
+        commands = commands.split(",")
     for command in commands:
         split_command = command.split(" ")
         command = split_command[0]
