@@ -96,13 +96,16 @@ async def handle_request(body: Dict[str, Any], event: str):
             get_logger().info(f"Ignoring comment from {bot_user} user")
             return {}
         get_logger().info(f"Processing comment from {sender} user")
+        disable_eyes = False
         if "issue" in body and "pull_request" in body["issue"] and "url" in body["issue"]["pull_request"]:
             api_url = body["issue"]["pull_request"]["url"]
         elif "comment" in body and "pull_request_url" in body["comment"]:
             api_url = body["comment"]["pull_request_url"]
             try:
-                if 'subject_type' in body["comment"] and body["comment"]["subject_type"] == "line":
+                if ('/ask' in comment_body and
+                        'subject_type' in body["comment"] and body["comment"]["subject_type"] == "line"):
                     comment_body = handle_line_comments(body, comment_body)
+                    disable_eyes = True
             except Exception as e:
                 get_logger().error(f"Failed to handle line comments: {e}")
 
@@ -114,7 +117,8 @@ async def handle_request(body: Dict[str, Any], event: str):
         comment_id = body.get("comment", {}).get("id")
         provider = get_git_provider()(pr_url=api_url)
         with get_logger().contextualize(**log_context):
-            await agent.handle_request(api_url, comment_body, notify=lambda: provider.add_eyes_reaction(comment_id))
+            await agent.handle_request(api_url, comment_body,
+                            notify=lambda: provider.add_eyes_reaction(comment_id, disable_eyes=disable_eyes))
 
     # handle pull_request event:
     #   automatically review opened/reopened/ready_for_review PRs as long as they're not in draft,

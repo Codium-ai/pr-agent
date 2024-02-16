@@ -298,7 +298,7 @@ class BitbucketProvider(GitProvider):
             "Bitbucket provider does not support issue comments yet"
         )
 
-    def add_eyes_reaction(self, issue_comment_id: int) -> Optional[int]:
+    def add_eyes_reaction(self, issue_comment_id: int, disable_eyes: bool = False) -> Optional[int]:
         return True
 
     def remove_reaction(self, issue_comment_id: int, reaction_id: int) -> bool:

@@ -162,7 +162,7 @@ class GitProvider(ABC):
         pass
 
     @abstractmethod
-    def add_eyes_reaction(self, issue_comment_id: int) -> Optional[int]:
+    def add_eyes_reaction(self, issue_comment_id: int, disable_eyes: bool = False) -> Optional[int]:
         pass
 
     @abstractmethod

@@ -452,7 +452,9 @@ class GithubProvider(GitProvider):
         except Exception:
             return ""
 
-    def add_eyes_reaction(self, issue_comment_id: int) -> Optional[int]:
+    def add_eyes_reaction(self, issue_comment_id: int, disable_eyes: bool = False) -> Optional[int]:
+        if disable_eyes:
+            return None
         try:
             reaction = self.pr.get_issue_comment(issue_comment_id).create_reaction("eyes")
             return reaction.id
