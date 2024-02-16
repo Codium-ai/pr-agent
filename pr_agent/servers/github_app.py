@@ -100,8 +100,11 @@ async def handle_request(body: Dict[str, Any], event: str):
             api_url = body["issue"]["pull_request"]["url"]
         elif "comment" in body and "pull_request_url" in body["comment"]:
             api_url = body["comment"]["pull_request_url"]
-            if 'subject_type' in body["comment"] and body["comment"]["subject_type"] == "line":
-                comment_body = await handle_line_comments(action, body, comment_body, event)
+            try:
+                if 'subject_type' in body["comment"] and body["comment"]["subject_type"] == "line":
+                    comment_body = handle_line_comments(body, comment_body)
+            except Exception as e:
+                get_logger().error(f"Failed to handle line comments: {e}")
 
         else:
             return {}
@@ -193,7 +196,7 @@ async def handle_request(body: Dict[str, Any], event: str):
     return {}
 
 
-async def handle_line_comments(action, body, comment_body, event):
+def handle_line_comments(body, comment_body):
     # handle line comments
     start_line = body["comment"]["start_line"]
     end_line = body["comment"]["line"]
@@ -205,7 +208,6 @@ async def handle_line_comments(action, body, comment_body, event):
     side = body["comment"]["side"]
     comment_id = body["comment"]["id"]
     if '/ask' in comment_body:
-        get_logger().info(f"Handling line comment because of event={event} and action={action}")
         comment_body = f"/ask_line --line_start={start_line} --line_end={end_line} --side={side} --file_name={path} --comment_id={comment_id} {question}"
     return comment_body
 

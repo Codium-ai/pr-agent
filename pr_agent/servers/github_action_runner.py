@@ -8,6 +8,7 @@ from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.utils import apply_repo_settings
 from pr_agent.log import get_logger
+from pr_agent.servers.github_app import handle_line_comments
 from pr_agent.tools.pr_code_suggestions import PRCodeSuggestions
 from pr_agent.tools.pr_description import PRDescription
 from pr_agent.tools.pr_reviewer import PRReviewer
@@ -114,6 +115,13 @@ async def run_action():
                     is_pr = True
                 else:
                     url = event_payload.get("issue", {}).get("url")
+                try:
+                    if 'subject_type' in event_payload["comment"] and event_payload["comment"]["subject_type"] == "line":
+                        comment_body = handle_line_comments(event_payload, comment_body)
+                except Exception as e:
+                    get_logger().error(f"Failed to handle line comments: {e}")
+
+
                 if url:
                     body = comment_body.strip().lower()
                     comment_id = event_payload.get("comment", {}).get("id")
