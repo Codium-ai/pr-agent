@@ -70,8 +70,7 @@ async def _perform_commands(commands_conf: str, agent: PRAgent, body: dict, api_
             await agent.handle_request(api_url, new_command)
 
 
-# @router.post("/", dependencies=[Depends(authorize)])
-@router.post("/")
+@router.post("/", dependencies=[Depends(authorize)])
 async def handle_webhook(background_tasks: BackgroundTasks, request: Request):
     log_context = {"server_type": "azure_devops_server"}
     data = await request.json()
