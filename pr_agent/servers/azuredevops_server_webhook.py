@@ -18,7 +18,9 @@ from starlette.responses import JSONResponse
 from starlette_context.middleware import RawContextMiddleware
 
 from pr_agent.agent.pr_agent import PRAgent, command2class
+from pr_agent.algo.utils import update_settings_from_args
 from pr_agent.config_loader import get_settings
+from pr_agent.git_providers.utils import apply_repo_settings
 from pr_agent.log import get_logger
 from fastapi import Request, Depends
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
@@ -51,8 +53,25 @@ def authorize(credentials: HTTPBasicCredentials = Depends(security)):
                 detail='Incorrect username or password.',
                 headers={'WWW-Authenticate': 'Basic'},
             )
-        
-@router.post("/", dependencies=[Depends(authorize)])
+
+async def _perform_commands(commands_conf: str, agent: PRAgent, body: dict, api_url: str, log_context: dict):
+    apply_repo_settings(api_url)
+    commands = get_settings().get(f"azure_devops_server.{commands_conf}")
+    for command in commands:
+        split_command = command.split(" ")
+        command = split_command[0]
+        args = split_command[1:]
+        other_args = update_settings_from_args(args)
+        new_command = ' '.join([command] + other_args)
+        if body:
+            get_logger().info(body)
+        get_logger().info(f"Performing command: {new_command}")
+        with get_logger().contextualize(**log_context):
+            await agent.handle_request(api_url, new_command)
+
+
+# @router.post("/", dependencies=[Depends(authorize)])
+@router.post("/")
 async def handle_webhook(background_tasks: BackgroundTasks, request: Request):
     log_context = {"server_type": "azure_devops_server"}
     data = await request.json()
@@ -62,13 +81,10 @@ async def handle_webhook(background_tasks: BackgroundTasks, request: Request):
     if data["eventType"] == "git.pullrequest.created": 
         # API V1 (latest)
         pr_url = data["resource"]["_links"]["web"]["href"].replace("_apis/git/repositories", "_git")
-        if get_settings().get("github_action_config").get("auto_review") == True:
-            actions.append("review")
-        if get_settings().get("github_action_config").get("auto_improve") == True:
-            actions.append("improve")
-        if get_settings().get("github_action_config").get("auto_describe") == True:
-            actions.append("describe")
-            
+        log_context["event"] = data["eventType"]
+        log_context["api_url"] = pr_url
+        await _perform_commands("pr_commands", PRAgent(), {}, pr_url, log_context)
+        return
     elif data["eventType"] == "ms.vss-code.git-pullrequest-comment-event" and "content" in data["resource"]["comment"]:
         if available_commands_rgx.match(data["resource"]["comment"]["content"]):
             if(data["resourceVersion"] == "2.0"):
