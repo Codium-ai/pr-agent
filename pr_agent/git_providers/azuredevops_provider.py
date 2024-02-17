@@ -10,7 +10,6 @@ from .git_provider import GitProvider
 from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
 
 AZURE_DEVOPS_AVAILABLE = True
-MAX_PR_DESCRIPTION_LENGTH = 4000-1
 
 try:
     # noinspection PyUnresolvedReferences
@@ -325,12 +324,6 @@ class AzureDevopsProvider(GitProvider):
             )
 
     def publish_description(self, pr_title: str, pr_body: str):
-        if len(pr_body) > MAX_PR_DESCRIPTION_LENGTH:
-            trunction_message = " ... (description truncated due to length limit)" 
-            pr_body = pr_body[:MAX_PR_DESCRIPTION_LENGTH - len(trunction_message)] + trunction_message
-            get_logger().warning(
-                "PR description exceeds the maximum character limit of 4000. Truncating the description."
-            )
         try:
             updated_pr = GitPullRequest()
             updated_pr.title = pr_title
@@ -460,23 +453,18 @@ class AzureDevopsProvider(GitProvider):
     @staticmethod
     def _parse_pr_url(pr_url: str) -> Tuple[str, str, int]:
         parsed_url = urlparse(pr_url)
+
         path_parts = parsed_url.path.strip("/").split("/")
 
-        # support legacy urls
-        # https://learn.microsoft.com/en-us/azure/devops/extend/develop/work-with-urls?view=azure-devops&tabs=http
-        path_offset = 0
-        if "visualstudio" in pr_url:
-            path_offset = 1
-            
-        if len(path_parts) < (6 - path_offset) or path_parts[4 - path_offset] != "pullrequest":
+        if len(path_parts) < 6 or path_parts[4] != "pullrequest":
             raise ValueError(
                 "The provided URL does not appear to be a Azure DevOps PR URL"
             )
 
-        workspace_slug = path_parts[1 - path_offset]
-        repo_slug = path_parts[3 - path_offset]
+        workspace_slug = path_parts[1]
+        repo_slug = path_parts[3]
         try:
-            pr_number = int(path_parts[5 - path_offset])
+            pr_number = int(path_parts[5])
         except ValueError as e:
             raise ValueError("Unable to convert PR number to integer") from e
 
