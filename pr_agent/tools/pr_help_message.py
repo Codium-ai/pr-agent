@@ -34,22 +34,3 @@ class PRHelpMessage:
         except Exception as e:
             get_logger().error(f"Error while running PRHelpMessage: {e}")
         return ""
-
-    def _prepare_pr_configs(self) -> str:
-        import tomli
-        with open(get_settings().find_file("configuration.toml"), "rb") as conf_file:
-            configuration_headers = [header.lower() for header in tomli.load(conf_file).keys()]
-        relevant_configs = {
-            header: configs for header, configs in get_settings().to_dict().items()
-            if header.lower().startswith("pr_") and header.lower() in configuration_headers
-        }
-        comment_str = "Possible Configurations:"
-        for header, configs in relevant_configs.items():
-            if configs:
-                comment_str += "\n"
-            for key, value in configs.items():
-                comment_str += f"\n{header.lower()}.{key.lower()} = {repr(value) if isinstance(value, str) else value}"
-                comment_str += "  "
-        if get_settings().config.verbosity_level >= 2:
-            get_logger().info(f"comment_str:\n{comment_str}")
-        return comment_str
