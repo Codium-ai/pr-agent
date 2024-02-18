@@ -32,7 +32,7 @@ Making pull requests less painful with an AI agent
   
 ## News and Updates
 ### Feb 18, 2024
-- Introducing the `CI Feedback` tool 💎. The tool automatically triggers when a PR has a failed check. It analyzes the failed check, and provides summarized logs and analysis. See [here](./docs/CI_FEEDBACK.md) for more details.
+- Introducing the `CI Feedback` tool 💎. The tool automatically triggers when a PR has a failed check. It analyzes the failed check, and provides summarized logs and analysis. Note that this feature requires read access to GitHub 'checks' and 'actions'. See [here](./docs/CI_FEEDBACK.md) for more details.
 
 <kbd>
 <img src="https://www.codium.ai/images/pr_agent/failed_check1.png" width="512">
