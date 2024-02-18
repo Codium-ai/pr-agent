@@ -7,6 +7,7 @@
 - [GitHub App](#working-with-github-app)
 - [GitHub Action](#working-with-github-action)
 - [BitBucket App](#working-with-bitbucket-self-hosted-app)
+- [Azure DevOps Provider](#azure-devops-provider)
 - [Additional Configurations Walkthrough](#appendix---additional-configurations-walkthrough)
 
 ### Introduction
@@ -261,6 +262,45 @@ If not set, the default option is that only the `review` tool will run automatic
 Note that due to limitations of the bitbucket platform, the `auto_describe` tool will be able to publish a PR description only as a comment. 
 In addition, some subsections like `PR changes walkthrough` will not appear, since they require the usage of collapsible sections, which are not supported by bitbucket.
 
+### Azure DevOps provider
+
+To use Azure DevOps provider use the following settings in configuration.toml:
+```
+[config]
+git_provider="azure"
+use_repo_settings_file=false
+```
+
+And use the following settings (you have to replace the values) in .secrets.toml:
+```
+[azure_devops]
+org = "https://dev.azure.com/YOUR_ORGANIZATION/"
+pat = "YOUR_PAT_TOKEN"
+```
+
+##### Azure DevOps Webhook
+To trigger from an Azure webhook, you need to manually [add a webhook](https://learn.microsoft.com/en-us/azure/devops/service-hooks/services/webhooks?view=azure-devops). 
+Use the "Pull request created" type to trigger a review, or "Pull request commented on" to trigger any supported comment with /<command> <args> comment on the relevant PR. Note that for the "Pull request commented on" trigger, only API v2.0 is supported.
+
+To control which commands will run automatically when a new PR is opened, you can set the `pr_commands` parameter in the configuration file, similar to the GitHub App:
+```
+[azure_devops_server]
+pr_commands = [
+    "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true",
+    "/review --pr_reviewer.num_code_suggestions=0",
+    "/improve",
+]
+```
+
+For webhook security, create a sporadic username/password pair and configure the webhook username and password on both the server and Azure DevOps webhook. These will be sent as basic Auth data by the webhook with each request:
+```
+[azure_devops_server]
+webhook_username = "<basic auth user>"
+webhook_password = "<basic auth password>"
+```
+> :warning: **Ensure that the webhook endpoint is only accessible over HTTPS** to mitigate the risk of credential interception when using basic authentication.
+
+
 ### Appendix - additional configurations walkthrough
 
 
@@ -425,32 +465,3 @@ patch_extra_lines=3
 
 Increasing this number provides more context to the model, but will also increase the token budget.
 If the PR is too large (see [PR Compression strategy](./PR_COMPRESSION.md)), PR-Agent automatically sets this number to 0, using the original git patch.
-
-
-#### Azure DevOps provider
-To use Azure DevOps provider use the following settings in configuration.toml:
-```
-[config]
-git_provider="azure"
-use_repo_settings_file=false
-```
-
-And use the following settings (you have to replace the values) in .secrets.toml:
-```
-[azure_devops]
-org = "https://dev.azure.com/YOUR_ORGANIZATION/"
-pat = "YOUR_PAT_TOKEN"
-```
-
-##### Azure DevOps Webhook
-To trigger from an Azure webhook, you need to manually [add a webhook](https://learn.microsoft.com/en-us/azure/devops/service-hooks/services/webhooks?view=azure-devops). 
-Use the "Pull request created" type to trigger a review, or "Pull request commented on" to trigger any supported comment with /<command> <args> comment on the relevant PR. Note that for the "Pull request commented on" trigger, only API v2.0 is supported.
-
-For webhook security, create a sporadic username/password pair and configure the webhook username and password on both the server and Azure DevOps webhook. These will be sent as basic Auth data by the webhook with each request:
-```
-[azure_devops_server]
-webhook_username = "<basic auth user>"
-webhook_password = "<basic auth password>"
-```
-> :warning: **Ensure that the webhook endpoint is only accessible over HTTPS** to mitigate the risk of credential interception when using basic authentication.
-
