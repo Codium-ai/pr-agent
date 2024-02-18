@@ -4,9 +4,6 @@ from pr_agent.log import get_logger
 
 
 class PRHelpMessage:
-    """
-    The PRConfig class is responsible for listing all configuration options available for the user.
-    """
     def __init__(self, pr_url: str, args=None, ai_handler=None):
         self.git_provider = get_git_provider()(pr_url)
 
