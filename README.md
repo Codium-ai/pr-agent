@@ -31,17 +31,25 @@ Making pull requests less painful with an AI agent
 - [Why use PR-Agent?](#why-use-pr-agent)
   
 ## News and Updates
-### Feb 15, 2024
-Introducing the `CI Feedback` tool 💎. The tool automatically triggers when a PR has a failed check. It analyzes the failed check, and provides summarized logs and analysis. See [here](./docs/CI_FEEDBACK.md) for more details.
+### Feb 18, 2024
+- Introducing the `CI Feedback` tool 💎. The tool automatically triggers when a PR has a failed check. It analyzes the failed check, and provides summarized logs and analysis. See [here](./docs/CI_FEEDBACK.md) for more details.
 
 <kbd>
 <img src="https://www.codium.ai/images/pr_agent/failed_check1.png" width="512">
 </kbd>
 
-&rarr;
+&rarr;<br>
 <kbd>
 <img src="https://www.codium.ai/images/pr_agent/failed_check2.png" width="512">
 </kbd>
+
+
+- New ability - you can run `/ask` on specific lines of code in the PR from the PR's diff view. See [here](./docs/ASK.md#ask-lines) for more details.
+
+<kbd><img src="https://codium.ai/images/pr_agent/Ask_line.png" width="512"></kbd>
+
+
+- Introducing support for [Azure DevOps Webhooks](./Usage.md#azure-devops-webhook), as well as bug fixes and improved support for several ADO commands.
 
 
 ### Feb 11, 2024
@@ -67,38 +75,39 @@ See [here](https://github.com/Codium-ai/pr-agent/blob/main/docs/CUSTOM_SUGGESTIO
 
 CodiumAI PR-Agent is an open-source tool to help efficiently review and handle pull requests. It automatically analyzes the pull request and can provide several types of commands:
 
-|       |                                                                                                                                          |       GitHub       |       Gitlab       |     Bitbucket      |
-|-------|------------------------------------------------------------------------------------------------------------------------------------------|:------------------:|:------------------:|:------------------:|
-| TOOLS | Review                                                                                                                                   | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|       | ⮑ Incremental                                                                                                                            | :white_check_mark: |                    |                    |
-|       | ⮑ [SOC2 Compliance](https://github.com/Codium-ai/pr-agent/blob/main/docs/REVIEW.md#soc2-ticket-compliance-) 💎                           | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|       | Describe                                                                                                                                 | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|       | ⮑ [Inline File Summary](https://github.com/Codium-ai/pr-agent/blob/main/docs/DESCRIBE.md#inline-file-summary-) 💎                        | :white_check_mark: |                    |                    |
-|       | Improve                                                                                                                                  | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|       | ⮑ Extended                                                                                                                               | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|       | Ask                                                                                                                                      | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|       | [Custom Suggestions](https://github.com/Codium-ai/pr-agent/blob/main/docs/CUSTOM_SUGGESTIONS.md) 💎                                      | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|       | [Test](https://github.com/Codium-ai/pr-agent/blob/main/docs/TEST.md) 💎                                                                  | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|       | Reflect and Review                                                                                                                       | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|       | Update CHANGELOG.md                                                                                                                      | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|       | Find Similar Issue                                                                                                                       | :white_check_mark: |                    |                    |
-|       | [Add PR Documentation](https://github.com/Codium-ai/pr-agent/blob/main/docs/ADD_DOCUMENTATION.md) 💎                                     | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|       |                                                                                                                                        |       GitHub       |       Gitlab       |     Bitbucket      |
+|-------|----------------------------------------------------------------------------------------------------------------------------------------|:------------------:|:------------------:|:------------------:|
+| TOOLS | Review                                                                                                                                 | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|       | ⮑ Incremental                                                                                                                          | :white_check_mark: |                    |                    |
+|       | ⮑ [SOC2 Compliance](https://github.com/Codium-ai/pr-agent/blob/main/docs/REVIEW.md#soc2-ticket-compliance-) 💎                         | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|       | Describe                                                                                                                               | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|       | ⮑ [Inline File Summary](https://github.com/Codium-ai/pr-agent/blob/main/docs/DESCRIBE.md#inline-file-summary-) 💎                      | :white_check_mark: |                    |                    |
+|       | Improve                                                                                                                                | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|       | ⮑ Extended                                                                                                                             | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|       | Ask                                                                                                                                    | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|       | ⮑ [Ask on code lines](./docs/ASK.md#ask-lines)                                                                                         | :white_check_mark: | :white_check_mark: |                    |
+|       | [Custom Suggestions](https://github.com/Codium-ai/pr-agent/blob/main/docs/CUSTOM_SUGGESTIONS.md) 💎                                    | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|       | [Test](https://github.com/Codium-ai/pr-agent/blob/main/docs/TEST.md) 💎                                                                | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|       | Reflect and Review                                                                                                                     | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|       | Update CHANGELOG.md                                                                                                                    | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|       | Find Similar Issue                                                                                                                     | :white_check_mark: |                    |                    |
+|       | [Add PR Documentation](https://github.com/Codium-ai/pr-agent/blob/main/docs/ADD_DOCUMENTATION.md) 💎                                   | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |       | [Custom Labels](https://github.com/Codium-ai/pr-agent/blob/main/docs/DESCRIBE.md#handle-custom-labels-from-the-repos-labels-page-gem) 💎 | :white_check_mark: | :white_check_mark: |                    |
-|       | [Analyze](https://github.com/Codium-ai/pr-agent/blob/main/docs/Analyze.md) 💎                                                            | :white_check_mark: | :white_check_mark: |                    |
-|       | [CI Feedback](https://github.com/Codium-ai/pr-agent/blob/main/docs/CI_FEEDBACK.md) 💎                                                    | :white_check_mark: |                    |                    |
-|       |                                                                                                                                          |                    |                    |                    |
-| USAGE | CLI                                                                                                                                      | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|       | App / webhook                                                                                                                            | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|       | Tagging bot                                                                                                                              | :white_check_mark: |                    |                    | 
-|       | Actions                                                                                                                                  | :white_check_mark: |                    | :white_check_mark: | 
-|       |                                                                                                                                          |                    |                    |                    |
-| CORE  | PR compression                                                                                                                           | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|       | Repo language prioritization                                                                                                             | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|       | Adaptive and token-aware<br />file patch fitting                                                                                         | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|       | Multiple models support                                                                                                                  | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|       | [Static code analysis](https://github.com/Codium-ai/pr-agent/blob/main/docs/Analyze.md) 💎                                               | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|       | [Global configuration](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#global-configuration-file-) 💎                           | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|       | [PR Actions](https://www.codium.ai/images/pr_agent/pr-actions.mp4) 💎                                                                    | :white_check_mark: |                    |                    |
+|       | [Analyze](https://github.com/Codium-ai/pr-agent/blob/main/docs/Analyze.md) 💎                                                          | :white_check_mark: | :white_check_mark: |                    |
+|       | [CI Feedback](https://github.com/Codium-ai/pr-agent/blob/main/docs/CI_FEEDBACK.md) 💎                                                  | :white_check_mark: |                    |                    |
+|       |                                                                                                                                        |                    |                    |                    |
+| USAGE | CLI                                                                                                                                    | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|       | App / webhook                                                                                                                          | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|       | Tagging bot                                                                                                                            | :white_check_mark: |                    |                    | 
+|       | Actions                                                                                                                                | :white_check_mark: |                    | :white_check_mark: | 
+|       |                                                                                                                                        |                    |                    |                    |
+| CORE  | PR compression                                                                                                                         | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|       | Repo language prioritization                                                                                                           | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|       | Adaptive and token-aware<br />file patch fitting                                                                                       | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|       | Multiple models support                                                                                                                | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|       | [Static code analysis](https://github.com/Codium-ai/pr-agent/blob/main/docs/Analyze.md) 💎                                             | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|       | [Global configuration](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#global-configuration-file-) 💎                         | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|       | [PR Actions](https://www.codium.ai/images/pr_agent/pr-actions.mp4) 💎                                                                  | :white_check_mark: |                    |                    |
 
 - 💎 means this feature is available only in [PR-Agent Pro](https://www.codium.ai/pricing/)
 - Support for additional git providers is described in [here](./docs/Full_environments.md)
