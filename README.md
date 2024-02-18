@@ -32,24 +32,25 @@ Making pull requests less painful with an AI agent
   
 ## News and Updates
 ### Feb 18, 2024
-Introducing the `CI Feedback` tool 💎. The tool automatically triggers when a PR has a failed check. It analyzes the failed check, and provides summarized logs and analysis. See [here](./docs/CI_FEEDBACK.md) for more details.
+- Introducing the `CI Feedback` tool 💎. The tool automatically triggers when a PR has a failed check. It analyzes the failed check, and provides summarized logs and analysis. See [here](./docs/CI_FEEDBACK.md) for more details.
 
 <kbd>
 <img src="https://www.codium.ai/images/pr_agent/failed_check1.png" width="512">
 </kbd>
 
-&rarr;
+&rarr;<br>
 <kbd>
 <img src="https://www.codium.ai/images/pr_agent/failed_check2.png" width="512">
 </kbd>
 
-### Feb 18, 2024
-New ability - you can run `/ask` on specific lines of code in the PR from the PR's diff view. See [here](./docs/ASK.md#ask-lines) for more details.
+
+- New ability - you can run `/ask` on specific lines of code in the PR from the PR's diff view. See [here](./docs/ASK.md#ask-lines) for more details.
 
 <kbd><img src=https://codium.ai/images/pr_agent/Ask_line.png width="612"></kbd>
 
-### Feb 18, 2024
-Introducing support for [Azure DevOps Webhooks](./Usage.md#azure-devops-webhook), as well as bug fixes and improved support for several commands.
+
+- Introducing support for [Azure DevOps Webhooks](./Usage.md#azure-devops-webhook), as well as bug fixes and improved support for several ADO commands.
+
 
 ### Feb 11, 2024
 The `review` tool has been revamped, aiming to make the feedback clearer and more relevant, and better complement the `improve` tool.
