@@ -212,7 +212,7 @@ class GerritProvider(GitProvider):
         raise NotImplementedError(
             'Getting labels is not implemented for the gerrit provider')
 
-    def add_eyes_reaction(self, issue_comment_id: int):
+    def add_eyes_reaction(self, issue_comment_id: int, disable_eyes: bool = False):
         raise NotImplementedError(
             'Adding reactions is not implemented for the gerrit provider')
 

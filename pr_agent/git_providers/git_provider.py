@@ -44,6 +44,9 @@ class GitProvider(ABC):
     def edit_comment(self, comment, body: str):
         pass
 
+    def reply_to_comment_from_comment_id(self, comment_id: int, body: str):
+        pass
+
     def get_pr_description(self, *, full: bool = True) -> str:
         from pr_agent.config_loader import get_settings
         from pr_agent.algo.utils import clip_tokens
@@ -159,7 +162,7 @@ class GitProvider(ABC):
         pass
 
     @abstractmethod
-    def add_eyes_reaction(self, issue_comment_id: int) -> Optional[int]:
+    def add_eyes_reaction(self, issue_comment_id: int, disable_eyes: bool = False) -> Optional[int]:
         pass
 
     @abstractmethod

@@ -245,3 +245,59 @@ __old hunk__
                 patch_with_lines_str += f"{line_old}\n"
 
     return patch_with_lines_str.rstrip()
+
+
+def extract_hunk_lines_from_patch(patch: str, file_name, line_start, line_end, side) -> tuple[str, str]:
+
+    patch_with_lines_str = f"\n\n## file: '{file_name.strip()}'\n\n"
+    selected_lines = ""
+    patch_lines = patch.splitlines()
+    RE_HUNK_HEADER = re.compile(
+        r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@[ ]?(.*)")
+    match = None
+    start1, size1, start2, size2 = -1, -1, -1, -1
+    skip_hunk = False
+    selected_lines_num = 0
+    for line in patch_lines:
+        if 'no newline at end of file' in line.lower():
+            continue
+
+        if line.startswith('@@'):
+            skip_hunk = False
+            selected_lines_num = 0
+            header_line = line
+
+            match = RE_HUNK_HEADER.match(line)
+
+            res = list(match.groups())
+            for i in range(len(res)):
+                if res[i] is None:
+                    res[i] = 0
+            try:
+                start1, size1, start2, size2 = map(int, res[:4])
+            except:  # '@@ -0,0 +1 @@' case
+                start1, size1, size2 = map(int, res[:3])
+                start2 = 0
+
+            # check if line range is in this hunk
+            if side.lower() == 'left':
+                # check if line range is in this hunk
+                if not (start1 <= line_start <= start1 + size1):
+                    skip_hunk = True
+                    continue
+            elif side.lower() == 'right':
+                if not (start2 <= line_start <= start2 + size2):
+                    skip_hunk = True
+                    continue
+            patch_with_lines_str += f'\n{header_line}\n'
+
+        elif not skip_hunk:
+            if side.lower() == 'right' and line_start <= start2 + selected_lines_num <= line_end:
+                selected_lines += line + '\n'
+            if side.lower() == 'left' and start1 <= selected_lines_num + start1 <= line_end:
+                selected_lines += line + '\n'
+            patch_with_lines_str += line + '\n'
+            if not line.startswith('-'): # currently we don't support /ask line for deleted lines
+                selected_lines_num += 1
+
+    return patch_with_lines_str.rstrip(), selected_lines.rstrip()

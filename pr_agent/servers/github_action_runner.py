@@ -8,6 +8,7 @@ from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.utils import apply_repo_settings
 from pr_agent.log import get_logger
+from pr_agent.servers.github_app import handle_line_comments
 from pr_agent.tools.pr_code_suggestions import PRCodeSuggestions
 from pr_agent.tools.pr_description import PRDescription
 from pr_agent.tools.pr_reviewer import PRReviewer
@@ -102,24 +103,38 @@ async def run_action():
                     await PRCodeSuggestions(pr_url).run()
 
     # Handle issue comment event
-    elif GITHUB_EVENT_NAME == "issue_comment":
+    elif GITHUB_EVENT_NAME == "issue_comment" or GITHUB_EVENT_NAME == "pull_request_review_comment":
         action = event_payload.get("action")
         if action in ["created", "edited"]:
             comment_body = event_payload.get("comment", {}).get("body")
+            try:
+                if GITHUB_EVENT_NAME == "pull_request_review_comment":
+                    if '/ask' in comment_body:
+                        comment_body = handle_line_comments(event_payload, comment_body)
+            except Exception as e:
+                get_logger().error(f"Failed to handle line comments: {e}")
+                return
             if comment_body:
                 is_pr = False
+                disable_eyes = False
                 # check if issue is pull request
                 if event_payload.get("issue", {}).get("pull_request"):
                     url = event_payload.get("issue", {}).get("pull_request", {}).get("url")
                     is_pr = True
+                elif event_payload.get("comment", {}).get("pull_request_url"): # for 'pull_request_review_comment
+                    url = event_payload.get("comment", {}).get("pull_request_url")
+                    is_pr = True
+                    disable_eyes = True
                 else:
                     url = event_payload.get("issue", {}).get("url")
+
                 if url:
                     body = comment_body.strip().lower()
                     comment_id = event_payload.get("comment", {}).get("id")
                     provider = get_git_provider()(pr_url=url)
                     if is_pr:
-                        await PRAgent().handle_request(url, body, notify=lambda: provider.add_eyes_reaction(comment_id))
+                        await PRAgent().handle_request(url, body,
+                                    notify=lambda: provider.add_eyes_reaction(comment_id, disable_eyes=disable_eyes))
                     else:
                         await PRAgent().handle_request(url, body)
 
