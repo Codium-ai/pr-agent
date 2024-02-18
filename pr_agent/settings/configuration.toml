@@ -110,7 +110,7 @@ enable_help_text=true
 
 [checks] # /checks (pro feature) #
 enable_auto_checks_feedback=true
-excluded_checks_list=[] # list of checks to exclude, for example: ["check1", "check2"]
+excluded_checks_list=["lint"] # list of checks to exclude, for example: ["check1", "check2"]
 persistent_comment=true
 
 
