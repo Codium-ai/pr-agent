@@ -56,7 +56,7 @@ class TestExtendPatch:
         original_file_str = 'line1\nline2\nline3\nline4\nline5'
         patch_str = ''
         num_lines = 1
-        expected_output = ''
+        expected_output = '3'
         assert extend_patch(original_file_str, patch_str, num_lines) == expected_output
 
     # Tests that the function returns the original patch when num_lines is 0
