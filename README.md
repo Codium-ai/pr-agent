@@ -46,7 +46,7 @@ Making pull requests less painful with an AI agent
 
 - New ability - you can run `/ask` on specific lines of code in the PR from the PR's diff view. See [here](./docs/ASK.md#ask-lines) for more details.
 
-<kbd><img src=https://codium.ai/images/pr_agent/Ask_line.png width="612"></kbd>
+<kbd><img src="https://codium.ai/images/pr_agent/Ask_line.png" width="512"></kbd>
 
 
 - Introducing support for [Azure DevOps Webhooks](./Usage.md#azure-devops-webhook), as well as bug fixes and improved support for several ADO commands.
