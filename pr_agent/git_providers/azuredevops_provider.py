@@ -10,6 +10,7 @@ from .git_provider import GitProvider
 from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
 
 AZURE_DEVOPS_AVAILABLE = True
+MAX_PR_DESCRIPTION_AZURE_LENGTH = 4000-1
 
 try:
     # noinspection PyUnresolvedReferences
@@ -38,7 +39,7 @@ class AzureDevopsProvider(GitProvider):
             )
 
         self.azure_devops_client = self._get_azure_devops_client()
-
+        self.diff_files = None
         self.workspace_slug = None
         self.repo_slug = None
         self.repo = None
@@ -124,6 +125,19 @@ class AzureDevopsProvider(GitProvider):
     def get_pr_description_full(self) -> str:
         return self.pr.description
 
+    def edit_comment(self, comment, body: str):
+        try:
+            self.azure_devops_client.update_comment(
+                repository_id=self.repo_slug,
+                pull_request_id=self.pr_num,
+                thread_id=comment["thread_id"],
+                comment_id=comment["comment_id"],
+                comment=Comment(content=body),
+                project=self.workspace_slug,
+            )
+        except Exception as e:
+            get_logger().exception(f"Failed to edit comment, error: {e}")
+
     def remove_comment(self, comment):
         try:
             self.azure_devops_client.delete_comment(
@@ -181,7 +195,7 @@ class AzureDevopsProvider(GitProvider):
                 include_content=True,
                 path=".pr_agent.toml",
             )
-            return contents
+            return list(contents)[0]
         except Exception as e:
             if get_settings().config.verbosity_level >= 2:
                 get_logger().error(f"Failed to get repo settings, error: {e}")
@@ -206,6 +220,10 @@ class AzureDevopsProvider(GitProvider):
 
     def get_diff_files(self) -> list[FilePatchInfo]:
         try:
+
+            if self.diff_files:
+                return self.diff_files
+
             base_sha = self.pr.last_merge_target_commit
             head_sha = self.pr.last_merge_source_commit
 
@@ -303,7 +321,7 @@ class AzureDevopsProvider(GitProvider):
                         edit_type=edit_type,
                     )
                 )
-
+            self.diff_files = diff_files
             return diff_files
         except Exception as e:
             print(f"Error: {str(e)}")
@@ -318,12 +336,29 @@ class AzureDevopsProvider(GitProvider):
             repository_id=self.repo_slug,
             pull_request_id=self.pr_num,
         )
+        response = {"thread_id": thread_response.id, "comment_id": thread_response.comments[0].id}
         if is_temporary:
-            self.temp_comments.append(
-                {"thread_id": thread_response.id, "comment_id": thread_response.comments[0].id}
-            )
+            self.temp_comments.append(response)
+        return response
 
     def publish_description(self, pr_title: str, pr_body: str):
+        if len(pr_body) > MAX_PR_DESCRIPTION_AZURE_LENGTH:
+
+            usage_guide_text='<details> <summary><strong>✨ Usage guide:</strong></summary><hr>'
+            ind = pr_body.find(usage_guide_text)
+            if ind != -1:
+                pr_body = pr_body[:ind]
+
+            if len(pr_body) > MAX_PR_DESCRIPTION_AZURE_LENGTH:
+                changes_walkthrough_text = '## **Changes walkthrough**'
+                ind = pr_body.find(changes_walkthrough_text)
+                if ind != -1:
+                    pr_body = pr_body[:ind]
+
+            if len(pr_body) > MAX_PR_DESCRIPTION_AZURE_LENGTH:
+                trunction_message = " ... (description truncated due to length limit)"
+                pr_body = pr_body[:MAX_PR_DESCRIPTION_AZURE_LENGTH - len(trunction_message)] + trunction_message
+                get_logger().warning("PR description was truncated due to length limit")
         try:
             updated_pr = GitPullRequest()
             updated_pr.title = pr_title
