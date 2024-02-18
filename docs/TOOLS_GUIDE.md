@@ -9,5 +9,6 @@
 - [GENERATE CUSTOM LABELS](./GENERATE_CUSTOM_LABELS.md) 💎
 - [Analyze](./Analyze.md) 💎
 - [Test](./TEST.md) 💎
+- [CI Feedback](./CI_FEEDBACK.md) 💎
 
 See the **[installation guide](/INSTALL.md)** for instructions on setting up PR-Agent.
