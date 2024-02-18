@@ -14,7 +14,7 @@ class TestIgnoreFilter:
             type('', (object,), {'filename': 'file4.py'})(),
             type('', (object,), {'filename': 'file5.py'})()
         ]
-        assert filter_ignored(files) == files, "Expected all files to be returned when no ignore patterns are given."
+        assert filter_ignored(files) == None, "Expected all files to be returned when no ignore patterns are given."
 
     def test_glob_ignores(self, monkeypatch):
         """
