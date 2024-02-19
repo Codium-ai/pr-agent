@@ -75,9 +75,9 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
         if gfm_supported:
             markdown_text += f"\n\n"
             markdown_text += f"<details><summary> <strong>Code feedback:</strong></summary>\n\n"
+            markdown_text += "<hr>"
         else:
             markdown_text += f"\n\n** Code feedback:**\n\n"
-        markdown_text += "<hr>"
         for i, value in enumerate(output_data['code_feedback']):
             if value is None or value == '' or value == {} or value == []:
                 continue
@@ -131,6 +131,10 @@ def parse_code_suggestion(code_suggestion: dict, i: int = 0, gfm_supported: bool
         markdown_text += "<hr>"
     else:
         for sub_key, sub_value in code_suggestion.items():
+            if isinstance(sub_key, str):
+                sub_key = sub_key.rstrip()
+            if isinstance(sub_value,str):
+                sub_value = sub_value.rstrip()
             if isinstance(sub_value, dict):  # "code example"
                 markdown_text += f"  - **{sub_key}:**\n"
                 for code_key, code_value in sub_value.items():  # 'before' and 'after' code
@@ -142,10 +146,9 @@ def parse_code_suggestion(code_suggestion: dict, i: int = 0, gfm_supported: bool
                     markdown_text += f"\n  - **{sub_key}:** {sub_value}  \n"
                 else:
                     markdown_text += f"   **{sub_key}:** {sub_value}  \n"
-                if not gfm_supported:
-                    if "relevant_line" not in sub_key.lower():  # nicer presentation
-                        # markdown_text = markdown_text.rstrip('\n') + "\\\n" # works for gitlab
-                        markdown_text = markdown_text.rstrip('\n') + "   \n"  # works for gitlab and bitbucker
+                if "relevant_line" not in sub_key.lower():  # nicer presentation
+                    # markdown_text = markdown_text.rstrip('\n') + "\\\n" # works for gitlab
+                    markdown_text = markdown_text.rstrip('\n') + "   \n"  # works for gitlab and bitbucker
 
         markdown_text += "\n"
     return markdown_text
