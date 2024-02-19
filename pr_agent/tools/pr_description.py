@@ -108,9 +108,9 @@ class PRDescription:
                 pr_body += "\n</details>\n"
             elif get_settings().pr_description.enable_help_comment:
                 if isinstance(self.git_provider, GithubProvider):
-                    pr_body +="\n\n___\n\n✨ **PR-Agent usage guide**:\n\n- [ ] Mark this checkbox :gem:, or comment `/help` on the PR, to get a list of PR-Agent tools and their descriptions.  <!-- /help -->"
+                    pr_body +="\n\n___\n\n✨ **PR-Agent usage guide**:\n\n- [ ] Mark this checkbox :gem:, or comment `/help`, to get a list of all PR-Agent tools and their descriptions.  <!-- /help -->"
                 else:
-                    pr_body +="\n\n___\n\n>Comment `/help` on the PR to to get a list of PR-Agent tools and their descriptions\n\n___\n\n"
+                    pr_body +="\n\n___\n\n>Comment `/help` on the PR to to get a list of all PR-Agent tools and their descriptions\n\n___\n\n"
 
 
             # final markdown description
