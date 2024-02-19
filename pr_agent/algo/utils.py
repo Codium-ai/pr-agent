@@ -131,8 +131,10 @@ def parse_code_suggestion(code_suggestion: dict, i: int = 0, gfm_supported: bool
         markdown_text += "<hr>"
     else:
         for sub_key, sub_value in code_suggestion.items():
-            sub_key = sub_key.rstrip()
-            sub_value = sub_value.rstrip()
+            if isinstance(sub_key, str):
+                sub_key = sub_key.rstrip()
+            if isinstance(sub_value,str):
+                sub_value = sub_value.rstrip()
             if isinstance(sub_value, dict):  # "code example"
                 markdown_text += f"  - **{sub_key}:**\n"
                 for code_key, code_value in sub_value.items():  # 'before' and 'after' code
