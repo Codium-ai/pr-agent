@@ -209,6 +209,12 @@ user="""
 ```
 Note that the new prompt will need to generate an output compatible with the relevant [post-process function](./pr_agent/tools/pr_description.py#L137).
 
+#### Managing notifications
+If you are subscribed to notifications for a repo with PR-Agent, we recommend turning off notifications for PR comments, to avoid lengthy emails:
+
+<kbd><img src="https://codium.ai/images/pr_agent/notifications.png" width="512"></kbd>
+
+
 ### Working with GitHub Action
 `GitHub Action` is a different way to trigger PR-Agent tools, and uses a different configuration mechanism than `GitHub App`.
 You can configure settings for `GitHub Action` by adding environment variables under the env section in `.github/workflows/pr_agent.yml` file. 
