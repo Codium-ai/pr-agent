@@ -115,21 +115,21 @@ ___
 
 ‣ **Auto Description ([`/describe`](./docs/DESCRIBE.md))**: Automatically generating PR description - title, type, summary, code walkthrough and labels.
 \
-‣ **Auto Review ([`/review`](./docs/REVIEW.md))**: Adjustable feedback about the PR main theme, type, relevant tests, security issues, score, and various suggestions for the PR content.
+‣ **Auto Review ([`/review`](./docs/REVIEW.md))**: Adjustable feedback about the PR, possible issues, security concerns, review effort and more.
 \
 ‣ **Question Answering ([`/ask ...`](./docs/ASK.md))**: Answering free-text questions about the PR.
 \
-‣ **Code Suggestions ([`/improve`](./docs/IMPROVE.md))**: Committable code suggestions for improving the PR.
+‣ **Code Suggestions ([`/improve`](./docs/IMPROVE.md))**: Code suggestions for improving the PR.
 \
 ‣ **Update Changelog ([`/update_changelog`](./docs/UPDATE_CHANGELOG.md))**: Automatically updating the CHANGELOG.md file with the PR changes.
 \
 ‣ **Find Similar Issue ([`/similar_issue`](./docs/SIMILAR_ISSUE.md))**: Automatically retrieves and presents similar issues.
 \
-‣ **Add Documentation 💎  ([`/add_docs`](./docs/ADD_DOCUMENTATION.md))**: Automatically adds documentation to methods/functions/classes that changed in the PR.
+‣ **Add Documentation 💎  ([`/add_docs`](./docs/ADD_DOCUMENTATION.md))**: Generates documentation to methods/functions/classes that changed in the PR.
 \
-‣ **Generate Custom Labels 💎 ([`/generate_labels`](./docs/GENERATE_CUSTOM_LABELS.md))**: Automatically suggests custom labels based on the PR code changes.
+‣ **Generate Custom Labels 💎 ([`/generate_labels`](./docs/GENERATE_CUSTOM_LABELS.md))**: Generates custom labels for the PR, based on specific guidelines defined by the user.
 \
-‣ **Analyze 💎 ([`/analyze`](./docs/Analyze.md))**: Automatically analyzes the PR, and presents changes walkthrough for each component.
+‣ **Analyze 💎 ([`/analyze`](./docs/Analyze.md))**: Identify code components that changed in the PR, and enables to interactively generate tests, docs, and code suggestions for each component.
 \
 ‣ **Custom Suggestions 💎 ([`/custom_suggestions`](./docs/CUSTOM_SUGGESTIONS.md))**: Automatically generates custom suggestions for improving the PR code, based on specific guidelines defined by the user.
 \
