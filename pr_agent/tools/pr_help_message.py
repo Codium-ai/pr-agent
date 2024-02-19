@@ -19,14 +19,14 @@ class PRHelpMessage:
             tool_names.append(f"[DESCRIBE]({base_path}/DESCRIBE.md)")
             tool_names.append(f"[REVIEW]({base_path}/REVIEW.md)")
             tool_names.append(f"[IMPROVE]({base_path}/IMPROVE.md)")
-            tool_names.append(f"[ANALYZE]({base_path}/Analyze.md)")
+            tool_names.append(f"[ANALYZE]({base_path}/Analyze.md) 💎")
             tool_names.append(f"[UPDATE CHANGELOG]({base_path}/UPDATE_CHANGELOG.md)")
-            tool_names.append(f"[ADD DOCUMENTATION]({base_path}/ADD_DOCUMENTATION.md)")
+            tool_names.append(f"[ADD DOCUMENTATION]({base_path}/ADD_DOCUMENTATION.md) 💎")
             tool_names.append(f"[ASK]({base_path}/ASK.md)")
             tool_names.append(f"[GENERATE CUSTOM LABELS]({base_path}/GENERATE_CUSTOM_LABELS.md)")
-            tool_names.append(f"[TEST]({base_path}/TEST.md)")
-            tool_names.append(f"[CI FEEDBACK]({base_path}/CI_FEEDBACK.md)")
-            tool_names.append(f"[CUSTOM SUGGESTIONS]({base_path}/CUSTOM_SUGGESTIONS.md)")
+            tool_names.append(f"[TEST]({base_path}/TEST.md) 💎")
+            tool_names.append(f"[CI FEEDBACK]({base_path}/CI_FEEDBACK.md) 💎")
+            tool_names.append(f"[CUSTOM SUGGESTIONS]({base_path}/CUSTOM_SUGGESTIONS.md) 💎")
             tool_names.append(f"[SIMILAR ISSUE]({base_path}/SIMILAR_ISSUE.md)")
 
             descriptions = []
@@ -38,7 +38,7 @@ class PRHelpMessage:
             descriptions.append("Generates documentation to methods/functions/classes that changed in the PR.")
             descriptions.append("Answering free-text questions about the PR.")
             descriptions.append("Generates custom labels for the PR, based on specific guidelines defined by the user")
-            descriptions.append("Generates unit tests for a selected component, based on the PR code change.")
+            descriptions.append("Generates unit tests for a specific component, based on the PR code change.")
             descriptions.append("Generates feedback and analysis for a failed CI job.")
             descriptions.append("Generates custom suggestions for improving the PR code, based on specific guidelines defined by the user.")
             descriptions.append("Automatically retrieves and presents similar issues.")
@@ -82,18 +82,6 @@ class PRHelpMessage:
                 pr_comment += f"<table><tr align='center'><th align='center'>Tool</th><th align='left'>Command</th><th align='left'>Description</th></tr>"
                 for i in range(len(tool_names)):
                     pr_comment += f"\n<tr><td align='center'>\n\n<strong>{tool_names[i]}</strong></td><td>{commands[i]}</td><td>{descriptions[i]}</td></tr>"
-                # pr_comment += f"\n<tr><td align='center'>\n\n<strong>[DESCRIBE]({base_path}/DESCRIBE.md)</strong></td><td>Generates PR description - title, type, summary, code walkthrough and labels</td></tr>"
-                # pr_comment += f"\n<tr><td align='center'>\n\n<strong>[REVIEW]({base_path}/REVIEW.md)</strong></td><td>Adjustable feedback about the PR, possible issues, security concerns, review effort and more</td></tr>"
-                # pr_comment += f"\n<tr><td align='center'>\n\n<strong>[IMPROVE]({base_path}/IMPROVE.md)</strong></td><td>Code suggestions for improving the PR.</td></tr>"
-                # pr_comment += f"\n<tr><td align='center'>\n\n<strong>[ASK]({base_path}/ASK.md)</strong></td><td>Answering free-text questions about the PR.</td></tr>"
-                # pr_comment += f"\n<tr><td align='center'>\n\n<strong>[SIMILAR ISSUE]({base_path}/SIMILAR_ISSUE.md)</strong></td><td>Automatically retrieves and presents similar issues.</td></tr>"
-                # pr_comment += f"\n<tr><td align='center'>\n\n<strong>[UPDATE CHANGELOG]({base_path}/UPDATE_CHANGELOG.md)</strong></td><td>Automatically updates the changelog.</td></tr>"
-                # pr_comment += f"\n<tr><td align='center'>\n\n<strong>[ADD DOCUMENTATION]({base_path}/ADD_DOCUMENTATION.md)</strong></td><td>Generates documentation to methods/functions/classes that changed in the PR.</td></tr>"
-                # pr_comment += f"\n<tr><td align='center'>\n\n<strong>[GENERATE CUSTOM LABELS]({base_path}/GENERATE_CUSTOM_LABELS.md)</strong></td><td>Generates custom labels for the PR, based on specific guidelines defined by the user</td></tr>"
-                # pr_comment += f"\n<tr><td align='center'>\n\n<strong>[ANALYZE]({base_path}/Analyze.md)</strong></td><td>Identifies code components that changed in the PR, and enables to interactively generate tests, docs, and code suggestions for each component.</td></tr>"
-                # pr_comment += f"\n<tr><td align='center'>\n\n<strong>[TEST]({base_path}/TEST.md)</strong></td><td>Generates unit tests for a selected component, based on the PR code change.</td></tr>"
-                # pr_comment += f"\n<tr><td align='center'>\n\n<strong>[CI FEEDBACK]({base_path}/CI_FEEDBACK.md)</strong></td><td>Generates feedback and analysis for a failed CI job.</td></tr>"
-                # pr_comment += f"\n<tr><td align='center'>\n\n<strong>[CUSTOM SUGGESTIONS]({base_path}/CUSTOM_SUGGESTIONS.md)</strong></td><td>Generates custom suggestions for improving the PR code, based on specific guidelines defined by the user.</td></tr>"
                 pr_comment += "</table>\n\n"
                 pr_comment += f"""\n\nNote that each tool be [invoked automatically](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#github-app-automatic-tools-for-pr-actions) when a new PR is opened, or called manually by [commenting on a PR](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#online-usage)."""
             if get_settings().config.publish_output:

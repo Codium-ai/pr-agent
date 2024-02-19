@@ -63,7 +63,7 @@ Added  ["PR Actions" 💎](https://www.codium.ai/images/pr_agent/pr-actions.mp4)
 
 
 ### Jan 28, 2024
-- 💎 Test - A new tool, [`/test component_name`](https://github.com/Codium-ai/pr-agent/blob/main/docs/TEST.md), was added to PR-Agent Pro. The tool will generate tests for a selected component, based on the PR code changes.
+- 💎 Test - A new tool, [`/test component_name`](https://github.com/Codium-ai/pr-agent/blob/main/docs/TEST.md), was added to PR-Agent Pro. The tool will generate tests for a specific component, based on the PR code changes.
 - 💎 Analyze - The [`/analyze`](https://github.com/Codium-ai/pr-agent/blob/main/docs/Analyze.md) tool was updated and simplified. It now presents a summary of the code components that were changed in the PR.
 ### Jan 21, 2024
 - 💎 Custom suggestions - A new tool, `/custom_suggestions`, was added to PR-Agent Pro. The tool will propose only suggestions that follow specific guidelines defined by the user. 
