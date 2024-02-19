@@ -1,6 +1,7 @@
 aiohttp==3.9.1
 atlassian-python-api==3.41.4
 azure-devops==7.1.0b3
+azure-identity==1.15.0
 boto3==1.33.6
 dynaconf==3.2.4
 fastapi==0.99.0

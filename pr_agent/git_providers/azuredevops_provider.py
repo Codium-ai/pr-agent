@@ -10,6 +10,7 @@ from .git_provider import GitProvider
 from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
 
 AZURE_DEVOPS_AVAILABLE = True
+ADO_APP_CLIENT_DEFAULT_ID = "499b84ac-1321-427f-aa17-267ca6975798/.default"
 MAX_PR_DESCRIPTION_AZURE_LENGTH = 4000-1
 
 try:
@@ -17,6 +18,8 @@ try:
     from msrest.authentication import BasicAuthentication
     # noinspection PyUnresolvedReferences
     from azure.devops.connection import Connection
+    # noinspection PyUnresolvedReferences
+    from azure.identity import DefaultAzureCredential
     # noinspection PyUnresolvedReferences
     from azure.devops.v7_1.git.models import (
         Comment,
@@ -507,13 +510,30 @@ class AzureDevopsProvider(GitProvider):
 
     @staticmethod
     def _get_azure_devops_client():
-        try:
-            pat = get_settings().azure_devops.pat
-            org = get_settings().azure_devops.org
-        except AttributeError as e:
-            raise ValueError("Azure DevOps PAT token is required ") from e
+        org = get_settings().azure_devops.get("org", None)
+        pat = get_settings().azure_devops.get("pat", None)
 
-        credentials = BasicAuthentication("", pat)
+        if not org:
+            raise ValueError("Azure DevOps organization is required")
+
+        if pat:
+            auth_token = pat
+        else:
+            try:
+                # try to use azure default credentials
+                # see https://learn.microsoft.com/en-us/python/api/overview/azure/identity-readme?view=azure-python
+                # for usage and env var configuration of user-assigned managed identity, local machine auth etc.
+                get_logger().info("No PAT found in settings, trying to use Azure Default Credentials.")
+                credentials = DefaultAzureCredential()
+                accessToken = credentials.get_token(ADO_APP_CLIENT_DEFAULT_ID)
+                auth_token = accessToken.token
+            except Exception as e:
+                get_logger().error(f"No PAT found in settings, and Azure Default Authentication failed, error: {e}")
+                raise
+
+        credentials = BasicAuthentication("", auth_token)
+
+        credentials = BasicAuthentication("", auth_token)
         azure_devops_connection = Connection(base_url=org, creds=credentials)
         azure_devops_client = azure_devops_connection.clients.get_git_client()
 
@@ -543,3 +563,4 @@ class AzureDevopsProvider(GitProvider):
             if get_settings().config.verbosity_level >= 2:
                 get_logger().error(f"Failed to get pr id, error: {e}")
             return ""
+
