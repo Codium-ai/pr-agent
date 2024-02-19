@@ -11,7 +11,7 @@ from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.algo.utils import load_yaml, set_custom_labels, get_user_labels, ModelType
 from pr_agent.config_loader import get_settings
-from pr_agent.git_providers import get_git_provider
+from pr_agent.git_providers import get_git_provider, GithubProvider
 from pr_agent.git_providers.git_provider import get_main_pr_language
 from pr_agent.log import get_logger
 from pr_agent.servers.help import HelpMessage
@@ -106,6 +106,12 @@ class PRDescription:
                 pr_body += "<hr>\n\n<details> <summary><strong>✨ Usage guide:</strong></summary><hr> \n\n"
                 pr_body += HelpMessage.get_describe_usage_guide()
                 pr_body += "\n</details>\n"
+            elif get_settings().pr_description.enable_help_comment:
+                if isinstance(self.git_provider, GithubProvider):
+                    pr_body +="\n\n___\n\n✨ **PR-Agent usage guide**:\n\n- [ ] Mark this checkbox :gem:, or comment `/help`, to get a list of all PR-Agent tools and their descriptions.  <!-- /help -->"
+                else:
+                    pr_body +="\n\n___\n\n>Comment `/help` on the PR to to get a list of all PR-Agent tools and their descriptions\n\n___\n\n"
+
 
             # final markdown description
             full_markdown_description = f"## Title\n\n{pr_title}\n\n___\n{pr_body}"
