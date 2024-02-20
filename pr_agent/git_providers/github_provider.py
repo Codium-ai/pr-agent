@@ -456,27 +456,26 @@ class GithubProvider(GitProvider):
         if disable_eyes:
             return None
         try:
-            reaction = self.pr.get_issue_comment(issue_comment_id).create_reaction("eyes")
-            return reaction.id
+            headers, data_patch = self.pr._requester.requestJsonAndCheck(
+                "POST", f"https://api.github.com/repos/{self.repo}/issues/comments/{issue_comment_id}/reactions",
+                input={"content": "eyes"}
+            )
+            return data_patch.get("id", None)
         except Exception as e:
             get_logger().exception(f"Failed to add eyes reaction, error: {e}")
-            try:
-                headers, data_patch = self.pr._requester.requestJsonAndCheck(
-                    "POST", f"https://api.github.com/repos/{self.repo}/pulls/comments/{issue_comment_id}/reactions",
-                    input={"content": "eyes"}
-                )
-            except:
-                pass
             return None
 
-    def remove_reaction(self, issue_comment_id: int, reaction_id: int) -> bool:
+    def remove_reaction(self, issue_comment_id: int, reaction_id: str) -> bool:
         try:
-            self.pr.get_issue_comment(issue_comment_id).delete_reaction(reaction_id)
+            # self.pr.get_issue_comment(issue_comment_id).delete_reaction(reaction_id)
+            headers, data_patch = self.pr._requester.requestJsonAndCheck(
+                "DELETE",
+                f"https://api.github.com/repos/{self.repo}/issues/comments/{issue_comment_id}/reactions/{reaction_id}"
+            )
             return True
         except Exception as e:
             get_logger().exception(f"Failed to remove eyes reaction, error: {e}")
             return False
-
 
     @staticmethod
     def _parse_pr_url(pr_url: str) -> Tuple[str, int]:

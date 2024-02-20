@@ -107,7 +107,7 @@ class PRCodeSuggestions:
 
                     # add usage guide
                     if get_settings().pr_code_suggestions.enable_help_text:
-                        pr_body += "<hr>\n\n<details> <summary><strong>✨ Usage guide:</strong></summary><hr> \n\n"
+                        pr_body += "<hr>\n\n<details> <summary><strong>✨ Improve tool usage guide:</strong></summary><hr> \n\n"
                         pr_body += HelpMessage.get_improve_usage_guide()
                         pr_body += "\n</details>\n"
 

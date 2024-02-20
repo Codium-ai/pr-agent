@@ -54,7 +54,7 @@ class PRQuestions:
         get_logger().info('Preparing answer...')
         pr_comment = self._prepare_pr_answer()
         if self.git_provider.is_supported("gfm_markdown") and get_settings().pr_questions.enable_help_text:
-            pr_comment += "<hr>\n\n<details> <summary><strong>✨ Usage guide:</strong></summary><hr> \n\n"
+            pr_comment += "<hr>\n\n<details> <summary><strong>✨ Ask tool usage guide:</strong></summary><hr> \n\n"
             pr_comment += HelpMessage.get_ask_usage_guide()
             pr_comment += "\n</details>\n"
 
