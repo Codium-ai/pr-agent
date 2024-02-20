@@ -277,11 +277,18 @@ git_provider="azure"
 use_repo_settings_file=false
 ```
 
-And use the following settings (you have to replace the values) in .secrets.toml:
+Azure DevOps provider supports [PAT token](https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate?view=azure-devops&tabs=Windows) or [DefaultAzureCredential](https://learn.microsoft.com/en-us/azure/developer/python/sdk/authentication-overview#authentication-in-server-environments) authentication.
+PAT is faster to create, but has build in experation date, and will use the user identity for API calls. 
+Using DefaultAzureCredential you can use managed identity or Service principle, which are more secure and will create seperate ADO user identity (via AAD) to the agent.
+
+If PAT was choosen, you can assign the value in .secrets.toml. 
+If DefaultAzureCredential was choosen, you can assigned the additional env vars like AZURE_CLIENT_SECRET directly, 
+or use managed identity/az cli (for local develpment) without any additional configuration.
+in any case, 'org' value must be assigned in .secrets.toml:
 ```
 [azure_devops]
 org = "https://dev.azure.com/YOUR_ORGANIZATION/"
-pat = "YOUR_PAT_TOKEN"
+# pat = "YOUR_PAT_TOKEN" needed only if using PAT for authentication
 ```
 
 ##### Azure DevOps Webhook
