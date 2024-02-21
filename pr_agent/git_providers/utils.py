@@ -15,15 +15,15 @@ def apply_repo_settings(pr_url):
         repo_settings_file = None
         try:
             try:
-                repo_settings = context.get("git_files", None)
+                repo_settings = context.get("repo_settings", None)
             except Exception:
                 repo_settings = None
                 pass
-            if not repo_settings:
+            if repo_settings is None:  # None is different from "", which is a valid value
                 git_provider = get_git_provider()(pr_url)
                 repo_settings = git_provider.get_repo_settings()
                 try:
-                    context.set("git_files", repo_settings)
+                    context.set("repo_settings", repo_settings)
                 except Exception:
                     pass
 
