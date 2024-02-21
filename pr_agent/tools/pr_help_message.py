@@ -58,12 +58,12 @@ class PRHelpMessage:
             commands.append("`/similar_issue`")
 
             checkbox_list = []
-            checkbox_list.append(" - [ ] Send <!-- /describe -->")
-            checkbox_list.append(" - [ ] Send <!-- /review -->")
-            checkbox_list.append(" - [ ] Send <!-- /improve -->")
-            checkbox_list.append(" - [ ] Send  <!-- /analyze -->")
-            checkbox_list.append(" - [ ] Send  <!-- /update_changelog -->")
-            checkbox_list.append(" - [ ] Send  <!-- /add_docs -->")
+            checkbox_list.append(" - [ ] Run <!-- /describe -->")
+            checkbox_list.append(" - [ ] Run <!-- /review -->")
+            checkbox_list.append(" - [ ] Run <!-- /improve -->")
+            checkbox_list.append(" - [ ] Run <!-- /analyze -->")
+            checkbox_list.append(" - [ ] Run <!-- /update_changelog -->")
+            checkbox_list.append(" - [ ] Run <!-- /add_docs -->")
             checkbox_list.append("[*]")
             checkbox_list.append("[*]")
             checkbox_list.append("[*]")
@@ -72,12 +72,12 @@ class PRHelpMessage:
             checkbox_list.append("[*]")
 
             if isinstance(self.git_provider, GithubProvider):
-                pr_comment += f"<table><tr align='center'><th align='center'>Tool</th><th align='left'>Description</th><th align='left'>Run this command :gem:</th></tr>"
+                pr_comment += f"<table><tr align='center'><th align='center'>Tool</th><th align='center'>Description</th><th align='center'>Invoke Interactively :gem:</th></tr>"
                 for i in range(len(tool_names)):
                     pr_comment += f"\n<tr><td align='center'>\n\n<strong>{tool_names[i]}</strong></td>\n<td>{descriptions[i]}</td>\n<td>\n\n{checkbox_list[i]}\n</td></tr>"
                 pr_comment += "</table>\n\n"
-                pr_comment += f"""\n\n(1) Note that each tool be [invoked automatically](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#github-app-automatic-tools-for-pr-actions) when a new PR is opened, or called manually by [commenting on a PR](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#online-usage)."""
-                pr_comment += f"""\n\n(2) Tools marked with [*] require additional parameters to be passed. For example, to invoke the `/ask` tool, you need to comment on a PR: `/ask "What is the purpose of this PR?"`. See the relevant documentation for each tool for more details."""
+                pr_comment += f"""\n\n(1) Note that each tool be [triggered automatically](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#github-app-automatic-tools-for-pr-actions) when a new PR is opened, or called manually by [commenting on a PR](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#online-usage)."""
+                pr_comment += f"""\n\n(2) Tools marked with [*] require additional parameters to be passed. For example, to invoke the `/ask` tool, you need to comment on a PR: `/ask "<question content>"`. See the relevant documentation for each tool for more details."""
             else:
                 pr_comment += f"<table><tr align='center'><th align='center'>Tool</th><th align='left'>Command</th><th align='left'>Description</th></tr>"
                 for i in range(len(tool_names)):
