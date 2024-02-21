@@ -23,7 +23,7 @@ def apply_repo_settings(pr_url):
                 git_provider = get_git_provider()(pr_url)
                 repo_settings = git_provider.get_repo_settings()
                 try:
-                    context.set("repo_settings", repo_settings)
+                    context["repo_settings"] = repo_settings
                 except Exception:
                     pass
 
