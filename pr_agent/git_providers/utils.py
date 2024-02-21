@@ -7,14 +7,26 @@ from dynaconf import Dynaconf
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.log import get_logger
+from starlette_context import context
 
 
 def apply_repo_settings(pr_url):
     if get_settings().config.use_repo_settings_file:
         repo_settings_file = None
         try:
-            git_provider = get_git_provider()(pr_url)
-            repo_settings = git_provider.get_repo_settings()
+            try:
+                repo_settings = context.get("git_files", None)
+            except Exception:
+                repo_settings = None
+                pass
+            if not repo_settings:
+                git_provider = get_git_provider()(pr_url)
+                repo_settings = git_provider.get_repo_settings()
+                try:
+                    context.set("git_files", repo_settings)
+                except Exception:
+                    pass
+
             if repo_settings:
                 repo_settings_file = None
                 fd, repo_settings_file = tempfile.mkstemp(suffix='.toml')
