@@ -102,10 +102,14 @@ class GithubProvider(GitProvider):
             git_files = context.get("git_files", None)
             if git_files:
                 return git_files
+            self.git_files = self.pr.get_files()
+            context["git_files"] = self.git_files
+            return self.git_files
         except Exception:
-            pass
-        self.git_files = context["git_files"] = self.pr.get_files()
-        return self.git_files
+            if not self.git_files:
+                self.git_files = self.pr.get_files()
+            return self.git_files
+
 
     @retry(exceptions=RateLimitExceeded,
            tries=get_settings().github.ratelimit_retries, delay=2, backoff=2, jitter=(1, 3))
@@ -168,7 +172,11 @@ class GithubProvider(GitProvider):
                 diff_files.append(file_patch_canonical_structure)
 
             self.diff_files = diff_files
-            context["diff_files"] = diff_files
+            try:
+                context["diff_files"] = diff_files
+            except Exception:
+                pass
+
             return diff_files
 
         except GithubException.RateLimitExceededException as e:

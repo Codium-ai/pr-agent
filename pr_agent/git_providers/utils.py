@@ -22,6 +22,10 @@ def apply_repo_settings(pr_url):
             if not repo_settings:
                 git_provider = get_git_provider()(pr_url)
                 repo_settings = git_provider.get_repo_settings()
+                try:
+                    context.set("git_files", repo_settings)
+                except Exception:
+                    pass
 
             if repo_settings:
                 repo_settings_file = None
