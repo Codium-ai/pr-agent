@@ -92,6 +92,9 @@ async def handle_request(body: Dict[str, Any], event: str):
         if "comment" not in body:
             return {}
         comment_body = body.get("comment", {}).get("body")
+        if not comment_body.lsstrip().startswith("/"):
+            get_logger().info("Ignoring comment not starting with /")
+            return {}
         if sender and bot_user in sender:
             get_logger().info(f"Ignoring comment from {bot_user} user")
             return {}
