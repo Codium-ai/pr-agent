@@ -113,7 +113,7 @@ enable_help_text=true
 enable_auto_checks_feedback=true
 excluded_checks_list=["lint"] # list of checks to exclude, for example: ["check1", "check2"]
 persistent_comment=true
-
+enable_help_text=true
 
 
 [pr_config] # /config #

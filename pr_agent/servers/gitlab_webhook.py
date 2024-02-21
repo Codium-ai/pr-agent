@@ -11,7 +11,9 @@ from starlette_context import context
 from starlette_context.middleware import RawContextMiddleware
 
 from pr_agent.agent.pr_agent import PRAgent
+from pr_agent.algo.utils import update_settings_from_args
 from pr_agent.config_loader import get_settings, global_settings
+from pr_agent.git_providers.utils import apply_repo_settings
 from pr_agent.log import LoggingFormat, get_logger, setup_logger
 from pr_agent.secret_providers import get_secret_provider
 
@@ -28,6 +30,20 @@ def handle_request(background_tasks: BackgroundTasks, url: str, body: str, log_c
     with get_logger().contextualize(**log_context):
         background_tasks.add_task(PRAgent().handle_request, url, body)
 
+async def _perform_commands_gitlab(commands_conf: str, agent: PRAgent, body: dict, api_url: str, log_context: dict):
+    apply_repo_settings(api_url)
+    commands = get_settings().get(f"azure_devops_server.{commands_conf}")
+    for command in commands:
+        split_command = command.split(" ")
+        command = split_command[0]
+        args = split_command[1:]
+        other_args = update_settings_from_args(args)
+        new_command = ' '.join([command] + other_args)
+        if body:
+            get_logger().info(body)
+        get_logger().info(f"Performing command: {new_command}")
+        with get_logger().contextualize(**log_context):
+            await agent.handle_request(api_url, new_command)
 
 @router.post("/webhook")
 async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
@@ -58,7 +74,8 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
     if data.get('object_kind') == 'merge_request' and data['object_attributes'].get('action') in ['open', 'reopen']:
         get_logger().info(f"A merge request has been opened: {data['object_attributes'].get('title')}")
         url = data['object_attributes'].get('url')
-        handle_request(background_tasks, url, "/review", log_context)
+        await _perform_commands_gitlab("pr_commands", PRAgent(), {}, url, log_context)
+        # handle_request(background_tasks, url, "/review", log_context)
     elif data.get('object_kind') == 'note' and data['event_type'] == 'note':
         if 'merge_request' in data:
             mr = data['merge_request']
