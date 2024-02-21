@@ -31,24 +31,20 @@ Making pull requests less painful with an AI agent
 - [Why use PR-Agent?](#why-use-pr-agent)
   
 ## News and Updates
+### Feb 21, 2024
+- Added a new command, `/help`, to easily provide a list of available tools and their descriptions, and run them interactively.
+
+<kbd>
+
+<img src="https://www.codium.ai/images/pr_agent/help.png" width="512">
+
+</kbd>
+
+
+- GitLab webhook now supports controlling which commands will [run automatically](./docs/USAGE.md#working-with-gitlab-webhook) when a new PR is opened.
 ### Feb 18, 2024
 - Introducing the `CI Feedback` tool 💎. The tool automatically triggers when a PR has a failed check. It analyzes the failed check, and provides summarized logs and analysis. Note that this feature requires read access to GitHub 'checks' and 'actions'. See [here](./docs/CI_FEEDBACK.md) for more details.
-
-<kbd>
-<img src="https://www.codium.ai/images/pr_agent/failed_check1.png" width="512">
-</kbd>
-
-&rarr;<br>
-<kbd>
-<img src="https://www.codium.ai/images/pr_agent/failed_check2.png" width="512">
-</kbd>
-
-
 - New ability - you can run `/ask` on specific lines of code in the PR from the PR's diff view. See [here](./docs/ASK.md#ask-lines) for more details.
-
-<kbd><img src="https://codium.ai/images/pr_agent/Ask_line.png" width="512"></kbd>
-
-
 - Introducing support for [Azure DevOps Webhooks](./Usage.md#azure-devops-webhook), as well as bug fixes and improved support for several ADO commands.
 
 
@@ -59,15 +55,7 @@ The `review` tool has been revamped, aiming to make the feedback clearer and mor
 A new feature was added to the `review` tool - [Auto-approve PRs](./docs/REVIEW.md#auto-approval-1). If enabled, this feature enables to automatically approve PRs that meet specific criteria, by commenting on a PR: `/review auto_approve`.
 
 ### Feb 2, 2024
-Added  ["PR Actions" 💎](https://www.codium.ai/images/pr_agent/pr-actions.mp4) - interactively trigger PR-Agent tools from the PR page.
-
-
-### Jan 28, 2024
-- 💎 Test - A new tool, [`/test component_name`](https://github.com/Codium-ai/pr-agent/blob/main/docs/TEST.md), was added to PR-Agent Pro. The tool will generate tests for a specific component, based on the PR code changes.
-- 💎 Analyze - The [`/analyze`](https://github.com/Codium-ai/pr-agent/blob/main/docs/Analyze.md) tool was updated and simplified. It now presents a summary of the code components that were changed in the PR.
-### Jan 21, 2024
-- 💎 Custom suggestions - A new tool, `/custom_suggestions`, was added to PR-Agent Pro. The tool will propose only suggestions that follow specific guidelines defined by the user. 
-See [here](https://github.com/Codium-ai/pr-agent/blob/main/docs/CUSTOM_SUGGESTIONS.md) for more details.
+Added  ["PR Actions"](https://www.codium.ai/images/pr_agent/pr-actions.mp4) 💎 - interactively trigger PR-Agent tools from the PR page.
 
 
 ## Overview

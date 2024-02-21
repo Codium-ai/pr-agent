@@ -54,20 +54,22 @@ def authorize(credentials: HTTPBasicCredentials = Depends(security)):
                 headers={'WWW-Authenticate': 'Basic'},
             )
 
-async def _perform_commands(commands_conf: str, agent: PRAgent, body: dict, api_url: str, log_context: dict):
+
+async def _perform_commands_azure(commands_conf: str, agent: PRAgent, api_url: str, log_context: dict):
     apply_repo_settings(api_url)
     commands = get_settings().get(f"azure_devops_server.{commands_conf}")
     for command in commands:
-        split_command = command.split(" ")
-        command = split_command[0]
-        args = split_command[1:]
-        other_args = update_settings_from_args(args)
-        new_command = ' '.join([command] + other_args)
-        if body:
-            get_logger().info(body)
-        get_logger().info(f"Performing command: {new_command}")
-        with get_logger().contextualize(**log_context):
-            await agent.handle_request(api_url, new_command)
+        try:
+            split_command = command.split(" ")
+            command = split_command[0]
+            args = split_command[1:]
+            other_args = update_settings_from_args(args)
+            new_command = ' '.join([command] + other_args)
+            get_logger().info(f"Performing command: {new_command}")
+            with get_logger().contextualize(**log_context):
+                await agent.handle_request(api_url, new_command)
+        except Exception as e:
+            get_logger().error(f"Failed to perform command {command}: {e}")
 
 
 @router.post("/", dependencies=[Depends(authorize)])
@@ -82,7 +84,7 @@ async def handle_webhook(background_tasks: BackgroundTasks, request: Request):
         pr_url = data["resource"]["_links"]["web"]["href"].replace("_apis/git/repositories", "_git")
         log_context["event"] = data["eventType"]
         log_context["api_url"] = pr_url
-        await _perform_commands("pr_commands", PRAgent(), {}, pr_url, log_context)
+        await _perform_commands_azure("pr_commands", PRAgent(), pr_url, log_context)
         return
     elif data["eventType"] == "ms.vss-code.git-pullrequest-comment-event" and "content" in data["resource"]["comment"]:
         if available_commands_rgx.match(data["resource"]["comment"]["content"]):
