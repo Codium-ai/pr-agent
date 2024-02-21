@@ -6,6 +6,7 @@
 - [Online Usage](#online-usage)
 - [GitHub App](#working-with-github-app)
 - [GitHub Action](#working-with-github-action)
+- [GitLab Webhook](#working-with-gitlab-webhook)
 - [BitBucket App](#working-with-bitbucket-self-hosted-app)
 - [Azure DevOps Provider](#azure-devops-provider)
 - [Additional Configurations Walkthrough](#appendix---additional-configurations-walkthrough)
@@ -236,6 +237,16 @@ For example, you can set an environment variable: `pr_description.add_original_u
 ```
 [pr_description]
 add_original_user_description = false
+```
+### Working with GitLab Webhook
+After setting up a GitLab webhook, to control which commands will run automatically when a new PR is opened, you can set the `pr_commands` parameter in the configuration file, similar to the GitHub App:
+```
+[gitlab]
+pr_commands = [
+    "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true",
+    "/review --pr_reviewer.num_code_suggestions=0",
+    "/improve",
+]
 ```
 
 ### Working with BitBucket Self-Hosted App

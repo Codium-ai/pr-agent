@@ -32,7 +32,7 @@ def handle_request(background_tasks: BackgroundTasks, url: str, body: str, log_c
 
 async def _perform_commands_gitlab(commands_conf: str, agent: PRAgent, body: dict, api_url: str, log_context: dict):
     apply_repo_settings(api_url)
-    commands = get_settings().get(f"azure_devops_server.{commands_conf}")
+    commands = get_settings().get(f"gitlab.{commands_conf}")
     for command in commands:
         split_command = command.split(" ")
         command = split_command[0]

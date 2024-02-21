@@ -171,17 +171,12 @@ push_commands = [
 ]
 
 [gitlab]
-# URL to the gitlab service
-url = "https://gitlab.com"
-
-# Polling (either project id or namespace/project_name) syntax can be used
-projects_to_monitor = ['org_name/repo_name']
-
-# Polling trigger
-magic_word = "AutoReview"
-
-# Polling interval
-polling_interval_seconds = 30
+url = "https://gitlab.com" # URL to the gitlab service
+pr_commands = [
+    "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true",
+    "/review --pr_reviewer.num_code_suggestions=0",
+    "/improve --pr_code_suggestions.summarize=true",
+]
 
 [bitbucket_app]
 #auto_review = true    # set as config var in .pr_agent.toml
