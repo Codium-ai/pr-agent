@@ -32,11 +32,14 @@ Making pull requests less painful with an AI agent
   
 ## News and Updates
 ### Feb 21, 2024
-- Added a new tool, `help`, to easily provide a list of available tools and their descriptions, and enabling to run them interactively.
+- Added a new command, `/help`, to easily provide a list of available tools and their descriptions, and run them interactively.
 
 <kbd>
+
 <img src="https://www.codium.ai/images/pr_agent/help.png" width="512">
+
 </kbd>
+
 
 - GitLab webhook now supports controlling which commands will [run automatically](./docs/USAGE.md#working-with-gitlab-webhook) when a new PR is opened.
 ### Feb 18, 2024
