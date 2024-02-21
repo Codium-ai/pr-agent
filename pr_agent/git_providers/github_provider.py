@@ -130,6 +130,9 @@ class GithubProvider(GitProvider):
             except Exception:
                 pass
 
+            if self.diff_files:
+                return self.diff_files
+
             files = self.get_files()
             diff_files = []
 
