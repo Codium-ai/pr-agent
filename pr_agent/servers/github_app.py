@@ -35,7 +35,6 @@ async def handle_github_webhooks(request: Request, response: Response):
 
     body = await get_body(request)
 
-    get_logger().debug(f'Request body:\n{body}')
     installation_id = body.get("installation", {}).get("id")
     context["installation_id"] = installation_id
     context["settings"] = copy.deepcopy(global_settings)
@@ -209,15 +208,18 @@ async def handle_request(body: Dict[str, Any], event: str):
 
     # handle comments on PRs
     if action == 'created':
+        get_logger().info(f'Request body:\n{body}')
         await handle_comments_on_pr(body, event, sender, action, log_context, agent)
     # handle new PRs
     elif event == 'pull_request' and action != 'synchronize':
+        get_logger().info(f'Request body:\n{body}')
         await handle_new_pr_opened(body, event, sender, action, log_context, agent)
     # handle pull_request event with synchronize action - "push trigger" for new commits
     elif event == 'pull_request' and action == 'synchronize':
+        get_logger().info(f'Request body:\n{body}')
         await handle_push_trigger_for_new_commits(body, event, sender, action, log_context, agent)
     else:
-        get_logger().info("event or action does not require handling")
+        get_logger().info(f"event {event=} action {action=} does not require any handling")
         return {}
 
 

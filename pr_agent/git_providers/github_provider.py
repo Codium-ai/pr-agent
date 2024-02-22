@@ -34,8 +34,10 @@ class GithubProvider(GitProvider):
         self.incremental = incremental
         if pr_url and 'pull' in pr_url:
             self.set_pr(pr_url)
-            self.pr_commits = self.pr.get_commits()
-            self.last_commit_id = list(self.pr_commits)[-1]
+            self.pr_commits = list(self.pr.get_commits())
+            if self.incremental.is_incremental:
+                self.get_incremental_commits()
+            self.last_commit_id = self.pr_commits[-1]
             self.pr_url = self.get_pr_url() # pr_url for github actions can be as api.github.com, so we need to get the url from the pr object
         else:
             self.pr_commits = None
@@ -49,8 +51,6 @@ class GithubProvider(GitProvider):
     def set_pr(self, pr_url: str):
         self.repo, self.pr_num = self._parse_pr_url(pr_url)
         self.pr = self._get_pr()
-        if self.incremental.is_incremental:
-            self.get_incremental_commits()
 
     def get_incremental_commits(self):
         if not self.pr_commits:
@@ -88,7 +88,7 @@ class GithubProvider(GitProvider):
             self.comments = list(self.pr.get_issue_comments())
         prefixes = []
         if full:
-            prefixes.append("## PR Analysis")
+            prefixes.append("## PR Review")
         if incremental:
             prefixes.append("## Incremental PR Review")
         for index in range(len(self.comments) - 1, -1, -1):
