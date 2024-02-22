@@ -120,6 +120,7 @@ async def handle_new_pr_opened(body: Dict[str, Any],
 
     pull_request, api_url = _check_pull_request_event(action, body, log_context)
     if not (pull_request and api_url):
+        get_logger().info(f"Invalid PR event: {action=} {api_url=}")
         return {}
     if action in get_settings().github_app.handle_pr_actions:  # ['opened', 'reopened', 'ready_for_review', 'review_requested']
         await _perform_auto_commands_github("pr_commands", agent, body, api_url, log_context)
@@ -134,7 +135,7 @@ async def handle_push_trigger_for_new_commits(body: Dict[str, Any],
     if not (pull_request and api_url):
         return {}
 
-    apply_repo_settings(api_url)
+    apply_repo_settings(api_url) # we need to apply the repo settings to get the correct settings for the PR. This is quite expensive - a call to the git provider is made for each PR event.
     if not get_settings().github_app.handle_push_trigger:
         return {}
 
@@ -206,11 +207,10 @@ async def handle_request(body: Dict[str, Any], event: str):
     sender = body.get("sender", {}).get("login")
     log_context = {"action": action, "event": event, "sender": sender, "server_type": "github_app"}
 
-    # handle all sorts of comment events (e.g. issue_comment)
+    # handle comments on PRs
     if action == 'created':
         await handle_comments_on_pr(body, event, sender, action, log_context, agent)
-    # handle pull_request event:
-    # automatically review opened/reopened/ready_for_review PRs as long as they're not in draft
+    # handle new PRs
     elif event == 'pull_request' and action != 'synchronize':
         await handle_new_pr_opened(body, event, sender, action, log_context, agent)
     # handle pull_request event with synchronize action - "push trigger" for new commits
