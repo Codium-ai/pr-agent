@@ -169,6 +169,7 @@ push_commands = [
        --pr_reviewer.extra_instructions='' \
     """
 ]
+ignore_pr_title = []
 
 [gitlab]
 url = "https://gitlab.com" # URL to the gitlab service

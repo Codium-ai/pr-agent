@@ -1,6 +1,7 @@
 import copy
 import os
 import asyncio.locks
+import re
 from typing import Any, Dict, List, Tuple
 
 import uvicorn
@@ -127,6 +128,13 @@ async def handle_request(body: Dict[str, Any], event: str):
     #   automatically review opened/reopened/ready_for_review PRs as long as they're not in draft,
     #   as well as direct review requests from the bot
     elif event == 'pull_request' and action != 'synchronize':
+        title = body.get("pull_request", {}).get("title", "")
+        ignore_pr_title_re = get_settings().get("GITHUB_APP.IGNORE_PR_TITLE", [])
+        if not isinstance(ignore_pr_title_re, list):
+            ignore_pr_title_re = [ignore_pr_title_re]
+        if ignore_pr_title_re and any(re.search(regex, title) for regex in ignore_pr_title_re):
+            get_logger().info(f"Ignoring PR with title '{title}' due to github_app.ignore_pr_title setting")
+            return {}
         pull_request, api_url = _check_pull_request_event(action, body, log_context, bot_user)
         if not (pull_request and api_url):
             return {}
