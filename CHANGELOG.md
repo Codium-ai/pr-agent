@@ -1,3 +1,11 @@
+## 2024-02-22
+
+### Enhanced
+- Improved error handling in the token handling process by adding a try-except block in `_get_system_user_tokens` method.
+
+### Fixed
+- Resolved a minor formatting issue by ensuring a newline at the end of the `count_tokens` method.
+
 ## 2023-08-03
 
 ### Optimized
