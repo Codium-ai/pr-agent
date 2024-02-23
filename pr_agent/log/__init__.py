@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import sys
 from enum import Enum
 
@@ -39,8 +40,10 @@ def setup_logger(level: str = "INFO", fmt: LoggingFormat = LoggingFormat.CONSOLE
         logger.remove(None)
         logger.add(sys.stdout, level=level, colorize=True)
 
-    log_file = get_settings().get("CONFIG.ANALYTICS_FILE", "")
-    if log_file:
+    log_folder = get_settings().get("CONFIG.ANALYTICS_FOLDER", "")
+    if log_folder:
+        pid = os.getpid()
+        log_file = os.path.join(log_folder, f"pr-agent.{pid}.log")
         logger.add(
             log_file,
             filter=analytics_filter,
