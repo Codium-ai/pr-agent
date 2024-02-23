@@ -34,9 +34,9 @@ To edit [configurations](./../pr_agent/settings/configuration.toml#L46) related 
 
 - `publish_description_as_comment`: if set to true, the tool will publish the description as a comment to the PR. If false, it will overwrite the origianl description. Default is false.
 
-- `add_original_user_description`: if set to true, the tool will add the original user description to the generated description. Default is false.
+- `add_original_user_description`: if set to true, the tool will add the original user description to the generated description. Default is true.
 
-- `keep_original_user_title`: if set to true, the tool will keep the original PR title, and won't change it. Default is false.
+- `keep_original_user_title`: if set to true, the tool will keep the original PR title, and won't change it. Default is true.
 
 - `extra_instructions`: Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".
 
