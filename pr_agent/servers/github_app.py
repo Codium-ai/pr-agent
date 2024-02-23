@@ -280,17 +280,17 @@ async def root():
     return {"status": "ok"}
 
 
+if get_settings().github_app.override_deployment_type:
+    # Override the deployment type to app
+    get_settings().set("GITHUB.DEPLOYMENT_TYPE", "app")
+get_settings().set("CONFIG.PUBLISH_OUTPUT_PROGRESS", False)
+middleware = [Middleware(RawContextMiddleware)]
+app = FastAPI(middleware=middleware)
+app.include_router(router)
+
+
 def start():
-    if get_settings().github_app.override_deployment_type:
-        # Override the deployment type to app
-        get_settings().set("GITHUB.DEPLOYMENT_TYPE", "app")
-    get_settings().set("CONFIG.PUBLISH_OUTPUT_PROGRESS", False)
-    middleware = [Middleware(RawContextMiddleware)]
-    app = FastAPI(middleware=middleware)
-    app.include_router(router)
-
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", "3000")))
-
 
 if __name__ == '__main__':
     start()
