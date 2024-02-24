@@ -72,7 +72,7 @@ class PRDescription:
         # Initialize patches_diff and prediction attributes
         self.patches_diff = None
         self.prediction = None
-        COLLAPSIBLE_FILE_LIST_THRESHOLD = 8
+        self.COLLAPSIBLE_FILE_LIST_THRESHOLD = 8
 
     async def run(self):
         """
@@ -363,7 +363,7 @@ class PRDescription:
             for semantic_label in value.keys():
                 num_files += len(value[semantic_label])
         if use_collapsible_file_list == "adaptive":
-            use_collapsible_file_list = num_files > COLLAPSIBLE_FILE_LIST_THRESHOLD
+            use_collapsible_file_list = num_files > self.COLLAPSIBLE_FILE_LIST_THRESHOLD
 
         if not self.git_provider.is_supported("gfm_markdown"):
             get_logger().info(f"Disabling semantic files types for {self.pr_id} since gfm_markdown is not supported")
