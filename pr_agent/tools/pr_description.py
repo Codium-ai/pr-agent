@@ -41,6 +41,7 @@ class PRDescription:
 
         # Initialize the AI handler
         self.ai_handler = ai_handler()
+
     
         # Initialize the variables dictionary
         self.vars = {
@@ -57,6 +58,7 @@ class PRDescription:
         }
 
         self.user_description = self.git_provider.get_user_description()
+
     
         # Initialize the token handler
         self.token_handler = TokenHandler(
@@ -65,10 +67,12 @@ class PRDescription:
             get_settings().pr_description_prompt.system,
             get_settings().pr_description_prompt.user,
         )
+
     
         # Initialize patches_diff and prediction attributes
         self.patches_diff = None
         self.prediction = None
+        self.COLLAPSIBLE_FILE_LIST_THRESHOLD = 8
 
     async def run(self):
         """
@@ -359,7 +363,7 @@ class PRDescription:
             for semantic_label in value.keys():
                 num_files += len(value[semantic_label])
         if use_collapsible_file_list == "adaptive":
-            use_collapsible_file_list = num_files > 8
+            use_collapsible_file_list = num_files > self.COLLAPSIBLE_FILE_LIST_THRESHOLD
 
         if not self.git_provider.is_supported("gfm_markdown"):
             get_logger().info(f"Disabling semantic files types for {self.pr_id} since gfm_markdown is not supported")
