@@ -48,7 +48,9 @@ To edit [configurations](./../pr_agent/settings/configuration.toml#L46) related 
 
 - `enable_semantic_files_types`: if set to true, "Changes walkthrough" section will be generated. Default is true.
 - `collapsible_file_list`: if set to true, the file list in the "Changes walkthrough" section will be collapsible. If set to "adaptive", the file list will be collapsible only if there are more than 8 files. Default is "adaptive".
-  
+
+ `collapsible_file_list_threshold`: Specifies the minimum number of files required for the file list to be collapsible when `collapsible_file_list` is set to 'adaptive'. Default is 8.
+
 ### Inline file summary 💎
 > This feature is available only in PR-Agent Pro
 

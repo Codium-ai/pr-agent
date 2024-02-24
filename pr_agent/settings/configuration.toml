@@ -63,6 +63,7 @@ enable_help_comment=true
 ## changes walkthrough section
 enable_semantic_files_types=true
 collapsible_file_list='adaptive' # true, false, 'adaptive'
+collapsible_file_list_threshold=8 # it's used only when collapsible_file_list set to 'adaptive'
 inline_file_summary=false # false, true, 'table'
 # markers
 use_description_markers=false
