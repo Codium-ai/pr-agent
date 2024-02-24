@@ -1,4 +1,4 @@
-/import asyncio.locks
+import asyncio.locks
 import copy
 import os
 import re
