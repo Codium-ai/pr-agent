@@ -10,6 +10,10 @@ class PRHelpMessage:
     async def run(self):
         try:
             get_logger().info('Getting PR Help Message...')
+            relevant_configs = {'pr_help': dict(get_settings().pr_help),
+                                'config': dict(get_settings().config)}
+            get_logger().debug("Relevant configs", configs=relevant_configs)
+
             pr_comment = "## PR Agent Walkthrough\n\n"
             pr_comment += "🤖 Welcome to the PR Agent, an AI-powered tool for automated pull request analysis, feedback, suggestions and more."""
             pr_comment += "\n\nHere is a list of tools you can use to interact with the PR Agent:\n"

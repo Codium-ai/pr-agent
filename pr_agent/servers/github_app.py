@@ -208,15 +208,15 @@ async def handle_request(body: Dict[str, Any], event: str):
 
     # handle comments on PRs
     if action == 'created':
-        get_logger().debug(f'Request body:\n{body}')
+        get_logger().debug(f'Request body', body=body)
         await handle_comments_on_pr(body, event, sender, action, log_context, agent)
     # handle new PRs
     elif event == 'pull_request' and action != 'synchronize':
-        get_logger().debug(f'Request body:\n{body}')
+        get_logger().debug(f'Request body', body=body)
         await handle_new_pr_opened(body, event, sender, action, log_context, agent)
     # handle pull_request event with synchronize action - "push trigger" for new commits
     elif event == 'pull_request' and action == 'synchronize':
-        get_logger().debug(f'Request body:\n{body}')
+        get_logger().debug(f'Request body', body=body)
         await handle_push_trigger_for_new_commits(body, event, sender, action, log_context, agent)
     else:
         get_logger().info(f"event {event=} action {action=} does not require any handling")

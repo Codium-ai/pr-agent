@@ -6,7 +6,8 @@ from pr_agent.agent.pr_agent import PRAgent, commands
 from pr_agent.config_loader import get_settings
 from pr_agent.log import setup_logger
 
-setup_logger()
+log_level = os.environ.get("LOG_LEVEL", "INFO")
+setup_logger(log_level)
 
 
 

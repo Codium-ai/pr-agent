@@ -115,6 +115,7 @@ excluded_checks_list=["lint"] # list of checks to exclude, for example: ["check1
 persistent_comment=true
 enable_help_text=true
 
+[pr_help] # /help #
 
 [pr_config] # /config #
 

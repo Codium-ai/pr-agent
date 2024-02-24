@@ -433,7 +433,7 @@ def get_user_labels(current_labels: List[str] = None):
                     continue
             user_labels.append(label)
         if user_labels:
-            get_logger().info(f"Keeping user labels: {user_labels}")
+            get_logger().debug(f"Keeping user labels: {user_labels}")
     except Exception as e:
         get_logger().exception(f"Failed to get user labels: {e}")
         return current_labels

@@ -113,6 +113,8 @@ class LiteLLMAIHandler(BaseAiHandler):
             }
             if self.aws_bedrock_client:
                 kwargs["aws_bedrock_client"] = self.aws_bedrock_client
+
+            get_logger().debug(f"Prompts", system=system, user=user)
             response = await acompletion(**kwargs)
         except (APIError, Timeout, TryAgain) as e:
             get_logger().error("Error during OpenAI inference: ", e)
@@ -127,7 +129,7 @@ class LiteLLMAIHandler(BaseAiHandler):
             raise TryAgain
         resp = response["choices"][0]['message']['content']
         finish_reason = response["choices"][0]["finish_reason"]
-        usage = response.get("usage")
-        get_logger().info("AI response", response=resp, messages=messages, finish_reason=finish_reason,
-                          model=model, usage=usage)
+        # usage = response.get("usage")
+
+        get_logger().debug(f"\nAI response:\n{resp}", full_response=response)
         return resp, finish_reason

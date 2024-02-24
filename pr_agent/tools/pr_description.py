@@ -36,7 +36,7 @@ class PRDescription:
 
         if get_settings().pr_description.enable_semantic_files_types and not self.git_provider.is_supported(
                 "gfm_markdown"):
-            get_logger().debug(f"Disabling semantic files types for {self.pr_id}")
+            get_logger().debug(f"Disabling semantic files types for {self.pr_id}, gfm_markdown not supported.")
             get_settings().pr_description.enable_semantic_files_types = False
 
         # Initialize the AI handler
@@ -56,10 +56,8 @@ class PRDescription:
             "custom_labels_class": "",  # will be filled if necessary in 'set_custom_labels' function
             "enable_semantic_files_types": get_settings().pr_description.enable_semantic_files_types,
         }
-
         self.user_description = self.git_provider.get_user_description()
 
-    
         # Initialize the token handler
         self.token_handler = TokenHandler(
             self.git_provider.pr,
@@ -68,33 +66,32 @@ class PRDescription:
             get_settings().pr_description_prompt.user,
         )
 
-    
         # Initialize patches_diff and prediction attributes
         self.patches_diff = None
         self.prediction = None
+        self.file_label_dict = None
         self.COLLAPSIBLE_FILE_LIST_THRESHOLD = 8
 
     async def run(self):
-        """
-        Generates a PR description using an AI model and publishes it to the PR.
-        """
-
         try:
-            get_logger().info(f"Generating a PR description {self.pr_id}")
+            get_logger().info(f"Generating a PR description for pr_id: {self.pr_id}")
+            relevant_configs = {'pr_description': dict(get_settings().pr_description),
+                                'config': dict(get_settings().config)}
+            get_logger().debug("Relevant configs", configs=relevant_configs)
             if get_settings().config.publish_output:
                 self.git_provider.publish_comment("Preparing PR description...", is_temporary=True)
 
             await retry_with_fallback_models(self._prepare_prediction, ModelType.TURBO) # turbo model because larger context
 
-            get_logger().info(f"Preparing answer {self.pr_id}")
             if self.prediction:
                 self._prepare_data()
             else:
+                get_logger().error(f"Error getting AI prediction {self.pr_id}")
                 self.git_provider.remove_initial_comment()
                 return None
 
             if get_settings().pr_description.enable_semantic_files_types:
-                self._prepare_file_labels()
+                self.file_label_dict = self._prepare_file_labels()
 
             pr_labels = []
             if get_settings().pr_description.publish_labels:
@@ -104,6 +101,7 @@ class PRDescription:
                 pr_title, pr_body = self._prepare_pr_answer_with_markers()
             else:
                 pr_title, pr_body,  = self._prepare_pr_answer()
+            get_logger().debug(f"PR output", title=pr_title, body=pr_body)
 
             # Add help text if gfm_markdown is supported
             if self.git_provider.is_supported("gfm_markdown") and get_settings().pr_description.enable_help_text:
@@ -111,26 +109,21 @@ class PRDescription:
                 pr_body += HelpMessage.get_describe_usage_guide()
                 pr_body += "\n</details>\n"
             elif get_settings().pr_description.enable_help_comment:
-                pr_body +="\n\n___\n\n> ✨ **PR-Agent usage**:"
-                pr_body +="\n>Comment `/help` on the PR to get a list of all available PR-Agent tools and their descriptions\n\n"
-
-
-            # final markdown description
-            full_markdown_description = f"## Title\n\n{pr_title}\n\n___\n{pr_body}"
-            # get_logger().debug(f"full_markdown_description:\n{full_markdown_description}")
+                pr_body += "\n\n___\n\n> ✨ **PR-Agent usage**:"
+                pr_body += "\n>Comment `/help` on the PR to get a list of all available PR-Agent tools and their descriptions\n\n"
 
             if get_settings().config.publish_output:
-                get_logger().info(f"Pushing answer {self.pr_id}")
-
                 # publish labels
                 if get_settings().pr_description.publish_labels and self.git_provider.is_supported("get_labels"):
-                    current_labels = self.git_provider.get_pr_labels()
-                    user_labels = get_user_labels(current_labels)
+                    original_labels = self.git_provider.get_pr_labels()
+                    get_logger().debug(f"original labels", labels=original_labels)
+                    user_labels = get_user_labels(original_labels)
+                    get_logger().debug(f"published labels:\n{pr_labels + user_labels}")
                     self.git_provider.publish_labels(pr_labels + user_labels)
 
                 # publish description
                 if get_settings().pr_description.publish_description_as_comment:
-                    get_logger().info(f"Publishing answer as comment")
+                    full_markdown_description = f"## Title\n\n{pr_title}\n\n___\n{pr_body}"
                     self.git_provider.publish_comment(full_markdown_description)
                 else:
                     self.git_provider.publish_description(pr_title, pr_body)
@@ -152,10 +145,9 @@ class PRDescription:
         if get_settings().pr_description.use_description_markers and 'pr_agent:' not in self.user_description:
             return None
 
-        get_logger().info(f"Getting PR diff {self.pr_id}")
         self.patches_diff = get_pr_diff(self.git_provider, self.token_handler, model)
         if self.patches_diff:
-            get_logger().info(f"Getting AI prediction {self.pr_id}")
+            get_logger().debug(f"PR diff", diff=self.patches_diff)
             self.prediction = await self._get_prediction(model)
         else:
             get_logger().error(f"Error getting PR diff {self.pr_id}")
@@ -180,19 +172,12 @@ class PRDescription:
         system_prompt = environment.from_string(get_settings().pr_description_prompt.system).render(variables)
         user_prompt = environment.from_string(get_settings().pr_description_prompt.user).render(variables)
 
-        if get_settings().config.verbosity_level >= 2:
-            get_logger().info(f"\nSystem prompt:\n{system_prompt}")
-            get_logger().info(f"\nUser prompt:\n{user_prompt}")
-
         response, finish_reason = await self.ai_handler.chat_completion(
             model=model,
             temperature=0.2,
             system=system_prompt,
             user=user_prompt
         )
-
-        if get_settings().config.verbosity_level >= 2:
-            get_logger().info(f"\nAI response:\n{response}")
 
         return response
 
@@ -335,25 +320,23 @@ class PRDescription:
             if idx < len(self.data) - 1:
                 pr_body += "\n\n___\n\n"
 
-        if get_settings().config.verbosity_level >= 2:
-            get_logger().info(f"title:\n{title}\n{pr_body}")
-
         return title, pr_body
 
     def _prepare_file_labels(self):
-        self.file_label_dict = {}
+        file_label_dict = {}
         for file in self.data['pr_files']:
             try:
                 filename = file['filename'].replace("'", "`").replace('"', '`')
                 changes_summary = file['changes_summary']
                 changes_title = file['changes_title'].strip()
                 label = file.get('label')
-                if label not in self.file_label_dict:
-                    self.file_label_dict[label] = []
-                self.file_label_dict[label].append((filename, changes_title, changes_summary))
+                if label not in file_label_dict:
+                    file_label_dict[label] = []
+                file_label_dict[label].append((filename, changes_title, changes_summary))
             except Exception as e:
                 get_logger().error(f"Error preparing file label dict {self.pr_id}: {e}")
                 pass
+        return file_label_dict
 
     def process_pr_files_prediction(self, pr_body, value):
         # logic for using collapsible file list
@@ -366,7 +349,6 @@ class PRDescription:
             use_collapsible_file_list = num_files > self.COLLAPSIBLE_FILE_LIST_THRESHOLD
 
         if not self.git_provider.is_supported("gfm_markdown"):
-            get_logger().info(f"Disabling semantic files types for {self.pr_id} since gfm_markdown is not supported")
             return pr_body
         try:
             pr_body += "<table>"

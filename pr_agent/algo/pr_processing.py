@@ -50,15 +50,29 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler, model: s
         PATCH_EXTRA_LINES = get_settings().config.patch_extra_lines
 
     try:
-        diff_files = git_provider.get_diff_files()
+        diff_files_original = git_provider.get_diff_files()
     except RateLimitExceededException as e:
         get_logger().error(f"Rate limit exceeded for git provider API. original message {e}")
         raise
 
-    diff_files = filter_ignored(diff_files)
+    diff_files = filter_ignored(diff_files_original)
+    if diff_files != diff_files_original:
+        try:
+            get_logger().info(f"Filtered out {len(diff_files_original) - len(diff_files)} files")
+            new_names = set([a.filename for a in diff_files])
+            orig_names = set([a.filename for a in diff_files_original])
+            get_logger().info(f"Filtered out files: {orig_names - new_names}")
+        except Exception as e:
+            pass
+
 
     # get pr languages
     pr_languages = sort_files_by_main_languages(git_provider.get_languages(), diff_files)
+    if pr_languages:
+        try:
+            get_logger().info(f"PR main language: {pr_languages[0]['language']}")
+        except Exception as e:
+            pass
 
     # generate a standard diff string, with patch extension
     patches_extended, total_tokens, patches_extended_tokens = pr_generate_extended_diff(
@@ -66,9 +80,13 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler, model: s
 
     # if we are under the limit, return the full diff
     if total_tokens + OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD < get_max_tokens(model):
+        get_logger().info(f"Tokens: {total_tokens}, total tokens under limit: {get_max_tokens(model)}, "
+                          f"returning full diff.")
         return "\n".join(patches_extended)
 
     # if we are over the limit, start pruning
+    get_logger().info(f"Tokens: {total_tokens}, total tokens over limit: {get_max_tokens(model)}, "
+                      f"pruning diff.")
     patches_compressed, modified_file_names, deleted_file_names, added_file_names = \
         pr_generate_compressed_diff(pr_languages, token_handler, model, add_line_numbers_to_hunks)
 
@@ -82,6 +100,11 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler, model: s
     if deleted_file_names:
         deleted_list_str = DELETED_FILES_ + "\n".join(deleted_file_names)
         final_diff = final_diff + "\n\n" + deleted_list_str
+    try:
+        get_logger().debug(f"After pruning, added_list_str: {added_list_str}, modified_list_str: {modified_list_str}, "
+                          f"deleted_list_str: {deleted_list_str}")
+    except Exception as e:
+        pass
     return final_diff
 
 
@@ -225,11 +248,10 @@ async def retry_with_fallback_models(f: Callable, model_type: ModelType = ModelT
     # try each (model, deployment_id) pair until one is successful, otherwise raise exception
     for i, (model, deployment_id) in enumerate(zip(all_models, all_deployments)):
         try:
-            if get_settings().config.verbosity_level >= 2:
-                get_logger().debug(
-                    f"Generating prediction with {model}"
-                    f"{(' from deployment ' + deployment_id) if deployment_id else ''}"
-                )
+            get_logger().debug(
+                f"Generating prediction with {model}"
+                f"{(' from deployment ' + deployment_id) if deployment_id else ''}"
+            )
             get_settings().set("openai.deployment_id", deployment_id)
             return await f(model)
         except Exception as e:
