@@ -480,8 +480,9 @@ class GithubProvider(GitProvider):
         if disable_eyes:
             return None
         try:
+            base_url = self.pr._requester.base_url # 'https://api.github.com'
             headers, data_patch = self.pr._requester.requestJsonAndCheck(
-                "POST", f"https://api.github.com/repos/{self.repo}/issues/comments/{issue_comment_id}/reactions",
+                "POST", f"{base_url}/repos/{self.repo}/issues/comments/{issue_comment_id}/reactions",
                 input={"content": "eyes"}
             )
             return data_patch.get("id", None)
@@ -492,9 +493,10 @@ class GithubProvider(GitProvider):
     def remove_reaction(self, issue_comment_id: int, reaction_id: str) -> bool:
         try:
             # self.pr.get_issue_comment(issue_comment_id).delete_reaction(reaction_id)
+            base_url = self.pr._requester.base_url # 'https://api.github.com'
             headers, data_patch = self.pr._requester.requestJsonAndCheck(
                 "DELETE",
-                f"https://api.github.com/repos/{self.repo}/issues/comments/{issue_comment_id}/reactions/{reaction_id}"
+                f"{base_url}/repos/{self.repo}/issues/comments/{issue_comment_id}/reactions/{reaction_id}"
             )
             return True
         except Exception as e:
