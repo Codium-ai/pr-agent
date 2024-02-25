@@ -1,7 +1,8 @@
+import asyncio.locks
 import copy
 import os
-import asyncio.locks
 import re
+import uuid
 from typing import Any, Dict, List, Tuple
 
 import uvicorn
@@ -14,10 +15,10 @@ from pr_agent.agent.pr_agent import PRAgent
 from pr_agent.algo.utils import update_settings_from_args
 from pr_agent.config_loader import get_settings, global_settings
 from pr_agent.git_providers import get_git_provider
-from pr_agent.git_providers.utils import apply_repo_settings
 from pr_agent.git_providers.git_provider import IncrementalPR
+from pr_agent.git_providers.utils import apply_repo_settings
 from pr_agent.log import LoggingFormat, get_logger, setup_logger
-from pr_agent.servers.utils import verify_signature, DefaultDictWithTimeout
+from pr_agent.servers.utils import DefaultDictWithTimeout, verify_signature
 
 setup_logger(fmt=LoggingFormat.JSON)
 
@@ -204,7 +205,8 @@ async def handle_request(body: Dict[str, Any], event: str):
         return {}
     agent = PRAgent()
     sender = body.get("sender", {}).get("login")
-    log_context = {"action": action, "event": event, "sender": sender, "server_type": "github_app"}
+    log_context = {"action": action, "event": event, "sender": sender, "server_type": "github_app",
+                   "request_id": uuid.uuid4().hex}
 
     # handle comments on PRs
     if action == 'created':
