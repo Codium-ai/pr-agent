@@ -24,6 +24,8 @@ class GithubProvider(GitProvider):
             self.installation_id = context.get("installation_id", None)
         except Exception:
             self.installation_id = None
+        self.base_url = get_settings().get("GITHUB.BASE_URL", "https://api.github.com").rstrip("/")
+        self.base_url_html = self.base_url.split("api")[0].rstrip("/") if "api" in self.base_url else "https://github.com"
         self.github_client = self._get_github_client()
         self.repo = None
         self.pr_num = None
@@ -32,8 +34,6 @@ class GithubProvider(GitProvider):
         self.diff_files = None
         self.git_files = None
         self.incremental = incremental
-        self.base_url = get_settings().get("GITHUB.BASE_URL", "https://api.github.com").rstrip("/")
-        self.base_url_html = self.base_url.split("api")[0].rstrip("/") if "api" in self.base_url else "https://github.com"
         if pr_url and 'pull' in pr_url:
             self.set_pr(pr_url)
             self.pr_commits = list(self.pr.get_commits())
