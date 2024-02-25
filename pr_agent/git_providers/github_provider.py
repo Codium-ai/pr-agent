@@ -32,6 +32,8 @@ class GithubProvider(GitProvider):
         self.diff_files = None
         self.git_files = None
         self.incremental = incremental
+        self.base_url = get_settings().get("GITHUB.BASE_URL", "https://api.github.com").rstrip("/")
+        self.base_url_html = self.base_url.split("api")[0].rstrip("/") if "api" in self.base_url else "https://github.com"
         if pr_url and 'pull' in pr_url:
             self.set_pr(pr_url)
             self.pr_commits = list(self.pr.get_commits())
@@ -412,7 +414,7 @@ class GithubProvider(GitProvider):
         try:
             # self.pr.get_issue_comment(comment_id).edit(body)
             headers, data_patch = self.pr._requester.requestJsonAndCheck(
-                "POST", f"https://api.github.com/repos/{self.repo}/pulls/{self.pr_num}/comments/{comment_id}/replies",
+                "POST", f"{self.base_url}/repos/{self.repo}/pulls/{self.pr_num}/comments/{comment_id}/replies",
                 input={"body": body}
             )
         except Exception as e:
@@ -480,9 +482,8 @@ class GithubProvider(GitProvider):
         if disable_eyes:
             return None
         try:
-            base_url = self.pr._requester.base_url # 'https://api.github.com'
             headers, data_patch = self.pr._requester.requestJsonAndCheck(
-                "POST", f"{base_url}/repos/{self.repo}/issues/comments/{issue_comment_id}/reactions",
+                "POST", f"{self.base_url}/repos/{self.repo}/issues/comments/{issue_comment_id}/reactions",
                 input={"content": "eyes"}
             )
             return data_patch.get("id", None)
@@ -493,10 +494,9 @@ class GithubProvider(GitProvider):
     def remove_reaction(self, issue_comment_id: int, reaction_id: str) -> bool:
         try:
             # self.pr.get_issue_comment(issue_comment_id).delete_reaction(reaction_id)
-            base_url = self.pr._requester.base_url # 'https://api.github.com'
             headers, data_patch = self.pr._requester.requestJsonAndCheck(
                 "DELETE",
-                f"{base_url}/repos/{self.repo}/issues/comments/{issue_comment_id}/reactions/{reaction_id}"
+                f"{self.base_url}/repos/{self.repo}/issues/comments/{issue_comment_id}/reactions/{reaction_id}"
             )
             return True
         except Exception as e:
@@ -574,7 +574,7 @@ class GithubProvider(GitProvider):
                 raise ValueError("GitHub app installation ID is required when using GitHub app deployment")
             auth = AppAuthentication(app_id=app_id, private_key=private_key,
                                      installation_id=self.installation_id)
-            return Github(app_auth=auth, base_url=get_settings().github.base_url)
+            return Github(app_auth=auth, base_url=self.base_url)
 
         if deployment_type == 'user':
             try:
@@ -583,7 +583,7 @@ class GithubProvider(GitProvider):
                 raise ValueError(
                     "GitHub token is required when using user deployment. See: "
                     "https://github.com/Codium-ai/pr-agent#method-2-run-from-source") from e
-            return Github(auth=Auth.Token(token), base_url=get_settings().github.base_url)
+            return Github(auth=Auth.Token(token), base_url=self.base_url)
 
     def _get_repo(self):
         if hasattr(self, 'repo_obj') and \
@@ -677,13 +677,12 @@ class GithubProvider(GitProvider):
 
     def get_line_link(self, relevant_file: str, relevant_line_start: int, relevant_line_end: int = None) -> str:
         sha_file = hashlib.sha256(relevant_file.encode('utf-8')).hexdigest()
-        pr_url = self.get_pr_url()  # for example 'https://github.com/Codium-ai/pr-agent/pull/1'
         if relevant_line_start == -1:
-            link = f"{pr_url}/files#diff-{sha_file}"
+            link = f"{self.base_url_html}/{self.repo}/pull/{self.pr_num}/files#diff-{sha_file}"
         elif relevant_line_end:
-            link = f"{pr_url}/files#diff-{sha_file}R{relevant_line_start}-R{relevant_line_end}"
+            link = f"{self.base_url_html}/{self.repo}/pull/{self.pr_num}/files#diff-{sha_file}R{relevant_line_start}-R{relevant_line_end}"
         else:
-            link = f"{pr_url}/files#diff-{sha_file}R{relevant_line_start}"
+            link = f"{self.base_url_html}/{self.repo}/pull/{self.pr_num}/files#diff-{sha_file}R{relevant_line_start}"
         return link
 
 
