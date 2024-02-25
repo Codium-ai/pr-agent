@@ -72,14 +72,15 @@ class PRCodeSuggestions:
     async def run(self):
         try:
             get_logger().info('Generating code suggestions for PR...')
-
+            relevant_configs = {'pr_code_suggestions': dict(get_settings().pr_code_suggestions),
+                                'config': dict(get_settings().config)}
+            get_logger().debug("Relevant configs", artifacts=relevant_configs)
             if get_settings().config.publish_output:
                 if self.git_provider.is_supported("gfm_markdown"):
                     self.progress_response = self.git_provider.publish_comment(self.progress)
                 else:
                     self.git_provider.publish_comment("Preparing suggestions...", is_temporary=True)
 
-            get_logger().info('Preparing PR code suggestions...')
             if not self.is_extended:
                 await retry_with_fallback_models(self._prepare_prediction, ModelType.TURBO)
                 data = self._prepare_pr_code_suggestions()
@@ -97,13 +98,12 @@ class PRCodeSuggestions:
                 data['code_suggestions'] = await self.rank_suggestions(data['code_suggestions'])
 
             if get_settings().config.publish_output:
-                get_logger().info('Pushing PR code suggestions...')
                 self.git_provider.remove_initial_comment()
                 if get_settings().pr_code_suggestions.summarize and self.git_provider.is_supported("gfm_markdown"):
-                    get_logger().info('Pushing summarize code suggestions...')
 
                     # generate summarized suggestions
                     pr_body = self.generate_summarized_suggestions(data)
+                    get_logger().debug(f"PR output", artifact=pr_body)
 
                     # add usage guide
                     if get_settings().pr_code_suggestions.enable_help_text:
@@ -117,7 +117,6 @@ class PRCodeSuggestions:
                         self.git_provider.publish_comment(pr_body)
 
                 else:
-                    get_logger().info('Pushing inline code suggestions...')
                     self.push_inline_code_suggestions(data)
                     if self.progress_response:
                         self.progress_response.delete()
@@ -127,15 +126,17 @@ class PRCodeSuggestions:
                 self.progress_response.delete()
 
     async def _prepare_prediction(self, model: str):
-        get_logger().info('Getting PR diff...')
-        patches_diff = get_pr_diff(self.git_provider,
+        self.patches_diff = get_pr_diff(self.git_provider,
                                         self.token_handler,
                                         model,
                                         add_line_numbers_to_hunks=True,
                                         disable_extra_lines=True)
-
-        get_logger().info('Getting AI prediction...')
-        self.prediction = await self._get_prediction(model, patches_diff)
+        if self.patches_diff:
+            get_logger().debug(f"PR diff", artifact=self.patches_diff)
+            self.prediction = await self._get_prediction(model, self.patches_diff)
+        else:
+            get_logger().error(f"Error getting PR diff")
+            self.prediction = None
 
     async def _get_prediction(self, model: str, patches_diff: str):
         variables = copy.deepcopy(self.vars)
@@ -143,14 +144,9 @@ class PRCodeSuggestions:
         environment = Environment(undefined=StrictUndefined)
         system_prompt = environment.from_string(get_settings().pr_code_suggestions_prompt.system).render(variables)
         user_prompt = environment.from_string(get_settings().pr_code_suggestions_prompt.user).render(variables)
-        if get_settings().config.verbosity_level >= 2:
-            get_logger().info(f"\nSystem prompt:\n{system_prompt}")
-            get_logger().info(f"\nUser prompt:\n{user_prompt}")
+
         response, finish_reason = await self.ai_handler.chat_completion(model=model, temperature=0.2,
                                                                         system=system_prompt, user=user_prompt)
-
-        if get_settings().config.verbosity_level >= 2:
-            get_logger().info(f"\nAI response:\n{response}")
 
         return response
 
@@ -185,8 +181,6 @@ class PRCodeSuggestions:
 
         for d in data['code_suggestions']:
             try:
-                if get_settings().config.verbosity_level >= 2:
-                    get_logger().info(f"suggestion: {d}")
                 relevant_file = d['relevant_file'].strip()
                 relevant_lines_start = int(d['relevant_lines_start'])  # absolute position
                 relevant_lines_end = int(d['relevant_lines_end'])
@@ -202,8 +196,7 @@ class PRCodeSuggestions:
                                              'relevant_lines_start': relevant_lines_start,
                                              'relevant_lines_end': relevant_lines_end})
             except Exception:
-                if get_settings().config.verbosity_level >= 2:
-                    get_logger().info(f"Could not parse suggestion: {d}")
+                get_logger().info(f"Could not parse suggestion: {d}")
 
         is_successful = self.git_provider.publish_code_suggestions(code_suggestions)
         if not is_successful:
@@ -229,8 +222,7 @@ class PRCodeSuggestions:
                 if delta_spaces > 0:
                     new_code_snippet = textwrap.indent(new_code_snippet, delta_spaces * " ").rstrip('\n')
         except Exception as e:
-            if get_settings().config.verbosity_level >= 2:
-                get_logger().info(f"Could not dedent code snippet for file {relevant_file}, error: {e}")
+            get_logger().error(f"Could not dedent code snippet for file {relevant_file}, error: {e}")
 
         return new_code_snippet
 
@@ -245,32 +237,33 @@ class PRCodeSuggestions:
         return False
 
     async def _prepare_prediction_extended(self, model: str) -> dict:
-        get_logger().info('Getting PR diff...')
-        patches_diff_list = get_pr_multi_diffs(self.git_provider, self.token_handler, model,
+        self.patches_diff_list = get_pr_multi_diffs(self.git_provider, self.token_handler, model,
                                                max_calls=get_settings().pr_code_suggestions.max_number_of_calls)
+        if self.patches_diff_list:
+            get_logger().debug(f"PR diff", artifact=self.patches_diff_list)
 
-        # parallelize calls to AI:
-        if get_settings().pr_code_suggestions.parallel_calls:
-            get_logger().info('Getting multi AI predictions in parallel...')
-            prediction_list = await asyncio.gather(*[self._get_prediction(model, patches_diff) for patches_diff in patches_diff_list])
-            self.prediction_list = prediction_list
-        else:
-            get_logger().info('Getting multi AI predictions...')
-            prediction_list = []
-            for i, patches_diff in enumerate(patches_diff_list):
-                get_logger().info(f"Processing chunk {i + 1} of {len(patches_diff_list)}")
-                prediction = await self._get_prediction(model, patches_diff)
-                prediction_list.append(prediction)
-
-        data = {}
-        for prediction in prediction_list:
-            self.prediction = prediction
-            data_per_chunk = self._prepare_pr_code_suggestions()
-            if "code_suggestions" in data:
-                data["code_suggestions"].extend(data_per_chunk["code_suggestions"])
+            # parallelize calls to AI:
+            if get_settings().pr_code_suggestions.parallel_calls:
+                prediction_list = await asyncio.gather(*[self._get_prediction(model, patches_diff) for patches_diff in self.patches_diff_list])
+                self.prediction_list = prediction_list
             else:
-                data.update(data_per_chunk)
-        self.data = data
+                prediction_list = []
+                for i, patches_diff in enumerate(self.patches_diff_list):
+                    prediction = await self._get_prediction(model, patches_diff)
+                    prediction_list.append(prediction)
+
+            data = {}
+            for prediction in prediction_list:
+                self.prediction = prediction
+                data_per_chunk = self._prepare_pr_code_suggestions()
+                if "code_suggestions" in data:
+                    data["code_suggestions"].extend(data_per_chunk["code_suggestions"])
+                else:
+                    data.update(data_per_chunk)
+            self.data = data
+        else:
+            get_logger().error(f"Error getting PR diff")
+            self.data = data = None
         return data
 
     async def rank_suggestions(self, data: List) -> List:
@@ -305,9 +298,7 @@ class PRCodeSuggestions:
             system_prompt = environment.from_string(get_settings().pr_sort_code_suggestions_prompt.system).render(
                 variables)
             user_prompt = environment.from_string(get_settings().pr_sort_code_suggestions_prompt.user).render(variables)
-            if get_settings().config.verbosity_level >= 2:
-                get_logger().info(f"\nSystem prompt:\n{system_prompt}")
-                get_logger().info(f"\nUser prompt:\n{user_prompt}")
+
             response, finish_reason = await self.ai_handler.chat_completion(model=model, system=system_prompt,
                                                                             user=user_prompt)
 

@@ -3,17 +3,12 @@ import datetime
 from collections import OrderedDict
 from functools import partial
 from typing import List, Tuple
-
-import yaml
 from jinja2 import Environment, StrictUndefined
-from yaml import SafeLoader
-
 from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAIHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import convert_to_markdown, load_yaml, try_fix_yaml, set_custom_labels, get_user_labels, \
-    ModelType
+from pr_agent.algo.utils import convert_to_markdown, load_yaml, ModelType
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import IncrementalPR, get_main_pr_language
@@ -109,7 +104,9 @@ class PRReviewer:
                 return None
 
             get_logger().info(f'Reviewing PR: {self.pr_url} ...')
-
+            relevant_configs = {'pr_reviewer': dict(get_settings().pr_reviewer),
+                                'config': dict(get_settings().config)}
+            get_logger().debug("Relevant configs", artifacts=relevant_configs)
             if get_settings().config.publish_output:
                 self.git_provider.publish_comment("Preparing review...", is_temporary=True)
 
@@ -118,35 +115,32 @@ class PRReviewer:
                 self.git_provider.remove_initial_comment()
                 return None
 
-            get_logger().info('Preparing PR review...')
-            pr_comment = self._prepare_pr_review()
+            pr_review = self._prepare_pr_review()
+            get_logger().debug(f"PR output", artifact=pr_review)
 
             if get_settings().config.publish_output:
-                get_logger().info('Pushing PR review...')
                 previous_review_comment = self._get_previous_review_comment()
 
                 # publish the review
                 if get_settings().pr_reviewer.persistent_comment and not self.incremental.is_incremental:
-                    self.git_provider.publish_persistent_comment(pr_comment,
+                    self.git_provider.publish_persistent_comment(pr_review,
                                                                  initial_header="## PR Review",
                                                                  update_header=True)
                 else:
-                    self.git_provider.publish_comment(pr_comment)
+                    self.git_provider.publish_comment(pr_review)
 
                 self.git_provider.remove_initial_comment()
                 if previous_review_comment:
                     self._remove_previous_review_comment(previous_review_comment)
                 if get_settings().pr_reviewer.inline_code_comments:
-                    get_logger().info('Pushing inline code comments...')
                     self._publish_inline_code_comments()
         except Exception as e:
             get_logger().error(f"Failed to review PR: {e}")
 
     async def _prepare_prediction(self, model: str) -> None:
-        get_logger().info('Getting PR diff...')
         self.patches_diff = get_pr_diff(self.git_provider, self.token_handler, model)
         if self.patches_diff:
-            get_logger().info('Getting AI prediction...')
+            get_logger().debug(f"PR diff", diff=self.patches_diff)
             self.prediction = await self._get_prediction(model)
         else:
             get_logger().error(f"Error getting PR diff")
@@ -169,10 +163,6 @@ class PRReviewer:
         system_prompt = environment.from_string(get_settings().pr_review_prompt.system).render(variables)
         user_prompt = environment.from_string(get_settings().pr_review_prompt.user).render(variables)
 
-        if get_settings().config.verbosity_level >= 2:
-            get_logger().info(f"\nSystem prompt:\n{system_prompt}")
-            get_logger().info(f"\nUser prompt:\n{user_prompt}")
-
         response, finish_reason = await self.ai_handler.chat_completion(
             model=model,
             temperature=0.2,
@@ -180,9 +170,7 @@ class PRReviewer:
             user=user_prompt
         )
 
-        if get_settings().config.verbosity_level >= 2:
-            get_logger().info(f"\nAI response:\n{response}")
-
+        get_logger().debug(f"\nAI response:\n{response}")
         return response
 
     def _prepare_pr_review(self) -> str:
@@ -244,10 +232,6 @@ class PRReviewer:
 
         # Add custom labels from the review prediction (effort, security)
         self.set_review_labels(data)
-
-        # Log markdown response if verbosity level is high
-        if get_settings().config.verbosity_level >= 2:
-            get_logger().info(f"Markdown response:\n{markdown_text}")
 
         if markdown_text == None or len(markdown_text) == 0:
             markdown_text = ""
@@ -385,7 +369,8 @@ class PRReviewer:
                 else:
                     current_labels_filtered = []
                 if current_labels or review_labels:
-                    get_logger().info(f"Setting review labels: {review_labels + current_labels_filtered}")
+                    get_logger().debug(f"Current labels:\n{current_labels}")
+                    get_logger().info(f"Setting review labels:\n{review_labels + current_labels_filtered}")
                     self.git_provider.publish_labels(review_labels + current_labels_filtered)
             except Exception as e:
                 get_logger().error(f"Failed to set review labels, error: {e}")

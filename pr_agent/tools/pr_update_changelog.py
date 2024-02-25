@@ -3,9 +3,7 @@ from datetime import date
 from functools import partial
 from time import sleep
 from typing import Tuple
-
 from jinja2 import Environment, StrictUndefined
-
 from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAIHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
@@ -51,26 +49,32 @@ class PRUpdateChangelog:
         # assert type(self.git_provider) == GithubProvider, "Currently only Github is supported"
 
         get_logger().info('Updating the changelog...')
+        relevant_configs = {'pr_update_changelog': dict(get_settings().pr_update_changelog),
+                            'config': dict(get_settings().config)}
+        get_logger().debug("Relevant configs", artifacts=relevant_configs)
         if get_settings().config.publish_output:
             self.git_provider.publish_comment("Preparing changelog updates...", is_temporary=True)
+
         await retry_with_fallback_models(self._prepare_prediction)
-        get_logger().info('Preparing PR changelog updates...')
+
         new_file_content, answer = self._prepare_changelog_update()
+        get_logger().debug(f"PR output", artifact=answer)
+
         if get_settings().config.publish_output:
             self.git_provider.remove_initial_comment()
-            get_logger().info('Publishing changelog updates...')
             if self.commit_changelog:
-                get_logger().info('Pushing PR changelog updates to repo...')
                 self._push_changelog_update(new_file_content, answer)
             else:
-                get_logger().info('Publishing PR changelog as comment...')
                 self.git_provider.publish_comment(f"**Changelog updates:**\n\n{answer}")
 
     async def _prepare_prediction(self, model: str):
-        get_logger().info('Getting PR diff...')
         self.patches_diff = get_pr_diff(self.git_provider, self.token_handler, model)
-        get_logger().info('Getting AI prediction...')
-        self.prediction = await self._get_prediction(model)
+        if self.patches_diff:
+            get_logger().debug(f"PR diff", artifact=self.patches_diff)
+            self.prediction = await self._get_prediction(model)
+        else:
+            get_logger().error(f"Error getting PR diff")
+            self.prediction = ""
 
     async def _get_prediction(self, model: str):
         variables = copy.deepcopy(self.vars)
@@ -78,9 +82,6 @@ class PRUpdateChangelog:
         environment = Environment(undefined=StrictUndefined)
         system_prompt = environment.from_string(get_settings().pr_update_changelog_prompt.system).render(variables)
         user_prompt = environment.from_string(get_settings().pr_update_changelog_prompt.user).render(variables)
-        if get_settings().config.verbosity_level >= 2:
-            get_logger().info(f"\nSystem prompt:\n{system_prompt}")
-            get_logger().info(f"\nUser prompt:\n{user_prompt}")
         response, finish_reason = await self.ai_handler.chat_completion(model=model, temperature=0.2,
                                                                         system=system_prompt, user=user_prompt)
 
@@ -100,9 +101,6 @@ class PRUpdateChangelog:
         if not self.commit_changelog:
             answer += "\n\n\n>to commit the new content to the CHANGELOG.md file, please type:" \
                       "\n>'/update_changelog --pr_update_changelog.push_changelog_changes=true'\n"
-
-        if get_settings().config.verbosity_level >= 2:
-            get_logger().info(f"answer:\n{answer}")
 
         return new_file_content, answer
 

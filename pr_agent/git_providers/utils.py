@@ -38,7 +38,7 @@ def apply_repo_settings(pr_url):
                         section_dict[key] = value
                     get_settings().unset(section)
                     get_settings().set(section, section_dict, merge=False)
-                    get_logger().info(f"Applying repo settings for section {section}, contents: {contents}")
+                get_logger().info(f"Applying repo settings:\n{new_settings.as_dict()}")
         except Exception as e:
             get_logger().exception("Failed to apply repo settings", e)
         finally:
