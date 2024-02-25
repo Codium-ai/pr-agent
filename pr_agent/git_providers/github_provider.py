@@ -666,8 +666,7 @@ class GithubProvider(GitProvider):
 
                 # link to diff
                 sha_file = hashlib.sha256(relevant_file.encode('utf-8')).hexdigest()
-                pr_url = self.get_pr_url()  # for example 'https://github.com/Codium-ai/pr-agent/pull/1'
-                link = f"{pr_url}/files#diff-{sha_file}R{absolute_position}"
+                link = f"{self.base_url_html}/{self.repo}/pull/{self.pr_num}/files#diff-{sha_file}R{absolute_position}"
                 return link
         except Exception as e:
             if get_settings().config.verbosity_level >= 2:
