@@ -34,7 +34,7 @@ To edit [configurations](./../pr_agent/settings/configuration.toml#L19)  related
 ```
 
 #### General options
-- `num_code_suggestions`: number of code suggestions provided by the 'review' tool. Default is 4.
+- `num_code_suggestions`: number of code suggestions provided by the 'review' tool. For manuall comments, defualt is 4. For [PR-Agent app](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L142) auto tools, default is 0, meaning no code suggestions will be provided by the review tool, unless you manually edit `pr_commands`.
 - `inline_code_comments`: if set to true, the tool will publish the code suggestions as comments on the code diff. Default is false.
 - `persistent_comment`: if set to true, the review comment will be persistent, meaning that every new review request will edit the previous one. Default is true.
 - `extra_instructions`: Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".
@@ -70,7 +70,7 @@ These configurations can be used to control the rate at which the incremental re
 If there are less than the specified number of commits since the last review, the tool will not perform any action.
 Default is 0 - the tool will always run, no matter how many commits since the last review.
 - `minimal_minutes_for_incremental_review`: Minimal number of minutes that need to pass since the last reviewed commit to create incremental review.
-If less that the specified number of minutes have passed between the last reviewed commit and running this command, the tool will not perform any action. 
+If less than the specified number of minutes have passed between the last reviewed commit and running this command, the tool will not perform any action. 
 Default is 0 - the tool will always run, no matter how much time have passed since the last reviewed commit.
 - `require_all_thresholds_for_incremental_review`: If set to true, all the previous thresholds must be met for incremental review to run. If false, only one is enough to run the tool.
 For example, if `minimal_commits_for_incremental_review=2` and `minimal_minutes_for_incremental_review=2`, and we have 3 commits since the last review, but the last reviewed commit is from 1 minute ago:
@@ -106,23 +106,24 @@ ___
 The `review` tool provides a collection of possible feedbacks about a PR.
 It is recommended to review the [Configuration options](#configuration-options) section, and choose the relevant options for your use case.
 
-Some of the feature that are disabled by default are quite useful, and should be considered for enabling. For example: 
+Some of the features that are disabled by default are quite useful, and should be considered for enabling. For example: 
 `require_score_review`, `require_soc2_ticket`, and more.
 
 On the other hand, if you find one of the enabled features to be irrelevant for your use case, disable it. No default configuration can fit all use cases.
 
 ### Code suggestions
-The `review` tool provides several type of feedbacks, one of them is code suggestions.
-If you are interested **only** in the code suggestions, it is recommended to use the [`improve`](./IMPROVE.md) feature instead, since it dedicated only to code suggestions, and usually gives better results.
-Use the `review` tool if you want to get a more comprehensive feedback, which includes code suggestions as well.
+If you set `num_code_suggestions`>0 , the `review` tool will also provide code suggestions.
+
+Notice If you are interested **only** in the code suggestions, it is recommended to use the [`improve`](./IMPROVE.md) feature instead, since it is a dedicated only to code suggestions, and usually gives better results.
+Use the `review` tool if you want to get more comprehensive feedback, which includes code suggestions as well.
 
 ### Automation
 - When you first install the app, the [default mode](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#github-app-automatic-tools) for the `review` tool is:
 ```
 pr_commands = ["/review", ...]
 ```
-meaning the `review` tool will run automatically on every PR, with the default configuration.
-Edit this field to enable/disable the tool, or to change the used configurations
+Meaning the `review` tool will run automatically on every PR, with the default configuration.
+Edit this field to enable/disable the tool, or to change the used configurations.
 
 ### Auto-labels
 The `review` tool can auto-generate two specific types of labels for a PR:
@@ -132,7 +133,7 @@ The `review` tool can auto-generate two specific types of labels for a PR:
 Both modes are useful, and we recommended to enable them.
 
 ### Extra instructions
-Extra instruction are important.
+Extra instructions are important.
 The `review` tool can be configured with extra instructions, which can be used to guide the model to a feedback tailored to the needs of your project.
 
 Be specific, clear, and concise in the instructions. With extra instructions, you are the prompter. Specify the relevant sub-tool, and the relevant aspects of the PR that you want to emphasize.
