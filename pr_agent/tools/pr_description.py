@@ -101,7 +101,7 @@ class PRDescription:
                 pr_title, pr_body = self._prepare_pr_answer_with_markers()
             else:
                 pr_title, pr_body,  = self._prepare_pr_answer()
-            get_logger().debug(f"PR output", title=pr_title, body=pr_body)
+            get_logger().debug("PR output", title=pr_title, body=pr_body)
 
             # Add help text if gfm_markdown is supported
             if self.git_provider.is_supported("gfm_markdown") and get_settings().pr_description.enable_help_text:
