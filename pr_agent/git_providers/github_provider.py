@@ -46,7 +46,7 @@ class GithubProvider(GitProvider):
         return True
 
     def get_pr_url(self) -> str:
-        return f"https://github.com/{self.repo}/pull/{self.pr_num}"
+        return self.pr.html_url
 
     def set_pr(self, pr_url: str):
         self.repo, self.pr_num = self._parse_pr_url(pr_url)
