@@ -93,14 +93,17 @@ class PRDescription:
             if get_settings().pr_description.enable_semantic_files_types:
                 self.file_label_dict = self._prepare_file_labels()
 
-            pr_labels = []
+            pr_labels, pr_file_changes = [], []
             if get_settings().pr_description.publish_labels:
                 pr_labels = self._prepare_labels()
 
             if get_settings().pr_description.use_description_markers:
-                pr_title, pr_body = self._prepare_pr_answer_with_markers()
+                pr_title, pr_body, changes_walkthrough, pr_file_changes = self._prepare_pr_answer_with_markers()
             else:
-                pr_title, pr_body,  = self._prepare_pr_answer()
+                pr_title, pr_body, changes_walkthrough, pr_file_changes = self._prepare_pr_answer()
+            if not self.git_provider.is_supported(
+                    "publish_file_comments") or not get_settings().pr_description.inline_file_summary:
+                pr_body += "\n\n" + changes_walkthrough
             get_logger().debug("PR output", artifact={"title": pr_title, "body": pr_body})
 
             # Add help text if gfm_markdown is supported
@@ -129,12 +132,12 @@ class PRDescription:
                     self.git_provider.publish_description(pr_title, pr_body)
 
                     # publish final update message
-                    if (get_settings().pr_description.final_update_message and
-                            hasattr(self.git_provider, 'pr_url') and self.git_provider.pr_url):
+                    if (get_settings().pr_description.final_update_message):
                         latest_commit_url = self.git_provider.get_latest_commit_url()
                         if latest_commit_url:
-                            self.git_provider.publish_comment(
-                                f"**[PR Description]({self.git_provider.get_pr_url()})** updated to latest commit ({latest_commit_url})")
+                            pr_url = self.git_provider.get_pr_url()
+                            update_comment = f"**[PR Description]({pr_url})** updated to latest commit ({latest_commit_url})"
+                            self.git_provider.publish_comment(update_comment)
                 self.git_provider.remove_initial_comment()
         except Exception as e:
             get_logger().error(f"Error generating PR description {self.pr_id}: {e}")
@@ -231,7 +234,7 @@ class PRDescription:
             get_logger().error(f"Error converting labels to original case {self.pr_id}: {e}")
         return pr_types
 
-    def _prepare_pr_answer_with_markers(self) -> Tuple[str, str]:
+    def _prepare_pr_answer_with_markers(self) -> Tuple[str, str, str, List[dict]]:
         get_logger().info(f"Using description marker replacements {self.pr_id}")
         title = self.vars["title"]
         body = self.user_description
@@ -251,18 +254,20 @@ class PRDescription:
             body = body.replace('pr_agent:summary', summary)
 
         ai_walkthrough = self.data.get('pr_files')
+        walkthrough_gfm = ""
+        pr_file_changes = []
         if ai_walkthrough and not re.search(r'<!--\s*pr_agent:walkthrough\s*-->', body):
             try:
-                walkthrough_gfm = ""
-                walkthrough_gfm = self.process_pr_files_prediction(walkthrough_gfm, self.file_label_dict)
+                walkthrough_gfm, pr_file_changes = self.process_pr_files_prediction(walkthrough_gfm,
+                                                                                    self.file_label_dict)
                 body = body.replace('pr_agent:walkthrough', walkthrough_gfm)
             except Exception as e:
                 get_logger().error(f"Failing to process walkthrough {self.pr_id}: {e}")
                 body = body.replace('pr_agent:walkthrough', "")
 
-        return title, body
+        return title, body, walkthrough_gfm, pr_file_changes
 
-    def _prepare_pr_answer(self) -> Tuple[str, str]:
+    def _prepare_pr_answer(self) -> Tuple[str, str, str, List[dict]]:
         """
         Prepare the PR description based on the AI prediction data.
 
@@ -293,14 +298,14 @@ class PRDescription:
 
         # Iterate over the remaining dictionary items and append the key and value to 'pr_body' in a markdown format,
         # except for the items containing the word 'walkthrough'
-        pr_body = ""
+        pr_body, changes_walkthrough = "", ""
+        pr_file_changes = []
         for idx, (key, value) in enumerate(self.data.items()):
             if key == 'pr_files':
                 value = self.file_label_dict
-                key_publish = "Changes walkthrough"
             else:
                 key_publish = key.rstrip(':').replace("_", " ").capitalize()
-            pr_body += f"## **{key_publish}**\n"
+                pr_body += f"## **{key_publish}**\n"
             if 'walkthrough' in key.lower():
                 if self.git_provider.is_supported("gfm_markdown"):
                     pr_body += "<details> <summary>files:</summary>\n\n"
@@ -311,7 +316,8 @@ class PRDescription:
                 if self.git_provider.is_supported("gfm_markdown"):
                     pr_body += "</details>\n"
             elif 'pr_files' in key.lower():
-                pr_body = self.process_pr_files_prediction(pr_body, value)
+                changes_walkthrough, pr_file_changes = self.process_pr_files_prediction(changes_walkthrough, value)
+                changes_walkthrough = f"## **Changes walkthrough**\n{changes_walkthrough}"
             else:
                 # if the value is a list, join its items by comma
                 if isinstance(value, list):
@@ -320,7 +326,7 @@ class PRDescription:
             if idx < len(self.data) - 1:
                 pr_body += "\n\n___\n\n"
 
-        return title, pr_body
+        return title, pr_body, changes_walkthrough, pr_file_changes,
 
     def _prepare_file_labels(self):
         file_label_dict = {}
@@ -339,6 +345,7 @@ class PRDescription:
         return file_label_dict
 
     def process_pr_files_prediction(self, pr_body, value):
+        pr_comments = []
         # logic for using collapsible file list
         use_collapsible_file_list = get_settings().pr_description.collapsible_file_list
         num_files = 0
@@ -419,7 +426,7 @@ class PRDescription:
         except Exception as e:
             get_logger().error(f"Error processing pr files to markdown {self.pr_id}: {e}")
             pass
-        return pr_body
+        return pr_body, pr_comments
 
 
 def count_chars_without_html(string):
@@ -493,4 +500,3 @@ def replace_code_tags(text):
     for i in range(1, len(parts), 2):
         parts[i] = '<code>' + parts[i] + '</code>'
     return ''.join(parts)
-
