@@ -106,8 +106,7 @@ class PRReviewer:
             get_logger().info(f'Reviewing PR: {self.pr_url} ...')
             relevant_configs = {'pr_reviewer': dict(get_settings().pr_reviewer),
                                 'config': dict(get_settings().config)}
-            get_logger().debug("Relevant configs", configs=relevant_configs)
-
+            get_logger().debug("Relevant configs", artifacts=relevant_configs)
             if get_settings().config.publish_output:
                 self.git_provider.publish_comment("Preparing review...", is_temporary=True)
 
@@ -117,7 +116,7 @@ class PRReviewer:
                 return None
 
             pr_review = self._prepare_pr_review()
-            get_logger().debug(f"PR output", review=pr_review)
+            get_logger().debug(f"PR output", artifact=pr_review)
 
             if get_settings().config.publish_output:
                 previous_review_comment = self._get_previous_review_comment()

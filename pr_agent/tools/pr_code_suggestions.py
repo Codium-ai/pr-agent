@@ -74,8 +74,7 @@ class PRCodeSuggestions:
             get_logger().info('Generating code suggestions for PR...')
             relevant_configs = {'pr_code_suggestions': dict(get_settings().pr_code_suggestions),
                                 'config': dict(get_settings().config)}
-            get_logger().debug("Relevant configs", configs=relevant_configs)
-
+            get_logger().debug("Relevant configs", artifacts=relevant_configs)
             if get_settings().config.publish_output:
                 if self.git_provider.is_supported("gfm_markdown"):
                     self.progress_response = self.git_provider.publish_comment(self.progress)
@@ -104,7 +103,7 @@ class PRCodeSuggestions:
 
                     # generate summarized suggestions
                     pr_body = self.generate_summarized_suggestions(data)
-                    get_logger().debug(f"PR output", suggestions=pr_body)
+                    get_logger().debug(f"PR output", artifact=pr_body)
 
                     # add usage guide
                     if get_settings().pr_code_suggestions.enable_help_text:
@@ -133,7 +132,7 @@ class PRCodeSuggestions:
                                         add_line_numbers_to_hunks=True,
                                         disable_extra_lines=True)
         if self.patches_diff:
-            get_logger().debug(f"PR diff", diff=self.patches_diff)
+            get_logger().debug(f"PR diff", artifact=self.patches_diff)
             self.prediction = await self._get_prediction(model, self.patches_diff)
         else:
             get_logger().error(f"Error getting PR diff")
@@ -241,7 +240,7 @@ class PRCodeSuggestions:
         self.patches_diff_list = get_pr_multi_diffs(self.git_provider, self.token_handler, model,
                                                max_calls=get_settings().pr_code_suggestions.max_number_of_calls)
         if self.patches_diff_list:
-            get_logger().debug(f"PR diff", diff=self.patches_diff_list)
+            get_logger().debug(f"PR diff", artifact=self.patches_diff_list)
 
             # parallelize calls to AI:
             if get_settings().pr_code_suggestions.parallel_calls:

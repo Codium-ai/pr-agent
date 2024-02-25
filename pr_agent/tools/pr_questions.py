@@ -50,14 +50,13 @@ class PRQuestions:
         get_logger().info('Answering a PR question...')
         relevant_configs = {'pr_questions': dict(get_settings().pr_questions),
                             'config': dict(get_settings().config)}
-        get_logger().debug("Relevant configs", configs=relevant_configs)
-
+        get_logger().debug("Relevant configs", artifacts=relevant_configs)
         if get_settings().config.publish_output:
             self.git_provider.publish_comment("Preparing answer...", is_temporary=True)
         await retry_with_fallback_models(self._prepare_prediction)
 
         pr_comment = self._prepare_pr_answer()
-        get_logger().debug(f"PR output", answer=pr_comment)
+        get_logger().debug(f"PR output", artifact=pr_comment)
 
         if self.git_provider.is_supported("gfm_markdown") and get_settings().pr_questions.enable_help_text:
             pr_comment += "<hr>\n\n<details> <summary><strong>✨ Ask tool usage guide:</strong></summary><hr> \n\n"
@@ -72,7 +71,7 @@ class PRQuestions:
     async def _prepare_prediction(self, model: str):
         self.patches_diff = get_pr_diff(self.git_provider, self.token_handler, model)
         if self.patches_diff:
-            get_logger().debug(f"PR diff", diff=self.patches_diff)
+            get_logger().debug(f"PR diff", artifact=self.patches_diff)
             self.prediction = await self._get_prediction(model)
         else:
             get_logger().error(f"Error getting PR diff")

@@ -77,7 +77,7 @@ class PRDescription:
             get_logger().info(f"Generating a PR description for pr_id: {self.pr_id}")
             relevant_configs = {'pr_description': dict(get_settings().pr_description),
                                 'config': dict(get_settings().config)}
-            get_logger().debug("Relevant configs", configs=relevant_configs)
+            get_logger().debug("Relevant configs", artifacts=relevant_configs)
             if get_settings().config.publish_output:
                 self.git_provider.publish_comment("Preparing PR description...", is_temporary=True)
 
@@ -101,7 +101,7 @@ class PRDescription:
                 pr_title, pr_body = self._prepare_pr_answer_with_markers()
             else:
                 pr_title, pr_body,  = self._prepare_pr_answer()
-            get_logger().debug("PR output", title=pr_title, body=pr_body)
+            get_logger().debug("PR output", artifact={"title": pr_title, "body": pr_body})
 
             # Add help text if gfm_markdown is supported
             if self.git_provider.is_supported("gfm_markdown") and get_settings().pr_description.enable_help_text:
@@ -116,7 +116,7 @@ class PRDescription:
                 # publish labels
                 if get_settings().pr_description.publish_labels and self.git_provider.is_supported("get_labels"):
                     original_labels = self.git_provider.get_pr_labels()
-                    get_logger().debug(f"original labels", labels=original_labels)
+                    get_logger().debug(f"original labels", artifact=original_labels)
                     user_labels = get_user_labels(original_labels)
                     get_logger().debug(f"published labels:\n{pr_labels + user_labels}")
                     self.git_provider.publish_labels(pr_labels + user_labels)
@@ -147,7 +147,7 @@ class PRDescription:
 
         self.patches_diff = get_pr_diff(self.git_provider, self.token_handler, model)
         if self.patches_diff:
-            get_logger().debug(f"PR diff", diff=self.patches_diff)
+            get_logger().debug(f"PR diff", artifact=self.patches_diff)
             self.prediction = await self._get_prediction(model)
         else:
             get_logger().error(f"Error getting PR diff {self.pr_id}")
