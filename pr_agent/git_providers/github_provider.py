@@ -664,7 +664,8 @@ class GithubProvider(GitProvider):
 
                 # link to diff
                 sha_file = hashlib.sha256(relevant_file.encode('utf-8')).hexdigest()
-                link = f"https://github.com/{self.repo}/pull/{self.pr_num}/files#diff-{sha_file}R{absolute_position}"
+                pr_url = self.get_pr_url()  # for example 'https://github.com/Codium-ai/pr-agent/pull/1'
+                link = f"{pr_url}/files#diff-{sha_file}R{absolute_position}"
                 return link
         except Exception as e:
             if get_settings().config.verbosity_level >= 2:
@@ -674,12 +675,13 @@ class GithubProvider(GitProvider):
 
     def get_line_link(self, relevant_file: str, relevant_line_start: int, relevant_line_end: int = None) -> str:
         sha_file = hashlib.sha256(relevant_file.encode('utf-8')).hexdigest()
+        pr_url = self.get_pr_url()  # for example 'https://github.com/Codium-ai/pr-agent/pull/1'
         if relevant_line_start == -1:
-            link = f"https://github.com/{self.repo}/pull/{self.pr_num}/files#diff-{sha_file}"
+            link = f"{pr_url}/files#diff-{sha_file}"
         elif relevant_line_end:
-            link = f"https://github.com/{self.repo}/pull/{self.pr_num}/files#diff-{sha_file}R{relevant_line_start}-R{relevant_line_end}"
+            link = f"{pr_url}/files#diff-{sha_file}R{relevant_line_start}-R{relevant_line_end}"
         else:
-            link = f"https://github.com/{self.repo}/pull/{self.pr_num}/files#diff-{sha_file}R{relevant_line_start}"
+            link = f"{pr_url}/files#diff-{sha_file}R{relevant_line_start}"
         return link
 
 
