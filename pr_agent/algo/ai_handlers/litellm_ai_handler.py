@@ -100,6 +100,7 @@ class LiteLLMAIHandler(BaseAiHandler):
             TryAgain: If there is an attribute error during OpenAI inference.
         """
         try:
+            resp, finish_reason = None, None
             deployment_id = self.deployment_id
             if self.azure:
                 model = 'azure/' + model
@@ -127,9 +128,11 @@ class LiteLLMAIHandler(BaseAiHandler):
             raise TryAgain from e
         if response is None or len(response["choices"]) == 0:
             raise TryAgain
-        resp = response["choices"][0]['message']['content']
-        finish_reason = response["choices"][0]["finish_reason"]
-        # usage = response.get("usage")
+        else:
+            resp = response["choices"][0]['message']['content']
+            finish_reason = response["choices"][0]["finish_reason"]
+            # usage = response.get("usage")
+            get_logger().debug(f"\nAI response:\n{resp}")
+            get_logger().debug("full_response", response=response)
 
-        get_logger().debug(f"\nAI response:\n{resp}", full_response=response)
         return resp, finish_reason
