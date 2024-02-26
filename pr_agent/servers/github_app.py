@@ -193,11 +193,11 @@ async def handle_push_trigger_for_new_commits(body: Dict[str, Any],
         if get_settings().github_app.push_trigger_wait_for_initial_review and not get_git_provider()(api_url,
                                                                                                      incremental=IncrementalPR(
                                                                                                              True)).previous_review:
-            if get_identity_provider().verify_eligibility("github", sender_id, api_url) is not Eligibility.NOT_ELIGIBLE:
-                get_logger().info(f"Skipping incremental review because there was no initial review for {api_url=} yet")
-                return {}
-        get_logger().info(f"Performing incremental review for {api_url=} because of {event=} and {action=}")
-        await _perform_auto_commands_github("push_commands", agent, body, api_url, log_context)
+            get_logger().info(f"Skipping incremental review because there was no initial review for {api_url=} yet")
+            return {}
+        if get_identity_provider().verify_eligibility("github", sender_id, api_url) is not Eligibility.NOT_ELIGIBLE:
+            get_logger().info(f"Performing incremental review for {api_url=} because of {event=} and {action=}")
+            await _perform_auto_commands_github("push_commands", agent, body, api_url, log_context)
 
     finally:
         # release the waiting task block
