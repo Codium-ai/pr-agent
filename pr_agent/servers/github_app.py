@@ -206,6 +206,14 @@ async def handle_push_trigger_for_new_commits(body: Dict[str, Any],
             _duplicate_push_triggers[api_url] -= 1
 
 
+def handle_closed_pr(body, event, action, log_context):
+    pull_request = body.get("pull_request")
+    api_url = pull_request.get("url")
+    pr_statistics = get_git_provider()(pr_url=api_url).calc_pr_statistics(pull_request)
+    with get_logger().contextualize(pr_statistics=pr_statistics):
+        get_logger().info("PR-Agent closed pr statistics", analytics=True)
+
+
 async def handle_request(body: Dict[str, Any], event: str):
     """
     Handle incoming GitHub webhook requests.
@@ -229,13 +237,16 @@ async def handle_request(body: Dict[str, Any], event: str):
         get_logger().debug(f'Request body', artifact=body)
         await handle_comments_on_pr(body, event, sender, sender_id, action, log_context, agent)
     # handle new PRs
-    elif event == 'pull_request' and action != 'synchronize':
+    elif event == 'pull_request' and action != 'synchronize' and action != 'closed':
         get_logger().debug(f'Request body', artifact=body)
         await handle_new_pr_opened(body, event, sender, sender_id, action, log_context, agent)
     # handle pull_request event with synchronize action - "push trigger" for new commits
     elif event == 'pull_request' and action == 'synchronize':
         get_logger().debug(f'Request body', artifact=body)
         await handle_push_trigger_for_new_commits(body, event, sender, sender_id, action, log_context, agent)
+    elif event == 'pull_request' and action == 'closed':
+        if get_settings().get("CONFIG.ANALYTICS_FOLDER", ""):
+            handle_closed_pr(body, event, action, log_context)
     else:
         get_logger().info(f"event {event=} action {action=} does not require any handling")
     return {}

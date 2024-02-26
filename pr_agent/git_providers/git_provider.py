@@ -190,6 +190,8 @@ class GitProvider(ABC):
     def auto_approve(self) -> bool:
         return False
 
+    def calc_pr_statistics(self, pull_request_data: dict):
+        return {}
 
 
 def get_main_pr_language(languages, files) -> str:
