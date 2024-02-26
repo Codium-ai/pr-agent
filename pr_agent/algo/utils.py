@@ -63,13 +63,13 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
         emoji = emojis.get(key_nice, "")
         if gfm_supported:
             if 'Estimated effort to review' in key_nice:
-                key_nice = 'Estimated&nbsp;effort&nbsp;to review [1-5]'
+                key_nice = 'Estimated&nbsp;effort&nbsp;to&nbsp;review [1-5]'
             if 'possible issues' in key_nice.lower():
                 value = value.strip()
                 issues = value.split('\n- ')
                 number_of_issues = len(issues)
                 if number_of_issues > 1:
-                    markdown_text += f"<tr><td rowspan={number_of_issues}> {emoji} <strong>{key_nice}</strong></td>\n"
+                    markdown_text += f"<tr><td rowspan={number_of_issues}> {emoji}&nbsp;<strong>{key_nice}</strong></td>\n"
                     for i, issue in enumerate(issues):
                         issue = issue.strip('-').strip()
                         if i == 0:
@@ -77,9 +77,10 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
                         else:
                             markdown_text += f"<tr>\n<td>\n\n{issue}</td></tr>\n"
                 else:
-                    markdown_text += f"<tr><td> {emoji} <strong>{key_nice}</strong></td><td>\n\n{value}\n\n</td></tr>\n"
+                    value = value.strip('-').strip()
+                    markdown_text += f"<tr><td> {emoji}&nbsp;<strong>{key_nice}</strong></td><td>\n\n{value}\n\n</td></tr>\n"
             else:
-                markdown_text += f"<tr><td> {emoji} <strong>{key_nice}</strong></td><td>\n\n{value}\n\n</td></tr>\n"
+                markdown_text += f"<tr><td> {emoji}&nbsp;<strong>{key_nice}</strong></td><td>\n\n{value}\n\n</td></tr>\n"
         else:
             if len(value.split()) > 1:
                 markdown_text += f"{emoji} **{key_nice}:**\n\n {value}\n\n"
