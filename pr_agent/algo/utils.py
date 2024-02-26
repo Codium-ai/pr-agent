@@ -51,7 +51,7 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
     markdown_text += f"## PR Review\n\n"
     if gfm_supported:
         markdown_text += "<table>\n<tr>\n"
-        markdown_text += """<td> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PR&nbsp;feedback &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </td> <td></td></tr>"""
+        # markdown_text += """<td> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Feedback&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td> <td></td></tr>"""
 
     if not output_data or not output_data.get('review', {}):
         return ""
@@ -62,6 +62,8 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
         key_nice = key.replace('_', ' ').capitalize()
         emoji = emojis.get(key_nice, "")
         if gfm_supported:
+            if 'Estimated effort to review' in key_nice:
+                key_nice = 'Estimated&nbsp;effort&nbsp;to review [1-5]'
             if 'possible issues' in key_nice.lower():
                 value = value.strip()
                 issues = value.split('\n- ')
