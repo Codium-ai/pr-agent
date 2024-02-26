@@ -205,8 +205,9 @@ async def handle_request(body: Dict[str, Any], event: str):
         return {}
     agent = PRAgent()
     sender = body.get("sender", {}).get("login")
+    app_name = get_settings().get("CONFIG.APP_NAME", "Unknown")
     log_context = {"action": action, "event": event, "sender": sender, "server_type": "github_app",
-                   "request_id": uuid.uuid4().hex}
+                   "request_id": uuid.uuid4().hex, "app_name": app_name}
 
     # handle comments on PRs
     if action == 'created':

@@ -22,6 +22,10 @@ def analytics_filter(record: dict) -> bool:
     return record.get("extra", {}).get("analytics", False)
 
 
+def inv_analytics_filter(record: dict) -> bool:
+    return not record.get("extra", {}).get("analytics", False)
+
+
 def setup_logger(level: str = "INFO", fmt: LoggingFormat = LoggingFormat.CONSOLE):
     level: int = logging.getLevelName(level.upper())
     if type(level) is not int:
@@ -31,6 +35,7 @@ def setup_logger(level: str = "INFO", fmt: LoggingFormat = LoggingFormat.CONSOLE
         logger.remove(None)
         logger.add(
             sys.stdout,
+            filter=inv_analytics_filter,
             level=level,
             format="{message}",
             colorize=False,
@@ -38,7 +43,7 @@ def setup_logger(level: str = "INFO", fmt: LoggingFormat = LoggingFormat.CONSOLE
         )
     elif fmt == LoggingFormat.CONSOLE: # does not print the 'extra' fields
         logger.remove(None)
-        logger.add(sys.stdout, level=level, colorize=True)
+        logger.add(sys.stdout, level=level, colorize=True, filter=inv_analytics_filter)
 
     log_folder = get_settings().get("CONFIG.ANALYTICS_FOLDER", "")
     if log_folder:
