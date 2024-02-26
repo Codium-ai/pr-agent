@@ -74,6 +74,7 @@ class PRAgent:
 
         action = action.lstrip("/").lower()
         with get_logger().contextualize(command=action):
+            get_logger().info("PR-Agent request handler started", analytics=True)
             if action == "reflect_and_review":
                 get_settings().pr_reviewer.ask_and_reflect = True
             if action == "answer":
