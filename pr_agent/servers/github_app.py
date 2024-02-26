@@ -273,7 +273,7 @@ async def _perform_auto_commands_github(commands_conf: str, agent: PRAgent, body
         other_args = update_settings_from_args(args)
         new_command = ' '.join([command] + other_args)
         with get_logger().contextualize(**log_context):
-            get_logger().info(f"New PR opened. Performing auto command '{new_command}', for {api_url=}")
+            get_logger().info(f"{commands_conf}. Performing auto command '{new_command}', for {api_url=}")
             await agent.handle_request(api_url, new_command)
 
 
