@@ -207,8 +207,11 @@ async def handle_push_trigger_for_new_commits(body: Dict[str, Any],
 
 
 def handle_closed_pr(body, event, action, log_context):
-    pull_request = body.get("pull_request")
-    api_url = pull_request.get("url")
+    pull_request = body.get("pull_request", {})
+    is_merged = pull_request.get("merged", False)
+    if not is_merged:
+        return
+    api_url = pull_request.get("url", "")
     pr_statistics = get_git_provider()(pr_url=api_url).calc_pr_statistics(pull_request)
     with get_logger().contextualize(pr_statistics=pr_statistics):
         get_logger().info("PR-Agent statistics for closed PR", analytics=True)
