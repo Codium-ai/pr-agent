@@ -51,7 +51,7 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
     markdown_text += f"## PR Review\n\n"
     if gfm_supported:
         markdown_text += "<table>\n<tr>\n"
-        markdown_text += """<td> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>PR&nbsp;feedback</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </td> <td></td></tr>"""
+        markdown_text += """<td> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PR&nbsp;feedback &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </td> <td></td></tr>"""
 
     if not output_data or not output_data.get('review', {}):
         return ""
@@ -62,7 +62,22 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
         key_nice = key.replace('_', ' ').capitalize()
         emoji = emojis.get(key_nice, "")
         if gfm_supported:
-            markdown_text += f"<tr><td> {emoji} {key_nice}</td><td>\n\n{value}\n\n</td></tr>\n"
+            if 'possible issues' in key_nice.lower():
+                value = value.strip()
+                issues = value.split('\n- ')
+                number_of_issues = len(issues)
+                if number_of_issues > 1:
+                    markdown_text += f"<tr><td rowspan={number_of_issues}> {emoji} <strong>{key_nice}</strong></td>\n"
+                    for i, issue in enumerate(issues):
+                        issue = issue.strip('-').strip()
+                        if i == 0:
+                            markdown_text += f"<td>\n\n{issue}</td></tr>\n"
+                        else:
+                            markdown_text += f"<tr>\n<td>\n\n{issue}</td></tr>\n"
+                else:
+                    markdown_text += f"<tr><td> {emoji} <strong>{key_nice}</strong></td><td>\n\n{value}\n\n</td></tr>\n"
+            else:
+                markdown_text += f"<tr><td> {emoji} <strong>{key_nice}</strong></td><td>\n\n{value}\n\n</td></tr>\n"
         else:
             if len(value.split()) > 1:
                 markdown_text += f"{emoji} **{key_nice}:**\n\n {value}\n\n"
