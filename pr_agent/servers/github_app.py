@@ -211,7 +211,7 @@ def handle_closed_pr(body, event, action, log_context):
     api_url = pull_request.get("url")
     pr_statistics = get_git_provider()(pr_url=api_url).calc_pr_statistics(pull_request)
     with get_logger().contextualize(pr_statistics=pr_statistics):
-        get_logger().info("PR-Agent closed pr statistics", analytics=True)
+        get_logger().info("PR-Agent statistics for closed PR", analytics=True)
 
 
 async def handle_request(body: Dict[str, Any], event: str):
