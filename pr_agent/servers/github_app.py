@@ -3,7 +3,7 @@ import copy
 import os
 import re
 import uuid
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, Tuple
 
 import uvicorn
 from fastapi import APIRouter, FastAPI, HTTPException, Request, Response
@@ -17,11 +17,19 @@ from pr_agent.config_loader import get_settings, global_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import IncrementalPR
 from pr_agent.git_providers.utils import apply_repo_settings
+from pr_agent.identity_providers import get_identity_provider
+from pr_agent.identity_providers.identity_provider import Eligibility
 from pr_agent.log import LoggingFormat, get_logger, setup_logger
 from pr_agent.servers.utils import DefaultDictWithTimeout, verify_signature
 
 setup_logger(fmt=LoggingFormat.JSON)
-
+base_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+build_number_path = os.path.join(base_path, "build_number.txt")
+if os.path.exists(build_number_path):
+    with open(build_number_path) as f:
+        build_number = f.read().strip()
+else:
+    build_number = "unknown"
 router = APIRouter()
 
 
@@ -70,6 +78,7 @@ _pending_task_duplicate_push_conditions = DefaultDictWithTimeout(asyncio.locks.C
 async def handle_comments_on_pr(body: Dict[str, Any],
                                 event: str,
                                 sender: str,
+                                sender_id: str,
                                 action: str,
                                 log_context: Dict[str, Any],
                                 agent: PRAgent):
@@ -98,13 +107,15 @@ async def handle_comments_on_pr(body: Dict[str, Any],
     comment_id = body.get("comment", {}).get("id")
     provider = get_git_provider()(pr_url=api_url)
     with get_logger().contextualize(**log_context):
-        get_logger().info(f"Processing comment on PR {api_url=}, comment_body={comment_body}")
-        await agent.handle_request(api_url, comment_body,
-                    notify=lambda: provider.add_eyes_reaction(comment_id, disable_eyes=disable_eyes))
+        if get_identity_provider().verify_eligibility("github", sender_id, api_url) is not Eligibility.NOT_ELIGIBLE:
+            get_logger().info(f"Processing comment on PR {api_url=}, comment_body={comment_body}")
+            await agent.handle_request(api_url, comment_body,
+                        notify=lambda: provider.add_eyes_reaction(comment_id, disable_eyes=disable_eyes))
 
 async def handle_new_pr_opened(body: Dict[str, Any],
                                event: str,
                                sender: str,
+                               sender_id: str,
                                action: str,
                                log_context: Dict[str, Any],
                                agent: PRAgent):
@@ -123,11 +134,13 @@ async def handle_new_pr_opened(body: Dict[str, Any],
         get_logger().info(f"Invalid PR event: {action=} {api_url=}")
         return {}
     if action in get_settings().github_app.handle_pr_actions:  # ['opened', 'reopened', 'ready_for_review', 'review_requested']
-        await _perform_auto_commands_github("pr_commands", agent, body, api_url, log_context)
+        if get_identity_provider().verify_eligibility("github", sender_id, api_url) is not Eligibility.NOT_ELIGIBLE:
+            await _perform_auto_commands_github("pr_commands", agent, body, api_url, log_context)
 
 async def handle_push_trigger_for_new_commits(body: Dict[str, Any],
                         event: str,
                         sender: str,
+                        sender_id: str,
                         action: str,
                         log_context: Dict[str, Any],
                         agent: PRAgent):
@@ -180,8 +193,9 @@ async def handle_push_trigger_for_new_commits(body: Dict[str, Any],
         if get_settings().github_app.push_trigger_wait_for_initial_review and not get_git_provider()(api_url,
                                                                                                      incremental=IncrementalPR(
                                                                                                              True)).previous_review:
-            get_logger().info(f"Skipping incremental review because there was no initial review for {api_url=} yet")
-            return {}
+            if get_identity_provider().verify_eligibility("github", sender_id, api_url) is not Eligibility.NOT_ELIGIBLE:
+                get_logger().info(f"Skipping incremental review because there was no initial review for {api_url=} yet")
+                return {}
         get_logger().info(f"Performing incremental review for {api_url=} because of {event=} and {action=}")
         await _perform_auto_commands_github("push_commands", agent, body, api_url, log_context)
 
@@ -205,25 +219,26 @@ async def handle_request(body: Dict[str, Any], event: str):
         return {}
     agent = PRAgent()
     sender = body.get("sender", {}).get("login")
+    sender_id = body.get("sender", {}).get("id")
     app_name = get_settings().get("CONFIG.APP_NAME", "Unknown")
     log_context = {"action": action, "event": event, "sender": sender, "server_type": "github_app",
-                   "request_id": uuid.uuid4().hex, "app_name": app_name}
+                   "request_id": uuid.uuid4().hex, "build_number": build_number, "app_name": app_name}
 
     # handle comments on PRs
     if action == 'created':
         get_logger().debug(f'Request body', artifact=body)
-        await handle_comments_on_pr(body, event, sender, action, log_context, agent)
+        await handle_comments_on_pr(body, event, sender, sender_id, action, log_context, agent)
     # handle new PRs
     elif event == 'pull_request' and action != 'synchronize':
         get_logger().debug(f'Request body', artifact=body)
-        await handle_new_pr_opened(body, event, sender, action, log_context, agent)
+        await handle_new_pr_opened(body, event, sender, sender_id, action, log_context, agent)
     # handle pull_request event with synchronize action - "push trigger" for new commits
     elif event == 'pull_request' and action == 'synchronize':
         get_logger().debug(f'Request body', artifact=body)
-        await handle_push_trigger_for_new_commits(body, event, sender, action, log_context, agent)
+        await handle_push_trigger_for_new_commits(body, event, sender, sender_id, action, log_context, agent)
     else:
         get_logger().info(f"event {event=} action {action=} does not require any handling")
-        return {}
+    return {}
 
 
 def handle_line_comments(body: Dict, comment_body: [str, Any]) -> str:
