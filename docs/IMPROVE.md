@@ -3,7 +3,6 @@
 ## Table of Contents
 - [Overview](#overview)
   - [Configuration options](#configuration-options)
-  - [Summarize mode](#summarize-mode)
 - [Usage Tips](#usage-tips)
     - [Extra instructions](#extra-instructions)
     - [PR footprint - regular vs summarize mode](#pr-footprint---regular-vs-summarize-mode)
@@ -16,7 +15,7 @@ The tool can be triggered automatically every time a new PR is [opened](https://
 /improve
 ```
 
-### Summarized vs commitable code suggestions
+### Summarized vs committable code suggestions
 
 The code suggestions can be presented as a single comment (via `pr_code_suggestions.summarize=true`):
 ___
