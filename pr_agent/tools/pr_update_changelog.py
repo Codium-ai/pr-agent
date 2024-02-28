@@ -9,7 +9,7 @@ from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAIHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.config_loader import get_settings
-from pr_agent.git_providers import get_git_provider
+from pr_agent.git_providers import get_git_provider, GithubProvider
 from pr_agent.git_providers.git_provider import get_main_pr_language
 from pr_agent.log import get_logger
 
@@ -46,12 +46,19 @@ class PRUpdateChangelog:
                                           get_settings().pr_update_changelog_prompt.user)
 
     async def run(self):
-        # assert type(self.git_provider) == GithubProvider, "Currently only Github is supported"
-
         get_logger().info('Updating the changelog...')
         relevant_configs = {'pr_update_changelog': dict(get_settings().pr_update_changelog),
                             'config': dict(get_settings().config)}
         get_logger().debug("Relevant configs", artifacts=relevant_configs)
+
+        # currently only GitHub is supported for pushing changelog changes
+        if get_settings().pr_update_changelog.push_changelog_changes and type(self.git_provider) != GithubProvider:
+            get_logger().error("Pushing changelog changes is not currently supported for this code platform")
+            if get_settings().config.publish_output:
+                self.git_provider.publish_comment(
+                    "Pushing changelog changes is not currently supported for this code platform")
+            return
+
         if get_settings().config.publish_output:
             self.git_provider.publish_comment("Preparing changelog updates...", is_temporary=True)
 

@@ -139,19 +139,12 @@ class PRGenerateLabels:
         system_prompt = environment.from_string(get_settings().pr_custom_labels_prompt.system).render(variables)
         user_prompt = environment.from_string(get_settings().pr_custom_labels_prompt.user).render(variables)
 
-        if get_settings().config.verbosity_level >= 2:
-            get_logger().info(f"\nSystem prompt:\n{system_prompt}")
-            get_logger().info(f"\nUser prompt:\n{user_prompt}")
-
         response, finish_reason = await self.ai_handler.chat_completion(
             model=model,
             temperature=0.2,
             system=system_prompt,
             user=user_prompt
         )
-
-        if get_settings().config.verbosity_level >= 2:
-            get_logger().info(f"\nAI response:\n{response}")
 
         return response
 

@@ -9,6 +9,11 @@ class PRHelpMessage:
 
     async def run(self):
         try:
+            if not self.git_provider.is_supported("gfm_markdown"):
+                self.git_provider.publish_comment(
+                    "The `Help` tool requires gfm markdown, which is not supported by your code platform.")
+                return
+
             get_logger().info('Getting PR Help Message...')
             relevant_configs = {'pr_help': dict(get_settings().pr_help),
                                 'config': dict(get_settings().config)}
