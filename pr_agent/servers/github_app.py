@@ -217,6 +217,24 @@ def handle_closed_pr(body, event, action, log_context):
     get_logger().info("PR-Agent statistics for closed PR", analytics=True, pr_statistics=pr_statistics, **log_context)
 
 
+def get_log_context(body, event, action, build_number):
+    sender = ""
+    sender_id = ""
+    try:
+        sender = body.get("sender", {}).get("login")
+        sender_id = body.get("sender", {}).get("id")
+        repo = body.get("repository", {}).get("full_name", "")
+        git_org = body.get("organization", {}).get("login", "")
+        app_name = get_settings().get("CONFIG.APP_NAME", "Unknown")
+        log_context = {"action": action, "event": event, "sender": sender, "server_type": "github_app",
+                       "request_id": uuid.uuid4().hex, "build_number": build_number, "app_name": app_name,
+                       "repo": repo, "git_org": git_org}
+    except Exception as e:
+        get_logger().error("Failed to get log context", e)
+        log_context = {}
+    return log_context, sender, sender_id
+
+
 async def handle_request(body: Dict[str, Any], event: str):
     """
     Handle incoming GitHub webhook requests.
@@ -229,11 +247,7 @@ async def handle_request(body: Dict[str, Any], event: str):
     if not action:
         return {}
     agent = PRAgent()
-    sender = body.get("sender", {}).get("login")
-    sender_id = body.get("sender", {}).get("id")
-    app_name = get_settings().get("CONFIG.APP_NAME", "Unknown")
-    log_context = {"action": action, "event": event, "sender": sender, "server_type": "github_app",
-                   "request_id": uuid.uuid4().hex, "build_number": build_number, "app_name": app_name}
+    log_context, sender, sender_id = get_log_context(body, event, action, build_number)
 
     # handle comments on PRs
     if action == 'created':
