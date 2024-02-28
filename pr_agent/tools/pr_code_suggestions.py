@@ -124,6 +124,12 @@ class PRCodeSuggestions:
             get_logger().error(f"Failed to generate code suggestions for PR, error: {e}")
             if self.progress_response:
                 self.progress_response.delete()
+            else:
+                try:
+                    self.git_provider.remove_initial_comment()
+                    self.git_provider.publish_comment(f"Failed to generate code suggestions for PR")
+                except Exception as e:
+                    pass
 
     async def _prepare_prediction(self, model: str):
         self.patches_diff = get_pr_diff(self.git_provider,

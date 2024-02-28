@@ -136,7 +136,7 @@ try_fix_invalid_inline_comments = true
 # these toggles allows running the github app from custom deployments
 override_deployment_type = true
 # settings for "pull_request" event
-handle_pr_actions = ['opened', 'reopened', 'ready_for_review', 'review_requested']
+handle_pr_actions = ['opened', 'reopened', 'ready_for_review']
 pr_commands = [
     "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true",
     "/review --pr_reviewer.num_code_suggestions=0",
