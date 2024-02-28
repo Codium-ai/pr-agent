@@ -170,7 +170,6 @@ class PRReviewer:
             user=user_prompt
         )
 
-        get_logger().debug(f"\nAI response:\n{response}")
         return response
 
     def _prepare_pr_review(self) -> str:
