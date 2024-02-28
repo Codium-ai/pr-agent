@@ -344,11 +344,13 @@ class PRCodeSuggestions:
                 for ext in extensions:
                     extension_to_language[ext] = language
 
+            pr_body = "## PR Code Suggestions\n\n"
+
             pr_body += "<table>"
             header = f"Suggestions"
-            delta = 75
+            delta = 76
             header += "&nbsp; " * delta
-            pr_body += f"""<thead><tr><th></th><th>{header}</th></tr></thead>"""
+            pr_body += f"""<thead><tr><td>Category</td><td align=left>{header}</td></tr></thead>"""
             pr_body += """<tbody>"""
             suggestions_labels = dict()
             # add all suggestions related to each label
@@ -359,11 +361,13 @@ class PRCodeSuggestions:
                 suggestions_labels[label].append(suggestion)
 
             for label, suggestions in suggestions_labels.items():
-                pr_body += f"""<tr><td><strong>{label}</strong></td>"""
-                pr_body += f"""<td>"""
+                num_suggestions=len(suggestions)
+                # pr_body += f"""<tr><td><strong>{label}</strong></td>"""
+                pr_body += f"""<tr><td rowspan={num_suggestions}><strong>{label.capitalize()}</strong></td>\n"""
+                # pr_body += f"""<td>"""
                 # pr_body += f"""<details><summary>{len(suggestions)} suggestions</summary>"""
-                pr_body += f"""<table>"""
-                for suggestion in suggestions:
+                # pr_body += f"""<table>"""
+                for i, suggestion in enumerate(suggestions):
 
                     relevant_file = suggestion['relevant_file'].strip()
                     relevant_lines_start = int(suggestion['relevant_lines_start'])
@@ -391,17 +395,17 @@ class PRCodeSuggestions:
 
                     example_code = ""
                     example_code += f"```diff\n{patch}\n```\n"
-
-                    pr_body += f"""<tr><td>"""
+                    if i==0:
+                        pr_body += f"""<td>\n\n"""
+                    else:
+                        pr_body += f"""<tr><td>\n\n"""
                     suggestion_summary = suggestion['one_sentence_summary'].strip()
                     if '`' in suggestion_summary:
                         suggestion_summary = replace_code_tags(suggestion_summary)
-                    suggestion_summary = suggestion_summary + max((77-len(suggestion_summary)), 0)*"&nbsp;"
+                    # suggestion_summary = suggestion_summary + max((77-len(suggestion_summary)), 0)*"&nbsp;"
                     pr_body += f"""\n\n<details><summary>{suggestion_summary}</summary>\n\n___\n\n"""
 
                     pr_body += f"""
-  
-  
 **{suggestion_content}**
     
 [{relevant_file} {range_str}]({code_snippet_link})
@@ -409,9 +413,9 @@ class PRCodeSuggestions:
 {example_code}                   
 """
                     pr_body += f"</details>"
+
                     pr_body += f"</td></tr>"
 
-                pr_body += """</table>"""
                 # pr_body += "</details>"
                 pr_body += """</td></tr>"""
             pr_body += """</tr></tbody></table>"""
