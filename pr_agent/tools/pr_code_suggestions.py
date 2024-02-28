@@ -363,7 +363,7 @@ class PRCodeSuggestions:
             for label, suggestions in suggestions_labels.items():
                 num_suggestions=len(suggestions)
                 # pr_body += f"""<tr><td><strong>{label}</strong></td>"""
-                pr_body += f"""<tr><td rowspan={num_suggestions}><strong>{label}</strong></td>\n"""
+                pr_body += f"""<tr><td rowspan={num_suggestions}><strong>{label.capitalize()}</strong></td>\n"""
                 # pr_body += f"""<td>"""
                 # pr_body += f"""<details><summary>{len(suggestions)} suggestions</summary>"""
                 # pr_body += f"""<table>"""
