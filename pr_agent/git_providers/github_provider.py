@@ -25,7 +25,7 @@ class GithubProvider(GitProvider):
         except Exception:
             self.installation_id = None
         self.base_url = get_settings().get("GITHUB.BASE_URL", "https://api.github.com").rstrip("/")
-        self.base_url_html = self.base_url.split("api")[0].rstrip("/") if "api" in self.base_url else "https://github.com"
+        self.base_url_html = self.base_url.split("api/")[0].rstrip("/") if "api/" in self.base_url else "https://github.com"
         self.github_client = self._get_github_client()
         self.repo = None
         self.pr_num = None
