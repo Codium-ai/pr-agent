@@ -368,11 +368,21 @@ class GitLabProvider(GitProvider):
         except Exception:
             return ""
 
-    def add_eyes_reaction(self, issue_comment_id: int, disable_eyes: bool = False) -> Optional[int]:
-        return True
+    def add_eyes_reaction(self) -> Optional[int]:
+      try:
+        emoji = self.mr.awardemojis.create({'name': 'eyes'})
+        return emoji
+      except Exception as e:
+        get_logger().exception(f"Failed to add eyes reaction, error: {e}")
+        return False
 
-    def remove_reaction(self, issue_comment_id: int, reaction_id: int) -> bool:
+    def remove_reaction(self, emoji) -> bool:
+      try:
+        emoji.delete()
         return True
+      except Exception as e:
+        get_logger().exception(f"Failed to remove eyes reaction, error: {e}")
+        return False
 
     def _parse_merge_request_url(self, merge_request_url: str) -> Tuple[str, int]:
         parsed_url = urlparse(merge_request_url)

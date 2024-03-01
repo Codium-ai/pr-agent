@@ -111,11 +111,17 @@ class PRReviewer:
             get_logger().info(f'Reviewing PR: {self.pr_url} ...')
 
             if get_settings().config.publish_output:
-                self.git_provider.publish_comment("Preparing review...", is_temporary=True)
+                if get_settings().config.use_eyes_for_progress:
+                    emoji = self.git_provider.add_eyes_reaction()
+                else:
+                    self.git_provider.publish_comment("Preparing review...", is_temporary=True)
 
             await retry_with_fallback_models(self._prepare_prediction, model_type=ModelType.TURBO)
             if not self.prediction:
-                self.git_provider.remove_initial_comment()
+                if get_settings().config.use_eyes_for_progress:
+                    self.git_provider.remove_reaction(emoji)
+                else:
+                    self.git_provider.remove_initial_comment()
                 return None
 
             get_logger().info('Preparing PR review...')
@@ -133,7 +139,11 @@ class PRReviewer:
                 else:
                     self.git_provider.publish_comment(pr_comment)
 
-                self.git_provider.remove_initial_comment()
+
+                if get_settings().config.use_eyes_for_progress:
+                    self.git_provider.remove_reaction(emoji)
+                else:
+                    self.git_provider.remove_initial_comment()
                 if previous_review_comment:
                     self._remove_previous_review_comment(previous_review_comment)
                 if get_settings().pr_reviewer.inline_code_comments:
