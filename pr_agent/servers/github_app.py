@@ -111,6 +111,8 @@ async def handle_comments_on_pr(body: Dict[str, Any],
             get_logger().info(f"Processing comment on PR {api_url=}, comment_body={comment_body}")
             await agent.handle_request(api_url, comment_body,
                         notify=lambda: provider.add_eyes_reaction(comment_id, disable_eyes=disable_eyes))
+        else:
+            get_logger().info(f"User {sender=} is not eligible to process comment on PR {api_url=}")
 
 async def handle_new_pr_opened(body: Dict[str, Any],
                                event: str,
@@ -136,6 +138,8 @@ async def handle_new_pr_opened(body: Dict[str, Any],
     if action in get_settings().github_app.handle_pr_actions:  # ['opened', 'reopened', 'ready_for_review', 'review_requested']
         if get_identity_provider().verify_eligibility("github", sender_id, api_url) is not Eligibility.NOT_ELIGIBLE:
             await _perform_auto_commands_github("pr_commands", agent, body, api_url, log_context)
+        else:
+            get_logger().info(f"User {sender=} is not eligible to process PR {api_url=}")
 
 async def handle_push_trigger_for_new_commits(body: Dict[str, Any],
                         event: str,

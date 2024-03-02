@@ -2,16 +2,25 @@
 
 ### Table of Contents
 - [Introduction](#introduction)
-- [Local Repo (CLI)](#working-from-a-local-repo-cli)
-- [Online Usage](#online-usage)
-- [GitHub App](#working-with-github-app)
-- [GitHub Action](#working-with-github-action)
-- [GitLab Webhook](#working-with-gitlab-webhook)
-- [BitBucket App](#working-with-bitbucket-self-hosted-app)
-- [Azure DevOps Provider](#azure-devops-provider)
+- [Configuration Options](#configuration-options)
+- [Managing Mail Notifications](#managing-mail-notifications)
+- [Usage Types](#usage-types)
+  - [Local Repo (CLI)](#working-from-a-local-repo-cli)
+  - [Online Usage](#online-usage)
+  - [GitHub App](#working-with-github-app)
+  - [GitHub Action](#working-with-github-action)
+  - [GitLab Webhook](#working-with-gitlab-webhook)
+  - [BitBucket App](#working-with-bitbucket-self-hosted-app)
+  - [Azure DevOps Provider](#azure-devops-provider)
 - [Additional Configurations Walkthrough](#appendix---additional-configurations-walkthrough)
+  - [Ignoring files from analysis](#ignoring-files-from-analysis)
+  - [Extra instructions](#extra-instructions)
+  - [Working with large PRs](#working-with-large-prs)
+  - [Changing a model](#changing-a-model)
+  - [Patch Extra Lines](#patch-extra-lines)
+  - [Editing the prompts](#editing-the-prompts)
 
-### Introduction
+## Introduction
 
 After [installation](/INSTALL.md), there are three basic ways to invoke CodiumAI PR-Agent:
 1. Locally running a CLI command
@@ -24,14 +33,46 @@ For online usage, you will need to setup either a [GitHub App](INSTALL.md#method
 GitHub App and GitHub Action also enable to run PR-Agent specific tool automatically when a new PR is opened.
 
 
-#### The configuration file
-- The different tools and sub-tools used by CodiumAI PR-Agent are adjustable via the **[configuration file](pr_agent/settings/configuration.toml)**.
+### git provider
+The [git_provider](pr_agent/settings/configuration.toml#L4) field in the configuration file determines the GIT provider that will be used by PR-Agent. Currently, the following providers are supported:
+`
+"github", "gitlab", "bitbucket", "azure", "codecommit", "local", "gerrit"
+`
+
+## Configuration Options
+
+The different tools and sub-tools used by CodiumAI PR-Agent are adjustable via the **[configuration file](pr_agent/settings/configuration.toml)**.
+
 In addition to general configuration options, each tool has its own configurations. For example, the `review` tool will use parameters from the [pr_reviewer](/pr_agent/settings/configuration.toml#L16) section in the configuration file.
+See the [Tools Guide](./docs/TOOLS_GUIDE.md) for a detailed description of the different tools and their configurations.
 
-- The [Tools Guide](./docs/TOOLS_GUIDE.md) provides a detailed description of the different tools and their configurations.
+There are three ways to set persistent configurations:
+1. Wiki configuration page 💎
+2. Local configuration file
+3. Global configuration file 💎
 
+In terms of precedence, wiki configurations will override local configurations, and local configurations will override global configurations.
 
-- By uploading a local `.pr_agent.toml` file to the root of the repo's main branch, you can edit and customize any configuration parameter. Note that you need to upload `.pr_agent.toml` prior to creating a PR, in order for the configuration to take effect.
+### Wiki configuration file 💎
+
+Specifically for GitHub, with PR-Agent-Pro you can set configurations by creating a page called `.pr_agent.toml` in the [wiki](https://github.com/Codium-ai/pr-agent/wiki/pr_agent.toml) of the repo. 
+The advantage of this method is that it allows to set configurations without needing to commit new content to the repo - just edit the wiki page and **save**.
+
+<kbd><img src="https://codium.ai/images/pr_agent/wiki_configuration.png" width="512"></kbd>
+
+We recommend surrounding the configuration content with triple-quotes, to allow better presentation when displayed in the wiki as markdown.
+An example content:
+
+\`\`\`<br>
+[pr_description] # /describe #<br>
+keep_original_user_title=false<br>
+\`\`\`
+
+PR-Agent will know to remove the triple-quotes when reading the configuration content.
+
+### Local configuration file
+
+By uploading a local `.pr_agent.toml` file to the root of the repo's main branch, you can edit and customize any configuration parameter. Note that you need to upload `.pr_agent.toml` prior to creating a PR, in order for the configuration to take effect.
 
 For example, if you set in `.pr_agent.toml`:
 
@@ -47,7 +88,7 @@ extra_instructions="""\
 Then you can give a list of extra instructions to the `review` tool.
 
 
-#### Global configuration file 💎
+### Global configuration file 💎
 
 If you create a repo called `pr-agent-settings` in your **organization**, it's configuration file `.pr_agent.toml` will be used as a global configuration file for any other repo that belongs to the same organization.
 Parameters from a local `.pr_agent.toml` file, in a specific repo, will override the global configuration parameters.
@@ -56,28 +97,19 @@ For example, in the GitHub organization `Codium-ai`:
 - The repo [`https://github.com/Codium-ai/pr-agent-settings`](https://github.com/Codium-ai/pr-agent-settings/blob/main/.pr_agent.toml) contains a `.pr_agent.toml` file that serves as a global configuration file for all the repos in the GitHub organization `Codium-ai`.
 - The repo [`https://github.com/Codium-ai/pr-agent`](https://github.com/Codium-ai/pr-agent/blob/main/.pr_agent.toml) inherits the global configuration file from `pr-agent-settings`.
 
-#### Ignoring files from analysis
-In some cases, you may want to exclude specific files or directories from the analysis performed by CodiumAI PR-Agent. This can be useful, for example, when you have files that are generated automatically or files that shouldn't be reviewed, like vendored code.
 
-To ignore files or directories, edit the **[ignore.toml](/pr_agent/settings/ignore.toml)** configuration file. This setting also exposes the following environment variables:
+## Managing mail notifications
 
- - `IGNORE.GLOB`
- - `IGNORE.REGEX`
+If you are subscribed to notifications for a repo with PR-Agent, we recommend turning off notifications for PR comments, to avoid lengthy emails:
 
-For example, to ignore python files in a PR with online usage, comment on a PR:
-`/review --ignore.glob=['*.py']`
+<kbd><img src="https://codium.ai/images/pr_agent/notifications.png" width="512"></kbd>
 
-To ignore python files in all PRs, set in a configuration file:
-```
-[ignore]
-glob = ['*.py']
-```
+As an alternative, you can filter in you mail provider the notifications specifically from the PR-Agent bot:
+https://www.quora.com/How-can-you-filter-emails-for-specific-people-in-Gmail#:~:text=On%20the%20Filters%20and%20Blocked,the%20body%20of%20the%20email
 
-#### git provider
-The [git_provider](pr_agent/settings/configuration.toml#L4) field in the configuration file determines the GIT provider that will be used by PR-Agent. Currently, the following providers are supported:
-`
-"github", "gitlab", "azure", "codecommit", "local", "gerrit"
-`
+<kbd><img src="https://codium.ai/images/pr_agent/filter_mail_notifications.png" width="512"></kbd>
+
+## Usage Types
 
 ### Working from a local repo (CLI)
 When running from your local repo (CLI), your local configuration file will be used.
@@ -130,23 +162,11 @@ Any configuration value in [configuration file](pr_agent/settings/configuration.
 
 
 ### Working with GitHub App
-When running PR-Agent from GitHub App, the default [configuration file](pr_agent/settings/configuration.toml) from a pre-built docker will be initially loaded.
 
-By uploading a local `.pr_agent.toml` file to the root of the repo's main branch, you can edit and customize any configuration parameter. Note that you need to upload `.pr_agent.toml` prior to creating a PR, in order for the configuration to take effect.
+#### GitHub app automatic tools when a new PR is opened
 
-For example, if you set in `.pr_agent.toml`:
-
-```
-[pr_reviewer]
-num_code_suggestions=1
-```
-
-Then you will overwrite the default number of code suggestions to 1.
-
-#### GitHub app automatic tools
 The [github_app](pr_agent/settings/configuration.toml#L108) section defines GitHub app specific configurations.  
 
-##### GitHub app automatic tools for PR actions 
 The configuration parameter `pr_commands` defines the list of tools that will be **run automatically** when a new PR is opened.
 ```
 [github_app]
@@ -159,7 +179,7 @@ pr_commands = [
 This means that when a new PR is opened/reopened or marked as ready for review, PR-Agent will run the `describe`, `review` and `improve` tools.  
 For the `describe` tool, for example, the `add_original_user_description` and `keep_original_user_title` parameters will be set to true.
 
-You can override the default tool parameters by uploading a local configuration file called `.pr_agent.toml` to the root of your repo.
+You can override the default tool parameters by using one the three options for a [configuration file](#configuration-options): **wiki**, **local**, or **global**. 
 For example, if your local `.pr_agent.toml` file contains:
 ```
 [pr_description]
@@ -181,7 +201,8 @@ ignore_pr_title = ["^[Auto]", ".*ignore.*"]
 ```
 will ignore PRs with titles that start with "Auto" or contain the word "ignore".
 
-##### GitHub app automatic tools for push actions (commits to an open PR)
+#### GitHub app automatic tools for push actions (commits to an open PR)
+
 In addition to running automatic tools when a PR is opened, the GitHub app can also respond to new code that is pushed to an open PR.
 
 The configuration toggle `handle_push_trigger` can be used to enable this feature.  
@@ -199,29 +220,6 @@ For the `describe` tool, the `add_original_user_description` and `keep_original_
 For the `review` tool, it will run in incremental mode, and the `remove_previous_review_comment` parameter will be set to true.
 
 Much like the configurations for `pr_commands`, you can override the default tool parameters by uploading a local configuration file to the root of your repo.
-
-#### Editing the prompts
-The prompts for the various PR-Agent tools are defined in the `pr_agent/settings` folder.
-In practice, the prompts are loaded and stored as a standard setting object.
-Hence, editing them is similar to editing any other configuration value - just place the relevant key in `.pr_agent.toml`file, and override the default value.
-
-For example, if you want to edit the prompts of the [describe](./pr_agent/settings/pr_description_prompts.toml) tool, you can add the following to your `.pr_agent.toml` file:
-```
-[pr_description_prompt]
-system="""
-...
-"""
-user="""
-...
-"""
-```
-Note that the new prompt will need to generate an output compatible with the relevant [post-process function](./pr_agent/tools/pr_description.py#L137).
-
-#### Managing notifications
-If you are subscribed to notifications for a repo with PR-Agent, we recommend turning off notifications for PR comments, to avoid lengthy emails:
-
-<kbd><img src="https://codium.ai/images/pr_agent/notifications.png" width="512"></kbd>
-
 
 ### Working with GitHub Action
 `GitHub Action` is a different way to trigger PR-Agent tools, and uses a different configuration mechanism than `GitHub App`.
@@ -245,6 +243,7 @@ For example, you can set an environment variable: `pr_description.add_original_u
 [pr_description]
 add_original_user_description = false
 ```
+
 ### Working with GitLab Webhook
 After setting up a GitLab webhook, to control which commands will run automatically when a new PR is opened, you can set the `pr_commands` parameter in the configuration file, similar to the GitHub App:
 ```
@@ -332,8 +331,25 @@ webhook_password = "<basic auth password>"
 > :warning: **Ensure that the webhook endpoint is only accessible over HTTPS** to mitigate the risk of credential interception when using basic authentication.
 
 
-### Appendix - additional configurations walkthrough
+## Appendix - additional configurations walkthrough
 
+
+#### Ignoring files from analysis
+In some cases, you may want to exclude specific files or directories from the analysis performed by CodiumAI PR-Agent. This can be useful, for example, when you have files that are generated automatically or files that shouldn't be reviewed, like vendored code.
+
+To ignore files or directories, edit the **[ignore.toml](/pr_agent/settings/ignore.toml)** configuration file. This setting also exposes the following environment variables:
+
+ - `IGNORE.GLOB`
+ - `IGNORE.REGEX`
+
+For example, to ignore python files in a PR with online usage, comment on a PR:
+`/review --ignore.glob=['*.py']`
+
+To ignore python files in all PRs, set in a configuration file:
+```
+[ignore]
+glob = ['*.py']
+```
 
 #### Extra instructions
 All PR-Agent tools have a parameter called `extra_instructions`, that enables to add free-text extra instructions. Example usage:
@@ -496,3 +512,21 @@ patch_extra_lines=3
 
 Increasing this number provides more context to the model, but will also increase the token budget.
 If the PR is too large (see [PR Compression strategy](./PR_COMPRESSION.md)), PR-Agent automatically sets this number to 0, using the original git patch.
+
+
+#### Editing the prompts
+The prompts for the various PR-Agent tools are defined in the `pr_agent/settings` folder.
+In practice, the prompts are loaded and stored as a standard setting object.
+Hence, editing them is similar to editing any other configuration value - just place the relevant key in `.pr_agent.toml`file, and override the default value.
+
+For example, if you want to edit the prompts of the [describe](./pr_agent/settings/pr_description_prompts.toml) tool, you can add the following to your `.pr_agent.toml` file:
+```
+[pr_description_prompt]
+system="""
+...
+"""
+user="""
+...
+"""
+```
+Note that the new prompt will need to generate an output compatible with the relevant [post-process function](./pr_agent/tools/pr_description.py#L137).

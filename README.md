@@ -31,6 +31,13 @@ Making pull requests less painful with an AI agent
 - [Why use PR-Agent?](#why-use-pr-agent)
   
 ## News and Updates
+
+### Feb 29, 2024
+- You can now use the repo's [wiki page](./Usage.md#configuration) to set configurations for PR-Agent 💎
+
+<kbd><img src="https://codium.ai/images/pr_agent/wiki_configuration.png" width="512"></kbd>
+
+
 ### Feb 21, 2024
 - Added a new command, `/help`, to easily provide a list of available tools and their descriptions, and run them interactively.
 
@@ -93,7 +100,7 @@ CodiumAI PR-Agent is an open-source tool to help efficiently review and handle p
 |       | Adaptive and token-aware file patch fitting                                                                                             | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |       | Multiple models support                                                                                                                 | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |       | [Static code analysis](https://github.com/Codium-ai/pr-agent/blob/main/docs/Analyze.md) 💎                                               | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-|       | [Global configuration](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#global-configuration-file-) 💎                           | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+|       | [Global and wiki configurations](./Usage.md#configuration) 💎                           | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 |       | [PR Actions](https://www.codium.ai/images/pr_agent/pr-actions.mp4) 💎                                                                    | :white_check_mark: |                    |                    |                    |
 - 💎 means this feature is available only in [PR-Agent Pro](https://www.codium.ai/pricing/)
 - Support for additional git providers is described in [here](./docs/Full_environments.md)
