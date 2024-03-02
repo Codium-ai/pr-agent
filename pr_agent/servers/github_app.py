@@ -22,7 +22,7 @@ from pr_agent.identity_providers.identity_provider import Eligibility
 from pr_agent.log import LoggingFormat, get_logger, setup_logger
 from pr_agent.servers.utils import DefaultDictWithTimeout, verify_signature
 
-setup_logger(fmt=LoggingFormat.JSON)
+setup_logger(fmt=LoggingFormat.JSON, level="DEBUG")
 base_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 build_number_path = os.path.join(base_path, "build_number.txt")
 if os.path.exists(build_number_path):
