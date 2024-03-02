@@ -33,7 +33,7 @@ Making pull requests less painful with an AI agent
 ## News and Updates
 
 ### Feb 29, 2024
-- You can now use the repo's [wiki page](./Usage.md#configuration-options) to set configurations for PR-Agent 💎
+- You can now use the repo's [wiki page](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#configuration-options) to set configurations for PR-Agent 💎
 
 <kbd><img src="https://codium.ai/images/pr_agent/wiki_configuration.png" width="512"></kbd>
 
