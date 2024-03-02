@@ -4,7 +4,7 @@
 - [Introduction](#introduction)
 - [Configuration Options](#configuration-options)
 - [Managing Mail Notifications](#managing-mail-notifications)
-- [Usage Types](#usage)
+- [Usage Types](#usage-types)
   - [Local Repo (CLI)](#working-from-a-local-repo-cli)
   - [Online Usage](#online-usage)
   - [GitHub App](#working-with-github-app)
@@ -18,6 +18,7 @@
   - [Working with large PRs](#working-with-large-prs)
   - [Changing a model](#changing-a-model)
   - [Patch Extra Lines](#patch-extra-lines)
+  - [Editing the prompts](#editing-the-prompts)
 
 ## Introduction
 
@@ -220,24 +221,6 @@ For the `review` tool, it will run in incremental mode, and the `remove_previous
 
 Much like the configurations for `pr_commands`, you can override the default tool parameters by uploading a local configuration file to the root of your repo.
 
-#### Editing the prompts
-The prompts for the various PR-Agent tools are defined in the `pr_agent/settings` folder.
-In practice, the prompts are loaded and stored as a standard setting object.
-Hence, editing them is similar to editing any other configuration value - just place the relevant key in `.pr_agent.toml`file, and override the default value.
-
-For example, if you want to edit the prompts of the [describe](./pr_agent/settings/pr_description_prompts.toml) tool, you can add the following to your `.pr_agent.toml` file:
-```
-[pr_description_prompt]
-system="""
-...
-"""
-user="""
-...
-"""
-```
-Note that the new prompt will need to generate an output compatible with the relevant [post-process function](./pr_agent/tools/pr_description.py#L137).
-
-
 ### Working with GitHub Action
 `GitHub Action` is a different way to trigger PR-Agent tools, and uses a different configuration mechanism than `GitHub App`.
 You can configure settings for `GitHub Action` by adding environment variables under the env section in `.github/workflows/pr_agent.yml` file. 
@@ -260,6 +243,7 @@ For example, you can set an environment variable: `pr_description.add_original_u
 [pr_description]
 add_original_user_description = false
 ```
+
 ### Working with GitLab Webhook
 After setting up a GitLab webhook, to control which commands will run automatically when a new PR is opened, you can set the `pr_commands` parameter in the configuration file, similar to the GitHub App:
 ```
@@ -528,3 +512,21 @@ patch_extra_lines=3
 
 Increasing this number provides more context to the model, but will also increase the token budget.
 If the PR is too large (see [PR Compression strategy](./PR_COMPRESSION.md)), PR-Agent automatically sets this number to 0, using the original git patch.
+
+
+#### Editing the prompts
+The prompts for the various PR-Agent tools are defined in the `pr_agent/settings` folder.
+In practice, the prompts are loaded and stored as a standard setting object.
+Hence, editing them is similar to editing any other configuration value - just place the relevant key in `.pr_agent.toml`file, and override the default value.
+
+For example, if you want to edit the prompts of the [describe](./pr_agent/settings/pr_description_prompts.toml) tool, you can add the following to your `.pr_agent.toml` file:
+```
+[pr_description_prompt]
+system="""
+...
+"""
+user="""
+...
+"""
+```
+Note that the new prompt will need to generate an output compatible with the relevant [post-process function](./pr_agent/tools/pr_description.py#L137).
