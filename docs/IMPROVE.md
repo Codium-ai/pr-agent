@@ -36,6 +36,14 @@ An extended mode, which does not involve PR Compression and provides more compre
 ```
 /improve --extended
 ```
+
+or by setting:
+```
+[pr_code_suggestions]
+auto_extended_mode=true
+```
+(True by default).
+
 Note that the extended mode divides the PR code changes into chunks, up to the token limits, where each chunk is handled separately (might use multiple calls to GPT-4 for large PRs).
 Hence, the total number of suggestions is proportional to the number of chunks, i.e., the size of the PR.
 
@@ -53,7 +61,7 @@ To edit [configurations](./../pr_agent/settings/configuration.toml#L66) related 
 - `summarize`: if set to true, the tool will display the suggestions in a single comment. Default is false.
 - `enable_help_text`: if set to true, the tool will display a help text in the comment. Default is true.
 #### params for '/improve --extended' mode
-- `auto_extended_mode`: enable extended mode automatically (no need for the `--extended` option). Default is false.
+- `auto_extended_mode`: enable extended mode automatically (no need for the `--extended` option). Default is true.
 - `num_code_suggestions_per_chunk`: number of code suggestions provided by the 'improve' tool, per chunk. Default is 8.
 - `rank_extended_suggestions`: if set to true, the tool will rank the suggestions, based on importance. Default is true.
 - `max_number_of_calls`: maximum number of chunks. Default is 5.
