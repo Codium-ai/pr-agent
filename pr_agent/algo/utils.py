@@ -28,19 +28,24 @@ def get_setting(key: str) -> Any:
     except Exception:
         return global_settings.get(key, None)
 
+
 def emphasize_header(text: str) -> str:
-    # Finding the position of the first occurrence of ": "
-    colon_position = text.find(": ")
+    try:
+        # Finding the position of the first occurrence of ": "
+        colon_position = text.find(": ")
 
-    # Splitting the string and wrapping the first part in <strong> tags
-    if colon_position != -1:
-        # Everything before the colon (inclusive) is wrapped in <strong> tags
-        transformed_string = "<strong>" + text[:colon_position + 1] + "</strong>" + text[colon_position + 1:]
-    else:
-        # If there's no ": ", return the original string
-        transformed_string = text
+        # Splitting the string and wrapping the first part in <strong> tags
+        if colon_position != -1:
+            # Everything before the colon (inclusive) is wrapped in <strong> tags
+            transformed_string = "<strong>" + text[:colon_position + 1] + "</strong>" + text[colon_position + 1:]
+        else:
+            # If there's no ": ", return the original string
+            transformed_string = text
 
-    return transformed_string
+        return transformed_string
+    except Exception as e:
+        get_logger().exception(f"Failed to emphasize header: {e}")
+        return text
 
 def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
     """
