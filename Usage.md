@@ -60,7 +60,7 @@ The advantage of this method is that it allows to set configurations without nee
 
 <kbd><img src="https://codium.ai/images/pr_agent/wiki_configuration.png" width="512"></kbd>
 
-We recommend surrounding the configuration content with triple-quotes, to allow better presentation when displayed in the wiki as markdown.
+Click [here](https://codium.ai/images/pr_agent/wiki_configuration_pr_agent.mp4) to see a short instructional video. We recommend surrounding the configuration content with triple-quotes, to allow better presentation when displayed in the wiki as markdown.
 An example content:
 
 \`\`\`<br>
