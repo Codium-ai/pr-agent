@@ -28,6 +28,25 @@ def get_setting(key: str) -> Any:
     except Exception:
         return global_settings.get(key, None)
 
+
+def emphasize_header(text: str) -> str:
+    try:
+        # Finding the position of the first occurrence of ": "
+        colon_position = text.find(": ")
+
+        # Splitting the string and wrapping the first part in <strong> tags
+        if colon_position != -1:
+            # Everything before the colon (inclusive) is wrapped in <strong> tags
+            transformed_string = "<strong>" + text[:colon_position + 1] + "</strong>" + text[colon_position + 1:]
+        else:
+            # If there's no ": ", return the original string
+            transformed_string = text
+
+        return transformed_string
+    except Exception as e:
+        get_logger().exception(f"Failed to emphasize header: {e}")
+        return text
+
 def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
     """
     Convert a dictionary of data into markdown format.
@@ -64,7 +83,10 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
         if gfm_supported:
             if 'Estimated effort to review' in key_nice:
                 key_nice = 'Estimated&nbsp;effort&nbsp;to&nbsp;review [1-5]'
-            if 'possible issues' in key_nice.lower():
+            if 'security concerns' in key_nice.lower():
+                value = emphasize_header(value.strip())
+                markdown_text += f"<tr><td> {emoji}&nbsp;<strong>{key_nice}</strong></td><td>\n\n{value}\n\n</td></tr>\n"
+            elif 'possible issues' in key_nice.lower():
                 value = value.strip()
                 issues = value.split('\n- ')
                 number_of_issues = len(issues)
@@ -72,12 +94,13 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
                     markdown_text += f"<tr><td rowspan={number_of_issues}> {emoji}&nbsp;<strong>{key_nice}</strong></td>\n"
                     for i, issue in enumerate(issues):
                         issue = issue.strip('-').strip()
+                        issue = emphasize_header(issue.strip())
                         if i == 0:
                             markdown_text += f"<td>\n\n{issue}</td></tr>\n"
                         else:
                             markdown_text += f"<tr>\n<td>\n\n{issue}</td></tr>\n"
                 else:
-                    value = value.strip('-').strip()
+                    value = emphasize_header(value.strip('-').strip())
                     markdown_text += f"<tr><td> {emoji}&nbsp;<strong>{key_nice}</strong></td><td>\n\n{value}\n\n</td></tr>\n"
             else:
                 markdown_text += f"<tr><td> {emoji}&nbsp;<strong>{key_nice}</strong></td><td>\n\n{value}\n\n</td></tr>\n"
