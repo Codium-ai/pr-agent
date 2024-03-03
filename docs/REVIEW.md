@@ -77,7 +77,6 @@ For example, if `minimal_commits_for_incremental_review=2` and `minimal_minutes_
 When `require_all_thresholds_for_incremental_review=true` the incremental review __will not__ run, because only 1 out of 2 conditions were met (we have enough commits but the last review is too recent),
 but when `require_all_thresholds_for_incremental_review=false` the incremental review __will__ run, because one condition is enough (we have 3 commits which is more than the configured 2).
 Default is false - the tool will run as long as at least once conditions is met.
-- `remove_previous_review_comment`: if set to true, the tool will remove the previous review comment before adding a new one. Default is false.
 
 ### PR Reflection
 By invoking:

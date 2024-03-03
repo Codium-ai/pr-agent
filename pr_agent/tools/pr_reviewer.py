@@ -119,8 +119,6 @@ class PRReviewer:
             get_logger().debug(f"PR output", artifact=pr_review)
 
             if get_settings().config.publish_output:
-                previous_review_comment = self._get_previous_review_comment()
-
                 # publish the review
                 if get_settings().pr_reviewer.persistent_comment and not self.incremental.is_incremental:
                     self.git_provider.publish_persistent_comment(pr_review,
@@ -130,8 +128,6 @@ class PRReviewer:
                     self.git_provider.publish_comment(pr_review)
 
                 self.git_provider.remove_initial_comment()
-                if previous_review_comment:
-                    self._remove_previous_review_comment(previous_review_comment)
                 if get_settings().pr_reviewer.inline_code_comments:
                     self._publish_inline_code_comments()
         except Exception as e:
@@ -295,7 +291,7 @@ class PRReviewer:
         Get the previous review comment if it exists.
         """
         try:
-            if get_settings().pr_reviewer.remove_previous_review_comment and hasattr(self.git_provider, "get_previous_review"):
+            if hasattr(self.git_provider, "get_previous_review"):
                 return self.git_provider.get_previous_review(
                     full=not self.incremental.is_incremental,
                     incremental=self.incremental.is_incremental,
@@ -308,7 +304,7 @@ class PRReviewer:
         Remove the previous review comment if it exists.
         """
         try:
-            if get_settings().pr_reviewer.remove_previous_review_comment and comment:
+            if comment:
                 self.git_provider.remove_comment(comment)
         except Exception as e:
             get_logger().exception(f"Failed to remove previous review comment, error: {e}")
