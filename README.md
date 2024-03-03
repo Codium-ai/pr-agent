@@ -47,28 +47,25 @@ Making pull requests less painful with an AI agent
 
 </kbd>
 
-
-- GitLab webhook now supports controlling which commands will [run automatically](./docs/USAGE.md#working-with-gitlab-webhook) when a new PR is opened.
 ### Feb 18, 2024
 - Introducing the `CI Feedback` tool 💎. The tool automatically triggers when a PR has a failed check. It analyzes the failed check, and provides summarized logs and analysis. Note that this feature requires read access to GitHub 'checks' and 'actions'. See [here](./docs/CI_FEEDBACK.md) for more details.
 - New ability - you can run `/ask` on specific lines of code in the PR from the PR's diff view. See [here](./docs/ASK.md#ask-lines) for more details.
 - Introducing support for [Azure DevOps Webhooks](./Usage.md#azure-devops-webhook), as well as bug fixes and improved support for several ADO commands.
 
 
-### Feb 11, 2024
-The `review` tool has been revamped, aiming to make the feedback clearer and more relevant, and better complement the `improve` tool.
-
-### Feb 6, 2024
-A new feature was added to the `review` tool - [Auto-approve PRs](./docs/REVIEW.md#auto-approval-1). If enabled, this feature enables to automatically approve PRs that meet specific criteria, by commenting on a PR: `/review auto_approve`.
-
-### Feb 2, 2024
-Added  ["PR Actions"](https://www.codium.ai/images/pr_agent/pr-actions.mp4) 💎 - interactively trigger PR-Agent tools from the PR page.
-
-
 ## Overview
 <div style="text-align:left;">
 
-CodiumAI PR-Agent is an open-source tool to help efficiently review and handle pull requests. It automatically analyzes the pull request and can provide several types of commands:
+CodiumAI PR-Agent is an open-source tool to help efficiently review and handle pull requests.
+
+- See the [Installation Guide](./INSTALL.md) for instructions on installing and running the tool on different git platforms.
+
+- See the [Usage Guide](./Usage.md) for instructions on running the PR-Agent commands via different interfaces, including _CLI_, _online usage_, or by _automatically triggering_ them when a new PR is opened.
+
+- See the [Tools Guide](./docs/TOOLS_GUIDE.md) for a detailed description of the different tools (tools are run via the commands).
+
+Supported commands per platform:
+
 |       |                                                                                                                                         | GitHub             | Gitlab             | Bitbucket          | Azure DevOps       |
 |-------|-----------------------------------------------------------------------------------------------------------------------------------------|:--------------------:|:--------------------:|:--------------------:|:--------------------:|
 | TOOLS | Review                                                                                                                                  | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
@@ -129,34 +126,38 @@ ___
 ‣ **Generate Tests 💎 ([`/test component_name`](./docs/TEST.md))**: Automatically generates unit tests for a selected component, based on the PR code changes.
 \
 ‣ **CI Feedback 💎 ([`/checks ci_job`](./docs/CI_FEEDBACK.md))**: Automatically generates feedback and analysis for a failed CI job.
-
-See the [Installation Guide](./INSTALL.md) for instructions on installing and running the tool on different git platforms.
-
-See the [Usage Guide](./Usage.md) for running the PR-Agent commands via different interfaces, including _CLI_, _online usage_, or by _automatically triggering_ them when a new PR is opened.
-
-See the [Tools Guide](./docs/TOOLS_GUIDE.md) for a detailed description of the different tools (tools are run via the commands).
-
+___
 
 ## Example results
 </div>
 <h4><a href="https://github.com/Codium-ai/pr-agent/pull/530">/describe</a></h4>
 <div align="center">
 <p float="center">
-<img src="https://www.codium.ai/images/pr_agent/describe_new_short_main.png" width="800">
+<img src="https://www.codium.ai/images/pr_agent/describe_new_short_main.png" width="512">
 </p>
 </div>
 <hr>
-<h4><a href="https://github.com/Codium-ai/pr-agent/pull/472#discussion_r1435819374">/improve</a></h4>
 
+<h4><a href="https://github.com/Codium-ai/pr-agent/pull/732#issuecomment-1975099151">/review</a></h4>
 <div align="center">
 <p float="center">
 <kbd>
-<img src="https://www.codium.ai/images/pr_agent/improve_short_main.png" width="768">
+<img src="https://www.codium.ai/images/pr_agent/review_new_short_main.png" width="512">
 </kbd>
 </p>
-
 </div>
 <hr>
+
+<h4><a href="https://github.com/Codium-ai/pr-agent/pull/732#issuecomment-1975099159">/improve</a></h4>
+<div align="center">
+<p float="center">
+<kbd>
+<img src="https://www.codium.ai/images/pr_agent/improve_new_short_main.png" width="512">
+</kbd>
+</p>
+</div>
+<hr>
+
 <h4><a href="https://github.com/Codium-ai/pr-agent/pull/530">/generate_labels</a></h4>
 <div align="center">
 <p float="center">
