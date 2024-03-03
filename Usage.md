@@ -212,14 +212,10 @@ The configuration parameter `push_commands` defines the list of tools that will 
 handle_push_trigger = true
 push_commands = [
     "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true",
-    "/review -i --pr_reviewer.remove_previous_review_comment=true",
+    "/review  --pr_reviewer.num_code_suggestions=0",
 ]
 ```
-This means that when new code is pushed to the PR, the PR-Agent will run the `describe` and incremental `review` tools.  
-For the `describe` tool, the `add_original_user_description` and `keep_original_user_title` parameters will be set to true.  
-For the `review` tool, it will run in incremental mode, and the `remove_previous_review_comment` parameter will be set to true.
-
-Much like the configurations for `pr_commands`, you can override the default tool parameters by uploading a local configuration file to the root of your repo.
+This means that when new code is pushed to the PR, the PR-Agent will run the `describe` and `review` tools, with the specified parameters.
 
 ### Working with GitHub Action
 `GitHub Action` is a different way to trigger PR-Agent tools, and uses a different configuration mechanism than `GitHub App`.
