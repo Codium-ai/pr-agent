@@ -138,15 +138,8 @@ Description:
 ======
 {%- endif %}
 
-{%- if commit_messages_str %}
-
-Commit messages:
-======
-{{commit_messages_str}}
-======
-{%- endif %}
-
 {%- if question_str %}
+
 =====
 Here are questions to better understand the PR. Use the answers to provide better feedback.
 

@@ -47,7 +47,20 @@ def emphasize_header(text: str) -> str:
         get_logger().exception(f"Failed to emphasize header: {e}")
         return text
 
-def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
+
+def unique_strings(input_list: List[str]) -> List[str]:
+    if not input_list or not isinstance(input_list, list):
+        return input_list
+    seen = set()
+    unique_list = []
+    for item in input_list:
+        if item not in seen:
+            unique_list.append(item)
+            seen.add(item)
+    return unique_list
+
+
+def convert_to_markdown(output_data: dict, gfm_supported: bool = True) -> str:
     """
     Convert a dictionary of data into markdown format.
     Args:
@@ -89,12 +102,16 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool=True) -> str:
             elif 'possible issues' in key_nice.lower():
                 value = value.strip()
                 issues = value.split('\n- ')
+                for i, _ in enumerate(issues):
+                    issues[i] = issues[i].strip().strip('-').strip()
+                issues = unique_strings(issues) # remove duplicates
                 number_of_issues = len(issues)
                 if number_of_issues > 1:
                     markdown_text += f"<tr><td rowspan={number_of_issues}> {emoji}&nbsp;<strong>{key_nice}</strong></td>\n"
                     for i, issue in enumerate(issues):
-                        issue = issue.strip('-').strip()
-                        issue = emphasize_header(issue.strip())
+                        if not issue:
+                            continue
+                        issue = emphasize_header(issue)
                         if i == 0:
                             markdown_text += f"<td>\n\n{issue}</td></tr>\n"
                         else:
