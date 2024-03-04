@@ -77,7 +77,7 @@ code_suggestions:
   language: |
     python
   suggestion_content: |
-    Add a docstring to func1()
+    ...
 {%- if summarize_mode %}
   existing_code: |
     def func1():
