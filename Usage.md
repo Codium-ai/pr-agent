@@ -374,11 +374,12 @@ For models and environments not from OPENAI, you might need to provide additiona
 ##### Azure
 To use Azure, set in your `.secrets.toml` (working from CLI), or in the GitHub `Settings > Secrets and variables` (working from GitHub App or GitHub Action):
 ```
-api_key = "" # your azure api key
+[openai]
+key = "" # your azure api key
 api_type = "azure"
 api_version = '2023-05-15'  # Check Azure documentation for the current API version
 api_base = ""  # The base URL for your Azure OpenAI resource. e.g. "https://<your resource name>.openai.azure.com"
-openai.deployment_id = ""  # The deployment name you chose when you deployed the engine
+deployment_id = ""  # The deployment name you chose when you deployed the engine
 ```
 
 and set in your configuration file:
