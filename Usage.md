@@ -4,7 +4,7 @@
 - [Introduction](#introduction)
 - [Configuration Options](#configuration-options)
 - [Managing Mail Notifications](#managing-mail-notifications)
-- [Usage Types](#usage-types)
+- [Automation and Usage](#usage-types)
   - [Local Repo (CLI)](#working-from-a-local-repo-cli)
   - [Online Usage](#online-usage)
   - [GitHub App](#working-with-github-app)
