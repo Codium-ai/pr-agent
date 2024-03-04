@@ -137,6 +137,7 @@ class PRCodeSuggestions:
                                         model,
                                         add_line_numbers_to_hunks=True,
                                         disable_extra_lines=True)
+
         if self.patches_diff:
             get_logger().debug(f"PR diff", artifact=self.patches_diff)
             self.prediction = await self._get_prediction(model, self.patches_diff)
@@ -150,11 +151,22 @@ class PRCodeSuggestions:
         environment = Environment(undefined=StrictUndefined)
         system_prompt = environment.from_string(get_settings().pr_code_suggestions_prompt.system).render(variables)
         user_prompt = environment.from_string(get_settings().pr_code_suggestions_prompt.user).render(variables)
-
         response, finish_reason = await self.ai_handler.chat_completion(model=model, temperature=0.2,
                                                                         system=system_prompt, user=user_prompt)
 
         return response
+
+    @staticmethod
+    def _truncate_if_needed(suggestion):
+        max_code_suggestion_length = get_settings().get("PR_CODE_SUGGESTIONS.MAX_CODE_SUGGESTION_LENGTH", 0)
+        suggestion_truncation_message = get_settings().get("PR_CODE_SUGGESTIONS.SUGGESTION_TRUNCATION_MESSAGE", "")
+        if max_code_suggestion_length > 0:
+            if len(suggestion['improved_code']) > max_code_suggestion_length:
+                suggestion['improved_code'] = suggestion['improved_code'][:max_code_suggestion_length]
+                suggestion['improved_code'] += f"\n{suggestion_truncation_message}"
+                get_logger().info(f"Truncated suggestion from {len(suggestion['improved_code'])} "
+                                      f"characters to {max_code_suggestion_length} characters")
+        return suggestion
 
     def _prepare_pr_code_suggestions(self) -> Dict:
         review = self.prediction.strip()
@@ -165,8 +177,22 @@ class PRCodeSuggestions:
 
         # remove invalid suggestions
         suggestion_list = []
+        one_sentence_summary_list = []
         for i, suggestion in enumerate(data['code_suggestions']):
-            if suggestion['existing_code'] != suggestion['improved_code']:
+            if get_settings().pr_code_suggestions.summarize:
+                if not suggestion or 'one_sentence_summary' not in suggestion or 'label' not in suggestion or 'relevant_file' not in suggestion:
+                    get_logger().debug(f"Skipping suggestion {i + 1}, because it is invalid: {suggestion}")
+                    continue
+
+                if suggestion['one_sentence_summary'] in one_sentence_summary_list:
+                    get_logger().debug(f"Skipping suggestion {i + 1}, because it is a duplicate: {suggestion}")
+                    continue
+
+            if ('existing_code' in suggestion) and ('improved_code' in suggestion) and (
+                    suggestion['existing_code'] != suggestion['improved_code']):
+                suggestion = self._truncate_if_needed(suggestion)
+                if get_settings().pr_code_suggestions.summarize:
+                    one_sentence_summary_list.append(suggestion['one_sentence_summary'])
                 suggestion_list.append(suggestion)
             else:
                 get_logger().debug(
@@ -244,13 +270,14 @@ class PRCodeSuggestions:
 
     async def _prepare_prediction_extended(self, model: str) -> dict:
         self.patches_diff_list = get_pr_multi_diffs(self.git_provider, self.token_handler, model,
-                                               max_calls=get_settings().pr_code_suggestions.max_number_of_calls)
+                                                    max_calls=get_settings().pr_code_suggestions.max_number_of_calls)
         if self.patches_diff_list:
             get_logger().debug(f"PR diff", artifact=self.patches_diff_list)
 
             # parallelize calls to AI:
             if get_settings().pr_code_suggestions.parallel_calls:
-                prediction_list = await asyncio.gather(*[self._get_prediction(model, patches_diff) for patches_diff in self.patches_diff_list])
+                prediction_list = await asyncio.gather(
+                    *[self._get_prediction(model, patches_diff) for patches_diff in self.patches_diff_list])
                 self.prediction_list = prediction_list
             else:
                 prediction_list = []
@@ -304,7 +331,6 @@ class PRCodeSuggestions:
             system_prompt = environment.from_string(get_settings().pr_sort_code_suggestions_prompt.system).render(
                 variables)
             user_prompt = environment.from_string(get_settings().pr_sort_code_suggestions_prompt.user).render(variables)
-
             response, finish_reason = await self.ai_handler.chat_completion(model=model, system=system_prompt,
                                                                             user=user_prompt)
 
