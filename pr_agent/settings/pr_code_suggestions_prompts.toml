@@ -40,11 +40,13 @@ Specific instructions:
 
 {%- if extra_instructions %}
 
+
 Extra instructions from the user:
 ======
 {{ extra_instructions }}
 ======
 {%- endif %}
+
 
 The output must be a YAML object equivalent to type $PRCodeSuggestions, according to the following Pydantic definitions:
 =====
@@ -80,18 +82,18 @@ code_suggestions:
     ...
 {%- if summarize_mode %}
   existing_code: |
-    def func1():
+    ...
   improved_code: |
     ...
   one_sentence_summary: |
     ...
   relevant_lines_start: 12
-  relevant_lines_end: 12
+  relevant_lines_end: 13
 {%- else %}
   existing_code: |
-    def func1():
+    ...
   relevant_lines_start: 12
-  relevant_lines_end: 12
+  relevant_lines_end: 13
   improved_code: |
     ...
 {%- endif %}
