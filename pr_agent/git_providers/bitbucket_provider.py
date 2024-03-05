@@ -160,7 +160,11 @@ class BitbucketProvider(GitProvider):
     def get_comment_url(self, comment):
         return comment.data['links']['html']['href']
 
-    def publish_persistent_comment(self, pr_comment: str, initial_header: str, update_header: bool = True, name='review'):
+    def publish_persistent_comment(self, pr_comment: str,
+                                   initial_header: str,
+                                   update_header: bool = True,
+                                   name='review',
+                                   final_update_message=True):
         try:
             for comment in self.pr.comments():
                 body = comment.raw
@@ -175,8 +179,9 @@ class BitbucketProvider(GitProvider):
                     get_logger().info(f"Persistent mode - updating comment {comment_url} to latest {name} message")
                     d = {"content": {"raw": pr_comment_updated}}
                     response = comment._update_data(comment.put(None, data=d))
-                    self.publish_comment(
-                        f"**[Persistent {name}]({comment_url})** updated to latest commit {latest_commit_url}")
+                    if final_update_message:
+                        self.publish_comment(
+                            f"**[Persistent {name}]({comment_url})** updated to latest commit {latest_commit_url}")
                     return
         except Exception as e:
             get_logger().exception(f"Failed to update persistent review, error: {e}")
