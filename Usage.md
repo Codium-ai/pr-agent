@@ -4,7 +4,7 @@
 - [Introduction](#introduction)
 - [Configuration Options](#configuration-options)
 - [Managing Mail Notifications](#managing-mail-notifications)
-- [Automation and Usage](#usage-types)
+- [Usage and Automation](#usage-and-automation)
   - [Local Repo (CLI)](#working-from-a-local-repo-cli)
   - [Online Usage](#online-usage)
   - [GitHub App](#working-with-github-app)
@@ -109,7 +109,7 @@ https://www.quora.com/How-can-you-filter-emails-for-specific-people-in-Gmail#:~:
 
 <kbd><img src="https://codium.ai/images/pr_agent/filter_mail_notifications.png" width="512"></kbd>
 
-## Usage Types
+## Usage and Automation
 
 ### Working from a local repo (CLI)
 When running from your local repo (CLI), your local configuration file will be used.
