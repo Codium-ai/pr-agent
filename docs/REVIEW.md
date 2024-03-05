@@ -36,9 +36,9 @@ To edit [configurations](./../pr_agent/settings/configuration.toml#L19)  related
 #### General options
 - `num_code_suggestions`: number of code suggestions provided by the 'review' tool. For manual comments, default is 4. For [PR-Agent app](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L142) auto tools, default is 0, meaning no code suggestions will be provided by the review tool, unless you manually edit `pr_commands`.
 - `inline_code_comments`: if set to true, the tool will publish the code suggestions as comments on the code diff. Default is false.
-- `persistent_comment`: if set to true, the review comment will be persistent, meaning that every new review request will edit the previous one. Default is true.
 - `extra_instructions`: Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".
-- `final_update_message`: if set to true, it will add a comment message after finishing calling `/review`, if a message already exits. Default is true.
+- `final_update_message`: if set to true, it will add a comment message after finishing calling `/review`. Default is true.
+- `persistent_comment`: if set to true, the review comment will be persistent, meaning that every new review request will edit the previous one. Default is true.
 
 #### Enable\\disable features
 - `require_focused_review`: if set to true, the tool will add a section - 'is the PR a focused one'. Default is false.
