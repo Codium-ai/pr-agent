@@ -87,9 +87,14 @@ class PRCodeSuggestions:
             else:
                 data = await retry_with_fallback_models(self._prepare_prediction_extended, ModelType.TURBO)
 
-
-            if (not data) or (not 'code_suggestions' in data):
-                get_logger().info('No code suggestions found for PR.')
+            if (not data) or (not 'code_suggestions' in data) or (not data['code_suggestions']):
+                get_logger().error('No code suggestions found for PR.')
+                pr_body = "## PR Code Suggestions\n\nNo code suggestions found for PR."
+                get_logger().debug(f"PR output", artifact=pr_body)
+                if self.progress_response:
+                    self.git_provider.edit_comment(self.progress_response, body=pr_body)
+                else:
+                    self.git_provider.publish_comment(pr_body)
                 return
 
             if (not self.is_extended and get_settings().pr_code_suggestions.rank_suggestions) or \
@@ -179,6 +184,7 @@ class PRCodeSuggestions:
         suggestion_list = []
         one_sentence_summary_list = []
         for i, suggestion in enumerate(data['code_suggestions']):
+            continue
             if get_settings().pr_code_suggestions.summarize:
                 if not suggestion or 'one_sentence_summary' not in suggestion or 'label' not in suggestion or 'relevant_file' not in suggestion:
                     get_logger().debug(f"Skipping suggestion {i + 1}, because it is invalid: {suggestion}")
@@ -317,7 +323,7 @@ class PRCodeSuggestions:
             suggestion_list.append(suggestion)
         data_sorted = [[]] * len(suggestion_list)
 
-        if len(suggestion_list ) == 1:
+        if len(suggestion_list) == 1:
             return suggestion_list
 
         try:
