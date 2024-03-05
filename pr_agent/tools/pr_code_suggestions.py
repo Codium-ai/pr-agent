@@ -184,7 +184,6 @@ class PRCodeSuggestions:
         suggestion_list = []
         one_sentence_summary_list = []
         for i, suggestion in enumerate(data['code_suggestions']):
-            continue
             if get_settings().pr_code_suggestions.summarize:
                 if not suggestion or 'one_sentence_summary' not in suggestion or 'label' not in suggestion or 'relevant_file' not in suggestion:
                     get_logger().debug(f"Skipping suggestion {i + 1}, because it is invalid: {suggestion}")
