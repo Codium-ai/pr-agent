@@ -38,6 +38,8 @@ To edit [configurations](./../pr_agent/settings/configuration.toml#L19)  related
 - `inline_code_comments`: if set to true, the tool will publish the code suggestions as comments on the code diff. Default is false.
 - `persistent_comment`: if set to true, the review comment will be persistent, meaning that every new review request will edit the previous one. Default is true.
 - `extra_instructions`: Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".
+- `final_update_message`: if set to true, it will add a comment message after finishing calling `/review`, if a message already exits. Default is true.
+
 #### Enable\\disable features
 - `require_focused_review`: if set to true, the tool will add a section - 'is the PR a focused one'. Default is false.
 - `require_score_review`: if set to true, the tool will add a section that scores the PR. Default is false.

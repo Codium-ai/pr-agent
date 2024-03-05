@@ -211,8 +211,8 @@ The configuration parameter `push_commands` defines the list of tools that will 
 [github_app]
 handle_push_trigger = true
 push_commands = [
-    "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true",
-    "/review  --pr_reviewer.num_code_suggestions=0",
+    "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true --pr_description.final_update_message=false",
+    "/review  --pr_reviewer.num_code_suggestions=0 --pr_reviewer.final_update_message=false",
 ]
 ```
 This means that when new code is pushed to the PR, the PR-Agent will run the `describe` and `review` tools, with the specified parameters.
