@@ -16,6 +16,7 @@ from starlette_context import context
 from starlette_context.middleware import RawContextMiddleware
 
 from pr_agent.agent.pr_agent import PRAgent
+from pr_agent.algo.utils import update_settings_from_args
 from pr_agent.config_loader import get_settings, global_settings
 from pr_agent.git_providers.utils import apply_repo_settings
 from pr_agent.identity_providers import get_identity_provider
@@ -72,6 +73,24 @@ async def handle_manifest(request: Request, response: Response):
     manifest_obj = json.loads(manifest)
     return JSONResponse(manifest_obj)
 
+
+async def _perform_commands_bitbucket(commands_conf: str, agent: PRAgent, api_url: str, log_context: dict):
+    apply_repo_settings(api_url)
+    commands = get_settings().get(f"bitbucket_app.{commands_conf}", {})
+    for command in commands:
+        try:
+            split_command = command.split(" ")
+            command = split_command[0]
+            args = split_command[1:]
+            other_args = update_settings_from_args(args)
+            new_command = ' '.join([command] + other_args)
+            get_logger().info(f"Performing command: {new_command}")
+            with get_logger().contextualize(**log_context):
+                await agent.handle_request(api_url, new_command)
+        except Exception as e:
+            get_logger().error(f"Failed to perform command {command}: {e}")
+
+
 @router.post("/webhook")
 async def handle_github_webhooks(background_tasks: BackgroundTasks, request: Request):
     log_context = {"server_type": "bitbucket_app"}
@@ -118,18 +137,19 @@ async def handle_github_webhooks(background_tasks: BackgroundTasks, request: Req
                     with get_logger().contextualize(**log_context):
                         apply_repo_settings(pr_url)
                         if get_identity_provider().verify_eligibility("bitbucket",
-                                                                         sender_id, pr_url) is not Eligibility.NOT_ELIGIBLE:
-                            auto_review = get_setting_or_env("BITBUCKET_APP.AUTO_REVIEW", None)
-                            if auto_review is None or is_true(auto_review):  # by default, auto review is enabled
-                                await PRReviewer(pr_url).run()
-                            auto_improve = get_setting_or_env("BITBUCKET_APP.AUTO_IMPROVE", None)
-                            if is_true(auto_improve):  # by default, auto improve is disabled
-                                await PRCodeSuggestions(pr_url).run()
-                            auto_describe = get_setting_or_env("BITBUCKET_APP.AUTO_DESCRIBE", None)
-                            if is_true(auto_describe):  # by default, auto describe is disabled
-                                await PRDescription(pr_url).run()
-                # with get_logger().contextualize(**log_context):
-                #     await agent.handle_request(pr_url, "review")
+                                                        sender_id, pr_url) is not Eligibility.NOT_ELIGIBLE:
+                            if get_settings().get("bitbucket_app.pr_commands"):
+                                await _perform_commands_bitbucket("pr_commands", PRAgent(), pr_url, log_context)
+                            else: # backwards compatibility
+                                auto_review = get_setting_or_env("BITBUCKET_APP.AUTO_REVIEW", None)
+                                if is_true(auto_review):  # by default, auto review is disabled
+                                    await PRReviewer(pr_url).run()
+                                auto_improve = get_setting_or_env("BITBUCKET_APP.AUTO_IMPROVE", None)
+                                if is_true(auto_improve):  # by default, auto improve is disabled
+                                    await PRCodeSuggestions(pr_url).run()
+                                auto_describe = get_setting_or_env("BITBUCKET_APP.AUTO_DESCRIBE", None)
+                                if is_true(auto_describe):  # by default, auto describe is disabled
+                                    await PRDescription(pr_url).run()
             elif event == "pullrequest:comment_created":
                 pr_url = data["data"]["pullrequest"]["links"]["html"]["href"]
                 log_context["api_url"] = pr_url
