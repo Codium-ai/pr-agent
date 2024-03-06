@@ -342,6 +342,41 @@ class BitbucketProvider(GitProvider):
     def _get_pr(self):
         return self._get_repo().pullrequests.get(self.pr_num)
 
+    def get_pr_file_content(self, file_path: str, branch: str) -> str:
+        try:
+            if branch == self.pr.source_branch:
+                branch = self.pr.data["source"]["commit"]["hash"]
+            elif branch == self.pr.destination_branch:
+                branch = self.pr.data["destination"]["commit"]["hash"]
+            url = (f"https://api.bitbucket.org/2.0/repositories/{self.workspace_slug}/{self.repo_slug}/src/"
+                   f"{branch}/{file_path}")
+            response = requests.request("GET", url, headers=self.headers)
+            if response.status_code == 404:  # not found
+                return ""
+            contents = response.text
+            return contents
+        except Exception:
+            return ""
+
+
+    def create_or_update_pr_file(self, file_path: str, branch: str, contents="", message="") -> None:
+        url = (f"https://api.bitbucket.org/2.0/repositories/{self.workspace_slug}/{self.repo_slug}/src/")
+        if not message:
+            if contents:
+                message = f"Update {file_path}"
+            else:
+                message = f"Create {file_path}"
+        files={file_path: contents}
+        data={
+            "message": message,
+            "branch": branch
+        }
+        headers = {'Authorization':self.headers['Authorization']} if 'Authorization' in self.headers else {}
+        try:
+            requests.request("POST", url, headers=headers, data=data, files=files)
+        except Exception:
+            get_logger().exception(f"Failed to create empty file {file_path} in branch {branch}")
+
     def _get_pr_file_content(self, remote_link: str):
         return ""
 
