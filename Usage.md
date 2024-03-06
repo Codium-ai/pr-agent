@@ -464,6 +464,20 @@ Your [application default credentials](https://cloud.google.com/docs/authenticat
 
 If you do want to set explicit credentials then you can use the `GOOGLE_APPLICATION_CREDENTIALS` environment variable set to a path to a json credentials file.
 
+##### Anthropic
+To use Anthropic models, set the relevant models in the configuration section of the configuration file:
+```
+[config]
+model="anthropic/claude-3-opus-20240229"
+model_turbo="anthropic/claude-3-opus-20240229"
+fallback_models=["anthropic/claude-3-opus-20240229"]
+```
+
+And also set the api key in the .secrets.toml file:
+```
+[anthropic]
+KEY = "..."
+```
 ##### Amazon Bedrock
 
 To use Amazon Bedrock and its foundational models, add the below configuration:
