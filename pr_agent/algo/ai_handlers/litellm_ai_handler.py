@@ -4,7 +4,8 @@ import boto3
 import litellm
 import openai
 from litellm import acompletion
-from openai.error import APIError, RateLimitError, Timeout, TryAgain
+# from openai.error import APIError, RateLimitError, Timeout, TryAgain
+from openai import APIError, RateLimitError, Timeout
 from retry import retry
 from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.config_loader import get_settings
@@ -77,28 +78,9 @@ class LiteLLMAIHandler(BaseAiHandler):
         """
         return get_settings().get("OPENAI.DEPLOYMENT_ID", None)
 
-    @retry(exceptions=(APIError, Timeout, TryAgain, AttributeError, RateLimitError),
+    @retry(exceptions=(APIError, Timeout, AttributeError, RateLimitError),
            tries=OPENAI_RETRIES, delay=2, backoff=2, jitter=(1, 3))
     async def chat_completion(self, model: str, system: str, user: str, temperature: float = 0.2):
-        """
-        Performs a chat completion using the OpenAI ChatCompletion API.
-        Retries in case of API errors or timeouts.
-        
-        Args:
-            model (str): The model to use for chat completion.
-            temperature (float): The temperature parameter for chat completion.
-            system (str): The system message for chat completion.
-            user (str): The user message for chat completion.
-        
-        Returns:
-            tuple: A tuple containing the response and finish reason from the API.
-        
-        Raises:
-            TryAgain: If the API response is empty or there are no choices in the response.
-            APIError: If there is an error during OpenAI inference.
-            Timeout: If there is a timeout during OpenAI inference.
-            TryAgain: If there is an attribute error during OpenAI inference.
-        """
         try:
             resp, finish_reason = None, None
             deployment_id = self.deployment_id
@@ -117,7 +99,7 @@ class LiteLLMAIHandler(BaseAiHandler):
 
             get_logger().debug("Prompts", artifact={"system": system, "user": user})
             response = await acompletion(**kwargs)
-        except (APIError, Timeout, TryAgain) as e:
+        except (APIError, Timeout) as e:
             get_logger().error("Error during OpenAI inference: ", e)
             raise
         except (RateLimitError) as e:
@@ -125,9 +107,9 @@ class LiteLLMAIHandler(BaseAiHandler):
             raise
         except (Exception) as e:
             get_logger().error("Unknown error during OpenAI inference: ", e)
-            raise TryAgain from e
+            raise APIError from e
         if response is None or len(response["choices"]) == 0:
-            raise TryAgain
+            raise APIError
         else:
             resp = response["choices"][0]['message']['content']
             finish_reason = response["choices"][0]["finish_reason"]
