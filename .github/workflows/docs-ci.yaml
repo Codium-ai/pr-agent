@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - add-docs-portal
     paths:
       - docs/**
 permissions:
