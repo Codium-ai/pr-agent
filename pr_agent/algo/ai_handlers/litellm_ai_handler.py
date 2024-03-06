@@ -4,9 +4,7 @@ import boto3
 import litellm
 import openai
 from litellm import acompletion
-# from openai.error import APIError, RateLimitError, Timeout, TryAgain
-from openai import APIError, RateLimitError, Timeout
-from retry import retry
+from tenacity import retry, retry_if_exception_type, stop_after_attempt
 from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.config_loader import get_settings
 from pr_agent.log import get_logger
@@ -28,7 +26,8 @@ class LiteLLMAIHandler(BaseAiHandler):
         """
         self.azure = False
         self.aws_bedrock_client = None
-
+        self.api_base = None
+        self.repetition_penalty = None
         if get_settings().get("OPENAI.KEY", None):
             openai.api_key = get_settings().openai.key
             litellm.openai_key = get_settings().openai.key
@@ -57,8 +56,11 @@ class LiteLLMAIHandler(BaseAiHandler):
             litellm.replicate_key = get_settings().replicate.key
         if get_settings().get("HUGGINGFACE.KEY", None):
             litellm.huggingface_key = get_settings().huggingface.key
-            if get_settings().get("HUGGINGFACE.API_BASE", None):
-                litellm.api_base = get_settings().huggingface.api_base
+        if get_settings().get("HUGGINGFACE.API_BASE", None) and 'huggingface' in get_settings().config.model:
+            litellm.api_base = get_settings().huggingface.api_base
+            self.api_base = get_settings().huggingface.api_base
+        if get_settings().get("HUGGINGFACE.REPITITION_PENALTY", None):
+            self.repetition_penalty = float(get_settings().huggingface.repetition_penalty)
         if get_settings().get("VERTEXAI.VERTEX_PROJECT", None):
             litellm.vertex_project = get_settings().vertexai.vertex_project
             litellm.vertex_location = get_settings().get(
@@ -78,8 +80,10 @@ class LiteLLMAIHandler(BaseAiHandler):
         """
         return get_settings().get("OPENAI.DEPLOYMENT_ID", None)
 
-    @retry(exceptions=(APIError, Timeout, AttributeError, RateLimitError),
-           tries=OPENAI_RETRIES, delay=2, backoff=2, jitter=(1, 3))
+    @retry(
+        retry=retry_if_exception_type((openai.APIError, openai.APIConnectionError, openai.Timeout)), # No retry on RateLimitError
+        stop=stop_after_attempt(OPENAI_RETRIES)
+    )
     async def chat_completion(self, model: str, system: str, user: str, temperature: float = 0.2):
         try:
             resp, finish_reason = None, None
@@ -93,28 +97,39 @@ class LiteLLMAIHandler(BaseAiHandler):
                 "messages": messages,
                 "temperature": temperature,
                 "force_timeout": get_settings().config.ai_timeout,
+                "api_base" : self.api_base,
             }
             if self.aws_bedrock_client:
                 kwargs["aws_bedrock_client"] = self.aws_bedrock_client
+            if self.repetition_penalty:
+                kwargs["repetition_penalty"] = self.repetition_penalty
 
             get_logger().debug("Prompts", artifact={"system": system, "user": user})
+
+            if get_settings().config.verbosity_level >= 2:
+                get_logger().info(f"\nSystem prompt:\n{system}")
+                get_logger().info(f"\nUser prompt:\n{user}")
+
             response = await acompletion(**kwargs)
-        except (APIError, Timeout) as e:
+        except (openai.APIError, openai.Timeout) as e:
             get_logger().error("Error during OpenAI inference: ", e)
             raise
-        except (RateLimitError) as e:
+        except (openai.RateLimitError) as e:
             get_logger().error("Rate limit error during OpenAI inference: ", e)
             raise
         except (Exception) as e:
             get_logger().error("Unknown error during OpenAI inference: ", e)
-            raise APIError from e
+            raise openai.APIError from e
         if response is None or len(response["choices"]) == 0:
-            raise APIError
+            raise openai.APIError
         else:
             resp = response["choices"][0]['message']['content']
             finish_reason = response["choices"][0]["finish_reason"]
             # usage = response.get("usage")
             get_logger().debug(f"\nAI response:\n{resp}")
             get_logger().debug("Full_response", artifact=response)
+
+            if get_settings().config.verbosity_level >= 2:
+                get_logger().info(f"\nAI response:\n{resp}")
 
         return resp, finish_reason
