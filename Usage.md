@@ -265,21 +265,16 @@ inline_code_comments = true
 Each time you invoke a `/review` tool, it will use inline code comments.
 
 #### BitBucket Self-Hosted App automatic tools
-You can configure in your local `.pr_agent.toml` file which tools will **run automatically** when a new PR is opened.
-
-Specifically, set the following values:
-```yaml
+to control which commands will run automatically when a new PR is opened, you can set the `pr_commands` parameter in the configuration file:
+```
 [bitbucket_app]
-auto_review = true    # set as config var in .pr_agent.toml
-auto_describe = true  # set as config var in .pr_agent.toml
-auto_improve = true   # set as config var in .pr_agent.toml
+pr_commands = [
+    "/review --pr_reviewer.num_code_suggestions=0",
+    "/improve --pr_code_suggestions.summarize=false",
+]
 ```
 
-`bitbucket_app.auto_review`, `bitbucket_app.auto_describe` and `bitbucket_app.auto_improve` are used to enable/disable automatic tools.
-If not set, the default option is that only the `review` tool will run automatically when a new PR is opened.
-
-Note that due to limitations of the bitbucket platform, the `auto_describe` tool will be able to publish a PR description only as a comment. 
-In addition, some subsections like `PR changes walkthrough` will not appear, since they require the usage of collapsible sections, which are not supported by bitbucket.
+Note that due to limitations of the bitbucket platform, not all tools or sub-options, are supported. See [here](./README.md#Overview) for an overview of the supported tools for bitbucket.
 
 ### Azure DevOps provider
 
@@ -469,6 +464,20 @@ Your [application default credentials](https://cloud.google.com/docs/authenticat
 
 If you do want to set explicit credentials then you can use the `GOOGLE_APPLICATION_CREDENTIALS` environment variable set to a path to a json credentials file.
 
+##### Anthropic
+To use Anthropic models, set the relevant models in the configuration section of the configuration file:
+```
+[config]
+model="anthropic/claude-3-opus-20240229"
+model_turbo="anthropic/claude-3-opus-20240229"
+fallback_models=["anthropic/claude-3-opus-20240229"]
+```
+
+And also set the api key in the .secrets.toml file:
+```
+[anthropic]
+KEY = "..."
+```
 ##### Amazon Bedrock
 
 To use Amazon Bedrock and its foundational models, add the below configuration:

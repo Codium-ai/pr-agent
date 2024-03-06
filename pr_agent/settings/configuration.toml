@@ -165,9 +165,10 @@ pr_commands = [
 ]
 
 [bitbucket_app]
-#auto_review = true    # set as config var in .pr_agent.toml
-#auto_describe = true  # set as config var in .pr_agent.toml
-#auto_improve = true   # set as config var in .pr_agent.toml
+pr_commands = [
+    "/review --pr_reviewer.num_code_suggestions=0",
+    "/improve --pr_code_suggestions.summarize=false",
+]
 
 
 [local]

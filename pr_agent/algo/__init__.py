@@ -19,7 +19,8 @@ MAX_TOKENS = {
     'vertex_ai/codechat-bison-32k': 32000,
     'codechat-bison': 6144,
     'codechat-bison-32k': 32000,
-    'anthropic.claude-v2': 100000,
     'anthropic.claude-instant-v1': 100000,
     'anthropic.claude-v1': 100000,
+    'anthropic.claude-v2': 100000,
+    'anthropic/claude-3-opus-20240229': 100000,
 }
