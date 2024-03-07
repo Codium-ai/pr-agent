@@ -603,12 +603,35 @@ class GithubProvider(GitProvider):
     def _get_pr(self):
         return self._get_repo().get_pull(self.pr_num)
 
-    def _get_pr_file_content(self, file: FilePatchInfo, sha: str) -> str:
+    def get_pr_file_content(self, file_path: str, branch: str) -> str:
         try:
-            file_content_str = str(self._get_repo().get_contents(file.filename, ref=sha).decoded_content.decode())
+            file_content_str = str(
+                self._get_repo()
+                .get_contents(file_path, ref=branch)
+                .decoded_content.decode()
+            )
         except Exception:
             file_content_str = ""
         return file_content_str
+
+    def create_or_update_pr_file(
+        self, file_path: str, branch: str, contents="", message=""
+    ) -> None:
+        try:
+            file_obj = self._get_repo().get_contents(file_path, ref=branch)
+            sha1=file_obj.sha
+        except Exception:
+            sha1=""
+        self.repo_obj.update_file(
+            path=file_path,
+            message=message,
+            content=contents,
+            sha=sha1,
+            branch=branch,
+        )
+
+    def _get_pr_file_content(self, file: FilePatchInfo, sha: str) -> str:
+        return self.get_pr_file_content(file.filename, sha)
 
     def publish_labels(self, pr_types):
         try:
