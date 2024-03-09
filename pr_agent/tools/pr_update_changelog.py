@@ -53,11 +53,16 @@ class PRUpdateChangelog:
         get_logger().debug("Relevant configs", artifacts=relevant_configs)
 
         # currently only GitHub is supported for pushing changelog changes
-        if get_settings().pr_update_changelog.push_changelog_changes and type(self.git_provider) != GithubProvider:
-            get_logger().error("Pushing changelog changes is not currently supported for this code platform")
+        if get_settings().pr_update_changelog.push_changelog_changes and not hasattr(
+            self.git_provider, "create_or_update_pr_file"
+        ):
+            get_logger().error(
+                "Pushing changelog changes is not currently supported for this code platform"
+            )
             if get_settings().config.publish_output:
                 self.git_provider.publish_comment(
-                    "Pushing changelog changes is not currently supported for this code platform")
+                    "Pushing changelog changes is not currently supported for this code platform"
+                )
             return
 
         if get_settings().config.publish_output:
@@ -98,11 +103,11 @@ class PRUpdateChangelog:
     def _prepare_changelog_update(self) -> Tuple[str, str]:
         answer = self.prediction.strip().strip("```").strip()  # noqa B005
         if hasattr(self, "changelog_file"):
-            existing_content = self.changelog_file.decoded_content.decode()
+            existing_content = self.changelog_file
         else:
             existing_content = ""
         if existing_content:
-            new_file_content = answer + "\n\n" + self.changelog_file.decoded_content.decode()
+            new_file_content = answer + "\n\n" + self.changelog_file
         else:
             new_file_content = answer
 
@@ -113,24 +118,27 @@ class PRUpdateChangelog:
         return new_file_content, answer
 
     def _push_changelog_update(self, new_file_content, answer):
-        self.git_provider.repo_obj.update_file(path=self.changelog_file.path,
-                                               message="Update CHANGELOG.md",
-                                               content=new_file_content,
-                                               sha=self.changelog_file.sha,
-                                               branch=self.git_provider.get_pr_branch())
-        d = dict(body="CHANGELOG.md update",
-                 path=self.changelog_file.path,
-                 line=max(2, len(answer.splitlines())),
-                 start_line=1)
+        self.git_provider.create_or_update_pr_file(
+            file_path="CHANGELOG.md",
+            branch=self.git_provider.get_pr_branch(),
+            contents=new_file_content,
+            message="Update CHANGELOG.md",
+        )
 
         sleep(5)  # wait for the file to be updated
-        last_commit_id = list(self.git_provider.pr.get_commits())[-1]
         try:
-            self.git_provider.pr.create_review(commit=last_commit_id, comments=[d])
+            if get_settings().config.git_provider == "github":
+                last_commit_id = list(self.git_provider.pr.get_commits())[-1]
+                d = dict(
+                    body="CHANGELOG.md update",
+                    path="CHANGELOG.md",
+                    line=max(2, len(answer.splitlines())),
+                    start_line=1,
+                )
+                self.git_provider.pr.create_review(commit=last_commit_id, comments=[d])
         except Exception:
             # we can't create a review for some reason, let's just publish a comment
             self.git_provider.publish_comment(f"**Changelog updates:**\n\n{answer}")
-
 
     def _get_default_changelog(self):
         example_changelog = \
@@ -149,20 +157,15 @@ Example:
 
     def _get_changlog_file(self):
         try:
-            self.changelog_file = self.git_provider.repo_obj.get_contents("CHANGELOG.md",
-                                                                          ref=self.git_provider.get_pr_branch())
-            changelog_file_lines = self.changelog_file.decoded_content.decode().splitlines()
+            self.changelog_file = self.git_provider.get_pr_file_content(
+                "CHANGELOG.md", self.git_provider.get_pr_branch()
+            )
+            changelog_file_lines = self.changelog_file.splitlines()
             changelog_file_lines = changelog_file_lines[:CHANGELOG_LINES]
             self.changelog_file_str = "\n".join(changelog_file_lines)
         except Exception:
             self.changelog_file_str = ""
-            if self.commit_changelog:
-                get_logger().info("No CHANGELOG.md file found in the repository. Creating one...")
-                changelog_file = self.git_provider.repo_obj.create_file(path="CHANGELOG.md",
-                                                                             message='add CHANGELOG.md',
-                                                                             content="",
-                                                                             branch=self.git_provider.get_pr_branch())
-                self.changelog_file = changelog_file['content']
+            self.changelog_file = ""
 
         if not self.changelog_file_str:
             self.changelog_file_str = self._get_default_changelog()
