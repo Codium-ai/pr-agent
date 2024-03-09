@@ -58,7 +58,7 @@ The GITHUB_TOKEN secret is automatically created by GitHub.
 3. Merge this change to your main branch.
 When you open your next PR, you should see a comment from `github-actions` bot with a review of your PR, and instructions on how to use the rest of the tools.
 
-4. You may configure PR-Agent by adding environment variables under the env section corresponding to any configurable property in the [configuration](pr_agent/settings/configuration.toml) file. Some examples:
+4. You may configure PR-Agent by adding environment variables under the env section corresponding to any configurable property in the [configuration](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml) file. Some examples:
 ```yaml
       env:
         # ... previous environment values
@@ -122,7 +122,7 @@ git clone https://github.com/Codium-ai/pr-agent.git
    - Copy your app's private key to the private_key field.
    - Copy your app's ID to the app_id field.
    - Copy your app's webhook secret to the webhook_secret field.
-   - Set deployment_type to 'app' in [configuration.toml](./pr_agent/settings/configuration.toml)
+   - Set deployment_type to 'app' in [configuration.toml](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml)
 
 > The .secrets.toml file is not copied to the Docker image by default, and is only used for local development.
 > If you want to use the .secrets.toml file in your Docker image, you can add remove it from the .dockerignore file.
@@ -164,7 +164,7 @@ docker push codiumai/pr-agent:github_app  # Push to your Docker repository
 
 > **Note:** When running PR-Agent from GitHub App, the default configuration file (configuration.toml) will be loaded.
 > However, you can override the default tool parameters by uploading a local configuration file `.pr_agent.toml`
-> For more information please check out the [USAGE GUIDE](./Usage.md#working-with-github-app)
+> For more information please check out the [USAGE GUIDE](../usage-guide/automations_and_usage.md#github-app)
 ---
 
 ## Deploy as a Lambda Function

@@ -27,7 +27,7 @@ All PR-Agent tools have a parameter called `extra_instructions`, that enables to
 
 The default mode of CodiumAI is to have a single call per tool, using GPT-4, which has a token limit of 8000 tokens.
 This mode provide a very good speed-quality-cost tradeoff, and can handle most PRs successfully.
-When the PR is above the token limit, it employs a [PR Compression strategy]([./PR_COMPRESSION.md](https://github.com/Codium-ai/pr-agent/blob/main/PR_COMPRESSION.md)).
+When the PR is above the token limit, it employs a [PR Compression strategy](../core-abilities/index.md).
 
 However, for very large PRs, or in case you want to emphasize quality over speed and cost, there are 2 possible solutions:
 1) [Use a model](https://codium-ai.github.io/Docs-PR-Agent/usage-guide/#changing-a-model) with larger context, like GPT-32K, or claude-100K. This solution will be applicable for all the tools.

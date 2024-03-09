@@ -8,7 +8,7 @@ nav:
     - GitHub: 'installation/github.md'
     - GitLab: 'installation/gitlab.md'
     - BitBucket: 'installation/bitbucket.md'
-    - Azure DevOps: 'installation/azure_devops.md'
+    - Azure DevOps: 'installation/azure.md'
   - Usage Guide: 
     - 'usage-guide/index.md'
     - Introduction: 'usage-guide/introduction.md'

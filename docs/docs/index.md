@@ -16,19 +16,19 @@ PR-Agent offers extensive pull request functionalities across various git provid
 |-------|---------------------------------------------------------------------------------------------------------------------|:------:|:------:|:---------:|:------------:|
 | TOOLS | Review                                                                                                              |   ✔️    |   ✔️    |   ✔️       |      ✔️      |
 |       | ⮑ Incremental                                                                                                       |   ✔️    |        |            |              |
-|       | ⮑ [SOC2 Compliance](/tools/REVIEW/#soc2-ticket-compliance){:target="_blank"} 💎                                     |   ✔️    |   ✔️    |   ✔️        |      ✔️      |
+|       | ⮑ [SOC2 Compliance](./tools/review.md#soc2-ticket-compliance-💎){:target="_blank"} 💎                                     |   ✔️    |   ✔️    |   ✔️        |      ✔️      |
 |       | Ask                                                                                                                 |   ✔️    |   ✔️    |   ✔️        |      ✔️      |
 |       | Describe                                                                                                            |   ✔️    |   ✔️    |   ✔️        |      ✔️      |
-|       | ⮑ [Inline file summary](/tools//DESCRIBE/#inline-file-summary){:target="_blank"} 💎                                 |   ✔️    |   ✔️    |   ✔️        |      ✔️      |
+|       | ⮑ [Inline file summary](./tools/describe.md#inline-file-summary-💎){:target="_blank"} 💎                                 |   ✔️    |   ✔️    |   ✔️        |      ✔️      |
 |       | Improve                                                                                                             |   ✔️    |   ✔️    |   ✔️        |      ✔️      |
 |       | ⮑ Extended                                                                                                          |   ✔️    |   ✔️    |   ✔️        |      ✔️      |
-|       | [Custom Suggestions](/tools/CUSTOM_SUGGESTIONS/){:target="_blank"} 💎                                               |   ✔️    |   ✔️    |   ✔️        |      ✔️      |
+|       | [Custom Suggestions](./tools/custom_suggestions.md){:target="_blank"} 💎                                               |   ✔️    |   ✔️    |   ✔️        |      ✔️      |
 |       | Reflect and Review                                                                                                  |   ✔️    |   ✔️    |   ✔️        |      ✔️      |
 |       | Update CHANGELOG.md                                                                                                 |   ✔️    |   ✔️    |   ✔️        |      ️       |
 |       | Find Similar Issue                                                                                                  |   ✔️    |        |             |      ️       |
-|       | [Add PR Documentation](/tools/DOCUMENTATION/){:target="_blank"} 💎                                                  |   ✔️    |   ✔️    |   ✔️        |      ✔️      |
-|       | [Generate Custom Labels](/tools/DESCRIBE/#handle-custom-labels-from-the-repos-labels-page-gem){:target="_blank"} 💎 |   ✔️    |   ✔️    |            |      ✔️      |
-|       | [Analyze PR Components](/tools/Analyze/){:target="_blank"} 💎                                                       |   ✔️    |   ✔️    |   ✔️      |      ✔️      |
+|       | [Add PR Documentation](./tools/documentation.md){:target="_blank"} 💎                                                  |   ✔️    |   ✔️    |   ✔️        |      ✔️      |
+|       | [Generate Custom Labels](./tools/describe.md#handle-custom-labels-from-the-repos-labels-page-💎){:target="_blank"} 💎 |   ✔️    |   ✔️    |            |      ✔️      |
+|       | [Analyze PR Components](./tools/analyze.md){:target="_blank"} 💎                                                       |   ✔️    |   ✔️    |   ✔️      |      ✔️      |
 |       |                                                                                                                     |        |        |            |      ️       |
 | USAGE | CLI                                                                                                                 |   ✔️    |   ✔️    |   ✔️       |      ✔️      |
 |       | App / webhook                                                                                                       |   ✔️    |   ✔️    |            |      ✔️      |
@@ -40,8 +40,8 @@ PR-Agent offers extensive pull request functionalities across various git provid
 |       | Adaptive and token-aware file patch fitting                                                                         |   ✔️    |   ✔️    |   ✔️     |   ✔️        |
 |       | Multiple models support                                                                                             |   ✔️    |   ✔️    |   ✔️       |   ✔️        |
 |       | Incremental PR review                                                                                               |   ✔️    |        |            |           |
-|       | [Static code analysis](/tools/analyze/){:target="_blank"} 💎                                                        |   ✔️    |   ✔️     |    ✔️    |   ✔️        |
-|       | [Multiple configuration options](usage-guide/configuration_options/){:target="_blank"} 💎                           |   ✔️    |   ✔️     |    ✔️    |   ✔️        |
+|       | [Static code analysis](./tools/analyze.md/){:target="_blank"} 💎                                                        |   ✔️    |   ✔️     |    ✔️    |   ✔️        |
+|       | [Multiple configuration options](./usage-guide/configuration_options.md){:target="_blank"} 💎                           |   ✔️    |   ✔️     |    ✔️    |   ✔️        |
 
 💎 marks a feature available only in [PR-Agent Pro](https://www.codium.ai/pricing/){:target="_blank"}
 
@@ -131,7 +131,7 @@ The following diagram illustrates PR-Agent tools and their flow:
 
 ![PR-Agent Tools](https://codium.ai/images/pr_agent/diagram-v0.9.png)
 
-Check out the [PR Compression strategy](./PR_COMPRESSION.md) page for more details on how we convert a code diff to a manageable LLM prompt
+Check out the [PR Compression strategy](core-abilities/index.md) page for more details on how we convert a code diff to a manageable LLM prompt
 
 
 
@@ -143,14 +143,14 @@ Check out the [PR Compression strategy](./PR_COMPRESSION.md) page for more detai
 2. **Improved privacy** - No data will be stored or used to train models. PR-Agent Pro will employ zero data retention, and will use an OpenAI account with zero data retention.
 3. **Improved support** - PR-Agent Pro users will receive priority support, and will be able to request new features and capabilities.
 4. **Extra features** -In addition to the benefits listed above, PR-Agent Pro will emphasize more customization, and the usage of static code analysis, in addition to LLM logic, to improve results. It has the following additional tools and features:
-    - [**Analyze PR components**](/tools/analyze/)
-    - [**Custom Code Suggestions**](/tools/custom_suggestions/)
-    - [**Tests**](/tools/test/)
-    - [**PR documentation**](/tools/documentation/)
-    - [**CI feedback**](./tools/ci_feedback/)
-    - [**SOC2 compliance check**](/tools/review/#soc2-ticket-compliance)
-    - [**Custom labels**](/tools/describe/#handle-custom-labels-from-the-repos-labels-page)
-    - [**Global and wiki configuration**](/usage-guide/configuration_options/#wiki-configuration-file)
+    - [**Analyze PR components**](./tools/analyze.md/)
+    - [**Custom Code Suggestions**](./tools/custom_suggestions.md/)
+    - [**Tests**](./tools/test.md/)
+    - [**PR documentation**](./tools/documentation.md/)
+    - [**CI feedback**](./tools/ci_feedback.md/)
+    - [**SOC2 compliance check**](./tools/review.md/#soc2-ticket-compliance)
+    - [**Custom labels**](./tools/describe.md/#handle-custom-labels-from-the-repos-labels-page)
+    - [**Global and wiki configuration**](./usage-guide/configuration_options.md/#wiki-configuration-file)
 
 
 
@@ -161,7 +161,7 @@ A reasonable question that can be asked is: `"Why use PR-Agent? What makes it st
 Here are some advantages of PR-Agent:
 
 - PR-Agent emphasize **real-life practical usage**. Each tool (review, improve, ask, ...) has a single GPT-4 call, no more. We believe this is critical for realistic team usage - obtaining an answer quickly (~30 seconds) and affordably.
-- PR-Agent [Compression strategy](./PR_COMPRESSION.md)  is a core ability that enables to effectively tackle both short and long PRs.
+- PR-Agent [Compression strategy](core-abilities/index.md)  is a core ability that enables to effectively tackle both short and long PRs.
 - YAML prompting strategy enables to have **modular, customizable, highly efficient tools**. 
 - PR-Agent is flexible and **highly configurable**.
 - PR-Agent supports **multiple git providers** (GitHub, Gitlab, Bitbucket, Azure devops), **multiple ways** to use the tool (CLI, GitHub Action, GitHub App, Docker, ...), and **multiple models** (GPT-4, GPT-3.5, Anthropic, Cohere, Llama, ...).
@@ -174,11 +174,3 @@ https://openai.com/enterprise-privacy
 
 When using PR-Agent Pro 💎, hosted by CodiumAI, we will not store any of your data, nor will we use it for training.
 You will also benefit from an OpenAI account with zero data retention.
-
-## Links
-
-- [Discord community](https://discord.gg/kG35uSHDBc)
-- [CodiumAI site](https://codium.ai)
-- [Blogs](https://www.codium.ai/blog/)
-- [Troubleshooting](https://www.codium.ai/blog/technical-faq-and-troubleshooting/)
-- [Support](support@codium.ai)
