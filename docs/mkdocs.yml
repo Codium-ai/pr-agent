@@ -34,8 +34,8 @@ nav:
   - Core Abilities: 'core-abilities/index.md'
 
 theme:
-  logo: https://www.codium.ai/wp-content/uploads/2023/02/codium-mobile-logo.svg
-  favicon: https://www.codium.ai/wp-content/uploads/2024/03/favicon.ico
+  logo: assets/logo.png
+  favicon: assets/favicon.ico
   name: material
   features:
     - navigation.tabs
