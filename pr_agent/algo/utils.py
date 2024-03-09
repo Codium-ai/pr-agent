@@ -70,6 +70,7 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool = True) -> str:
     """    
 
     emojis = {
+        "Can be split": "🔀",
         "Possible issues": "🔍",
         "Score": "🏅",
         "Relevant tests": "🧪",
@@ -90,7 +91,8 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool = True) -> str:
 
     for key, value in output_data['review'].items():
         if value is None or value == '' or value == {} or value == []:
-            continue
+            if key.lower() != 'can_be_split':
+                continue
         key_nice = key.replace('_', ' ').capitalize()
         emoji = emojis.get(key_nice, "")
         if gfm_supported:
@@ -99,6 +101,8 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool = True) -> str:
             if 'security concerns' in key_nice.lower():
                 value = emphasize_header(value.strip())
                 markdown_text += f"<tr><td> {emoji}&nbsp;<strong>{key_nice}</strong></td><td>\n\n{value}\n\n</td></tr>\n"
+            elif 'can be split' in key_nice.lower():
+                markdown_text += process_can_be_split(emoji, value)
             elif 'possible issues' in key_nice.lower():
                 value = value.strip()
                 issues = value.split('\n- ')
@@ -147,6 +151,37 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool = True) -> str:
     #print(markdown_text)
 
 
+    return markdown_text
+
+
+def process_can_be_split(emoji, value):
+    key_nice = "Can this PR be split?"
+    markdown_text = ""
+    if not value or isinstance(value, list) and len(value) == 1:
+        value = "No"
+        markdown_text += f"<tr><td> {emoji}&nbsp;<strong>{key_nice}</strong></td><td>\n\n{value}\n\n</td></tr>\n"
+    else:
+        number_of_splits = len(value)
+        markdown_text += f"<tr><td rowspan={number_of_splits}> {emoji}&nbsp;<strong>{key_nice}</strong></td>\n"
+        for i, split in enumerate(value):
+            title = split.get('title', '')
+            relevant_files = split.get('relevant_files', [])
+            if i == 0:
+                markdown_text += f"<td><details><summary>\nSub PR theme: <strong>{title}</strong></summary>\n\n"
+                markdown_text += f"<hr>\n"
+                markdown_text += f"Relevant files:\n"
+                markdown_text += f"<ul>\n"
+                for file in relevant_files:
+                    markdown_text += f"<li>{file}</li>\n"
+                markdown_text += f"</ul>\n\n</details></td></tr>\n"
+            else:
+                markdown_text += f"<tr>\n<td><details><summary>\nSub PR theme: <strong>{title}</strong></summary>\n\n"
+                markdown_text += f"<hr>\n"
+                markdown_text += f"Relevant files:\n"
+                markdown_text += f"<ul>\n"
+                for file in relevant_files:
+                    markdown_text += f"<li>{file}</li>\n"
+                markdown_text += f"</ul>\n\n</details></td></tr>\n"
     return markdown_text
 
 

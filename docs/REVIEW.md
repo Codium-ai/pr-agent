@@ -41,7 +41,6 @@ To edit [configurations](./../pr_agent/settings/configuration.toml#L19)  related
 - `persistent_comment`: if set to true, the review comment will be persistent, meaning that every new review request will edit the previous one. Default is true.
 
 #### Enable\\disable features
-- `require_focused_review`: if set to true, the tool will add a section - 'is the PR a focused one'. Default is false.
 - `require_score_review`: if set to true, the tool will add a section that scores the PR. Default is false.
 - `require_tests_review`: if set to true, the tool will add a section that checks if the PR contains tests. Default is true.
 - `require_estimate_effort_to_review`: if set to true, the tool will add a section that estimates the effort needed to review the PR. Default is true.
