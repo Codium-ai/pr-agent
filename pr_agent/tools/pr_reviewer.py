@@ -175,7 +175,9 @@ class PRReviewer:
         Prepare the PR review by processing the AI prediction and generating a markdown-formatted text that summarizes
         the feedback.
         """
-        data = load_yaml(self.prediction.strip())
+        data = load_yaml(self.prediction.strip(),
+                         keys_fix_yaml=["estimated_effort_to_review_[1-5]:", "security_concerns:", "possible_issues:",
+                                        "relevant_file:", "relevant_line:", "suggestion:"])
 
         if 'code_feedback' in data:
             code_feedback = data['code_feedback']
@@ -246,7 +248,7 @@ class PRReviewer:
                          keys_fix_yaml=["estimated_effort_to_review_[1-5]:", "security_concerns:", "possible_issues:",
                                         "relevant_file:", "relevant_line:", "suggestion:"])
         comments: List[str] = []
-        for suggestion in data.get('PR Feedback', {}).get('Code feedback', []):
+        for suggestion in data.get('code_feedback', []):
             relevant_file = suggestion.get('relevant_file', '').strip()
             relevant_line_in_file = suggestion.get('relevant_line', '').strip()
             content = suggestion.get('suggestion', '')
