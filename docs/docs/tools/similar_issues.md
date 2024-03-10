@@ -1,4 +1,4 @@
-# Similar Issue Tool
+## Overview
 The similar issue tool retrieves the most similar issues to the current issue.
 It can be invoked manually by commenting on any PR:
 ```
@@ -7,7 +7,9 @@ It can be invoked manually by commenting on any PR:
 For example:
 
 <kbd><img src=https://codium.ai/images/pr_agent/similar_issue_original_issue.png width="768"></kbd>
+
 <kbd><img src=https://codium.ai/images/pr_agent/similar_issue_comment.png width="768"></kbd>
+
 <kbd><img src=https://codium.ai/images/pr_agent/similar_issue.png width="768"></kbd>
 
 Note that to perform retrieval, the `similar_issue` tool indexes all the repo previous issues (once).
@@ -29,7 +31,7 @@ environment = "..."
 These parameters can be obtained by registering to [Pinecone](https://app.pinecone.io/?sessionType=signup/).
 
 
-### How to use:
+## How to use:
 - To invoke the 'similar issue' tool from **CLI**, run:
 `python3 cli.py --issue_url=... similar_issue`
 

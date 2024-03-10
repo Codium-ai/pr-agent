@@ -7,3 +7,4 @@ dist/
 build/
 review.md
 .DS_Store
+docs/.cache/
