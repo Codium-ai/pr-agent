@@ -88,7 +88,7 @@ class PRReview(BaseModel):
     code_feedback: List[CodeSuggestion]
 {%- else %}
 
-class PRReview(BaseModel)
+class PRReview(BaseModel):
     review: Review
 {%- endif %}
 =====
