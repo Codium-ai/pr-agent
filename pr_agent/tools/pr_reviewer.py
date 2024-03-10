@@ -110,10 +110,12 @@ class PRReviewer:
 
             if self.incremental.is_incremental and hasattr(self.git_provider, "file_set") and not self.git_provider.file_set:
                 get_logger().info(f"Incremental review is enabled for {self.pr_url} but there are no new files")
+                previous_review_url = ""
                 if hasattr(self.git_provider, "previous_review"):
                     previous_review_url = self.git_provider.previous_review.html_url
                 if get_settings().config.publish_output:
-                    self.git_provider.publish_comment(f"Incremental Review Skipped\nNo files were changed since the [previous PR Review]({previous_review_url})",  is_temporary=True)
+                    self.git_provider.publish_comment(f"Incremental Review Skipped\n"
+                                                      f"No files were changed since the [previous PR Review]({previous_review_url})",  is_temporary=True)
                 return None
 
             if get_settings().config.publish_output:
