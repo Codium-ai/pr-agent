@@ -16,10 +16,10 @@ PR-Agent offers extensive pull request functionalities across various git provid
 |-------|---------------------------------------------------------------------------------------------------------------------|:------:|:------:|:---------:|:------------:|
 | TOOLS | Review                                                                                                              |   ✔️    |   ✔️    |   ✔️       |      ✔️      |
 |       | ⮑ Incremental                                                                                                       |   ✔️    |        |            |              |
-|       | ⮑ [SOC2 Compliance](./tools/review.md#soc2-ticket-compliance-💎){:target="_blank"} 💎                                     |   ✔️    |   ✔️    |   ✔️        |      ✔️      |
+|       | ⮑ [SOC2 Compliance](https://pr-agent-docs.codium.ai/tools/review/#soc2-ticket-compliance){:target="_blank"} 💎                                     |   ✔️    |   ✔️    |   ✔️        |      ✔️      |
 |       | Ask                                                                                                                 |   ✔️    |   ✔️    |   ✔️        |      ✔️      |
 |       | Describe                                                                                                            |   ✔️    |   ✔️    |   ✔️        |      ✔️      |
-|       | ⮑ [Inline file summary](./tools/describe.md#inline-file-summary-💎){:target="_blank"} 💎                                 |   ✔️    |   ✔️    |   ✔️        |      ✔️      |
+|       | ⮑ [Inline file summary](https://pr-agent-docs.codium.ai/tools/describe/#inline-file-summary){:target="_blank"} 💎                                 |   ✔️    |   ✔️    |   ✔️        |      ✔️      |
 |       | Improve                                                                                                             |   ✔️    |   ✔️    |   ✔️        |      ✔️      |
 |       | ⮑ Extended                                                                                                          |   ✔️    |   ✔️    |   ✔️        |      ✔️      |
 |       | [Custom Suggestions](./tools/custom_suggestions.md){:target="_blank"} 💎                                               |   ✔️    |   ✔️    |   ✔️        |      ✔️      |
