@@ -107,6 +107,15 @@ class PRReviewer:
             relevant_configs = {'pr_reviewer': dict(get_settings().pr_reviewer),
                                 'config': dict(get_settings().config)}
             get_logger().debug("Relevant configs", artifacts=relevant_configs)
+
+            if self.incremental.is_incremental and hasattr(self.git_provider, "file_set") and not self.git_provider.file_set:
+                get_logger().info(f"Incremental review is enabled for {self.pr_url} but there are no new files")
+                if hasattr(self.git_provider, "previous_review"):
+                    previous_review_url = self.git_provider.previous_review.html_url
+                if get_settings().config.publish_output:
+                    self.git_provider.publish_comment(f"Incremental Review Skipped\nNo files were changed since the [previous PR Review]({previous_review_url})",  is_temporary=True)
+                return None
+
             if get_settings().config.publish_output:
                 self.git_provider.publish_comment("Preparing review...", is_temporary=True)
 
@@ -212,11 +221,7 @@ class PRReviewer:
         if self.incremental.is_incremental:
             last_commit_url = f"{self.git_provider.get_pr_url()}/commits/" \
                               f"{self.git_provider.incremental.first_new_commit_sha}"
-            last_commit_msg = self.incremental.commits_range[0].commit.message if self.incremental.commits_range else ""
             incremental_review_markdown_text = f"Starting from commit {last_commit_url}"
-            if last_commit_msg:
-                replacement = last_commit_msg.splitlines(keepends=False)[0].replace('_', r'\_')
-                incremental_review_markdown_text += f"  \n_({replacement})_"
 
         markdown_text = convert_to_markdown(data, self.git_provider.is_supported("gfm_markdown"),
                                             incremental_review_markdown_text)

@@ -38,6 +38,7 @@ class GithubProvider(GitProvider):
             self.set_pr(pr_url)
             self.pr_commits = list(self.pr.get_commits())
             if self.incremental.is_incremental:
+                self.file_set = dict()
                 self.get_incremental_commits()
             self.last_commit_id = self.pr_commits[-1]
             self.pr_url = self.get_pr_url() # pr_url for github actions can be as api.github.com, so we need to get the url from the pr object
@@ -62,7 +63,7 @@ class GithubProvider(GitProvider):
         if self.previous_review:
             self.incremental.commits_range = self.get_commit_range()
             # Get all files changed during the commit range
-            self.file_set = dict()
+
             for commit in self.incremental.commits_range:
                 if commit.commit.message.startswith(f"Merge branch '{self._get_repo().default_branch}'"):
                     get_logger().info(f"Skipping merge commit {commit.commit.message}")
