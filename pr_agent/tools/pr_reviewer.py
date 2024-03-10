@@ -207,6 +207,7 @@ class PRReviewer:
                         pass
 
 
+        incremental_review_markdown_text = None
         # Add incremental review section
         if self.incremental.is_incremental:
             last_commit_url = f"{self.git_provider.get_pr_url()}/commits/" \
@@ -216,12 +217,9 @@ class PRReviewer:
             if last_commit_msg:
                 replacement = last_commit_msg.splitlines(keepends=False)[0].replace('_', r'\_')
                 incremental_review_markdown_text += f"  \n_({replacement})_"
-            data = OrderedDict(data)
-            data.update({'Incremental PR Review': {
-                "⏮️ Review for commits since previous PR-Agent review": incremental_review_markdown_text}})
-            data.move_to_end('Incremental PR Review', last=False)
 
-        markdown_text = convert_to_markdown(data, self.git_provider.is_supported("gfm_markdown"))
+        markdown_text = convert_to_markdown(data, self.git_provider.is_supported("gfm_markdown"),
+                                            incremental_review_markdown_text)
 
         # Add help text if gfm_markdown is supported
         if self.git_provider.is_supported("gfm_markdown") and get_settings().pr_reviewer.enable_help_text:
