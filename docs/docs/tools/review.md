@@ -1,34 +1,19 @@
-# Review Tool
-
-## Table of Contents
-- [Overview](#overview)
-  - [Configuration options](#configuration-options)
-  - [Incremental Mode](#incremental-mode)
-  - [PR Reflection](#pr-reflection)
-- [Usage Tips](#usage-tips)
-  - [General guidelines](#general-guidelines)
-  - [Code suggestions](#code-suggestions)
-  - [Automation](#automation)
-  - [Auto-labels](#auto-labels)
-  - [Extra instructions](#extra-instructions)
-  - [Auto-approval](#auto-approval-1)
-
 ## Overview
 The `review` tool scans the PR code changes, and automatically generates a PR review.
-The tool can be triggered automatically every time a new PR is [opened](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#github-app-automatic-tools), or can be invoked manually by commenting on any PR:
+The tool can be triggered automatically every time a new PR is [opened](../usage-guide/automations_and_usage.md#github-app-automatic-tools-when-a-new-pr-is-opened), or can be invoked manually by commenting on any PR:
 ```
 /review
 ```
 For example:
-___
+
 <kbd><img src=https://codium.ai/images/pr_agent/review_comment.png width="768"></kbd>
-___
+
 <kbd><img src=https://codium.ai/images/pr_agent/review.png width="768"></kbd>
-___
 
-### Configuration options
 
-To edit [configurations](./../pr_agent/settings/configuration.toml#L19)  related to the review tool (`pr_reviewer` section), use the following template:
+## Configuration options
+
+To edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L19)  related to the review tool (`pr_reviewer` section), use the following template:
 ```
 /review --pr_reviewer.some_config1=... --pr_reviewer.some_config2=...
 ```
@@ -36,26 +21,30 @@ To edit [configurations](./../pr_agent/settings/configuration.toml#L19)  related
 #### General options
 - `num_code_suggestions`: number of code suggestions provided by the 'review' tool. For manual comments, default is 4. For [PR-Agent app](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L142) auto tools, default is 0, meaning no code suggestions will be provided by the review tool, unless you manually edit `pr_commands`.
 - `inline_code_comments`: if set to true, the tool will publish the code suggestions as comments on the code diff. Default is false.
-- `extra_instructions`: Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".
-- `final_update_message`: if set to true, it will add a comment message after finishing calling `/review`. Default is true.
 - `persistent_comment`: if set to true, the review comment will be persistent, meaning that every new review request will edit the previous one. Default is true.
+- `extra_instructions`: Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".
 
 #### Enable\\disable features
 - `require_score_review`: if set to true, the tool will add a section that scores the PR. Default is false.
 - `require_tests_review`: if set to true, the tool will add a section that checks if the PR contains tests. Default is true.
 - `require_estimate_effort_to_review`: if set to true, the tool will add a section that estimates the effort needed to review the PR. Default is true.
+
 #### SOC2 ticket compliance 💎
+> This feature is available only in PR-Agent Pro 
+
 This sub-tool checks if the PR description properly contains a ticket to a project management system (e.g., Jira, Asana, Trello, etc.), as required by SOC2 compliance. If not, it will add a label to the PR: "Missing SOC2 ticket".
 - `require_soc2_ticket`: If set to true, the SOC2 ticket checker sub-tool will be enabled. Default is false.
 - `soc2_ticket_prompt`: The prompt for the SOC2 ticket review. Default is: `Does the PR description include a link to ticket in a project management system (e.g., Jira, Asana, Trello, etc.) ?`. Edit this field if your compliance requirements are different.
+
 #### Adding PR labels
 - `enable_review_labels_security`: if set to true, the tool will publish a 'possible security issue' label if it detects a security issue. Default is true.
 - `enable_review_labels_effort`: if set to true, the tool will publish a 'Review effort [1-5]: x' label. Default is true.
+
 #### Auto-approval
 - `enable_auto_approval`: if set to true, the tool will approve the PR when invoked with the 'auto_approve' command. Default is false. This flag can be changed only from configuration file.
 - `maximal_review_effort`: maximal effort level for auto-approval. If the PR's estimated review effort is above this threshold, the auto-approval will not run. Default is 5.
 
-###  Incremental Mode
+#### Incremental Mode
 Incremental review only considers changes since the last PR-Agent review. This can be useful when working on the PR in an iterative manner, and you want to focus on the changes since the last review instead of reviewing the entire PR again.
 For invoking the incremental mode, the following command can be used:
 ```
@@ -65,7 +54,7 @@ Note that the incremental mode is only available for GitHub.
 
 <kbd><img src=https://codium.ai/images/pr_agent/incremental_review.png width="768"></kbd>
 
-Under the section 'pr_reviewer', the [configuration file](./../pr_agent/settings/configuration.toml#L19) contains options to customize the 'review -i' tool.  
+Under the section 'pr_reviewer', the [configuration file](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L19) contains options to customize the 'review -i' tool.  
 These configurations can be used to control the rate at which the incremental review tool will create new review comments when invoked automatically, to prevent making too much noise in the PR.
 - `minimal_commits_for_incremental_review`: Minimal number of commits since the last review that are required to create incremental review.
 If there are less than the specified number of commits since the last review, the tool will not perform any action.
@@ -79,7 +68,8 @@ When `require_all_thresholds_for_incremental_review=true` the incremental review
 but when `require_all_thresholds_for_incremental_review=false` the incremental review __will__ run, because one condition is enough (we have 3 commits which is more than the configured 2).
 Default is false - the tool will run as long as at least once conditions is met.
 
-### PR Reflection
+#### PR Reflection
+
 By invoking:
 ```
 /reflect_and_review
@@ -87,22 +77,17 @@ By invoking:
 The tool will first ask the author questions about the PR, and will guide the review based on their answers.
 
 <kbd><img src=https://codium.ai/images/pr_agent/reflection_questions.png width="768"></kbd>
-___
+
 <kbd><img src=https://codium.ai/images/pr_agent/reflection_answers.png width="768"></kbd>
-___
+
 <kbd><img src=https://codium.ai/images/pr_agent/reflection_insights.png width="768"></kbd>
-___
+
 
 
 ## Usage Tips
-1) [General guidelines](#general-guidelines)
-2) [Code suggestions](#code-suggestions)
-3) [Automation](#automation)
-4) [Auto-labels](#auto-labels)
-5) [Extra instructions](#extra-instructions)
-6) [Auto-approval](#auto-approval)
 
 ### General guidelines
+
 The `review` tool provides a collection of possible feedbacks about a PR.
 It is recommended to review the [Configuration options](#configuration-options) section, and choose the relevant options for your use case.
 
@@ -112,13 +97,14 @@ Some of the features that are disabled by default are quite useful, and should b
 On the other hand, if you find one of the enabled features to be irrelevant for your use case, disable it. No default configuration can fit all use cases.
 
 ### Code suggestions
+
 If you set `num_code_suggestions`>0 , the `review` tool will also provide code suggestions.
 
-Notice If you are interested **only** in the code suggestions, it is recommended to use the [`improve`](./IMPROVE.md) feature instead, since it is a dedicated only to code suggestions, and usually gives better results.
+Notice If you are interested **only** in the code suggestions, it is recommended to use the [`improve`](./improve.md) feature instead, since it is a dedicated only to code suggestions, and usually gives better results.
 Use the `review` tool if you want to get more comprehensive feedback, which includes code suggestions as well.
 
 ### Automation
-- When you first install the app, the [default mode](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#github-app-automatic-tools) for the `review` tool is:
+- When you first install the app, the [default mode](../usage-guide/automations_and_usage.md#github-app-automatic-tools-when-a-new-pr-is-opened) for the `review` tool is:
 ```
 pr_commands = ["/review", ...]
 ```
@@ -126,13 +112,16 @@ Meaning the `review` tool will run automatically on every PR, with the default c
 Edit this field to enable/disable the tool, or to change the used configurations.
 
 ### Auto-labels
+
 The `review` tool can auto-generate two specific types of labels for a PR:
+
 - a `possible security issue` label that detects a possible [security issue](https://github.com/Codium-ai/pr-agent/blob/tr/user_description/pr_agent/settings/pr_reviewer_prompts.toml#L136) (`enable_review_labels_security` flag)
 - a `Review effort [1-5]: x` label, where x is the estimated effort to review the PR (`enable_review_labels_effort` flag)
 
 Both modes are useful, and we recommended to enable them.
 
 ### Extra instructions
+
 Extra instructions are important.
 The `review` tool can be configured with extra instructions, which can be used to guide the model to a feedback tailored to the needs of your project.
 
@@ -153,6 +142,7 @@ Use triple quotes to write multi-line instructions. Use bullet points to make th
 
 
 ### Auto-approval
+
 PR-Agent can approve a PR when a specific comment is invoked.
 
 To ensure safety, the auto-approval feature is disabled by default. To enable auto-approval, you need to actively set in a pre-defined configuration file the following:

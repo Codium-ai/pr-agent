@@ -1,0 +1,98 @@
+
+
+:root {
+    --md-primary-fg-color: #765bfa;
+    --md-accent-fg-color: #AEA1F1;
+  }
+.md-nav__title, .md-nav__link  {
+    font-size: 16px; /* Adjust the font size as needed */
+}
+
+.md-tabs__link  {
+    font-size: 16px; /* Adjust the font size as needed */
+}
+
+.md-header__title {
+    font-size: 20px; /* Adjust the font size as needed */
+}
+
+/* 
+@media (prefers-color-scheme: light) {
+    body {
+        --md-primary-fg-color: #00ffee !important;
+        --md-primary-bg-color: #ff0000 !important;
+    }
+
+    body, .md-main, .md-content {
+        background-color: #4312f5 !important;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    body {
+        --md-primary-fg-color: #171518 !important;
+        --md-primary-bg-color: #171518 !important;
+    }
+
+    body, .md-main, .md-content {
+        background-color: #171518 !important;
+    }
+
+    .md-header__title {
+        color: #ffffff !important;
+    }
+
+    .md-tabs .md-tabs__link {
+        color: #ffffff !important;
+    }
+
+    .md-tabs .md-tabs__link:hover,
+    .md-tabs .md-tabs__link:focus {
+        color: #ffffff !important; 
+    }
+
+    .md-header__button {
+        color: #ffffff !important; 
+    }
+
+    .md-header__button svg {
+        fill: currentColor !important; 
+    }
+
+    .md-header__button:hover,
+    .md-header__button:focus {
+        color: #ffffff !important; 
+    }
+
+    .md-header__button:hover svg,
+    .md-header__button:focus svg {
+        fill: currentColor !important;
+    }
+
+    .md-search__icon svg {
+        fill: #ffffff !important;
+    }
+
+    .md-search__input {
+        color: #ffffff !important;
+    }
+
+    .md-nav__item--active > .md-nav__link--active,
+    .md-nav__link--active {
+        color: #AEA1F1 !important;
+    }
+
+    .md-nav--secondary .md-nav__title {
+        background: #171518;
+        box-shadow: 0 0 0.4rem 0.4rem #171518;
+    }
+
+    .md-nav--lifted>.md-nav__list>.md-nav__item--active>.md-nav__link {
+        background: #171518;
+        box-shadow: 0 0 0.4rem 0.4rem #171518;
+    }
+
+    .md-content a {
+        color: #AEA1F1 !important;
+    }
+} */

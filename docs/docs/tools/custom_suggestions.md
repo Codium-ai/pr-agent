@@ -1,16 +1,8 @@
-# Custom Suggestions Tool 💎
-
-## Table of Contents
-- [Overview](#overview)
-- [Example usage](#example-usage)
-- [Configuration options](#configuration-options)
-
-
 ## Overview
 The `custom_suggestions` tool scans the PR code changes, and automatically generates custom suggestions for improving the PR code.
 It shares similarities with the `improve` tool, but with one main difference: the `custom_suggestions` tool will only propose suggestions that follow specific guidelines defined by the prompt in: `pr_custom_suggestions.prompt` configuration.
 
-The tool can be triggered [automatically](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#github-app-automatic-tools) every time a new PR is opened, or can be invoked manually by commenting on a PR.
+The tool can be triggered [automatically](../usage-guide/automations_and_usage.md#github-app-automatic-tools-when-a-new-pr-is-opened) every time a new PR is opened, or can be invoked manually by commenting on a PR.
 
 When commenting, use the following template:
 
@@ -18,7 +10,7 @@ When commenting, use the following template:
 /custom_suggestions --pr_custom_suggestions.prompt="The suggestions should focus only on the following:\n-...\n-...\n-..."
 ```
 
-With a [configuration file](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#working-with-github-app), use the following template:
+With a [configuration file](../usage-guide/automations_and_usage.md#github-app), use the following template:
 
 ```
 [pr_custom_suggestions]
@@ -50,11 +42,11 @@ The suggestions should focus only on the following:
 The instructions above are just an example. We want to emphasize that the prompt should be specific and clear, and be tailored to the needs of your project.
 
 Results obtained with the prompt above:
-___
+
 <kbd><img src=https://codium.ai/images/pr_agent/custom_suggestions_prompt.png width="512"></kbd>
-___
+
 <kbd><img src=https://codium.ai/images/pr_agent/custom_suggestions_result.png width="768"></kbd>
-___
+
 
 ## Configuration options
 
