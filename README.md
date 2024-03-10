@@ -33,7 +33,7 @@ Making pull requests less painful with an AI agent
 ## News and Updates
 
 ### Jan 10, 2024
-- A new [documentation website](https://codium-ai.github.io/Docs-PR-Agent/) is now available for PR-Agent. It includes detailed information about the different tools, usage guides, and more, in an accessible and organized format.
+- A new [knowledge-base website](https://codium-ai.github.io/Docs-PR-Agent/) for PR-Agent is now available. It includes detailed information about the different tools, usage guides and more, in an accessible and organized format.
 
 ### Jan 8, 2024
 
