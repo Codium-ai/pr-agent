@@ -24,6 +24,24 @@ Search result link example:
 
 
 ## How to use
+### Manually
+To invoke the `similar code` tool manually, comment on the PR:
+```
+/find_similar_component COMPONENT_NAME
+```
+Where `COMPONENT_NAME` should be the name of a code component in the PR (class, method, function).
+
+If there is a name ambiguity, there are two configurations that will help the tool to find the correct component:
+
+- `--pr_find_similar_component.file`: in case there are several components with the same name, you can specify the relevant file.
+- `--pr_find_similar_component.class_name`: in case there are several methods with the same name in the same file, you can specify the relevant class name.
+
+example:
+```
+/find_similar_component COMPONENT_NAME --pr_find_similar_component.file=FILE_NAME
+```
+
+### Automatically (via Analyze table)
 It can be invoked automatically from the analyze table, can be accessed by:
 ```
 /analyze
