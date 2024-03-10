@@ -9,7 +9,7 @@ CodiumAI PR-Agent is an open-source tool to help efficiently review and handle p
 - See the [Tools Guide](./tools/index.md) for a detailed description of the different tools (tools are run via the commands).
 
 
-## Features table
+## PR-Agent Features
 PR-Agent offers extensive pull request functionalities across various git providers.
 
 |       |                                                                                                                     | GitHub | Gitlab | Bitbucket | Azure DevOps |
@@ -152,21 +152,7 @@ Check out the [PR Compression strategy](core-abilities/index.md) page for more d
     - [**Custom labels**](./tools/describe.md/#handle-custom-labels-from-the-repos-labels-page)
     - [**Global and wiki configuration**](./usage-guide/configuration_options.md/#wiki-configuration-file)
 
-
-
-## Why use PR-Agent?
-
-A reasonable question that can be asked is: `"Why use PR-Agent? What makes it stand out from existing tools?"`
-
-Here are some advantages of PR-Agent:
-
-- PR-Agent emphasize **real-life practical usage**. Each tool (review, improve, ask, ...) has a single GPT-4 call, no more. We believe this is critical for realistic team usage - obtaining an answer quickly (~30 seconds) and affordably.
-- PR-Agent [Compression strategy](core-abilities/index.md)  is a core ability that enables to effectively tackle both short and long PRs.
-- YAML prompting strategy enables to have **modular, customizable, highly efficient tools**. 
-- PR-Agent is flexible and **highly configurable**.
-- PR-Agent supports **multiple git providers** (GitHub, Gitlab, Bitbucket, Azure devops), **multiple ways** to use the tool (CLI, GitHub Action, GitHub App, Docker, ...), and **multiple models** (GPT-4, GPT-3.5, Anthropic, Cohere, Llama, ...).
-
-
+   
 ## Data privacy
 
 If you host PR-Agent with your OpenAI API key, it is between you and OpenAI. You can read their API data privacy policy here:
