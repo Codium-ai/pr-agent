@@ -39,6 +39,7 @@ Making pull requests less painful with an AI agent
 
 - A new tool, [Find Similar Code](https://pr-agent-docs.codium.ai/tools/similar_code/) 💎 is now available. 
 <br>This tool retrieves the most similar code components from inside the organization's codebase, or from open-source code:
+
 <kbd><a href="https://codium.ai/images/pr_agent/similar_code.mp4"><img src="https://codium.ai/images/pr_agent/similar_code_global2.png" width="512"></a></kbd>
 
 (click on the image to see an instructional video)
