@@ -80,7 +80,7 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
         return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content=jsonable_encoder({"message": "unauthorized"}))
 
     data = await request.json()
-    get_logger().info("GitLab data", json.dumps(data))
+    get_logger().info("GitLab data", artifact=data)
 
     if data.get('object_kind') == 'merge_request' and data['object_attributes'].get('action') in ['open', 'reopen']:
         url = data['object_attributes'].get('url')
