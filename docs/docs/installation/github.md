@@ -2,7 +2,7 @@
 
 You can use our pre-built Github Action Docker image to run PR-Agent as a Github Action.
 
-1. Add the following file to your repository under `.github/workflows/pr_agent.yml`:
+1) Add the following file to your repository under `.github/workflows/pr_agent.yml`:
 
 ```yaml
 on:
@@ -46,7 +46,7 @@ jobs:
           OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
-2. Add the following secret to your repository under `Settings > Secrets and variables > Actions > New repository secret > Add secret`:
+2) Add the following secret to your repository under `Settings > Secrets and variables > Actions > New repository secret > Add secret`:
 
 ```
 Name = OPENAI_KEY
@@ -55,10 +55,10 @@ Secret = <your key>
 
 The GITHUB_TOKEN secret is automatically created by GitHub.
 
-3. Merge this change to your main branch.
+3) Merge this change to your main branch.
 When you open your next PR, you should see a comment from `github-actions` bot with a review of your PR, and instructions on how to use the rest of the tools.
 
-4. You may configure PR-Agent by adding environment variables under the env section corresponding to any configurable property in the [configuration](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml) file. Some examples:
+4) You may configure PR-Agent by adding environment variables under the env section corresponding to any configurable property in the [configuration](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml) file. Some examples:
 ```yaml
       env:
         # ... previous environment values
@@ -72,7 +72,7 @@ When you open your next PR, you should see a comment from `github-actions` bot w
 ## Run as a GitHub App
 Allowing you to automate the review process on your private or public repositories.
 
-1. Create a GitHub App from the [Github Developer Portal](https://docs.github.com/en/developers/apps/creating-a-github-app).
+1) Create a GitHub App from the [Github Developer Portal](https://docs.github.com/en/developers/apps/creating-a-github-app).
 
    - Set the following permissions:
      - Pull requests: Read & write
@@ -84,60 +84,62 @@ Allowing you to automate the review process on your private or public repositori
      - Pull request
      - Push (if you need to enable triggering on PR update)
 
-2. Generate a random secret for your app, and save it for later. For example, you can use:
+2) Generate a random secret for your app, and save it for later. For example, you can use:
 
 ```
 WEBHOOK_SECRET=$(python -c "import secrets; print(secrets.token_hex(10))")
 ```
 
-3. Acquire the following pieces of information from your app's settings page:
+3) Acquire the following pieces of information from your app's settings page:
 
    - App private key (click "Generate a private key" and save the file)
    - App ID
 
-4. Clone this repository:
+4) Clone this repository:
 
 ```
 git clone https://github.com/Codium-ai/pr-agent.git
 ```
 
-5. Copy the secrets template file and fill in the following:
-    ```
-    cp pr_agent/settings/.secrets_template.toml pr_agent/settings/.secrets.toml
-    # Edit .secrets.toml file
-    ```
+5) Copy the secrets template file and fill in the following:
+    
+```
+cp pr_agent/settings/.secrets_template.toml pr_agent/settings/.secrets.toml
+# Edit .secrets.toml file
+```
+
    - Your OpenAI key.
    - Copy your app's private key to the private_key field.
    - Copy your app's ID to the app_id field.
    - Copy your app's webhook secret to the webhook_secret field.
    - Set deployment_type to 'app' in [configuration.toml](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml)
 
-> The .secrets.toml file is not copied to the Docker image by default, and is only used for local development.
-> If you want to use the .secrets.toml file in your Docker image, you can add remove it from the .dockerignore file.
-> In most production environments, you would inject the secrets file as environment variables or as mounted volumes.
-> For example, in order to inject a secrets file as a volume in a Kubernetes environment you can update your pod spec to include the following,
-> assuming you have a secret named `pr-agent-settings` with a key named `.secrets.toml`:
-```
-       volumes:
-        - name: settings-volume
-          secret:
-            secretName: pr-agent-settings
-// ...
-       containers:
-// ...
-          volumeMounts:
-            - mountPath: /app/pr_agent/settings_prod
-              name: settings-volume
-```
+    > The .secrets.toml file is not copied to the Docker image by default, and is only used for local development.
+    > If you want to use the .secrets.toml file in your Docker image, you can add remove it from the .dockerignore file.
+    > In most production environments, you would inject the secrets file as environment variables or as mounted volumes.
+    > For example, in order to inject a secrets file as a volume in a Kubernetes environment you can update your pod spec to include the following,
+    > assuming you have a secret named `pr-agent-settings` with a key named `.secrets.toml`:
+    ```
+           volumes:
+            - name: settings-volume
+              secret:
+                secretName: pr-agent-settings
+    // ...
+           containers:
+    // ...
+              volumeMounts:
+                - mountPath: /app/pr_agent/settings_prod
+                  name: settings-volume
+    ```
+    
+    > Another option is to set the secrets as environment variables in your deployment environment, for example `OPENAI.KEY` and `GITHUB.USER_TOKEN`.
 
-> Another option is to set the secrets as environment variables in your deployment environment, for example `OPENAI.KEY` and `GITHUB.USER_TOKEN`.
+6) Build a Docker image for the app and optionally push it to a Docker repository. We'll use Dockerhub as an example:
 
-6. Build a Docker image for the app and optionally push it to a Docker repository. We'll use Dockerhub as an example:
-
-```
-docker build . -t codiumai/pr-agent:github_app --target github_app -f docker/Dockerfile
-docker push codiumai/pr-agent:github_app  # Push to your Docker repository
-```
+    ```
+    docker build . -t codiumai/pr-agent:github_app --target github_app -f docker/Dockerfile
+    docker push codiumai/pr-agent:github_app  # Push to your Docker repository
+    ```
 
 7. Host the app using a server, serverless function, or container environment. Alternatively, for development and
    debugging, you may use tools like smee.io to forward webhooks to your local machine.
