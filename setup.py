@@ -5,3 +5,4 @@ from setuptools import setup
 setup()
 
 print("aaa")
+print("bbb")
