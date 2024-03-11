@@ -6,6 +6,8 @@ import json
 import os
 import re
 import secrets
+from urllib.parse import unquote
+
 import uvicorn
 from fastapi import APIRouter, Depends, FastAPI, HTTPException
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
@@ -81,7 +83,7 @@ async def handle_webhook(background_tasks: BackgroundTasks, request: Request):
     actions = []
     if data["eventType"] == "git.pullrequest.created": 
         # API V1 (latest)
-        pr_url = data["resource"]["_links"]["web"]["href"].replace("_apis/git/repositories", "_git")
+        pr_url = unquote(data["resource"]["_links"]["web"]["href"].replace("_apis/git/repositories", "_git"))
         log_context["event"] = data["eventType"]
         log_context["api_url"] = pr_url
         await _perform_commands_azure("pr_commands", PRAgent(), pr_url, log_context)
@@ -90,7 +92,7 @@ async def handle_webhook(background_tasks: BackgroundTasks, request: Request):
         if available_commands_rgx.match(data["resource"]["comment"]["content"]):
             if(data["resourceVersion"] == "2.0"):
                 repo = data["resource"]["pullRequest"]["repository"]["webUrl"]
-                pr_url = f'{repo}/pullrequest/{data["resource"]["pullRequest"]["pullRequestId"]}'
+                pr_url = unquote(f'{repo}/pullrequest/{data["resource"]["pullRequest"]["pullRequestId"]}')
                 actions = [data["resource"]["comment"]["content"]]
             else: 
                 # API V1 not supported as it does not contain the PR URL
