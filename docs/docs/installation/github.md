@@ -157,7 +157,7 @@ docker push codiumai/pr-agent:github_app  # Push to your Docker repository
 
 ## Deploy as a Lambda Function
 
-1. Follow steps 1-5 of [Method 5](#run-as-a-github-app).
+1. Follow steps 1-5 from [here](#run-as-a-github-app).
 2. Build a docker image that can be used as a lambda function
     ```shell
     docker buildx build --platform=linux/amd64 . -t codiumai/pr-agent:serverless -f docker/Dockerfile.lambda
