@@ -108,7 +108,7 @@ class PRReviewer:
                                 'config': dict(get_settings().config)}
             get_logger().debug("Relevant configs", artifacts=relevant_configs)
 
-            if self.incremental.is_incremental and hasattr(self.git_provider, "file_set") and not self.git_provider.unreviewed_files_set:
+            if self.incremental.is_incremental and hasattr(self.git_provider, "unreviewed_files_set") and not self.git_provider.unreviewed_files_set:
                 get_logger().info(f"Incremental review is enabled for {self.pr_url} but there are no new files")
                 previous_review_url = ""
                 if hasattr(self.git_provider, "previous_review"):
