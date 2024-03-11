@@ -83,7 +83,6 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
     get_logger().info("GitLab data", json.dumps(data))
 
     if data.get('object_kind') == 'merge_request' and data['object_attributes'].get('action') in ['open', 'reopen']:
-        get_logger().info(f"A merge request has been opened: {data['object_attributes'].get('title')}")
         url = data['object_attributes'].get('url')
         get_logger().info(f"New merge request: {url}")
         await _perform_commands_gitlab("pr_commands", PRAgent(), url, log_context)
