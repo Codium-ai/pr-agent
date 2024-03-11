@@ -7,6 +7,7 @@ nav:
     - Locally: 'installation/locally.md'
     - GitHub: 'installation/github.md'
     - GitLab: 'installation/gitlab.md'
+    - 💎 GitLab Pro: 'installation/gitlab_pro.md'
     - BitBucket: 'installation/bitbucket.md'
     - Azure DevOps: 'installation/azure.md'
   - Usage Guide: 
