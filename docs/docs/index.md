@@ -6,7 +6,7 @@ CodiumAI PR-Agent is an open-source tool to help efficiently review and handle p
 
 - See the [Usage Guide](./usage-guide/index.md) for instructions on running the PR-Agent commands via different interfaces, including _CLI_, _online usage_, or by _automatically triggering_ them when a new PR is opened.
 
-- See the [Tools Guide](./tools/index.md) for a detailed description of the different tools (tools are run via the commands).
+- See the [Tools Guide](./tools/index.md) for a detailed description of the different tools.
 
 
 ## PR-Agent Features
