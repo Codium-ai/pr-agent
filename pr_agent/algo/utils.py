@@ -60,7 +60,7 @@ def unique_strings(input_list: List[str]) -> List[str]:
     return unique_list
 
 
-def convert_to_markdown(output_data: dict, gfm_supported: bool = True) -> str:
+def convert_to_markdown(output_data: dict, gfm_supported: bool = True, incremental_review=None) -> str:
     """
     Convert a dictionary of data into markdown format.
     Args:
@@ -80,7 +80,11 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool = True) -> str:
         "Estimated effort to review [1-5]": "⏱️",
     }
     markdown_text = ""
-    markdown_text += f"## PR Review\n\n"
+    if not incremental_review:
+        markdown_text += f"## PR Review\n\n"
+    else:
+        markdown_text += f"## Incremental PR Review\n\n"
+        markdown_text += f"⏮️ Review for commits since previous PR-Agent review {incremental_review}.\n\n"
     if gfm_supported:
         markdown_text += "<table>\n<tr>\n"
         # markdown_text += """<td> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Feedback&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td> <td></td></tr>"""
