@@ -17,7 +17,7 @@ from pr_agent.git_providers.utils import apply_repo_settings
 from pr_agent.log import LoggingFormat, get_logger, setup_logger
 from pr_agent.secret_providers import get_secret_provider
 
-setup_logger(fmt=LoggingFormat.JSON)
+setup_logger(fmt=LoggingFormat.JSON, level="DEBUG")
 router = APIRouter()
 
 secret_provider = get_secret_provider() if get_settings().get("CONFIG.SECRET_PROVIDER") else None
@@ -51,6 +51,9 @@ async def _perform_commands_gitlab(commands_conf: str, agent: PRAgent, api_url: 
 @router.post("/webhook")
 async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
     log_context = {"server_type": "gitlab_app"}
+    get_logger().debug("Received a GitLab webhook")
+
+    # Check if the request is authorized
     if request.headers.get("X-Gitlab-Token") and secret_provider:
         request_token = request.headers.get("X-Gitlab-Token")
         secret = secret_provider.get_secret(request_token)
@@ -66,44 +69,55 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
     elif get_settings().get("GITLAB.SHARED_SECRET"):
         secret = get_settings().get("GITLAB.SHARED_SECRET")
         if not request.headers.get("X-Gitlab-Token") == secret:
+            get_logger().error(f"Failed to validate secret")
             return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content=jsonable_encoder({"message": "unauthorized"}))
     else:
+        get_logger().error(f"Failed to validate secret")
         return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content=jsonable_encoder({"message": "unauthorized"}))
     gitlab_token = get_settings().get("GITLAB.PERSONAL_ACCESS_TOKEN", None)
     if not gitlab_token:
+        get_logger().error(f"No gitlab token found")
         return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content=jsonable_encoder({"message": "unauthorized"}))
+
     data = await request.json()
-    get_logger().info(json.dumps(data))
+    get_logger().info("GitLab data", artifact=data)
+
     if data.get('object_kind') == 'merge_request' and data['object_attributes'].get('action') in ['open', 'reopen']:
-        get_logger().info(f"A merge request has been opened: {data['object_attributes'].get('title')}")
         url = data['object_attributes'].get('url')
+        get_logger().info(f"New merge request: {url}")
         await _perform_commands_gitlab("pr_commands", PRAgent(), url, log_context)
-        # handle_request(background_tasks, url, "/review", log_context)
-    elif data.get('object_kind') == 'note' and data['event_type'] == 'note':
+    elif data.get('object_kind') == 'note' and data['event_type'] == 'note': # comment on MR
         if 'merge_request' in data:
             mr = data['merge_request']
             url = mr.get('url')
+            get_logger().info(f"A comment has been added to a merge request: {url}")
             body = data.get('object_attributes', {}).get('note')
-            if data.get('object_attributes', {}).get('type') == 'DiffNote' and '/ask' in body:
-                line_range_ = data['object_attributes']['position']['line_range']
-
-                # if line_range_['start']['type'] == 'new':
-                start_line = line_range_['start']['new_line']
-                end_line = line_range_['end']['new_line']
-                # else:
-                #     start_line = line_range_['start']['old_line']
-                #     end_line = line_range_['end']['old_line']
-
-                question = body.replace('/ask', '').strip()
-                path = data['object_attributes']['position']['new_path']
-                side = 'RIGHT'# if line_range_['start']['type'] == 'new' else 'LEFT'
-                comment_id = data['object_attributes']["discussion_id"]
-                get_logger().info(f"Handling line comment")
-                body = f"/ask_line --line_start={start_line} --line_end={end_line} --side={side} --file_name={path} --comment_id={comment_id} {question}"
+            if data.get('object_attributes', {}).get('type') == 'DiffNote' and '/ask' in body: # /ask_line
+                body = handle_ask_line(body, data)
 
             handle_request(background_tasks, url, body, log_context)
 
     return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
+
+
+def handle_ask_line(body, data):
+    try:
+        line_range_ = data['object_attributes']['position']['line_range']
+        # if line_range_['start']['type'] == 'new':
+        start_line = line_range_['start']['new_line']
+        end_line = line_range_['end']['new_line']
+        # else:
+        #     start_line = line_range_['start']['old_line']
+        #     end_line = line_range_['end']['old_line']
+        question = body.replace('/ask', '').strip()
+        path = data['object_attributes']['position']['new_path']
+        side = 'RIGHT'  # if line_range_['start']['type'] == 'new' else 'LEFT'
+        comment_id = data['object_attributes']["discussion_id"]
+        get_logger().info(f"Handling line comment")
+        body = f"/ask_line --line_start={start_line} --line_end={end_line} --side={side} --file_name={path} --comment_id={comment_id} {question}"
+    except Exception as e:
+        get_logger().error(f"Failed to handle ask line comment: {e}")
+    return body
 
 
 @router.get("/")

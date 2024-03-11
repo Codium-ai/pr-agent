@@ -68,18 +68,6 @@ When you open your next PR, you should see a comment from `github-actions` bot w
 ```
 
 ---
-## Run as a polling server
-Request reviews by tagging your GitHub user on a PR
-
-Follow [steps 1-3](#run-as-a-github-action) of the GitHub Action setup.
-
-Run the following command to start the server:
-
-```
-python pr_agent/servers/github_polling.py
-```
-
----
 
 ## Run as a GitHub App
 Allowing you to automate the review process on your private or public repositories.
