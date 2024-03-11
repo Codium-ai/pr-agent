@@ -70,7 +70,8 @@ class GithubProvider(GitProvider):
                     continue
                 self.unreviewed_files_set.update({file.filename: file for file in commit.files})
         else:
-            raise ValueError("No previous review found")
+            get_logger().info("No previous review found, will review the entire PR")
+            self.incremental.is_incremental = False
 
     def get_commit_range(self):
         last_review_time = self.previous_review.created_at
