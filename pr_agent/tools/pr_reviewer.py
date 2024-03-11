@@ -115,7 +115,7 @@ class PRReviewer:
                     previous_review_url = self.git_provider.previous_review.html_url
                 if get_settings().config.publish_output:
                     self.git_provider.publish_comment(f"Incremental Review Skipped\n"
-                                                      f"No files were changed since the [previous PR Review]({previous_review_url})",  is_temporary=True)
+                                    f"No files were changed since the [previous PR Review]({previous_review_url})")
                 return None
 
             if get_settings().config.publish_output:
