@@ -118,11 +118,15 @@ class PRDescription:
             if get_settings().config.publish_output:
                 # publish labels
                 if get_settings().pr_description.publish_labels and self.git_provider.is_supported("get_labels"):
-                    original_labels = self.git_provider.get_pr_labels()
+                    original_labels = self.git_provider.get_pr_labels(update=True)
                     get_logger().debug(f"original labels", artifact=original_labels)
                     user_labels = get_user_labels(original_labels)
-                    get_logger().debug(f"published labels:\n{pr_labels + user_labels}")
-                    self.git_provider.publish_labels(pr_labels + user_labels)
+                    new_labels = pr_labels + user_labels
+                    get_logger().debug(f"published labels", artifact=new_labels)
+                    if new_labels != original_labels:
+                        self.git_provider.publish_labels(new_labels)
+                    else:
+                        get_logger().debug(f"Labels are the same, not updating")
 
                 # publish description
                 if get_settings().pr_description.publish_description_as_comment:

@@ -216,7 +216,7 @@ class CodeCommitProvider(GitProvider):
     def publish_labels(self, labels):
         return [""]  # not implemented yet
 
-    def get_pr_labels(self):
+    def get_pr_labels(self, update=False):
         return [""]  # not implemented yet
 
     def remove_initial_comment(self):

@@ -650,9 +650,16 @@ class GithubProvider(GitProvider):
         except Exception as e:
             get_logger().exception(f"Failed to publish labels, error: {e}")
 
-    def get_pr_labels(self):
+    def get_pr_labels(self, update=False):
         try:
-            return [label.name for label in self.pr.labels]
+            if not update:
+                labels =self.pr.labels
+                return [label.name for label in labels]
+            else: # obtain the latest labels. Maybe they changed while the AI was running
+                headers, labels = self.pr._requester.requestJsonAndCheck(
+                    "GET", f"{self.pr.issue_url}/labels")
+                return [label['name'] for label in labels]
+
         except Exception as e:
             get_logger().exception(f"Failed to get labels, error: {e}")
             return []
