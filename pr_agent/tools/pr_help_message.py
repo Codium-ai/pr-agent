@@ -35,7 +35,7 @@ class PRHelpMessage:
             tool_names.append(f"[TEST]({base_path}/test/) 💎")
             tool_names.append(f"[CI FEEDBACK]({base_path}/ci_feedback/) 💎")
             tool_names.append(f"[CUSTOM SUGGESTIONS]({base_path}/custom_suggestions/) 💎")
-            tool_names.append(f"[SIMILAR ISSUE]({base_path}/similar_issue/)")
+            tool_names.append(f"[SIMILAR ISSUE]({base_path}/similar_issues/)")
 
             descriptions = []
             descriptions.append("Generates PR description - title, type, summary, code walkthrough and labels")
