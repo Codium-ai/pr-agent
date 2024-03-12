@@ -164,7 +164,7 @@ class GitProvider(ABC):
         pass
 
     @abstractmethod
-    def get_pr_labels(self):
+    def get_pr_labels(self, update=False):
         pass
 
     def get_repo_labels(self):

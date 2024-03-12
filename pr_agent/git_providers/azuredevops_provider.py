@@ -165,7 +165,7 @@ class AzureDevopsProvider(GitProvider):
         except Exception as e:
             get_logger().exception(f"Failed to publish labels, error: {e}")
 
-    def get_pr_labels(self):
+    def get_pr_labels(self, update=False):
         try:
             labels = self.azure_devops_client.get_pull_request_labels(
                 project=self.workspace_slug,
