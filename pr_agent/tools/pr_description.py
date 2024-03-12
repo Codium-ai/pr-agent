@@ -123,7 +123,7 @@ class PRDescription:
                     user_labels = get_user_labels(original_labels)
                     new_labels = pr_labels + user_labels
                     get_logger().debug(f"published labels", artifact=new_labels)
-                    if new_labels != original_labels:
+                    if sorted(new_labels) != sorted(original_labels):
                         self.git_provider.publish_labels(new_labels)
                     else:
                         get_logger().debug(f"Labels are the same, not updating")

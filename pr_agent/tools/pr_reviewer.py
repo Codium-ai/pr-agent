@@ -378,7 +378,7 @@ class PRReviewer:
                 else:
                     current_labels_filtered = []
                 new_labels = review_labels + current_labels_filtered
-                if (current_labels or review_labels) and new_labels != current_labels:
+                if (current_labels or review_labels) and sorted(new_labels) != sorted(current_labels):
                     get_logger().info(f"Setting review labels:\n{review_labels + current_labels_filtered}")
                     self.git_provider.publish_labels(new_labels)
                 else:
