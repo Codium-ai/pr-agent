@@ -192,7 +192,8 @@ pr_commands = [
 url = ""
 
 [litellm]
-#use_client = false
+# use_client = false
+# drop_params = false
 
 [pr_similar_issue]
 skip_comments = false
