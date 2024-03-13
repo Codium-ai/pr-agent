@@ -162,8 +162,9 @@ To use Amazon Bedrock and its foundational models, add the below configuration:
 
 ``` 
 [config] # in configuration.toml
-model = "anthropic.claude-v2"
-fallback_models="anthropic.claude-instant-v1"
+model="bedrock/anthropic.claude-3-sonnet-20240229-v1:0"
+model_turbo="bedrock/anthropic.claude-3-sonnet-20240229-v1:0"
+fallback_models=["bedrock/anthropic.claude-v2:1"]
 
 [aws] # in .secrets.toml
 bedrock_region = "us-east-1"
