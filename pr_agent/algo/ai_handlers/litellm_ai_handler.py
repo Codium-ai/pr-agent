@@ -70,6 +70,7 @@ class LiteLLMAIHandler(BaseAiHandler):
             )
         if get_settings().get("AWS.BEDROCK_REGION", None):
             litellm.AmazonAnthropicConfig.max_tokens_to_sample = 2000
+            litellm.AmazonAnthropicClaude3Config.max_tokens = 2000
             self.aws_bedrock_client = boto3.client(
                 service_name="bedrock-runtime",
                 region_name=get_settings().aws.bedrock_region,
