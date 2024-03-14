@@ -93,6 +93,9 @@ extra:
       link: https://twitter.com/CodiumAI
     - icon: fontawesome/brands/instagram
       link: https://www.instagram.com/codiumai/
+  analytics:
+    provider: google
+    property: G-9LJSZ77MJF
 
 extra_css:
   - css/custom.css
