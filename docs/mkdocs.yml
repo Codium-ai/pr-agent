@@ -95,7 +95,7 @@ extra:
       link: https://www.instagram.com/codiumai/
   analytics:
     provider: google
-    property: G-9LJSZ77MJF
+    property: ${{ secrets.GOOGLE_ANALYTICS_ID }}
 
 extra_css:
   - css/custom.css
