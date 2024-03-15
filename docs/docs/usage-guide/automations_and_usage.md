@@ -170,7 +170,6 @@ To use Azure DevOps provider use the following settings in configuration.toml:
 ```
 [config]
 git_provider="azure"
-use_repo_settings_file=false
 ```
 
 Azure DevOps provider supports [PAT token](https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate?view=azure-devops&tabs=Windows) or [DefaultAzureCredential](https://learn.microsoft.com/en-us/azure/developer/python/sdk/authentication-overview#authentication-in-server-environments) authentication.
