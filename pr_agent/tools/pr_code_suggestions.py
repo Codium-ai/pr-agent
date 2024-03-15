@@ -393,11 +393,7 @@ class PRCodeSuggestions:
 
             for label, suggestions in suggestions_labels.items():
                 num_suggestions=len(suggestions)
-                # pr_body += f"""<tr><td><strong>{label}</strong></td>"""
                 pr_body += f"""<tr><td rowspan={num_suggestions}><strong>{label.capitalize()}</strong></td>\n"""
-                # pr_body += f"""<td>"""
-                # pr_body += f"""<details><summary>{len(suggestions)} suggestions</summary>"""
-                # pr_body += f"""<table>"""
                 for i, suggestion in enumerate(suggestions):
 
                     relevant_file = suggestion['relevant_file'].strip()
@@ -444,11 +440,11 @@ class PRCodeSuggestions:
 {example_code}                   
 """
                     pr_body += f"</details>"
-
                     pr_body += f"</td></tr>"
 
+
                 # pr_body += "</details>"
-                pr_body += """</td></tr>"""
+                # pr_body += """</td></tr>"""
             pr_body += """</tr></tbody></table>"""
             return pr_body
         except Exception as e:
