@@ -125,10 +125,21 @@ class LiteLLMAIHandler(BaseAiHandler):
         else:
             resp = response["choices"][0]['message']['content']
             finish_reason = response["choices"][0]["finish_reason"]
-            # usage = response.get("usage")
             get_logger().debug(f"\nAI response:\n{resp}")
-            get_logger().debug("Full_response", artifact=response)
 
+            # log the full response for debugging, including the system and user prompts
+            response_log = response.dict()
+            response_log['system'] = system
+            response_log['user'] = user
+            response_log['output'] = resp
+            response_log['finish_reason'] = finish_reason
+            if hasattr(self, 'main_pr_language'):
+                response_log['main_pr_language'] = self.main_pr_language
+            else:
+                response_log['main_pr_language'] = 'unknown'
+            get_logger().debug("Full_response", artifact=response_log)
+
+            # for CLI debugging
             if get_settings().config.verbosity_level >= 2:
                 get_logger().info(f"\nAI response:\n{resp}")
 

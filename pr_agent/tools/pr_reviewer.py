@@ -46,6 +46,8 @@ class PRReviewer:
         if self.is_answer and not self.git_provider.is_supported("get_issue_comments"):
             raise Exception(f"Answer mode is not supported for {get_settings().config.git_provider} for now")
         self.ai_handler = ai_handler()
+        self.ai_handler.main_pr_language = self.main_language
+
         self.patches_diff = None
         self.prediction = None
 

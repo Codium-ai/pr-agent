@@ -46,6 +46,7 @@ class PRCodeSuggestions:
             num_code_suggestions = get_settings().pr_code_suggestions.num_code_suggestions
 
         self.ai_handler = ai_handler()
+        self.ai_handler.main_pr_language = self.main_language
         self.patches_diff = None
         self.prediction = None
         self.cli_mode = cli_mode

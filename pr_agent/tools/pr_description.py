@@ -41,6 +41,7 @@ class PRDescription:
 
         # Initialize the AI handler
         self.ai_handler = ai_handler()
+        self.ai_handler.main_pr_language = self.main_pr_language
 
     
         # Initialize the variables dictionary
