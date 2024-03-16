@@ -22,6 +22,8 @@ class PRQuestions:
             self.git_provider.get_languages(), self.git_provider.get_files()
         )
         self.ai_handler = ai_handler()
+        self.ai_handler.main_pr_language = self.main_pr_language
+
         self.question_str = question_str
         self.vars = {
             "title": self.git_provider.pr.title,
