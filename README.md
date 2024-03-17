@@ -33,7 +33,8 @@ Making pull requests less painful with an AI agent
 ## News and Updates
 
 ### Jan 17, 2024
-- A new feature is not available for the review tool: [`require_can_be_split_review`](https://pr-agent-docs.codium.ai/tools/review/#enabledisable-features). If set to true, the tool will add a section that checks if the PR contains several themes, and can be split into smaller PRs.
+- A new feature is now available for the review tool: [`require_can_be_split_review`](https://pr-agent-docs.codium.ai/tools/review/#enabledisable-features). 
+If set to true, the tool will add a section that checks if the PR contains several themes, and can be split into smaller PRs.
 
 <kbd><img src="https://codium.ai/images/pr_agent/multiple_pr_themes.png" width="512"></kbd>
 
