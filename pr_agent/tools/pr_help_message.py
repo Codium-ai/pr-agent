@@ -21,21 +21,21 @@ class PRHelpMessage:
             pr_comment = "## PR Agent Walkthrough\n\n"
             pr_comment += "🤖 Welcome to the PR Agent, an AI-powered tool for automated pull request analysis, feedback, suggestions and more."""
             pr_comment += "\n\nHere is a list of tools you can use to interact with the PR Agent:\n"
-            base_path = "https://github.com/Codium-ai/pr-agent/tree/main/docs"
+            base_path = "https://pr-agent-docs.codium.ai/tools"
 
             tool_names = []
-            tool_names.append(f"[DESCRIBE]({base_path}/DESCRIBE.md)")
-            tool_names.append(f"[REVIEW]({base_path}/REVIEW.md)")
-            tool_names.append(f"[IMPROVE]({base_path}/IMPROVE.md)")
-            tool_names.append(f"[ANALYZE]({base_path}/Analyze.md) 💎")
-            tool_names.append(f"[UPDATE CHANGELOG]({base_path}/UPDATE_CHANGELOG.md)")
-            tool_names.append(f"[ADD DOCUMENTATION]({base_path}/ADD_DOCUMENTATION.md) 💎")
-            tool_names.append(f"[ASK]({base_path}/ASK.md)")
-            tool_names.append(f"[GENERATE CUSTOM LABELS]({base_path}/GENERATE_CUSTOM_LABELS.md)")
-            tool_names.append(f"[TEST]({base_path}/TEST.md) 💎")
-            tool_names.append(f"[CI FEEDBACK]({base_path}/CI_FEEDBACK.md) 💎")
-            tool_names.append(f"[CUSTOM SUGGESTIONS]({base_path}/CUSTOM_SUGGESTIONS.md) 💎")
-            tool_names.append(f"[SIMILAR ISSUE]({base_path}/SIMILAR_ISSUE.md)")
+            tool_names.append(f"[DESCRIBE]({base_path}/describe/)")
+            tool_names.append(f"[REVIEW]({base_path}/review/)")
+            tool_names.append(f"[IMPROVE]({base_path}/improve/)")
+            tool_names.append(f"[ANALYZE]({base_path}/analyze/) 💎")
+            tool_names.append(f"[UPDATE CHANGELOG]({base_path}/update_changelog/)")
+            tool_names.append(f"[ADD DOCUMENTATION]({base_path}/documentation/) 💎")
+            tool_names.append(f"[ASK]({base_path}/ask/)")
+            tool_names.append(f"[GENERATE CUSTOM LABELS]({base_path}/custom_labels/)")
+            tool_names.append(f"[TEST]({base_path}/test/) 💎")
+            tool_names.append(f"[CI FEEDBACK]({base_path}/ci_feedback/) 💎")
+            tool_names.append(f"[CUSTOM SUGGESTIONS]({base_path}/custom_suggestions/) 💎")
+            tool_names.append(f"[SIMILAR ISSUE]({base_path}/similar_issues/)")
 
             descriptions = []
             descriptions.append("Generates PR description - title, type, summary, code walkthrough and labels")
@@ -91,7 +91,7 @@ class PRHelpMessage:
                 for i in range(len(tool_names)):
                     pr_comment += f"\n<tr><td align='center'>\n\n<strong>{tool_names[i]}</strong></td><td>{commands[i]}</td><td>{descriptions[i]}</td></tr>"
                 pr_comment += "</table>\n\n"
-                pr_comment += f"""\n\nNote that each tool be [invoked automatically](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#github-app-automatic-tools-for-pr-actions) when a new PR is opened, or called manually by [commenting on a PR](https://github.com/Codium-ai/pr-agent/blob/main/Usage.md#online-usage)."""
+                pr_comment += f"""\n\nNote that each tool be [invoked automatically](https://pr-agent-docs.codium.ai/usage-guide/automations_and_usage/) when a new PR is opened, or called manually by [commenting on a PR](https://pr-agent-docs.codium.ai/usage-guide/automations_and_usage/#online-usage)."""
             if get_settings().config.publish_output:
                 self.git_provider.publish_comment(pr_comment)
         except Exception as e:

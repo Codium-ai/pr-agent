@@ -46,6 +46,8 @@ class PRReviewer:
         if self.is_answer and not self.git_provider.is_supported("get_issue_comments"):
             raise Exception(f"Answer mode is not supported for {get_settings().config.git_provider} for now")
         self.ai_handler = ai_handler()
+        self.ai_handler.main_pr_language = self.main_language
+
         self.patches_diff = None
         self.prediction = None
 
@@ -108,6 +110,17 @@ class PRReviewer:
             relevant_configs = {'pr_reviewer': dict(get_settings().pr_reviewer),
                                 'config': dict(get_settings().config)}
             get_logger().debug("Relevant configs", artifacts=relevant_configs)
+
+            if self.incremental.is_incremental and hasattr(self.git_provider, "unreviewed_files_set") and not self.git_provider.unreviewed_files_set:
+                get_logger().info(f"Incremental review is enabled for {self.pr_url} but there are no new files")
+                previous_review_url = ""
+                if hasattr(self.git_provider, "previous_review"):
+                    previous_review_url = self.git_provider.previous_review.html_url
+                if get_settings().config.publish_output:
+                    self.git_provider.publish_comment(f"Incremental Review Skipped\n"
+                                    f"No files were changed since the [previous PR Review]({previous_review_url})")
+                return None
+
             if get_settings().config.publish_output:
                 self.git_provider.publish_comment("Preparing review...", is_temporary=True)
 
@@ -208,21 +221,15 @@ class PRReviewer:
                         pass
 
 
+        incremental_review_markdown_text = None
         # Add incremental review section
         if self.incremental.is_incremental:
             last_commit_url = f"{self.git_provider.get_pr_url()}/commits/" \
                               f"{self.git_provider.incremental.first_new_commit_sha}"
-            last_commit_msg = self.incremental.commits_range[0].commit.message if self.incremental.commits_range else ""
             incremental_review_markdown_text = f"Starting from commit {last_commit_url}"
-            if last_commit_msg:
-                replacement = last_commit_msg.splitlines(keepends=False)[0].replace('_', r'\_')
-                incremental_review_markdown_text += f"  \n_({replacement})_"
-            data = OrderedDict(data)
-            data.update({'Incremental PR Review': {
-                "⏮️ Review for commits since previous PR-Agent review": incremental_review_markdown_text}})
-            data.move_to_end('Incremental PR Review', last=False)
 
-        markdown_text = convert_to_markdown(data, self.git_provider.is_supported("gfm_markdown"))
+        markdown_text = convert_to_markdown(data, self.git_provider.is_supported("gfm_markdown"),
+                                            incremental_review_markdown_text)
 
         # Add help text if gfm_markdown is supported
         if self.git_provider.is_supported("gfm_markdown") and get_settings().pr_reviewer.enable_help_text:
@@ -320,6 +327,10 @@ class PRReviewer:
         if self.is_auto and not self.incremental.first_new_commit_sha:
             get_logger().info(f"Incremental review is enabled for {self.pr_url} but there are no new commits")
             return False
+
+        if not hasattr(self.git_provider, "get_incremental_commits"):
+            get_logger().info(f"Incremental review is not supported for {get_settings().config.git_provider}")
+            return False
         # checking if there are enough commits to start the review
         num_new_commits = len(self.incremental.commits_range)
         num_commits_threshold = get_settings().pr_reviewer.minimal_commits_for_incremental_review
@@ -361,17 +372,20 @@ class PRReviewer:
                     if security_concerns_bool:
                         review_labels.append('Possible security concern')
 
-                current_labels = self.git_provider.get_pr_labels()
+                current_labels = self.git_provider.get_pr_labels(update=True)
+                get_logger().debug(f"Current labels:\n{current_labels}")
                 if current_labels:
                     current_labels_filtered = [label for label in current_labels if
                                                not label.lower().startswith('review effort [1-5]:') and not label.lower().startswith(
                                                    'possible security concern')]
                 else:
                     current_labels_filtered = []
-                if current_labels or review_labels:
-                    get_logger().debug(f"Current labels:\n{current_labels}")
+                new_labels = review_labels + current_labels_filtered
+                if (current_labels or review_labels) and sorted(new_labels) != sorted(current_labels):
                     get_logger().info(f"Setting review labels:\n{review_labels + current_labels_filtered}")
-                    self.git_provider.publish_labels(review_labels + current_labels_filtered)
+                    self.git_provider.publish_labels(new_labels)
+                else:
+                    get_logger().info(f"Review labels are already set:\n{review_labels + current_labels_filtered}")
             except Exception as e:
                 get_logger().error(f"Failed to set review labels, error: {e}")
 

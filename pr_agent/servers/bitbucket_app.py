@@ -28,7 +28,7 @@ from pr_agent.tools.pr_code_suggestions import PRCodeSuggestions
 from pr_agent.tools.pr_description import PRDescription
 from pr_agent.tools.pr_reviewer import PRReviewer
 
-setup_logger(fmt=LoggingFormat.JSON)
+setup_logger(fmt=LoggingFormat.JSON, level="DEBUG")
 router = APIRouter()
 secret_provider = get_secret_provider() if get_settings().get("CONFIG.SECRET_PROVIDER") else None
 

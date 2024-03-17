@@ -419,7 +419,7 @@ class GitLabProvider(GitProvider):
     def publish_inline_comments(self, comments: list[dict]):
         pass
 
-    def get_pr_labels(self):
+    def get_pr_labels(self, update=False):
         return self.mr.labels
 
     def get_repo_labels(self):

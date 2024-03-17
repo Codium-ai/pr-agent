@@ -38,6 +38,7 @@ class GithubProvider(GitProvider):
             self.set_pr(pr_url)
             self.pr_commits = list(self.pr.get_commits())
             if self.incremental.is_incremental:
+                self.unreviewed_files_set = dict()
                 self.get_incremental_commits()
             self.last_commit_id = self.pr_commits[-1]
             self.pr_url = self.get_pr_url() # pr_url for github actions can be as api.github.com, so we need to get the url from the pr object
@@ -62,14 +63,15 @@ class GithubProvider(GitProvider):
         if self.previous_review:
             self.incremental.commits_range = self.get_commit_range()
             # Get all files changed during the commit range
-            self.file_set = dict()
+
             for commit in self.incremental.commits_range:
                 if commit.commit.message.startswith(f"Merge branch '{self._get_repo().default_branch}'"):
                     get_logger().info(f"Skipping merge commit {commit.commit.message}")
                     continue
-                self.file_set.update({file.filename: file for file in commit.files})
+                self.unreviewed_files_set.update({file.filename: file for file in commit.files})
         else:
-            raise ValueError("No previous review found")
+            get_logger().info("No previous review found, will review the entire PR")
+            self.incremental.is_incremental = False
 
     def get_commit_range(self):
         last_review_time = self.previous_review.created_at
@@ -98,8 +100,8 @@ class GithubProvider(GitProvider):
                 return self.comments[index]
 
     def get_files(self):
-        if self.incremental.is_incremental and self.file_set:
-            return self.file_set.values()
+        if self.incremental.is_incremental and self.unreviewed_files_set:
+            return self.unreviewed_files_set.values()
         try:
             git_files = context.get("git_files", None)
             if git_files:
@@ -150,10 +152,10 @@ class GithubProvider(GitProvider):
                 new_file_content_str = self._get_pr_file_content(file, self.pr.head.sha)  # communication with GitHub
                 patch = file.patch
 
-                if self.incremental.is_incremental and self.file_set:
+                if self.incremental.is_incremental and self.unreviewed_files_set:
                     original_file_content_str = self._get_pr_file_content(file, self.incremental.last_seen_commit_sha)
                     patch = load_large_diff(file.filename, new_file_content_str, original_file_content_str)
-                    self.file_set[file.filename] = patch
+                    self.unreviewed_files_set[file.filename] = patch
                 else:
                     original_file_content_str = self._get_pr_file_content(file, self.pr.base.sha)
                     if not patch:
@@ -653,9 +655,16 @@ class GithubProvider(GitProvider):
         except Exception as e:
             get_logger().exception(f"Failed to publish labels, error: {e}")
 
-    def get_pr_labels(self):
+    def get_pr_labels(self, update=False):
         try:
-            return [label.name for label in self.pr.labels]
+            if not update:
+                labels =self.pr.labels
+                return [label.name for label in labels]
+            else: # obtain the latest labels. Maybe they changed while the AI was running
+                headers, labels = self.pr._requester.requestJsonAndCheck(
+                    "GET", f"{self.pr.issue_url}/labels")
+                return [label['name'] for label in labels]
+
         except Exception as e:
             get_logger().exception(f"Failed to get labels, error: {e}")
             return []

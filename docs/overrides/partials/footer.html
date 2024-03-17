@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Footer Customization</title>
+<title>Footer</title>
 <style>
   body {
     margin: 0;
@@ -27,13 +27,7 @@
     margin-left: auto;
     margin-right: auto;
   }
-  .footer-links {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    margin: 10px 0;
-    
-  }
+
   .footer-links, .social-icons {
     padding: 0;
     list-style-type: none;
@@ -42,24 +36,45 @@
     gap: 20px;
     align-items: center;
   }
-  .footer-links a:hover {
+
+  .footer-links a:hover, .social-icons a:hover {
     color: #AEA1F1;
   }
-  .social-icons {
-    display: flex;
-    gap: 20px;
-    align-items: center;
-  }
-  .social-icons a:hover {
-    color: #AEA1F1;
-  }
+
   .social-icons svg {
     width: 24px; 
     height: auto;
     fill: white;
   }
+
   .footer-text {
     width: 240px;
+  }
+
+  @media (max-width: 768px) {
+    .container {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .footer-links, .social-icons, .footer-text {
+      width: 100%;
+      justify-content: center;
+      margin: 10px 0;
+    }
+
+    .footer-links {
+      order: 1;
+    }
+
+    .social-icons {
+      order: 2;
+    }
+
+    .footer-text {
+      order: 3;
+    }
   }
 </style>
 </head>

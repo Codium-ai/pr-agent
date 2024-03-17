@@ -176,5 +176,5 @@ class LocalGitProvider(GitProvider):
     def get_issue_comments(self):
         raise NotImplementedError('Getting issue comments is not implemented for the local git provider')
 
-    def get_pr_labels(self):
+    def get_pr_labels(self, update=False):
         raise NotImplementedError('Getting labels is not implemented for the local git provider')
