@@ -1,5 +1,6 @@
 # Installation
 
+## self-hosted PR-Agent
 If you choose to host you own PR-Agent, you first need to acquire two tokens:
 
 1. An OpenAI key from [here](https://platform.openai.com/api-keys), with access to GPT-4 (or a key for [other models](../usage-guide/additional_configurations.md/#changing-a-model), if you prefer).
@@ -13,7 +14,9 @@ There are several ways to use self-hosted PR-Agent:
 - [BitBucket](./bitbucket.md)
 - [Azure DevOps](./azure.md)
 
-___
-Note that [PR-Agent Pro 💎](https://app.codium.ai/), an app for GitHub\GitLab\BitBucket hosted by CodiumAI, is also available. 
+## PR-Agent Pro 💎
+PR-Agent Pro, an app for GitHub\GitLab\BitBucket hosted by CodiumAI, is also available. 
 <br>
 With PR-Agent Pro Installation is as simple as signing up and adding the PR-Agent app to your relevant repo.
+<br>
+See [here](./pr_agent_pro.md) for more details.
