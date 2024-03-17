@@ -180,7 +180,7 @@ def process_can_be_split(emoji, value):
                     markdown_text += f"<li>{file}</li>\n"
                 markdown_text += f"</ul>\n\n</details></td></tr>\n"
             else:
-                markdown_text += f"<tr>\n<td><details><summary>\nSub PR theme: <strong>{title}</strong></summary>\n\n"
+                markdown_text += f"<tr>\n<td><details><summary>\nSub-PR theme: <strong>{title}</strong></summary>\n\n"
                 markdown_text += f"<hr>\n"
                 markdown_text += f"Relevant files:\n"
                 markdown_text += f"<ul>\n"
