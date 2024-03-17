@@ -159,7 +159,8 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool = True, increment
 
 
 def process_can_be_split(emoji, value):
-    key_nice = "Can this PR be split?"
+    # key_nice = "Can this PR be split?"
+    key_nice = "Multiple PR themes"
     markdown_text = ""
     if not value or isinstance(value, list) and len(value) == 1:
         value = "No"
@@ -171,7 +172,7 @@ def process_can_be_split(emoji, value):
             title = split.get('title', '')
             relevant_files = split.get('relevant_files', [])
             if i == 0:
-                markdown_text += f"<td><details><summary>\nSub PR theme: <strong>{title}</strong></summary>\n\n"
+                markdown_text += f"<td><details><summary>\nSub-PR theme: <strong>{title}</strong></summary>\n\n"
                 markdown_text += f"<hr>\n"
                 markdown_text += f"Relevant files:\n"
                 markdown_text += f"<ul>\n"

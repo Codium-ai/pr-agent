@@ -51,8 +51,8 @@ The output must be a YAML object equivalent to type $PRReview, according to the 
 =====
 {%- if require_can_be_split_review %}
 class SubPR(BaseModel):
-    title: str = Field(description="short and concise title for a sub-PR composed only from the relevant files")
-    relevant_files: List[str] = Field(description="the relevant files of the sub-PR")
+    relevant_files: List[str] = Field(description="The relevant files of the sub-PR")
+    title: str = Field(description="Short and concise title for an independent and meaningful sub-PR, composed only from the relevant files")
 {%- endif %}
 
 class Review(BaseModel):
@@ -71,7 +71,7 @@ class Review(BaseModel):
     possible_issues: str = Field(description="Does this PR code introduce clear issues, bugs, or major performance concerns? If there are no apparent issues, respond with 'No'. If there are any issues, describe them briefly. Use bullet points if more than one issue. Be specific, and provide examples if possible. Start each bullet point with a short specific header, such as: "- Possible Bug: ...", etc.")
     security_concerns: str = Field(description="does this PR code introduce possible vulnerabilities such as exposure of sensitive information (e.g., API keys, secrets, passwords), or security concerns like SQL injection, XSS, CSRF, and others ? Answer 'No' if there are no possible issues. If there are security concerns or issues, start your answer with a short header, such as: 'Sensitive information exposure: ...', 'SQL injection: ...' etc. Explain your answer. Be specific and give examples if possible")
 {%- if require_can_be_split_review %}
-    can_be_split: List[SubPR] = Field(description="Can this PR, with its {{ num_pr_files }} changed files, be clearly split into smaller sub-PRs, that can be reviewed and merged independently, regardless of the order ? If yes, provide a title and list the relevant files for each sub-PR. Make sure that the sub-PRs are indeed independent, without any code dependencies between them. Try not to create too many sub-PRs. For example, logic changes and corresponding documentation should be grouped together. Output empty list if the PR cannot be split.")
+    can_be_split: List[SubPR] = Field(min_items=0, max_items=3, description="Can this PR, which contains {{ num_pr_files }} changed files in total, be divided into smaller sub-PRs with distinct tasks that can be reviewed and merged independently, regardless of the order ? Make sure that the sub-PRs are indeed independent, with no code dependencies between them, and that each sub-PR represent a meaningfull independent task. Output an empty list if the PR code does not needd to be split.")
 {%- endif %}
 {%- if num_code_suggestions > 0 %}
 
@@ -112,11 +112,11 @@ review:
     No
 {%- if require_can_be_split_review %}
     can_be_split: |
-    title: |
-      ...
     - relevant_files:
       - ...
       - ...
+     title: ...
+    - ...
 {%- endif %}
 {%- if num_code_suggestions > 0 %}
 code_feedback
