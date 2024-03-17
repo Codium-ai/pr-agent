@@ -373,6 +373,8 @@ class PRReviewer:
                         review_labels.append('Possible security concern')
 
                 current_labels = self.git_provider.get_pr_labels(update=True)
+                if not current_labels:
+                    current_labels = []
                 get_logger().debug(f"Current labels:\n{current_labels}")
                 if current_labels:
                     current_labels_filtered = [label for label in current_labels if
