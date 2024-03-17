@@ -25,10 +25,10 @@ To edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agen
 - `extra_instructions`: Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".
 
 #### Enable\\disable features
-- `require_focused_review`: if set to true, the tool will add a section - 'is the PR a focused one'. Default is false.
 - `require_score_review`: if set to true, the tool will add a section that scores the PR. Default is false.
 - `require_tests_review`: if set to true, the tool will add a section that checks if the PR contains tests. Default is true.
 - `require_estimate_effort_to_review`: if set to true, the tool will add a section that estimates the effort needed to review the PR. Default is true.
+- `require_can_be_split_review`: if set to true, the tool will add a section that checks if the PR contains several themes, and can be split into smaller PRs. Default is false.
 
 #### SOC2 ticket compliance 💎
 > This feature is available only in PR-Agent Pro 

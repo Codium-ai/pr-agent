@@ -49,6 +49,12 @@ Extra instructions from the user:
 
 The output must be a YAML object equivalent to type $PRReview, according to the following Pydantic definitions:
 =====
+{%- if require_can_be_split_review %}
+class SubPR(BaseModel):
+    relevant_files: List[str] = Field(description="The relevant files of the sub-PR")
+    title: str = Field(description="Short and concise title for an independent and meaningful sub-PR, composed only from the relevant files")
+{%- endif %}
+
 class Review(BaseModel):
 {%- if require_estimate_effort_to_review %}
     estimated_effort_to_review_[1-5]: str = Field(description="Estimate, on a scale of 1-5 (inclusive), the time and effort required to review this PR by an experienced and knowledgeable developer. 1 means short and easy review , 5 means long and hard review. Take into account the size, complexity, quality, and the needed changes of the PR code diff. Explain your answer in a short and concise manner.")
@@ -62,11 +68,11 @@ class Review(BaseModel):
 {%- if question_str %}
     insights_from_user_answers: str = Field(description="shortly summarize the insights you gained from the user's answers to the questions")
 {%- endif %}
-{%- if require_focused %}
-    focused_pr: str = Field(description="Is this a focused PR, in the sense that all the PR code diff changes are united under a single focused theme ? If the theme is too broad, or the PR code diff changes are too scattered, then the PR is not focused. Explain your answer shortly.")
-{%- endif %}
     possible_issues: str = Field(description="Does this PR code introduce clear issues, bugs, or major performance concerns? If there are no apparent issues, respond with 'No'. If there are any issues, describe them briefly. Use bullet points if more than one issue. Be specific, and provide examples if possible. Start each bullet point with a short specific header, such as: "- Possible Bug: ...", etc.")
     security_concerns: str = Field(description="does this PR code introduce possible vulnerabilities such as exposure of sensitive information (e.g., API keys, secrets, passwords), or security concerns like SQL injection, XSS, CSRF, and others ? Answer 'No' if there are no possible issues. If there are security concerns or issues, start your answer with a short header, such as: 'Sensitive information exposure: ...', 'SQL injection: ...' etc. Explain your answer. Be specific and give examples if possible")
+{%- if require_can_be_split_review %}
+    can_be_split: List[SubPR] = Field(min_items=0, max_items=3, description="Can this PR, which contains {{ num_pr_files }} changed files in total, be divided into smaller sub-PRs with distinct tasks that can be reviewed and merged independently, regardless of the order ? Make sure that the sub-PRs are indeed independent, with no code dependencies between them, and that each sub-PR represent a meaningfull independent task. Output an empty list if the PR code does not needd to be split.")
+{%- endif %}
 {%- if num_code_suggestions > 0 %}
 
 class CodeSuggestion(BaseModel):
@@ -100,14 +106,18 @@ review:
 {%- endif %}
   relevant_tests: |
     No
-{%- if require_focused %}
-  focused_pr: |
-    no, because ...
-{%- endif %}
   possible_issues: |
     No
   security_concerns: |
     No
+{%- if require_can_be_split_review %}
+    can_be_split: |
+    - relevant_files:
+      - ...
+      - ...
+     title: ...
+    - ...
+{%- endif %}
 {%- if num_code_suggestions > 0 %}
 code_feedback
 - relevant_file: |
