@@ -9,7 +9,7 @@ GitPython==3.1.32
 google-cloud-aiplatform==1.35.0
 google-cloud-storage==2.10.0
 Jinja2==3.1.2
-litellm==1.29.1
+litellm==1.31.10
 loguru==0.7.2
 msrest==0.7.1
 openai==1.13.3

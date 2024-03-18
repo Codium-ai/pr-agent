@@ -36,6 +36,8 @@ class LiteLLMAIHandler(BaseAiHandler):
             assert litellm_token, "LITELLM_TOKEN is required"
             os.environ["LITELLM_TOKEN"] = litellm_token
             litellm.use_client = True
+        if get_settings().get("LITELLM.DROP_PARAMS", None):
+            litellm.drop_params = get_settings().litellm.drop_params
         if get_settings().get("OPENAI.ORG", None):
             litellm.organization = get_settings().openai.org
         if get_settings().get("OPENAI.API_TYPE", None):
@@ -68,6 +70,7 @@ class LiteLLMAIHandler(BaseAiHandler):
             )
         if get_settings().get("AWS.BEDROCK_REGION", None):
             litellm.AmazonAnthropicConfig.max_tokens_to_sample = 2000
+            litellm.AmazonAnthropicClaude3Config.max_tokens = 2000
             self.aws_bedrock_client = boto3.client(
                 service_name="bedrock-runtime",
                 region_name=get_settings().aws.bedrock_region,
