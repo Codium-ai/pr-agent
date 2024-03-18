@@ -123,7 +123,7 @@ async def handle_new_pr_opened(body: Dict[str, Any],
                                agent: PRAgent):
     # logic to ignore PRs opened by bot
     if get_settings().get("GITHUB_APP.IGNORE_BOT_PR", False):
-       if re.match('.+\[bot]$', sender) is not None:
+       if sender.endswith('[bot]'):
            get_logger().info(f"Ignoring PR by sender '{sender}' due to github_app.ignore_bot_pr setting")
            return {}
 
