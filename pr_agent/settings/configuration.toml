@@ -155,6 +155,7 @@ push_commands = [
     "/review --pr_reviewer.num_code_suggestions=0",
 ]
 ignore_pr_title = []
+ignore_bot_pr = false
 
 [gitlab]
 url = "https://gitlab.com" # URL to the gitlab service
