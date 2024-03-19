@@ -2,8 +2,6 @@ name: Build-and-test
 
 on:
   push:
-  pull_request:
-    types: [ opened, reopened ]
 
 jobs:
   build-and-test:
