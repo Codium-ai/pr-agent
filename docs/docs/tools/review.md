@@ -13,8 +13,8 @@ For example:
 </kbd>
 
 <kbd>
-<a href="https://codium.ai/images/pr_agent/review.png">
-<img src="https://codium.ai/images/pr_agent/review.png" width="512">
+<a href="https://codium.ai/images/pr_agent/review3.png">
+<img src="https://codium.ai/images/pr_agent/review3.png" width="512">
 </a>
 </kbd>
 

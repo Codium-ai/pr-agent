@@ -91,16 +91,16 @@ To edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agen
 
 !!! tip "Review vs. Improve tools comparison"
 
-    The [`review` tool](https://pr-agent-docs.codium.ai/tools/review/)  includes a section called 'Possible issues', that also provide feedback on the PR Code.
+    - The [`review`](https://pr-agent-docs.codium.ai/tools/review/) tool includes a section called 'Possible issues', that also provide feedback on the PR Code.
     In this section, the model is instructed to focus **only** on [major bugs and issues](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/pr_reviewer_prompts.toml#L71).
-    The 'improve' tool, on the other hand, has a broader mandate, and in addition to bugs and issues, it makes suggestions for improving code quality and making the code more efficient, readable, and maintainable.(see [here](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/pr_code_suggestions_prompts.toml#L34)).
-    Hence, if you are interested only in feedback about clear bugs, the `review` tool might suffice. If you want more detailed feedback, including broader suggestions for improving the code, also enable the `improve` tool to run on each PR.
+    - The `improve` tool, on the other hand, has a broader mandate, and in addition to bugs and issues, it can also give suggestions for improving code quality and making the code more efficient, readable, and maintainable (see [here](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/pr_code_suggestions_prompts.toml#L34)).
+    - Hence, if you are interested only in feedback about clear bugs, the `review` tool might suffice. If you want a more detailed feedback, including broader suggestions for improving the PR code, also enable the `improve` tool to run on each PR.
 
 ### A note on code suggestions quality
 
 - While the current AI for code is getting better and better (GPT-4), it's not flawless. Not all the suggestions will be perfect, and a user should not accept all of them automatically. Critical reading and judgment are required.
-- While mistakes of the AI are rare but can happen, a real benefit of the tool is to catch, with high probability, **mistakes or bugs done by the PR author**, when they happen. So, it's a good practice to spend the needed ~30-60 seconds to review the suggestions, even if not all of them are relevant.
-- The hierarchical structure of the suggestions UI-UX is designed to help the user to _quickly_ understand them, and to decide which ones are relevant and which are not:
+- While mistakes of the AI are rare but can happen, a real benefit from the suggestions of the `improve` (and [`review`](https://pr-agent-docs.codium.ai/tools/review/)) tool is to catch, with high probability, **mistakes or bugs done by the PR author**, when they happen. So, it's a good practice to spend the needed ~30-60 seconds to review the suggestions, even if not all of them are always relevant.
+- The hierarchical structure of the suggestions is designed to help the user to _quickly_ understand them, and to decide which ones are relevant and which are not:
 
     - Only if the `Category` header is relevant, the user should move to the summarized suggestion description
     - Only if the summarized suggestion description is relevant, the user should click on the collpasible, to read the full suggestion description with a code preview example.
