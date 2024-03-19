@@ -89,6 +89,13 @@ To edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agen
     ```
     Use triple quotes to write multi-line instructions. Use bullet points to make the instructions more readable.
 
+!!! tip "Review vs. Improve tools comparison"
+
+    The [`review` tool](https://pr-agent-docs.codium.ai/tools/review/)  includes a section called 'Possible issues', that also provide feedback on the PR Code.
+    In this section, the model is instructed to focus **only** on [major bugs and issues](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/pr_reviewer_prompts.toml#L71).
+    The 'improve' tool, on the other hand, has a broader mandate, and in addition to bugs and issues, it makes suggestions for improving code quality and making the code more efficient, readable, and maintainable.(see [here](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/pr_code_suggestions_prompts.toml#L34)).
+    Hence, if you are interested only in feedback about clear bugs, the `review` tool might suffice. If you want more detailed feedback, including broader suggestions for improving the code, also enable the `improve` tool to run on each PR.
+
 ### A note on code suggestions quality
 
 - While the current AI for code is getting better and better (GPT-4), it's not flawless. Not all the suggestions will be perfect, and a user should not accept all of them automatically. Critical reading and judgment are required.
