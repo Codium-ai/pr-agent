@@ -9,13 +9,13 @@ For example:
 
 <kbd>
 <a href="https://codium.ai/images/pr_agent/describe_comment.png">
-<img src=https://codium.ai/images/pr_agent/describe_comment.png width="512">
+<img src="https://codium.ai/images/pr_agent/describe_comment.png" width="512">
 </a>
 </kbd>
 
 <kbd>
 <a href="https://codium.ai/images/pr_agent/describe_new.png">
-<img src=https://codium.ai/images/pr_agent/describe_new.png width="512">
+<img src="https://codium.ai/images/pr_agent/describe_new.png" width="512">
 </a>
 </kbd>
 
@@ -33,7 +33,7 @@ To edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agen
 
     - `publish_labels`: if set to true, the tool will publish the labels to the PR. Default is true.
 
-    - `publish_description_as_comment`: if set to true, the tool will publish the description as a comment to the PR. If false, it will overwrite the origianl description. Default is false.
+    - `publish_description_as_comment`: if set to true, the tool will publish the description as a comment to the PR. If false, it will overwrite the original description. Default is false.
 
     - `add_original_user_description`: if set to true, the tool will add the original user description to the generated description. Default is true.
 
@@ -58,7 +58,7 @@ To copy the `changes walkthrough` table to the "Files changed" tab, you can clic
 
 <kbd>
 <a href="https://codium.ai/images/pr_agent/add_table_checkbox.png">
-<img src=https://codium.ai/images/pr_agent/add_table_checkbox.png width="512">
+<img src="https://codium.ai/images/pr_agent/add_table_checkbox.png" width="512">
 </a>
 </kbd>
 
@@ -68,7 +68,7 @@ If you prefer to have the file summaries appear in the "Files changed" tab on ev
 
 <kbd>
 <a href="https://codium.ai/images/pr_agent/diffview-table.png">
-<img src=https://codium.ai/images/pr_agent/diffview-table.png width="512">
+<img src="https://codium.ai/images/pr_agent/diffview-table.png" width="512">
 </a>
 </kbd>
 
@@ -76,7 +76,7 @@ If you prefer to have the file summaries appear in the "Files changed" tab on ev
 
 <kbd>
 <a href="https://codium.ai/images/pr_agent/diffview_changes.png">
-<img src=https://codium.ai/images/pr_agent/diffview_changes.png width="512">
+<img src="https://codium.ai/images/pr_agent/diffview_changes.png" width="512">
 </a>
 </kbd>
 
@@ -99,8 +99,8 @@ Now add/edit the custom labels. they should be formatted as follows:
 
 The description should be comprehensive and detailed, indicating when to add the desired label. For example:
 <kbd>
-<a href="https://codium.ai/images/pr_agent/custom_labels.png">
-<img src=https://codium.ai/images/pr_agent/add_native_custom_labels.png width="768">
+<a href="https://codium.ai/images/pr_agent/add_native_custom_labels.png">
+<img src="https://codium.ai/images/pr_agent/add_native_custom_labels.png" width="768">
 </a>
 </kbd>
 
@@ -127,7 +127,7 @@ The marker `pr_agent:type` will be replaced with the PR type, `pr_agent:summary`
 
 <kbd>
 <a href="https://codium.ai/images/pr_agent/describe_markers_before.png">
-<img src=https://codium.ai/images/pr_agent/describe_markers_before.png width="512">
+<img src="https://codium.ai/images/pr_agent/describe_markers_before.png" width="512">
 </a>
 </kbd>
 
@@ -135,7 +135,7 @@ The marker `pr_agent:type` will be replaced with the PR type, `pr_agent:summary`
 
 <kbd>
 <a href="https://codium.ai/images/pr_agent/describe_markers_after.png">
-<img src=https://codium.ai/images/pr_agent/describe_markers_after.png width="512">
+<img src="https://codium.ai/images/pr_agent/describe_markers_after.png" width="512">
 </a>
 </kbd>
 
