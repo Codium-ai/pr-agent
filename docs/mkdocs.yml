@@ -7,9 +7,9 @@ nav:
     - Locally: 'installation/locally.md'
     - GitHub: 'installation/github.md'
     - GitLab: 'installation/gitlab.md'
-    - 💎 GitLab Pro: 'installation/gitlab_pro.md'
     - BitBucket: 'installation/bitbucket.md'
     - Azure DevOps: 'installation/azure.md'
+    - 💎 PR-Agent Pro: 'installation/pr_agent_pro.md'
   - Usage Guide: 
     - 'usage-guide/index.md'
     - Introduction: 'usage-guide/introduction.md'
@@ -35,7 +35,7 @@ nav:
   - Core Abilities: 'core-abilities/index.md'
 
 theme:
-  logo: assets/logo.png
+  logo: assets/logo.svg
   favicon: assets/favicon.ico
   name: material
   features:

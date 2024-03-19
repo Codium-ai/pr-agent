@@ -197,6 +197,12 @@ class GitProvider(ABC):
     def calc_pr_statistics(self, pull_request_data: dict):
         return {}
 
+    def get_num_of_files(self):
+        try:
+            return len(self.get_diff_files())
+        except Exception as e:
+            return -1
+
 
 def get_main_pr_language(languages, files) -> str:
     """
@@ -265,6 +271,7 @@ def get_main_pr_language(languages, files) -> str:
         pass
 
     return main_language_str
+
 
 class IncrementalPR:
     def __init__(self, is_incremental: bool = False):

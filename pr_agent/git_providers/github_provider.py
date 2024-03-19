@@ -114,6 +114,11 @@ class GithubProvider(GitProvider):
                 self.git_files = self.pr.get_files()
             return self.git_files
 
+    def get_num_of_files(self):
+        if self.git_files:
+            return self.git_files.totalCount
+        else:
+            return -1
 
     @retry(exceptions=RateLimitExceeded,
            tries=get_settings().github.ratelimit_retries, delay=2, backoff=2, jitter=(1, 3))

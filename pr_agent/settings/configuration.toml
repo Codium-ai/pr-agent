@@ -22,10 +22,10 @@ ai_disclaimer=""  # Pro feature, full text for the AI disclaimer
 
 [pr_reviewer] # /review #
 # enable/disable features
-require_focused_review=false
 require_score_review=false
 require_tests_review=true
 require_estimate_effort_to_review=true
+require_can_be_split_review=false
 # soc2
 require_soc2_ticket=false
 soc2_ticket_prompt="Does the PR description include a link to ticket in a project management system (e.g., Jira, Asana, Trello, etc.) ?"
@@ -192,7 +192,8 @@ pr_commands = [
 url = ""
 
 [litellm]
-#use_client = false
+# use_client = false
+# drop_params = false
 
 [pr_similar_issue]
 skip_comments = false
