@@ -35,6 +35,8 @@ To edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agen
     - `extra_instructions`: Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".
 
 !!! example "Enable\\disable sub-sections"
+    You can enable or disable specific sub-sections of the review tool:
+
     - `require_score_review`: if set to true, the tool will add a section that scores the PR. Default is false.
     - `require_tests_review`: if set to true, the tool will add a section that checks if the PR contains tests. Default is true.
     - `require_estimate_effort_to_review`: if set to true, the tool will add a section that estimates the effort needed to review the PR. Default is true.
@@ -47,11 +49,15 @@ To edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agen
     - `require_soc2_ticket`: If set to true, the SOC2 ticket checker sub-tool will be enabled. Default is false.
     - `soc2_ticket_prompt`: The prompt for the SOC2 ticket review. Default is: `Does the PR description include a link to ticket in a project management system (e.g., Jira, Asana, Trello, etc.) ?`. Edit this field if your compliance requirements are different.
 
-!!! example Adding PR labels
+!!! example "Adding PR labels"
+    You can enable the tool to add specific labels to the PR:
+
     - `enable_review_labels_security`: if set to true, the tool will publish a 'possible security issue' label if it detects a security issue. Default is true.
     - `enable_review_labels_effort`: if set to true, the tool will publish a 'Review effort [1-5]: x' label. Default is true.
 
 !!! example "Auto-approval"
+    The review tool can approve a PR when a specific comment, `/review auto_approve` is invoked.
+
     - `enable_auto_approval`: if set to true, the tool will approve the PR when invoked with the 'auto_approve' command. Default is false. This flag can be changed only from configuration file.
     - `maximal_review_effort`: maximal effort level for auto-approval. If the PR's estimated review effort is above this threshold, the auto-approval will not run. Default is 5.
 
@@ -109,7 +115,7 @@ The tool will first ask the author questions about the PR, and will guide the re
     On the other hand, if you find one of the enabled features to be irrelevant for your use case, disable it. No default configuration can fit all use cases.
 
 !!! tip "Automation"
-    - When you first install PR-Agent app, the [default mode](../usage-guide/automations_and_usage.md#github-app-automatic-tools-when-a-new-pr-is-opened) for the `review` tool is:
+    When you first install PR-Agent app, the [default mode](../usage-guide/automations_and_usage.md#github-app-automatic-tools-when-a-new-pr-is-opened) for the `review` tool is:
     ```
     pr_commands = ["/review --pr_reviewer.num_code_suggestions=0", ...]
     ```
