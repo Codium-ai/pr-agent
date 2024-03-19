@@ -70,8 +70,8 @@ For invoking the incremental mode, the following command can be used:
 Note that the incremental mode is only available for GitHub.
 
 <kbd>
-<a href="https://codium.ai/images/pr_agent/incremental_review.png">
-<img src="https://codium.ai/images/pr_agent/incremental_review.png" width="512">
+<a href="https://codium.ai/images/pr_agent/incremental_review_2.png">
+<img src="https://codium.ai/images/pr_agent/incremental_review_2.png" width="512">
 </a>
 </kbd>
 
