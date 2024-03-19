@@ -19,8 +19,8 @@ The code suggestions can be presented as a single comment (via `pr_code_suggesti
 Or as a separate commitable code comment for each suggestion:
 
 <kbd>
-<a href="https://codium.ai/images/pr_agent/improve.png"  target="_blank">
-<img src=https://codium.ai/images/pr_agent/improve.png width="512">
+<a href="https://codium.ai/images/pr_agent/improve.png" target="_blank">
+<img src="https://codium.ai/images/pr_agent/improve.png" width="512">
 </a>
 </kbd>
 
