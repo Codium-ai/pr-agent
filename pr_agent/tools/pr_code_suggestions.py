@@ -122,6 +122,7 @@ class PRCodeSuggestions:
                         self.git_provider.publish_persistent_comment(pr_body,
                                                                      initial_header="## PR Code Suggestions",
                                                                      update_header=True,
+                                                                     name="suggestions",
                                                                      final_update_message=final_update_message, )
                         if self.progress_response:
                             self.progress_response.delete()
