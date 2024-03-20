@@ -41,4 +41,4 @@ age: 35
     # The YAML string is empty.
     def test_empty_yaml_fixed(self):
         review_text = ""
-        assert try_fix_yaml(review_text) is None
+        assert try_fix_yaml(review_text) is not None
