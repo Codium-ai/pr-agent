@@ -117,10 +117,20 @@ class PRCodeSuggestions:
                         pr_body += HelpMessage.get_improve_usage_guide()
                         pr_body += "\n</details>\n"
 
-                    if self.progress_response:
-                        self.git_provider.edit_comment(self.progress_response, body=pr_body)
+                    if get_settings().pr_code_suggestions.persistent_comment:
+                        final_update_message = False
+                        self.git_provider.publish_persistent_comment(pr_body,
+                                                                     initial_header="## PR Code Suggestions",
+                                                                     update_header=True,
+                                                                     final_update_message=final_update_message, )
+                        if self.progress_response:
+                            self.progress_response.delete()
                     else:
-                        self.git_provider.publish_comment(pr_body)
+
+                        if self.progress_response:
+                            self.git_provider.edit_comment(self.progress_response, body=pr_body)
+                        else:
+                            self.git_provider.publish_comment(pr_body)
 
                 else:
                     self.push_inline_code_suggestions(data)

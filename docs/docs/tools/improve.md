@@ -53,16 +53,17 @@ To edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agen
 
 !!! example "General options"
 
-    - `num_code_suggestions`: number of code suggestions provided by the 'improve' tool. Default is 4.
+    - `num_code_suggestions`: number of code suggestions provided by the 'improve' tool. Default is 4 for CLI, 0 for auto tools.
     - `extra_instructions`: Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".
     - `rank_suggestions`: if set to true, the tool will rank the suggestions, based on importance. Default is false.
-    - `summarize`: if set to true, the tool will display the suggestions in a single comment. Default is false.
+    - `summarize`: if set to true, the tool will display the suggestions in a single comment. Default is true.
+    - `persistent_comment`: if set to true, the improve comment will be persistent, meaning that every new improve request will edit the previous one. Default is false.
     - `enable_help_text`: if set to true, the tool will display a help text in the comment. Default is true.
 
 !!! example "params for '/improve --extended' mode"
 
     - `auto_extended_mode`: enable extended mode automatically (no need for the `--extended` option). Default is true.
-    - `num_code_suggestions_per_chunk`: number of code suggestions provided by the 'improve' tool, per chunk. Default is 8.
+    - `num_code_suggestions_per_chunk`: number of code suggestions provided by the 'improve' tool, per chunk. Default is 5.
     - `rank_extended_suggestions`: if set to true, the tool will rank the suggestions, based on importance. Default is true.
     - `max_number_of_calls`: maximum number of chunks. Default is 5.
     - `final_clip_factor`: factor to remove suggestions with low confidence. Default is 0.9.
