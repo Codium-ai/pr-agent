@@ -13,9 +13,6 @@ litellm==1.31.10
 loguru==0.7.2
 msrest==0.7.1
 openai==1.13.3
-pinecone-client
-pinecone-datasets @ git+https://github.com/mrT23/pinecone-datasets.git@main
-lancedb==0.5.1
 pytest==7.4.0
 PyGithub==1.59.*
 PyYAML==6.0.1
@@ -26,4 +23,9 @@ tiktoken==0.5.2
 ujson==5.8.0
 uvicorn==0.22.0
 tenacity==8.2.3
-# langchain==0.0.349 # uncomment this to support language LangChainOpenAIHandler
+# Uncomment the following lines to enable the 'similar issue' tool
+# pinecone-client
+# pinecone-datasets @ git+https://github.com/mrT23/pinecone-datasets.git@main
+# lancedb==0.5.1
+# uncomment this to support language LangChainOpenAIHandler
+# langchain==0.0.349
