@@ -6,7 +6,7 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://codium.ai/images/pr_agent/logo-dark.png" width="330">
   <source media="(prefers-color-scheme: light)" srcset="https://codium.ai/images/pr_agent/logo-light.png" width="330">
-  <img src="https://codium.ai/images/pr_agent/logo-light.png" alt="logo">
+  <img src="https://codium.ai/images/pr_agent/logo-light.png" alt="logo" width="330">
 
 </picture>
 <br/>
