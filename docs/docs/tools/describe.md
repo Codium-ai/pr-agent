@@ -49,7 +49,8 @@ To edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agen
 
     - `enable_semantic_files_types`: if set to true, "Changes walkthrough" section will be generated. Default is true.
     - `collapsible_file_list`: if set to true, the file list in the "Changes walkthrough" section will be collapsible. If set to "adaptive", the file list will be collapsible only if there are more than 8 files. Default is "adaptive".
-  
+    - `enable_help_text`: if set to true, the tool will display a help text in the comment. Default is false.
+
 ### Inline file summary 💎
 
 This feature enables you to copy the `changes walkthrough` table to the "Files changed" tab, so you can quickly understand the changes in each file while reviewing the code changes (diff view).

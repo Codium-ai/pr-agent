@@ -2,8 +2,11 @@ name: Build-and-test
 
 on:
   push:
+    branches:
+      - main
   pull_request:
-    types: [ opened, reopened ]
+    branches:
+      - main
 
 jobs:
   build-and-test:

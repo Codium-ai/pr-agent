@@ -118,9 +118,15 @@ async def handle_new_pr_opened(body: Dict[str, Any],
                                event: str,
                                sender: str,
                                sender_id: str,
+                               sender_type: str,
                                action: str,
                                log_context: Dict[str, Any],
                                agent: PRAgent):
+    # logic to ignore PRs opened by bot
+    if get_settings().get("GITHUB_APP.IGNORE_BOT_PR", False) and sender_type == "Bot":
+        get_logger().info(f"Ignoring PR from '{sender=}' due to github_app.ignore_bot_pr setting")
+        return {}
+
     title = body.get("pull_request", {}).get("title", "")
 
     # logic to ignore PRs with specific titles (e.g. "[Auto] ...")
@@ -224,9 +230,11 @@ def handle_closed_pr(body, event, action, log_context):
 def get_log_context(body, event, action, build_number):
     sender = ""
     sender_id = ""
+    sender_type = ""
     try:
         sender = body.get("sender", {}).get("login")
         sender_id = body.get("sender", {}).get("id")
+        sender_type = body.get("sender", {}).get("type")
         repo = body.get("repository", {}).get("full_name", "")
         git_org = body.get("organization", {}).get("login", "")
         app_name = get_settings().get("CONFIG.APP_NAME", "Unknown")
@@ -236,7 +244,7 @@ def get_log_context(body, event, action, build_number):
     except Exception as e:
         get_logger().error("Failed to get log context", e)
         log_context = {}
-    return log_context, sender, sender_id
+    return log_context, sender, sender_id, sender_type
 
 
 async def handle_request(body: Dict[str, Any], event: str):
@@ -251,7 +259,7 @@ async def handle_request(body: Dict[str, Any], event: str):
     if not action:
         return {}
     agent = PRAgent()
-    log_context, sender, sender_id = get_log_context(body, event, action, build_number)
+    log_context, sender, sender_id, sender_type = get_log_context(body, event, action, build_number)
 
     # handle comments on PRs
     if action == 'created':
@@ -260,7 +268,7 @@ async def handle_request(body: Dict[str, Any], event: str):
     # handle new PRs
     elif event == 'pull_request' and action != 'synchronize' and action != 'closed':
         get_logger().debug(f'Request body', artifact=body, event=event)
-        await handle_new_pr_opened(body, event, sender, sender_id, action, log_context, agent)
+        await handle_new_pr_opened(body, event, sender, sender_id, sender_type, action, log_context, agent)
     # handle pull_request event with synchronize action - "push trigger" for new commits
     elif event == 'pull_request' and action == 'synchronize':
         get_logger().debug(f'Request body', artifact=body, event=event)

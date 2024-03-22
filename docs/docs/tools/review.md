@@ -33,6 +33,7 @@ To edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agen
     - `inline_code_comments`: if set to true, the tool will publish the code suggestions as comments on the code diff. Default is false.
     - `persistent_comment`: if set to true, the review comment will be persistent, meaning that every new review request will edit the previous one. Default is true.
     - `extra_instructions`: Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".
+    - `enable_help_text`: if set to true, the tool will display a help text in the comment. Default is true.
 
 !!! example "Enable\\disable sub-sections"
     You can enable or disable specific sub-sections of the review tool:
