@@ -1,8 +1,5 @@
 from pr_agent import cli
 from pr_agent.config_loader import get_settings
-from pr_agent.log import setup_logger
-
-setup_logger()
 
 
 def main():
@@ -18,12 +15,8 @@ def main():
     get_settings().set("openai.key", openai_key)
     get_settings().set("github.user_token", user_token)
 
-    # Preparing the command
-    run_command = f"--pr_url={pr_url} {command.lstrip('/')}"
-    args = cli.set_parser().parse_args(run_command.split())
-
     # Run the command. Feedback will appear in GitHub PR comments
-    cli.run(args=args)
+    cli.run_command(pr_url, command)
 
 
 if __name__ == '__main__':
