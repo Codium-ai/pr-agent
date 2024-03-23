@@ -33,19 +33,19 @@ Making pull requests less painful with an AI agent
   
 ## News and Updates
 
-### Jan 24, 2024
+### March 24, 2024
 PR-Agent is now available for easy installation via [pip](https://pr-agent-docs.codium.ai/installation/locally/#using-pip-package).
 
-### Jan 17, 2024
+### March 17, 2024
 - A new feature is now available for the review tool: [`require_can_be_split_review`](https://pr-agent-docs.codium.ai/tools/review/#enabledisable-features). 
 If set to true, the tool will add a section that checks if the PR contains several themes, and can be split into smaller PRs.
 
 <kbd><img src="https://codium.ai/images/pr_agent/multiple_pr_themes.png" width="512"></kbd>
 
-### Jan 10, 2024
+### March 10, 2024
 - A new [knowledge-base website](https://pr-agent-docs.codium.ai/) for PR-Agent is now available. It includes detailed information about the different tools, usage guides and more, in an accessible and organized format.
 
-### Jan 8, 2024
+### March 8, 2024
 
 - A new tool, [Find Similar Code](https://pr-agent-docs.codium.ai/tools/similar_code/) 💎 is now available. 
 <br>This tool retrieves the most similar code components from inside the organization's codebase, or from open-source code:
@@ -244,7 +244,8 @@ To use your own version of PR-Agent, you first need to acquire two tokens:
 There are several ways to use PR-Agent:
 
 **Locally**
-- [Use Docker image (no installation required)](https://pr-agent-docs.codium.ai/installation/locally/#use-docker-image-no-installation-required)
+- [Using pip package](https://pr-agent-docs.codium.ai/installation/locally/#using-pip-package)
+- [Using Docker image](https://pr-agent-docs.codium.ai/installation/locally/#using-docker-image)
 - [Run from source](https://pr-agent-docs.codium.ai/installation/locally/#run-from-source)
 
 **GitHub specific methods**
