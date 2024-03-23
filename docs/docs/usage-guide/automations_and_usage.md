@@ -1,5 +1,5 @@
 ## Local repo (CLI)
-When running from your local repo (CLI), your local configuration file will be used.
+When running from your locally cloned PR-Agent repo (CLI), your local configuration file will be used.
 Examples of invoking the different tools via the CLI:
 
 - **Review**:       `python -m pr_agent.cli --pr_url=<pr_url>  review`

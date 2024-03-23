@@ -17,6 +17,7 @@ from pr_agent.servers.help import HelpMessage
 class PRQuestions:
     def __init__(self, pr_url: str, args=None, ai_handler: partial[BaseAiHandler,] = LiteLLMAIHandler):
         question_str = self.parse_args(args)
+        self.pr_url = pr_url
         self.git_provider = get_git_provider()(pr_url)
         self.main_pr_language = get_main_pr_language(
             self.git_provider.get_languages(), self.git_provider.get_files()
@@ -49,7 +50,7 @@ class PRQuestions:
         return question_str
 
     async def run(self):
-        get_logger().info('Answering a PR question...')
+        get_logger().info(f'Answering a PR question about the PR {self.pr_url} ')
         relevant_configs = {'pr_questions': dict(get_settings().pr_questions),
                             'config': dict(get_settings().config)}
         get_logger().debug("Relevant configs", artifacts=relevant_configs)
