@@ -1,20 +1,18 @@
-## Using Pip package
+## Using pip package
 
-1. Install the package:
+Install the package:
 
 ```
 pip install pr-agent
 ```
 
-2. Run the relevant tool. Make sure to fill in the required parameters (`user_token`, `openai_key`, `pr_url`, `command`):
+Then run the relevant tool with the script below.
+<br>
+Make sure to fill in the required parameters (`user_token`, `openai_key`, `pr_url`, `command`):
 
 ```python
 from pr_agent import cli
 from pr_agent.config_loader import get_settings
-from pr_agent.log import setup_logger
-
-setup_logger()
-
 
 def main():
     # Fill in the following values
@@ -41,7 +39,7 @@ if __name__ == '__main__':
     main()
 ```
 
-## Use Docker image (no installation required)
+## Using Docker image
 
 A list of the relevant tools can be found in the [tools guide](../tools/ask.md).
 

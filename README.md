@@ -33,6 +33,9 @@ Making pull requests less painful with an AI agent
   
 ## News and Updates
 
+### Jan 24, 2024
+PR-Agent is now available for easy installation via [pip](https://pr-agent-docs.codium.ai/installation/locally/#using-pip-package).
+
 ### Jan 17, 2024
 - A new feature is now available for the review tool: [`require_can_be_split_review`](https://pr-agent-docs.codium.ai/tools/review/#enabledisable-features). 
 If set to true, the tool will add a section that checks if the PR contains several themes, and can be split into smaller PRs.
