@@ -257,7 +257,8 @@ async def handle_request(body: Dict[str, Any], event: str):
 
     # logic to ignore PRs opened by bot
     if get_settings().get("GITHUB_APP.IGNORE_BOT_PR", False) and sender_type == "Bot":
-        get_logger().info(f"Ignoring PR from '{sender=}' due to github_app.ignore_bot_pr setting")
+        if 'pr-agent' not in sender:
+            get_logger().info(f"Ignoring PR from '{sender=}' because it is a bot")
         return {}
 
     # handle comments on PRs
