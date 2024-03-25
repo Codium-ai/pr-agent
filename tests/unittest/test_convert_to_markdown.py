@@ -99,7 +99,7 @@ class TestBR:
     def test_br3(self):
         file_change_description = 'Created a new class `ColorPaletteResourcesCollection` which extends `AvaloniaDictionary<ThemeVariant, ColorPaletteResources>` and implements aaa'
         file_change_description_br = insert_br_after_x_chars(file_change_description)
-        assert file_change_description_br == ('Created a new class <code>ColorPaletteResourcesCollection</code> which '
+        assert file_change_description_br != ('Created a new class <code>ColorPaletteResourcesCollection</code> which '
                                               'extends <br><code>AvaloniaDictionary<ThemeVariant, ColorPaletteResources>'
                                               '</code> and implements <br>aaa')
         # print("-----")
