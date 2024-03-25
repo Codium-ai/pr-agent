@@ -22,116 +22,22 @@ class HelpMessage:
     @staticmethod
     def get_review_usage_guide():
         output ="**Overview:**\n"
-        output +="The `review` tool scans the PR code changes, and generates a PR review. The tool can be triggered [automatically](https://pr-agent-docs.codium.ai/usage-guide/automations_and_usage/#github-app-automatic-tools-when-a-new-pr-is-opened) every time a new PR is opened, or can be invoked manually by commenting on any PR.\n"
+        output +=("The `review` tool scans the PR code changes, and generates a PR review which includes several types of feedbacks, such as possible PR issues, security threats and relevant test in the PR. More feedbacks can be [added](https://pr-agent-docs.codium.ai/tools/review/#general-configurations) by configuring the tool.\n\n"
+                  "The tool can be triggered [automatically](https://pr-agent-docs.codium.ai/usage-guide/automations_and_usage/#github-app-automatic-tools-when-a-new-pr-is-opened) every time a new PR is opened, or can be invoked manually by commenting on any PR.\n")
         output +="""\
-When commenting, to edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L19) related to the review tool (`pr_reviewer` section), use the following template:
+- When commenting, to edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L23) related to the review tool (`pr_reviewer` section), use the following template:
 ```
 /review --pr_reviewer.some_config1=... --pr_reviewer.some_config2=...
 ```
-With a [configuration file](https://pr-agent-docs.codium.ai/usage-guide/configuration_options/), use the following template:
+- With a [configuration file](https://pr-agent-docs.codium.ai/usage-guide/configuration_options/), use the following template:
 ```
 [pr_reviewer]
 some_config1=...
 some_config2=...
 ```
     """
-        output +="\n\n<table>"
 
-        # extra instructions
-        output += "<tr><td><details> <summary><strong> Utilizing extra instructions</strong></summary><hr>\n\n"
-        output += '''\
-The `review` tool can be configured with extra instructions, which can be used to guide the model to a feedback tailored to the needs of your project.
-
-Be specific, clear, and concise in the instructions. With extra instructions, you are the prompter. Specify the relevant sub-tool, and the relevant aspects of the PR that you want to emphasize.
-
-Examples for extra instructions:
-```
-[pr_reviewer] # /review #
-extra_instructions="""
-In the 'possible issues' section, emphasize the following:
-- Does the code logic cover relevant edge cases?
-- Is the code logic clear and easy to understand?
-- Is the code logic efficient?
-...
-"""
-```
-Use triple quotes to write multi-line instructions. Use bullet points to make the instructions more readable.
-        '''
-        output += "\n\n</details></td></tr>\n\n"
-
-        # automation
-        output += "<tr><td><details> <summary><strong> How to enable\\disable automation</strong></summary><hr>\n\n"
-        output += """\
-- When you first install PR-Agent app, the [default mode](https://pr-agent-docs.codium.ai/usage-guide/automations_and_usage/#github-app-automatic-tools-when-a-new-pr-is-opened) for the `review` tool is:
-```
-pr_commands = ["/review", ...]
-```
-meaning the `review` tool will run automatically on every PR, with the default configuration.
-Edit this field to enable/disable the tool, or to change the used configurations
-        """
-        output += "\n\n</details></td></tr>\n\n"
-
-#         # code feedback
-#         output += "<tr><td><details> <summary><strong> About the 'Code feedback' section</strong></summary><hr>\n\n"
-#         output+="""\
-# The `review` tool provides several type of feedbacks, one of them is code suggestions.
-# If you are interested **only** in the code suggestions, it is recommended to use the [`improve`](https://github.com/Codium-ai/pr-agent/blob/main/docs/IMPROVE.md) feature instead, since it dedicated only to code suggestions, and usually gives better results.
-# Use the `review` tool if you want to get a more comprehensive feedback, which includes code suggestions as well.
-# """
-#         output += "\n\n</details></td></tr>\n\n"
-
-        # auto-labels
-        output += "<tr><td><details> <summary><strong> Auto-labels</strong></summary><hr>\n\n"
-        output+="""\
-The `review` tool can auto-generate two specific types of labels for a PR:
-- a `possible security issue` label, that detects possible [security issues](https://github.com/Codium-ai/pr-agent/blob/tr/user_description/pr_agent/settings/pr_reviewer_prompts.toml#L136) (`enable_review_labels_security` flag)
-- a `Review effort [1-5]: x` label, where x is the estimated effort to review the PR (`enable_review_labels_effort` flag)
-"""
-        output += "\n\n</details></td></tr>\n\n"
-
-        # extra sub-tools
-        output += "<tr><td><details> <summary><strong> Extra sub-tools</strong></summary><hr>\n\n"
-        output += """\
-The `review` tool provides a collection of possible feedbacks about a PR.
-It is recommended to review the [possible options](https://pr-agent-docs.codium.ai/tools/review/#enabledisable-features), and choose the ones relevant for your use case.
-Some of the feature that are disabled by default are quite useful, and should be considered for enabling. For example: 
-`require_score_review`, `require_soc2_ticket`, `require_can_be_split_review`, and more.
-"""
-        output += "\n\n</details></td></tr>\n\n"
-
-        output += "<tr><td><details> <summary><strong> Auto-approve PRs</strong></summary><hr>\n\n"
-        output += '''\
-By invoking:
-```
-/review auto_approve
-```
-The tool will automatically approve the PR, and add a comment with the approval.
-
-
-To ensure safety, the auto-approval feature is disabled by default. To enable auto-approval, you need to actively set in a pre-defined configuration file the following:
-```
-[pr_reviewer]
-enable_auto_approval = true
-```
-(this specific flag cannot be set with a command line argument, only in the configuration file, committed to the repository)
-
-
-You can also enable auto-approval only if the PR meets certain requirements, such as that the `estimated_review_effort` is equal or below a certain threshold, by adjusting the flag:
-```
-[pr_reviewer]
-maximal_review_effort = 5
-```
-'''
-        output += "\n\n</details></td></tr>\n\n"
-
-        # general
-        output += "\n\n<tr><td><details> <summary><strong> More PR-Agent commands</strong></summary><hr> \n\n"
-        output += HelpMessage.get_general_bot_help_text()
-        output += "\n\n</details></td></tr>\n\n"
-
-        output += "</table>"
-
-        output += f"\n\nSee the [review usage](https://pr-agent-docs.codium.ai/tools/review/) page for a comprehensive guide on using this tool.\n\n"
+        output += f"\n\nSee the review [usage page](https://pr-agent-docs.codium.ai/tools/review/) for a comprehensive guide on using this tool.\n\n"
 
         return output
 
@@ -276,13 +182,13 @@ Note that the tool does not have "memory" of previous questions, and answers eac
         output += "The `improve` tool scans the PR code changes, and automatically generates suggestions for improving the PR code. "
         output += "The tool can be triggered [automatically](https://pr-agent-docs.codium.ai/usage-guide/automations_and_usage/#github-app-automatic-tools-when-a-new-pr-is-opened) every time a new PR is opened, or can be invoked manually by commenting on a PR.\n"
         output += """\
-When commenting, to edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L69) related to the improve tool (`pr_code_suggestions` section), use the following template:
+- When commenting, to edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L78) related to the improve tool (`pr_code_suggestions` section), use the following template:
 
 ```
 /improve --pr_code_suggestions.some_config1=... --pr_code_suggestions.some_config2=...
 ```
 
-With a [configuration file](https://pr-agent-docs.codium.ai/usage-guide/configuration_options/), use the following template:
+- With a [configuration file](https://pr-agent-docs.codium.ai/usage-guide/configuration_options/), use the following template:
 
 ```
 [pr_code_suggestions]
@@ -291,64 +197,7 @@ some_config2=...
 ```
     
 """
-        output += "\n\n<table>"
 
-        # automation
-        output += "<tr><td><details> <summary><strong> Enabling\\disabling automation </strong></summary><hr>\n\n"
-        output += """\
-When you first install the app, the [default mode](https://pr-agent-docs.codium.ai/usage-guide/automations_and_usage/#github-app-automatic-tools-when-a-new-pr-is-opened) for the improve tool is:
-
-```
-pr_commands = ["/improve --pr_code_suggestions.summarize=true", ...]
-```
-
-meaning the `improve` tool will run automatically on every PR, with summarization enabled. Delete this line to disable the tool from running automatically.
-"""
-        output += "\n\n</details></td></tr>\n\n"
-
-        # extra instructions
-        output += "<tr><td><details> <summary><strong> Utilizing extra instructions</strong></summary><hr>\n\n"
-        output += '''\
-Extra instructions are very important for the `improve` tool, since they enable to guide the model to suggestions that are more relevant to the specific needs of the project.
-
-Be specific, clear, and concise in the instructions. With extra instructions, you are the prompter. Specify relevant aspects that you want the model to focus on.
-
-Examples for extra instructions:
-
-```
-[pr_code_suggestions] # /improve #
-extra_instructions="""
-Emphasize the following aspects:
-- Does the code logic cover relevant edge cases?
-- Is the code logic clear and easy to understand?
-- Is the code logic efficient?
-...
-"""
-```
-
-Use triple quotes to write multi-line instructions. Use bullet points to make the instructions more readable.
-    '''
-        output += "\n\n</details></td></tr>\n\n"
-
-        # suggestions quality
-        output += "\n\n<tr><td><details> <summary><strong> A note on code suggestions quality</strong></summary><hr> \n\n"
-        output += """\
-- While the current AI for code is getting better and better (GPT-4), it's not flawless. Not all the suggestions will be perfect, and a user should not accept all of them automatically.
-- Suggestions are not meant to be simplistic. Instead, they aim to give deep feedback and raise questions, ideas and thoughts to the user, who can then use his judgment, experience, and understanding of the code base.
-- Recommended to use the 'extra_instructions' field to guide the model to suggestions that are more relevant to the specific needs of the project, or use the [custom suggestions :gem:](https://pr-agent-docs.codium.ai/tools/custom_suggestions/) tool
-- With large PRs, best quality will be obtained by using 'improve --extended' mode.
-
-
-"""
-        output += "\n\n</details></td></tr>\n\n"\
-
-        # general
-        output += "\n\n<tr><td><details> <summary><strong> More PR-Agent commands</strong></summary><hr> \n\n"
-        output += HelpMessage.get_general_bot_help_text()
-        output += "\n\n</details></td></tr>\n\n"
-
-        output += "</table>"
-
-        output += f"\n\nSee the [improve usage](https://pr-agent-docs.codium.ai/tools/improve/) page for a more comprehensive guide on using this tool.\n\n"
+        output += f"\n\nSee the improve [usage page](https://pr-agent-docs.codium.ai/tools/improve/) for a comprehensive guide on using this tool.\n\n"
 
         return output
