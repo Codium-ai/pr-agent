@@ -7,11 +7,11 @@ It can be invoked manually by commenting on any PR:
 ```
 For example:
 
-<kbd><img src=https://codium.ai/images/pr_agent/docs_command.png width="768"></kbd>
+![Docs command](https://codium.ai/images/pr_agent/docs_command.png){width=768}
 
-<kbd><img src=https://codium.ai/images/pr_agent/docs_components.png width="768"></kbd>
+![Docs component](https://codium.ai/images/pr_agent/docs_components.png){width=768}
 
-<kbd><img src=https://codium.ai/images/pr_agent/docs_single_component.png width="768"></kbd>
+![Docs single component](https://codium.ai/images/pr_agent/docs_single_component.png){width=768}
 
 ## Configuration options
  - `docs_style`: The exact style of the documentation (for python docstring). you can choose between: `google`, `numpy`, `sphinx`, `restructuredtext`, `plain`. Default is `sphinx`.

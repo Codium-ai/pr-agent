@@ -7,17 +7,9 @@ The tool can be triggered automatically every time a new PR is [opened](../usage
 ```
 For example:
 
-<kbd>
-<a href="https://codium.ai/images/pr_agent/describe_comment.png">
-<img src="https://codium.ai/images/pr_agent/describe_comment.png" width="512">
-</a>
-</kbd>
+![Describe comment](https://codium.ai/images/pr_agent/describe_comment.png){width=512}
 
-<kbd>
-<a href="https://codium.ai/images/pr_agent/describe_new.png">
-<img src="https://codium.ai/images/pr_agent/describe_new.png" width="512">
-</a>
-</kbd>
+![Describe New](https://codium.ai/images/pr_agent/describe_new.png){width=512}
 
 
   
@@ -57,29 +49,17 @@ This feature enables you to copy the `changes walkthrough` table to the "Files c
 
 To copy the `changes walkthrough` table to the "Files changed" tab, you can click on the checkbox that appears PR Description status message below the main PR Description:
 
-<kbd>
-<a href="https://codium.ai/images/pr_agent/add_table_checkbox.png">
-<img src="https://codium.ai/images/pr_agent/add_table_checkbox.png" width="512">
-</a>
-</kbd>
+![Add table checkbox](https://codium.ai/images/pr_agent/add_table_checkbox.png){width=512}
 
 If you prefer to have the file summaries appear in the "Files changed" tab on every PR, change the `pr_description.inline_file_summary` parameter in the configuration file, possible values are:
 
 - `'table'`: File changes walkthrough table will be displayed on the top of the "Files changed" tab, in addition to the "Conversation" tab.
 
-<kbd>
-<a href="https://codium.ai/images/pr_agent/diffview-table.png">
-<img src="https://codium.ai/images/pr_agent/diffview-table.png" width="512">
-</a>
-</kbd>
+![Diffview table](https://codium.ai/images/pr_agent/diffview-table.png){width=512}
 
 - `true`: A collapsable file comment with changes title and a changes summary for each file in the PR.
 
-<kbd>
-<a href="https://codium.ai/images/pr_agent/diffview_changes.png">
-<img src="https://codium.ai/images/pr_agent/diffview_changes.png" width="512">
-</a>
-</kbd>
+![Diffview changes](https://codium.ai/images/pr_agent/diffview_changes.png){width=512}
 
 - `false` (`default`): File changes walkthrough will be added only to the "Conversation" tab.
 
@@ -99,11 +79,7 @@ Now add/edit the custom labels. they should be formatted as follows:
 * Description: Start the description of with prefix `pr_agent:`, for example: `pr_agent: Description of when AI should suggest this label`.<br>
 
 The description should be comprehensive and detailed, indicating when to add the desired label. For example:
-<kbd>
-<a href="https://codium.ai/images/pr_agent/add_native_custom_labels.png">
-<img src="https://codium.ai/images/pr_agent/add_native_custom_labels.png" width="768">
-</a>
-</kbd>
+![Add native custom labels](https://codium.ai/images/pr_agent/add_native_custom_labels.png){width=768}
 
 
 ### Markers template
@@ -126,19 +102,12 @@ pr_agent:walkthrough
 ```
 The marker `pr_agent:type` will be replaced with the PR type, `pr_agent:summary` will be replaced with the PR summary, and `pr_agent:walkthrough` will be replaced with the PR walkthrough.
 
-<kbd>
-<a href="https://codium.ai/images/pr_agent/describe_markers_before.png">
-<img src="https://codium.ai/images/pr_agent/describe_markers_before.png" width="512">
-</a>
-</kbd>
+![Describe markers before](https://codium.ai/images/pr_agent/describe_markers_before.png){width=512}
 
 &rarr;
 
-<kbd>
-<a href="https://codium.ai/images/pr_agent/describe_markers_after.png">
-<img src="https://codium.ai/images/pr_agent/describe_markers_after.png" width="512">
-</a>
-</kbd>
+![Describe markers after](https://codium.ai/images/pr_agent/describe_markers_after.png){width=512}
+
 
 **Configuration params**:
 

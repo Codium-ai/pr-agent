@@ -47,83 +47,25 @@ PR-Agent offers extensive pull request functionalities across various git provid
 
 
 ## Example results
-<hr>
-<h4><a href="https://github.com/Codium-ai/pr-agent/pull/530">/describe</a></h4>
-<div align="center">
-<p float="center">
-<img src="https://www.codium.ai/images/pr_agent/describe_new_short_main.png" width="512">
-</p>
-</div>
-<hr>
+#### [/describe](https://github.com/Codium-ai/pr-agent/pull/530)
+<figure markdown="1">
+![/describe](https://www.codium.ai/images/pr_agent/describe_new_short_main.png){width=512}
+</figure>
 
-<h4><a href="https://github.com/Codium-ai/pr-agent/pull/732#issuecomment-1975099151">/review</a></h4>
-<div align="center">
-<p float="center">
-<kbd>
-<img src="https://www.codium.ai/images/pr_agent/review_new_short_main.png" width="512">
-</kbd>
-</p>
-</div>
-<hr>
+#### [/review](https://github.com/Codium-ai/pr-agent/pull/732#issuecomment-1975099151)
+<figure markdown="1">
+![/review](https://www.codium.ai/images/pr_agent/review_new_short_main.png){width=512}
+</figure>
 
-<h4><a href="https://github.com/Codium-ai/pr-agent/pull/732#issuecomment-1975099159">/improve</a></h4>
-<div align="center">
-<p float="center">
-<kbd>
-<img src="https://www.codium.ai/images/pr_agent/improve_new_short_main.png" width="512">
-</kbd>
-</p>
-</div>
-<hr>
+#### [/improve](https://github.com/Codium-ai/pr-agent/pull/732#issuecomment-1975099159)
+<figure markdown="1">
+![/improve](https://www.codium.ai/images/pr_agent/improve_new_short_main.png){width=512}
+</figure>
 
-<h4><a href="https://github.com/Codium-ai/pr-agent/pull/530">/generate_labels</a></h4>
-<div align="center">
-<p float="center">
-<kbd><img src="https://www.codium.ai/images/pr_agent/geneare_custom_labels_main_short.png" width="300"></kbd>
-</p>
-</div>
-
-[//]: # (<h4><a href="https://github.com/Codium-ai/pr-agent/pull/78#issuecomment-1639739496">/reflect_and_review:</a></h4>)
-
-[//]: # (<div align="center">)
-
-[//]: # (<p float="center">)
-
-[//]: # (<img src="https://www.codium.ai/images/reflect_and_review.gif" width="800">)
-
-[//]: # (</p>)
-
-[//]: # (</div>)
-
-[//]: # (<h4><a href="https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695020538">/ask:</a></h4>)
-
-[//]: # (<div align="center">)
-
-[//]: # (<p float="center">)
-
-[//]: # (<img src="https://www.codium.ai/images/ask-2.gif" width="800">)
-
-[//]: # (</p>)
-
-[//]: # (</div>)
-
-[//]: # (<h4><a href="https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695024952">/improve:</a></h4>)
-
-[//]: # (<div align="center">)
-
-[//]: # (<p float="center">)
-
-[//]: # (<img src="https://www.codium.ai/images/improve-2.gif" width="800">)
-
-[//]: # (</p>)
-
-[//]: # (</div>)
-<div align="left">
-
-
-</div>
-<hr>
-
+#### [/generate_labels](https://github.com/Codium-ai/pr-agent/pull/530)
+<figure markdown="1">
+![/generate_labels](https://www.codium.ai/images/pr_agent/geneare_custom_labels_main_short.png){width=300}
+</figure>
 
 ## How it works
 

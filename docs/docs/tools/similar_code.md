@@ -5,7 +5,8 @@ For example:
 
 `Global Search` for a method called `chat_completion`:
 
-<kbd><img src=https://codium.ai/images/pr_agent/similar_code_global2.png width="768"></kbd>
+![similar code global](https://codium.ai/images/pr_agent/similar_code_global2.png){width=768}
+
 
 PR-Agent will examine the code component and will extract the most relevant keywords to search for similar code:
 
@@ -16,11 +17,12 @@ PR-Agent will examine the code component and will extract the most relevant keyw
 
 Search result link example:
 
-<kbd><img src=https://codium.ai/images/pr_agent/code_search_result_single.png width="768"></kbd>
+![code search result single](https://codium.ai/images/pr_agent/code_search_result_single.png){width=768}
+
 
 `Organization Search`:
 
-<kbd><img src=https://codium.ai/images/pr_agent/similar_code_org.png width="768"></kbd>
+![similar code org](https://codium.ai/images/pr_agent/similar_code_org.png){width=768}
 
 
 ## How to use
@@ -47,11 +49,11 @@ It can be invoked automatically from the analyze table, can be accessed by:
 /analyze
 ```
 Choose the components you want to find similar code for, and click on the `similar` checkbox.
-<kbd><img src=https://codium.ai/images/pr_agent/analyze_similar.png width="768"></kbd>
+![analyze similar](https://codium.ai/images/pr_agent/analyze_similar.png){width=768}
 
 If you are looking to search for similar code in the organization's codebase, you can click on the `Organization` checkbox, and it will invoke a new search command just for the organization's codebase. 
 
-<kbd><img src=https://codium.ai/images/pr_agent/similar_code_global.png width="768"></kbd>
+![similar code global](https://codium.ai/images/pr_agent/similar_code_global.png){width=768}
 
 
 ## Configuration options
