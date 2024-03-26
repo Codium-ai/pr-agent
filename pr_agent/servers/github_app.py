@@ -231,10 +231,11 @@ def get_log_context(body, event, action, build_number):
         sender_type = body.get("sender", {}).get("type")
         repo = body.get("repository", {}).get("full_name", "")
         git_org = body.get("organization", {}).get("login", "")
+        installation_id = body.get("installation", {}).get("id", "")
         app_name = get_settings().get("CONFIG.APP_NAME", "Unknown")
         log_context = {"action": action, "event": event, "sender": sender, "server_type": "github_app",
                        "request_id": uuid.uuid4().hex, "build_number": build_number, "app_name": app_name,
-                       "repo": repo, "git_org": git_org}
+                       "repo": repo, "git_org": git_org, "installation_id": installation_id}
     except Exception as e:
         get_logger().error("Failed to get log context", e)
         log_context = {}
