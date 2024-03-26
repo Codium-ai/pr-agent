@@ -4,7 +4,7 @@ RUN yum update -y && \
     yum install -y gcc python3-devel && \
     yum clean all
 
-ADD pyproject.toml .
+ADD pyproject.toml requirements.txt .
 RUN pip install . && rm pyproject.toml
 RUN pip install mangum==0.17.0
 COPY pr_agent/ ${LAMBDA_TASK_ROOT}/pr_agent/
