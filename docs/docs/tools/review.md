@@ -8,7 +8,7 @@ For example:
 
 ![review comment](https://codium.ai/images/pr_agent/review_comment.png){width=512}
 
-![review](https://codium.ai/images/pr_agent/review_comment.png){width=512}
+![review](https://codium.ai/images/pr_agent/review3.png){width=512}
 
 
 ## Configuration options
