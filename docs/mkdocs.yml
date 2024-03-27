@@ -77,6 +77,7 @@ theme:
 plugins:
   - social
   - search
+  - glightbox
 
 extra:
   generator: false
@@ -112,10 +113,11 @@ markdown_extensions:
   - pymdownx.details
   - pymdownx.superfences
   - pymdownx.mark
+  - md_in_html
   - attr_list
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
-      emoji_generator: !!python/name:materialx.emoji.to_svg
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - toc:
       title: On this page
       toc_depth: 3

@@ -11,13 +11,11 @@ It can be invoked manually by commenting on any PR:
 ## Example usage
 An example [result](https://github.com/Codium-ai/pr-agent/pull/546#issuecomment-1868524805):
 
-<kbd><img src=https://codium.ai/images/pr_agent/analyze_1.png width="768"></kbd>
-
-<kbd><img src=https://codium.ai/images/pr_agent/analyze_2.png width="768"></kbd>
-
-<kbd><img src=https://codium.ai/images/pr_agent/analyze_3.png width="768"></kbd>
-
-
+![Analyze 1](https://codium.ai/images/pr_agent/analyze_1.png){width=750}
+&rarr;
+![Analyze 2](https://codium.ai/images/pr_agent/analyze_2.png){width=750}
+&rarr;
+![Analyze 3](https://codium.ai/images/pr_agent/analyze_3.png){width=750}
 
 **Notes**
 

@@ -8,13 +8,10 @@ The tool analyzes the failed checks and provides several feedbacks:
 - Failure summary
 - Relevant error logs
 
-<kbd>
-<img src="https://www.codium.ai/images/pr_agent/failed_check1.png" width="768">
-</kbd>
+![Failed Check 1](https://www.codium.ai/images/pr_agent/failed_check1.png){width=768}
+
 &rarr;
-<kbd>
-<img src="https://www.codium.ai/images/pr_agent/failed_check2.png" width="768">
-</kbd>
+![Failed Check 2](https://www.codium.ai/images/pr_agent/failed_check2.png){width=768}
 
 ___
 

@@ -6,10 +6,9 @@ It can be invoked manually by commenting on any PR:
 ```
 For example:
 
-<kbd><img src=https://codium.ai/images/pr_agent/update_changelog_comment.png width="768"></kbd>
+![update_changelog_comment](https://codium.ai/images/pr_agent/update_changelog_comment.png){width=768}
 
-<kbd><img src=https://codium.ai/images/pr_agent/update_changelog.png width="768"></kbd>
-
+![update_changelog](https://codium.ai/images/pr_agent/update_changelog.png){width=768}
 
 ## Configuration options
 
