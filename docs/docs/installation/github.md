@@ -159,6 +159,9 @@ cp pr_agent/settings/.secrets_template.toml pr_agent/settings/.secrets.toml
 
 ## Deploy as a Lambda Function
 
+Note that since AWS Lambda env vars cannot have "." in the name, you can replace each "." in an env variable with "__".<br>
+For example: `GITHUB.WEBHOOK_SECRET` --> `GITHUB__WEBHOOK_SECRET`
+
 1. Follow steps 1-5 from [here](#run-as-a-github-app).
 2. Build a docker image that can be used as a lambda function
     ```shell
