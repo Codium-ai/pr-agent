@@ -229,7 +229,7 @@ class GithubProvider(GitProvider):
         self.publish_comment(pr_comment)
 
     def publish_comment(self, pr_comment: str, is_temporary: bool = False):
-        if is_temporary and not get_settings().config.publish_output_progress:
+        if is_temporary or not get_settings().config.publish_output_progress:
             get_logger().debug(f"Skipping publish_comment for temporary comment: {pr_comment}")
             return
 
