@@ -7,6 +7,7 @@ You can use our pre-built Github Action Docker image to run PR-Agent as a Github
 ```yaml
 on:
   pull_request:
+    types: [opened,reopened,ready_for_review,review_requested]
   issue_comment:
 jobs:
   pr_agent_job:
@@ -28,6 +29,7 @@ jobs:
 ```yaml
 on:
   pull_request:
+    types: [opened,reopened,ready_for_review,review_requested]
   issue_comment:
 
 jobs:
