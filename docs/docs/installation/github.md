@@ -26,29 +26,14 @@ jobs:
           OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
-** if you want to pin your action to a specific release (v0.7 for example) for stability reasons, use:
+** if you want to pin your action to a specific release (v2.0 for example) for stability reasons, use:
 ```yaml
-on:
-  pull_request:
-    types: [opened, reopened, ready_for_review]
-  issue_comment:
-
-jobs:
-  pr_agent_job:
-    if: ${{ github.event.sender.type != 'Bot' }}
-    runs-on: ubuntu-latest
-    permissions:
-      issues: write
-      pull-requests: write
-      contents: write
-    name: Run pr agent on every pull request, respond to user comments
+...
     steps:
       - name: PR Agent action step
         id: pragent
-        uses: Codium-ai/pr-agent@v0.7
-        env:
-          OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: Codium-ai/pr-agent@v2.0
+...
 ```
 2) Add the following secret to your repository under `Settings > Secrets and variables > Actions > New repository secret > Add secret`:
 
@@ -70,6 +55,7 @@ When you open your next PR, you should see a comment from `github-actions` bot w
         PR_REVIEWER.REQUIRE_TESTS_REVIEW: "false" # Disable tests review
         PR_CODE_SUGGESTIONS.NUM_CODE_SUGGESTIONS: 6 # Increase number of code suggestions
 ```
+See detailed usage instructions in the [USAGE GUIDE](https://pr-agent-docs.codium.ai/usage-guide/automations_and_usage/#github-action)
 
 ---
 
