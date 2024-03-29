@@ -10,7 +10,7 @@
 
 </picture>
 <br/>
-Making pull requests less painful with an AI agent
+CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by providing AI feedbacks and suggestions
 </div>
 
 [![GitHub license](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/Codium-ai/pr-agent/blob/main/LICENSE)
@@ -20,6 +20,14 @@ Making pull requests less painful with an AI agent
     <img alt="GitHub" src="https://img.shields.io/github/last-commit/Codium-ai/pr-agent/main?style=for-the-badge" height="20">
     </a>
 </div>
+
+### [Documentation](https://pr-agent-docs.codium.ai/)
+- See the [Installation Guide](https://pr-agent-docs.codium.ai/installation/) for instructions on installing PR-Agent on different platforms.
+
+- See the [Usage Guide](https://pr-agent-docs.codium.ai/usage-guide/) for instructions on running PR-Agent tools via different interfaces, such as CLI, PR Comments, or by automatically triggering them when a new PR is opened.
+
+- See the [Tools Guide](https://pr-agent-docs.codium.ai/tools/) for a detailed description of the different tools, and the available configurations for each tool.
+
 
 ## Table of Contents
 - [News and Updates](#news-and-updates)
@@ -62,14 +70,6 @@ If set to true, the tool will add a section that checks if the PR contains sever
 
 ## Overview
 <div style="text-align:left;">
-
-CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by providing AI feedbacks and suggestions
-
-- See the [Installation Guide](https://pr-agent-docs.codium.ai/installation/) for instructions on installing and running the tool on different git platforms.
-
-- See the [Usage Guide](https://pr-agent-docs.codium.ai/usage-guide/) for instructions on running the PR-Agent commands via different interfaces, including _CLI_, _online usage_, or by _automatically triggering_ them when a new PR is opened.
-
-- See the [Tools Guide](https://pr-agent-docs.codium.ai/tools/) for a detailed description of the different tools.
 
 Supported commands per platform:
 
