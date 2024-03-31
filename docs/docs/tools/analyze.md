@@ -19,4 +19,4 @@ An example [result](https://github.com/Codium-ai/pr-agent/pull/546#issuecomment-
 
 **Notes**
 
-- Language that are currently supported: Python, Java, C++, JavaScript, TypeScript.
+- Language that are currently supported: Python, Java, C++, JavaScript, TypeScript, C#.
