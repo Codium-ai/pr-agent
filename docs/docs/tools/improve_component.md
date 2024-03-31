@@ -15,7 +15,7 @@ Example result:
 ![improve_component2](https://codium.ai/images/pr_agent/improve_component2.png){width=768}
 
 **Notes**
-- Language that are currently supported by the tool: Python, Java, C++, JavaScript, TypeScript.
+- Language that are currently supported by the tool: Python, Java, C++, JavaScript, TypeScript, C#.
 
 ## Configuration options
 - `num_code_suggestions`: number of code suggestions to provide. Default is 4

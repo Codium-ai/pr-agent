@@ -19,6 +19,6 @@ For example:
 
 **Notes**
 
-- Language that are currently fully supported: Python, Java, C++, JavaScript, TypeScript.
+- Language that are currently fully supported: Python, Java, C++, JavaScript, TypeScript, C#.
 - For languages that are not fully supported, the tool will suggest documentation only for new components in the PR.
 - A previous version of the tool, that offered support only for new components, was deprecated.

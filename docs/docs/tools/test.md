@@ -17,7 +17,7 @@ An example [result](https://github.com/Codium-ai/pr-agent/pull/598#issuecomment-
 ![test3](https://codium.ai/images/pr_agent/test3.png){width=768}
 
 **Notes**
-- Language that are currently supported by the tool: Python, Java, C++, JavaScript, TypeScript.
+- Language that are currently supported by the tool: Python, Java, C++, JavaScript, TypeScript, C#.
 
 
 ## Configuration options
