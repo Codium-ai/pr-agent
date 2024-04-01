@@ -96,7 +96,7 @@ extra:
     - icon: fontawesome/brands/instagram
       link: https://www.instagram.com/codiumai/
   analytics:
-    provider: google
+    provider: custom
     property: ${{ secrets.GOOGLE_ANALYTICS_ID }}
 
 extra_css:
