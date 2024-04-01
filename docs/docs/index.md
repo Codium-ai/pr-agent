@@ -19,20 +19,19 @@ PR-Agent offers extensive pull request functionalities across various git provid
 |       | ⮑ [SOC2 Compliance](https://pr-agent-docs.codium.ai/tools/review/#soc2-ticket-compliance){:target="_blank"} 💎                                     |   ✅    |   ✅    |   ✅        |      ✅      |
 |       | Ask                                                                                                                 |   ✅    |   ✅    |   ✅        |      ✅      |
 |       | Describe                                                                                                            |   ✅    |   ✅    |   ✅        |      ✅      |
-|       | ⮑ [Inline file summary](https://pr-agent-docs.codium.ai/tools/describe/#inline-file-summary){:target="_blank"} 💎                                 |   ✅    |   ✅    |   ✅        |      ✅      |
+|       | ⮑ [Inline file summary](https://pr-agent-docs.codium.ai/tools/describe/#inline-file-summary){:target="_blank"} 💎                                 |   ✅    |   ✅    |           |      ✅      |
 |       | Improve                                                                                                             |   ✅    |   ✅    |   ✅        |      ✅      |
 |       | ⮑ Extended                                                                                                          |   ✅    |   ✅    |   ✅        |      ✅      |
 |       | [Custom Suggestions](./tools/custom_suggestions.md){:target="_blank"} 💎                                               |   ✅    |   ✅    |   ✅        |      ✅      |
 |       | Reflect and Review                                                                                                  |   ✅    |   ✅    |   ✅        |      ✅      |
 |       | Update CHANGELOG.md                                                                                                 |   ✅    |   ✅    |   ✅        |      ️       |
 |       | Find Similar Issue                                                                                                  |   ✅    |        |             |      ️       |
-|       | [Add PR Documentation](./tools/documentation.md){:target="_blank"} 💎                                                  |   ✅    |   ✅    |   ✅        |      ✅      |
+|       | [Add PR Documentation](./tools/documentation.md){:target="_blank"} 💎                                                  |   ✅    |   ✅    |          |      ✅      |
 |       | [Generate Custom Labels](./tools/describe.md#handle-custom-labels-from-the-repos-labels-page-💎){:target="_blank"} 💎 |   ✅    |   ✅    |            |      ✅      |
-|       | [Analyze PR Components](./tools/analyze.md){:target="_blank"} 💎                                                       |   ✅    |   ✅    |   ✅      |      ✅      |
+|       | [Analyze PR Components](./tools/analyze.md){:target="_blank"} 💎                                                       |   ✅    |   ✅    |       |      ✅      |
 |       |                                                                                                                     |        |        |            |      ️       |
 | USAGE | CLI                                                                                                                 |   ✅    |   ✅    |   ✅       |      ✅      |
-|       | App / webhook                                                                                                       |   ✅    |   ✅    |            |      ✅      |
-|       | Tagging bot                                                                                                         |   ✅    |        |            |      ✅      |
+|       | App / webhook                                                                                                       |   ✅    |   ✅    |    ✅        |      ✅      |
 |       | Actions                                                                                                             |   ✅    |        |            |      ️       |
 |       |                                                                                                                     |        |        |            |
 | CORE  | PR compression                                                                                                      |   ✅    |   ✅    |   ✅       |   ✅        |
