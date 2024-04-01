@@ -154,11 +154,11 @@ Each time you invoke a `/review` tool, it will use inline code comments.
 
 ### BitBucket Self-Hosted App automatic tools
 
-to control which commands will run automatically when a new PR is opened, you can set the `pr_commands` parameter in the configuration file:
+To control which commands will run automatically when a new PR is opened, you can set the `pr_commands` parameter in the configuration file:
 Specifically, set the following values:
 
-[bitbucket_app]
 ```
+[bitbucket_app]
 pr_commands = [
     "/review --pr_reviewer.num_code_suggestions=0",
     "/improve --pr_code_suggestions.summarize=false",
