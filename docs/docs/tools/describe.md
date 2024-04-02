@@ -27,6 +27,8 @@ To edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agen
 
     - `publish_description_as_comment`: if set to true, the tool will publish the description as a comment to the PR. If false, it will overwrite the original description. Default is false.
 
+    - `publish_description_as_comment_persistent`: if set to true and `publish_description_as_comment` is true, the tool will publish the description as a persistent comment to the PR. Default is true.
+
     - `add_original_user_description`: if set to true, the tool will add the original user description to the generated description. Default is true.
 
     - `keep_original_user_title`: if set to true, the tool will keep the original PR title, and won't change it. Default is true.
