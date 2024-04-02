@@ -61,6 +61,9 @@ class LiteLLMAIHandler(BaseAiHandler):
         if get_settings().get("HUGGINGFACE.API_BASE", None) and 'huggingface' in get_settings().config.model:
             litellm.api_base = get_settings().huggingface.api_base
             self.api_base = get_settings().huggingface.api_base
+        if get_settings().get("OLLAMA.API_BASE", None) :
+            litellm.api_base = get_settings().ollama.api_base
+            self.api_base = get_settings().ollama.api_base
         if get_settings().get("HUGGINGFACE.REPITITION_PENALTY", None):
             self.repetition_penalty = float(get_settings().huggingface.repetition_penalty)
         if get_settings().get("VERTEXAI.VERTEX_PROJECT", None):
