@@ -133,6 +133,7 @@ enable_help_text=true
 deployment_type = "user"
 ratelimit_retries = 5
 base_url = "https://api.github.com"
+instance_url = "https://github.com"
 publish_inline_comments_fallback_with_verification = true
 try_fix_invalid_inline_comments = true
 

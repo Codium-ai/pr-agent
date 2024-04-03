@@ -17,6 +17,9 @@ from .git_provider import GitProvider, IncrementalPR
 from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
 
 
+github_instance_url = get_settings().get("GITHUB.INSTANCE_URL", "https://github.com").replace('https://', '')
+github_base_url = get_settings().get("GITHUB.BASE_URL", "https://api.github.com").replace('https://', '')
+
 class GithubProvider(GitProvider):
     def __init__(self, pr_url: Optional[str] = None, incremental=IncrementalPR(False)):
         self.repo_obj = None
@@ -518,12 +521,12 @@ class GithubProvider(GitProvider):
     @staticmethod
     def _parse_pr_url(pr_url: str) -> Tuple[str, int]:
         parsed_url = urlparse(pr_url)
-
-        if 'github.com' not in parsed_url.netloc:
+    
+        if github_instance_url not in parsed_url.netloc:
             raise ValueError("The provided URL is not a valid GitHub URL")
 
         path_parts = parsed_url.path.strip('/').split('/')
-        if 'api.github.com' in parsed_url.netloc:
+        if github_base_url in parsed_url.netloc:
             if len(path_parts) < 5 or path_parts[3] != 'pulls':
                 raise ValueError("The provided URL does not appear to be a GitHub PR URL")
             repo_name = '/'.join(path_parts[1:3])
@@ -548,11 +551,11 @@ class GithubProvider(GitProvider):
     def _parse_issue_url(issue_url: str) -> Tuple[str, int]:
         parsed_url = urlparse(issue_url)
 
-        if 'github.com' not in parsed_url.netloc:
+        if github_instance_url not in parsed_url.netloc:
             raise ValueError("The provided URL is not a valid GitHub URL")
 
         path_parts = parsed_url.path.strip('/').split('/')
-        if 'api.github.com' in parsed_url.netloc:
+        if github_base_url in parsed_url.netloc:
             if len(path_parts) < 5 or path_parts[3] != 'issues':
                 raise ValueError("The provided URL does not appear to be a GitHub ISSUE URL")
             repo_name = '/'.join(path_parts[1:3])
