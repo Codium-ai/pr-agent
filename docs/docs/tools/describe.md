@@ -5,6 +5,7 @@ The tool can be triggered automatically every time a new PR is [opened](../usage
 ```
 /describe
 ```
+
 For example:
 
 ![Describe comment](https://codium.ai/images/pr_agent/describe_comment.png){width=512}
