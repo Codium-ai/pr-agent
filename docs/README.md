@@ -13,3 +13,4 @@ The deployment is managed on the gh-pages branches.
 After each merge to main the deplloyment will be taken care of by GH action automatically and the new version will be available at: [Docs](https://codium-ai.github.io/docs/)
 
 Github action is located in `.github/workflows/ci.yml` file.
+
