@@ -7,3 +7,11 @@ If you are subscribed to notifications for a repo with PR-Agent, we recommend tu
 As an alternative, you can filter in your mail provider the notifications specifically from the PR-Agent bot, [see how](https://www.quora.com/How-can-you-filter-emails-for-specific-people-in-Gmail#:~:text=On%20the%20Filters%20and%20Blocked,the%20body%20of%20the%20email).
 
 ![filter_mail_notifications](https://codium.ai/images/pr_agent/filter_mail_notifications.png){width=512}
+
+
+Another option to reduce the mail overload is disable the help collapsible section in PR-Agent bot comments, by adding the relevant configurations to the `.pr_agent.toml` file.
+For example, to disable the help text for the `pr_reviewer` tool, add to the configuration file:
+```
+[pr_reviewer]
+enable_help_text = false
+```
