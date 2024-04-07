@@ -72,7 +72,7 @@ To edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agen
     Examples for extra instructions:
     ```
     [pr_code_suggestions] # /improve #
-    extra_instructions="""
+    extra_instructions="""\
     Emphasize the following aspects:
     - Does the code logic cover relevant edge cases?
     - Is the code logic clear and easy to understand?

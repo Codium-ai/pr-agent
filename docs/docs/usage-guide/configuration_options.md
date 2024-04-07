@@ -22,7 +22,7 @@ Click [here](https://codium.ai/images/pr_agent/wiki_configuration_pr_agent.mp4) 
 An example content:
 
 ```
-[pr_description] # /describe #
+[pr_description]
 keep_original_user_title=false
 ```
 

@@ -128,7 +128,7 @@ Be specific, clear, and concise in the instructions. With extra instructions, yo
 Examples for extra instructions:
 ```
 [pr_description] 
-extra_instructions="""
+extra_instructions="""\
 - The PR title should be in the format: '<PR type>: <title>'
 - The title should be short and concise (up to 10 words)
 - ...

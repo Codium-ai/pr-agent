@@ -124,8 +124,8 @@ The tool will first ask the author questions about the PR, and will guide the re
     
     Examples for extra instructions:
     ```
-    [pr_reviewer] # /review #
-    extra_instructions="""
+    [pr_reviewer]
+    extra_instructions="""\
     In the code feedback section, emphasize the following:
     - Does the code logic cover relevant edge cases?
     - Is the code logic clear and easy to understand?
