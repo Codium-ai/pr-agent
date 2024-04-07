@@ -575,7 +575,7 @@ def clip_tokens(text: str, max_tokens: int, add_three_dots=True) -> str:
         num_output_chars = int(chars_per_token * max_tokens)
         clipped_text = text[:num_output_chars]
         if add_three_dots:
-            clipped_text += "...(truncated)"
+            clipped_text += " ...(truncated)"
         return clipped_text
     except Exception as e:
         get_logger().warning(f"Failed to clip tokens: {e}")
