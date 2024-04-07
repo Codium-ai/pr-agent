@@ -50,6 +50,10 @@ Any configuration value in [configuration file](https://github.com/Codium-ai/pr-
 
 ## GitHub App
 
+!!! note "Configurations for PR-Agent Pro"
+    PR-Agent Pro for GitHub is an App, hosted by CodiumAI. So all the instructions below are relevant also for PR-Agent Pro users.
+    Same goes for [GitLab webhook](#gitlab-webhook) and [BitBucket App](#bitbucket-app) sections.
+
 ### GitHub app automatic tools when a new PR is opened
 
 The [github_app](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L108) section defines GitHub app specific configurations.  
