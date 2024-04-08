@@ -357,6 +357,9 @@ class PRReviewer:
         return True
 
     def set_review_labels(self, data):
+        if not get_settings().config.publish_output:
+            return
+
         if (get_settings().pr_reviewer.enable_review_labels_security or
                 get_settings().pr_reviewer.enable_review_labels_effort):
             try:

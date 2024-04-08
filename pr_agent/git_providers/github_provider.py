@@ -745,22 +745,4 @@ class GithubProvider(GitProvider):
             return False
 
     def calc_pr_statistics(self, pull_request_data: dict):
-        try:
-            out = {}
-            from datetime import datetime
-            created_at = pull_request_data['created_at']
-            closed_at = pull_request_data['closed_at']
-            closed_at_datetime = datetime.strptime(closed_at, "%Y-%m-%dT%H:%M:%SZ")
-            created_at_datetime = datetime.strptime(created_at, "%Y-%m-%dT%H:%M:%SZ")
-            difference = closed_at_datetime - created_at_datetime
-            out['hours'] = difference.total_seconds() / 3600
-            out['commits'] = pull_request_data['commits']
-            out['comments'] = pull_request_data['comments']
-            out['review_comments'] = pull_request_data['review_comments']
-            out['changed_files'] = pull_request_data['changed_files']
-            out['additions'] = pull_request_data['additions']
-            out['deletions'] = pull_request_data['deletions']
-        except Exception as e:
-            get_logger().exception(f"Failed to calculate PR statistics, error: {e}")
-            return {}
-        return out
+        return {}
