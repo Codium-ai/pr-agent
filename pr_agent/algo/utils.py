@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import difflib
 import json
+import os
 import re
 import textwrap
 from datetime import datetime
@@ -661,3 +662,12 @@ def find_line_number_of_relevant_line_in_file(diff_files: List[FilePatchInfo],
                             absolute_position = start2 + delta - 1
                             break
     return position, absolute_position
+
+def github_output(output_data: dict, key_name: str):
+    if get_settings().github_action_config.enable_output is False:
+        return
+    
+    output = os.getenv('GITHUB_OUTPUT')
+    key_data = output_data.get(key_name, {})
+    with open(output, 'w') as f:
+        f.write(f"{key_name}={json.dumps(key_data, indent=None, ensure_ascii=False)}")
