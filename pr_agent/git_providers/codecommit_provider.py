@@ -10,7 +10,7 @@ from ..algo.utils import load_large_diff
 from .git_provider import GitProvider
 from ..config_loader import get_settings
 from ..log import get_logger
-
+from pr_agent.algo.language_handler import is_valid_file
 
 class PullRequestCCMimic:
     """
