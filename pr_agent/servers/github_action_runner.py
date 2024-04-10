@@ -59,7 +59,7 @@ async def run_action():
         get_settings().set("OPENAI.ORG", OPENAI_ORG)
     get_settings().set("GITHUB.USER_TOKEN", GITHUB_TOKEN)
     get_settings().set("GITHUB.DEPLOYMENT_TYPE", "user")
-    enable_output = get_setting_or_env("GITHUB_ACTION_CONFIG.ENABLE_OUTPUT", False)
+    enable_output = get_setting_or_env("GITHUB_ACTION_CONFIG.ENABLE_OUTPUT", True)
     get_settings().set("GITHUB_ACTION_CONFIG.ENABLE_OUTPUT", enable_output)
 
     # Load the event payload
