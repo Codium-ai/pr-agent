@@ -29,3 +29,12 @@ class TestGitHubOutput:
         github_output(output_data, key_name)
         
         assert not os.path.exists(str(tmp_path / 'output'))
+
+    def test_github_output_notset(self, monkeypatch, tmp_path):
+        monkeypatch.setenv('GITHUB_OUTPUT', str(tmp_path / 'output'))
+        output_data = {'key1': {'value1': 1, 'value2': 2}}
+        key_name = 'key1'
+        
+        github_output(output_data, key_name)
+        
+        assert not os.path.exists(str(tmp_path / 'output'))
