@@ -236,3 +236,7 @@ vectordb = "pinecone"
 
 [lancedb]
 uri = "./lancedb"
+
+[slack]
+enabled = false # Set to true to enable Slack notifications for newly reviewed PRs
+slack_channel = "" # Slack channel or user to post the PR review

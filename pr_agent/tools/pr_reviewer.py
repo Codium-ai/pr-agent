@@ -15,6 +15,7 @@ from pr_agent.git_providers import get_git_provider, get_git_provider_with_conte
 from pr_agent.git_providers.git_provider import IncrementalPR, get_main_pr_language
 from pr_agent.log import get_logger
 from pr_agent.servers.help import HelpMessage
+from pr_agent.algo.misc_features import send_notification
 
 
 class PRReviewer:
@@ -195,6 +196,9 @@ class PRReviewer:
         if 'key_issues_to_review' in data['review']:
             key_issues_to_review = data['review'].pop('key_issues_to_review')
             data['review']['key_issues_to_review'] = key_issues_to_review
+
+        if get_settings().slack.enabled:
+            send_notification(data, self.git_provider)
 
         if 'code_feedback' in data:
             code_feedback = data['code_feedback']
