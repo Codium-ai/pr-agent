@@ -52,7 +52,6 @@ maximal_review_effort=5
 
 [pr_description] # /describe #
 publish_labels=true
-publish_description_as_comment=false
 add_original_user_description=true
 keep_original_user_title=true
 use_bullet_points=true
@@ -61,6 +60,9 @@ enable_pr_type=true
 final_update_message = true
 enable_help_text=false
 enable_help_comment=true
+# describe as comment
+publish_description_as_comment=false
+publish_description_as_comment_persistent=true
 ## changes walkthrough section
 enable_semantic_files_types=true
 collapsible_file_list='adaptive' # true, false, 'adaptive'
@@ -110,6 +112,11 @@ file = ""              # in case there are several components with the same name
 class_name = ""        # in case there are several methods with the same name in the same file, you can specify the relevant class name
 enable_help_text=true
 
+[pr_improve_component] # /improve_component #
+num_code_suggestions=4
+extra_instructions = ""
+file = ""              # in case there are several components with the same name, you can specify the relevant file
+class_name = ""
 
 [checks] # /checks (pro feature) #
 enable_auto_checks_feedback=true

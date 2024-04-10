@@ -1,6 +1,6 @@
 # Installation
 
-## self-hosted PR-Agent
+## Self-hosted PR-Agent
 If you choose to host you own PR-Agent, you first need to acquire two tokens:
 
 1. An OpenAI key from [here](https://platform.openai.com/api-keys), with access to GPT-4 (or a key for [other models](../usage-guide/additional_configurations.md/#changing-a-model), if you prefer).

@@ -13,7 +13,7 @@ import yaml
 from starlette_context import context
 
 from pr_agent.algo import MAX_TOKENS
-from pr_agent.algo.token_handler import get_token_encoder
+from pr_agent.algo.token_handler import TokenEncoder
 from pr_agent.config_loader import get_settings, global_settings
 from pr_agent.algo.types import FilePatchInfo
 from pr_agent.log import get_logger
@@ -567,7 +567,7 @@ def clip_tokens(text: str, max_tokens: int, add_three_dots=True) -> str:
         return text
 
     try:
-        encoder = get_token_encoder()
+        encoder = TokenEncoder.get_token_encoder()
         num_input_tokens = len(encoder.encode(text))
         if num_input_tokens <= max_tokens:
             return text
@@ -576,7 +576,7 @@ def clip_tokens(text: str, max_tokens: int, add_three_dots=True) -> str:
         num_output_chars = int(chars_per_token * max_tokens)
         clipped_text = text[:num_output_chars]
         if add_three_dots:
-            clipped_text += "...(truncated)"
+            clipped_text += "\n...(truncated)"
         return clipped_text
     except Exception as e:
         get_logger().warning(f"Failed to clip tokens: {e}")

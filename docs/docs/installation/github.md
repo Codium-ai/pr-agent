@@ -7,9 +7,11 @@ You can use our pre-built Github Action Docker image to run PR-Agent as a Github
 ```yaml
 on:
   pull_request:
+    types: [opened, reopened, ready_for_review]
   issue_comment:
 jobs:
   pr_agent_job:
+    if: ${{ github.event.sender.type != 'Bot' }}
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -24,27 +26,14 @@ jobs:
           OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
-** if you want to pin your action to a specific release (v0.7 for example) for stability reasons, use:
+** if you want to pin your action to a specific release (v2.0 for example) for stability reasons, use:
 ```yaml
-on:
-  pull_request:
-  issue_comment:
-
-jobs:
-  pr_agent_job:
-    runs-on: ubuntu-latest
-    permissions:
-      issues: write
-      pull-requests: write
-      contents: write
-    name: Run pr agent on every pull request, respond to user comments
+...
     steps:
       - name: PR Agent action step
         id: pragent
-        uses: Codium-ai/pr-agent@v0.7
-        env:
-          OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: Codium-ai/pr-agent@v2.0
+...
 ```
 2) Add the following secret to your repository under `Settings > Secrets and variables > Actions > New repository secret > Add secret`:
 
@@ -66,6 +55,7 @@ When you open your next PR, you should see a comment from `github-actions` bot w
         PR_REVIEWER.REQUIRE_TESTS_REVIEW: "false" # Disable tests review
         PR_CODE_SUGGESTIONS.NUM_CODE_SUGGESTIONS: 6 # Increase number of code suggestions
 ```
+See detailed usage instructions in the [USAGE GUIDE](https://pr-agent-docs.codium.ai/usage-guide/automations_and_usage/#github-action)
 
 ---
 
@@ -158,6 +148,9 @@ cp pr_agent/settings/.secrets_template.toml pr_agent/settings/.secrets.toml
 ---
 
 ## Deploy as a Lambda Function
+
+Note that since AWS Lambda env vars cannot have "." in the name, you can replace each "." in an env variable with "__".<br>
+For example: `GITHUB.WEBHOOK_SECRET` --> `GITHUB__WEBHOOK_SECRET`
 
 1. Follow steps 1-5 from [here](#run-as-a-github-app).
 2. Build a docker image that can be used as a lambda function

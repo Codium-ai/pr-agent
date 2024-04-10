@@ -43,10 +43,9 @@ The instructions above are just an example. We want to emphasize that the prompt
 
 Results obtained with the prompt above:
 
-<kbd><img src=https://codium.ai/images/pr_agent/custom_suggestions_prompt.png width="512"></kbd>
-
-<kbd><img src=https://codium.ai/images/pr_agent/custom_suggestions_result.png width="768"></kbd>
-
+![Custom suggestions prompt](https://codium.ai/images/pr_agent/custom_suggestions_prompt.png){width=512}
+&rarr;
+![Custom suggestions results](https://codium.ai/images/pr_agent/custom_suggestions_result.png){width=768}
 
 ## Configuration options
 

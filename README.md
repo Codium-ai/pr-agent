@@ -10,7 +10,7 @@
 
 </picture>
 <br/>
-Making pull requests less painful with an AI agent
+CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by providing AI feedbacks and suggestions
 </div>
 
 [![GitHub license](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/Codium-ai/pr-agent/blob/main/LICENSE)
@@ -21,12 +21,19 @@ Making pull requests less painful with an AI agent
     </a>
 </div>
 
+### [Documentation](https://pr-agent-docs.codium.ai/)
+- See the [Installation Guide](https://pr-agent-docs.codium.ai/installation/) for instructions on installing PR-Agent on different platforms.
+
+- See the [Usage Guide](https://pr-agent-docs.codium.ai/usage-guide/) for instructions on running PR-Agent tools via different interfaces, such as CLI, PR Comments, or by automatically triggering them when a new PR is opened.
+
+- See the [Tools Guide](https://pr-agent-docs.codium.ai/tools/) for a detailed description of the different tools, and the available configurations for each tool.
+
+
 ## Table of Contents
 - [News and Updates](#news-and-updates)
 - [Overview](#overview)
 - [Example results](#example-results)
 - [Try it now](#try-it-now)
-- [Installation](#installation)
 - [PR-Agent Pro 💎](#pr-agent-pro-)
 - [How it works](#how-it-works)
 - [Why use PR-Agent?](#why-use-pr-agent)
@@ -62,14 +69,6 @@ If set to true, the tool will add a section that checks if the PR contains sever
 
 ## Overview
 <div style="text-align:left;">
-
-CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by providing AI feedbacks and suggestions
-
-- See the [Installation Guide](https://pr-agent-docs.codium.ai/installation/) for instructions on installing and running the tool on different git platforms.
-
-- See the [Usage Guide](https://pr-agent-docs.codium.ai/usage-guide/) for instructions on running the PR-Agent commands via different interfaces, including _CLI_, _online usage_, or by _automatically triggering_ them when a new PR is opened.
-
-- See the [Tools Guide](https://pr-agent-docs.codium.ai/tools/) for a detailed description of the different tools.
 
 Supported commands per platform:
 
@@ -136,7 +135,7 @@ ___
 \
 ‣ **CI Feedback 💎 ([`/checks ci_job`](https://pr-agent-docs.codium.ai/tools/ci_feedback/))**: Automatically generates feedback and analysis for a failed CI job.
 \
-‣ **Similar Code 💎 ([`/find_similar_component`](https://pr-agent-docs.codium.ai/tools/similar_code//))**: Retrieves the most similar code components from inside the organization's codebase, or from open-source code.
+‣ **Similar Code 💎 ([`/find_similar_component`](https://pr-agent-docs.codium.ai/tools/similar_code/))**: Retrieves the most similar code components from inside the organization's codebase, or from open-source code.
 ___
 
 ## Example results
@@ -235,32 +234,47 @@ Note that when you set your own PR-Agent or use CodiumAI hosted PR-Agent, there 
 
 ---
 
-## Installation
-To use your own version of PR-Agent, you first need to acquire two tokens:
+[//]: # (## Installation)
 
-1. An OpenAI key from [here](https://platform.openai.com/), with access to GPT-4.
-2. A GitHub personal access token (classic) with the repo scope.
+[//]: # (To use your own version of PR-Agent, you first need to acquire two tokens:)
 
-There are several ways to use PR-Agent:
+[//]: # ()
+[//]: # (1. An OpenAI key from [here]&#40;https://platform.openai.com/&#41;, with access to GPT-4.)
 
-**Locally**
-- [Using pip package](https://pr-agent-docs.codium.ai/installation/locally/#using-pip-package)
-- [Using Docker image](https://pr-agent-docs.codium.ai/installation/locally/#using-docker-image)
-- [Run from source](https://pr-agent-docs.codium.ai/installation/locally/#run-from-source)
+[//]: # (2. A GitHub personal access token &#40;classic&#41; with the repo scope.)
 
-**GitHub specific methods**
-- [Run as a GitHub Action](https://pr-agent-docs.codium.ai/installation/github/#run-as-a-github-action)
-- [Run as a GitHub App](https://pr-agent-docs.codium.ai/installation/github/#run-as-a-github-app)
+[//]: # ()
+[//]: # (There are several ways to use PR-Agent:)
 
-**GitLab specific methods**
-- [Run a GitLab webhook server](https://pr-agent-docs.codium.ai/installation/gitlab/)
+[//]: # ()
+[//]: # (**Locally**)
 
-**BitBucket specific methods**
-- [Run as a Bitbucket Pipeline](https://pr-agent-docs.codium.ai/installation/bitbucket/)
+[//]: # (- [Using pip package]&#40;https://pr-agent-docs.codium.ai/installation/locally/#using-pip-package&#41;)
+
+[//]: # (- [Using Docker image]&#40;https://pr-agent-docs.codium.ai/installation/locally/#using-docker-image&#41;)
+
+[//]: # (- [Run from source]&#40;https://pr-agent-docs.codium.ai/installation/locally/#run-from-source&#41;)
+
+[//]: # ()
+[//]: # (**GitHub specific methods**)
+
+[//]: # (- [Run as a GitHub Action]&#40;https://pr-agent-docs.codium.ai/installation/github/#run-as-a-github-action&#41;)
+
+[//]: # (- [Run as a GitHub App]&#40;https://pr-agent-docs.codium.ai/installation/github/#run-as-a-github-app&#41;)
+
+[//]: # ()
+[//]: # (**GitLab specific methods**)
+
+[//]: # (- [Run a GitLab webhook server]&#40;https://pr-agent-docs.codium.ai/installation/gitlab/&#41;)
+
+[//]: # ()
+[//]: # (**BitBucket specific methods**)
+
+[//]: # (- [Run as a Bitbucket Pipeline]&#40;https://pr-agent-docs.codium.ai/installation/bitbucket/&#41;)
 
 ## PR-Agent Pro 💎
 [PR-Agent Pro](https://www.codium.ai/pricing/) is a hosted version of PR-Agent, provided by CodiumAI. It is available for a monthly fee, and provides the following benefits:
-1. **Fully managed** - We take care of everything for you - hosting, models, regular updates, and more. Installation is as simple as signing up and adding the PR-Agent app to your GitHub\BitBucket repo.
+1. **Fully managed** - We take care of everything for you - hosting, models, regular updates, and more. Installation is as simple as signing up and adding the PR-Agent app to your GitHub\GitLab\BitBucket repo.
 2. **Improved privacy** - No data will be stored or used to train models. PR-Agent Pro will employ zero data retention, and will use an OpenAI account with zero data retention.
 3. **Improved support** - PR-Agent Pro users will receive priority support, and will be able to request new features and capabilities.
 4. **Extra features** -In addition to the benefits listed above, PR-Agent Pro will emphasize more customization, and the usage of static code analysis, in addition to LLM logic, to improve results. 

@@ -9,20 +9,12 @@ The tool can be triggered automatically every time a new PR is [opened](../usage
 
 The code suggestions can be presented as a single comment (via `pr_code_suggestions.summarize=true`):
 
-<kbd>
-<a href="https://codium.ai/images/pr_agent/code_suggestions_as_comment.png" target="_blank">
-<img src="https://codium.ai/images/pr_agent/code_suggestions_as_comment.png" width="512">
-</a>
-</kbd>
-
+![code suggestions as comment](https://codium.ai/images/pr_agent/code_suggestions_as_comment.png){width=512}
 
 Or as a separate commitable code comment for each suggestion:
 
-<kbd>
-<a href="https://codium.ai/images/pr_agent/improve.png" target="_blank">
-<img src="https://codium.ai/images/pr_agent/improve.png" width="512">
-</a>
-</kbd>
+![imporove](https://codium.ai/images/pr_agent/improve.png){width=512}
+
 
 Note that a single comment has a significantly smaller PR footprint. We recommend this mode for most cases.
 Also note that collapsible are not supported in _Bitbucket_. Hence, the suggestions are presented there as code comments.
@@ -80,7 +72,7 @@ To edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agen
     Examples for extra instructions:
     ```
     [pr_code_suggestions] # /improve #
-    extra_instructions="""
+    extra_instructions="""\
     Emphasize the following aspects:
     - Does the code logic cover relevant edge cases?
     - Is the code logic clear and easy to understand?

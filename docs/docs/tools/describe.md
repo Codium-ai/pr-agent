@@ -5,19 +5,12 @@ The tool can be triggered automatically every time a new PR is [opened](../usage
 ```
 /describe
 ```
+
 For example:
 
-<kbd>
-<a href="https://codium.ai/images/pr_agent/describe_comment.png">
-<img src="https://codium.ai/images/pr_agent/describe_comment.png" width="512">
-</a>
-</kbd>
+![Describe comment](https://codium.ai/images/pr_agent/describe_comment.png){width=512}
 
-<kbd>
-<a href="https://codium.ai/images/pr_agent/describe_new.png">
-<img src="https://codium.ai/images/pr_agent/describe_new.png" width="512">
-</a>
-</kbd>
+![Describe New](https://codium.ai/images/pr_agent/describe_new.png){width=512}
 
 
   
@@ -34,6 +27,8 @@ To edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agen
     - `publish_labels`: if set to true, the tool will publish the labels to the PR. Default is true.
 
     - `publish_description_as_comment`: if set to true, the tool will publish the description as a comment to the PR. If false, it will overwrite the original description. Default is false.
+
+    - `publish_description_as_comment_persistent`: if set to true and `publish_description_as_comment` is true, the tool will publish the description as a persistent comment to the PR. Default is true.
 
     - `add_original_user_description`: if set to true, the tool will add the original user description to the generated description. Default is true.
 
@@ -57,53 +52,21 @@ This feature enables you to copy the `changes walkthrough` table to the "Files c
 
 To copy the `changes walkthrough` table to the "Files changed" tab, you can click on the checkbox that appears PR Description status message below the main PR Description:
 
-<kbd>
-<a href="https://codium.ai/images/pr_agent/add_table_checkbox.png">
-<img src="https://codium.ai/images/pr_agent/add_table_checkbox.png" width="512">
-</a>
-</kbd>
+![Add table checkbox](https://codium.ai/images/pr_agent/add_table_checkbox.png){width=512}
 
 If you prefer to have the file summaries appear in the "Files changed" tab on every PR, change the `pr_description.inline_file_summary` parameter in the configuration file, possible values are:
 
 - `'table'`: File changes walkthrough table will be displayed on the top of the "Files changed" tab, in addition to the "Conversation" tab.
 
-<kbd>
-<a href="https://codium.ai/images/pr_agent/diffview-table.png">
-<img src="https://codium.ai/images/pr_agent/diffview-table.png" width="512">
-</a>
-</kbd>
+![Diffview table](https://codium.ai/images/pr_agent/diffview-table.png){width=512}
 
 - `true`: A collapsable file comment with changes title and a changes summary for each file in the PR.
 
-<kbd>
-<a href="https://codium.ai/images/pr_agent/diffview_changes.png">
-<img src="https://codium.ai/images/pr_agent/diffview_changes.png" width="512">
-</a>
-</kbd>
+![Diffview changes](https://codium.ai/images/pr_agent/diffview_changes.png){width=512}
 
 - `false` (`default`): File changes walkthrough will be added only to the "Conversation" tab.
 
 **Note**: that this feature is currently available only for GitHub.
-
-
-### Handle custom labels from the Repo's labels page 💎
-
-You can control  the custom labels that will be suggested by the `describe` tool, from the repo's labels page:
-
-* GitHub : go to `https://github.com/{owner}/{repo}/labels` (or click on the "Labels" tab in the issues or PRs page)
-* GitLab : go to `https://gitlab.com/{owner}/{repo}/-/labels` (or click on "Manage" -> "Labels" on the left menu)
-
-Now add/edit the custom labels. they should be formatted as follows:
-
-* Label name: The name of the custom label.
-* Description: Start the description of with prefix `pr_agent:`, for example: `pr_agent: Description of when AI should suggest this label`.<br>
-
-The description should be comprehensive and detailed, indicating when to add the desired label. For example:
-<kbd>
-<a href="https://codium.ai/images/pr_agent/add_native_custom_labels.png">
-<img src="https://codium.ai/images/pr_agent/add_native_custom_labels.png" width="768">
-</a>
-</kbd>
 
 
 ### Markers template
@@ -126,24 +89,54 @@ pr_agent:walkthrough
 ```
 The marker `pr_agent:type` will be replaced with the PR type, `pr_agent:summary` will be replaced with the PR summary, and `pr_agent:walkthrough` will be replaced with the PR walkthrough.
 
-<kbd>
-<a href="https://codium.ai/images/pr_agent/describe_markers_before.png">
-<img src="https://codium.ai/images/pr_agent/describe_markers_before.png" width="512">
-</a>
-</kbd>
+![Describe markers before](https://codium.ai/images/pr_agent/describe_markers_before.png){width=512}
 
 &rarr;
 
-<kbd>
-<a href="https://codium.ai/images/pr_agent/describe_markers_after.png">
-<img src="https://codium.ai/images/pr_agent/describe_markers_after.png" width="512">
-</a>
-</kbd>
+![Describe markers after](https://codium.ai/images/pr_agent/describe_markers_after.png){width=512}
+
 
 **Configuration params**:
 
 - `use_description_markers`: if set to true, the tool will use markers template. It replaces every marker of the form `pr_agent:marker_name` with the relevant content. Default is false.
 - `include_generated_by_header`: if set to true, the tool will add a dedicated header: 'Generated by PR Agent at ...' to any automatic content. Default is true.
+
+## Custom labels
+
+The default labels of the describe tool are quite generic, since they are meant to be used in any repo: [`Bug fix`, `Tests`, `Enhancement`, `Documentation`, `Other`].
+
+You can define custom labels that are relevant for your repo and use cases.
+Custom labels can be defined in a [configuration file](https://pr-agent-docs.codium.ai/tools/custom_labels/#configuration-options), or directly in the repo's [labels page](#handle-custom-labels-from-the-repos-labels-page).
+
+Examples for custom labels:
+
+  - `Main topic:performance` -  pr_agent:The main topic of this PR is performance
+  - `New endpoint` -  pr_agent:A new endpoint was added in this PR
+  - `SQL query` -  pr_agent:A new SQL query was added in this PR
+  - `Dockerfile changes` - pr_agent:The PR contains changes in the Dockerfile
+  - ...
+
+The list above is eclectic, and aims to give an idea of different possibilities. Define custom labels that are relevant for your repo and use cases.
+Note that Labels are not mutually exclusive, so you can add multiple label categories.
+<br>
+Make sure to provide proper title, and a detailed and well-phrased description for each label, so the tool will know when to suggest it.
+Each label description should be a **conditional statement**, that indicates if to add the label to the PR or not, according to the PR content.
+
+
+### Handle custom labels from the Repo's labels page 💎
+
+You can control  the custom labels that will be suggested by the `describe` tool, from the repo's labels page:
+
+* GitHub : go to `https://github.com/{owner}/{repo}/labels` (or click on the "Labels" tab in the issues or PRs page)
+* GitLab : go to `https://gitlab.com/{owner}/{repo}/-/labels` (or click on "Manage" -> "Labels" on the left menu)
+
+Now add/edit the custom labels. they should be formatted as follows:
+
+* Label name: The name of the custom label.
+* Description: Start the description of with prefix `pr_agent:`, for example: `pr_agent: Description of when AI should suggest this label`.<br>
+
+The description should be comprehensive and detailed, indicating when to add the desired label. For example:
+![Add native custom labels](https://codium.ai/images/pr_agent/add_native_custom_labels.png){width=768}
 
 
 ## Usage Tips
@@ -173,20 +166,3 @@ The marker `pr_agent:type` will be replaced with the PR type, `pr_agent:summary`
           * `walkthrough`: the PR walkthrough.
 
     - Note that when markers are enabled, if the original PR description does not contain any markers, the tool will not alter the description at all.
-
-!!! tip "Custom labels"
-
-    The default labels of the describe tool are quite generic, since they are meant to be used in any repo: [`Bug fix`, `Tests`, `Enhancement`, `Documentation`, `Other`].
-    
-    If you specify [custom labels](#handle-custom-labels-from-the-repos-labels-page) in the repo's labels page, you can get tailored labels for your use cases.
-    Examples for custom labels:
-
-      - `Main topic:performance` -  pr_agent:The main topic of this PR is performance
-      - `New endpoint` -  pr_agent:A new endpoint was added in this PR
-      - `SQL query` -  pr_agent:A new SQL query was added in this PR
-      - `Dockerfile changes` - pr_agent:The PR contains changes in the Dockerfile
-      - ...
-    
-    The list above is eclectic, and aims to give an idea of different possibilities. Define custom labels that are relevant for your repo and use cases.
-    Note that Labels are not mutually exclusive, so you can add multiple label categories.
-    <br>Make sure to provide proper title, and a detailed and well-phrased description for each label, so the tool will know when to suggest it.

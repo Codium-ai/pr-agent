@@ -16,3 +16,12 @@
     font-size: 20px; 
     margin-left: 0px !important;
 }
+
+.md-content img {
+    border-width: 1px;
+    border-style: solid;
+    border-color: black;
+    outline-width: 1px;
+    outline-style: solid;
+    outline-color: darkgray;
+  }

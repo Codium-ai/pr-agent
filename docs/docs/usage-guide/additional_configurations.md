@@ -7,10 +7,10 @@ To ignore files or directories, edit the **[ignore.toml](https://github.com/Codi
  - `IGNORE.GLOB`
  - `IGNORE.REGEX`
 
-For example, to ignore python files in a PR with online usage, comment on a PR:
+For example, to ignore Python files in a PR with online usage, comment on a PR:
 `/review --ignore.glob=['*.py']`
 
-To ignore python files in all PRs, set in a configuration file:
+To ignore Python files in all PRs, set in a configuration file:
 ```
 [ignore]
 glob = ['*.py']
@@ -26,13 +26,13 @@ All PR-Agent tools have a parameter called `extra_instructions`, that enables to
 ## Working with large PRs
 
 The default mode of CodiumAI is to have a single call per tool, using GPT-4, which has a token limit of 8000 tokens.
-This mode provide a very good speed-quality-cost tradeoff, and can handle most PRs successfully.
+This mode provides a very good speed-quality-cost tradeoff, and can handle most PRs successfully.
 When the PR is above the token limit, it employs a [PR Compression strategy](../core-abilities/index.md).
 
-However, for very large PRs, or in case you want to emphasize quality over speed and cost, there are 2 possible solutions:
+However, for very large PRs, or in case you want to emphasize quality over speed and cost, there are two possible solutions:
 1) [Use a model](https://codium-ai.github.io/Docs-PR-Agent/usage-guide/#changing-a-model) with larger context, like GPT-32K, or claude-100K. This solution will be applicable for all the tools.
 2) For the `/improve` tool, there is an ['extended' mode](https://codium-ai.github.io/Docs-PR-Agent/tools/#improve) (`/improve --extended`),
-which divides the PR to chunks, and process each chunk separately. With this mode, regardless of the model, no compression will be done (but for large PRs, multiple model calls may occur)
+which divides the PR to chunks, and processes each chunk separately. With this mode, regardless of the model, no compression will be done (but for large PRs, multiple model calls may occur)
 
 
 ## Changing a model
@@ -79,6 +79,7 @@ MAX_TOKENS={
 
 [config] # in configuration.toml
 model = "ollama/llama2"
+model_turbo = "ollama/llama2"
 
 [ollama] # in .secrets.toml
 api_base = ... # the base url for your huggingface inference endpoint
@@ -101,6 +102,7 @@ MAX_TOKENS={
 }
 [config] # in configuration.toml
 model = "huggingface/meta-llama/Llama-2-7b-chat-hf"
+model_turbo = "huggingface/meta-llama/Llama-2-7b-chat-hf"
 
 [huggingface] # in .secrets.toml
 key = ... # your huggingface api key
@@ -114,13 +116,14 @@ To use Llama2 model with Replicate, for example, set:
 ```
 [config] # in configuration.toml
 model = "replicate/llama-2-70b-chat:2c1608e18606fad2812020dc541930f2d0495ce32eee50074220b87300bc16e1"
+model_turbo = "replicate/llama-2-70b-chat:2c1608e18606fad2812020dc541930f2d0495ce32eee50074220b87300bc16e1"
 [replicate] # in .secrets.toml
 key = ...
 ```
 (you can obtain a Llama2 key from [here](https://replicate.com/replicate/llama-2-70b-chat/api))
 
 
-Also review the [AiHandler](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/algo/ai_handler.py) file for instruction how to set keys for other models.
+Also, review the [AiHandler](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/algo/ai_handler.py) file for instructions on how to set keys for other models.
 
 ### Vertex AI
 
@@ -129,6 +132,7 @@ To use Google's Vertex AI platform and its associated models (chat-bison/codecha
 ``` 
 [config] # in configuration.toml
 model = "vertex_ai/codechat-bison"
+model_turbo = "vertex_ai/codechat-bison"
 fallback_models="vertex_ai/codechat-bison"
 
 [vertexai] # in .secrets.toml
@@ -183,7 +187,7 @@ AWS session is automatically authenticated from your environment, but you can al
 
 ## Patch Extra Lines
 
-By default, around any change in your PR, git patch provides 3 lines of context above and below the change.
+By default, around any change in your PR, git patch provides three lines of context above and below the change.
 ```
 @@ -12,5 +12,5 @@ def func1():
  code line that already existed in the file...

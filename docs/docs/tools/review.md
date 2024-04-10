@@ -6,17 +6,9 @@ The tool can be triggered automatically every time a new PR is [opened](../usage
 ```
 For example:
 
-<kbd>
-<a href="https://codium.ai/images/pr_agent/review_comment.png">
-<img src="https://codium.ai/images/pr_agent/review_comment.png" width="512">
-</a>
-</kbd>
+![review comment](https://codium.ai/images/pr_agent/review_comment.png){width=512}
 
-<kbd>
-<a href="https://codium.ai/images/pr_agent/review3.png">
-<img src="https://codium.ai/images/pr_agent/review3.png" width="512">
-</a>
-</kbd>
+![review](https://codium.ai/images/pr_agent/review3.png){width=512}
 
 
 ## Configuration options
@@ -70,11 +62,7 @@ For invoking the incremental mode, the following command can be used:
 ```
 Note that the incremental mode is only available for GitHub.
 
-<kbd>
-<a href="https://codium.ai/images/pr_agent/incremental_review_2.png">
-<img src="https://codium.ai/images/pr_agent/incremental_review_2.png" width="512">
-</a>
-</kbd>
+![incremental review](https://codium.ai/images/pr_agent/incremental_review_2.png){width=512}
 
 ### PR Reflection
 
@@ -84,23 +72,11 @@ By invoking:
 ```
 The tool will first ask the author questions about the PR, and will guide the review based on their answers.
 
-<kbd>
-<a href="https://codium.ai/images/pr_agent/reflection_questions.png">
-<img src="https://codium.ai/images/pr_agent/reflection_questions.png" width="512">
-</a>
-</kbd>
+![reflection questions](https://codium.ai/images/pr_agent/reflection_questions.png){width=512}
 
-<kbd>
-<a href="https://codium.ai/images/pr_agent/reflection_answers.png">
-<img src="https://codium.ai/images/pr_agent/reflection_answers.png" width="512">
-</a>
-</kbd>
+![reflection answers](https://codium.ai/images/pr_agent/reflection_answers.png){width=512}
 
-<kbd>
-<a href="https://codium.ai/images/pr_agent/reflection_insights.png">
-<img src="https://codium.ai/images/pr_agent/reflection_insights.png" width="512">
-</a>
-</kbd>
+![reflection insights](https://codium.ai/images/pr_agent/reflection_insights.png){width=512}
 
 
 ## Usage Tips
@@ -148,8 +124,8 @@ The tool will first ask the author questions about the PR, and will guide the re
     
     Examples for extra instructions:
     ```
-    [pr_reviewer] # /review #
-    extra_instructions="""
+    [pr_reviewer]
+    extra_instructions="""\
     In the code feedback section, emphasize the following:
     - Does the code logic cover relevant edge cases?
     - Is the code logic clear and easy to understand?
