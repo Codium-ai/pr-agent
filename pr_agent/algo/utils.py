@@ -664,10 +664,13 @@ def find_line_number_of_relevant_line_in_file(diff_files: List[FilePatchInfo],
     return position, absolute_position
 
 def github_action_output(output_data: dict, key_name: str):
-    if get_settings().github_action_config.enable_output is False:
-        return
-    
-    output = os.getenv('GITHUB_OUTPUT')
-    key_data = output_data.get(key_name, {})
-    with open(output, 'w') as f:
-        f.write(f"{key_name}={json.dumps(key_data, indent=None, ensure_ascii=False)}")
+    try:
+        if not get_settings().get('github_action_config.enable_output', False):
+            return
+        
+        key_data = output_data.get(key_name, {})
+        with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
+            print(f"{key_name}={json.dumps(key_data, indent=None, ensure_ascii=False)}", file=fh)
+    except Exception as e:
+        get_logger().error(f"Failed to write to GitHub Action output: {e}")
+    return
