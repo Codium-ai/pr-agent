@@ -663,7 +663,7 @@ def find_line_number_of_relevant_line_in_file(diff_files: List[FilePatchInfo],
                             break
     return position, absolute_position
 
-def github_output(output_data: dict, key_name: str):
+def github_action_output(output_data: dict, key_name: str):
     if get_settings().github_action_config.enable_output is False:
         return
     
