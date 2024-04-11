@@ -119,9 +119,14 @@ Specifically, start by setting the following environment variables:
         github_action_config.auto_review: "true" # enable\disable auto review
         github_action_config.auto_describe: "true" # enable\disable auto describe
         github_action_config.auto_improve: "true" # enable\disable auto improve
+        github_action_config.enable_output: "true" # enable\disable github actions output parameter
 ```
 `github_action_config.auto_review`, `github_action_config.auto_describe` and `github_action_config.auto_improve` are used to enable/disable automatic tools that run when a new PR is opened.
 If not set, the default configuration is for all three tools to run automatically when a new PR is opened.
+
+`github_action_config.enable_output` are used to enable/disable github actions [output parameter](https://docs.github.com/en/actions/creating-actions/metadata-syntax-for-github-actions#outputs-for-docker-container-and-javascript-actions) (default is `true`). 
+Review result is output as JSON to `steps.{step-id}.outputs.review` property.
+The JSON structure is equivalent to the yaml data structure defined in [pr_reviewer_prompts.toml](https://github.com/idubnori/pr-agent/blob/main/pr_agent/settings/pr_reviewer_prompts.toml).
 
 Note that you can give additional config parameters by adding environment variables to `.github/workflows/pr_agent.yml`, or by using a `.pr_agent.toml` [configuration file](https://pr-agent-docs.codium.ai/usage-guide/configuration_options/#global-configuration-file) in the root of your repo
 
