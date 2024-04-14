@@ -86,8 +86,13 @@ async def handle_comments_on_pr(body: Dict[str, Any],
         return {}
     comment_body = body.get("comment", {}).get("body")
     if comment_body and isinstance(comment_body, str) and not comment_body.lstrip().startswith("/"):
-        get_logger().info("Ignoring comment not starting with /")
-        return {}
+        if '/ask' in comment_body and comment_body.strip().startswith('> ![image]'):
+            comment_body_split = comment_body.split('/ask')
+            comment_body = '/ask' + comment_body_split[1] +'/n' +comment_body_split[0].strip()
+            get_logger().info(f"Reformatting comment_body so command is at the beginning: {comment_body}")
+        else:
+            get_logger().info("Ignoring comment not starting with /")
+            return {}
     disable_eyes = False
     if "issue" in body and "pull_request" in body["issue"] and "url" in body["issue"]["pull_request"]:
         api_url = body["issue"]["pull_request"]["url"]

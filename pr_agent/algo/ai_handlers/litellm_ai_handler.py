@@ -102,13 +102,23 @@ class LiteLLMAIHandler(BaseAiHandler):
         retry=retry_if_exception_type((openai.APIError, openai.APIConnectionError, openai.Timeout)), # No retry on RateLimitError
         stop=stop_after_attempt(OPENAI_RETRIES)
     )
-    async def chat_completion(self, model: str, system: str, user: str, temperature: float = 0.2):
+    async def chat_completion(self, model: str, system: str, user: str, temperature: float = 0.2, img_path: str = None):
         try:
             resp, finish_reason = None, None
             deployment_id = self.deployment_id
             if self.azure:
                 model = 'azure/' + model
             messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
+            if img_path:
+                import requests
+                r = requests.get(img_path, allow_redirects=True)
+                if r.status_code == 404:
+                    error_msg = "The image link is not alive. Please repost the image, get a new address, and send the question again."
+                    get_logger().error(error_msg)
+                    return f"{error_msg}", "error"
+                messages[1]["content"] = [{"type": "text", "text": messages[1]["content"]},
+                                          {"type": "image_url", "image_url": {"url": img_path}}]
+
             kwargs = {
                 "model": model,
                 "deployment_id": deployment_id,
