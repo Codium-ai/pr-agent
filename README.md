@@ -42,8 +42,9 @@ CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by p
 
 ### April 14, 2024
 You can now ask questions about images that appear in the comment, where the entire PR is considered as the context.
-see [here](https://pr-agent-docs.codium.ai/tools/ask/#ask-on-images-using-the-pr-code-as-context).
-![Ask image5](https://codium.ai/images/pr_agent/ask_images5.png){width=512}
+see [here](https://pr-agent-docs.codium.ai/tools/ask/#ask-on-images-using-the-pr-code-as-context) for more details.
+
+<kbd><img src="https://codium.ai/images/pr_agent/ask_images5.png" width="512"></kbd>
 
 ### March 24, 2024
 PR-Agent is now available for easy installation via [pip](https://pr-agent-docs.codium.ai/installation/locally/#using-pip-package).
