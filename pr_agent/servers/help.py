@@ -160,16 +160,17 @@ It can be invoked manually by commenting on any PR:
 /ask "..."
 ```
 
-Note that the tool does not have "memory" of previous questions, and answers each question independently.        
+Note that the tool does not have "memory" of previous questions, and answers each question independently.   
+You can ask questions about the entire PR, about specific code lines, or about an image related to the PR code changes.     
         """
-        output += "\n\n<table>"
-
-        # general
-        output += "\n\n<tr><td><details> <summary><strong> More PR-Agent commands</strong></summary><hr> \n\n"
-        output += HelpMessage.get_general_bot_help_text()
-        output += "\n\n</details></td></tr>\n\n"
-
-        output += "</table>"
+        # output += "\n\n<table>"
+        #
+        # # # general
+        # # output += "\n\n<tr><td><details> <summary><strong> More PR-Agent commands</strong></summary><hr> \n\n"
+        # # output += HelpMessage.get_general_bot_help_text()
+        # # output += "\n\n</details></td></tr>\n\n"
+        #
+        # output += "</table>"
 
         output += f"\n\nSee the [ask usage](https://pr-agent-docs.codium.ai/tools/ask/) page for a comprehensive guide on using this tool.\n\n"
 
