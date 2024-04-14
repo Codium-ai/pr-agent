@@ -56,6 +56,12 @@ class PRQuestions:
         get_logger().debug("Relevant configs", artifacts=relevant_configs)
         if get_settings().config.publish_output:
             self.git_provider.publish_comment("Preparing answer...", is_temporary=True)
+
+        # identify image
+        img_path = self.idenfity_image_in_comment()
+        if img_path:
+            get_logger().debug(f"Image path identified", artifact=img_path)
+
         await retry_with_fallback_models(self._prepare_prediction)
 
         pr_comment = self._prepare_pr_answer()
@@ -70,6 +76,19 @@ class PRQuestions:
             self.git_provider.publish_comment(pr_comment)
             self.git_provider.remove_initial_comment()
         return ""
+
+    def idenfity_image_in_comment(self):
+        img_path = ''
+        if '![image]' in self.question_str:
+            # assuming structure:
+            # /ask question ...  > ![image](img_path)
+            img_path = self.question_str.split('![image]')[1].strip().strip('()')
+            self.vars['img_path'] = img_path
+        elif 'https://' in self.question_str and ('.png' in self.question_str or 'jpg' in self.question_str): # direct image link
+            # include https:// in the image path
+            img_path = 'https://' + self.question_str.split('https://')[1]
+            self.vars['img_path'] = img_path
+        return img_path
 
     async def _prepare_prediction(self, model: str):
         self.patches_diff = get_pr_diff(self.git_provider, self.token_handler, model)
@@ -86,8 +105,14 @@ class PRQuestions:
         environment = Environment(undefined=StrictUndefined)
         system_prompt = environment.from_string(get_settings().pr_questions_prompt.system).render(variables)
         user_prompt = environment.from_string(get_settings().pr_questions_prompt.user).render(variables)
-        response, finish_reason = await self.ai_handler.chat_completion(model=model, temperature=0.2,
-                                                                        system=system_prompt, user=user_prompt)
+        if 'img_path' in variables:
+            img_path = self.vars['img_path']
+            response, finish_reason = await self.ai_handler.chat_completion(model=model, temperature=0.2,
+                                                                            system=system_prompt, user=user_prompt,
+                                                                            img_path=img_path)
+        else:
+            response, finish_reason = await self.ai_handler.chat_completion(model=model, temperature=0.2,
+                                                                            system=system_prompt, user=user_prompt)
         return response
 
     def _prepare_pr_answer(self) -> str:
