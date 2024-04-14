@@ -88,7 +88,7 @@ async def handle_comments_on_pr(body: Dict[str, Any],
     if comment_body and isinstance(comment_body, str) and not comment_body.lstrip().startswith("/"):
         if '/ask' in comment_body and comment_body.strip().startswith('> ![image]'):
             comment_body_split = comment_body.split('/ask')
-            comment_body = '/ask' + comment_body_split[1] +'/n' +comment_body_split[0].strip()
+            comment_body = '/ask' + comment_body_split[1] +' \n' +comment_body_split[0].strip().lstrip('>')
             get_logger().info(f"Reformatting comment_body so command is at the beginning: {comment_body}")
         else:
             get_logger().info("Ignoring comment not starting with /")

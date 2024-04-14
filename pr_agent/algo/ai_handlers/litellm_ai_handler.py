@@ -113,7 +113,7 @@ class LiteLLMAIHandler(BaseAiHandler):
                 import requests
                 r = requests.get(img_path, allow_redirects=True)
                 if r.status_code == 404:
-                    error_msg = "The image link is not alive. Please repost the image, get a new address, and send the question again."
+                    error_msg = f"The image link is not [alive](img_path).\nPlease repost the original image as a comment, and send the question again with 'quote reply' (see [instructions](https://pr-agent-docs.codium.ai/tools/ask/#ask-on-images-using-the-pr-code-as-context))."
                     get_logger().error(error_msg)
                     return f"{error_msg}", "error"
                 messages[1]["content"] = [{"type": "text", "text": messages[1]["content"]},
