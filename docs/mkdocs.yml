@@ -1,4 +1,5 @@
-site_name: PR-Agent
+site_name: PR-Agent Documentation 
+description: Documentation for PR-Agent, the AI-powered Pull Request tool.
 repo_url: https://github.com/Codium-ai/pr-agent
 
 nav: 
