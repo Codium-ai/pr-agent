@@ -1,7 +1,7 @@
 site_name: PR-Agent Documentation 
 description: Documentation for PR-Agent, the AI-powered Pull Request tool.
 repo_url: https://github.com/Codium-ai/pr-agent
-
+repo_name: Codium-ai/pr-agent
 nav: 
   - Overview: 'index.md'
   - Installation: 
@@ -41,6 +41,8 @@ theme:
   logo: assets/logo.svg
   favicon: assets/favicon.ico
   name: material
+  icon:
+    repo: fontawesome/brands/github
   features:
     - navigation.tabs
     - navigation.expand
