@@ -24,31 +24,33 @@ Note that the tool does not have "memory" of previous questions, and answers eac
 
 ## Ask on images
 
-You can also ask questions about images that appear in the comment, where the entire PR is considered as the context. The tool will answer questions based on the images in the PR.
+You can also ask questions about images that appear in the comment, where the entire PR code will be used as context.
+<br>
 The basic syntax is:
 ```
 /ask "..."
 
 [Image](https://real_link_to_image)
 ```
+where `https://real_link_to_image` is the direct link to the image.
 
-Note that GitHub has a mecahnism of pasting images in comments. However, pasted image does not provide a direct link.
-To get a direct link to the image, we recommend using the following steps:
+Note that GitHub has a built-in mechanism of pasting images in comments. However, pasted image does not provide a direct link.
+To get a direct link to an image, we recommend using the following scheme:
 
-1) send a comment that contains only the image:
+1) First, post a comment that contains **only** the image:
 
 ![Ask image1](https://codium.ai/images/pr_agent/ask_images1.png){width=512}
 
-2) quote reply to that comment:
+2) Quote reply to that comment:
 
 ![Ask image2](https://codium.ai/images/pr_agent/ask_images2.png){width=512}
 
-3) type the question below the image:
+3) In the screen opened, type the question below the image:
 
 ![Ask image3](https://codium.ai/images/pr_agent/ask_images3.png){width=512}
 ![Ask image4](https://codium.ai/images/pr_agent/ask_images4.png){width=512}
 
-4) post the comment, and receive the answer:
+4) Post the comment, and receive the answer:
 
 ![Ask image5](https://codium.ai/images/pr_agent/ask_images5.png){width=512}
 
