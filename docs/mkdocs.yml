@@ -1,4 +1,5 @@
 site_name: PR-Agent
+repo_url: https://github.com/Codium-ai/pr-agent
 
 nav: 
   - Overview: 'index.md'
