@@ -1,7 +1,7 @@
 [config]
-model="gpt-4" # "gpt-4-0125-preview"
-model_turbo="gpt-4-0125-preview"
-fallback_models=["gpt-3.5-turbo-16k"]
+model="gpt-4-turbo-2024-04-09"
+model_turbo="gpt-4-turbo-2024-04-09"
+fallback_models=["gpt-4-0125-preview"]
 git_provider="github"
 publish_output=true
 publish_output_progress=true
@@ -61,6 +61,9 @@ enable_pr_type=true
 disable_final_update_message = false
 enable_help_text=false
 enable_help_comment=true
+# describe as comment
+publish_description_as_comment=false
+publish_description_as_comment_persistent=true
 ## changes walkthrough section
 enable_semantic_files_types=true
 collapsible_file_list='adaptive' # true, false, 'adaptive'
@@ -110,6 +113,11 @@ file = ""              # in case there are several components with the same name
 class_name = ""        # in case there are several methods with the same name in the same file, you can specify the relevant class name
 enable_help_text=true
 
+[pr_improve_component] # /improve_component #
+num_code_suggestions=4
+extra_instructions = ""
+file = ""              # in case there are several components with the same name, you can specify the relevant file
+class_name = ""
 
 [checks] # /checks (pro feature) #
 enable_auto_checks_feedback=true
@@ -133,6 +141,7 @@ try_fix_invalid_inline_comments = true
 # auto_review = true    # set as env var in .github/workflows/pr-agent.yaml
 # auto_describe = true  # set as env var in .github/workflows/pr-agent.yaml
 # auto_improve = true   # set as env var in .github/workflows/pr-agent.yaml
+# enable_output = true   # set as env var in .github/workflows/pr-agent.yaml
 
 [github_app]
 # these toggles allows running the github app from custom deployments

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import difflib
 import json
+import os
 import re
 import textwrap
 from datetime import datetime
@@ -12,7 +13,7 @@ import yaml
 from starlette_context import context
 
 from pr_agent.algo import MAX_TOKENS
-from pr_agent.algo.token_handler import get_token_encoder
+from pr_agent.algo.token_handler import TokenEncoder
 from pr_agent.config_loader import get_settings, global_settings
 from pr_agent.algo.types import FilePatchInfo
 from pr_agent.log import get_logger
@@ -566,7 +567,7 @@ def clip_tokens(text: str, max_tokens: int, add_three_dots=True) -> str:
         return text
 
     try:
-        encoder = get_token_encoder()
+        encoder = TokenEncoder.get_token_encoder()
         num_input_tokens = len(encoder.encode(text))
         if num_input_tokens <= max_tokens:
             return text
@@ -575,7 +576,7 @@ def clip_tokens(text: str, max_tokens: int, add_three_dots=True) -> str:
         num_output_chars = int(chars_per_token * max_tokens)
         clipped_text = text[:num_output_chars]
         if add_three_dots:
-            clipped_text += "...(truncated)"
+            clipped_text += "\n...(truncated)"
         return clipped_text
     except Exception as e:
         get_logger().warning(f"Failed to clip tokens: {e}")
@@ -661,3 +662,15 @@ def find_line_number_of_relevant_line_in_file(diff_files: List[FilePatchInfo],
                             absolute_position = start2 + delta - 1
                             break
     return position, absolute_position
+
+def github_action_output(output_data: dict, key_name: str):
+    try:
+        if not get_settings().get('github_action_config.enable_output', False):
+            return
+        
+        key_data = output_data.get(key_name, {})
+        with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
+            print(f"{key_name}={json.dumps(key_data, indent=None, ensure_ascii=False)}", file=fh)
+    except Exception as e:
+        get_logger().error(f"Failed to write to GitHub Action output: {e}")
+    return

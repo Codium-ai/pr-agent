@@ -76,7 +76,7 @@ class PRCodeSuggestions:
             relevant_configs = {'pr_code_suggestions': dict(get_settings().pr_code_suggestions),
                                 'config': dict(get_settings().config)}
             get_logger().debug("Relevant configs", artifacts=relevant_configs)
-            if get_settings().config.publish_output:
+            if get_settings().config.publish_output and get_settings().config.publish_output_progress:
                 if self.git_provider.is_supported("gfm_markdown"):
                     self.progress_response = self.git_provider.publish_comment(self.progress)
                 else:
@@ -196,24 +196,31 @@ class PRCodeSuggestions:
         suggestion_list = []
         one_sentence_summary_list = []
         for i, suggestion in enumerate(data['code_suggestions']):
-            if get_settings().pr_code_suggestions.summarize:
-                if not suggestion or 'one_sentence_summary' not in suggestion or 'label' not in suggestion or 'relevant_file' not in suggestion:
-                    get_logger().debug(f"Skipping suggestion {i + 1}, because it is invalid: {suggestion}")
-                    continue
-
-                if suggestion['one_sentence_summary'] in one_sentence_summary_list:
-                    get_logger().debug(f"Skipping suggestion {i + 1}, because it is a duplicate: {suggestion}")
-                    continue
-
-            if ('existing_code' in suggestion) and ('improved_code' in suggestion) and (
-                    suggestion['existing_code'] != suggestion['improved_code']):
-                suggestion = self._truncate_if_needed(suggestion)
+            try:
                 if get_settings().pr_code_suggestions.summarize:
-                    one_sentence_summary_list.append(suggestion['one_sentence_summary'])
-                suggestion_list.append(suggestion)
-            else:
-                get_logger().debug(
-                    f"Skipping suggestion {i + 1}, because existing code is equal to improved code {suggestion['existing_code']}")
+                    if not suggestion or 'one_sentence_summary' not in suggestion or 'label' not in suggestion or 'relevant_file' not in suggestion:
+                        get_logger().debug(f"Skipping suggestion {i + 1}, because it is invalid: {suggestion}")
+                        continue
+
+                    if suggestion['one_sentence_summary'] in one_sentence_summary_list:
+                        get_logger().debug(f"Skipping suggestion {i + 1}, because it is a duplicate: {suggestion}")
+                        continue
+
+                if 'const' in suggestion['suggestion_content'] and 'instead' in suggestion['suggestion_content'] and 'let' in suggestion['suggestion_content']:
+                    get_logger().debug(f"Skipping suggestion {i + 1}, because it uses 'const instead let': {suggestion}")
+                    continue
+
+                if ('existing_code' in suggestion) and ('improved_code' in suggestion) and (
+                        suggestion['existing_code'] != suggestion['improved_code']):
+                    suggestion = self._truncate_if_needed(suggestion)
+                    if get_settings().pr_code_suggestions.summarize:
+                        one_sentence_summary_list.append(suggestion['one_sentence_summary'])
+                    suggestion_list.append(suggestion)
+                else:
+                    get_logger().debug(
+                        f"Skipping suggestion {i + 1}, because existing code is equal to improved code {suggestion['existing_code']}")
+            except Exception as e:
+                get_logger().error(f"Error processing suggestion {i + 1}: {suggestion}, error: {e}")
         data['code_suggestions'] = suggestion_list
 
         return data

@@ -1,4 +1,6 @@
-site_name: PR-Agent
+site_name: PR-Agent Documentation 
+repo_url: https://github.com/Codium-ai/pr-agent
+repo_name: Codium-ai/pr-agent
 
 nav: 
   - Overview: 'index.md'
@@ -14,7 +16,7 @@ nav:
     - 'usage-guide/index.md'
     - Introduction: 'usage-guide/introduction.md'
     - Configuration Options: 'usage-guide/configuration_options.md'
-    - Managing email notifications: 'usage-guide/mail_notifications.md'
+    - Managing Mail Notifications: 'usage-guide/mail_notifications.md'
     - Usage and Automation: 'usage-guide/automations_and_usage.md'
     - Additional Configurations: 'usage-guide/additional_configurations.md'
   - Tools: 
@@ -25,8 +27,10 @@ nav:
     - Ask: 'tools/ask.md'
     - Update Changelog: 'tools/update_changelog.md'
     - Similar Issues: 'tools/similar_issues.md'
+    - Help: 'tools/help.md'
     - 💎 Analyze: 'tools/analyze.md'
     - 💎 Test: 'tools/test.md'
+    - 💎 Improve Component: 'tools/improve_component.md'
     - 💎 Documentation: 'tools/documentation.md'
     - 💎 Custom Labels: 'tools/custom_labels.md'
     - 💎 Custom Suggestions: 'tools/custom_suggestions.md'
@@ -38,6 +42,8 @@ theme:
   logo: assets/logo.svg
   favicon: assets/favicon.ico
   name: material
+  icon:
+    repo: fontawesome/brands/github
   features:
     - navigation.tabs
     - navigation.expand
@@ -95,7 +101,7 @@ extra:
     - icon: fontawesome/brands/instagram
       link: https://www.instagram.com/codiumai/
   analytics:
-    provider: google
+    provider: custom
     property: ${{ secrets.GOOGLE_ANALYTICS_ID }}
 
 extra_css:

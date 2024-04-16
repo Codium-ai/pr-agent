@@ -8,7 +8,7 @@ from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAIHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import convert_to_markdown, load_yaml, ModelType
+from pr_agent.algo.utils import convert_to_markdown, github_action_output, load_yaml, ModelType
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import IncrementalPR, get_main_pr_language
@@ -192,6 +192,7 @@ class PRReviewer:
         data = load_yaml(self.prediction.strip(),
                          keys_fix_yaml=["estimated_effort_to_review_[1-5]:", "security_concerns:", "possible_issues:",
                                         "relevant_file:", "relevant_line:", "suggestion:"])
+        github_action_output(data, 'review')
 
         if 'code_feedback' in data:
             code_feedback = data['code_feedback']
@@ -357,6 +358,9 @@ class PRReviewer:
         return True
 
     def set_review_labels(self, data):
+        if not get_settings().config.publish_output:
+            return
+
         if (get_settings().pr_reviewer.enable_review_labels_security or
                 get_settings().pr_reviewer.enable_review_labels_effort):
             try:

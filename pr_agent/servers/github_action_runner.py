@@ -46,19 +46,22 @@ async def run_action():
     if not GITHUB_EVENT_PATH:
         print("GITHUB_EVENT_PATH not set")
         return
-    if not OPENAI_KEY:
-        print("OPENAI_KEY not set")
-        return
     if not GITHUB_TOKEN:
         print("GITHUB_TOKEN not set")
         return
 
     # Set the environment variables in the settings
-    get_settings().set("OPENAI.KEY", OPENAI_KEY)
+    if OPENAI_KEY:
+        get_settings().set("OPENAI.KEY", OPENAI_KEY)
+    else:
+        # Might not be set if the user is using models not from OpenAI
+        print("OPENAI_KEY not set")
     if OPENAI_ORG:
         get_settings().set("OPENAI.ORG", OPENAI_ORG)
     get_settings().set("GITHUB.USER_TOKEN", GITHUB_TOKEN)
     get_settings().set("GITHUB.DEPLOYMENT_TYPE", "user")
+    enable_output = get_setting_or_env("GITHUB_ACTION_CONFIG.ENABLE_OUTPUT", True)
+    get_settings().set("GITHUB_ACTION_CONFIG.ENABLE_OUTPUT", enable_output)
 
     # Load the event payload
     try:
@@ -101,6 +104,8 @@ async def run_action():
                     await PRReviewer(pr_url).run()
                 if auto_improve is None or is_true(auto_improve):
                     await PRCodeSuggestions(pr_url).run()
+        else:
+            get_logger().info(f"Skipping action: {action}")
 
     # Handle issue comment event
     elif GITHUB_EVENT_NAME == "issue_comment" or GITHUB_EVENT_NAME == "pull_request_review_comment":

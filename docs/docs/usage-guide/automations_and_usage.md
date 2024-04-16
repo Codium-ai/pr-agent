@@ -50,6 +50,10 @@ Any configuration value in [configuration file](https://github.com/Codium-ai/pr-
 
 ## GitHub App
 
+!!! note "Configurations for PR-Agent Pro"
+    PR-Agent Pro for GitHub is an App, hosted by CodiumAI. So all the instructions below are relevant also for PR-Agent Pro users.
+    Same goes for [GitLab webhook](#gitlab-webhook) and [BitBucket App](#bitbucket-app) sections.
+
 ### GitHub app automatic tools when a new PR is opened
 
 The [github_app](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L108) section defines GitHub app specific configurations.  
@@ -59,7 +63,7 @@ The configuration parameter `pr_commands` defines the list of tools that will be
 [github_app]
 pr_commands = [
     "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true --pr_description.final_update_message=false",
-    "/review --pr_reviewer.num_code_suggestions=0 --pr_reviewer.final_update_message=false",
+    "/review --pr_reviewer.num_code_suggestions=0",
     "/improve",
 ]
 ```
@@ -99,13 +103,13 @@ The configuration parameter `push_commands` defines the list of tools that will 
 handle_push_trigger = true
 push_commands = [
     "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true",
-    "/review  --pr_reviewer.num_code_suggestions=0",
+    "/review  --pr_reviewer.num_code_suggestions=0 --pr_reviewer.final_update_message=false",
 ]
 ```
 This means that when new code is pushed to the PR, the PR-Agent will run the `describe` and `review` tools, with the specified parameters.
 
 ## GitHub Action
-`GitHub Action` is a different way to trigger PR-Agent tools, and uses a different configuration mechanism than `GitHub App`.
+`GitHub Action` is a different way to trigger PR-Agent tools, and uses a different configuration mechanism than `GitHub App`.<br>
 You can configure settings for `GitHub Action` by adding environment variables under the env section in `.github/workflows/pr_agent.yml` file. 
 Specifically, start by setting the following environment variables:
 ```yaml
@@ -115,17 +119,23 @@ Specifically, start by setting the following environment variables:
         github_action_config.auto_review: "true" # enable\disable auto review
         github_action_config.auto_describe: "true" # enable\disable auto describe
         github_action_config.auto_improve: "true" # enable\disable auto improve
+        github_action_config.enable_output: "true" # enable\disable github actions output parameter
 ```
 `github_action_config.auto_review`, `github_action_config.auto_describe` and `github_action_config.auto_improve` are used to enable/disable automatic tools that run when a new PR is opened.
 If not set, the default configuration is for all three tools to run automatically when a new PR is opened.
 
-Note that you can give additional config parameters by adding environment variables to `.github/workflows/pr_agent.yml`, or by using a `.pr_agent.toml` file in the root of your repo, similar to the GitHub App usage.
+`github_action_config.enable_output` are used to enable/disable github actions [output parameter](https://docs.github.com/en/actions/creating-actions/metadata-syntax-for-github-actions#outputs-for-docker-container-and-javascript-actions) (default is `true`). 
+Review result is output as JSON to `steps.{step-id}.outputs.review` property.
+The JSON structure is equivalent to the yaml data structure defined in [pr_reviewer_prompts.toml](https://github.com/idubnori/pr-agent/blob/main/pr_agent/settings/pr_reviewer_prompts.toml).
 
-For example, you can set an environment variable: `pr_description.add_original_user_description=false`, or add a `.pr_agent.toml` file with the following content:
+Note that you can give additional config parameters by adding environment variables to `.github/workflows/pr_agent.yml`, or by using a `.pr_agent.toml` [configuration file](https://pr-agent-docs.codium.ai/usage-guide/configuration_options/#global-configuration-file) in the root of your repo
+
+For example, you can set an environment variable: `pr_description.publish_labels=false`, or add a `.pr_agent.toml` file with the following content:
 ```
 [pr_description]
-add_original_user_description = false
+publish_labels = false
 ```
+to prevent PR-Agent from publishing labels when running the `describe` tool.
 
 ## GitLab Webhook
 After setting up a GitLab webhook, to control which commands will run automatically when a new PR is opened, you can set the `pr_commands` parameter in the configuration file, similar to the GitHub App:
@@ -153,11 +163,11 @@ Each time you invoke a `/review` tool, it will use inline code comments.
 
 ### BitBucket Self-Hosted App automatic tools
 
-to control which commands will run automatically when a new PR is opened, you can set the `pr_commands` parameter in the configuration file:
+To control which commands will run automatically when a new PR is opened, you can set the `pr_commands` parameter in the configuration file:
 Specifically, set the following values:
 
-[bitbucket_app]
 ```
+[bitbucket_app]
 pr_commands = [
     "/review --pr_reviewer.num_code_suggestions=0",
     "/improve --pr_code_suggestions.summarize=false",
