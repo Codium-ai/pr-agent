@@ -95,7 +95,7 @@ class PRDescription:
                 self.file_label_dict = self._prepare_file_labels()
 
             pr_labels, pr_file_changes = [], []
-            if get_settings().pr_description.publish_labels:
+            if not get_settings().pr_description.disable_publish_labels:
                 pr_labels = self._prepare_labels()
 
             if get_settings().pr_description.use_description_markers:
@@ -118,7 +118,7 @@ class PRDescription:
 
             if get_settings().config.publish_output:
                 # publish labels
-                if get_settings().pr_description.publish_labels and self.git_provider.is_supported("get_labels"):
+                if (not get_settings().pr_description.disable_publish_labels) and self.git_provider.is_supported("get_labels"):
                     original_labels = self.git_provider.get_pr_labels(update=True)
                     get_logger().debug(f"original labels", artifact=original_labels)
                     user_labels = get_user_labels(original_labels)
@@ -137,7 +137,7 @@ class PRDescription:
                     self.git_provider.publish_description(pr_title, pr_body)
 
                     # publish final update message
-                    if (get_settings().pr_description.final_update_message):
+                    if (not get_settings().pr_description.disable_final_update_message):
                         latest_commit_url = self.git_provider.get_latest_commit_url()
                         if latest_commit_url:
                             pr_url = self.git_provider.get_pr_url()
@@ -294,7 +294,7 @@ class PRDescription:
 
         # Remove the 'PR Title' key from the dictionary
         ai_title = self.data.pop('title', self.vars["title"])
-        if get_settings().pr_description.keep_original_user_title:
+        if not get_settings().pr_description.generate_ai_title:
             # Assign the original PR title to the 'title' variable
             title = self.vars["title"]
         else:

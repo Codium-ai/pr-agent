@@ -51,14 +51,14 @@ maximal_review_effort=5
 
 
 [pr_description] # /describe #
-publish_labels=true
+disable_publish_labels=false
 publish_description_as_comment=false
 add_original_user_description=true
-keep_original_user_title=true
+generate_ai_title=false
 use_bullet_points=true
 extra_instructions = ""
 enable_pr_type=true
-final_update_message = true
+disable_final_update_message = false
 enable_help_text=false
 enable_help_comment=true
 ## changes walkthrough section

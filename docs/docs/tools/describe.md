@@ -23,13 +23,13 @@ To edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agen
 
 !!! example "Possible configurations"
 
-    - `publish_labels`: if set to true, the tool will publish the labels to the PR. Default is true.
+    - `disable_publish_labels`: if set to true, the tool will not publish the labels to the PR. Default is false.
 
     - `publish_description_as_comment`: if set to true, the tool will publish the description as a comment to the PR. If false, it will overwrite the original description. Default is false.
 
     - `add_original_user_description`: if set to true, the tool will add the original user description to the generated description. Default is true.
 
-    - `keep_original_user_title`: if set to true, the tool will keep the original PR title, and won't change it. Default is true.
+    - `generate_ai_title`: if set to true, the tool will automatically generate a title for the PR. If false, it will keep the original title. Default is false.
 
     - `extra_instructions`: Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".
 
@@ -37,7 +37,7 @@ To edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agen
 
     - `enable_pr_type`: if set to false, it will not show the `PR type` as a text value in the description content. Default is true.
 
-    - `final_update_message`: if set to true, it will add a comment message [`PR Description updated to latest commit...`](https://github.com/Codium-ai/pr-agent/pull/499#issuecomment-1837412176) after finishing calling `/describe`. Default is true.
+    - `disable_final_update_message`: if set to true, the tool will skip adding a comment message [`PR Description updated to latest commit...`](https://github.com/Codium-ai/pr-agent/pull/499#issuecomment-1837412176) after finishing calling `/describe`. Default is false.
 
     - `enable_semantic_files_types`: if set to true, "Changes walkthrough" section will be generated. Default is true.
     - `collapsible_file_list`: if set to true, the file list in the "Changes walkthrough" section will be collapsible. If set to "adaptive", the file list will be collapsible only if there are more than 8 files. Default is "adaptive".
