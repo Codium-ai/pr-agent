@@ -4,4 +4,4 @@ enable_auto_approval = true
 
 
 [pr_code_suggestions]
-summarize=true
+commitable_code_suggestions=false

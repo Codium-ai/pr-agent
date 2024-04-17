@@ -57,7 +57,7 @@ class PRCodeSuggestions:
             "language": self.main_language,
             "diff": "",  # empty diff for initial calculation
             "num_code_suggestions": num_code_suggestions,
-            "summarize_mode": get_settings().pr_code_suggestions.summarize,
+            "commitable_code_suggestions_mode": get_settings().pr_code_suggestions.commitable_code_suggestions,
             "extra_instructions": get_settings().pr_code_suggestions.extra_instructions,
             "commit_messages_str": self.git_provider.get_commit_messages(),
         }
@@ -105,7 +105,7 @@ class PRCodeSuggestions:
 
             if get_settings().config.publish_output:
                 self.git_provider.remove_initial_comment()
-                if get_settings().pr_code_suggestions.summarize and self.git_provider.is_supported("gfm_markdown"):
+                if (not get_settings().pr_code_suggestions.commitable_code_suggestions) and self.git_provider.is_supported("gfm_markdown"):
 
                     # generate summarized suggestions
                     pr_body = self.generate_summarized_suggestions(data)
@@ -197,7 +197,7 @@ class PRCodeSuggestions:
         one_sentence_summary_list = []
         for i, suggestion in enumerate(data['code_suggestions']):
             try:
-                if get_settings().pr_code_suggestions.summarize:
+                if not get_settings().pr_code_suggestions.commitable_code_suggestions:
                     if not suggestion or 'one_sentence_summary' not in suggestion or 'label' not in suggestion or 'relevant_file' not in suggestion:
                         get_logger().debug(f"Skipping suggestion {i + 1}, because it is invalid: {suggestion}")
                         continue
@@ -213,7 +213,7 @@ class PRCodeSuggestions:
                 if ('existing_code' in suggestion) and ('improved_code' in suggestion) and (
                         suggestion['existing_code'] != suggestion['improved_code']):
                     suggestion = self._truncate_if_needed(suggestion)
-                    if get_settings().pr_code_suggestions.summarize:
+                    if not get_settings().pr_code_suggestions.commitable_code_suggestions:
                         one_sentence_summary_list.append(suggestion['one_sentence_summary'])
                     suggestion_list.append(suggestion)
                 else:

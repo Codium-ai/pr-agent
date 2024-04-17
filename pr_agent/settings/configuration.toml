@@ -80,7 +80,7 @@ enable_help_text=true
 [pr_code_suggestions] # /improve #
 max_context_tokens=8000
 num_code_suggestions=4
-summarize = true
+commitable_code_suggestions = false
 extra_instructions = ""
 rank_suggestions = false
 enable_help_text=true
@@ -150,7 +150,7 @@ handle_pr_actions = ['opened', 'reopened', 'ready_for_review']
 pr_commands = [
     "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true",
     "/review --pr_reviewer.num_code_suggestions=0",
-    "/improve --pr_code_suggestions.summarize=true",
+    "/improve",
 ]
 # settings for "pull_request" event with "synchronize" action - used to detect and handle push triggers for new commits
 handle_push_trigger = false
@@ -171,13 +171,13 @@ url = "https://gitlab.com" # URL to the gitlab service
 pr_commands = [
     "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true",
     "/review --pr_reviewer.num_code_suggestions=0",
-    "/improve --pr_code_suggestions.summarize=true",
+    "/improve",
 ]
 
 [bitbucket_app]
 pr_commands = [
     "/review --pr_reviewer.num_code_suggestions=0",
-    "/improve --pr_code_suggestions.summarize=false",
+    "/improve --pr_code_suggestions.commitable_code_suggestions=true",
 ]
 
 

@@ -7,11 +7,11 @@ The tool can be triggered automatically every time a new PR is [opened](../usage
 
 ### Summarized vs committable code suggestions
 
-The code suggestions can be presented as a single comment (via `pr_code_suggestions.summarize=true`):
+The code suggestions can be presented as a single comment
 
 ![code suggestions as comment](https://codium.ai/images/pr_agent/code_suggestions_as_comment.png){width=512}
 
-Or as a separate commitable code comment for each suggestion:
+Or as a separate commitable code comment for each suggestion  (via `pr_code_suggestions.commitable_code_suggestions=true`)::
 
 ![imporove](https://codium.ai/images/pr_agent/improve.png){width=512}
 
@@ -58,7 +58,7 @@ To edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agen
     - `num_code_suggestions_per_chunk`: number of code suggestions provided by the 'improve' tool, per chunk. Default is 5.
     - `rank_extended_suggestions`: if set to true, the tool will rank the suggestions, based on importance. Default is true.
     - `max_number_of_calls`: maximum number of chunks. Default is 5.
-    - `final_clip_factor`: factor to remove suggestions with low confidence. Default is 0.9.
+    - `final_clip_factor`: factor to remove suggestions with low confidence. Default is 0.9.;
 
 
 ## Usage Tips
