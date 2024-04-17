@@ -36,7 +36,7 @@ ask_and_reflect=false
 #automatic_review=true
 persistent_comment=true
 extra_instructions = ""
-final_update_message = true
+disable_final_update_message = false
 # review labels
 enable_review_labels_security=true
 enable_review_labels_effort=true
