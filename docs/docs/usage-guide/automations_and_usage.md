@@ -62,20 +62,19 @@ The configuration parameter `pr_commands` defines the list of tools that will be
 ```
 [github_app]
 pr_commands = [
-    "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true --pr_description.final_update_message=false",
+    "/describe --pr_description.add_original_user_description=true --pr_description.final_update_message=false",
     "/review --pr_reviewer.num_code_suggestions=0",
     "/improve",
 ]
 ```
 This means that when a new PR is opened/reopened or marked as ready for review, PR-Agent will run the `describe`, `review` and `improve` tools.  
-For the `describe` tool, for example, the `add_original_user_description` and `keep_original_user_title` parameters will be set to true.
+For the `describe` tool, for example, the `add_original_user_description` parameter will be set to true.
 
 You can override the default tool parameters by using one the three options for a [configuration file](https://codium-ai.github.io/Docs-PR-Agent/usage-guide/#configuration-options): **wiki**, **local**, or **global**. 
 For example, if your local `.pr_agent.toml` file contains:
 ```
 [pr_description]
 add_original_user_description = false
-keep_original_user_title = false
 ```
 When a new PR is opened, PR-Agent will run the `describe` tool with the above parameters.
 
@@ -102,7 +101,7 @@ The configuration parameter `push_commands` defines the list of tools that will 
 [github_app]
 handle_push_trigger = true
 push_commands = [
-    "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true",
+    "/describe --pr_description.add_original_user_description=true",
     "/review  --pr_reviewer.num_code_suggestions=0 --pr_reviewer.final_update_message=false",
 ]
 ```
@@ -142,7 +141,7 @@ After setting up a GitLab webhook, to control which commands will run automatica
 ```
 [gitlab]
 pr_commands = [
-    "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true",
+    "/describe --pr_description.add_original_user_description=true",
     "/review --pr_reviewer.num_code_suggestions=0",
     "/improve",
 ]
@@ -202,7 +201,7 @@ To control which commands will run automatically when a new PR is opened, you ca
 ```
 [azure_devops_server]
 pr_commands = [
-    "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true",
+    "/describe --pr_description.add_original_user_description=true",
     "/review --pr_reviewer.num_code_suggestions=0",
     "/improve",
 ]

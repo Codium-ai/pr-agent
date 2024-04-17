@@ -23,7 +23,7 @@ An example content:
 
 ```
 [pr_description]
-keep_original_user_title=false
+generate_ai_title=true
 ```
 
 PR-Agent will know to remove the triple-quotes when reading the configuration content.
