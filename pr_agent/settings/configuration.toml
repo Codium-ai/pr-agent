@@ -52,7 +52,6 @@ maximal_review_effort=5
 
 [pr_description] # /describe #
 disable_publish_labels=false
-publish_description_as_comment=false
 add_original_user_description=true
 generate_ai_title=false
 use_bullet_points=true
