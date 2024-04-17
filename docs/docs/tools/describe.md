@@ -6,21 +6,46 @@ The tool can be triggered automatically every time a new PR is [opened](../usage
 /describe
 ```
 
-For example:
+## Example usage
+
+### Manual invocation
+
+Invoke the tool manually by commenting `/describe` on any PR:
 
 ![Describe comment](https://codium.ai/images/pr_agent/describe_comment.png){width=512}
 
+After ~30 seconds, the tool will generate a description for the PR:
+
 ![Describe New](https://codium.ai/images/pr_agent/describe_new.png){width=512}
 
-
-  
-## Configuration options
-
-### General configurations
-To edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L46) related to the describe tool (`pr_description` section), use the following template:
+If you want to edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L46), add the relevant ones to the command:
 ```
 /describe --pr_description.some_config1=... --pr_description.some_config2=...
 ```
+
+### Automatic invocation
+
+To run the `describe` automatically when a PR is opened, define in a [configuration file](https://pr-agent-docs.codium.ai/usage-guide/configuration_options/#wiki-configuration-file):
+```
+[github_app]
+pr_commands = [
+    "/describe",
+    ...
+]
+
+[pr_description]
+publish_labels = ...
+...
+
+```
+
+- The `pr_commands` lists commands that will be executed on every PR.
+- The `[pr_description]` section contains the configurations for the `describe` tool you want to edit.
+
+
+## Configuration options
+
+### General configurations
 
 !!! example "Possible configurations"
 
