@@ -18,7 +18,7 @@ After ~30 seconds, the tool will generate a description for the PR:
 
 ![Describe New](https://codium.ai/images/pr_agent/describe_new.png){width=512}
 
-If you want to edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L46), add the relevant ones to the command:
+If you want to edit [configurations](#configuration-options), add the relevant ones to the command:
 ```
 /describe --pr_description.some_config1=... --pr_description.some_config2=...
 ```
@@ -36,10 +36,9 @@ pr_commands = [
 [pr_description]
 publish_labels = ...
 ...
-
 ```
 
-- The `pr_commands` lists commands that will be executed on every PR.
+- The `pr_commands` lists commands that will be executed automatically when a PR is opened.
 - The `[pr_description]` section contains the configurations for the `describe` tool you want to edit.
 
 

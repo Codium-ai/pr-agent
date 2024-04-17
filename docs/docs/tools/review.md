@@ -4,21 +4,46 @@ The tool can be triggered automatically every time a new PR is [opened](../usage
 ```
 /review
 ```
-For example:
+
+## Example usage
+
+### Manual invocation
+
+Invoke the tool manually by commenting `/review` on any PR:
 
 ![review comment](https://codium.ai/images/pr_agent/review_comment.png){width=512}
 
+After ~30 seconds, the tool will generate a review for the PR:
+
 ![review](https://codium.ai/images/pr_agent/review3.png){width=512}
+
+If you want to edit [configurations](#configuration-options), add the relevant ones to the command:
+```
+/review --pr_reviewer.some_config1=... --pr_reviewer.some_config2=...
+```
+
+### Automatic invocation
+
+To run the `review` automatically when a PR is opened, define in a [configuration file](https://pr-agent-docs.codium.ai/usage-guide/configuration_options/#wiki-configuration-file):
+```
+[github_app]
+pr_commands = [
+    "/review",
+    ...
+]
+
+[pr_reviewer]
+publish_labels = ...
+...
+```
+
+- The `pr_commands` lists commands that will be executed automatically when a PR is opened.
+- The `[pr_reviewer]` section contains the configurations for the `review` tool you want to edit.
 
 
 ## Configuration options
 
 ### General configurations
-
-To edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L19)  related to the review tool (`pr_reviewer` section), use the following template:
-```
-/review --pr_reviewer.some_config1=... --pr_reviewer.some_config2=...
-```
 
 !!! example "General options"
     - `num_code_suggestions`: number of code suggestions provided by the 'review' tool. For manual comments, default is 4. For [PR-Agent app](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L142) auto tools, default is 0, meaning no code suggestions will be provided by the review tool, unless you manually edit `pr_commands`.
