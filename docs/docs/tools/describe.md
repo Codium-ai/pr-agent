@@ -18,7 +18,7 @@ After ~30 seconds, the tool will generate a description for the PR:
 
 ![Describe New](https://codium.ai/images/pr_agent/describe_new.png){width=512}
 
-If you want to edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L46), add the relevant ones to the command:
+If you want to edit [configurations](#configuration-options), add the relevant ones to the command:
 ```
 /describe --pr_description.some_config1=... --pr_description.some_config2=...
 ```
@@ -36,10 +36,9 @@ pr_commands = [
 [pr_description]
 publish_labels = ...
 ...
-
 ```
 
-- The `pr_commands` lists commands that will be executed on every PR.
+- The `pr_commands` lists commands that will be executed automatically when a PR is opened.
 - The `[pr_description]` section contains the configurations for the `describe` tool you want to edit.
 
 
@@ -57,7 +56,7 @@ publish_labels = ...
 
     - `add_original_user_description`: if set to true, the tool will add the original user description to the generated description. Default is true.
 
-    - `keep_original_user_title`: if set to true, the tool will keep the original PR title, and won't change it. Default is true.
+    - `generate_ai_title`: if set to true, the tool will also generate an AI title for the PR. Default is false.
 
     - `extra_instructions`: Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".
 
@@ -169,18 +168,17 @@ The description should be comprehensive and detailed, indicating when to add the
 !!! tip "Automation"
     - When you first install PR-Agent app, the [default mode](../usage-guide/automations_and_usage.md#github-app) for the describe tool is:
     ```
-    pr_commands = ["/describe --pr_description.add_original_user_description=true" 
-                             "--pr_description.keep_original_user_title=true", ...]
+    pr_commands = ["/describe --pr_description.add_original_user_description=true ..."]
     ```
-    meaning the `describe` tool will run automatically on every PR, will keep the original title, and will add the original user description above the generated description. 
+    meaning the `describe` tool will run automatically on every PR, and will add the original user description above the generated description. 
     <br> This default settings aim to strike a good balance between automation and control:
         - If you want more automation, just give the PR a title, and the tool will auto-write a full description; If you want more control, you can add a detailed description, and the tool will add the complementary description below it.
         - For maximal automation, you can change the default mode to:
         ```
         pr_commands = ["/describe --pr_description.add_original_user_description=false" 
-                                 "--pr_description.keep_original_user_title=true", ...]
+                                 " --pr_description.generate_ai_tile=true", ...]
         ```
-        so the title will be auto-generated as well.
+        so the title of the PR will be auto-generated as well.
     - Markers are an alternative way to control the generated description, to give maximal control to the user. If you set:
     ```
     pr_commands = ["/describe --pr_description.use_description_markers=true", ...]
