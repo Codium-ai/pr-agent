@@ -95,7 +95,10 @@ class PRDescription:
                 self.file_label_dict = self._prepare_file_labels()
 
             pr_labels, pr_file_changes = [], []
-            if not get_settings().pr_description.disable_publish_labels:
+            # backward compatibility support
+            publish_label = get_settings().pr_reviewer.get("publish_labels", True) \
+                            and not get_settings().pr_description.disable_publish_labels
+            if publish_label:
                 pr_labels = self._prepare_labels()
 
             if get_settings().pr_description.use_description_markers:
@@ -118,7 +121,7 @@ class PRDescription:
 
             if get_settings().config.publish_output:
                 # publish labels
-                if not get_settings().pr_description.disable_publish_labels and self.git_provider.is_supported("get_labels"):
+                if publish_label and self.git_provider.is_supported("get_labels"):
                     original_labels = self.git_provider.get_pr_labels(update=True)
                     get_logger().debug(f"original labels", artifact=original_labels)
                     user_labels = get_user_labels(original_labels)
@@ -143,8 +146,10 @@ class PRDescription:
                 else:
                     self.git_provider.publish_description(pr_title, pr_body)
 
-                    # publish final update message
-                    if (not get_settings().pr_description.disable_final_update_message):
+                    # publish final update message - with backward compatibility support
+                    publish_update_message = get_settings().pr_reviewer.get("final_update_message", True)\
+                                             and not get_settings().pr_description.disable_final_update_message
+                    if (publish_update_message):
                         latest_commit_url = self.git_provider.get_latest_commit_url()
                         if latest_commit_url:
                             pr_url = self.git_provider.get_pr_url()
@@ -301,7 +306,10 @@ class PRDescription:
 
         # Remove the 'PR Title' key from the dictionary
         ai_title = self.data.pop('title', self.vars["title"])
-        if not get_settings().pr_description.generate_ai_title:
+        # get config - with backward compatibility
+        keep_user_title = get_settings().pr_reviewer.get("keep_original_user_title", True) \
+                          and not get_settings().pr_description.generate_ai_title
+        if keep_user_title:
             # Assign the original PR title to the 'title' variable
             title = self.vars["title"]
         else:

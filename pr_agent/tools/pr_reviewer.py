@@ -135,7 +135,9 @@ class PRReviewer:
             if get_settings().config.publish_output:
                 # publish the review
                 if get_settings().pr_reviewer.persistent_comment and not self.incremental.is_incremental:
-                    final_update_message = not get_settings().pr_reviewer.disable_final_update_message
+                    # get config with backward compatibility
+                    final_update_message = get_settings().pr_reviewer.get("final_update_message", True)\
+                                           and not get_settings().pr_reviewer.disable_final_update_message
                     self.git_provider.publish_persistent_comment(pr_review,
                                                                  initial_header="## PR Review",
                                                                  update_header=True,
