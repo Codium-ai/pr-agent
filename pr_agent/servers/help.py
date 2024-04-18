@@ -68,9 +68,9 @@ some_config2=...
         output += """\
 - When you first install the app, the [default mode](https://pr-agent-docs.codium.ai/usage-guide/automations_and_usage/#github-app-automatic-tools-when-a-new-pr-is-opened) for the describe tool is:
 ```
-pr_commands = ["/describe --pr_description.add_original_user_description=true ..."]
+pr_commands = ["/describe", ...]
 ```
-meaning the `describe` tool will run automatically on every PR, and will add the original user description above the generated description. 
+meaning the `describe` tool will run automatically on every PR.
 
 - Markers are an alternative way to control the generated description, to give maximal control to the user. If you set:
 ```

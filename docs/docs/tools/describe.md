@@ -168,24 +168,18 @@ The description should be comprehensive and detailed, indicating when to add the
 !!! tip "Automation"
     - When you first install PR-Agent app, the [default mode](../usage-guide/automations_and_usage.md#github-app) for the describe tool is:
     ```
-    pr_commands = ["/describe --pr_description.add_original_user_description=true ..."]
+    pr_commands = ["/describe", ...]
     ```
-    meaning the `describe` tool will run automatically on every PR, and will add the original user description above the generated description. 
-    <br> This default settings aim to strike a good balance between automation and control:
-        - If you want more automation, just give the PR a title, and the tool will auto-write a full description; If you want more control, you can add a detailed description, and the tool will add the complementary description below it.
-        - For maximal automation, you can change the default mode to:
-        ```
-        pr_commands = ["/describe --pr_description.add_original_user_description=false" 
-                                 " --pr_description.generate_ai_tile=true", ...]
-        ```
-        so the title of the PR will be auto-generated as well.
-    - Markers are an alternative way to control the generated description, to give maximal control to the user. If you set:
-    ```
-    pr_commands = ["/describe --pr_description.use_description_markers=true", ...]
-    ```
-    the tool will replace every marker of the form `pr_agent:marker_name` in the PR description with the relevant content, where `marker_name` is one of the following:
-          * `type`: the PR type.
-          * `summary`: the PR summary.
-          * `walkthrough`: the PR walkthrough.
+    meaning the `describe` tool will run automatically on every PR, with the default configurations. 
 
-    - Note that when markers are enabled, if the original PR description does not contain any markers, the tool will not alter the description at all.
+
+   - Markers are an alternative way to control the generated description, to give maximal control to the user. If you set:
+   ```
+   pr_commands = ["/describe --pr_description.use_description_markers=true", ...]
+   ```
+   the tool will replace every marker of the form `pr_agent:marker_name` in the PR description with the relevant content, where `marker_name` is one of the following:
+         * `type`: the PR type.
+         * `summary`: the PR summary.
+         * `walkthrough`: the PR walkthrough.
+
+   - Note that when markers are enabled, if the original PR description does not contain any markers, the tool will not alter the description at all.
