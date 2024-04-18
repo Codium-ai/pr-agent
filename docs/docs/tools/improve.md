@@ -5,43 +5,51 @@ The tool can be triggered automatically every time a new PR is [opened](../usage
 /improve
 ```
 
-### Summarized vs committable code suggestions
+## Example usage
 
-The code suggestions can be presented as a single comment
+### Manual triggering
+
+Invoke the tool manually by commenting `/improve` on any PR. The code suggestions by default are presented as a single comment:
 
 ![code suggestions as comment](https://codium.ai/images/pr_agent/code_suggestions_as_comment.png){width=512}
 
-Or as a separate commitable code comment for each suggestion  (via `pr_code_suggestions.commitable_code_suggestions=true`)::
+To edit [configurations](#configuration-options) related to the improve tool, use the following template:
+```
+/improve --pr_code_suggestions.some_config1=... --pr_code_suggestions.some_config2=...
+```
 
-![imporove](https://codium.ai/images/pr_agent/improve.png){width=512}
+For example, you can choose to present the suggestions as commitable code comments, by running the following command:
+```
+/improve --pr_code_suggestions.commitable_code_suggestions=true
+```
+
+![improve](https://codium.ai/images/pr_agent/improve.png){width=512}
 
 
 Note that a single comment has a significantly smaller PR footprint. We recommend this mode for most cases.
 Also note that collapsible are not supported in _Bitbucket_. Hence, the suggestions are presented there as code comments.
 
-### Extended mode
+### Automatic triggering
 
-An extended mode, which does not involve PR Compression and provides more comprehensive suggestions, can be invoked by commenting on any PR:
+To run the `improve` automatically when a PR is opened, define in a [configuration file](https://pr-agent-docs.codium.ai/usage-guide/configuration_options/#wiki-configuration-file):
 ```
-/improve --extended
-```
+[github_app]
+pr_commands = [
+    "/improve",
+    ...
+]
 
-or by setting:
-```
 [pr_code_suggestions]
-auto_extended_mode=true
+num_code_suggestions = ...
+...
 ```
-(True by default).
 
-Note that the extended mode divides the PR code changes into chunks, up to the token limits, where each chunk is handled separately (might use multiple calls to GPT-4 for large PRs).
-Hence, the total number of suggestions is proportional to the number of chunks, i.e., the size of the PR.
+- The `pr_commands` lists commands that will be executed automatically when a PR is opened.
+- The `[pr_code_suggestions]` section contains the configurations for the `improve` tool you want to edit (if any)
 
-### Configuration options
 
-To edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L66) related to the improve tool (`pr_code_suggestions` section), use the following template:
-```
-/improve --pr_code_suggestions.some_config1=... --pr_code_suggestions.some_config2=...
-```
+
+## Configuration options
 
 !!! example "General options"
 
@@ -59,6 +67,24 @@ To edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agen
     - `rank_extended_suggestions`: if set to true, the tool will rank the suggestions, based on importance. Default is true.
     - `max_number_of_calls`: maximum number of chunks. Default is 5.
     - `final_clip_factor`: factor to remove suggestions with low confidence. Default is 0.9.;
+
+## Extended mode
+
+An extended mode, which does not involve PR Compression and provides more comprehensive suggestions, can be invoked by commenting on any PR:
+```
+/improve --extended
+```
+
+or by setting:
+```
+[pr_code_suggestions]
+auto_extended_mode=true
+```
+(True by default).
+
+Note that the extended mode divides the PR code changes into chunks, up to the token limits, where each chunk is handled separately (might use multiple calls to GPT-4 for large PRs).
+Hence, the total number of suggestions is proportional to the number of chunks, i.e., the size of the PR.
+
 
 
 ## Usage Tips

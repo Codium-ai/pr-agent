@@ -7,7 +7,7 @@ The tool can be triggered automatically every time a new PR is [opened](../usage
 
 ## Example usage
 
-### Manual invocation
+### Manual triggering
 
 Invoke the tool manually by commenting `/review` on any PR:
 
@@ -22,7 +22,7 @@ If you want to edit [configurations](#configuration-options), add the relevant o
 /review --pr_reviewer.some_config1=... --pr_reviewer.some_config2=...
 ```
 
-### Automatic invocation
+### Automatic triggering
 
 To run the `review` automatically when a PR is opened, define in a [configuration file](https://pr-agent-docs.codium.ai/usage-guide/configuration_options/#wiki-configuration-file):
 ```
@@ -38,7 +38,7 @@ num_code_suggestions = ...
 ```
 
 - The `pr_commands` lists commands that will be executed automatically when a PR is opened.
-- The `[pr_reviewer]` section contains the configurations for the `review` tool you want to edit.
+- The `[pr_reviewer]` section contains the configurations for the `review` tool you want to edit (if any).
 
 
 ## Configuration options

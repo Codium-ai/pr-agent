@@ -8,7 +8,7 @@ The tool can be triggered automatically every time a new PR is [opened](../usage
 
 ## Example usage
 
-### Manual invocation
+### Manual triggering
 
 Invoke the tool manually by commenting `/describe` on any PR:
 
@@ -23,7 +23,7 @@ If you want to edit [configurations](#configuration-options), add the relevant o
 /describe --pr_description.some_config1=... --pr_description.some_config2=...
 ```
 
-### Automatic invocation
+### Automatic triggering
 
 To run the `describe` automatically when a PR is opened, define in a [configuration file](https://pr-agent-docs.codium.ai/usage-guide/configuration_options/#wiki-configuration-file):
 ```
@@ -39,7 +39,7 @@ publish_labels = ...
 ```
 
 - The `pr_commands` lists commands that will be executed automatically when a PR is opened.
-- The `[pr_description]` section contains the configurations for the `describe` tool you want to edit.
+- The `[pr_description]` section contains the configurations for the `describe` tool you want to edit (if any).
 
 
 ## Configuration options
