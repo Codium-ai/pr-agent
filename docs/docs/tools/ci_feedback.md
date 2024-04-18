@@ -23,6 +23,14 @@ In addition to being automatically triggered, the tool can also be invoked manua
 ```
 where `{repo_name}` is the name of the repository, `{run_number}` is the run number of the failed check, and `{job_number}` is the job number of the failed check.
 
+## Disabling the tool from running automatically
+
+If you wish to disable the tool from running automatically, you can do so by adding the following configuration to the configuration file:
+```
+[checks]
+enable_auto_checks_feedback = false
+```
+
 ## Configuration options
 - `enable_auto_checks_feedback` - if set to true, the tool will automatically provide feedback when a check is failed. Default is true.
 - `excluded_checks_list` - a list of checks to exclude from the feedback, for example: ["check1", "check2"]. Default is an empty list.
