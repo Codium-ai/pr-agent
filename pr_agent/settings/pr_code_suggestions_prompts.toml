@@ -54,7 +54,7 @@ class CodeSuggestion(BaseModel):
     relevant_file: str = Field(description="the relevant file full path")
     language: str = Field(description="the code language of the relevant file")
     suggestion_content: str = Field(description="an actionable suggestion for meaningfully improving the new code introduced in the PR")
-{%- if summarize_mode %}
+{%- if commitable_code_suggestions_mode %}
     existing_code: str = Field(description="a short code snippet from a '__new hunk__' section to illustrate the relevant existing code. Don't show the line numbers.")
     improved_code: str = Field(description="a short code snippet to illustrate the improved code, after applying the suggestion.")
     one_sentence_summary:str = Field(description="a short summary of the suggestion action, in a single sentence. Focus on the 'what'. Be general, and avoid method or variable names.")
@@ -80,7 +80,7 @@ code_suggestions:
     python
   suggestion_content: |
     ...
-{%- if summarize_mode %}
+{%- if commitable_code_suggestions_mode %}
   existing_code: |
     ...
   improved_code: |
