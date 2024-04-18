@@ -27,7 +27,7 @@ The suggestions should focus only on the following:
 """
 ```
 
-Remmeber - with this tool, you are the prompter. Be specific, clear, and concise in the instructions. Specify relevant aspects that you want the model to focus on. \
+Remember - with this tool, you are the prompter. Be specific, clear, and concise in the instructions. Specify relevant aspects that you want the model to focus on. \
 You might benefit from several trial-and-error iterations, until you get the correct prompt for your use case.
 
 ## Example usage
