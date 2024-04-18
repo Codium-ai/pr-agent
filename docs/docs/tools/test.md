@@ -7,17 +7,23 @@ It can be invoked manually by commenting on any PR:
 where 'component_name' is the name of a specific component in the PR.
 To get a list of the components that changed in the PR and choose the relevant component interactively, use the [`analyze`](./analyze.md) tool.
 
+## Example usage
 
-An example [result](https://github.com/Codium-ai/pr-agent/pull/598#issuecomment-1913679429):
+Invoke the tool manually by commenting `/test` on any PR:
 
 ![test1](https://codium.ai/images/pr_agent/test1.png){width=704}
+
+The tool will generate tests for the selected component (if no component is stated, it will generate tests for largest component):
 
 ![test2](https://codium.ai/images/pr_agent/test2.png){width=768}
 
 ![test3](https://codium.ai/images/pr_agent/test3.png){width=768}
 
+(Example taken from [here](https://github.com/Codium-ai/pr-agent/pull/598#issuecomment-1913679429)):
+
 **Notes**
 - Language that are currently supported by the tool: Python, Java, C++, JavaScript, TypeScript, C#.
+- This tool can also be triggered interactively by using the [`analyze`](./analyze.md) tool.
 
 
 ## Configuration options

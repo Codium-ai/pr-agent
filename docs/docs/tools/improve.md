@@ -56,7 +56,7 @@ num_code_suggestions = ...
     - `num_code_suggestions`: number of code suggestions provided by the 'improve' tool. Default is 4 for CLI, 0 for auto tools.
     - `extra_instructions`: Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".
     - `rank_suggestions`: if set to true, the tool will rank the suggestions, based on importance. Default is false.
-    - `summarize`: if set to true, the tool will display the suggestions in a single comment. Default is true.
+    - `commitable_code_suggestions`: if set to true, the tool will display the suggestions as commitable code comments. Default is false.
     - `persistent_comment`: if set to true, the improve comment will be persistent, meaning that every new improve request will edit the previous one. Default is false.
     - `enable_help_text`: if set to true, the tool will display a help text in the comment. Default is true.
 
