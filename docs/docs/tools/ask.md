@@ -5,7 +5,8 @@ It can be invoked manually by commenting on any PR:
 ```
 /ask "..."
 ```
-For example:
+
+## Example usage
 
 ![Ask Comment](https://codium.ai/images/pr_agent/ask_comment.png){width=512}
 

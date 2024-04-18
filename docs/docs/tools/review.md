@@ -46,38 +46,38 @@ num_code_suggestions = ...
 ### General configurations
 
 !!! example "General options"
-    - `num_code_suggestions`: number of code suggestions provided by the 'review' tool. For manual comments, default is 4. For [PR-Agent app](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L142) auto tools, default is 0, meaning no code suggestions will be provided by the review tool, unless you manually edit `pr_commands`.
-    - `inline_code_comments`: if set to true, the tool will publish the code suggestions as comments on the code diff. Default is false.
-    - `persistent_comment`: if set to true, the review comment will be persistent, meaning that every new review request will edit the previous one. Default is true.
-    - `extra_instructions`: Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".
-    - `enable_help_text`: if set to true, the tool will display a help text in the comment. Default is true.
+    - <a name="num_code_suggestions"></a>`num_code_suggestions`: number of code suggestions provided by the 'review' tool. For manual comments, default is 4. For [PR-Agent app](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L142) auto tools, default is 0, meaning no code suggestions will be provided by the review tool, unless you manually edit `pr_commands`.
+    - <a name="inline_code_comments"></a>`inline_code_comments`: if set to true, the tool will publish the code suggestions as comments on the code diff. Default is false.
+    - <a name="persistent_comment"></a>`persistent_comment`: if set to true, the review comment will be persistent, meaning that every new review request will edit the previous one. Default is true.
+    - <a name="extra_instructions"></a>`extra_instructions`: Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".
+    - <a name="enable_help_text"></a>`enable_help_text`: if set to true, the tool will display a help text in the comment. Default is true.
 
 !!! example "Enable\\disable sub-sections"
     You can enable or disable specific sub-sections of the review tool:
 
-    - `require_score_review`: if set to true, the tool will add a section that scores the PR. Default is false.
-    - `require_tests_review`: if set to true, the tool will add a section that checks if the PR contains tests. Default is true.
-    - `require_estimate_effort_to_review`: if set to true, the tool will add a section that estimates the effort needed to review the PR. Default is true.
-    - `require_can_be_split_review`: if set to true, the tool will add a section that checks if the PR contains several themes, and can be split into smaller PRs. Default is false.
+    - <a name="require_score_review"></a>`require_score_review`: if set to true, the tool will add a section that scores the PR. Default is false.
+    - <a name="require_tests_review"></a>`require_tests_review`: if set to true, the tool will add a section that checks if the PR contains tests. Default is true.
+    - <a name="require_estimate_effort_to_review"></a>`require_estimate_effort_to_review`: if set to true, the tool will add a section that estimates the effort needed to review the PR. Default is true.
+    - <a name="require_can_be_split_review"></a>`require_can_be_split_review`: if set to true, the tool will add a section that checks if the PR contains several themes, and can be split into smaller PRs. Default is false.
 
 !!! example "SOC2 ticket compliance 💎"
 
     This sub-tool checks if the PR description properly contains a ticket to a project management system (e.g., Jira, Asana, Trello, etc.), as required by SOC2 compliance. If not, it will add a label to the PR: "Missing SOC2 ticket".
     
-    - `require_soc2_ticket`: If set to true, the SOC2 ticket checker sub-tool will be enabled. Default is false.
-    - `soc2_ticket_prompt`: The prompt for the SOC2 ticket review. Default is: `Does the PR description include a link to ticket in a project management system (e.g., Jira, Asana, Trello, etc.) ?`. Edit this field if your compliance requirements are different.
+    - <a name="require_soc2_ticket"></a>`require_soc2_ticket`: If set to true, the SOC2 ticket checker sub-tool will be enabled. Default is false.
+    - <a name="soc2_ticket_prompt"></a>`soc2_ticket_prompt`: The prompt for the SOC2 ticket review. Default is: `Does the PR description include a link to ticket in a project management system (e.g., Jira, Asana, Trello, etc.) ?`. Edit this field if your compliance requirements are different.
 
 !!! example "Adding PR labels"
     You can enable the tool to add specific labels to the PR:
 
-    - `enable_review_labels_security`: if set to true, the tool will publish a 'possible security issue' label if it detects a security issue. Default is true.
-    - `enable_review_labels_effort`: if set to true, the tool will publish a 'Review effort [1-5]: x' label. Default is true.
+    - <a name="enable_review_labels_security"></a>`enable_review_labels_security`: if set to true, the tool will publish a 'possible security issue' label if it detects a security issue. Default is true.
+    - <a name="enable_review_labels_effort"></a>`enable_review_labels_effort`: if set to true, the tool will publish a 'Review effort [1-5]: x' label. Default is true.
 
 !!! example "Auto-approval"
     The review tool can approve a PR when a specific comment, `/review auto_approve` is invoked.
 
-    - `enable_auto_approval`: if set to true, the tool will approve the PR when invoked with the 'auto_approve' command. Default is false. This flag can be changed only from configuration file.
-    - `maximal_review_effort`: maximal effort level for auto-approval. If the PR's estimated review effort is above this threshold, the auto-approval will not run. Default is 5.
+    - <a name="enable_auto_approval"></a>`enable_auto_approval`: if set to true, the tool will approve the PR when invoked with the 'auto_approve' command. Default is false. This flag can be changed only from configuration file.
+    - <a name="maximal_review_effort"></a>`maximal_review_effort`: maximal effort level for auto-approval. If the PR's estimated review effort is above this threshold, the auto-approval will not run. Default is 5.
 
 ### Incremental Mode
 Incremental review only considers changes since the last PR-Agent review. This can be useful when working on the PR in an iterative manner, and you want to focus on the changes since the last review instead of reviewing the entire PR again.
