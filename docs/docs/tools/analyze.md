@@ -9,6 +9,7 @@ It can be invoked manually by commenting on any PR:
 ```
 
 ## Example usage
+
 An example result:
 
 ![Analyze 1](https://codium.ai/images/pr_agent/analyze_1.png){width=750}

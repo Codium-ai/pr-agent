@@ -5,7 +5,8 @@ It can be invoked manually by commenting on any PR:
 ```
 /generate_labels
 ```
-For example:
+
+## Example usage
 
 If we wish to add detect changes to SQL queries in a given PR, we can add the following custom label along with its description:
 

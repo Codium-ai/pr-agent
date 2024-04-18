@@ -8,6 +8,8 @@ The tool analyzes the failed checks and provides several feedbacks:
 - Failure summary
 - Relevant error logs
 
+## Example usage
+
 ![Failed Check 1](https://www.codium.ai/images/pr_agent/failed_check1.png){width=768}
 
 &rarr;
