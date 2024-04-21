@@ -1,5 +1,7 @@
 FROM public.ecr.aws/lambda/python:3.10
 
+ARG PIP_NO_CACHE_DIR=1
+
 RUN yum update -y && \
     yum install -y gcc python3-devel git && \
     yum clean all

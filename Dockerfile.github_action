@@ -1,5 +1,7 @@
 FROM python:3.10 as base
 
+ARG PIP_NO_CACHE_DIR=1
+
 WORKDIR /app
 ADD pyproject.toml .
 ADD requirements.txt .
