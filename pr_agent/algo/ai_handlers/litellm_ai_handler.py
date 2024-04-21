@@ -52,6 +52,8 @@ class LiteLLMAIHandler(BaseAiHandler):
             litellm.anthropic_key = get_settings().anthropic.key
         if get_settings().get("COHERE.KEY", None):
             litellm.cohere_key = get_settings().cohere.key
+        if get_settings().get("GROQ.KEY", None):
+            litellm.api_key = get_settings().groq.key
         if get_settings().get("REPLICATE.KEY", None):
             litellm.replicate_key = get_settings().replicate.key
         if get_settings().get("REPLICATE.KEY", None):
