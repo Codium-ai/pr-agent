@@ -125,6 +125,19 @@ key = ...
 
 Also, review the [AiHandler](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/algo/ai_handler.py) file for instructions on how to set keys for other models.
 
+### Groq
+
+To use Llama3 model with Groq, for example, set:
+```
+[config] # in configuration.toml
+model = "llama3-70b-8192"
+model_turbo = "llama3-70b-8192"
+fallback_models = ["groq/llama3-70b-8192"] 
+[groq] # in .secrets.toml
+key = ... # your Groq api key
+```
+(you can obtain a Groq key from [here](https://console.groq.com/keys))
+
 ### Vertex AI
 
 To use Google's Vertex AI platform and its associated models (chat-bison/codechat-bison) set:
