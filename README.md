@@ -41,14 +41,13 @@ CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by p
 ## News and Updates
 
 ### May 2, 2024
-Check out the new [PR-Agent Chrome Extension](https://www.youtube.com/watch?v=gT5tli7X4H4) 🚀🚀🚀
+Check out the new [PR-Agent Chrome Extension](https://chromewebstore.google.com/detail/pr-agent-chrome-extension/ephlnjeghhogofkifjloamocljapahnl]) 🚀🚀🚀
 
-This toolbar integrates seamlessly with your GitHub environment, allowing you to access and configure PR-Agent tools directly from the GitHub interface.
+This toolbar integrates seamlessly with your GitHub environment, allowing you to access and configure PR-Agent tools [directly from the GitHub interface]((https://www.youtube.com/watch?v=gT5tli7X4H4)).
 
 <kbd><img src="https://codium.ai/images/pr_agent/toolbar1.png" width="512"></kbd>
 
 <kbd><img src="https://codium.ai/images/pr_agent/toolbar2.png" width="512"></kbd>
-
 
 
 ### April 14, 2024
