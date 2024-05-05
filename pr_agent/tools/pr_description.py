@@ -113,7 +113,7 @@ class PRDescription:
                 pr_body += HelpMessage.get_describe_usage_guide()
                 pr_body += "\n</details>\n"
             elif get_settings().pr_description.enable_help_comment:
-                pr_body += "\n\n___\n\n> ✨ **PR-Agent usage**:"
+                pr_body += "\n\n___\n\n> 💡 **PR-Agent usage**:"
                 pr_body += "\n>Comment `/help` on the PR to get a list of all available PR-Agent tools and their descriptions\n\n"
 
             if get_settings().config.publish_output:
@@ -317,7 +317,11 @@ class PRDescription:
                 value = self.file_label_dict
             else:
                 key_publish = key.rstrip(':').replace("_", " ").capitalize()
-                pr_body += f"## **{key_publish}**\n"
+                if key_publish== "Type":
+                    key_publish = "PR Type"
+                # elif key_publish == "Description":
+                #     key_publish = "PR Description"
+                pr_body += f"### **{key_publish}**\n"
             if 'walkthrough' in key.lower():
                 if self.git_provider.is_supported("gfm_markdown"):
                     pr_body += "<details> <summary>files:</summary>\n\n"
@@ -329,7 +333,7 @@ class PRDescription:
                     pr_body += "</details>\n"
             elif 'pr_files' in key.lower():
                 changes_walkthrough, pr_file_changes = self.process_pr_files_prediction(changes_walkthrough, value)
-                changes_walkthrough = f"## **Changes walkthrough**\n{changes_walkthrough}"
+                changes_walkthrough = f"### **Changes walkthrough** 📝\n{changes_walkthrough}"
             else:
                 # if the value is a list, join its items by comma
                 if isinstance(value, list):

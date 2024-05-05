@@ -68,7 +68,7 @@ class PRQuestions:
         get_logger().debug(f"PR output", artifact=pr_comment)
 
         if self.git_provider.is_supported("gfm_markdown") and get_settings().pr_questions.enable_help_text:
-            pr_comment += "<hr>\n\n<details> <summary><strong>✨ Ask tool usage guide:</strong></summary><hr> \n\n"
+            pr_comment += "<hr>\n\n<details> <summary><strong>💡 Tool usage guide:</strong></summary><hr> \n\n"
             pr_comment += HelpMessage.get_ask_usage_guide()
             pr_comment += "\n</details>\n"
 
@@ -116,6 +116,6 @@ class PRQuestions:
         return response
 
     def _prepare_pr_answer(self) -> str:
-        answer_str = f"Question: {self.question_str}\n\n"
-        answer_str += f"Answer:\n{self.prediction.strip()}\n\n"
+        answer_str = f"### **Ask**❓\n{self.question_str}\n\n"
+        answer_str += f"### **Answer:**\n{self.prediction.strip()}\n\n"
         return answer_str
