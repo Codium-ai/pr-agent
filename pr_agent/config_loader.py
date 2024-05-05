@@ -36,6 +36,7 @@ def get_settings():
     try:
         return context["settings"]
     except Exception:
+        print("error")
         return global_settings
 
 
