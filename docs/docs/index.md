@@ -104,7 +104,7 @@ Check out the [PR Compression strategy](core-abilities/index.md) page for more d
     - (Feature): [**Inline file summary**](https://pr-agent-docs.codium.ai/tools/describe/#inline-file-summary)
 
    
-## Data privacy
+## Data Privacy
 
 ### Self-hosted PR-Agent
 
