@@ -321,11 +321,22 @@ Here are some advantages of PR-Agent:
 
 ## Data privacy
 
-If you host PR-Agent with your OpenAI API key, it is between you and OpenAI. You can read their API data privacy policy here:
+### Self-hosted PR-Agent
+
+- If you host PR-Agent with your OpenAI API key, it is between you and OpenAI. You can read their API data privacy policy here:
 https://openai.com/enterprise-privacy
 
-When using PR-Agent Pro 💎, hosted by CodiumAI, we will not store any of your data, nor will we use it for training.
-You will also benefit from an OpenAI account with zero data retention.
+### CodiumAI-hosted PR-Agent Pro 💎
+
+- When using PR-Agent Pro 💎, hosted by CodiumAI, we will not store any of your data, nor will we use it for training. You will also benefit from an OpenAI account with zero data retention.
+
+- For certain clients, CodiumAI-hosted PR-Agent Pro will use CodiumAI’s proprietary models — if this is the case, you will be notified.
+
+- No passive collection of Code and Pull Requests’ data — PR-Agent will be active only when you invoke it, and it will then extract and analyze only data relevant to the executed command and queried pull request.
+
+### PR-Agent Chrome extension
+
+- The [PR-Agent Chrome extension](https://chromewebstore.google.com/detail/pr-agent-chrome-extension/ephlnjeghhogofkifjloamocljapahnl) will only act to alter the visual appearance of a GitHub PR screen. It will not communicate any user's repo or pull request code by itself. Only when the user actually sends a GitHub comment that triggers a PR-Agent command, will a code be sent to processing, according to the standard privacy policy of PR-Agent.
 
 ## Links
 
