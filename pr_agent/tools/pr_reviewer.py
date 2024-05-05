@@ -137,7 +137,7 @@ class PRReviewer:
                 if get_settings().pr_reviewer.persistent_comment and not self.incremental.is_incremental:
                     final_update_message = get_settings().pr_reviewer.final_update_message
                     self.git_provider.publish_persistent_comment(pr_review,
-                                                                 initial_header="## PR Review",
+                                                                 initial_header="## PR Review 🔍",
                                                                  update_header=True,
                                                                  final_update_message=final_update_message, )
                 else:
@@ -234,7 +234,7 @@ class PRReviewer:
 
         # Add help text if gfm_markdown is supported
         if self.git_provider.is_supported("gfm_markdown") and get_settings().pr_reviewer.enable_help_text:
-            markdown_text += "<hr>\n\n<details> <summary><strong>✨ Review tool usage guide:</strong></summary><hr> \n\n"
+            markdown_text += "<hr>\n\n<details> <summary><strong>💡 Tool usage guide:</strong></summary><hr> \n\n"
             markdown_text += HelpMessage.get_review_usage_guide()
             markdown_text += "\n</details>\n"
 

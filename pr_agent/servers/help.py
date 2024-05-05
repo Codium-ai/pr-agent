@@ -179,7 +179,7 @@ You can ask questions about the entire PR, about specific code lines, or about a
     @staticmethod
     def get_improve_usage_guide():
         output = "**Overview:**\n"
-        output += "The `improve` tool scans the PR code changes, and automatically generates suggestions for improving the PR code. "
+        output += "The code suggestions tool, named `improve`, scans the PR code changes, and automatically generates code suggestions for improving the PR."
         output += "The tool can be triggered [automatically](https://pr-agent-docs.codium.ai/usage-guide/automations_and_usage/#github-app-automatic-tools-when-a-new-pr-is-opened) every time a new PR is opened, or can be invoked manually by commenting on a PR.\n"
         output += """\
 - When commenting, to edit [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L78) related to the improve tool (`pr_code_suggestions` section), use the following template:

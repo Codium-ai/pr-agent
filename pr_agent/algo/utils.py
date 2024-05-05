@@ -68,11 +68,11 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool = True, increment
         output_data (dict): A dictionary containing data to be converted to markdown format.
     Returns:
         str: The markdown formatted text generated from the input dictionary.
-    """    
+    """
 
     emojis = {
         "Can be split": "🔀",
-        "Possible issues": "🔍",
+        "Possible issues": "⚡",
         "Score": "🏅",
         "Relevant tests": "🧪",
         "Focused PR": "✨",
@@ -83,9 +83,9 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool = True, increment
     }
     markdown_text = ""
     if not incremental_review:
-        markdown_text += f"## PR Review\n\n"
+        markdown_text += f"## PR Review 🔍\n\n"
     else:
-        markdown_text += f"## Incremental PR Review\n\n"
+        markdown_text += f"## Incremental PR Review 🔍 \n\n"
         markdown_text += f"⏮️ Review for commits since previous PR-Agent review {incremental_review}.\n\n"
     if gfm_supported:
         markdown_text += "<table>\n<tr>\n"

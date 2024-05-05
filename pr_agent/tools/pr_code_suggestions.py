@@ -90,7 +90,7 @@ class PRCodeSuggestions:
 
             if (not data) or (not 'code_suggestions' in data) or (not data['code_suggestions']):
                 get_logger().error('No code suggestions found for PR.')
-                pr_body = "## PR Code Suggestions\n\nNo code suggestions found for PR."
+                pr_body = "## PR Code Suggestions ✨\n\nNo code suggestions found for PR."
                 get_logger().debug(f"PR output", artifact=pr_body)
                 if self.progress_response:
                     self.git_provider.edit_comment(self.progress_response, body=pr_body)
@@ -113,14 +113,14 @@ class PRCodeSuggestions:
 
                     # add usage guide
                     if get_settings().pr_code_suggestions.enable_help_text:
-                        pr_body += "<hr>\n\n<details> <summary><strong>✨ Improve tool usage guide:</strong></summary><hr> \n\n"
+                        pr_body += "<hr>\n\n<details> <summary><strong>💡 Tool usage guide:</strong></summary><hr> \n\n"
                         pr_body += HelpMessage.get_improve_usage_guide()
                         pr_body += "\n</details>\n"
 
                     if get_settings().pr_code_suggestions.persistent_comment:
                         final_update_message = False
                         self.git_provider.publish_persistent_comment(pr_body,
-                                                                     initial_header="## PR Code Suggestions",
+                                                                     initial_header="## PR Code Suggestions ✨",
                                                                      update_header=True,
                                                                      name="suggestions",
                                                                      final_update_message=final_update_message, )
@@ -382,7 +382,7 @@ class PRCodeSuggestions:
 
     def generate_summarized_suggestions(self, data: Dict) -> str:
         try:
-            pr_body = "## PR Code Suggestions\n\n"
+            pr_body = "## PR Code Suggestions ✨\n\n"
 
             if len(data.get('code_suggestions', [])) == 0:
                 pr_body += "No suggestions found to improve this PR."
@@ -394,7 +394,7 @@ class PRCodeSuggestions:
                 for ext in extensions:
                     extension_to_language[ext] = language
 
-            pr_body = "## PR Code Suggestions\n\n"
+            pr_body = "## PR Code Suggestions ✨\n\n"
 
             pr_body += "<table>"
             header = f"Suggestions"
