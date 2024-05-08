@@ -44,33 +44,57 @@ publish_labels = ...
 
 ## Configuration options
 
-### General configurations
-
 !!! example "Possible configurations"
 
-    - `publish_labels`: if set to true, the tool will publish the labels to the PR. Default is true.
+<table>
+  <tr>
+    <td><b>publish_labels</b></td>
+    <td>If set to true, the tool will publish the labels to the PR. Default is true.</td>
+  </tr>
+  <tr>
+    <td><b>publish_description_as_comment</b></td>
+    <td>If set to true, the tool will publish the description as a comment to the PR. If false, it will overwrite the original description. Default is false.</td>
+  </tr>
+  <tr>
+    <td><b>publish_description_as_comment_persistent</b></td>
+    <td>If set to true and `publish_description_as_comment` is true, the tool will publish the description as a persistent comment to the PR. Default is true.</td>
+  </tr>
+  <tr>
+    <td><b>add_original_user_description</b></td>
+    <td>If set to true, the tool will add the original user description to the generated description. Default is true.</td>
+  </tr>
+  <tr>
+    <td><b>generate_ai_title</b></td>
+    <td>If set to true, the tool will also generate an AI title for the PR. Default is false.</td>
+  </tr>
+  <tr>
+    <td><b>extra_instructions</b></td>
+    <td>Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ..."</td>
+  </tr>
+  <tr>
+    <td><b>enable_pr_type</b></td>
+    <td>If set to false, it will not show the `PR type` as a text value in the description content. Default is true.</td>
+  </tr>
+  <tr>
+    <td><b>final_update_message</b></td>
+    <td>If set to true, it will add a comment message [`PR Description updated to latest commit...`](https://github.com/Codium-ai/pr-agent/pull/499#issuecomment-1837412176) after finishing calling `/describe`. Default is true.</td>
+  </tr>
+  <tr>
+    <td><b>enable_semantic_files_types</b></td>
+    <td>If set to true, "Changes walkthrough" section will be generated. Default is true.</td>
+  </tr>
+  <tr>
+    <td><b>collapsible_file_list</b></td>
+    <td>If set to true, the file list in the "Changes walkthrough" section will be collapsible. If set to "adaptive", the file list will be collapsible only if there are more than 8 files. Default is "adaptive".</td>
+  </tr>
+  <tr>
+    <td><b>enable_help_text</b></td>
+    <td>If set to true, the tool will display a help text in the comment. Default is false.</td>
+  </tr>
+</table>
 
-    - `publish_description_as_comment`: if set to true, the tool will publish the description as a comment to the PR. If false, it will overwrite the original description. Default is false.
 
-    - `publish_description_as_comment_persistent`: if set to true and `publish_description_as_comment` is true, the tool will publish the description as a persistent comment to the PR. Default is true.
-
-    - `add_original_user_description`: if set to true, the tool will add the original user description to the generated description. Default is true.
-
-    - `generate_ai_title`: if set to true, the tool will also generate an AI title for the PR. Default is false.
-
-    - `extra_instructions`: Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".
-
-    - To enable `custom labels`, apply the configuration changes described [here](./custom_labels.md#configuration-options)
-
-    - `enable_pr_type`: if set to false, it will not show the `PR type` as a text value in the description content. Default is true.
-
-    - `final_update_message`: if set to true, it will add a comment message [`PR Description updated to latest commit...`](https://github.com/Codium-ai/pr-agent/pull/499#issuecomment-1837412176) after finishing calling `/describe`. Default is true.
-
-    - `enable_semantic_files_types`: if set to true, "Changes walkthrough" section will be generated. Default is true.
-    - `collapsible_file_list`: if set to true, the file list in the "Changes walkthrough" section will be collapsible. If set to "adaptive", the file list will be collapsible only if there are more than 8 files. Default is "adaptive".
-    - `enable_help_text`: if set to true, the tool will display a help text in the comment. Default is false.
-
-### Inline file summary 💎
+## Inline file summary 💎
 
 This feature enables you to copy the `changes walkthrough` table to the "Files changed" tab, so you can quickly understand the changes in each file while reviewing the code changes (diff view).
 
@@ -93,7 +117,7 @@ If you prefer to have the file summaries appear in the "Files changed" tab on ev
 **Note**: that this feature is currently available only for GitHub.
 
 
-### Markers template
+## Markers template
 
 To enable markers, set `pr_description.use_description_markers=true`.
 Markers enable to easily integrate user's content and auto-generated content, with a template-like mechanism.
