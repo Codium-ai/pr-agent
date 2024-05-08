@@ -11,6 +11,12 @@ There are three ways to set persistent configurations:
 
 In terms of precedence, wiki configurations will override local configurations, and local configurations will override global configurations.
 
+!!! tip "Edit only what you need"
+
+  Your configuration file should be minimal, and edit only the relevant values. Don't copy the entire configuration options, since it can lead to legacy problems when something changes.
+
+
+
 ## Wiki configuration file 💎
 
 Specifically for GitHub, with PR-Agent-Pro you can set configurations by creating a page called `.pr_agent.toml` in the [wiki](https://github.com/Codium-ai/pr-agent/wiki/pr_agent.toml) of the repo. 
