@@ -40,12 +40,24 @@ pr_commands = [
 ]
 
 [pr_code_suggestions]
-num_code_suggestions = ...
+num_code_suggestions_per_chunk = ...
 ...
 ```
 
 - The `pr_commands` lists commands that will be executed automatically when a PR is opened.
 - The `[pr_code_suggestions]` section contains the configurations for the `improve` tool you want to edit (if any)
+
+### Extended mode
+
+An extended mode, which does not involve PR Compression and provides more comprehensive suggestions, can be invoked by commenting on any PR by setting:
+```
+[pr_code_suggestions]
+auto_extended_mode=true
+```
+(This mode is true by default).
+
+Note that the extended mode divides the PR code changes into chunks, up to the token limits, where each chunk is handled separately (might use multiple calls to GPT-4 for large PRs).
+Hence, the total number of suggestions is proportional to the number of chunks, i.e., the size of the PR.
 
 
 
@@ -53,39 +65,57 @@ num_code_suggestions = ...
 
 !!! example "General options"
 
-    - `num_code_suggestions`: number of code suggestions provided by the 'improve' tool. Default is 4 for CLI, 0 for auto tools.
-    - `extra_instructions`: Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".
-    - `rank_suggestions`: if set to true, the tool will rank the suggestions, based on importance. Default is false.
-    - `commitable_code_suggestions`: if set to true, the tool will display the suggestions as commitable code comments. Default is false.
-    - `persistent_comment`: if set to true, the improve comment will be persistent, meaning that every new improve request will edit the previous one. Default is false.
-    - `enable_help_text`: if set to true, the tool will display a help text in the comment. Default is true.
+<table>
+  <tr>
+    <td><b>num_code_suggestions</b></td>
+    <td>Number of code suggestions provided by the 'improve' tool. Default is 4 for CLI, 0 for auto tools.</td>
+  </tr>
+  <tr>
+    <td><b>extra_instructions</b></td>
+    <td>Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".</td>
+  </tr>
+  <tr>
+    <td><b>rank_suggestions</b></td>
+    <td>If set to true, the tool will rank the suggestions, based on importance. Default is false.</td>
+  </tr>
+  <tr>
+    <td><b>commitable_code_suggestions</b></td>
+    <td>If set to true, the tool will display the suggestions as commitable code comments. Default is false.</td>
+  </tr>
+  <tr>
+    <td><b>persistent_comment</b></td>
+    <td>If set to true, the improve comment will be persistent, meaning that every new improve request will edit the previous one. Default is false.</td>
+  </tr>
+  <tr>
+    <td><b>enable_help_text</b></td>
+    <td>If set to true, the tool will display a help text in the comment. Default is true.</td>
+  </tr>
+</table>
 
-!!! example "params for '/improve --extended' mode"
+!!! example "params for 'extended' mode"
 
-    - `auto_extended_mode`: enable extended mode automatically (no need for the `--extended` option). Default is true.
-    - `num_code_suggestions_per_chunk`: number of code suggestions provided by the 'improve' tool, per chunk. Default is 5.
-    - `rank_extended_suggestions`: if set to true, the tool will rank the suggestions, based on importance. Default is true.
-    - `max_number_of_calls`: maximum number of chunks. Default is 5.
-    - `final_clip_factor`: factor to remove suggestions with low confidence. Default is 0.9.;
-
-## Extended mode
-
-An extended mode, which does not involve PR Compression and provides more comprehensive suggestions, can be invoked by commenting on any PR:
-```
-/improve --extended
-```
-
-or by setting:
-```
-[pr_code_suggestions]
-auto_extended_mode=true
-```
-(True by default).
-
-Note that the extended mode divides the PR code changes into chunks, up to the token limits, where each chunk is handled separately (might use multiple calls to GPT-4 for large PRs).
-Hence, the total number of suggestions is proportional to the number of chunks, i.e., the size of the PR.
-
-
+<table>
+  <tr>
+    <td><b>auto_extended_mode</b></td>
+    <td>Enable extended mode automatically (no need for the --extended option). Default is true.</td>
+  </tr>
+  <tr>
+    <td><b>num_code_suggestions_per_chunk</b></td>
+    <td>Number of code suggestions provided by the 'improve' tool, per chunk. Default is 5.</td>
+  </tr>
+  <tr>
+    <td><b>rank_extended_suggestions</b></td>
+    <td>If set to true, the tool will rank the suggestions, based on importance. Default is true.</td>
+  </tr>
+  <tr>
+    <td><b>max_number_of_calls</b></td>
+    <td>Maximum number of chunks. Default is 5.</td>
+  </tr>
+  <tr>
+    <td><b>final_clip_factor</b></td>
+    <td>Factor to remove suggestions with low confidence. Default is 0.9.</td>
+  </tr>
+</table>
 
 ## Usage Tips
 
@@ -110,7 +140,7 @@ Hence, the total number of suggestions is proportional to the number of chunks, 
 
 !!! tip "Review vs. Improve tools comparison"
 
-    - The [`review`](https://pr-agent-docs.codium.ai/tools/review/) tool includes a section called 'Possible issues', that also provide feedback on the PR Code.
+    - The [review](https://pr-agent-docs.codium.ai/tools/review/) tool includes a section called 'Possible issues', that also provide feedback on the PR Code.
     In this section, the model is instructed to focus **only** on [major bugs and issues](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/pr_reviewer_prompts.toml#L71).
     - The `improve` tool, on the other hand, has a broader mandate, and in addition to bugs and issues, it can also give suggestions for improving code quality and making the code more efficient, readable, and maintainable (see [here](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/pr_code_suggestions_prompts.toml#L34)).
     - Hence, if you are interested only in feedback about clear bugs, the `review` tool might suffice. If you want a more detailed feedback, including broader suggestions for improving the PR code, also enable the `improve` tool to run on each PR.
