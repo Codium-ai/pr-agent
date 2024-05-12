@@ -86,8 +86,10 @@ class PRCodeSuggestions:
                 data = await retry_with_fallback_models(self._prepare_prediction, ModelType.TURBO)
             else:
                 data = await retry_with_fallback_models(self._prepare_prediction_extended, ModelType.TURBO)
+            if not data:
+                data = {"code_suggestions": []}
 
-            if not data or not data.get('code_suggestions'):
+            if data is None or 'code_suggestions' not in data or not data['code_suggestions']:
                 get_logger().error('No code suggestions found for PR.')
                 pr_body = "## PR Code Suggestions ✨\n\nNo code suggestions found for PR."
                 get_logger().debug(f"PR output", artifact=pr_body)
@@ -423,10 +425,10 @@ class PRCodeSuggestions:
 
             pr_body += "<table>"
             header = f"Suggestion"
-            delta = 68
+            delta = 64
             header += "&nbsp; " * delta
             if get_settings().pr_code_suggestions.self_reflect_on_suggestions:
-                pr_body += f"""<thead><tr><td>Category</td><td align=left>{header}</td><td align=center>Importance</td></tr>"""
+                pr_body += f"""<thead><tr><td>Category</td><td align=left>{header}</td><td align=center>Score</td></tr>"""
             else:
                 pr_body += f"""<thead><tr><td>Category</td><td align=left>{header}</td></tr>"""
             pr_body += """<tbody>"""
@@ -441,6 +443,9 @@ class PRCodeSuggestions:
             # sort suggestions_labels by the suggestion with the highest score
             if get_settings().pr_code_suggestions.self_reflect_on_suggestions:
                 suggestions_labels = dict(sorted(suggestions_labels.items(), key=lambda x: max([s['score'] for s in x[1]]), reverse=True))
+                # sort the suggestions inside each label group by score
+                for label, suggestions in suggestions_labels.items():
+                    suggestions_labels[label] = sorted(suggestions, key=lambda x: x['score'], reverse=True)
 
 
             for label, suggestions in suggestions_labels.items():

@@ -9,6 +9,7 @@ Specific instructions:
 - Carefully review both the suggestion content, and the related PR code diff. Mistakes in the suggestions can occur. Make sure the suggestions are correct, and properly derived from the PR code diff.
 - In addition to the exact code lines mentioned in each suggestion, review the code around them, to ensure that the suggestions are contextually accurate.
 - Also check that the 'existing_code' and 'improved_code' fields correctly reflect the suggested changes.
+- Make sure the suggestions focus on new code introduced in the PR, and not on existing code that was not changed.
 - High scores (8 to 10) should be given to correct suggestions that address major bugs and issues, or security concerns. Lower scores (3 to 7) should be for correct suggestions addressing minor issues, code style, code readability, maintainability, etc. Don't give high scores to suggestions that are not crucial, and bring only small improvement or optimization.
 - Order the feedback the same way the suggestions are ordered in the input.
 
