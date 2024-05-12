@@ -328,22 +328,20 @@ class PRCodeSuggestions:
 
 
             data = {"code_suggestions": []}
-            for i, prediction in enumerate(prediction_list):
-                try:
-                    if "code_suggestions" in prediction:
-                        if get_settings().pr_code_suggestions.self_reflect_on_suggestions:
-                            score = int(prediction["code_suggestions"][0]["score"])
-                            if score > 0:
-                                data["code_suggestions"].extend(prediction["code_suggestions"])
+            for i, predictions in enumerate(prediction_list):
+                if "code_suggestions" in predictions:
+                    for prediction in predictions["code_suggestions"]:
+                        try:
+                            if get_settings().pr_code_suggestions.self_reflect_on_suggestions:
+                                score = int(prediction["score"])
+                                if score > 0:
+                                    data["code_suggestions"].append(prediction)
+                                else:
+                                    get_logger().info(f"Skipping suggestions from call {i + 1}, because score is {score}")
                             else:
-                                get_logger().info(f"Skipping suggestions from call {i + 1}, because score is {score}")
-                        else:
-                            data["code_suggestions"].extend(prediction["code_suggestions"])
-                    else:
-                        get_logger().error(f"Error getting PR diff, no code suggestions found in call {i + 1}")
-                except Exception as e:
-                    get_logger().error(f"Error getting PR diff, error: {e}")
-                    data = None
+                                get_logger().error(f"Error getting PR diff, no code suggestions found in call {i + 1}")
+                        except Exception as e:
+                            get_logger().error(f"Error getting PR diff, error: {e}")
             self.data = data
         else:
             get_logger().error(f"Error getting PR diff")
@@ -428,7 +426,7 @@ class PRCodeSuggestions:
             delta = 68
             header += "&nbsp; " * delta
             if get_settings().pr_code_suggestions.self_reflect_on_suggestions:
-                pr_body += f"""<thead><tr><td>Category</td><td align=left>{header}</td><td align=center>Score</td></tr>"""
+                pr_body += f"""<thead><tr><td>Category</td><td align=left>{header}</td><td align=center>Importance</td></tr>"""
             else:
                 pr_body += f"""<thead><tr><td>Category</td><td align=left>{header}</td></tr>"""
             pr_body += """<tbody>"""
