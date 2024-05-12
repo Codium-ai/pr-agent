@@ -161,7 +161,7 @@ class PRCodeSuggestions:
             get_logger().error(f"Error getting PR diff")
             self.prediction = None
 
-        data = self._prepare_pr_code_suggestions(self.prediction)
+        data = self.prediction
         return data
 
     async def _get_prediction(self, model: str, patches_diff: str) -> dict:
