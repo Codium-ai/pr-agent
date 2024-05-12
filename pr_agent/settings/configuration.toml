@@ -85,9 +85,10 @@ extra_instructions = ""
 rank_suggestions = false
 enable_help_text=false
 persistent_comment=false
+self_reflect_on_suggestions=true
 # params for '/improve --extended' mode
 auto_extended_mode=true
-num_code_suggestions_per_chunk=5
+num_code_suggestions_per_chunk=4
 max_number_of_calls = 3
 parallel_calls = true
 rank_extended_suggestions = false
