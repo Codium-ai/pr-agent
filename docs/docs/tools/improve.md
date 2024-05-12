@@ -87,6 +87,10 @@ Hence, the total number of suggestions is proportional to the number of chunks, 
     <td>If set to true, the improve comment will be persistent, meaning that every new improve request will edit the previous one. Default is false.</td>
   </tr>
   <tr>
+    <td><b>self_reflect_on_suggestions</b></td>
+    <td>If set to true, the improve tool will calculate an importance score for each suggestion [1-10], and sort the suggestion labels group based on this score. Default is true.</td>
+  </tr>
+  <tr>
     <td><b>enable_help_text</b></td>
     <td>If set to true, the tool will display a help text in the comment. Default is true.</td>
   </tr>
