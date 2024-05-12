@@ -425,7 +425,7 @@ class PRCodeSuggestions:
 
             pr_body += "<table>"
             header = f"Suggestion"
-            delta = 64
+            delta = 66
             header += "&nbsp; " * delta
             if get_settings().pr_code_suggestions.self_reflect_on_suggestions:
                 pr_body += f"""<thead><tr><td>Category</td><td align=left>{header}</td><td align=center>Score</td></tr>"""
