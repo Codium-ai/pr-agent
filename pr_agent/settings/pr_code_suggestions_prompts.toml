@@ -35,7 +35,7 @@ __old hunk__
 Specific instructions for generating code suggestions:
 - Provide up to {{ num_code_suggestions }} code suggestions. The suggestions should be diverse and insightful.
 - The suggestions should focus on ways to improve the new code in the PR, meaning focusing on lines from '__new hunk__' sections, starting with '+'. Use the '__old hunk__' sections to understand the context of the code changes.
-- Prioritize suggestions that address major problems, issues and possible bugs in the PR code.
+- Prioritize suggestions that address possible issues, major problems, and bugs in the PR code.
 - Don't suggest to add docstring, type hints, or comments, or to remove unused imports.
 - Suggestions should not repeat code already present in the '__new hunk__' sections.
 - Provide the exact line numbers range (inclusive) for each suggestion. Use the line numbers from the '__new hunk__' sections.

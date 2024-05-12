@@ -22,54 +22,53 @@ class PRCodeSuggestions:
     def __init__(self, pr_url: str, cli_mode=False, args: list = None,
                  ai_handler: partial[BaseAiHandler,] = LiteLLMAIHandler):
 
-        if pr_url:
-            self.git_provider = get_git_provider()(pr_url)
-            self.main_language = get_main_pr_language(
-                self.git_provider.get_languages(), self.git_provider.get_files()
-            )
+        self.git_provider = get_git_provider()(pr_url)
+        self.main_language = get_main_pr_language(
+            self.git_provider.get_languages(), self.git_provider.get_files()
+        )
 
-            # limit context specifically for the improve command, which has hard input to parse:
-            if get_settings().pr_code_suggestions.max_context_tokens:
-                MAX_CONTEXT_TOKENS_IMPROVE = get_settings().pr_code_suggestions.max_context_tokens
-                if get_settings().config.max_model_tokens > MAX_CONTEXT_TOKENS_IMPROVE:
-                    get_logger().info(f"Setting max_model_tokens to {MAX_CONTEXT_TOKENS_IMPROVE} for PR improve")
-                    get_settings().config.max_model_tokens = MAX_CONTEXT_TOKENS_IMPROVE
+        # limit context specifically for the improve command, which has hard input to parse:
+        if get_settings().pr_code_suggestions.max_context_tokens:
+            MAX_CONTEXT_TOKENS_IMPROVE = get_settings().pr_code_suggestions.max_context_tokens
+            if get_settings().config.max_model_tokens > MAX_CONTEXT_TOKENS_IMPROVE:
+                get_logger().info(f"Setting max_model_tokens to {MAX_CONTEXT_TOKENS_IMPROVE} for PR improve")
+                get_settings().config.max_model_tokens = MAX_CONTEXT_TOKENS_IMPROVE
 
 
-            # extended mode
-            try:
-                self.is_extended = self._get_is_extended(args or [])
-            except:
-                self.is_extended = False
-            if self.is_extended:
-                num_code_suggestions = get_settings().pr_code_suggestions.num_code_suggestions_per_chunk
-            else:
-                num_code_suggestions = get_settings().pr_code_suggestions.num_code_suggestions
+        # extended mode
+        try:
+            self.is_extended = self._get_is_extended(args or [])
+        except:
+            self.is_extended = False
+        if self.is_extended:
+            num_code_suggestions = get_settings().pr_code_suggestions.num_code_suggestions_per_chunk
+        else:
+            num_code_suggestions = get_settings().pr_code_suggestions.num_code_suggestions
 
-            self.ai_handler = ai_handler()
-            self.ai_handler.main_pr_language = self.main_language
-            self.patches_diff = None
-            self.prediction = None
-            self.cli_mode = cli_mode
-            self.vars = {
-                "title": self.git_provider.pr.title,
-                "branch": self.git_provider.get_pr_branch(),
-                "description": self.git_provider.get_pr_description(),
-                "language": self.main_language,
-                "diff": "",  # empty diff for initial calculation
-                "num_code_suggestions": num_code_suggestions,
-                "commitable_code_suggestions_mode": get_settings().pr_code_suggestions.commitable_code_suggestions,
-                "extra_instructions": get_settings().pr_code_suggestions.extra_instructions,
-                "commit_messages_str": self.git_provider.get_commit_messages(),
-            }
-            self.token_handler = TokenHandler(self.git_provider.pr,
-                                              self.vars,
-                                              get_settings().pr_code_suggestions_prompt.system,
-                                              get_settings().pr_code_suggestions_prompt.user)
+        self.ai_handler = ai_handler()
+        self.ai_handler.main_pr_language = self.main_language
+        self.patches_diff = None
+        self.prediction = None
+        self.cli_mode = cli_mode
+        self.vars = {
+            "title": self.git_provider.pr.title,
+            "branch": self.git_provider.get_pr_branch(),
+            "description": self.git_provider.get_pr_description(),
+            "language": self.main_language,
+            "diff": "",  # empty diff for initial calculation
+            "num_code_suggestions": num_code_suggestions,
+            "commitable_code_suggestions_mode": get_settings().pr_code_suggestions.commitable_code_suggestions,
+            "extra_instructions": get_settings().pr_code_suggestions.extra_instructions,
+            "commit_messages_str": self.git_provider.get_commit_messages(),
+        }
+        self.token_handler = TokenHandler(self.git_provider.pr,
+                                          self.vars,
+                                          get_settings().pr_code_suggestions_prompt.system,
+                                          get_settings().pr_code_suggestions_prompt.user)
 
-            self.progress = f"## Generating PR code suggestions\n\n"
-            self.progress += f"""\nWork in progress ...<br>\n<img src="https://codium.ai/images/pr_agent/dual_ball_loading-crop.gif" width=48>"""
-            self.progress_response = None
+        self.progress = f"## Generating PR code suggestions\n\n"
+        self.progress += f"""\nWork in progress ...<br>\n<img src="https://codium.ai/images/pr_agent/dual_ball_loading-crop.gif" width=48>"""
+        self.progress_response = None
 
     async def run(self):
         try:
