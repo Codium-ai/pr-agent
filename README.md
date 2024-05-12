@@ -40,6 +40,15 @@ CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by p
   
 ## News and Updates
 
+### May 12, 2024
+Inspired by [AlphaCodium](https://github.com/Codium-ai/AlphaCodium) flow engineering scheme, PR-Agent now performs **self-reflection** on the code suggestions it provides,
+enabling to remove invalid suggestions, and score the valid ones. The suggestions will be presented sorted by their score, enabling to focus on the most important ones first.
+
+<kbd><img src="https://codium.ai/images/pr_agent/self_reflection1.png" width="512"></kbd>
+
+<kbd><img src="https://codium.ai/images/pr_agent/self_reflection2.png" width="512"></kbd>
+
+
 ### May 2, 2024
 Check out the new [PR-Agent Chrome Extension](https://chromewebstore.google.com/detail/pr-agent-chrome-extension/ephlnjeghhogofkifjloamocljapahnl) 🚀🚀🚀
 
