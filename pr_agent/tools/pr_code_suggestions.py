@@ -352,7 +352,7 @@ class PRCodeSuggestions:
                                     data["code_suggestions"].append(prediction)
                                 else:
                                     get_logger().info(f"Removing suggestions {i}, because score is {score}",
-                                                      artifact={"prediction": prediction})
+                                                      artifact=prediction)
                             else:
                                 get_logger().error(f"Error getting PR diff, no code suggestions found in call {i + 1}")
                         except Exception as e:
