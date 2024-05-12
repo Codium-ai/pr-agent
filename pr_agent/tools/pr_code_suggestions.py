@@ -186,8 +186,20 @@ class PRCodeSuggestions:
                 code_suggestions_feedback = response_reflect_yaml["code_suggestions"]
                 if len(code_suggestions_feedback) == len(data["code_suggestions"]):
                     for i, suggestion in enumerate(data["code_suggestions"]):
-                        suggestion["score"] = code_suggestions_feedback[i]["suggestion_score"]
-                        suggestion["score_why"] = code_suggestions_feedback[i]["why"]
+                        try:
+                            suggestion["score"] = code_suggestions_feedback[i]["suggestion_score"]
+                            suggestion["score_why"] = code_suggestions_feedback[i]["why"]
+                        except Exception as e: #
+                            get_logger().error(f"Error processing suggestion score {i}",
+                                               artifact={"suggestion": suggestion,
+                                                         "code_suggestions_feedback": code_suggestions_feedback[i]})
+                            suggestion["score"] = 7
+                            suggestion["score_why"] = ""
+            else:
+                get_logger().error(f"Could not self-reflect on suggestions. using default score 7")
+                for i, suggestion in enumerate(data["code_suggestions"]):
+                    suggestion["score"] = 7
+                    suggestion["score_why"] = ""
 
         return data
 
@@ -539,9 +551,10 @@ class PRCodeSuggestions:
             system_prompt_reflect = environment.from_string(get_settings().pr_code_suggestions_reflect_prompt.system).render(
                 variables)
             user_prompt_reflect = environment.from_string(get_settings().pr_code_suggestions_reflect_prompt.user).render(variables)
-            response_reflect, finish_reason_reflect = await self.ai_handler.chat_completion(model=model,
-                                                                            system=system_prompt_reflect,
-                                                                            user=user_prompt_reflect)
+            with get_logger().contextualize(command="self_reflect_on_suggestions"):
+                response_reflect, finish_reason_reflect = await self.ai_handler.chat_completion(model=model,
+                                                                                system=system_prompt_reflect,
+                                                                                user=user_prompt_reflect)
         except Exception as e:
             get_logger().info(f"Could not reflect on suggestions, error: {e}")
             return ""
