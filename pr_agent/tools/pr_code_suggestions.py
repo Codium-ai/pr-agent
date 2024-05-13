@@ -344,14 +344,15 @@ class PRCodeSuggestions:
             data = {"code_suggestions": []}
             for i, predictions in enumerate(prediction_list):
                 if "code_suggestions" in predictions:
+                    score_threshold = max(1,get_settings().pr_code_suggestions.suggestions_score_threshold)
                     for prediction in predictions["code_suggestions"]:
                         try:
                             if get_settings().pr_code_suggestions.self_reflect_on_suggestions:
                                 score = int(prediction["score"])
-                                if score > 0:
+                                if score >= score_threshold:
                                     data["code_suggestions"].append(prediction)
                                 else:
-                                    get_logger().info(f"Removing suggestions {i}, because score is {score}",
+                                    get_logger().info(f"Removing suggestions {i}, because score is {score}, and score_threshold is {score_threshold}",
                                                       artifact=prediction)
                             else:
                                 get_logger().error(f"Error getting PR diff, no code suggestions found in call {i + 1}")
@@ -517,11 +518,12 @@ class PRCodeSuggestions:
                         pr_body += f"Why: {suggestion['score_why']}\n\n"
                         pr_body += f"</details>"
 
+                    pr_body += f"</details>"
+
                     # # add another column for 'score'
                     if get_settings().pr_code_suggestions.self_reflect_on_suggestions:
                         pr_body += f"</td><td align=center>{suggestion['score']}\n\n"
 
-                    pr_body += f"</details>"
                     pr_body += f"</td></tr>"
 
 
