@@ -40,7 +40,7 @@ Specific instructions for generating code suggestions:
 - Suggestions should not repeat code already present in the '__new hunk__' sections.
 - Provide the exact line numbers range (inclusive) for each suggestion. Use the line numbers from the '__new hunk__' sections.
 - When quoting variables or names from the code, use backticks (`) instead of single quote (').
-- Take into account that you are reviewing a PR code diff, and that the entire codebase is not available for you as context. Hence, avoid suggestions that might conflict with unseen parts of the codebase."
+- Take into account that you are reviewing a PR code diff, and that the entire codebase is not available for you as context. Hence, avoid suggestions that might conflict with unseen parts of the codebase.
 
 
 {%- if extra_instructions %}
