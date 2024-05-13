@@ -274,10 +274,10 @@ class AzureDevopsProvider(GitProvider):
                     new_file_content_str = new_file_content_str.content
                 except Exception as error:
                     get_logger().error(
-                        "Failed to retrieve new file content of %s at version %s. Error: %s",
-                        file,
+                        "Failed to retrieve new file content of %s at version %s. Error: %s" %
+                        (file,
                         version,
-                        str(error),
+                        str(error)),
                     )
                     new_file_content_str = ""
 
@@ -304,10 +304,10 @@ class AzureDevopsProvider(GitProvider):
                     original_file_content_str = original_file_content_str.content
                 except Exception as error:
                     get_logger().error(
-                        "Failed to retrieve original file content of %s at version %s. Error: %s",
-                        file,
+                        "Failed to retrieve original file content of %s at version %s. Error: %s" %
+                        (file,
                         version,
-                        str(error),
+                        str(error)),
                     )
                     original_file_content_str = ""
 
