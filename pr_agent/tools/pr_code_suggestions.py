@@ -364,7 +364,7 @@ class PRCodeSuggestions:
                             else:
                                 data["code_suggestions"].append(prediction)
                         except Exception as e:
-                            get_logger().error(f"Error getting PR diff, error: {e}")
+                            get_logger().error(f"Error getting PR diff for suggestion {i} in call {j}, error: {e}")
             self.data = data
         else:
             get_logger().error(f"Error getting PR diff")
