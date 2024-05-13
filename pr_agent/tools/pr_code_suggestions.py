@@ -57,7 +57,6 @@ class PRCodeSuggestions:
             "language": self.main_language,
             "diff": "",  # empty diff for initial calculation
             "num_code_suggestions": num_code_suggestions,
-            "commitable_code_suggestions_mode": get_settings().pr_code_suggestions.commitable_code_suggestions,
             "extra_instructions": get_settings().pr_code_suggestions.extra_instructions,
             "commit_messages_str": self.git_provider.get_commit_messages(),
         }
@@ -106,7 +105,8 @@ class PRCodeSuggestions:
 
             if get_settings().config.publish_output:
                 self.git_provider.remove_initial_comment()
-                if (not get_settings().pr_code_suggestions.commitable_code_suggestions) and self.git_provider.is_supported("gfm_markdown"):
+                if ((not get_settings().pr_code_suggestions.commitable_code_suggestions) and
+                        self.git_provider.is_supported("gfm_markdown")):
 
                     # generate summarized suggestions
                     pr_body = self.generate_summarized_suggestions(data)
@@ -226,14 +226,14 @@ class PRCodeSuggestions:
         one_sentence_summary_list = []
         for i, suggestion in enumerate(data['code_suggestions']):
             try:
-                if not get_settings().pr_code_suggestions.commitable_code_suggestions:
-                    if not suggestion or 'one_sentence_summary' not in suggestion or 'label' not in suggestion or 'relevant_file' not in suggestion:
-                        get_logger().debug(f"Skipping suggestion {i + 1}, because it is invalid: {suggestion}")
-                        continue
+                if (not suggestion or 'one_sentence_summary' not in suggestion or
+                        'label' not in suggestion or 'relevant_file' not in suggestion):
+                    get_logger().debug(f"Skipping suggestion {i + 1}, because it is invalid: {suggestion}")
+                    continue
 
-                    if suggestion['one_sentence_summary'] in one_sentence_summary_list:
-                        get_logger().debug(f"Skipping suggestion {i + 1}, because it is a duplicate: {suggestion}")
-                        continue
+                if suggestion['one_sentence_summary'] in one_sentence_summary_list:
+                    get_logger().debug(f"Skipping suggestion {i + 1}, because it is a duplicate: {suggestion}")
+                    continue
 
                 if 'const' in suggestion['suggestion_content'] and 'instead' in suggestion['suggestion_content'] and 'let' in suggestion['suggestion_content']:
                     get_logger().debug(f"Skipping suggestion {i + 1}, because it uses 'const instead let': {suggestion}")
@@ -241,11 +241,14 @@ class PRCodeSuggestions:
 
                 if ('existing_code' in suggestion) and ('improved_code' in suggestion):
                     if suggestion['existing_code'] == suggestion['improved_code']:
-                        get_logger().debug(f"skipping improved suggestion {i + 1}, because equal to existing code: {suggestion['existing_code']}")
-                        suggestion['existing_code'] = ""
+                        get_logger().debug(
+                            f"edited improved suggestion {i + 1}, because equal to existing code: {suggestion['existing_code']}")
+                        if get_settings().pr_code_suggestions.commitable_code_suggestions:
+                            suggestion['improved_code'] = "" # we need 'existing_code' to locate the code in the PR
+                        else:
+                            suggestion['existing_code'] = ""
                     suggestion = self._truncate_if_needed(suggestion)
-                    if not get_settings().pr_code_suggestions.commitable_code_suggestions:
-                        one_sentence_summary_list.append(suggestion['one_sentence_summary'])
+                    one_sentence_summary_list.append(suggestion['one_sentence_summary'])
                     suggestion_list.append(suggestion)
                 else:
                     get_logger().info(
@@ -278,7 +281,10 @@ class PRCodeSuggestions:
                 if new_code_snippet:
                     new_code_snippet = self.dedent_code(relevant_file, relevant_lines_start, new_code_snippet)
 
-                body = f"**Suggestion:** {content} [{label}]\n```suggestion\n" + new_code_snippet + "\n```"
+                if d.get('score'):
+                    body = f"**Suggestion:** {content} [{label}, importance: {d.get('score')}]\n```suggestion\n" + new_code_snippet + "\n```"
+                else:
+                    body = f"**Suggestion:** {content} [{label}]\n```suggestion\n" + new_code_snippet + "\n```"
                 code_suggestions.append({'body': body, 'relevant_file': relevant_file,
                                              'relevant_lines_start': relevant_lines_start,
                                              'relevant_lines_end': relevant_lines_end})
@@ -327,7 +333,8 @@ class PRCodeSuggestions:
         self.patches_diff_list = get_pr_multi_diffs(self.git_provider, self.token_handler, model,
                                                     max_calls=get_settings().pr_code_suggestions.max_number_of_calls)
         if self.patches_diff_list:
-            get_logger().debug(f"PR diff", artifact=self.patches_diff_list)
+            get_logger().info(f"Number of PR chunk calls: {len(self.patches_diff_list)}")
+            get_logger().debug(f"PR diff:", artifact=self.patches_diff_list)
 
             # parallelize calls to AI:
             if get_settings().pr_code_suggestions.parallel_calls:
@@ -340,24 +347,24 @@ class PRCodeSuggestions:
                     prediction = await self._get_prediction(model, patches_diff)
                     prediction_list.append(prediction)
 
-
             data = {"code_suggestions": []}
-            for i, predictions in enumerate(prediction_list):
+            for j, predictions in enumerate(prediction_list):  # each call adds an element to the list
                 if "code_suggestions" in predictions:
-                    score_threshold = max(1,get_settings().pr_code_suggestions.suggestions_score_threshold)
-                    for prediction in predictions["code_suggestions"]:
+                    score_threshold = max(1, get_settings().pr_code_suggestions.suggestions_score_threshold)
+                    for i, prediction in enumerate(predictions["code_suggestions"]):
                         try:
                             if get_settings().pr_code_suggestions.self_reflect_on_suggestions:
                                 score = int(prediction["score"])
                                 if score >= score_threshold:
                                     data["code_suggestions"].append(prediction)
                                 else:
-                                    get_logger().info(f"Removing suggestions {i}, because score is {score}, and score_threshold is {score_threshold}",
-                                                      artifact=prediction)
+                                    get_logger().info(
+                                        f"Removing suggestions {i} from call {j}, because score is {score}, and score_threshold is {score_threshold}",
+                                        artifact=prediction)
                             else:
-                                get_logger().error(f"Error getting PR diff, no code suggestions found in call {i + 1}")
+                                data["code_suggestions"].append(prediction)
                         except Exception as e:
-                            get_logger().error(f"Error getting PR diff, error: {e}")
+                            get_logger().error(f"Error getting PR diff for suggestion {i} in call {j}, error: {e}")
             self.data = data
         else:
             get_logger().error(f"Error getting PR diff")
@@ -547,8 +554,7 @@ class PRCodeSuggestions:
             variables = {'suggestion_list': suggestion_list,
                          'suggestion_str': suggestion_str,
                          "diff": patches_diff,
-                         'num_code_suggestions': len(suggestion_list),
-                         'commitable_code_suggestions_mode': get_settings().pr_code_suggestions.commitable_code_suggestions,}
+                         'num_code_suggestions': len(suggestion_list)}
             model = get_settings().config.model
             environment = Environment(undefined=StrictUndefined)
             system_prompt_reflect = environment.from_string(get_settings().pr_code_suggestions_reflect_prompt.system).render(
