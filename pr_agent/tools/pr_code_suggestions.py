@@ -347,22 +347,22 @@ class PRCodeSuggestions:
                     prediction = await self._get_prediction(model, patches_diff)
                     prediction_list.append(prediction)
 
-
             data = {"code_suggestions": []}
-            for predictions in enumerate(prediction_list):
-                if "code_suggestions" in enumerate(predictions):
-                    score_threshold = max(1,get_settings().pr_code_suggestions.suggestions_score_threshold)
-                    for i, prediction in predictions["code_suggestions"]:
+            for j, predictions in enumerate(prediction_list):  # each call adds an element to the list
+                if "code_suggestions" in predictions:
+                    score_threshold = max(1, get_settings().pr_code_suggestions.suggestions_score_threshold)
+                    for i, prediction in enumerate(predictions["code_suggestions"]):
                         try:
                             if get_settings().pr_code_suggestions.self_reflect_on_suggestions:
                                 score = int(prediction["score"])
                                 if score >= score_threshold:
                                     data["code_suggestions"].append(prediction)
                                 else:
-                                    get_logger().info(f"Removing suggestions {i}, because score is {score}, and score_threshold is {score_threshold}",
-                                                      artifact=prediction)
+                                    get_logger().info(
+                                        f"Removing suggestions {i} from call {j}, because score is {score}, and score_threshold is {score_threshold}",
+                                        artifact=prediction)
                             else:
-                                get_logger().error(f"Error getting PR diff, no code suggestions found in call {i + 1}")
+                                data["code_suggestions"].append(prediction)
                         except Exception as e:
                             get_logger().error(f"Error getting PR diff, error: {e}")
             self.data = data
