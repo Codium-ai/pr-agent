@@ -303,12 +303,18 @@ class AzureDevopsProvider(GitProvider):
                     )
                     original_file_content_str = original_file_content_str.content
                 except Exception as error:
-                    get_logger().error(
-                        "Failed to retrieve original file content of %s at version %s. Error: %s" %
-                        (file,
-                        version,
-                        str(error)),
-                    )
+                    if not head_sha:
+                        get_logger().error(
+                            "Failed to retrieve original file content of %s at version %s. Error: %s" %
+                            (file,
+                            version,
+                            str(error)),
+                        )
+                    else:
+                        get_logger().warning(
+                            "Unable to locate previous versions for file %s. Maybe it has been added in this PR" %
+                            (file)
+                        )
                     original_file_content_str = ""
 
                 patch = load_large_diff(
