@@ -11,6 +11,8 @@ MAX_TOKENS = {
     'gpt-4-32k': 32000,
     'gpt-4-1106-preview': 128000, # 128K, but may be limited by config.max_model_tokens
     'gpt-4-0125-preview': 128000,  # 128K, but may be limited by config.max_model_tokens
+    'gpt-4o': 128000,  # 128K, but may be limited by config.max_model_tokens
+    'gpt-4o-2024-05-13': 128000,  # 128K, but may be limited by config.max_model_tokens
     'gpt-4-turbo-preview': 128000,  # 128K, but may be limited by config.max_model_tokens
     'gpt-4-turbo-2024-04-09': 128000,  # 128K, but may be limited by config.max_model_tokens
     'gpt-4-turbo': 128000,  # 128K, but may be limited by config.max_model_tokens
