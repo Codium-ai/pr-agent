@@ -237,12 +237,12 @@ class AzureDevopsProvider(GitProvider):
                 pull_request_id=self.pr_num,
                 project=self.workspace_slug
             )
-            changes = []
+            changes = None
             if iterations:
                 iteration_id = iterations[-1].id  # Get the last iteration (most recent changes)
 
                 # Get changes for the iteration
-                changes: GitPullRequestIterationChanges = self.azure_devops_client.get_pull_request_iteration_changes(
+                changes = self.azure_devops_client.get_pull_request_iteration_changes(
                     repository_id=self.repo_slug,
                     pull_request_id=self.pr_num,
                     iteration_id=iteration_id,
@@ -336,8 +336,8 @@ class AzureDevopsProvider(GitProvider):
                     original_file_content_str = ""
 
                 patch = load_large_diff(
-                    file, new_file_content_str, original_file_content_str
-                )
+                    file, new_file_content_str, original_file_content_str, show_warning=False
+                ).rstrip()
 
                 diff_files.append(
                     FilePatchInfo(
