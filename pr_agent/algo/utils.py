@@ -356,7 +356,7 @@ def convert_str_to_datetime(date_str):
     return datetime.strptime(date_str, datetime_format)
 
 
-def load_large_diff(filename, new_file_content_str: str, original_file_content_str: str) -> str:
+def load_large_diff(filename, new_file_content_str: str, original_file_content_str: str, show_warning: bool = True) -> str:
     """
     Generate a patch for a modified file by comparing the original content of the file with the new content provided as
     input.
@@ -375,7 +375,7 @@ def load_large_diff(filename, new_file_content_str: str, original_file_content_s
     try:
         diff = difflib.unified_diff(original_file_content_str.splitlines(keepends=True),
                                     new_file_content_str.splitlines(keepends=True))
-        if get_settings().config.verbosity_level >= 2:
+        if get_settings().config.verbosity_level >= 2 and show_warning:
             get_logger().warning(f"File was modified, but no patch was found. Manually creating patch: {filename}.")
         patch = ''.join(diff)
     except Exception:
