@@ -253,9 +253,11 @@ class AzureDevopsProvider(GitProvider):
             diff_types = {}
             if changes:
                 for change in changes.change_entries:
-                    c = change.additional_properties['item']
-                    diffs.append(c['path'])
-                    diff_types[c['path']] = change.additional_properties['changeType']
+                    item = change.additional_properties.get('item', {})
+                    path = item.get('path', None)
+                    if path:
+                        diffs.append(path)
+                        diff_types[path] = change.additional_properties.get('changeType', 'Unknown')
 
             # wrong implementation - gets all the files that were changed in any commit in the PR
             # commits = self.azure_devops_client.get_pull_request_commits(
