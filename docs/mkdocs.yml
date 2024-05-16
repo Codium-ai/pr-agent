@@ -33,7 +33,7 @@ nav:
     - 💎 Improve Component: 'tools/improve_component.md'
     - 💎 Documentation: 'tools/documentation.md'
     - 💎 Custom Labels: 'tools/custom_labels.md'
-    - 💎 Custom Suggestions: 'tools/custom_suggestions.md'
+    - 💎 Custom Prompt: 'tools/custom_prompt.md'
     - 💎 CI Feedback: 'tools/ci_feedback.md'
     - 💎 Similar Code: 'tools/similar_code.md'
   - Core Abilities: 'core-abilities/index.md'
