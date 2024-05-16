@@ -20,3 +20,9 @@ The PR-Agent Chrome extension will work on any repo where you have previously [i
 ## Data privacy and security
 
 The PR-Agent Chrome extension only modifies the visual appearance of a GitHub PR screen. It does not transmit any user's repo or pull request code. Code is only sent for processing when a user submits a GitHub comment that activates a PR-Agent tool, in accordance with the standard [privacy policy of PR-Agent](https://pr-agent-docs.codium.ai/#pr-agent-chrome-extension).
+
+## Roadmap
+
+Stay tuned ...
+
+<kbd><img src="https://codium.ai/images/pr_agent/chrome_extension_roadmap.png" width="512"></kbd>
