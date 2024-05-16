@@ -37,6 +37,7 @@ nav:
     - 💎 CI Feedback: 'tools/ci_feedback.md'
     - 💎 Similar Code: 'tools/similar_code.md'
   - Core Abilities: 'core-abilities/index.md'
+  - Chrome Extension: 'chrome-extension/index.md'
 
 theme:
   logo: assets/logo.svg
