@@ -35,7 +35,7 @@ class PRHelpMessage:
             tool_names.append(f"[ASK]({base_path}/ask/)")
             tool_names.append(f"[GENERATE CUSTOM LABELS]({base_path}/custom_labels/) 💎")
             tool_names.append(f"[CI FEEDBACK]({base_path}/ci_feedback/) 💎")
-            tool_names.append(f"[CUSTOM SUGGESTIONS]({base_path}/custom_suggestions/) 💎")
+            tool_names.append(f"[CUSTOM PROMPT]({base_path}/custom_prompt/) 💎")
             tool_names.append(f"[SIMILAR ISSUE]({base_path}/similar_issues/)")
 
             descriptions = []
@@ -50,7 +50,7 @@ class PRHelpMessage:
             descriptions.append("Answering free-text questions about the PR")
             descriptions.append("Generates custom labels for the PR, based on specific guidelines defined by the user")
             descriptions.append("Generates feedback and analysis for a failed CI job")
-            descriptions.append("Generates custom suggestions for improving the PR code, based only on specific guidelines defined by the user")
+            descriptions.append("Generates custom suggestions for improving the PR code, derived only from a specific guidelines prompt defined by the user")
             descriptions.append("Automatically retrieves and presents similar issues")
 
             commands  =[]
@@ -65,7 +65,7 @@ class PRHelpMessage:
             commands.append("`/ask`")
             commands.append("`/generate_labels`")
             commands.append("`/checks`")
-            commands.append("`/custom_suggestions`")
+            commands.append("`/custom_prompt`")
             commands.append("`/similar_issue`")
 
             checkbox_list = []
@@ -86,7 +86,7 @@ class PRHelpMessage:
             checkbox_list.append("[*]")
             checkbox_list.append("[*]")
 
-            if isinstance(self.git_provider, GithubProvider):
+            if isinstance(self.git_provider, GithubProvider) and not get_settings().config.get('disable_checkboxes', False):
                 pr_comment += f"<table><tr align='left'><th align='left'>Tool</th><th align='left'>Description</th><th align='left'>Trigger Interactively :gem:</th></tr>"
                 for i in range(len(tool_names)):
                     pr_comment += f"\n<tr><td align='left'>\n\n<strong>{tool_names[i]}</strong></td>\n<td>{descriptions[i]}</td>\n<td>\n\n{checkbox_list[i]}\n</td></tr>"

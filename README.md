@@ -101,40 +101,40 @@ If set to true, the tool will add a section that checks if the PR contains sever
 
 Supported commands per platform:
 
-|       |                                                                                                                   | GitHub             | Gitlab             | Bitbucket          | Azure DevOps       |
-|-------|-------------------------------------------------------------------------------------------------------------------|:--------------------:|:--------------------:|:--------------------:|:--------------------:|
-| TOOLS | Review                                                                                                            | ✅ | ✅ | ✅ | ✅ |
-|       | ⮑ Incremental                                                                                                     | ✅ |                    |                    |                    |
+|       |                                                                                                         | GitHub             | Gitlab             | Bitbucket          | Azure DevOps       |
+|-------|---------------------------------------------------------------------------------------------------------|:--------------------:|:--------------------:|:--------------------:|:--------------------:|
+| TOOLS | Review                                                                                                  | ✅ | ✅ | ✅ | ✅ |
+|       | ⮑ Incremental                                                                                           | ✅ |                    |                    |                    |
 |       | ⮑ [SOC2 Compliance](https://pr-agent-docs.codium.ai/tools/review/#soc2-ticket-compliance) 💎            | ✅ | ✅ | ✅ | ✅ |
-|       | Describe                                                                                                          | ✅ | ✅ | ✅ | ✅ |
+|       | Describe                                                                                                | ✅ | ✅ | ✅ | ✅ |
 |       | ⮑ [Inline File Summary](https://pr-agent-docs.codium.ai/tools/describe#inline-file-summary) 💎          | ✅ |                    |                    |                    |
-|       | Improve                                                                                                           | ✅ | ✅ | ✅ | ✅ |
-|       | ⮑ Extended                                                                                                        | ✅ | ✅ | ✅ | ✅ |
-|       | Ask                                                                                                               | ✅ | ✅ | ✅ | ✅ |
+|       | Improve                                                                                                 | ✅ | ✅ | ✅ | ✅ |
+|       | ⮑ Extended                                                                                              | ✅ | ✅ | ✅ | ✅ |
+|       | Ask                                                                                                     | ✅ | ✅ | ✅ | ✅ |
 |       | ⮑ [Ask on code lines](https://pr-agent-docs.codium.ai/tools/ask#ask-lines)                              | ✅ | ✅ |                    |                    |
-|       | [Custom Suggestions](https://pr-agent-docs.codium.ai/tools/custom_suggestions/) 💎                      | ✅ | ✅ | ✅ | ✅ |
+|       | [Custom Prompt](https://pr-agent-docs.codium.ai/tools/custom_prompt/) 💎                                | ✅ | ✅ | ✅ | ✅ |
 |       | [Test](https://pr-agent-docs.codium.ai/tools/test/) 💎                                                  | ✅ | ✅ |                    | ✅ |
-|       | Reflect and Review                                                                                                | ✅ | ✅ | ✅ | ✅ |
-|       | Update CHANGELOG.md                                                                                               | ✅ | ✅ | ✅ | ✅ |
-|       | Find Similar Issue                                                                                                | ✅ |                    |                    |                    |
+|       | Reflect and Review                                                                                      | ✅ | ✅ | ✅ | ✅ |
+|       | Update CHANGELOG.md                                                                                     | ✅ | ✅ | ✅ | ✅ |
+|       | Find Similar Issue                                                                                      | ✅ |                    |                    |                    |
 |       | [Add PR Documentation](https://pr-agent-docs.codium.ai/tools/documentation/) 💎                         | ✅ | ✅ |                   | ✅ |
 |       | [Custom Labels](https://pr-agent-docs.codium.ai/tools/custom_labels/) 💎                                | ✅ | ✅ |                    | ✅ |
 |       | [Analyze](https://pr-agent-docs.codium.ai/tools/analyze/) 💎                                            | ✅ | ✅ |                    | ✅ |
 |       | [CI Feedback](https://pr-agent-docs.codium.ai/tools/ci_feedback/) 💎                                    | ✅ |                    |                    |                    |
 |       | [Similar Code](https://pr-agent-docs.codium.ai/tools/similar_code/) 💎                                  | ✅ |                    |                    |                    |
-|       |                                                                                                                   |                    |                    |                    |                    |
-| USAGE | CLI                                                                                                               | ✅ | ✅ | ✅ | ✅ |
-|       | App / webhook                                                                                                     | ✅ | ✅ | ✅ | ✅ |
-|       | Tagging bot                                                                                                       | ✅ |                    |                    |                    |
-|       | Actions                                                                                                           | ✅ |                    | ✅ |                    |
-|       |                                                                                                                   |                    |                    |                    |                    |
-| CORE  | PR compression                                                                                                    | ✅ | ✅ | ✅ | ✅ |
-|       | Repo language prioritization                                                                                      | ✅ | ✅ | ✅ | ✅ |
-|       | Adaptive and token-aware file patch fitting                                                                       | ✅ | ✅ | ✅ | ✅ |
-|       | Multiple models support                                                                                           | ✅ | ✅ | ✅ | ✅ |
+|       |                                                                                                         |                    |                    |                    |                    |
+| USAGE | CLI                                                                                                     | ✅ | ✅ | ✅ | ✅ |
+|       | App / webhook                                                                                           | ✅ | ✅ | ✅ | ✅ |
+|       | Tagging bot                                                                                             | ✅ |                    |                    |                    |
+|       | Actions                                                                                                 | ✅ |                    | ✅ |                    |
+|       |                                                                                                         |                    |                    |                    |                    |
+| CORE  | PR compression                                                                                          | ✅ | ✅ | ✅ | ✅ |
+|       | Repo language prioritization                                                                            | ✅ | ✅ | ✅ | ✅ |
+|       | Adaptive and token-aware file patch fitting                                                             | ✅ | ✅ | ✅ | ✅ |
+|       | Multiple models support                                                                                 | ✅ | ✅ | ✅ | ✅ |
 |       | [Static code analysis](https://pr-agent-docs.codium.ai/core-abilities/#static-code-analysis) 💎         | ✅ | ✅ | ✅ | ✅ |
 |       | [Global and wiki configurations](https://pr-agent-docs.codium.ai/usage-guide/configuration_options/) 💎 | ✅ | ✅ | ✅ | ✅ |
-|       | [PR interactive actions](https://www.codium.ai/images/pr_agent/pr-actions.mp4) 💎                                 | ✅ |                    |                    |                    |
+|       | [PR interactive actions](https://www.codium.ai/images/pr_agent/pr-actions.mp4) 💎                       | ✅ |                    |                    |                    |
 - 💎 means this feature is available only in [PR-Agent Pro](https://www.codium.ai/pricing/)
 
 [//]: # (- Support for additional git providers is described in [here]&#40;./docs/Full_environments.md&#41;)
@@ -158,7 +158,7 @@ ___
 \
 ‣ **Analyze 💎 ([`/analyze`](https://pr-agent-docs.codium.ai/tools/analyze/))**: Identify code components that changed in the PR, and enables to interactively generate tests, docs, and code suggestions for each component.
 \
-‣ **Custom Suggestions 💎 ([`/custom_suggestions`](https://pr-agent-docs.codium.ai/tools/custom_suggestions/))**: Automatically generates custom suggestions for improving the PR code, based on specific guidelines defined by the user.
+‣ **Custom Prompt 💎 ([`/custom_prompt`](https://pr-agent-docs.codium.ai/tools/custom_prompt/))**: Automatically generates custom suggestions for improving the PR code, based on specific guidelines defined by the user.
 \
 ‣ **Generate Tests 💎 ([`/test component_name`](https://pr-agent-docs.codium.ai/tools/test/))**: Generates unit tests for a selected component, based on the PR code changes.
 \

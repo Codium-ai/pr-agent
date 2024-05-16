@@ -164,4 +164,4 @@ Hence, the total number of suggestions is proportional to the number of chunks, 
 
 In addition, we recommend to use the `exra_instructions` field to guide the model to suggestions that are more relevant to the specific needs of the project. 
 <br>
-Consider also trying the [Custom Suggestions Tool](./custom_suggestions.md) 💎, that will **only** propose suggestions that follow specific guidelines defined by user.
+Consider also trying the [Custom Prompt Tool](./custom_prompt.md) 💎, that will **only** propose code suggestions that follow specific guidelines defined by user.

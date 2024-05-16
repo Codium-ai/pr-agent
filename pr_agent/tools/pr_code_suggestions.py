@@ -196,7 +196,7 @@ class PRCodeSuggestions:
                             suggestion["score"] = 7
                             suggestion["score_why"] = ""
             else:
-                get_logger().error(f"Could not self-reflect on suggestions. using default score 7")
+                # get_logger().error(f"Could not self-reflect on suggestions. using default score 7")
                 for i, suggestion in enumerate(data["code_suggestions"]):
                     suggestion["score"] = 7
                     suggestion["score_why"] = ""
