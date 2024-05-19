@@ -125,7 +125,7 @@ class PRReviewer:
             if get_settings().config.publish_output:
                 self.git_provider.publish_comment("Preparing review...", is_temporary=True)
 
-            await retry_with_fallback_models(self._prepare_prediction, model_type=ModelType.TURBO)
+            await retry_with_fallback_models(self._prepare_prediction)
             if not self.prediction:
                 self.git_provider.remove_initial_comment()
                 return None

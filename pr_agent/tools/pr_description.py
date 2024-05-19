@@ -82,7 +82,7 @@ class PRDescription:
             if get_settings().config.publish_output:
                 self.git_provider.publish_comment("Preparing PR description...", is_temporary=True)
 
-            await retry_with_fallback_models(self._prepare_prediction, ModelType.TURBO) # turbo model because larger context
+            await retry_with_fallback_models(self._prepare_prediction, ModelType.TURBO)
 
             if self.prediction:
                 self._prepare_data()

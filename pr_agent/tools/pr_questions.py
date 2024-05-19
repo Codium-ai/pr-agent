@@ -7,6 +7,7 @@ from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAIHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
+from pr_agent.algo.utils import ModelType
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
@@ -62,7 +63,7 @@ class PRQuestions:
         if img_path:
             get_logger().debug(f"Image path identified", artifact=img_path)
 
-        await retry_with_fallback_models(self._prepare_prediction)
+        await retry_with_fallback_models(self._prepare_prediction, model_type=ModelType.TURBO)
 
         pr_comment = self._prepare_pr_answer()
         get_logger().debug(f"PR output", artifact=pr_comment)
