@@ -65,40 +65,6 @@ You can also easily export your chosen configuration, and use it for the automat
 
 <kbd><img src="https://codium.ai/images/pr_agent/toolbar2.png" width="512"></kbd>
 
-
-### April 14, 2024
-You can now ask questions about images that appear in the comment, where the entire PR is considered as the context.
-see [here](https://pr-agent-docs.codium.ai/tools/ask/#ask-on-images) for more details.
-
-<kbd><img src="https://codium.ai/images/pr_agent/ask_images5.png" width="512"></kbd>
-
-### March 24, 2024
-PR-Agent is now available for easy installation via [pip](https://pr-agent-docs.codium.ai/installation/locally/#using-pip-package).
-
-### March 17, 2024
-- A new feature is now available for the review tool: [`require_can_be_split_review`](https://pr-agent-docs.codium.ai/tools/review/#enabledisable-features). 
-If set to true, the tool will add a section that checks if the PR contains several themes, and can be split into smaller PRs.
-
-<kbd><img src="https://codium.ai/images/pr_agent/multiple_pr_themes.png" width="512"></kbd>
-
-### March 10, 2024
-- A new [knowledge-base website](https://pr-agent-docs.codium.ai/) for PR-Agent is now available. It includes detailed information about the different tools, usage guides and more, in an accessible and organized format.
-
-### March 8, 2024
-
-- A new tool, [Find Similar Code](https://pr-agent-docs.codium.ai/tools/similar_code/) 💎 is now available. 
-<br>This tool retrieves the most similar code components from inside the organization's codebase, or from open-source code:
-
-<kbd><a href="https://codium.ai/images/pr_agent/similar_code.mp4"><img src="https://codium.ai/images/pr_agent/similar_code_global2.png" width="512"></a></kbd>
-
-(click on the image to see an instructional video)
-
-### Feb 29, 2024
-- You can now use the repo's [wiki page](https://pr-agent-docs.codium.ai/usage-guide/configuration_options/) to set configurations for PR-Agent 💎
-
-<kbd><img src="https://codium.ai/images/pr_agent/wiki_configuration.png" width="512"></kbd>
-
-
 ## Overview
 <div style="text-align:left;">
 
