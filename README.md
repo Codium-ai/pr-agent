@@ -41,6 +41,9 @@ CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by p
   
 ## News and Updates
 
+### May 19, 2024
+GPT-4o is now the default fast model ("Turbo"). This model will be used for all command except `review` and `improve`, which will still use "GPT-4-turbo-2024-04-09", since they are harder and would still benefit from the larger model.
+
 ### May 12, 2024
 Inspired by [AlphaCodium](https://github.com/Codium-ai/AlphaCodium) flow engineering scheme, PR-Agent now performs **self-reflection** on the code suggestions it provides,
 enabling to remove invalid suggestions, and score the valid ones. The suggestions will be presented sorted by their score, enabling to focus on the most important ones first.
