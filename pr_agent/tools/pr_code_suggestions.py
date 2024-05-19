@@ -82,9 +82,9 @@ class PRCodeSuggestions:
                     self.git_provider.publish_comment("Preparing suggestions...", is_temporary=True)
 
             if not self.is_extended:
-                data = await retry_with_fallback_models(self._prepare_prediction, ModelType.TURBO)
+                data = await retry_with_fallback_models(self._prepare_prediction)
             else:
-                data = await retry_with_fallback_models(self._prepare_prediction_extended, ModelType.TURBO)
+                data = await retry_with_fallback_models(self._prepare_prediction_extended)
             if not data:
                 data = {"code_suggestions": []}
 
@@ -184,7 +184,8 @@ class PRCodeSuggestions:
 
         # self-reflect on suggestions
         if get_settings().pr_code_suggestions.self_reflect_on_suggestions:
-            response_reflect = await self.self_reflect_on_suggestions(data["code_suggestions"], patches_diff)
+            model = get_settings().config.model_turbo # use turbo model for self-reflection, since it is an easier task
+            response_reflect = await self.self_reflect_on_suggestions(data["code_suggestions"], patches_diff, model=model)
             if response_reflect:
                 response_reflect_yaml = load_yaml(response_reflect)
                 code_suggestions_feedback = response_reflect_yaml["code_suggestions"]
@@ -546,7 +547,7 @@ class PRCodeSuggestions:
             get_logger().info(f"Failed to publish summarized code suggestions, error: {e}")
             return ""
 
-    async def self_reflect_on_suggestions(self, suggestion_list: List, patches_diff: str) -> str:
+    async def self_reflect_on_suggestions(self, suggestion_list: List, patches_diff: str, model: str) -> str:
         if not suggestion_list:
             return ""
 
@@ -559,7 +560,6 @@ class PRCodeSuggestions:
                          'suggestion_str': suggestion_str,
                          "diff": patches_diff,
                          'num_code_suggestions': len(suggestion_list)}
-            model = get_settings().config.model
             environment = Environment(undefined=StrictUndefined)
             system_prompt_reflect = environment.from_string(get_settings().pr_code_suggestions_reflect_prompt.system).render(
                 variables)
