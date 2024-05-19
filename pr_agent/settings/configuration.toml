@@ -19,6 +19,7 @@ secret_provider="google_cloud_storage"
 cli_mode=false
 ai_disclaimer_title=""  # Pro feature, title for a collapsible disclaimer to AI outputs
 ai_disclaimer=""  # Pro feature, full text for the AI disclaimer
+output_relevant_configurations=false
 
 [pr_reviewer] # /review #
 # enable/disable features

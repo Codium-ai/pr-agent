@@ -8,7 +8,8 @@ from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAIHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import convert_to_markdown, github_action_output, load_yaml, ModelType
+from pr_agent.algo.utils import convert_to_markdown, github_action_output, load_yaml, ModelType, \
+    show_relevant_configurations
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import IncrementalPR, get_main_pr_language
@@ -237,6 +238,10 @@ class PRReviewer:
             markdown_text += "<hr>\n\n<details> <summary><strong>💡 Tool usage guide:</strong></summary><hr> \n\n"
             markdown_text += HelpMessage.get_review_usage_guide()
             markdown_text += "\n</details>\n"
+
+        # Output the relevant configurations if enabled
+        if get_settings().get('config', {}).get('output_relevant_configurations', False):
+            markdown_text += show_relevant_configurations(relevant_section='pr_reviewer')
 
         # Add custom labels from the review prediction (effort, security)
         self.set_review_labels(data)

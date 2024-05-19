@@ -11,8 +11,10 @@ There are three ways to set persistent configurations:
 
 In terms of precedence, wiki configurations will override local configurations, and local configurations will override global configurations.
 
-!!! tip "Tip: edit only what you need"
+!!! tip "Tip1: edit only what you need"
     Your configuration file should be minimal, and edit only the relevant values. Don't copy the entire configuration options, since it can lead to legacy problems when something changes.
+!!! tip "Tip2: show relevant configurations"
+    If you set `config.output_relevant_configurations=true`, each tool will also output in a collapsible section its relevant configurations. This can be useful for debugging, or getting to know the configurations better.
 
 ## Wiki configuration file 💎
 
