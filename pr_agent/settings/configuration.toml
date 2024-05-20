@@ -58,7 +58,7 @@ generate_ai_title=false
 use_bullet_points=true
 extra_instructions = ""
 enable_pr_type=true
-final_update_message = true
+final_update_message = false
 enable_help_text=false
 enable_help_comment=true
 # describe as comment
