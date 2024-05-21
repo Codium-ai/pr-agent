@@ -41,6 +41,9 @@ CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by p
   
 ## News and Updates
 
+### May 21, 2024
+Check out CodiumAI new project, [**Cover-Agent**](https://github.com/Codium-ai/cover-agent), that can automatically generate qualified tests to enhance existing test suites to efficiently increase code coverage,
+
 ### May 19, 2024
 GPT-4o is now the default fast model ("Turbo"). This model will be used for all commands except `review` and `improve`, which will still use "GPT-4-2024-04-09", since they are harder and would still benefit from the larger model.
 
