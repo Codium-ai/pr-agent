@@ -1,10 +1,10 @@
 ## PR-Agent chrome extension
-PR-Agent Chrome extension ia a collection of tools that integrates seamlessly with your GitHub environment, aiming to enhance your PR-Agent usage experience, and providing additional features.
+PR-Agent Chrome extension is a collection of tools that integrates seamlessly with your GitHub environment, aiming to enhance your PR-Agent usage experience, and providing additional features.
 
 ## Features
 
 ### Toolbar extension
-With PR-Agent Chrome extension, it's [easier than ever](https://www.youtube.com/watch?v=gT5tli7X4H4) to interactively configuring and experimenting with the different tools and configuration options.
+With PR-Agent Chrome extension, it's [easier than ever](https://www.youtube.com/watch?v=gT5tli7X4H4) to interactively configure and experiment with the different tools and configuration options.
 
 After you found the setup that works for you, you can also easily export it as a persistent configuration file, and use it for automatic commands.
 
@@ -14,7 +14,7 @@ After you found the setup that works for you, you can also easily export it as a
 
 ### PR-Agent filters
 
-PR-Agent filters is a sidepanel option. that allow you to filter different message in the conversation tab.
+PR-Agent filters is a sidepanel option. that allows you to filter different message in the conversation tab.
 
 For example, you can choose to present only message from PR-Agent, or filter those messages, focusing only on user's comments.
 
