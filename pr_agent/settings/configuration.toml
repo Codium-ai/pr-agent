@@ -58,7 +58,7 @@ generate_ai_title=false
 use_bullet_points=true
 extra_instructions = ""
 enable_pr_type=true
-final_update_message = false
+final_update_message = true
 enable_help_text=false
 enable_help_comment=true
 # describe as comment
@@ -152,7 +152,7 @@ override_deployment_type = true
 # settings for "pull_request" event
 handle_pr_actions = ['opened', 'reopened', 'ready_for_review']
 pr_commands = [
-    "/describe",
+    "/describe --pr_description.final_update_message=false",
     "/review --pr_reviewer.num_code_suggestions=0",
     "/improve",
 ]
