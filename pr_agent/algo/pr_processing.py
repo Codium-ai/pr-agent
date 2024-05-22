@@ -146,6 +146,9 @@ def pr_generate_extended_diff(pr_languages: list,
 
             # extend each patch with extra lines of context
             extended_patch = extend_patch(original_file_content_str, patch, num_lines=patch_extra_lines)
+            if not extend_patch:
+                get_logger().warning(f"Failed to extend patch for file: {file.filename}")
+                continue
             full_extended_patch = f"\n\n## {file.filename}\n\n{extended_patch}\n"
 
             if add_line_numbers_to_hunks:
