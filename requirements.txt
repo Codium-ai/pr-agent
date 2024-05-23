@@ -23,6 +23,7 @@ tiktoken==0.7.0
 ujson==5.8.0
 uvicorn==0.22.0
 tenacity==8.2.3
+toml==0.10.2
 # Uncomment the following lines to enable the 'similar issue' tool
 # pinecone-client
 # pinecone-datasets @ git+https://github.com/mrT23/pinecone-datasets.git@main
