@@ -357,64 +357,8 @@ middleware = [Middleware(RawContextMiddleware)]
 app = FastAPI(middleware=middleware)
 app.include_router(router)
 
-def get_aws_secrets(secret_name, region_name):
-    session = boto3.session.Session()
-    client = session.client(
-        service_name='secretsmanager',
-        region_name=region_name
-    )
-
-    try:
-        get_secret_value_response = client.get_secret_value(
-            SecretId=secret_name
-        )
-    except ClientError as e:
-        raise e
-
-    secret = get_secret_value_response['SecretString']
-    return secret
-
-def modify_toml_key(file_path, key_path, new_value):
-    """
-    Modify a key in a TOML file and save the changes.
-
-    :param file_path: Path to the TOML file
-    :param key_path: The key to modify, specified as a list of nested keys
-    :param new_value: The new value to set for the key
-    """
-    # Read the existing data from the TOML file
-    try:
-        with open(file_path, 'r') as file:
-            toml_data = toml.load(file)
-    except FileNotFoundError:
-        print(f"Error: The file {file_path} does not exist.")
-        return
-    except toml.TomlDecodeError as e:
-        print(f"Error parsing TOML file: {e}")
-        return
-
-    # Navigate to the key to modify
-    d = toml_data
-    for key in key_path[:-1]:
-        d = d.get(key, {})
-    d[key_path[-1]] = new_value
-
-    # Write the modified data back to the TOML file
-    try:
-        with open("pr_agent/settings/.secrets.toml", 'w') as file:
-            toml.dump(toml_data, file)
-        print(f"Successfully updated {key_path} in {file_path}.")
-    except Exception as e:
-        print(f"Error writing to TOML file: {e}")
 
 def start():
-    secret_name = "devops/github/pr-agent-bot"
-    region_name = "eu-west-1"
-    secret_dict = json.loads(get_aws_secrets(secret_name,region_name))
-    modify_toml_key("pr_agent/settings/.secrets_template.toml", ['openai', 'key'], secret_dict.get('open_ai_gpt4_token'))
-    modify_toml_key("pr_agent/settings/.secrets.toml", ['github', 'app_id'], secret_dict.get('app_id'))
-    modify_toml_key("pr_agent/settings/.secrets.toml", ['github', 'webhook_secret'], secret_dict.get('webhook_secret'))
-    modify_toml_key("pr_agent/settings/.secrets.toml", ['github', 'private_key'], secret_dict.get('private_key'))
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", "3000")))
 
 if __name__ == '__main__':
