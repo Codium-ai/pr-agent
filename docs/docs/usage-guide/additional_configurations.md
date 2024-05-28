@@ -59,12 +59,12 @@ and set in your configuration file:
 model="" # the OpenAI model you've deployed on Azure (e.g. gpt-3.5-turbo)
 ```
 
-### Huggingface
+### Hugging Face
 
 **Local**
-You can run Huggingface models locally through either [VLLM](https://docs.litellm.ai/docs/providers/vllm) or [Ollama](https://docs.litellm.ai/docs/providers/ollama)
+You can run Hugging Face models locally through either [VLLM](https://docs.litellm.ai/docs/providers/vllm) or [Ollama](https://docs.litellm.ai/docs/providers/ollama)
 
-E.g. to use a new Huggingface model locally via Ollama, set:
+E.g. to use a new Hugging Face model locally via Ollama, set:
 ```
 [__init__.py]
 MAX_TOKENS = {
@@ -82,14 +82,14 @@ model = "ollama/llama2"
 model_turbo = "ollama/llama2"
 
 [ollama] # in .secrets.toml
-api_base = ... # the base url for your huggingface inference endpoint
+api_base = ... # the base url for your Hugging Face inference endpoint
 # e.g. if running Ollama locally, you may use:
 api_base = "http://localhost:11434/"
 ```
 
 ### Inference Endpoints
 
-To use a new model with Huggingface Inference Endpoints, for example, set:
+To use a new model with Hugging Face Inference Endpoints, for example, set:
 ```
 [__init__.py]
 MAX_TOKENS = {
@@ -105,8 +105,8 @@ model = "huggingface/meta-llama/Llama-2-7b-chat-hf"
 model_turbo = "huggingface/meta-llama/Llama-2-7b-chat-hf"
 
 [huggingface] # in .secrets.toml
-key = ... # your huggingface api key
-api_base = ... # the base url for your huggingface inference endpoint
+key = ... # your Hugging Face api key
+api_base = ... # the base url for your Hugging Face inference endpoint
 ```
 (you can obtain a Llama2 key from [here](https://replicate.com/replicate/llama-2-70b-chat/api))
 
