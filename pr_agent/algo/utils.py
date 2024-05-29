@@ -552,7 +552,7 @@ def get_max_tokens(model):
     return max_tokens_model
 
 
-def clip_tokens(text: str, max_tokens: int, add_three_dots=True) -> str:
+def clip_tokens(text: str, max_tokens: int, add_three_dots=True, delete_last_line=False) -> str:
     """
     Clip the number of tokens in a string to a maximum number of tokens.
 
@@ -575,6 +575,8 @@ def clip_tokens(text: str, max_tokens: int, add_three_dots=True) -> str:
         chars_per_token = num_chars / num_input_tokens
         num_output_chars = int(chars_per_token * max_tokens)
         clipped_text = text[:num_output_chars]
+        if delete_last_line:
+            clipped_text = clipped_text.rsplit('\n', 1)[0]
         if add_three_dots:
             clipped_text += "\n...(truncated)"
         return clipped_text
