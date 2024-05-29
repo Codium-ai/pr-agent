@@ -383,8 +383,8 @@ def get_pr_multi_diffs(git_provider: GitProvider,
                 get_logger().warning(f"Patch too large, skipping: {file.filename}")
                 continue
             elif get_settings().config.get('large_patch_policy') == 'clip':
-                delta_tokens = int(0.9*(get_max_tokens(model) - OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD - token_handler.prompt_tokens))
-                patch_clipped = clip_tokens(patch,delta_tokens, delete_last_line=True)
+                delta_tokens = get_max_tokens(model) - OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD - token_handler.prompt_tokens
+                patch_clipped = clip_tokens(patch, delta_tokens, delete_last_line=True, num_input_tokens=new_patch_tokens)
                 new_patch_tokens = token_handler.count_tokens(patch_clipped)
                 if patch_clipped and (token_handler.prompt_tokens + new_patch_tokens) > get_max_tokens(
                         model) - OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD:
