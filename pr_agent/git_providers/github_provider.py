@@ -147,6 +147,7 @@ class GithubProvider(GitProvider):
 
             for file in files:
                 if not is_valid_file(file.filename):
+                    get_logger().info(f"Skipping a non-code file: {file.filename}")
                     continue
 
                 new_file_content_str = self._get_pr_file_content(file, self.pr.head.sha)  # communication with GitHub
