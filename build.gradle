@@ -1,0 +1,36 @@
+plugins {
+    id 'java'
+    id 'jacoco'
+    id 'groovy'
+}
+
+group = 'com.davidparry'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'org.spockframework:spock-core:2.4-M4-groovy-4.0'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        csv.required = true
+    }
+}
+
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+tasks.withType(Test) {
+    useJUnitPlatform()
+}
