@@ -238,8 +238,11 @@ class BitbucketServerProvider(GitProvider):
             }
         }
 
-        response = requests.post(url=self._get_pr_comments_url(), json=payload, headers=self.headers)
-        response.raise_for_status()
+        try:
+            requests.post(url=self._get_pr_comments_url(), json=payload, headers=self.headers).raise_for_status()
+        except Exception as e:
+            get_logger().error(f"Failed to publish inline comment to '{file}' at line {from_line}, error: {e}")
+            raise e
 
     def generate_link_to_relevant_line_number(self, suggestion) -> str:
         try:
@@ -252,12 +255,23 @@ class BitbucketServerProvider(GitProvider):
             position, absolute_position = find_line_number_of_relevant_line_in_file \
                 (diff_files, relevant_file, relevant_line_str)
 
+            if absolute_position != -1:
+                if self.pr:
+                    link = f"{self.pr_url}/diff#{quote_plus(relevant_file)}?t={absolute_position}"
+                    return link
+                else:
+                    if get_settings().config.verbosity_level >= 2:
+                        get_logger().info(f"Failed adding line link to '{relevant_file}' since PR not set")
+            else:
+                if get_settings().config.verbosity_level >= 2:
+                    get_logger().info(f"Failed adding line link to '{relevant_file}' since position not found")
+
             if absolute_position != -1 and self.pr_url:
                 link = f"{self.pr_url}/diff#{quote_plus(relevant_file)}?t={absolute_position}"
                 return link
         except Exception as e:
             if get_settings().config.verbosity_level >= 2:
-                get_logger().info(f"Failed adding line link, error: {e}")
+                get_logger().info(f"Failed adding line link to '{relevant_file}', error: {e}")
 
         return ""
 
@@ -271,7 +285,7 @@ class BitbucketServerProvider(GitProvider):
             elif 'line' in comment: # single-line comment
                 self.publish_inline_comment(comment['body'], comment['line'], comment['path'])
             else:
-                get_logger().error(f"Could not publish inline comment {comment}")
+                get_logger().error(f"Could not publish inline comment: {comment}")
 
     def get_title(self):
         return self.pr.title
@@ -313,7 +327,7 @@ class BitbucketServerProvider(GitProvider):
         path_parts = parsed_url.path.strip("/").split("/")
         if len(path_parts) < 6 or path_parts[4] != "pull-requests":
             raise ValueError(
-                "The provided URL does not appear to be a Bitbucket PR URL"
+                f"The provided URL '{pr_url}' does not appear to be a Bitbucket PR URL"
             )
 
         workspace_slug = path_parts[1]
@@ -321,7 +335,7 @@ class BitbucketServerProvider(GitProvider):
         try:
             pr_number = int(path_parts[5])
         except ValueError as e:
-            raise ValueError("Unable to convert PR number to integer") from e
+            raise ValueError(f"Unable to convert PR number '{path_parts[5]}' to integer") from e
 
         return workspace_slug, repo_slug, pr_number
 
@@ -348,8 +362,12 @@ class BitbucketServerProvider(GitProvider):
             "title": pr_title,
             "reviewers": self.pr.reviewers # needs to be sent otherwise gets wiped
         }
+        try:
+            self.bitbucket_client.update_pull_request(self.workspace_slug, self.repo_slug, str(self.pr_num), payload)
+        except Exception as e:
+            get_logger().error(f"Failed to update pull request, error: {e}")
+            raise e
         
-        self.bitbucket_client.update_pull_request(self.workspace_slug, self.repo_slug, str(self.pr_num), payload)
 
     # bitbucket does not support labels
     def publish_labels(self, pr_types: list):
