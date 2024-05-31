@@ -26,8 +26,9 @@ from pr_agent.git_providers.utils import apply_repo_settings
 from pr_agent.log import get_logger
 from fastapi import Request, Depends
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from pr_agent.log import get_logger
+from pr_agent.log import LoggingFormat, get_logger, setup_logger
 
+setup_logger(fmt=LoggingFormat.JSON, level="DEBUG")
 security = HTTPBasic()
 router = APIRouter()
 available_commands_rgx = re.compile(r"^\/(" + "|".join(command2class.keys()) + r")\s*")
@@ -40,8 +41,12 @@ def handle_request(
 ):
     log_context["action"] = body
     log_context["api_url"] = url
-    with get_logger().contextualize(**log_context):
-        background_tasks.add_task(PRAgent().handle_request, url, body)
+    
+    async def inner():
+        with get_logger().contextualize(**log_context):
+            await PRAgent().handle_request(url, body)
+
+    background_tasks.add_task(inner)
 
 
 # currently only basic auth is supported with azure webhooks

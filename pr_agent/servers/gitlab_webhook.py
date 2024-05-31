@@ -27,8 +27,12 @@ def handle_request(background_tasks: BackgroundTasks, url: str, body: str, log_c
     log_context["action"] = body
     log_context["event"] = "pull_request" if body == "/review" else "comment"
     log_context["api_url"] = url
-    with get_logger().contextualize(**log_context):
-        background_tasks.add_task(PRAgent().handle_request, url, body)
+    
+    async def inner():
+        with get_logger().contextualize(**log_context):
+            await PRAgent().handle_request(url, body)
+
+    background_tasks.add_task(inner)
 
 
 async def _perform_commands_gitlab(commands_conf: str, agent: PRAgent, api_url: str, log_context: dict):
