@@ -15,6 +15,7 @@ CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by p
 
 [![GitHub license](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/Codium-ai/pr-agent/blob/main/LICENSE)
 [![Static Badge](https://img.shields.io/badge/Chrome-Extension-violet)](https://chromewebstore.google.com/detail/pr-agent-chrome-extension/ephlnjeghhogofkifjloamocljapahnl)
+[![Static Badge](https://img.shields.io/badge/Code-Benchmark-blue)](https://pr-agent-docs.codium.ai/finetuning_benchmark/)
 [![Discord](https://badgen.net/badge/icon/discord?icon=discord&label&color=purple)](https://discord.com/channels/1057273017547378788/1126104260430528613)
 [![Twitter](https://img.shields.io/twitter/follow/codiumai)](https://twitter.com/codiumai)
     <a href="https://github.com/Codium-ai/pr-agent/commits/main">
@@ -41,6 +42,10 @@ CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by p
   
 ## News and Updates
 
+### May 31, 2024
+
+Check out the new [**PR-Agent Code Fine-tuning Benchmark**](https://pr-agent-docs.codium.ai/finetuning_benchmark/)
+
 ### May 23, 2024
 
 We released a new version of [PR-Agent Chrome extension](https://chromewebstore.google.com/detail/pr-agent-chrome-extension/ephlnjeghhogofkifjloamocljapahnl), with two new features:
@@ -53,19 +58,6 @@ See more [here](https://www.youtube.com/watch?v=v9bJ1frtPcg)
 
 ### May 21, 2024
 Check out CodiumAI new project, [**Cover-Agent**](https://github.com/Codium-ai/cover-agent), that can automatically generate qualified tests to enhance existing test suites, aiming to increase code and behavior coverage efficiently.
-
-### May 19, 2024
-GPT-4o is now the default fast model ("Turbo"). This model will be used for all commands except `review` and `improve`, which will still use "GPT-4-2024-04-09", since they are harder and would still benefit from the larger model.
-
-### May 12, 2024
-Inspired by [AlphaCodium](https://github.com/Codium-ai/AlphaCodium) flow engineering scheme, PR-Agent now performs **self-reflection** on the code suggestions it provides,
-enabling to remove invalid suggestions, and score the valid ones. The suggestions will be presented sorted by their score, enabling to focus on the most important ones first.
-
-You can also choose to automatically remove suggestions below a certain importance score threshold, by setting the `pr_code_suggestions.suggestions_score_threshold` [configuration](https://pr-agent-docs.codium.ai/tools/improve/#configuration-options).
-
-<kbd><img src="https://codium.ai/images/pr_agent/self_reflection1.png" width="512"></kbd>
-
-<kbd><img src="https://codium.ai/images/pr_agent/self_reflection2.png" width="512"></kbd>
 
 
 ## Overview
