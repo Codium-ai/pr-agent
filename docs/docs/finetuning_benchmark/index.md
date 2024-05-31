@@ -82,6 +82,7 @@ Here are the results:
         <td align="center"></td>
         <td align="center"></td>
         <td align="center"></td>
+    </tr>
     <tr>
         <td align="center"><b>CodeQwen1.5-7B</b></td>
         <td align="center"><b>7</b></td>
