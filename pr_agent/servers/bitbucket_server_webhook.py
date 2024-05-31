@@ -27,8 +27,11 @@ def handle_request(
     log_context["api_url"] = url
     
     async def inner():
-        with get_logger().contextualize(**log_context):
-            await PRAgent().handle_request(url, body)
+        try:
+            with get_logger().contextualize(**log_context):
+                await PRAgent().handle_request(url, body)
+        except Exception as e:
+            get_logger().error(f"Failed to handle webhook: {e}")
 
     background_tasks.add_task(inner)
 
