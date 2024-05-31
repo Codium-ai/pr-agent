@@ -7,7 +7,8 @@ from atlassian.bitbucket import Bitbucket
 from starlette_context import context
 
 from .git_provider import GitProvider
-from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
+from ..algo.types import EDIT_TYPE, FilePatchInfo
+from ..algo.language_handler import is_valid_file
 from ..algo.utils import load_large_diff, find_line_number_of_relevant_line_in_file
 from ..config_loader import get_settings
 from ..log import get_logger
@@ -153,6 +154,10 @@ class BitbucketServerProvider(GitProvider):
         changes = self.bitbucket_client.get_pull_requests_changes(self.workspace_slug, self.repo_slug, self.pr_num)
         for change in changes:
             file_path = change['path']['toString']
+            if not is_valid_file(file_path.split("/")[-1]):
+                get_logger().info(f"Skipping a non-code file: {file_path}")
+                continue
+
             match change['type']:
                 case 'ADD':
                     edit_type = EDIT_TYPE.ADDED
