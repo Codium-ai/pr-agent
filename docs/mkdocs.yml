@@ -38,6 +38,7 @@ nav:
     - 💎 Similar Code: 'tools/similar_code.md'
   - Core Abilities: 'core-abilities/index.md'
   - Chrome Extension: 'chrome-extension/index.md'
+  - Code Fine-tuning Benchmark: 'finetuning_benchmark/index.md'
 
 theme:
   logo: assets/logo.svg
