@@ -11,116 +11,22 @@ Here are the results:
 <br>
 <br>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-    td, th {
-        font-size: 16px; /* Adjust this value to your preference */
-    }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th {
-            background-color: #f2f2f2;
-            border: 1px solid #dddddd;
-            text-align: center;
-            padding: 8px;
-        }
-        td {
-            border: 1px solid #dddddd;
-            text-align: center;
-            padding: 8px;
-        }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-            text-align: center;
-        }
-    </style>
-    <title>Model Performance Table</title>
-</head>
-<body>
-
-<table>
-    <tr>
-        <th align="center">Model name</th>
-        <th align="center">Model size [B]</th>
-        <th align="center">Better than gpt-4 rate, after fine-tuning [%]</th>
-    </tr>
-    <tr>
-        <td align="center"><b>DeepSeek 34B-instruct</b></td>
-        <td align="center"><b>34</b></td>
-        <td align="center"><b>40.7</b></td>
-    </tr>
-    <tr>
-        <td align="center">DeepSeek 34B-base</td>
-        <td align="center">34</td>
-        <td align="center">38.2</td>
-    </tr>
-    <tr>
-        <td align="center">Phind-34b</td>
-        <td align="center">34</td>
-        <td align="center">38</td>
-    </tr>
-    <tr>
-        <td align="center">Granite-34B</td>
-        <td align="center">34</td>
-        <td align="center">37.6</td>
-    </tr>
-    <tr>
-        <td align="center">Codestral-22B-v0.1</td>
-        <td align="center">22</td>
-        <td align="center">32.7</td>
-    </tr>
-    <tr>
-        <td align="center">QWEN-1.5-32B</td>
-        <td align="center">32</td>
-        <td align="center">29</td>
-    </tr>
-    <tr>
-        <td align="center"></td>
-        <td align="center"></td>
-        <td align="center"></td>
-    </tr>
-    <tr>
-        <td align="center"><b>CodeQwen1.5-7B</b></td>
-        <td align="center"><b>7</b></td>
-        <td align="center"><b>35.4</b></td>
-    </tr>
-    <tr>
-        <td align="center">Granite-8b-code-instruct</td>
-        <td align="center">8</td>
-        <td align="center">34.2</td>
-    </tr>
-    <tr>
-        <td align="center">CodeLlama-7b-hf</td>
-        <td align="center">7</td>
-        <td align="center">31.8</td>
-    </tr>
-    <tr>
-        <td align="center">Gemma-7B</td>
-        <td align="center">7</td>
-        <td align="center">27.2</td>
-    </tr>
-    <tr>
-        <td align="center">DeepSeek coder-7b-instruct</td>
-        <td align="center">7</td>
-        <td align="center">26.8</td>
-    </tr>
-    <tr>
-        <td align="center">Llama-3-8B-Instruct</td>
-        <td align="center">8</td>
-        <td align="center">26.8</td>
-    </tr>
-    <tr>
-        <td align="center">Mistral-7B-v0.1</td>
-        <td align="center">7</td>
-        <td align="center">16.1</td>
-    </tr>
-</table>
-
-</body>
+| Model name                  | Model size [B] | Better than gpt-4 rate, after fine-tuning [%] |
+|-----------------------------|----------------|----------------------------------------------|
+| **DeepSeek 34B-instruct**   | **34**         | **40.7**                                     |
+| DeepSeek 34B-base           | 34             | 38.2                                         |
+| Phind-34b                   | 34             | 38                                           |
+| Granite-34B                 | 34             | 37.6                                         |
+| Codestral-22B-v0.1          | 22             | 32.7                                         |
+| QWEN-1.5-32B                | 32             | 29                                           |
+|                             |                |                                              |
+| **CodeQwen1.5-7B**          | **7**          | **35.4**                                     |
+| Granite-8b-code-instruct    | 8              | 34.2                                         |
+| CodeLlama-7b-hf             | 7              | 31.8                                         |
+| Gemma-7B                    | 7              | 27.2                                         |
+| DeepSeek coder-7b-instruct  | 7              | 26.8                                         |
+| Llama-3-8B-Instruct         | 8              | 26.8                                         |
+| Mistral-7B-v0.1             | 7              | 16.1                                         |
 
 <br>
 
