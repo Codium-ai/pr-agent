@@ -33,7 +33,6 @@ Here are the results:
 <br>
 
 **Fine-tuning impact:**
-**Fine-tuning impact:**
 
 | Model name                | Model size [B] | Fine-tuned | Better than gpt-4 rate [%] |
 |---------------------------|----------------|------------|----------------------------|
