@@ -33,29 +33,12 @@ Here are the results:
 <br>
 
 **Fine-tuning impact:**
-<body>
-<table>
-    <tr>
-        <th align="center">Model name</th>
-        <th>Model size [B]</th>
-        <th>Fine-tuned</th>
-        <th>Better than gpt-4 rate [%]</th>
-    </tr>
-    <tr>
-        <td align="center">DeepSeek 34B-instruct</td>
-        <td align="center">34</td>
-        <td align="center">yes</td>
-        <td align="center">40.7</td>
-    </tr>
-    <tr>
-        <td align="center">DeepSeek 34B-instruct</td>
-        <td align="center">34</td>
-        <td align="center">no</td>
-        <td align="center">3.6</td>
-    </tr>
-</table>
+**Fine-tuning impact:**
 
-</body>
+| Model name                | Model size [B] | Fine-tuned | Better than gpt-4 rate [%] |
+|---------------------------|----------------|------------|----------------------------|
+| DeepSeek 34B-instruct     | 34             | yes        | 40.7                       |
+| DeepSeek 34B-instruct     | 34             | no         | 3.6                        |
 
 ## Results analysis
 
