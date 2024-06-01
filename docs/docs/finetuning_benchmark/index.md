@@ -1,8 +1,8 @@
 # PR-Agent Code Fine-tuning Benchmark
 
-On coding tasks, the gap between open-source models and top closed-source models such as GPT4 is significant. 
+On coding tasks, the gap between open-source models and top closed-source models such as GPT4 is significant.
 <br>
-In practice, open-source models are unsuitable for most real-world code tasks, and require further fine-tuning to produce acceptable results. 
+In practice, open-source models are unsuitable for most real-world code tasks, and require further fine-tuning to produce acceptable results.
 
 _PR-Agent fine-tuning benchmark_ aims to benchmark open-source models on their ability to be fine-tuned for a code task.
 Specifically, we chose to fine-tune open-source models on the task of analyzing a pull request, and providing useful feedback and code suggestions.
@@ -10,6 +10,8 @@ Specifically, we chose to fine-tune open-source models on the task of analyzing 
 Here are the results:
 <br>
 <br>
+
+**Model performance:**
 
 | Model name                  | Model size [B] | Better than gpt-4 rate, after fine-tuning [%] |
 |-----------------------------|----------------|----------------------------------------------|
@@ -55,7 +57,6 @@ Here are the results:
 
 </body>
 
-
 ## Results analysis
 
 - **Fine-tuning is a must** - without fine-tuning, open-source models provide poor results on most real-world code tasks, which include complicated prompt and lengthy context. We clearly see that without fine-tuning, deepseek model was 96.4% of the time inferior to GPT-4, while after fine-tuning, it is better 40.7% of the time.
@@ -65,10 +66,9 @@ Here are the results:
 - **The best small model** - For small 7B code-dedicated models, the gaps when fine-tuning are much larger. **CodeQWEN 1.5-7B** is by far the best model for fine-tuning.
 - **Base vs. instruct** - For the top model (deepseek), we saw small advantage when starting from the instruct version. However, we recommend testing both versions on each specific task, as the base model is generally considered more suitable for fine-tuning.
 
+## The dataset
 
-## The dataset 
-
-### Training dataset 
+### Training dataset
 
 Our training dataset is comprised of 25,000 pull requests, aggregated from permissive license repos. For each pull request, we generated responses for the three main tools of PR-Agent:
 [Describe](https://pr-agent-docs.codium.ai/tools/describe/), [Review](https://pr-agent-docs.codium.ai/tools/improve/) and [Improve](https://pr-agent-docs.codium.ai/tools/improve/).
@@ -77,11 +77,13 @@ On the raw data collected, we employed various automatic and manual cleaning tec
 An example input prompt can be found [here](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/pr_code_suggestions_prompts.toml), and an example output can be found [here](https://github.com/Codium-ai/pr-agent/pull/910#issuecomment-2118761309).
 
 ### Evaluation dataset
+
 - For each tool, we aggregated 100 additional examples to be used for evaluation. These examples were not used in the training dataset, and were manually selected to represent diverse real-world use-cases.
 - For each test example, we generated two responses: one from the fine-tuned model, and one from the best code model in the world, `gpt-4-turbo-2024-04-09`.
 
 - We used a third LLM to judge which response better answers the prompt, and will likely be perceived by a human as better response.
 <br>
+
 We experimented with three model as judges: `gpt-4-turbo-2024-04-09`, `gpt-4o`, and `claude-3-opus-20240229`. All three produced similar results, with the same ranking order. This strengthens the validity of our testing protocol.
 
 Here is an example for a judge model feedback:
