@@ -57,7 +57,7 @@ Our training dataset comprises 25,000 pull requests, aggregated from permissive 
 
 On the raw data collected, we employed various automatic and manual cleaning techniques to ensure the outputs were of the highest quality, and suitable for instruct-tuning.
 
-Here are the prompts, and example outputs, used to fine-tune the models:
+Here are the prompts, and example outputs, used as input-output paris to fine-tune the models:
 
 | Tool     | Prompt                                                                                                     | Example output |
 |----------|------------------------------------------------------------------------------------------------------------|----------------|
