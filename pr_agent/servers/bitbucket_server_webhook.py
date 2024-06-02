@@ -13,9 +13,10 @@ from starlette_context.middleware import RawContextMiddleware
 
 from pr_agent.agent.pr_agent import PRAgent
 from pr_agent.config_loader import get_settings
-from pr_agent.log import get_logger
+from pr_agent.log import LoggingFormat, get_logger, setup_logger
 from pr_agent.servers.utils import verify_signature
 
+setup_logger(fmt=LoggingFormat.JSON, level="DEBUG")
 router = APIRouter()
 
 
@@ -24,8 +25,15 @@ def handle_request(
 ):
     log_context["action"] = body
     log_context["api_url"] = url
-    with get_logger().contextualize(**log_context):
-        background_tasks.add_task(PRAgent().handle_request, url, body)
+    
+    async def inner():
+        try:
+            with get_logger().contextualize(**log_context):
+                await PRAgent().handle_request(url, body)
+        except Exception as e:
+            get_logger().error(f"Failed to handle webhook: {e}")
+
+    background_tasks.add_task(inner)
 
 
 @router.post("/")
