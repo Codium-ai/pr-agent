@@ -52,11 +52,18 @@ Here are the results:
 
 ### Training dataset
 
-Our training dataset is comprised of 25,000 pull requests, aggregated from permissive license repos. For each pull request, we generated responses for the three main tools of PR-Agent:
+Our training dataset comprises 25,000 pull requests, aggregated from permissive license repos. For each pull request, we generated responses for the three main tools of PR-Agent:
 [Describe](https://pr-agent-docs.codium.ai/tools/describe/), [Review](https://pr-agent-docs.codium.ai/tools/improve/) and [Improve](https://pr-agent-docs.codium.ai/tools/improve/).
 
 On the raw data collected, we employed various automatic and manual cleaning techniques to ensure the outputs were of the highest quality, and suitable for instruct-tuning.
-An example input prompt can be found [here](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/pr_code_suggestions_prompts.toml), and an example output can be found [here](https://github.com/Codium-ai/pr-agent/pull/910#issuecomment-2118761309).
+
+Here are the prompts, and example outputs, used to fine-tune the models:
+
+| Tool     | Prompt                                                                                                     | Example output |
+|----------|------------------------------------------------------------------------------------------------------------|----------------|
+| Describe | [link](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/pr_description_prompts.toml) | [link](https://github.com/Codium-ai/pr-agent/pull/910#issue-2303989601)           |
+| Review   | [link](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/pr_reviewer_prompts.toml) | [link](https://github.com/Codium-ai/pr-agent/pull/910#issuecomment-2118761219)           |
+| Improve  | [link](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/pr_code_suggestions_prompts.toml) | [link](https://github.com/Codium-ai/pr-agent/pull/910#issuecomment-2118761309)           |
 
 ### Evaluation dataset
 
