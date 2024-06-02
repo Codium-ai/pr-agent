@@ -4,7 +4,7 @@ On coding tasks, the gap between open-source models and top closed-source models
 <br>
 In practice, open-source models are unsuitable for most real-world code tasks, and require further fine-tuning to produce acceptable results.
 
-_PR-Agent fine-tuning benchmark_ aims to benchmark open-source models on their ability to be fine-tuned for a code task.
+_PR-Agent fine-tuning benchmark_ aims to benchmark open-source models on their ability to be fine-tuned for a coding task.
 Specifically, we chose to fine-tune open-source models on the task of analyzing a pull request, and providing useful feedback and code suggestions.
 
 Here are the results:
@@ -57,7 +57,7 @@ Our training dataset comprises 25,000 pull requests, aggregated from permissive 
 
 On the raw data collected, we employed various automatic and manual cleaning techniques to ensure the outputs were of the highest quality, and suitable for instruct-tuning.
 
-Here are the prompts, and example outputs, used as input-output paris to fine-tune the models:
+Here are the prompts, and example outputs, used as input-output pairs to fine-tune the models:
 
 | Tool     | Prompt                                                                                                     | Example output |
 |----------|------------------------------------------------------------------------------------------------------------|----------------|
@@ -75,7 +75,7 @@ Here are the prompts, and example outputs, used as input-output paris to fine-tu
 
 We experimented with three model as judges: `gpt-4-turbo-2024-04-09`, `gpt-4o`, and `claude-3-opus-20240229`. All three produced similar results, with the same ranking order. This strengthens the validity of our testing protocol.
 
-Here is an example for a judge model feedback:
+Here is an example of a judge model feedback:
 
 ```
 command: improve
