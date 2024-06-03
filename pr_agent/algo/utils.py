@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import difflib
 import json
+import os
 import re
 import textwrap
+import time
 from datetime import datetime
 from enum import Enum
 from typing import Any, List, Tuple
@@ -12,7 +14,7 @@ import yaml
 from starlette_context import context
 
 from pr_agent.algo import MAX_TOKENS
-from pr_agent.algo.token_handler import get_token_encoder
+from pr_agent.algo.token_handler import TokenEncoder
 from pr_agent.config_loader import get_settings, global_settings
 from pr_agent.algo.types import FilePatchInfo
 from pr_agent.log import get_logger
@@ -67,13 +69,15 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool = True, increment
         output_data (dict): A dictionary containing data to be converted to markdown format.
     Returns:
         str: The markdown formatted text generated from the input dictionary.
-    """    
+    """
 
     emojis = {
-        "Possible issues": "🔍",
+        "Can be split": "🔀",
+        "Possible issues": "⚡",
         "Score": "🏅",
         "Relevant tests": "🧪",
         "Focused PR": "✨",
+        "Relevant ticket": "🎫",
         "Security concerns": "🔒",
         "Insights from user's answers": "📝",
         "Code feedback": "🤖",
@@ -81,9 +85,9 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool = True, increment
     }
     markdown_text = ""
     if not incremental_review:
-        markdown_text += f"## PR Review\n\n"
+        markdown_text += f"## PR Review 🔍\n\n"
     else:
-        markdown_text += f"## Incremental PR Review\n\n"
+        markdown_text += f"## Incremental PR Review 🔍\n\n"
         markdown_text += f"⏮️ Review for commits since previous PR-Agent review {incremental_review}.\n\n"
     if gfm_supported:
         markdown_text += "<table>\n<tr>\n"
@@ -94,7 +98,8 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool = True, increment
 
     for key, value in output_data['review'].items():
         if value is None or value == '' or value == {} or value == []:
-            continue
+            if key.lower() != 'can_be_split':
+                continue
         key_nice = key.replace('_', ' ').capitalize()
         emoji = emojis.get(key_nice, "")
         if gfm_supported:
@@ -103,6 +108,8 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool = True, increment
             if 'security concerns' in key_nice.lower():
                 value = emphasize_header(value.strip())
                 markdown_text += f"<tr><td> {emoji}&nbsp;<strong>{key_nice}</strong></td><td>\n\n{value}\n\n</td></tr>\n"
+            elif 'can be split' in key_nice.lower():
+                markdown_text += process_can_be_split(emoji, value)
             elif 'possible issues' in key_nice.lower():
                 value = value.strip()
                 issues = value.split('\n- ')
@@ -151,6 +158,38 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool = True, increment
     #print(markdown_text)
 
 
+    return markdown_text
+
+
+def process_can_be_split(emoji, value):
+    # key_nice = "Can this PR be split?"
+    key_nice = "Multiple PR themes"
+    markdown_text = ""
+    if not value or isinstance(value, list) and len(value) == 1:
+        value = "No"
+        markdown_text += f"<tr><td> {emoji}&nbsp;<strong>{key_nice}</strong></td><td>\n\n{value}\n\n</td></tr>\n"
+    else:
+        number_of_splits = len(value)
+        markdown_text += f"<tr><td rowspan={number_of_splits}> {emoji}&nbsp;<strong>{key_nice}</strong></td>\n"
+        for i, split in enumerate(value):
+            title = split.get('title', '')
+            relevant_files = split.get('relevant_files', [])
+            if i == 0:
+                markdown_text += f"<td><details><summary>\nSub-PR theme: <strong>{title}</strong></summary>\n\n"
+                markdown_text += f"<hr>\n"
+                markdown_text += f"Relevant files:\n"
+                markdown_text += f"<ul>\n"
+                for file in relevant_files:
+                    markdown_text += f"<li>{file}</li>\n"
+                markdown_text += f"</ul>\n\n</details></td></tr>\n"
+            else:
+                markdown_text += f"<tr>\n<td><details><summary>\nSub-PR theme: <strong>{title}</strong></summary>\n\n"
+                markdown_text += f"<hr>\n"
+                markdown_text += f"Relevant files:\n"
+                markdown_text += f"<ul>\n"
+                for file in relevant_files:
+                    markdown_text += f"<li>{file}</li>\n"
+                markdown_text += f"</ul>\n\n</details></td></tr>\n"
     return markdown_text
 
 
@@ -319,7 +358,7 @@ def convert_str_to_datetime(date_str):
     return datetime.strptime(date_str, datetime_format)
 
 
-def load_large_diff(filename, new_file_content_str: str, original_file_content_str: str) -> str:
+def load_large_diff(filename, new_file_content_str: str, original_file_content_str: str, show_warning: bool = True) -> str:
     """
     Generate a patch for a modified file by comparing the original content of the file with the new content provided as
     input.
@@ -338,7 +377,7 @@ def load_large_diff(filename, new_file_content_str: str, original_file_content_s
     try:
         diff = difflib.unified_diff(original_file_content_str.splitlines(keepends=True),
                                     new_file_content_str.splitlines(keepends=True))
-        if get_settings().config.verbosity_level >= 2:
+        if get_settings().config.verbosity_level >= 2 and show_warning:
             get_logger().warning(f"File was modified, but no patch was found. Manually creating patch: {filename}.")
         patch = ''.join(diff)
     except Exception:
@@ -433,7 +472,8 @@ def try_fix_yaml(response_text: str, keys_fix_yaml: List[str] = []) -> dict:
         except:
             pass
 
-     # third fallback - try to remove leading and trailing curly brackets
+
+    # third fallback - try to remove leading and trailing curly brackets
     response_text_copy = response_text.strip().rstrip().removeprefix('{').removesuffix('}').rstrip(':\n')
     try:
         data = yaml.safe_load(response_text_copy)
@@ -515,7 +555,7 @@ def get_max_tokens(model):
     return max_tokens_model
 
 
-def clip_tokens(text: str, max_tokens: int, add_three_dots=True) -> str:
+def clip_tokens(text: str, max_tokens: int, add_three_dots=True, num_input_tokens=None, delete_last_line=False) -> str:
     """
     Clip the number of tokens in a string to a maximum number of tokens.
 
@@ -530,16 +570,30 @@ def clip_tokens(text: str, max_tokens: int, add_three_dots=True) -> str:
         return text
 
     try:
-        encoder = get_token_encoder()
-        num_input_tokens = len(encoder.encode(text))
+        if num_input_tokens is None:
+            encoder = TokenEncoder.get_token_encoder()
+            num_input_tokens = len(encoder.encode(text))
         if num_input_tokens <= max_tokens:
             return text
+        if max_tokens < 0:
+            return ""
+
+        # calculate the number of characters to keep
         num_chars = len(text)
         chars_per_token = num_chars / num_input_tokens
-        num_output_chars = int(chars_per_token * max_tokens)
-        clipped_text = text[:num_output_chars]
-        if add_three_dots:
-            clipped_text += "...(truncated)"
+        factor = 0.9  # reduce by 10% to be safe
+        num_output_chars = int(factor * chars_per_token * max_tokens)
+
+        # clip the text
+        if num_output_chars > 0:
+            clipped_text = text[:num_output_chars]
+            if delete_last_line:
+                clipped_text = clipped_text.rsplit('\n', 1)[0]
+            if add_three_dots:
+                clipped_text += "\n...(truncated)"
+        else: # if the text is empty
+            clipped_text =  ""
+
         return clipped_text
     except Exception as e:
         get_logger().warning(f"Failed to clip tokens: {e}")
@@ -625,3 +679,89 @@ def find_line_number_of_relevant_line_in_file(diff_files: List[FilePatchInfo],
                             absolute_position = start2 + delta - 1
                             break
     return position, absolute_position
+
+def validate_and_await_rate_limit(rate_limit_status=None, git_provider=None, get_rate_limit_status_func=None):
+    if git_provider and not rate_limit_status:
+        rate_limit_status = {'resources': git_provider.github_client.get_rate_limit().raw_data}
+
+    if not rate_limit_status:
+        rate_limit_status = get_rate_limit_status_func()
+    # validate that the rate limit is not exceeded
+    is_rate_limit = False
+    for key, value in rate_limit_status['resources'].items():
+        if value['remaining'] == 0:
+            print(f"key: {key}, value: {value}")
+            is_rate_limit = True
+            sleep_time_sec = value['reset'] - datetime.now().timestamp()
+            sleep_time_hour = sleep_time_sec / 3600.0
+            print(f"Rate limit exceeded. Sleeping for {sleep_time_hour} hours")
+            if sleep_time_sec > 0:
+                time.sleep(sleep_time_sec+1)
+
+            if git_provider:
+                rate_limit_status = {'resources': git_provider.github_client.get_rate_limit().raw_data}
+            else:
+                rate_limit_status = get_rate_limit_status_func()
+
+    return is_rate_limit
+
+
+def get_largest_component(pr_url):
+    from pr_agent.tools.pr_analyzer import PRAnalyzer
+    publish_output = get_settings().config.publish_output
+    get_settings().config.publish_output = False  # disable publish output
+    analyzer = PRAnalyzer(pr_url)
+    methods_dict_files = analyzer.run_sync()
+    get_settings().config.publish_output = publish_output
+    max_lines_changed = 0
+    file_b = ""
+    component_name_b = ""
+    for file in methods_dict_files:
+        for method in methods_dict_files[file]:
+            try:
+                if methods_dict_files[file][method]['num_plus_lines'] > max_lines_changed:
+                    max_lines_changed = methods_dict_files[file][method]['num_plus_lines']
+                    file_b = file
+                    component_name_b = method
+            except:
+                pass
+    if component_name_b:
+        get_logger().info(f"Using the largest changed component: '{component_name_b}'")
+        return component_name_b, file_b
+    else:
+        return None, None
+
+def github_action_output(output_data: dict, key_name: str):
+    try:
+        if not get_settings().get('github_action_config.enable_output', False):
+            return
+
+        key_data = output_data.get(key_name, {})
+        with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
+            print(f"{key_name}={json.dumps(key_data, indent=None, ensure_ascii=False)}", file=fh)
+    except Exception as e:
+        get_logger().error(f"Failed to write to GitHub Action output: {e}")
+    return
+
+
+def show_relevant_configurations(relevant_section: str) -> str:
+    forbidden_keys = ['ai_disclaimer', 'ai_disclaimer_title', 'ANALYTICS_FOLDER', 'secret_provider',
+                      'trial_prefix_message', 'no_eligible_message', 'identity_provider', 'ALLOWED_REPOS','APP_NAME']
+
+    markdown_text = ""
+    markdown_text += "\n<hr>\n<details> <summary><strong>🛠️ Relevant configurations:</strong></summary> \n\n"
+    markdown_text +="<br>These are the relevant [configurations](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml) for this tool:\n\n"
+    markdown_text += f"**[config**]\n```yaml\n\n"
+    for key, value in get_settings().config.items():
+        if key in forbidden_keys:
+            continue
+        markdown_text += f"{key}: {value}\n"
+    markdown_text += "\n```\n"
+    markdown_text += f"\n**[{relevant_section}]**\n```yaml\n\n"
+    for key, value in get_settings().get(relevant_section, {}).items():
+        if key in forbidden_keys:
+            continue
+        markdown_text += f"{key}: {value}\n"
+    markdown_text += "\n```"
+    markdown_text += "\n</details>\n"
+    return markdown_text

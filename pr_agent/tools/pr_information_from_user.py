@@ -21,6 +21,8 @@ class PRInformationFromUser:
             self.git_provider.get_languages(), self.git_provider.get_files()
         )
         self.ai_handler = ai_handler()
+        self.ai_handler.main_pr_language = self.main_pr_language
+
         self.vars = {
             "title": self.git_provider.pr.title,
             "branch": self.git_provider.get_pr_branch(),

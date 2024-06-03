@@ -8,7 +8,7 @@ from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAIHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import ModelType
+from pr_agent.algo.utils import ModelType, show_relevant_configurations
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider, GithubProvider
 from pr_agent.git_providers.git_provider import get_main_pr_language
@@ -26,7 +26,10 @@ class PRUpdateChangelog:
         )
         self.commit_changelog = get_settings().pr_update_changelog.push_changelog_changes
         self._get_changlog_file()  # self.changelog_file_str
+
         self.ai_handler = ai_handler()
+        self.ai_handler.main_pr_language = self.main_language
+
         self.patches_diff = None
         self.prediction = None
         self.cli_mode = cli_mode
@@ -71,6 +74,11 @@ class PRUpdateChangelog:
         await retry_with_fallback_models(self._prepare_prediction, model_type=ModelType.TURBO)
 
         new_file_content, answer = self._prepare_changelog_update()
+
+        # Output the relevant configurations if enabled
+        if get_settings().get('config', {}).get('output_relevant_configurations', False):
+            answer += show_relevant_configurations(relevant_section='pr_update_changelog')
+
         get_logger().debug(f"PR output", artifact=answer)
 
         if get_settings().config.publish_output:
@@ -78,7 +86,7 @@ class PRUpdateChangelog:
             if self.commit_changelog:
                 self._push_changelog_update(new_file_content, answer)
             else:
-                self.git_provider.publish_comment(f"**Changelog updates:**\n\n{answer}")
+                self.git_provider.publish_comment(f"**Changelog updates:** 🔄\n\n{answer}")
 
     async def _prepare_prediction(self, model: str):
         self.patches_diff = get_pr_diff(self.git_provider, self.token_handler, model)
@@ -138,7 +146,7 @@ class PRUpdateChangelog:
                 self.git_provider.pr.create_review(commit=last_commit_id, comments=[d])
         except Exception:
             # we can't create a review for some reason, let's just publish a comment
-            self.git_provider.publish_comment(f"**Changelog updates:**\n\n{answer}")
+            self.git_provider.publish_comment(f"**Changelog updates: 🔄**\n\n{answer}")
 
     def _get_default_changelog(self):
         example_changelog = \

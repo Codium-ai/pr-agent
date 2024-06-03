@@ -5,15 +5,16 @@ It can be invoked manually by commenting on any PR:
 ```
 /generate_labels
 ```
-For example:
+
+## Example usage
 
 If we wish to add detect changes to SQL queries in a given PR, we can add the following custom label along with its description:
 
-<kbd><img src=https://codium.ai/images/pr_agent/custom_labels_list.png width="768"></kbd>
+![Custom labels list](https://codium.ai/images/pr_agent/custom_labels_list.png){width=768}
 
 When running the `generate_labels` tool on a PR that includes changes in SQL queries, it will automatically suggest the custom label:
 
-<kbd><img src=https://codium.ai/images/pr_agent/custom_label_published.png width="768"></kbd>
+![Custom labels published](https://codium.ai/images/pr_agent/custom_label_published.png){width=768}
 
 Note that in addition to the dedicated tool `generate_labels`, the custom labels will also be used by the `describe` tool.
 
@@ -36,7 +37,8 @@ b. Add/edit the custom labels. It should be formatted as follows:
 * Label name: The name of the custom label.
 * Description: Start the description of with prefix `pr_agent:`, for example: `pr_agent: Description of when AI should suggest this label`.<br>
 The description should be comprehensive and detailed, indicating when to add the desired label.
-<kbd><img src=https://codium.ai/images/pr_agent/add_native_custom_labels.png width="880"></kbd>
+
+![Add native custom labels](https://codium.ai/images/pr_agent/add_native_custom_labels.png){width=880}
 
 c. Now the custom labels will be included in the `generate_labels` tool.
 

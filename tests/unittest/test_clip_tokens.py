@@ -15,5 +15,5 @@ class TestClipTokens:
 
         max_tokens = 10
         result = clip_tokens(text, max_tokens)
-        expected_results = 'line1\nline2\nline3\nli...(truncated)'
+        expected_results = 'line1\nline2\nline3\n\n...(truncated)'
         assert result == expected_results

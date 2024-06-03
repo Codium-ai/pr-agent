@@ -7,6 +7,7 @@ from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAIHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
+from pr_agent.algo.utils import ModelType
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
@@ -17,11 +18,14 @@ from pr_agent.servers.help import HelpMessage
 class PRQuestions:
     def __init__(self, pr_url: str, args=None, ai_handler: partial[BaseAiHandler,] = LiteLLMAIHandler):
         question_str = self.parse_args(args)
+        self.pr_url = pr_url
         self.git_provider = get_git_provider()(pr_url)
         self.main_pr_language = get_main_pr_language(
             self.git_provider.get_languages(), self.git_provider.get_files()
         )
         self.ai_handler = ai_handler()
+        self.ai_handler.main_pr_language = self.main_pr_language
+
         self.question_str = question_str
         self.vars = {
             "title": self.git_provider.pr.title,
@@ -47,19 +51,25 @@ class PRQuestions:
         return question_str
 
     async def run(self):
-        get_logger().info('Answering a PR question...')
+        get_logger().info(f'Answering a PR question about the PR {self.pr_url} ')
         relevant_configs = {'pr_questions': dict(get_settings().pr_questions),
                             'config': dict(get_settings().config)}
         get_logger().debug("Relevant configs", artifacts=relevant_configs)
         if get_settings().config.publish_output:
             self.git_provider.publish_comment("Preparing answer...", is_temporary=True)
-        await retry_with_fallback_models(self._prepare_prediction)
+
+        # identify image
+        img_path = self.idenfity_image_in_comment()
+        if img_path:
+            get_logger().debug(f"Image path identified", artifact=img_path)
+
+        await retry_with_fallback_models(self._prepare_prediction, model_type=ModelType.TURBO)
 
         pr_comment = self._prepare_pr_answer()
         get_logger().debug(f"PR output", artifact=pr_comment)
 
         if self.git_provider.is_supported("gfm_markdown") and get_settings().pr_questions.enable_help_text:
-            pr_comment += "<hr>\n\n<details> <summary><strong>✨ Ask tool usage guide:</strong></summary><hr> \n\n"
+            pr_comment += "<hr>\n\n<details> <summary><strong>💡 Tool usage guide:</strong></summary><hr> \n\n"
             pr_comment += HelpMessage.get_ask_usage_guide()
             pr_comment += "\n</details>\n"
 
@@ -67,6 +77,19 @@ class PRQuestions:
             self.git_provider.publish_comment(pr_comment)
             self.git_provider.remove_initial_comment()
         return ""
+
+    def idenfity_image_in_comment(self):
+        img_path = ''
+        if '![image]' in self.question_str:
+            # assuming structure:
+            # /ask question ...  > ![image](img_path)
+            img_path = self.question_str.split('![image]')[1].strip().strip('()')
+            self.vars['img_path'] = img_path
+        elif 'https://' in self.question_str and ('.png' in self.question_str or 'jpg' in self.question_str): # direct image link
+            # include https:// in the image path
+            img_path = 'https://' + self.question_str.split('https://')[1]
+            self.vars['img_path'] = img_path
+        return img_path
 
     async def _prepare_prediction(self, model: str):
         self.patches_diff = get_pr_diff(self.git_provider, self.token_handler, model)
@@ -83,11 +106,17 @@ class PRQuestions:
         environment = Environment(undefined=StrictUndefined)
         system_prompt = environment.from_string(get_settings().pr_questions_prompt.system).render(variables)
         user_prompt = environment.from_string(get_settings().pr_questions_prompt.user).render(variables)
-        response, finish_reason = await self.ai_handler.chat_completion(model=model, temperature=0.2,
-                                                                        system=system_prompt, user=user_prompt)
+        if 'img_path' in variables:
+            img_path = self.vars['img_path']
+            response, finish_reason = await self.ai_handler.chat_completion(model=model, temperature=0.2,
+                                                                            system=system_prompt, user=user_prompt,
+                                                                            img_path=img_path)
+        else:
+            response, finish_reason = await self.ai_handler.chat_completion(model=model, temperature=0.2,
+                                                                            system=system_prompt, user=user_prompt)
         return response
 
     def _prepare_pr_answer(self) -> str:
-        answer_str = f"Question: {self.question_str}\n\n"
-        answer_str += f"Answer:\n{self.prediction.strip()}\n\n"
+        answer_str = f"### **Ask**❓\n{self.question_str}\n\n"
+        answer_str += f"### **Answer:**\n{self.prediction.strip()}\n\n"
         return answer_str

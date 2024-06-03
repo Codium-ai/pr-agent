@@ -43,7 +43,7 @@ We use [tiktoken](https://github.com/openai/tiktoken) to tokenize the patches af
 
 #### Example
 
-<kbd><img src=https://codium.ai/images/git_patch_logic.png width="768"></kbd>
+![Core Abilities](https://codium.ai/images/git_patch_logic.png){width=768}
 
 ## YAML Prompting
 TBD

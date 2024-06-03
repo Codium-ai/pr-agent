@@ -7,10 +7,10 @@ To ignore files or directories, edit the **[ignore.toml](https://github.com/Codi
  - `IGNORE.GLOB`
  - `IGNORE.REGEX`
 
-For example, to ignore python files in a PR with online usage, comment on a PR:
+For example, to ignore Python files in a PR with online usage, comment on a PR:
 `/review --ignore.glob=['*.py']`
 
-To ignore python files in all PRs, set in a configuration file:
+To ignore Python files in all PRs, set in a configuration file:
 ```
 [ignore]
 glob = ['*.py']
@@ -26,13 +26,13 @@ All PR-Agent tools have a parameter called `extra_instructions`, that enables to
 ## Working with large PRs
 
 The default mode of CodiumAI is to have a single call per tool, using GPT-4, which has a token limit of 8000 tokens.
-This mode provide a very good speed-quality-cost tradeoff, and can handle most PRs successfully.
+This mode provides a very good speed-quality-cost tradeoff, and can handle most PRs successfully.
 When the PR is above the token limit, it employs a [PR Compression strategy](../core-abilities/index.md).
 
-However, for very large PRs, or in case you want to emphasize quality over speed and cost, there are 2 possible solutions:
+However, for very large PRs, or in case you want to emphasize quality over speed and cost, there are two possible solutions:
 1) [Use a model](https://codium-ai.github.io/Docs-PR-Agent/usage-guide/#changing-a-model) with larger context, like GPT-32K, or claude-100K. This solution will be applicable for all the tools.
 2) For the `/improve` tool, there is an ['extended' mode](https://codium-ai.github.io/Docs-PR-Agent/tools/#improve) (`/improve --extended`),
-which divides the PR to chunks, and process each chunk separately. With this mode, regardless of the model, no compression will be done (but for large PRs, multiple model calls may occur)
+which divides the PR to chunks, and processes each chunk separately. With this mode, regardless of the model, no compression will be done (but for large PRs, multiple model calls may occur)
 
 
 ## Changing a model
@@ -59,12 +59,12 @@ and set in your configuration file:
 model="" # the OpenAI model you've deployed on Azure (e.g. gpt-3.5-turbo)
 ```
 
-### Huggingface
+### Hugging Face
 
 **Local**
-You can run Huggingface models locally through either [VLLM](https://docs.litellm.ai/docs/providers/vllm) or [Ollama](https://docs.litellm.ai/docs/providers/ollama)
+You can run Hugging Face models locally through either [VLLM](https://docs.litellm.ai/docs/providers/vllm) or [Ollama](https://docs.litellm.ai/docs/providers/ollama)
 
-E.g. to use a new Huggingface model locally via Ollama, set:
+E.g. to use a new Hugging Face model locally via Ollama, set:
 ```
 [__init__.py]
 MAX_TOKENS = {
@@ -79,16 +79,17 @@ MAX_TOKENS={
 
 [config] # in configuration.toml
 model = "ollama/llama2"
+model_turbo = "ollama/llama2"
 
 [ollama] # in .secrets.toml
-api_base = ... # the base url for your huggingface inference endpoint
+api_base = ... # the base url for your Hugging Face inference endpoint
 # e.g. if running Ollama locally, you may use:
 api_base = "http://localhost:11434/"
 ```
 
 ### Inference Endpoints
 
-To use a new model with Huggingface Inference Endpoints, for example, set:
+To use a new model with Hugging Face Inference Endpoints, for example, set:
 ```
 [__init__.py]
 MAX_TOKENS = {
@@ -101,10 +102,11 @@ MAX_TOKENS={
 }
 [config] # in configuration.toml
 model = "huggingface/meta-llama/Llama-2-7b-chat-hf"
+model_turbo = "huggingface/meta-llama/Llama-2-7b-chat-hf"
 
 [huggingface] # in .secrets.toml
-key = ... # your huggingface api key
-api_base = ... # the base url for your huggingface inference endpoint
+key = ... # your Hugging Face api key
+api_base = ... # the base url for your Hugging Face inference endpoint
 ```
 (you can obtain a Llama2 key from [here](https://replicate.com/replicate/llama-2-70b-chat/api))
 
@@ -114,13 +116,27 @@ To use Llama2 model with Replicate, for example, set:
 ```
 [config] # in configuration.toml
 model = "replicate/llama-2-70b-chat:2c1608e18606fad2812020dc541930f2d0495ce32eee50074220b87300bc16e1"
+model_turbo = "replicate/llama-2-70b-chat:2c1608e18606fad2812020dc541930f2d0495ce32eee50074220b87300bc16e1"
 [replicate] # in .secrets.toml
 key = ...
 ```
 (you can obtain a Llama2 key from [here](https://replicate.com/replicate/llama-2-70b-chat/api))
 
 
-Also review the [AiHandler](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/algo/ai_handler.py) file for instruction how to set keys for other models.
+Also, review the [AiHandler](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/algo/ai_handler.py) file for instructions on how to set keys for other models.
+
+### Groq
+
+To use Llama3 model with Groq, for example, set:
+```
+[config] # in configuration.toml
+model = "llama3-70b-8192"
+model_turbo = "llama3-70b-8192"
+fallback_models = ["groq/llama3-70b-8192"] 
+[groq] # in .secrets.toml
+key = ... # your Groq api key
+```
+(you can obtain a Groq key from [here](https://console.groq.com/keys))
 
 ### Vertex AI
 
@@ -129,6 +145,7 @@ To use Google's Vertex AI platform and its associated models (chat-bison/codecha
 ``` 
 [config] # in configuration.toml
 model = "vertex_ai/codechat-bison"
+model_turbo = "vertex_ai/codechat-bison"
 fallback_models="vertex_ai/codechat-bison"
 
 [vertexai] # in .secrets.toml
@@ -162,8 +179,9 @@ To use Amazon Bedrock and its foundational models, add the below configuration:
 
 ``` 
 [config] # in configuration.toml
-model = "anthropic.claude-v2"
-fallback_models="anthropic.claude-instant-v1"
+model="bedrock/anthropic.claude-3-sonnet-20240229-v1:0"
+model_turbo="bedrock/anthropic.claude-3-sonnet-20240229-v1:0"
+fallback_models=["bedrock/anthropic.claude-v2:1"]
 
 [aws] # in .secrets.toml
 bedrock_region = "us-east-1"
@@ -171,12 +189,18 @@ bedrock_region = "us-east-1"
 
 Note that you have to add access to foundational models before using them. Please refer to [this document](https://docs.aws.amazon.com/bedrock/latest/userguide/setting-up.html) for more details.
 
+If you are using the claude-3 model, please configure the following settings as there are parameters incompatible with claude-3.
+```
+[litellm]
+drop_params = true
+```
+
 AWS session is automatically authenticated from your environment, but you can also explicitly set `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables.
 
 
 ## Patch Extra Lines
 
-By default, around any change in your PR, git patch provides 3 lines of context above and below the change.
+By default, around any change in your PR, git patch provides three lines of context above and below the change.
 ```
 @@ -12,5 +12,5 @@ def func1():
  code line that already existed in the file...

@@ -1,7 +1,7 @@
 [config]
-model="gpt-4" # "gpt-4-0125-preview"
-model_turbo="gpt-4-0125-preview"
-fallback_models=["gpt-3.5-turbo-16k"]
+model="gpt-4-turbo-2024-04-09"
+model_turbo="gpt-4o"
+fallback_models=["gpt-4-0125-preview"]
 git_provider="github"
 publish_output=true
 publish_output_progress=true
@@ -19,13 +19,15 @@ secret_provider="google_cloud_storage"
 cli_mode=false
 ai_disclaimer_title=""  # Pro feature, title for a collapsible disclaimer to AI outputs
 ai_disclaimer=""  # Pro feature, full text for the AI disclaimer
+output_relevant_configurations=false
+large_patch_policy = "clip" # "clip", "skip"
 
 [pr_reviewer] # /review #
 # enable/disable features
-require_focused_review=false
 require_score_review=false
 require_tests_review=true
 require_estimate_effort_to_review=true
+require_can_be_split_review=false
 # soc2
 require_soc2_ticket=false
 soc2_ticket_prompt="Does the PR description include a link to ticket in a project management system (e.g., Jira, Asana, Trello, etc.) ?"
@@ -44,7 +46,7 @@ enable_review_labels_effort=true
 require_all_thresholds_for_incremental_review=false
 minimal_commits_for_incremental_review=0
 minimal_minutes_for_incremental_review=0
-enable_help_text=true # Determines whether to include help text in the PR review. Enabled by default.
+enable_help_text=false # Determines whether to include help text in the PR review. Enabled by default.
 # auto approval
 enable_auto_approval=false
 maximal_review_effort=5
@@ -52,15 +54,17 @@ maximal_review_effort=5
 
 [pr_description] # /describe #
 publish_labels=true
-publish_description_as_comment=false
 add_original_user_description=true
-keep_original_user_title=true
+generate_ai_title=false
 use_bullet_points=true
 extra_instructions = ""
 enable_pr_type=true
 final_update_message = true
 enable_help_text=false
 enable_help_comment=true
+# describe as comment
+publish_description_as_comment=false
+publish_description_as_comment_persistent=true
 ## changes walkthrough section
 enable_semantic_files_types=true
 collapsible_file_list='adaptive' # true, false, 'adaptive'
@@ -72,19 +76,23 @@ include_generated_by_header=true
 #custom_labels = ['Bug fix', 'Tests', 'Bug fix with tests', 'Enhancement', 'Documentation', 'Other']
 
 [pr_questions] # /ask #
-enable_help_text=true
+enable_help_text=false
 
 
 [pr_code_suggestions] # /improve #
 max_context_tokens=8000
 num_code_suggestions=4
-summarize = true
+commitable_code_suggestions = false
 extra_instructions = ""
 rank_suggestions = false
-enable_help_text=true
+enable_help_text=false
+persistent_comment=false
+# suggestions scoring
+self_reflect_on_suggestions=true
+suggestions_score_threshold=0 # [0-10]. highly recommend not to set this value above 8, since above it may clip highly relevant suggestions
 # params for '/improve --extended' mode
 auto_extended_mode=true
-num_code_suggestions_per_chunk=5
+num_code_suggestions_per_chunk=4
 max_number_of_calls = 3
 parallel_calls = true
 rank_extended_suggestions = false
@@ -107,8 +115,13 @@ num_tests=3            # number of tests to generate. max 5.
 avoid_mocks=true       # if true, the generated tests will prefer to use real objects instead of mocks
 file = ""              # in case there are several components with the same name, you can specify the relevant file
 class_name = ""        # in case there are several methods with the same name in the same file, you can specify the relevant class name
-enable_help_text=true
+enable_help_text=false
 
+[pr_improve_component] # /improve_component #
+num_code_suggestions=4
+extra_instructions = ""
+file = ""              # in case there are several components with the same name, you can specify the relevant file
+class_name = ""
 
 [checks] # /checks (pro feature) #
 enable_auto_checks_feedback=true
@@ -132,6 +145,7 @@ try_fix_invalid_inline_comments = true
 # auto_review = true    # set as env var in .github/workflows/pr-agent.yaml
 # auto_describe = true  # set as env var in .github/workflows/pr-agent.yaml
 # auto_improve = true   # set as env var in .github/workflows/pr-agent.yaml
+# enable_output = true   # set as env var in .github/workflows/pr-agent.yaml
 
 [github_app]
 # these toggles allows running the github app from custom deployments
@@ -139,9 +153,9 @@ override_deployment_type = true
 # settings for "pull_request" event
 handle_pr_actions = ['opened', 'reopened', 'ready_for_review']
 pr_commands = [
-    "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true",
+    "/describe --pr_description.final_update_message=false",
     "/review --pr_reviewer.num_code_suggestions=0",
-    "/improve --pr_code_suggestions.summarize=true",
+    "/improve",
 ]
 # settings for "pull_request" event with "synchronize" action - used to detect and handle push triggers for new commits
 handle_push_trigger = false
@@ -151,23 +165,24 @@ push_trigger_wait_for_initial_review = true
 push_trigger_pending_tasks_backlog = true
 push_trigger_pending_tasks_ttl = 300
 push_commands = [
-    "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true",
+    "/describe",
     "/review --pr_reviewer.num_code_suggestions=0",
 ]
 ignore_pr_title = []
+ignore_bot_pr = true
 
 [gitlab]
 url = "https://gitlab.com" # URL to the gitlab service
 pr_commands = [
-    "/describe --pr_description.add_original_user_description=true --pr_description.keep_original_user_title=true",
+    "/describe",
     "/review --pr_reviewer.num_code_suggestions=0",
-    "/improve --pr_code_suggestions.summarize=true",
+    "/improve",
 ]
 
 [bitbucket_app]
 pr_commands = [
     "/review --pr_reviewer.num_code_suggestions=0",
-    "/improve --pr_code_suggestions.summarize=false",
+    "/improve --pr_code_suggestions.commitable_code_suggestions=true",
 ]
 
 
@@ -192,7 +207,8 @@ pr_commands = [
 url = ""
 
 [litellm]
-#use_client = false
+# use_client = false
+# drop_params = false
 
 [pr_similar_issue]
 skip_comments = false

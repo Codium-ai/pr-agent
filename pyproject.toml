@@ -3,44 +3,44 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pr_agent"
-version = "0.0.1"
+name = "pr-agent"
+version = "0.2.2"
 
-authors = [
-  {name = "Itamar Friedman", email = "itamar.f@codium.ai"},
-]
+authors = [{name= "CodiumAI", email = "tal.r@codium.ai"}]
+
 maintainers = [
-  {name = "Ori Kotek", email = "ori.k@codium.ai"},
   {name = "Tal Ridnik", email = "tal.r@codium.ai"},
+  {name = "Ori Kotek", email = "ori.k@codium.ai"},
   {name = "Hussam Lawen", email = "hussam.l@codium.ai"},
-  {name = "Sagi Medina", email = "sagi.m@codium.ai"}
 ]
-description = "CodiumAI PR-Agent is an open-source tool to automatically analyze a pull request and provide several types of feedback"
+
+description = "CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by providing AI feedbacks and suggestions."
 readme = "README.md"
 requires-python = ">=3.10"
-keywords = ["ai", "tool", "developer", "review", "agent"]
-license = {file = "LICENSE", name = "Apache 2.0 License"}
+keywords = ["AI", "Agents", "Pull Request", "Automation", "Code Review"]
+license = {name = "Apache 2.0", file = "LICENSE"}
+
 classifiers = [
-  "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
-  "Operating System :: Independent",
   "Programming Language :: Python :: 3",
 ]
 dynamic = ["dependencies"]
+
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
 
 [project.urls]
 "Homepage" = "https://github.com/Codium-ai/pr-agent"
+"Documentation" = "https://pr-agent-docs.codium.ai/"
 
 [tool.setuptools]
-include-package-data = false
+include-package-data = true
 license-files = ["LICENSE"]
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["pr_agent"]
+include = ["pr_agent*"] # include pr_agent and any sub-packages it finds under it.
 
 [project.scripts]
 pr-agent = "pr_agent.cli:run"

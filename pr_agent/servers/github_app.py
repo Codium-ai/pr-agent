@@ -86,8 +86,13 @@ async def handle_comments_on_pr(body: Dict[str, Any],
         return {}
     comment_body = body.get("comment", {}).get("body")
     if comment_body and isinstance(comment_body, str) and not comment_body.lstrip().startswith("/"):
-        get_logger().info("Ignoring comment not starting with /")
-        return {}
+        if '/ask' in comment_body and comment_body.strip().startswith('> ![image]'):
+            comment_body_split = comment_body.split('/ask')
+            comment_body = '/ask' + comment_body_split[1] +' \n' +comment_body_split[0].strip().lstrip('>')
+            get_logger().info(f"Reformatting comment_body so command is at the beginning: {comment_body}")
+        else:
+            get_logger().info("Ignoring comment not starting with /")
+            return {}
     disable_eyes = False
     if "issue" in body and "pull_request" in body["issue"] and "url" in body["issue"]["pull_request"]:
         api_url = body["issue"]["pull_request"]["url"]
@@ -135,7 +140,7 @@ async def handle_new_pr_opened(body: Dict[str, Any],
     if not (pull_request and api_url):
         get_logger().info(f"Invalid PR event: {action=} {api_url=}")
         return {}
-    if action in get_settings().github_app.handle_pr_actions:  # ['opened', 'reopened', 'ready_for_review', 'review_requested']
+    if action in get_settings().github_app.handle_pr_actions:  # ['opened', 'reopened', 'ready_for_review']
         if get_identity_provider().verify_eligibility("github", sender_id, api_url) is not Eligibility.NOT_ELIGIBLE:
             await _perform_auto_commands_github("pr_commands", agent, body, api_url, log_context)
         else:
@@ -224,19 +229,22 @@ def handle_closed_pr(body, event, action, log_context):
 def get_log_context(body, event, action, build_number):
     sender = ""
     sender_id = ""
+    sender_type = ""
     try:
         sender = body.get("sender", {}).get("login")
         sender_id = body.get("sender", {}).get("id")
+        sender_type = body.get("sender", {}).get("type")
         repo = body.get("repository", {}).get("full_name", "")
         git_org = body.get("organization", {}).get("login", "")
+        installation_id = body.get("installation", {}).get("id", "")
         app_name = get_settings().get("CONFIG.APP_NAME", "Unknown")
         log_context = {"action": action, "event": event, "sender": sender, "server_type": "github_app",
                        "request_id": uuid.uuid4().hex, "build_number": build_number, "app_name": app_name,
-                       "repo": repo, "git_org": git_org}
+                       "repo": repo, "git_org": git_org, "installation_id": installation_id}
     except Exception as e:
         get_logger().error("Failed to get log context", e)
         log_context = {}
-    return log_context, sender, sender_id
+    return log_context, sender, sender_id, sender_type
 
 
 async def handle_request(body: Dict[str, Any], event: str):
@@ -251,7 +259,13 @@ async def handle_request(body: Dict[str, Any], event: str):
     if not action:
         return {}
     agent = PRAgent()
-    log_context, sender, sender_id = get_log_context(body, event, action, build_number)
+    log_context, sender, sender_id, sender_type = get_log_context(body, event, action, build_number)
+
+    # logic to ignore PRs opened by bot
+    if get_settings().get("GITHUB_APP.IGNORE_BOT_PR", False) and sender_type == "Bot":
+        if 'pr-agent' not in sender:
+            get_logger().info(f"Ignoring PR from '{sender=}' because it is a bot")
+        return {}
 
     # handle comments on PRs
     if action == 'created':

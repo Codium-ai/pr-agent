@@ -1,4 +1,6 @@
-site_name: PR-Agent
+site_name: PR-Agent Documentation 
+repo_url: https://github.com/Codium-ai/pr-agent
+repo_name: Codium-ai/pr-agent
 
 nav: 
   - Overview: 'index.md'
@@ -7,14 +9,14 @@ nav:
     - Locally: 'installation/locally.md'
     - GitHub: 'installation/github.md'
     - GitLab: 'installation/gitlab.md'
-    - 💎 GitLab Pro: 'installation/gitlab_pro.md'
     - BitBucket: 'installation/bitbucket.md'
     - Azure DevOps: 'installation/azure.md'
+    - 💎 PR-Agent Pro: 'installation/pr_agent_pro.md'
   - Usage Guide: 
     - 'usage-guide/index.md'
     - Introduction: 'usage-guide/introduction.md'
     - Configuration Options: 'usage-guide/configuration_options.md'
-    - Managing email notifications: 'usage-guide/mail_notifications.md'
+    - Managing Mail Notifications: 'usage-guide/mail_notifications.md'
     - Usage and Automation: 'usage-guide/automations_and_usage.md'
     - Additional Configurations: 'usage-guide/additional_configurations.md'
   - Tools: 
@@ -25,19 +27,25 @@ nav:
     - Ask: 'tools/ask.md'
     - Update Changelog: 'tools/update_changelog.md'
     - Similar Issues: 'tools/similar_issues.md'
+    - Help: 'tools/help.md'
     - 💎 Analyze: 'tools/analyze.md'
     - 💎 Test: 'tools/test.md'
+    - 💎 Improve Component: 'tools/improve_component.md'
     - 💎 Documentation: 'tools/documentation.md'
     - 💎 Custom Labels: 'tools/custom_labels.md'
-    - 💎 Custom Suggestions: 'tools/custom_suggestions.md'
+    - 💎 Custom Prompt: 'tools/custom_prompt.md'
     - 💎 CI Feedback: 'tools/ci_feedback.md'
     - 💎 Similar Code: 'tools/similar_code.md'
   - Core Abilities: 'core-abilities/index.md'
+  - Chrome Extension: 'chrome-extension/index.md'
+  - Code Fine-tuning Benchmark: 'finetuning_benchmark/index.md'
 
 theme:
-  logo: assets/logo.png
+  logo: assets/logo.svg
   favicon: assets/favicon.ico
   name: material
+  icon:
+    repo: fontawesome/brands/github
   features:
     - navigation.tabs
     - navigation.expand
@@ -77,6 +85,7 @@ theme:
 plugins:
   - social
   - search
+  - glightbox
 
 extra:
   generator: false
@@ -93,6 +102,9 @@ extra:
       link: https://twitter.com/CodiumAI
     - icon: fontawesome/brands/instagram
       link: https://www.instagram.com/codiumai/
+  analytics:
+    provider: custom
+    property: ${{ secrets.GOOGLE_ANALYTICS_ID }}
 
 extra_css:
   - css/custom.css
@@ -109,10 +121,11 @@ markdown_extensions:
   - pymdownx.details
   - pymdownx.superfences
   - pymdownx.mark
+  - md_in_html
   - attr_list
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
-      emoji_generator: !!python/name:materialx.emoji.to_svg
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - toc:
       title: On this page
       toc_depth: 3

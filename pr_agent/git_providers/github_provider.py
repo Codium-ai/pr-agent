@@ -114,6 +114,11 @@ class GithubProvider(GitProvider):
                 self.git_files = self.pr.get_files()
             return self.git_files
 
+    def get_num_of_files(self):
+        if self.git_files:
+            return self.git_files.totalCount
+        else:
+            return -1
 
     @retry(exceptions=RateLimitExceeded,
            tries=get_settings().github.ratelimit_retries, delay=2, backoff=2, jitter=(1, 3))
@@ -142,6 +147,7 @@ class GithubProvider(GitProvider):
 
             for file in files:
                 if not is_valid_file(file.filename):
+                    get_logger().info(f"Skipping a non-code file: {file.filename}")
                     continue
 
                 new_file_content_str = self._get_pr_file_content(file, self.pr.head.sha)  # communication with GitHub
@@ -740,22 +746,4 @@ class GithubProvider(GitProvider):
             return False
 
     def calc_pr_statistics(self, pull_request_data: dict):
-        try:
-            out = {}
-            from datetime import datetime
-            created_at = pull_request_data['created_at']
-            closed_at = pull_request_data['closed_at']
-            closed_at_datetime = datetime.strptime(closed_at, "%Y-%m-%dT%H:%M:%SZ")
-            created_at_datetime = datetime.strptime(created_at, "%Y-%m-%dT%H:%M:%SZ")
-            difference = closed_at_datetime - created_at_datetime
-            out['hours'] = difference.total_seconds() / 3600
-            out['commits'] = pull_request_data['commits']
-            out['comments'] = pull_request_data['comments']
-            out['review_comments'] = pull_request_data['review_comments']
-            out['changed_files'] = pull_request_data['changed_files']
-            out['additions'] = pull_request_data['additions']
-            out['deletions'] = pull_request_data['deletions']
-        except Exception as e:
-            get_logger().exception(f"Failed to calculate PR statistics, error: {e}")
-            return {}
-        return out
+        return {}

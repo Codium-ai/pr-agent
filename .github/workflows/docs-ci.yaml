@@ -29,4 +29,5 @@ jobs:
             mkdocs-material-
       - run: pip install mkdocs-material 
       - run: pip install "mkdocs-material[imaging]"
+      - run: pip install mkdocs-glightbox
       - run: mkdocs gh-deploy -f docs/mkdocs.yml --force

@@ -3,9 +3,6 @@ from enum import Enum
 from typing import List
 
 import openai
-import pandas as pd
-import pinecone
-from pinecone_datasets import Dataset, DatasetMetadata
 from pydantic import BaseModel, Field
 
 from pr_agent.algo import MAX_TOKENS
@@ -36,6 +33,12 @@ class PRSimilarIssue:
         index_name = self.index_name = "codium-ai-pr-agent-issues"
 
         if get_settings().pr_similar_issue.vectordb == "pinecone":
+            try:
+                import pinecone
+                from pinecone_datasets import Dataset, DatasetMetadata
+                import pandas as pd
+            except:
+                raise Exception("Please install 'pinecone' and 'pinecone_datasets' to use pinecone as vectordb")
             # assuming pinecone api key and environment are set in secrets file
             try:
                 api_key = get_settings().pinecone.api_key
@@ -107,7 +110,10 @@ class PRSimilarIssue:
                     get_logger().info('No new issues to update')
         
         elif get_settings().pr_similar_issue.vectordb == "lancedb":
-            import lancedb # import lancedb only if needed
+            try:
+                import lancedb # import lancedb only if needed
+            except:
+                raise Exception("Please install lancedb to use lancedb as vectordb")
             self.db = lancedb.connect(get_settings().lancedb.uri)
             self.table = None
 

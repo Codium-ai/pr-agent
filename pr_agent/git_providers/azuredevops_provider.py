@@ -26,6 +26,7 @@ try:
         CommentThread,
         GitVersionDescriptor,
         GitPullRequest,
+        GitPullRequestIterationChanges,
     )
 except ImportError:
     AZURE_DEVOPS_AVAILABLE = False
@@ -230,29 +231,58 @@ class AzureDevopsProvider(GitProvider):
             base_sha = self.pr.last_merge_target_commit
             head_sha = self.pr.last_merge_source_commit
 
-            commits = self.azure_devops_client.get_pull_request_commits(
-                project=self.workspace_slug,
+            # Get PR iterations
+            iterations = self.azure_devops_client.get_pull_request_iterations(
                 repository_id=self.repo_slug,
                 pull_request_id=self.pr_num,
+                project=self.workspace_slug
             )
+            changes = None
+            if iterations:
+                iteration_id = iterations[-1].id  # Get the last iteration (most recent changes)
 
+                # Get changes for the iteration
+                changes = self.azure_devops_client.get_pull_request_iteration_changes(
+                    repository_id=self.repo_slug,
+                    pull_request_id=self.pr_num,
+                    iteration_id=iteration_id,
+                    project=self.workspace_slug
+                )
             diff_files = []
             diffs = []
             diff_types = {}
+            if changes:
+                for change in changes.change_entries:
+                    item = change.additional_properties.get('item', {})
+                    path = item.get('path', None)
+                    if path:
+                        diffs.append(path)
+                        diff_types[path] = change.additional_properties.get('changeType', 'Unknown')
 
-            for c in commits:
-                changes_obj = self.azure_devops_client.get_changes(
-                    project=self.workspace_slug,
-                    repository_id=self.repo_slug,
-                    commit_id=c.commit_id,
-                )
-                for i in changes_obj.changes:
-                    if i["item"]["gitObjectType"] == "tree":
-                        continue
-                    diffs.append(i["item"]["path"])
-                    diff_types[i["item"]["path"]] = i["changeType"]
+            # wrong implementation - gets all the files that were changed in any commit in the PR
+            # commits = self.azure_devops_client.get_pull_request_commits(
+            #     project=self.workspace_slug,
+            #     repository_id=self.repo_slug,
+            #     pull_request_id=self.pr_num,
+            # )
+            #
+            # diff_files = []
+            # diffs = []
+            # diff_types = {}
 
-            diffs = list(set(diffs))
+            # for c in commits:
+            #     changes_obj = self.azure_devops_client.get_changes(
+            #         project=self.workspace_slug,
+            #         repository_id=self.repo_slug,
+            #         commit_id=c.commit_id,
+            #     )
+            #     for i in changes_obj.changes:
+            #         if i["item"]["gitObjectType"] == "tree":
+            #             continue
+            #         diffs.append(i["item"]["path"])
+            #         diff_types[i["item"]["path"]] = i["changeType"]
+            #
+            # diffs = list(set(diffs))
 
             for file in diffs:
                 if not is_valid_file(file):
@@ -273,12 +303,13 @@ class AzureDevopsProvider(GitProvider):
 
                     new_file_content_str = new_file_content_str.content
                 except Exception as error:
-                    get_logger().error(
-                        "Failed to retrieve new file content of %s at version %s. Error: %s",
-                        file,
-                        version,
-                        str(error),
-                    )
+                    get_logger().error(f"Failed to retrieve new file content of {file} at version {version}. Error: {str(error)}")
+                    # get_logger().error(
+                    #     "Failed to retrieve new file content of %s at version %s. Error: %s",
+                    #     file,
+                    #     version,
+                    #     str(error),
+                    # )
                     new_file_content_str = ""
 
                 edit_type = EDIT_TYPE.MODIFIED
@@ -303,17 +334,12 @@ class AzureDevopsProvider(GitProvider):
                     )
                     original_file_content_str = original_file_content_str.content
                 except Exception as error:
-                    get_logger().error(
-                        "Failed to retrieve original file content of %s at version %s. Error: %s",
-                        file,
-                        version,
-                        str(error),
-                    )
+                    get_logger().error(f"Failed to retrieve original file content of {file} at version {version}. Error: {str(error)}")
                     original_file_content_str = ""
 
                 patch = load_large_diff(
-                    file, new_file_content_str, original_file_content_str
-                )
+                    file, new_file_content_str, original_file_content_str, show_warning=False
+                ).rstrip()
 
                 diff_files.append(
                     FilePatchInfo(
