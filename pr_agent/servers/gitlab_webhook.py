@@ -133,15 +133,16 @@ def handle_ask_line(body, data):
 async def root():
     return {"status": "ok"}
 
-def start():
-    gitlab_url = get_settings().get("GITLAB.URL", None)
-    if not gitlab_url:
-        raise ValueError("GITLAB.URL is not set")
-    get_settings().config.git_provider = "gitlab"
-    middleware = [Middleware(RawContextMiddleware)]
-    app = FastAPI(middleware=middleware)
-    app.include_router(router)
+gitlab_url = get_settings().get("GITLAB.URL", None)
+if not gitlab_url:
+    raise ValueError("GITLAB.URL is not set")
+get_settings().config.git_provider = "gitlab"
+middleware = [Middleware(RawContextMiddleware)]
+app = FastAPI(middleware=middleware)
+app.include_router(router)
 
+
+def start():
     uvicorn.run(app, host="0.0.0.0", port=3000)
 
 
