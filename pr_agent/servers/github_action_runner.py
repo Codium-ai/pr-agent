@@ -99,6 +99,7 @@ async def run_action():
 
                 # invoke by default all three tools
                 if auto_describe is None or is_true(auto_describe):
+                    get_settings().pr_description.final_update_message = False  # No final update message when auto_describe is enabled
                     await PRDescription(pr_url).run()
                 if auto_review is None or is_true(auto_review):
                     await PRReviewer(pr_url).run()
