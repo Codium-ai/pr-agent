@@ -21,6 +21,7 @@ class PRReviewer:
     """
     The PRReviewer class is responsible for reviewing a pull request and generating feedback using an AI model.
     """
+
     def __init__(self, pr_url: str, is_answer: bool = False, is_auto: bool = False, args: list = None,
                  ai_handler: partial[BaseAiHandler,] = LiteLLMAIHandler):
         """
@@ -34,7 +35,7 @@ class PRReviewer:
             args (list, optional): List of arguments passed to the PRReviewer class. Defaults to None.
         """
         self.args = args
-        self.parse_args(args) # -i command
+        self.parse_args(args)  # -i command
 
         self.git_provider = get_git_provider()(pr_url, incremental=self.incremental)
         self.main_language = get_main_pr_language(
@@ -222,7 +223,6 @@ class PRReviewer:
                     else:
                         pass
 
-
         incremental_review_markdown_text = None
         # Add incremental review section
         if self.incremental.is_incremental:
@@ -278,7 +278,7 @@ class PRReviewer:
                 self.git_provider.publish_inline_comment(content, relevant_file, relevant_line_in_file)
 
         if comments:
-                self.git_provider.publish_inline_comments(comments)
+            self.git_provider.publish_inline_comments(comments)
 
     def _get_user_answers(self) -> Tuple[str, str]:
         """
@@ -373,10 +373,10 @@ class PRReviewer:
                 if get_settings().pr_reviewer.enable_review_labels_effort:
                     estimated_effort = data['review']['estimated_effort_to_review_[1-5]']
                     estimated_effort_number = int(estimated_effort.split(',')[0])
-                    if 1 <= estimated_effort_number <= 5: # 1, because ...
+                    if 1 <= estimated_effort_number <= 5:  # 1, because ...
                         review_labels.append(f'Review effort [1-5]: {estimated_effort_number}')
                 if get_settings().pr_reviewer.enable_review_labels_security:
-                    security_concerns = data['review']['security_concerns'] # yes, because ...
+                    security_concerns = data['review']['security_concerns']  # yes, because ...
                     security_concerns_bool = 'yes' in security_concerns.lower() or 'true' in security_concerns.lower()
                     if security_concerns_bool:
                         review_labels.append('Possible security concern')

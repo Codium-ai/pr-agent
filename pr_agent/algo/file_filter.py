@@ -3,6 +3,7 @@ import re
 
 from pr_agent.config_loader import get_settings
 
+
 def filter_ignored(files):
     """
     Filter out files that match the ignore patterns.
@@ -14,7 +15,7 @@ def filter_ignored(files):
         if isinstance(patterns, str):
             patterns = [patterns]
         glob_setting = get_settings().ignore.glob
-        if isinstance(glob_setting, str): # --ignore.glob=[.*utils.py], --ignore.glob=.*utils.py
+        if isinstance(glob_setting, str):  # --ignore.glob=[.*utils.py], --ignore.glob=.*utils.py
             glob_setting = glob_setting.strip('[]').split(",")
         patterns += [fnmatch.translate(glob) for glob in glob_setting]
 

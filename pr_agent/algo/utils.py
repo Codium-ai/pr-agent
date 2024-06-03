@@ -409,7 +409,7 @@ def update_settings_from_args(args: List[str]) -> List[str]:
                 arg = arg.strip('-').strip()
                 vals = arg.split('=', 1)
                 if len(vals) != 2:
-                    if len(vals) > 2: # --extended is a valid argument
+                    if len(vals) > 2:  # --extended is a valid argument
                         get_logger().error(f'Invalid argument format: {arg}')
                     other_args.append(arg)
                     continue

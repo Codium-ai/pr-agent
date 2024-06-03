@@ -28,13 +28,14 @@ class OpenAIHandler(BaseAiHandler):
 
         except AttributeError as e:
             raise ValueError("OpenAI key is required") from e
+
     @property
     def deployment_id(self):
         """
         Returns the deployment ID for the OpenAI API.
         """
         return get_settings().get("OPENAI.DEPLOYMENT_ID", None)
-    
+
     @retry(exceptions=(APIError, Timeout, TryAgain, AttributeError, RateLimitError),
            tries=OPENAI_RETRIES, delay=2, backoff=2, jitter=(1, 3))
     async def chat_completion(self, model: str, system: str, user: str, temperature: float = 0.2):
@@ -54,8 +55,8 @@ class OpenAIHandler(BaseAiHandler):
             finish_reason = chat_completion["choices"][0]["finish_reason"]
             usage = chat_completion.get("usage")
             get_logger().info("AI response", response=resp, messages=messages, finish_reason=finish_reason,
-                            model=model, usage=usage)
-            return resp, finish_reason       
+                              model=model, usage=usage)
+            return resp, finish_reason
         except (APIError, Timeout, TryAgain) as e:
             get_logger().error("Error during OpenAI inference: ", e)
             raise
@@ -64,4 +65,4 @@ class OpenAIHandler(BaseAiHandler):
             raise
         except (Exception) as e:
             get_logger().error("Unknown error during OpenAI inference: ", e)
-            raise TryAgain from e        
+            raise TryAgain from e
