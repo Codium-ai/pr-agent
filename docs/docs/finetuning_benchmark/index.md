@@ -74,6 +74,7 @@ Here are the prompts, and example outputs, used as input-output pairs to fine-tu
 <br>
 
 We experimented with three model as judges: `gpt-4-turbo-2024-04-09`, `gpt-4o`, and `claude-3-opus-20240229`. All three produced similar results, with the same ranking order. This strengthens the validity of our testing protocol.
+The evaluation prompt can be found [here](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/pr_evaluate_prompt_response.toml)
 
 Here is an example of a judge model feedback:
 
