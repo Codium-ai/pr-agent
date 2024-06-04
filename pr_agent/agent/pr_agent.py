@@ -46,9 +46,10 @@ command2class = {
 
 commands = list(command2class.keys())
 
+
 class PRAgent:
     def __init__(self, ai_handler: partial[BaseAiHandler,] = LiteLLMAIHandler):
-        self.ai_handler = ai_handler # will be initialized in run_action
+        self.ai_handler = ai_handler  # will be initialized in run_action
         self.forbidden_cli_args = ['enable_auto_approval']
 
     async def handle_request(self, pr_url, request, notify=None) -> bool:
@@ -68,7 +69,9 @@ class PRAgent:
             for forbidden_arg in self.forbidden_cli_args:
                 for arg in args:
                     if forbidden_arg in arg:
-                        get_logger().error(f"CLI argument for param '{forbidden_arg}' is forbidden. Use instead a configuration file.")
+                        get_logger().error(
+                            f"CLI argument for param '{forbidden_arg}' is forbidden. Use instead a configuration file."
+                        )
                         return False
         args = update_settings_from_args(args)
 
@@ -94,4 +97,3 @@ class PRAgent:
             else:
                 return False
             return True
-

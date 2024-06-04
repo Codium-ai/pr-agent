@@ -127,7 +127,7 @@ async def run_action():
                 if event_payload.get("issue", {}).get("pull_request"):
                     url = event_payload.get("issue", {}).get("pull_request", {}).get("url")
                     is_pr = True
-                elif event_payload.get("comment", {}).get("pull_request_url"): # for 'pull_request_review_comment
+                elif event_payload.get("comment", {}).get("pull_request_url"):  # for 'pull_request_review_comment
                     url = event_payload.get("comment", {}).get("pull_request_url")
                     is_pr = True
                     disable_eyes = True
@@ -139,8 +139,11 @@ async def run_action():
                     comment_id = event_payload.get("comment", {}).get("id")
                     provider = get_git_provider()(pr_url=url)
                     if is_pr:
-                        await PRAgent().handle_request(url, body,
-                                    notify=lambda: provider.add_eyes_reaction(comment_id, disable_eyes=disable_eyes))
+                        await PRAgent().handle_request(
+                            url, body, notify=lambda: provider.add_eyes_reaction(
+                                comment_id, disable_eyes=disable_eyes
+                            )
+                        )
                     else:
                         await PRAgent().handle_request(url, body)
 
