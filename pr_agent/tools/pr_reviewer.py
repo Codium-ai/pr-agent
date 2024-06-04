@@ -65,6 +65,7 @@ class PRReviewer:
             "require_tests": get_settings().pr_reviewer.require_tests_review,
             "require_estimate_effort_to_review": get_settings().pr_reviewer.require_estimate_effort_to_review,
             'require_can_be_split_review': get_settings().pr_reviewer.require_can_be_split_review,
+            'require_security_review': get_settings().pr_reviewer.require_security_review,
             'num_code_suggestions': get_settings().pr_reviewer.num_code_suggestions,
             'question_str': question_str,
             'answer_str': answer_str,
@@ -375,7 +376,7 @@ class PRReviewer:
                     estimated_effort_number = int(estimated_effort.split(',')[0])
                     if 1 <= estimated_effort_number <= 5:  # 1, because ...
                         review_labels.append(f'Review effort [1-5]: {estimated_effort_number}')
-                if get_settings().pr_reviewer.enable_review_labels_security:
+                if get_settings().pr_reviewer.enable_review_labels_security and get_settings().pr_reviewer.require_security_review:
                     security_concerns = data['review']['security_concerns']  # yes, because ...
                     security_concerns_bool = 'yes' in security_concerns.lower() or 'true' in security_concerns.lower()
                     if security_concerns_bool:
