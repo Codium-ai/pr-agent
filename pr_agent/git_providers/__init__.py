@@ -8,7 +8,6 @@ from pr_agent.git_providers.local_git_provider import LocalGitProvider
 from pr_agent.git_providers.azuredevops_provider import AzureDevopsProvider
 from pr_agent.git_providers.gerrit_provider import GerritProvider
 
-
 _GIT_PROVIDERS = {
     'github': GithubProvider,
     'gitlab': GitLabProvider,
@@ -16,9 +15,10 @@ _GIT_PROVIDERS = {
     'bitbucket_server': BitbucketServerProvider,
     'azure': AzureDevopsProvider,
     'codecommit': CodeCommitProvider,
-    'local' : LocalGitProvider,
+    'local': LocalGitProvider,
     'gerrit': GerritProvider,
 }
+
 
 def get_git_provider():
     try:
