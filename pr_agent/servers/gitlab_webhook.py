@@ -31,8 +31,9 @@ async def get_mr_url_from_commit_sha(commit_sha, gitlab_token, project_id):
             'Private-Token': f'{gitlab_token}'
         }
         # API endpoint to find MRs containing the commit
+        gitlab_url = get_settings().get("GITLAB.URL", 'https://gitlab.com')
         response = requests.get(
-            f'https://gitlab.com/api/v4/projects/{project_id}/repository/commits/{commit_sha}/merge_requests',
+            f'{gitlab_url}/api/v4/projects/{project_id}/repository/commits/{commit_sha}/merge_requests',
             headers=headers
         )
         merge_requests = response.json()
