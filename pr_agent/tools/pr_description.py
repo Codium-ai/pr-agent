@@ -43,7 +43,6 @@ class PRDescription:
         self.ai_handler = ai_handler()
         self.ai_handler.main_pr_language = self.main_pr_language
 
-    
         # Initialize the variables dictionary
         self.vars = {
             "title": self.git_provider.pr.title,
@@ -157,7 +156,7 @@ class PRDescription:
                 self.git_provider.remove_initial_comment()
         except Exception as e:
             get_logger().error(f"Error generating PR description {self.pr_id}: {e}")
-        
+
         return ""
 
     async def _prepare_prediction(self, model: str) -> None:
@@ -220,9 +219,6 @@ class PRDescription:
             self.data['description'] = self.data.pop('description')
         if 'pr_files' in self.data:
             self.data['pr_files'] = self.data.pop('pr_files')
-
-
-
 
     def _prepare_labels(self) -> List[str]:
         pr_types = []
@@ -321,7 +317,7 @@ class PRDescription:
                 value = self.file_label_dict
             else:
                 key_publish = key.rstrip(':').replace("_", " ").capitalize()
-                if key_publish== "Type":
+                if key_publish == "Type":
                     key_publish = "PR Type"
                 # elif key_publish == "Description":
                 #     key_publish = "PR Description"
@@ -511,6 +507,7 @@ def insert_br_after_x_chars(text, x=70):
         if "</code>" in word:
             is_inside_code = False
     return ''.join(new_text).strip()
+
 
 def replace_code_tags(text):
     """
