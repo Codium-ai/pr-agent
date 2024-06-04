@@ -178,6 +178,11 @@ pr_commands = [
     "/review --pr_reviewer.num_code_suggestions=0",
     "/improve",
 ]
+handle_push_trigger = false
+commands = [
+    "/describe",
+    "/review --pr_reviewer.num_code_suggestions=0",
+]
 
 [bitbucket_app]
 pr_commands = [
