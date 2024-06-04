@@ -27,7 +27,6 @@ secret_provider = get_secret_provider() if get_settings().get("CONFIG.SECRET_PRO
 async def get_mr_url_from_commit_sha(commit_sha, gitlab_token, project_id):
     try:
         import requests
-        # Replace 'your_access_token' with your GitLab personal access token
         headers = {
             'Private-Token': f'{gitlab_token}'
         }
@@ -37,8 +36,12 @@ async def get_mr_url_from_commit_sha(commit_sha, gitlab_token, project_id):
             headers=headers
         )
         merge_requests = response.json()
-        pr_url = merge_requests[0]['web_url']
-        return pr_url
+        if merge_requests and response.status_code == 200:
+            pr_url = merge_requests[0]['web_url']
+            return pr_url
+        else:
+            get_logger().info(f"No merge requests found for commit: {commit_sha}")
+            return None
     except Exception as e:
         get_logger().error(f"Failed to get MR url from commit sha: {e}")
         return None
