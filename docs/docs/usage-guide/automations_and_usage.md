@@ -136,7 +136,7 @@ publish_labels = false
 to prevent PR-Agent from publishing labels when running the `describe` tool.
 
 ## GitLab Webhook
-After setting up a GitLab webhook, to control which commands will run automatically when a new PR is opened, you can set the `pr_commands` parameter in the configuration file, similar to the GitHub App:
+After setting up a GitLab webhook, to control which commands will run automatically when a new MR is opened, you can set the `pr_commands` parameter in the configuration file, similar to the GitHub App:
 ```
 [gitlab]
 pr_commands = [
@@ -145,6 +145,20 @@ pr_commands = [
     "/improve",
 ]
 ```
+
+the GitLab webhook can also respond to new code that is pushed to an open MR.
+The configuration toggle `handle_push_trigger` can be used to enable this feature.  
+The configuration parameter `push_commands` defines the list of tools that will be **run automatically** when new code is pushed to the MR.
+```
+[gitlab]
+handle_push_trigger = true
+push_commands = [
+    "/describe",
+    "/review  --pr_reviewer.num_code_suggestions=0 --pr_reviewer.final_update_message=false",
+]
+```
+
+Note that to use the 'handle_push_trigger' feature, you need give the gitlab webhook also the "Push events" scope.
 
 ## BitBucket App
 Similar to GitHub app, when running PR-Agent from BitBucket App, the default [configuration file](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml) from a pre-built docker will be initially loaded.
