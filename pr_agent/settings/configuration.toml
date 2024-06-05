@@ -180,7 +180,7 @@ pr_commands = [
     "/improve",
 ]
 handle_push_trigger = false
-commands = [
+push_commands = [
     "/describe",
     "/review --pr_reviewer.num_code_suggestions=0",
 ]
