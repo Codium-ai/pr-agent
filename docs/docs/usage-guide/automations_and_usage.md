@@ -158,7 +158,7 @@ push_commands = [
 ]
 ```
 
-Note that to use the 'handle_push_trigger' feature, you need give the gitlab webhook also the "Push events" scope.
+Note that to use the 'handle_push_trigger' feature, you need to give the gitlab webhook also the "Push events" scope.
 
 ## BitBucket App
 Similar to GitHub app, when running PR-Agent from BitBucket App, the default [configuration file](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml) from a pre-built docker will be initially loaded.
