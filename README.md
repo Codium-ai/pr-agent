@@ -48,6 +48,8 @@ New option now available (💎) - **apply suggestions**:
 
 <kbd><img src="https://www.codium.ai/images/pr_agent/apply_suggestion_1.png" width="512"></kbd>
 
+&rarr;
+
 <kbd><img src="https://www.codium.ai/images/pr_agent/apply_suggestion_2.png" width="512"></kbd>
 
 
