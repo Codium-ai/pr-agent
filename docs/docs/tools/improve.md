@@ -95,6 +95,10 @@ Hence, the total number of suggestions is proportional to the number of chunks, 
     <td> Any suggestion with importance score less than this threshold will be removed. Default is 0. Highly recommend not to set this value above 7-8, since above it may clip relevant suggestions that can be useful. </td>
   </tr>
   <tr>
+    <td><b>apply_suggestions_checkbox</b></td>
+    <td> Enable the checkbox to create a committable suggestion. Default is true.</td>
+  </tr>
+  <tr>
     <td><b>enable_help_text</b></td>
     <td>If set to true, the tool will display a help text in the comment. Default is true.</td>
   </tr>

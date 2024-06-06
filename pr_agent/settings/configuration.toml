@@ -88,6 +88,8 @@ extra_instructions = ""
 rank_suggestions = false
 enable_help_text=false
 persistent_comment=false
+# enable to apply suggestion 💎
+apply_suggestions_checkbox=true
 # suggestions scoring
 self_reflect_on_suggestions=true
 suggestions_score_threshold=0 # [0-10]. highly recommend not to set this value above 8, since above it may clip highly relevant suggestions
