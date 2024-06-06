@@ -112,6 +112,10 @@ The tool will first ask the author questions about the PR, and will guide the re
     <td><b>require_can_be_split_review</b></td>
     <td>If set to true, the tool will add a section that checks if the PR contains several themes, and can be split into smaller PRs. Default is false.</td>
   </tr>
+  <tr>
+    <td><b>require_security_review</b></td>
+    <td>If set to true, the tool will add a section that checks if the PR contains a possible security or vulnerability issue. Default is true.</td>
+  </tr>
 </table>
 
 !!! example "SOC2 ticket compliance 💎"
