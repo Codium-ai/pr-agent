@@ -101,6 +101,7 @@ class PRReviewer:
 
     async def run(self) -> None:
         try:
+            print('12345') # print debug message
             if self.incremental.is_incremental and not self._can_run_incremental_review():
                 return None
 
