@@ -92,9 +92,9 @@ class GithubProvider(GitProvider):
             self.comments = list(self.pr.get_issue_comments())
         prefixes = []
         if full:
-            prefixes.append("## PR Review")
+            prefixes.append("## PR Reviewer Guide")
         if incremental:
-            prefixes.append("## Incremental PR Review")
+            prefixes.append("## Incremental PR Reviewer Guide")
         for index in range(len(self.comments) - 1, -1, -1):
             if any(self.comments[index].body.startswith(prefix) for prefix in prefixes):
                 return self.comments[index]

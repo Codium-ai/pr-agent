@@ -57,7 +57,7 @@ class SubPR(BaseModel):
 
 class Review(BaseModel):
 {%- if require_estimate_effort_to_review %}
-    estimated_effort_to_review_[1-5]: str = Field(description="Estimate, on a scale of 1-5 (inclusive), the time and effort required to review this PR by an experienced and knowledgeable developer. 1 means short and easy review , 5 means long and hard review. Take into account the size, complexity, quality, and the needed changes of the PR code diff. Explain your answer in a short and concise manner.")
+    estimated_effort_to_review_[1-5]: int = Field(description="Estimate, on a scale of 1-5 (inclusive), the time and effort required to review this PR by an experienced and knowledgeable developer. 1 means short and easy review , 5 means long and hard review. Take into account the size, complexity, quality, and the needed changes of the PR code diff.")
 {%- endif %}
 {%- if require_score %}
     score: str = Field(description="Rate this PR on a scale of 0-100 (inclusive), where 0 means the worst possible PR code, and 100 means PR code of the highest quality, without any bugs or performance issues, that is ready to be merged immediately and run in production at scale.")
@@ -68,7 +68,7 @@ class Review(BaseModel):
 {%- if question_str %}
     insights_from_user_answers: str = Field(description="shortly summarize the insights you gained from the user's answers to the questions")
 {%- endif %}
-    possible_issues: str = Field(description="Does this PR code introduce clear issues, bugs, or major performance concerns? If there are no apparent issues, respond with 'No'. If there are any issues, describe them briefly. Use bullet points if more than one issue. Be specific, and provide examples if possible. Start each bullet point with a short specific header, such as: "- Possible Bug: ...", etc.")
+    key_issues_to_review: str = Field(description="Does this PR code introduce issues, bugs, or major performance concerns, which the PR reviewer should further investigate ? If there are no apparent issues, respond with 'No'. If there are any issues, describe them briefly. Use bullet points if more than one issue. Be specific, and provide examples if possible. Start each bullet point with a short specific header, such as: "- Possible Bug: ...", etc.")
 {%- if require_security_review %}
     security_concerns: str = Field(description="does this PR code introduce possible vulnerabilities such as exposure of sensitive information (e.g., API keys, secrets, passwords), or security concerns like SQL injection, XSS, CSRF, and others ? Answer 'No' if there are no possible issues. If there are security concerns or issues, start your answer with a short header, such as: 'Sensitive information exposure: ...', 'SQL injection: ...' etc. Explain your answer. Be specific and give examples if possible")
 {%- endif %}
@@ -101,14 +101,14 @@ Example output:
 review:
 {%- if require_estimate_effort_to_review %}
   estimated_effort_to_review_[1-5]: |
-    3, because ...
+    3
 {%- endif %}
 {%- if require_score %}
   score: 89
 {%- endif %}
   relevant_tests: |
     No
-  possible_issues: |
+  key_issues_to_review: |
     No
   security_concerns: |
     No

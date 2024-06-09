@@ -39,7 +39,7 @@ def emphasize_header(text: str) -> str:
         # Splitting the string and wrapping the first part in <strong> tags
         if colon_position != -1:
             # Everything before the colon (inclusive) is wrapped in <strong> tags
-            transformed_string = "<strong>" + text[:colon_position + 1] + "</strong>" + text[colon_position + 1:]
+            transformed_string = "<strong>" + text[:colon_position + 1] + "</strong>" +'<br>' + text[colon_position + 1:]
         else:
             # If there's no ": ", return the original string
             transformed_string = text
@@ -74,6 +74,7 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool = True, increment
     emojis = {
         "Can be split": "🔀",
         "Possible issues": "⚡",
+        "Key issues to review": "⚡",
         "Score": "🏅",
         "Relevant tests": "🧪",
         "Focused PR": "✨",
@@ -85,9 +86,9 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool = True, increment
     }
     markdown_text = ""
     if not incremental_review:
-        markdown_text += f"## PR Review 🔍\n\n"
+        markdown_text += f"## PR Reviewer Guide 🔍\n\n"
     else:
-        markdown_text += f"## Incremental PR Review 🔍\n\n"
+        markdown_text += f"## Incremental PR Reviewer Guide 🔍\n\n"
         markdown_text += f"⏮️ Review for commits since previous PR-Agent review {incremental_review}.\n\n"
     if gfm_supported:
         markdown_text += "<table>\n<tr>\n"
@@ -110,7 +111,7 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool = True, increment
                 markdown_text += f"<tr><td> {emoji}&nbsp;<strong>{key_nice}</strong></td><td>\n\n{value}\n\n</td></tr>\n"
             elif 'can be split' in key_nice.lower():
                 markdown_text += process_can_be_split(emoji, value)
-            elif 'possible issues' in key_nice.lower():
+            elif 'key issues to review' in key_nice.lower():
                 value = value.strip()
                 issues = value.split('\n- ')
                 for i, _ in enumerate(issues):
