@@ -137,7 +137,7 @@ class PRReviewer:
 
             # load prediction dictionary from yaml
             pr_review_data = load_yaml(self.prediction.strip(),
-                             keys_fix_yaml=["estimated_effort_to_review_[1-5]:", "security_concerns:", "possible_issues:",
+                             keys_fix_yaml=["estimated_effort_to_review_[1-5]:", "security_concerns:", "key_issues_to_review:",
                                             "relevant_file:", "relevant_line:", "suggestion:"])
             self.prepare_prediction(pr_review_data)
             github_action_output(pr_review_data, 'review')
