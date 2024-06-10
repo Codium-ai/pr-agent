@@ -1,9 +1,12 @@
 ## Overview
-The `review` tool scans the PR code changes, and automatically generates a PR review.
+The `review` tool scans the PR code changes, and generates a list of feedbacks about the PR, aiming to aid the reviewing process.
+<br>
 The tool can be triggered automatically every time a new PR is [opened](../usage-guide/automations_and_usage.md#github-app-automatic-tools-when-a-new-pr-is-opened), or can be invoked manually by commenting on any PR:
 ```
 /review
 ```
+
+Note that the main purpose of the `review` tool is to provide the **PR reviewer** with useful feedbacks and insights. The PR author, in contrast, may prefer to save time and focus on the output of the [improve](./improve.md) tool, which provides actionable code suggestions.
 
 ## Example usage
 
@@ -50,19 +53,27 @@ Note that the incremental mode is only available for GitHub.
 
 ![incremental review](https://codium.ai/images/pr_agent/incremental_review_2.png){width=512}
 
-### PR Reflection
+[//]: # (### PR Reflection)
 
-By invoking:
-```
-/reflect_and_review
-```
-The tool will first ask the author questions about the PR, and will guide the review based on their answers.
+[//]: # ()
+[//]: # (By invoking:)
 
-![reflection questions](https://codium.ai/images/pr_agent/reflection_questions.png){width=512}
+[//]: # (```)
 
-![reflection answers](https://codium.ai/images/pr_agent/reflection_answers.png){width=512}
+[//]: # (/reflect_and_review)
 
-![reflection insights](https://codium.ai/images/pr_agent/reflection_insights.png){width=512}
+[//]: # (```)
+
+[//]: # (The tool will first ask the author questions about the PR, and will guide the review based on their answers.)
+
+[//]: # ()
+[//]: # (![reflection questions]&#40;https://codium.ai/images/pr_agent/reflection_questions.png&#41;{width=512})
+
+[//]: # ()
+[//]: # (![reflection answers]&#40;https://codium.ai/images/pr_agent/reflection_answers.png&#41;{width=512})
+
+[//]: # ()
+[//]: # (![reflection insights]&#40;https://codium.ai/images/pr_agent/reflection_insights.png&#41;{width=512})
 
 
 
@@ -167,7 +178,7 @@ If enabled, the `review` tool can approve a PR when a specific comment, `/review
 
 !!! tip "General guidelines"
 
-    The `review` tool provides a collection of possible feedbacks about a PR.
+    The `review` tool provides a collection of configurable feedbacks about a PR.
     It is recommended to review the [Configuration options](#configuration-options) section, and choose the relevant options for your use case.
     
     Some of the features that are disabled by default are quite useful, and should be considered for enabling. For example: 
@@ -182,13 +193,6 @@ If enabled, the `review` tool can approve a PR when a specific comment, `/review
     ```
     Meaning the `review` tool will run automatically on every PR, without providing code suggestions.
     Edit this field to enable/disable the tool, or to change the used configurations.
-
-!!! tip  "Code suggestions"
-
-    If you set `num_code_suggestions`>0 , the `review` tool will also provide code suggestions.
-    
-    Notice If you are interested **only** in the code suggestions, it is recommended to use the [`improve`](./improve.md) feature instead, since it is a dedicated only to code suggestions, and usually gives better results.
-    Use the `review` tool if you want to get more comprehensive feedback, which includes code suggestions as well.
 
 !!! tip "Possible labels from the review tool"
 
@@ -244,3 +248,14 @@ If enabled, the `review` tool can approve a PR when a specific comment, `/review
     [pr_reviewer]
     maximal_review_effort = 5
     ```
+
+[//]: # (!!! tip  "Code suggestions")
+
+[//]: # ()
+[//]: # (    If you set `num_code_suggestions`>0 , the `review` tool will also provide code suggestions.)
+
+[//]: # (    )
+[//]: # (    Notice If you are interested **only** in the code suggestions, it is recommended to use the [`improve`]&#40;./improve.md&#41; feature instead, since it is a dedicated only to code suggestions, and usually gives better results.)
+
+[//]: # (    Use the `review` tool if you want to get more comprehensive feedback, which includes code suggestions as well.)
+

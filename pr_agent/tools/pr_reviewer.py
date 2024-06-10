@@ -140,7 +140,7 @@ class PRReviewer:
                 if get_settings().pr_reviewer.persistent_comment and not self.incremental.is_incremental:
                     final_update_message = get_settings().pr_reviewer.final_update_message
                     self.git_provider.publish_persistent_comment(pr_review,
-                                                                 initial_header="## PR Review 🔍",
+                                                                 initial_header="## PR Reviewer Guide 🔍",
                                                                  update_header=True,
                                                                  final_update_message=final_update_message, )
                 else:
@@ -193,9 +193,14 @@ class PRReviewer:
         the feedback.
         """
         data = load_yaml(self.prediction.strip(),
-                         keys_fix_yaml=["estimated_effort_to_review_[1-5]:", "security_concerns:", "possible_issues:",
+                         keys_fix_yaml=["estimated_effort_to_review_[1-5]:", "security_concerns:", "key_issues_to_review:",
                                         "relevant_file:", "relevant_line:", "suggestion:"])
         github_action_output(data, 'review')
+
+        # move data['review'] 'key_issues_to_review' key to the end of the dictionary
+        if 'key_issues_to_review' in data['review']:
+            key_issues_to_review = data['review'].pop('key_issues_to_review')
+            data['review']['key_issues_to_review'] = key_issues_to_review
 
         if 'code_feedback' in data:
             code_feedback = data['code_feedback']
@@ -260,7 +265,7 @@ class PRReviewer:
             return
 
         data = load_yaml(self.prediction.strip(),
-                         keys_fix_yaml=["estimated_effort_to_review_[1-5]:", "security_concerns:", "possible_issues:",
+                         keys_fix_yaml=["estimated_effort_to_review_[1-5]:", "security_concerns:", "key_issues_to_review:",
                                         "relevant_file:", "relevant_line:", "suggestion:"])
         comments: List[str] = []
         for suggestion in data.get('code_feedback', []):
