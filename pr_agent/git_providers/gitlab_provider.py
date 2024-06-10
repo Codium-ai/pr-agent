@@ -160,7 +160,7 @@ class GitLabProvider(GitProvider):
                     latest_commit_url = self.get_latest_commit_url()
                     comment_url = self.get_comment_url(comment)
                     if update_header:
-                        updated_header = f"{initial_header}\n\n### ({name.capitalize()} updated until commit {latest_commit_url})\n"
+                        updated_header = f"{initial_header}\n\n#### ({name.capitalize()} updated until commit {latest_commit_url})\n"
                         pr_comment_updated = pr_comment.replace(initial_header, updated_header)
                     else:
                         pr_comment_updated = pr_comment
