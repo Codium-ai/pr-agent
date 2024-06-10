@@ -33,7 +33,7 @@ require_security_review=true
 require_soc2_ticket=false
 soc2_ticket_prompt="Does the PR description include a link to ticket in a project management system (e.g., Jira, Asana, Trello, etc.) ?"
 # general options
-num_code_suggestions=4
+num_code_suggestions=0
 inline_code_comments = false
 ask_and_reflect=false
 #automatic_review=true
@@ -88,6 +88,8 @@ extra_instructions = ""
 rank_suggestions = false
 enable_help_text=false
 persistent_comment=false
+# enable to apply suggestion 💎
+apply_suggestions_checkbox=true
 # suggestions scoring
 self_reflect_on_suggestions=true
 suggestions_score_threshold=0 # [0-10]. highly recommend not to set this value above 8, since above it may clip highly relevant suggestions
