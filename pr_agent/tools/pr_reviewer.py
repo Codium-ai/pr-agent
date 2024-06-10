@@ -100,6 +100,9 @@ class PRReviewer:
         self.incremental = IncrementalPR(is_incremental)
 
     async def run(self) -> None:
+        # reset variables
+        self.pr_review_data = None
+        self.pr_review_markdown = None
         try:
             if self.incremental.is_incremental and not self._can_run_incremental_review():
                 return None
@@ -132,70 +135,42 @@ class PRReviewer:
                 self.git_provider.remove_initial_comment()
                 return None
 
-            pr_review = self._prepare_pr_review()
-            get_logger().debug(f"PR output", artifact=pr_review)
+            # load prediction dictionary from yaml
+            pr_review_data = load_yaml(self.prediction.strip(),
+                             keys_fix_yaml=["estimated_effort_to_review_[1-5]:", "security_concerns:", "possible_issues:",
+                                            "relevant_file:", "relevant_line:", "suggestion:"])
+            self.prepare_prediction(pr_review_data)
+            github_action_output(pr_review_data, 'review')
+            self.set_review_labels(pr_review_data)
+            # generate the PR review markdown
+            pr_review_markdown = self.generate_markdown(pr_review_data)
+            get_logger().debug(f"PR output", artifact=pr_review_markdown)
 
             if get_settings().config.publish_output:
                 # publish the review
                 if get_settings().pr_reviewer.persistent_comment and not self.incremental.is_incremental:
                     final_update_message = get_settings().pr_reviewer.final_update_message
-                    self.git_provider.publish_persistent_comment(pr_review,
+                    self.git_provider.publish_persistent_comment(pr_review_markdown,
                                                                  initial_header="## PR Review 🔍",
                                                                  update_header=True,
                                                                  final_update_message=final_update_message, )
                 else:
-                    self.git_provider.publish_comment(pr_review)
+                    self.git_provider.publish_comment(pr_review_markdown)
 
                 self.git_provider.remove_initial_comment()
                 if get_settings().pr_reviewer.inline_code_comments:
                     self._publish_inline_code_comments()
+            
+            # cache result of pr review, if caller want to use it in custom usage       
+            self.pr_review_data = pr_review_data
+            self.pr_review_markdown = pr_review_markdown
         except Exception as e:
             get_logger().error(f"Failed to review PR: {e}")
 
-    async def _prepare_prediction(self, model: str) -> None:
-        self.patches_diff = get_pr_diff(self.git_provider, self.token_handler, model)
-        if self.patches_diff:
-            get_logger().debug(f"PR diff", diff=self.patches_diff)
-            self.prediction = await self._get_prediction(model)
-        else:
-            get_logger().error(f"Error getting PR diff")
-            self.prediction = None
-
-    async def _get_prediction(self, model: str) -> str:
+    def prepare_prediction(self, data: dict) -> None:
         """
-        Generate an AI prediction for the pull request review.
-
-        Args:
-            model: A string representing the AI model to be used for the prediction.
-
-        Returns:
-            A string representing the AI prediction for the pull request review.
+        Prepare the PR review by processing the AI prediction 
         """
-        variables = copy.deepcopy(self.vars)
-        variables["diff"] = self.patches_diff  # update diff
-
-        environment = Environment(undefined=StrictUndefined)
-        system_prompt = environment.from_string(get_settings().pr_review_prompt.system).render(variables)
-        user_prompt = environment.from_string(get_settings().pr_review_prompt.user).render(variables)
-
-        response, finish_reason = await self.ai_handler.chat_completion(
-            model=model,
-            temperature=0.2,
-            system=system_prompt,
-            user=user_prompt
-        )
-
-        return response
-
-    def _prepare_pr_review(self) -> str:
-        """
-        Prepare the PR review by processing the AI prediction and generating a markdown-formatted text that summarizes
-        the feedback.
-        """
-        data = load_yaml(self.prediction.strip(),
-                         keys_fix_yaml=["estimated_effort_to_review_[1-5]:", "security_concerns:", "possible_issues:",
-                                        "relevant_file:", "relevant_line:", "suggestion:"])
-        github_action_output(data, 'review')
 
         if 'code_feedback' in data:
             code_feedback = data['code_feedback']
@@ -223,7 +198,11 @@ class PRReviewer:
                             suggestion['relevant_line'] = f"[{suggestion['relevant_line']}]({link})"
                     else:
                         pass
-
+    
+    def generate_markdown(self, data: dict) -> str:
+        """
+        generating a markdown-formatted text that summarizes the feedback.
+        """
         incremental_review_markdown_text = None
         # Add incremental review section
         if self.incremental.is_incremental:
@@ -244,13 +223,45 @@ class PRReviewer:
         if get_settings().get('config', {}).get('output_relevant_configurations', False):
             markdown_text += show_relevant_configurations(relevant_section='pr_reviewer')
 
-        # Add custom labels from the review prediction (effort, security)
-        self.set_review_labels(data)
-
         if markdown_text == None or len(markdown_text) == 0:
             markdown_text = ""
 
-        return markdown_text
+        return markdown_text 
+
+    async def _prepare_prediction(self, model: str) -> None:
+        self.patches_diff = get_pr_diff(self.git_provider, self.token_handler, model)
+        if self.patches_diff:
+            get_logger().debug(f"PR diff", diff=self.patches_diff)
+            self.prediction = await self._get_prediction(model)
+        else:
+            get_logger().error(f"Error getting PR diff")
+            self.prediction = None
+    
+    async def _get_prediction(self, model: str) -> str:
+        """
+        Generate an AI prediction for the pull request review.
+
+        Args:
+            model: A string representing the AI model to be used for the prediction.
+
+        Returns:
+            A string representing the AI prediction for the pull request review.
+        """
+        variables = copy.deepcopy(self.vars)
+        variables["diff"] = self.patches_diff  # update diff
+
+        environment = Environment(undefined=StrictUndefined)
+        system_prompt = environment.from_string(get_settings().pr_review_prompt.system).render(variables)
+        user_prompt = environment.from_string(get_settings().pr_review_prompt.user).render(variables)
+
+        response, finish_reason = await self.ai_handler.chat_completion(
+            model=model,
+            temperature=0.2,
+            system=system_prompt,
+            user=user_prompt
+        )
+
+        return response
 
     def _publish_inline_code_comments(self) -> None:
         """
