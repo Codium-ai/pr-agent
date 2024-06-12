@@ -1,0 +1,57 @@
+import os
+import requests
+import openai
+from git import Repo
+
+# Bitbucket environment variables
+BITBUCKET_REPO_OWNER = os.getenv('BITBUCKET_REPO_OWNER')
+BITBUCKET_REPO_SLUG = os.getenv('BITBUCKET_REPO_SLUG')
+BITBUCKET_PR_ID = os.getenv('BITBUCKET_PR_ID')
+BITBUCKET_ACCESS_TOKEN = os.getenv('BITBUCKET_ACCESS_TOKEN')
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+
+# Initialize OpenAI API
+openai.api_key = OPENAI_API_KEY
+
+# Clone the repository (assuming the pipeline runner has the necessary permissions)
+repo_path = '/tmp/repo'
+if not os.path.exists(repo_path):
+    os.makedirs(repo_path)
+
+repo_url = f"https://{BITBUCKET_REPO_OWNER}:{BITBUCKET_ACCESS_TOKEN}@bitbucket.org/{BITBUCKET_REPO_OWNER}/{BITBUCKET_REPO_SLUG}.git"
+repo = Repo.clone_from(repo_url, repo_path)
+
+# Fetch the PR details
+pr_url = f"https://api.bitbucket.org/2.0/repositories/{BITBUCKET_REPO_OWNER}/{BITBUCKET_REPO_SLUG}/pullrequests/{BITBUCKET_PR_ID}"
+headers = {
+    "Authorization": f"Bearer {BITBUCKET_ACCESS_TOKEN}"
+}
+pr_response = requests.get(pr_url, headers=headers)
+pr_data = pr_response.json()
+
+# Fetch the diff for the PR
+diff_url = pr_data['links']['diff']['href']
+diff_response = requests.get(diff_url, headers=headers)
+diff_text = diff_response.text
+
+# Prepare the prompt for the AI model
+prompt = f"Analyze the following changes made in the code and provide a summary in layman's terms:\n\n{diff_text}"
+
+# Use OpenAI's API to get the analysis
+response = openai.Completion.create(
+    engine="text-davinci-003",
+    prompt=prompt,
+    max_tokens=150
+)
+
+# Extract the summary from the response
+summary = response.choices[0].text.strip()
+
+# Print the report (for pipeline logging)
+print(report)
+
+# Save the report to a file
+with open('/tmp/pr_report.txt', 'w') as f:
+    f.write(report)
+
+# Optionally, send the report via email or any other preferred method
