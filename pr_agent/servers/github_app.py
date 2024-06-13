@@ -7,6 +7,7 @@ from typing import Any, Dict, Tuple
 
 import uvicorn
 from fastapi import APIRouter, FastAPI, HTTPException, Request, Response
+from starlette.background import BackgroundTasks
 from starlette.middleware import Middleware
 from starlette_context import context
 from starlette_context.middleware import RawContextMiddleware
@@ -34,7 +35,7 @@ router = APIRouter()
 
 
 @router.post("/api/v1/github_webhooks")
-async def handle_github_webhooks(request: Request, response: Response):
+async def handle_github_webhooks(background_tasks: BackgroundTasks, request: Request, response: Response):
     """
     Receives and processes incoming GitHub webhook requests.
     Verifies the request signature, parses the request body, and passes it to the handle_request function for further
@@ -48,8 +49,8 @@ async def handle_github_webhooks(request: Request, response: Response):
     context["installation_id"] = installation_id
     context["settings"] = copy.deepcopy(global_settings)
 
-    response = await handle_request(body, event=request.headers.get("X-GitHub-Event", None))
-    return response or {}
+    background_tasks.add_task(handle_request, body, event=request.headers.get("X-GitHub-Event", None))
+    return {}
 
 
 @router.post("/api/v1/marketplace_webhooks")
