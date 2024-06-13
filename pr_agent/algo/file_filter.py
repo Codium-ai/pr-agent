@@ -32,6 +32,9 @@ def filter_ignored(files):
             if hasattr(files[0], 'filename'): # github
                 for r in compiled_patterns:
                     files = [f for f in files if (f.filename and not r.match(f.filename))]
+            elif hasattr(files[0], 'new') and hasattr(files[0].new, 'path'): # bitbucket
+                for r in compiled_patterns:
+                    files = [f for f in files if (f.new.path and not r.match(f.new.path))]
             elif isinstance(files[0], dict) and 'new_path' in files[0]: # gitlab
                 for r in compiled_patterns:
                     files = [f for f in files if (f['new_path'] and not r.match(f['new_path']))]
