@@ -146,10 +146,20 @@ class GithubProvider(GitProvider):
             if self.diff_files:
                 return self.diff_files
 
-            files = self.get_files()
-            files = filter_ignored(files)
-            diff_files = []
+            # filter using [ignore] patterns
+            files_original = self.get_files()
+            files = filter_ignored(files_original)
+            if files_original != files:
+                try:
+                    names_original = [file.filename for file in files_original]
+                    names_new = [file.filename for file in files]
+                    get_logger().info(f"Filtered out [ignore] files for pull request:", extra=
+                    {"files": names_original,
+                     "filtered_files": names_new})
+                except Exception:
+                    pass
 
+            diff_files = []
             for file in files:
                 if not is_valid_file(file.filename):
                     get_logger().info(f"Skipping a non-code file: {file.filename}")

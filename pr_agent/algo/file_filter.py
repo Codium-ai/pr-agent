@@ -28,8 +28,13 @@ def filter_ignored(files):
                 pass
 
         # keep filenames that _don't_ match the ignore regex
-        for r in compiled_patterns:
-            files = [f for f in files if (f.filename and not r.match(f.filename))]
+        if files:
+            if hasattr(files[0], 'filename'): # github
+                for r in compiled_patterns:
+                    files = [f for f in files if (f.filename and not r.match(f.filename))]
+            elif 'new_path' in files[0]: # gitlab
+                for r in compiled_patterns:
+                    files = [f for f in files if (f['new_path'] and not r.match(f['new_path']))]
 
     except Exception as e:
         print(f"Could not filter file list: {e}")

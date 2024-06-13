@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 import gitlab
 from gitlab import GitlabGetError
 
+from ..algo.file_filter import filter_ignored
 from ..algo.language_handler import is_valid_file
 from ..algo.utils import load_large_diff, clip_tokens, find_line_number_of_relevant_line_in_file
 from ..config_loader import get_settings
@@ -84,7 +85,20 @@ class GitLabProvider(GitProvider):
         if self.diff_files:
             return self.diff_files
 
-        diffs = self.mr.changes()['changes']
+        # filter using [ignore] patterns
+        diffs_original = self.mr.changes()['changes']
+        diffs = filter_ignored(diffs_original)
+        if diffs != diffs_original:
+            try:
+                names_original = [diff['new_path'] for diff in diffs_original]
+                names_filtered = [diff['new_path'] for diff in diffs]
+                get_logger().info(f"Filtered out [ignore] files for merge request {self.id_mr}",extra={
+                    'original_files': names_original,
+                    'filtered_files': names_filtered
+                })
+            except Exception as e:
+                get_logger().exception(f"Could not log filtered files for merge request {self.id_mr}: {e}")
+
         diff_files = []
         for diff in diffs:
             if is_valid_file(diff['new_path']):
@@ -130,7 +144,7 @@ class GitLabProvider(GitProvider):
         self.diff_files = diff_files
         return diff_files
 
-    def get_files(self):
+    def get_files(self) -> list:
         if not self.git_files:
             self.git_files = [change['new_path'] for change in self.mr.changes()['changes']]
         return self.git_files
