@@ -10,12 +10,17 @@ To ignore files or directories, edit the **[ignore.toml](https://github.com/Codi
 For example, to ignore Python files in a PR with online usage, comment on a PR:
 `/review --ignore.glob=['*.py']`
 
-To ignore Python files in all PRs, set in a configuration file:
+To ignore Python files in all PRs using `glob` pattern, set in a configuration file:
 ```
 [ignore]
 glob = ['*.py']
 ```
 
+And to ignore Python files in all PRs using `regex` pattern, set in a configuration file:
+```
+[regex]
+regex = ['.*\.py$']
+```
 ## Extra instructions
 
 All PR-Agent tools have a parameter called `extra_instructions`, that enables to add free-text extra instructions. Example usage:
