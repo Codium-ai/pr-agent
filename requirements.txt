@@ -6,7 +6,7 @@ boto3==1.33.6
 dynaconf==3.2.4
 fastapi==0.99.0
 GitPython==3.1.32
-google-cloud-aiplatform==1.35.0
+google-cloud-aiplatform==1.38.0
 google-cloud-storage==2.10.0
 Jinja2==3.1.2
 litellm==1.31.10
