@@ -4,7 +4,7 @@ import re
 from pr_agent.config_loader import get_settings
 
 
-def filter_ignored(files):
+def filter_ignored(files, platform = 'github'):
     """
     Filter out files that match the ignore patterns.
     """
@@ -29,17 +29,14 @@ def filter_ignored(files):
 
         # keep filenames that _don't_ match the ignore regex
         if files and isinstance(files, list):
-            if hasattr(files[0], 'filename'): # github
-                for r in compiled_patterns:
+            for r in compiled_patterns:
+                if platform == 'github':
                     files = [f for f in files if (f.filename and not r.match(f.filename))]
-            elif hasattr(files[0], 'new') and hasattr(files[0].new, 'path'): # bitbucket
-                for r in compiled_patterns:
+                elif platform == 'bitbucket':
                     files = [f for f in files if (f.new.path and not r.match(f.new.path))]
-            elif isinstance(files[0], dict) and 'new_path' in files[0]: # gitlab
-                for r in compiled_patterns:
+                elif platform == 'gitlab':
                     files = [f for f in files if (f['new_path'] and not r.match(f['new_path']))]
-            elif isinstance(files[0], str): # azure devops
-                for r in compiled_patterns:
+                elif platform == 'azure':
                     files = [f for f in files if not r.match(f)]
 
     except Exception as e:

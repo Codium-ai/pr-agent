@@ -87,7 +87,7 @@ class GitLabProvider(GitProvider):
 
         # filter files using [ignore] patterns
         diffs_original = self.mr.changes()['changes']
-        diffs = filter_ignored(diffs_original)
+        diffs = filter_ignored(diffs_original, 'gitlab')
         if diffs != diffs_original:
             try:
                 names_original = [diff['new_path'] for diff in diffs_original]

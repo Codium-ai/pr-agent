@@ -125,7 +125,7 @@ class BitbucketProvider(GitProvider):
             return self.diff_files
 
         diffs_original = list(self.pr.diffstat())
-        diffs = filter_ignored(diffs_original)
+        diffs = filter_ignored(diffs_original, 'bitbucket')
         if diffs != diffs_original:
             try:
                 names_original = [d.new.path for d in diffs_original]

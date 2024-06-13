@@ -286,7 +286,7 @@ class AzureDevopsProvider(GitProvider):
             # diffs = list(set(diffs))
 
             diffs_original = diffs
-            diffs = filter_ignored(diffs_original)
+            diffs = filter_ignored(diffs_original, 'azure')
             if diffs_original != diffs:
                 try:
                     get_logger().info(f"Filtered out [ignore] files for pull request:", extra=
