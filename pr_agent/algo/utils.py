@@ -91,7 +91,7 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool = True, increment
         markdown_text += f"## Incremental PR Reviewer Guide 🔍\n\n"
         markdown_text += f"⏮️ Review for commits since previous PR-Agent review {incremental_review}.\n\n"
     if gfm_supported:
-        markdown_text += "<table>\n<tr>\n"
+        markdown_text += "<table>\n"
         # markdown_text += """<td> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Feedback&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td> <td></td></tr>"""
 
     if not output_data or not output_data.get('review', {}):
@@ -108,7 +108,7 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool = True, increment
                 key_nice = 'Estimated&nbsp;effort&nbsp;to&nbsp;review [1-5]'
             if 'security concerns' in key_nice.lower():
                 value = emphasize_header(value.strip())
-                markdown_text += f"<tr><td> {emoji}&nbsp;<strong>{key_nice}</strong></td><td>\n\n{value}\n\n</td></tr>\n"
+                markdown_text += f"<tr><td> {emoji}&nbsp;<strong>{key_nice}</strong></td><td>\n{value}\n\n</td></tr>\n"
             elif 'can be split' in key_nice.lower():
                 markdown_text += process_can_be_split(emoji, value)
             elif 'key issues to review' in key_nice.lower():
@@ -124,12 +124,14 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool = True, increment
                         if not issue:
                             continue
                         issue = emphasize_header(issue)
+                        issue = replace_code_tags(issue)
                         if i == 0:
                             markdown_text += f"<td>\n{issue}</td></tr>\n"
                         else:
                             markdown_text += f"<tr>\n<td>\n{issue}</td></tr>\n"
                 else:
                     value = emphasize_header(value.strip('-').strip())
+                    value = replace_code_tags(value)
                     markdown_text += f"<tr><td> {emoji}&nbsp;<strong>{key_nice}</strong></td><td>\n{value}\n\n</td></tr>\n"
             else:
                 markdown_text += f"<tr><td> {emoji}&nbsp;<strong>{key_nice}</strong></td><td>\n{value}\n\n</td></tr>\n"
