@@ -146,7 +146,7 @@ class GithubProvider(GitProvider):
             if self.diff_files:
                 return self.diff_files
 
-            # filter using [ignore] patterns
+            # filter files using [ignore] patterns
             files_original = self.get_files()
             files = filter_ignored(files_original)
             if files_original != files:
@@ -160,9 +160,10 @@ class GithubProvider(GitProvider):
                     pass
 
             diff_files = []
+            invalid_files_names = []
             for file in files:
                 if not is_valid_file(file.filename):
-                    get_logger().info(f"Skipping a non-code file: {file.filename}")
+                    invalid_files_names.append(file.filename)
                     continue
 
                 new_file_content_str = self._get_pr_file_content(file, self.pr.head.sha)  # communication with GitHub
@@ -198,6 +199,8 @@ class GithubProvider(GitProvider):
                                                                num_plus_lines=num_plus_lines,
                                                                num_minus_lines=num_minus_lines,)
                 diff_files.append(file_patch_canonical_structure)
+            if invalid_files_names:
+                get_logger().info(f"Filtered out files with invalid extensions: {invalid_files_names}")
 
             self.diff_files = diff_files
             try:
