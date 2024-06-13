@@ -125,14 +125,14 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool = True, increment
                             continue
                         issue = emphasize_header(issue)
                         if i == 0:
-                            markdown_text += f"<td>\n\n{issue}</td></tr>\n"
+                            markdown_text += f"<td>\n{issue}</td></tr>\n"
                         else:
-                            markdown_text += f"<tr>\n<td>\n\n{issue}</td></tr>\n"
+                            markdown_text += f"<tr>\n<td>\n{issue}</td></tr>\n"
                 else:
                     value = emphasize_header(value.strip('-').strip())
-                    markdown_text += f"<tr><td> {emoji}&nbsp;<strong>{key_nice}</strong></td><td>\n\n{value}\n\n</td></tr>\n"
+                    markdown_text += f"<tr><td> {emoji}&nbsp;<strong>{key_nice}</strong></td><td>\n{value}\n\n</td></tr>\n"
             else:
-                markdown_text += f"<tr><td> {emoji}&nbsp;<strong>{key_nice}</strong></td><td>\n\n{value}\n\n</td></tr>\n"
+                markdown_text += f"<tr><td> {emoji}&nbsp;<strong>{key_nice}</strong></td><td>\n{value}\n\n</td></tr>\n"
         else:
             if len(value.split()) > 1:
                 markdown_text += f"{emoji} **{key_nice}:**\n\n {value}\n\n"
