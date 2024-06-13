@@ -2,6 +2,7 @@ import os
 from typing import Optional, Tuple
 from urllib.parse import urlparse
 
+from ..algo.file_filter import filter_ignored
 from ..log import get_logger
 from ..algo.language_handler import is_valid_file
 from ..algo.utils import clip_tokens, find_line_number_of_relevant_line_in_file, load_large_diff
@@ -284,8 +285,20 @@ class AzureDevopsProvider(GitProvider):
             #
             # diffs = list(set(diffs))
 
+            diffs_original = diffs
+            diffs = filter_ignored(diffs_original)
+            if diffs_original != diffs:
+                try:
+                    get_logger().info(f"Filtered out [ignore] files for pull request:", extra=
+                    {"files": diffs_original,  # diffs is just a list of names
+                     "filtered_files": diffs})
+                except Exception:
+                    pass
+
+            invalid_files_names = []
             for file in diffs:
                 if not is_valid_file(file):
+                    invalid_files_names.append(file)
                     continue
 
                 version = GitVersionDescriptor(
@@ -350,6 +363,8 @@ class AzureDevopsProvider(GitProvider):
                         edit_type=edit_type,
                     )
                 )
+            get_logger().info(f"Invalid files: {invalid_files_names}")
+
             self.diff_files = diff_files
             return diff_files
         except Exception as e:

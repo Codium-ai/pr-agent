@@ -38,6 +38,9 @@ def filter_ignored(files):
             elif isinstance(files[0], dict) and 'new_path' in files[0]: # gitlab
                 for r in compiled_patterns:
                     files = [f for f in files if (f['new_path'] and not r.match(f['new_path']))]
+            elif isinstance(files[0], str): # azure devops
+                for r in compiled_patterns:
+                    files = [f for f in files if not r.match(f)]
 
     except Exception as e:
         print(f"Could not filter file list: {e}")
