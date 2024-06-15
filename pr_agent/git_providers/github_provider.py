@@ -8,6 +8,7 @@ from github import AppAuthentication, Auth, Github, GithubException
 from retry import retry
 from starlette_context import context
 
+from ..algo.file_filter import filter_ignored
 from ..algo.language_handler import is_valid_file
 from ..algo.utils import load_large_diff, clip_tokens, find_line_number_of_relevant_line_in_file
 from ..config_loader import get_settings
@@ -106,19 +107,22 @@ class GithubProvider(GitProvider):
             git_files = context.get("git_files", None)
             if git_files:
                 return git_files
-            self.git_files = self.pr.get_files()
+            self.git_files = list(self.pr.get_files()) # 'list' to hanlde pagination
             context["git_files"] = self.git_files
             return self.git_files
         except Exception:
             if not self.git_files:
-                self.git_files = self.pr.get_files()
+                self.git_files = list(self.pr.get_files())
             return self.git_files
 
     def get_num_of_files(self):
-        if self.git_files:
+        if hasattr(self.git_files, "totalCount"):
             return self.git_files.totalCount
         else:
-            return -1
+            try:
+                return len(self.git_files)
+            except Exception as e:
+                return -1
 
     @retry(exceptions=RateLimitExceeded,
            tries=get_settings().github.ratelimit_retries, delay=2, backoff=2, jitter=(1, 3))
@@ -142,12 +146,24 @@ class GithubProvider(GitProvider):
             if self.diff_files:
                 return self.diff_files
 
-            files = self.get_files()
-            diff_files = []
+            # filter files using [ignore] patterns
+            files_original = self.get_files()
+            files = filter_ignored(files_original)
+            if files_original != files:
+                try:
+                    names_original = [file.filename for file in files_original]
+                    names_new = [file.filename for file in files]
+                    get_logger().info(f"Filtered out [ignore] files for pull request:", extra=
+                    {"files": names_original,
+                     "filtered_files": names_new})
+                except Exception:
+                    pass
 
+            diff_files = []
+            invalid_files_names = []
             for file in files:
                 if not is_valid_file(file.filename):
-                    get_logger().info(f"Skipping a non-code file: {file.filename}")
+                    invalid_files_names.append(file.filename)
                     continue
 
                 new_file_content_str = self._get_pr_file_content(file, self.pr.head.sha)  # communication with GitHub
@@ -183,6 +199,8 @@ class GithubProvider(GitProvider):
                                                                num_plus_lines=num_plus_lines,
                                                                num_minus_lines=num_minus_lines,)
                 diff_files.append(file_patch_canonical_structure)
+            if invalid_files_names:
+                get_logger().info(f"Filtered out files with invalid extensions: {invalid_files_names}")
 
             self.diff_files = diff_files
             try:

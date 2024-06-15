@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 import gitlab
 from gitlab import GitlabGetError
 
+from ..algo.file_filter import filter_ignored
 from ..algo.language_handler import is_valid_file
 from ..algo.utils import load_large_diff, clip_tokens, find_line_number_of_relevant_line_in_file
 from ..config_loader import get_settings
@@ -84,53 +85,71 @@ class GitLabProvider(GitProvider):
         if self.diff_files:
             return self.diff_files
 
-        diffs = self.mr.changes()['changes']
+        # filter files using [ignore] patterns
+        diffs_original = self.mr.changes()['changes']
+        diffs = filter_ignored(diffs_original, 'gitlab')
+        if diffs != diffs_original:
+            try:
+                names_original = [diff['new_path'] for diff in diffs_original]
+                names_filtered = [diff['new_path'] for diff in diffs]
+                get_logger().info(f"Filtered out [ignore] files for merge request {self.id_mr}", extra={
+                    'original_files': names_original,
+                    'filtered_files': names_filtered
+                })
+            except Exception as e:
+                pass
+
         diff_files = []
+        invalid_files_names = []
         for diff in diffs:
-            if is_valid_file(diff['new_path']):
-                original_file_content_str = self.get_pr_file_content(diff['old_path'], self.mr.diff_refs['base_sha'])
-                new_file_content_str = self.get_pr_file_content(diff['new_path'], self.mr.diff_refs['head_sha'])
+            if not is_valid_file(diff['new_path']):
+                invalid_files_names.append(diff['new_path'])
+                continue
 
-                try:
-                    if isinstance(original_file_content_str, bytes):
-                        original_file_content_str = bytes.decode(original_file_content_str, 'utf-8')
-                    if isinstance(new_file_content_str, bytes):
-                        new_file_content_str = bytes.decode(new_file_content_str, 'utf-8')
-                except UnicodeDecodeError:
-                    get_logger().warning(
-                        f"Cannot decode file {diff['old_path']} or {diff['new_path']} in merge request {self.id_mr}")
+            original_file_content_str = self.get_pr_file_content(diff['old_path'], self.mr.diff_refs['base_sha'])
+            new_file_content_str = self.get_pr_file_content(diff['new_path'], self.mr.diff_refs['head_sha'])
+            try:
+                if isinstance(original_file_content_str, bytes):
+                    original_file_content_str = bytes.decode(original_file_content_str, 'utf-8')
+                if isinstance(new_file_content_str, bytes):
+                    new_file_content_str = bytes.decode(new_file_content_str, 'utf-8')
+            except UnicodeDecodeError:
+                get_logger().warning(
+                    f"Cannot decode file {diff['old_path']} or {diff['new_path']} in merge request {self.id_mr}")
 
-                edit_type = EDIT_TYPE.MODIFIED
-                if diff['new_file']:
-                    edit_type = EDIT_TYPE.ADDED
-                elif diff['deleted_file']:
-                    edit_type = EDIT_TYPE.DELETED
-                elif diff['renamed_file']:
-                    edit_type = EDIT_TYPE.RENAMED
+            edit_type = EDIT_TYPE.MODIFIED
+            if diff['new_file']:
+                edit_type = EDIT_TYPE.ADDED
+            elif diff['deleted_file']:
+                edit_type = EDIT_TYPE.DELETED
+            elif diff['renamed_file']:
+                edit_type = EDIT_TYPE.RENAMED
 
-                filename = diff['new_path']
-                patch = diff['diff']
-                if not patch:
-                    patch = load_large_diff(filename, new_file_content_str, original_file_content_str)
+            filename = diff['new_path']
+            patch = diff['diff']
+            if not patch:
+                patch = load_large_diff(filename, new_file_content_str, original_file_content_str)
 
 
-                # count number of lines added and removed
-                patch_lines = patch.splitlines(keepends=True)
-                num_plus_lines = len([line for line in patch_lines if line.startswith('+')])
-                num_minus_lines = len([line for line in patch_lines if line.startswith('-')])
-                diff_files.append(
-                    FilePatchInfo(original_file_content_str, new_file_content_str,
-                                  patch=patch,
-                                  filename=filename,
-                                  edit_type=edit_type,
-                                  old_filename=None if diff['old_path'] == diff['new_path'] else diff['old_path'],
-                                  num_plus_lines=num_plus_lines,
-                                  num_minus_lines=num_minus_lines, ))
+            # count number of lines added and removed
+            patch_lines = patch.splitlines(keepends=True)
+            num_plus_lines = len([line for line in patch_lines if line.startswith('+')])
+            num_minus_lines = len([line for line in patch_lines if line.startswith('-')])
+            diff_files.append(
+                FilePatchInfo(original_file_content_str, new_file_content_str,
+                              patch=patch,
+                              filename=filename,
+                              edit_type=edit_type,
+                              old_filename=None if diff['old_path'] == diff['new_path'] else diff['old_path'],
+                              num_plus_lines=num_plus_lines,
+                              num_minus_lines=num_minus_lines, ))
+        if invalid_files_names:
+            get_logger().info(f"Filtered out files with invalid extensions: {invalid_files_names}")
 
         self.diff_files = diff_files
         return diff_files
 
-    def get_files(self):
+    def get_files(self) -> list:
         if not self.git_files:
             self.git_files = [change['new_path'] for change in self.mr.changes()['changes']]
         return self.git_files
