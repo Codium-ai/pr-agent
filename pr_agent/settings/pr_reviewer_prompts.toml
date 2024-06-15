@@ -109,7 +109,7 @@ review:
   relevant_tests: |
     No
   key_issues_to_review: |
-    No
+    ...
   security_concerns: |
     No
 {%- if require_can_be_split_review %}
