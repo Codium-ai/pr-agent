@@ -105,7 +105,7 @@ class PRCodeSuggestions:
 
             if get_settings().config.publish_output:
                 self.git_provider.remove_initial_comment()
-                if ((not get_settings().pr_code_suggestions.commitable_code_suggestions) and
+                if ((not get_settings().pr_code_suggestions.committable_code_suggestions) and
                         self.git_provider.is_supported("gfm_markdown")):
 
                     # generate summarized suggestions
@@ -248,7 +248,7 @@ class PRCodeSuggestions:
                     if suggestion['existing_code'] == suggestion['improved_code']:
                         get_logger().debug(
                             f"edited improved suggestion {i + 1}, because equal to existing code: {suggestion['existing_code']}")
-                        if get_settings().pr_code_suggestions.commitable_code_suggestions:
+                        if get_settings().pr_code_suggestions.committable_code_suggestions:
                             suggestion['improved_code'] = "" # we need 'existing_code' to locate the code in the PR
                         else:
                             suggestion['existing_code'] = ""
@@ -520,10 +520,10 @@ class PRCodeSuggestions:
                     pr_body += f"""\n\n<details><summary>{suggestion_summary}</summary>\n\n___\n\n"""
                     pr_body += f"""
 **{suggestion_content}**
-    
+
 [{relevant_file} {range_str}]({code_snippet_link})
 
-{example_code}                   
+{example_code}
 """
                     if get_settings().pr_code_suggestions.self_reflect_on_suggestions:
                         pr_body +=f"\n\n<details><summary><b>Suggestion importance[1-10]: {suggestion['score']}</b></summary>\n\n"

@@ -83,7 +83,7 @@ enable_help_text=false
 [pr_code_suggestions] # /improve #
 max_context_tokens=8000
 num_code_suggestions=4
-commitable_code_suggestions = false
+committable_code_suggestions = false
 extra_instructions = ""
 rank_suggestions = false
 enable_help_text=false
@@ -190,7 +190,7 @@ push_commands = [
 [bitbucket_app]
 pr_commands = [
     "/review --pr_reviewer.num_code_suggestions=0",
-    "/improve --pr_code_suggestions.commitable_code_suggestions=true",
+    "/improve --pr_code_suggestions.committable_code_suggestions=true",
 ]
 
 

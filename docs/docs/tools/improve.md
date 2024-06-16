@@ -18,9 +18,9 @@ To edit [configurations](#configuration-options) related to the improve tool, us
 /improve --pr_code_suggestions.some_config1=... --pr_code_suggestions.some_config2=...
 ```
 
-For example, you can choose to present the suggestions as commitable code comments, by running the following command:
+For example, you can choose to present the suggestions as committable code comments, by running the following command:
 ```
-/improve --pr_code_suggestions.commitable_code_suggestions=true
+/improve --pr_code_suggestions.committable_code_suggestions=true
 ```
 
 ![improve](https://codium.ai/images/pr_agent/improve.png){width=512}
@@ -79,8 +79,8 @@ Hence, the total number of suggestions is proportional to the number of chunks, 
     <td>If set to true, the tool will rank the suggestions, based on importance. Default is false.</td>
   </tr>
   <tr>
-    <td><b>commitable_code_suggestions</b></td>
-    <td>If set to true, the tool will display the suggestions as commitable code comments. Default is false.</td>
+    <td><b>committable_code_suggestions</b></td>
+    <td>If set to true, the tool will display the suggestions as committable code comments. Default is false.</td>
   </tr>
   <tr>
     <td><b>persistent_comment</b></td>

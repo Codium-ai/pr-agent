@@ -182,7 +182,7 @@ Specifically, set the following values:
 [bitbucket_app]
 pr_commands = [
     "/review --pr_reviewer.num_code_suggestions=0",
-    "/improve --pr_code_suggestions.commitable_code_suggestions=true",
+    "/improve --pr_code_suggestions.committable_code_suggestions=true",
 ]
 ```
 
