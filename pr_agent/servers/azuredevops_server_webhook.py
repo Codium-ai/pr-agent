@@ -41,7 +41,7 @@ def handle_request(
 ):
     log_context["action"] = body
     log_context["api_url"] = url
-    
+
     async def inner():
         try:
             with get_logger().contextualize(**log_context):
@@ -89,7 +89,7 @@ async def handle_webhook(background_tasks: BackgroundTasks, request: Request):
     get_logger().info(json.dumps(data))
 
     actions = []
-    if data["eventType"] == "git.pullrequest.created": 
+    if data["eventType"] == "git.pullrequest.created":
         # API V1 (latest)
         pr_url = unquote(data["resource"]["_links"]["web"]["href"].replace("_apis/git/repositories", "_git"))
         log_context["event"] = data["eventType"]
@@ -102,7 +102,7 @@ async def handle_webhook(background_tasks: BackgroundTasks, request: Request):
                 repo = data["resource"]["pullRequest"]["repository"]["webUrl"]
                 pr_url = unquote(f'{repo}/pullrequest/{data["resource"]["pullRequest"]["pullRequestId"]}')
                 actions = [data["resource"]["comment"]["content"]]
-            else: 
+            else:
                 # API V1 not supported as it does not contain the PR URL
                 return JSONResponse(
                     status_code=status.HTTP_400_BAD_REQUEST,
@@ -120,7 +120,7 @@ async def handle_webhook(background_tasks: BackgroundTasks, request: Request):
 
     log_context["event"] = data["eventType"]
     log_context["api_url"] = pr_url
-    
+
     for action in actions:
         try:
             handle_request(background_tasks, pr_url, action, log_context)
@@ -131,13 +131,13 @@ async def handle_webhook(background_tasks: BackgroundTasks, request: Request):
                 content=json.dumps({"message": "Internal server error"}),
             )
     return JSONResponse(
-        status_code=status.HTTP_202_ACCEPTED, content=jsonable_encoder({"message": "webhook triggerd successfully"})
+        status_code=status.HTTP_202_ACCEPTED, content=jsonable_encoder({"message": "webhook triggered successfully"})
     )
 
 @router.get("/")
 async def root():
     return {"status": "ok"}
-    
+
 def start():
     app = FastAPI(middleware=[Middleware(RawContextMiddleware)])
     app.include_router(router)
