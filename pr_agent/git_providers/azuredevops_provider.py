@@ -445,7 +445,7 @@ class AzureDevopsProvider(GitProvider):
         return dict(body=body, path=path, position=position, absolute_position=absolute_position) if subject_type == "LINE" else {}
 
     def publish_inline_comments(self, comments: list[dict], disable_fallback: bool = False):
-            overall_sucess = True
+            overall_success = True
             for comment in comments:
                 try:
                     self.publish_comment(comment["body"],
@@ -467,8 +467,8 @@ class AzureDevopsProvider(GitProvider):
                 except Exception as e:
                     if get_settings().config.verbosity_level >= 2:
                         get_logger().error(f"Failed to publish code suggestion, error: {e}")
-                    overall_sucess = False
-            return overall_sucess
+                    overall_success = False
+            return overall_success
 
     def get_title(self):
         return self.pr.title
