@@ -42,6 +42,12 @@ CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by p
   
 ## News and Updates
 
+### June 17, 2024
+
+New option for a self-review checkbox is now available for the `/improve` tool, along with the ability(💎) to enable auto-approve, or demand self-review in addition to human reviewer. See more [here](https://pr-agent-docs.codium.ai/tools/improve/#self-review).
+
+<kbd><img src="https://www.codium.ai/images/pr_agent/self_review_1.png" width="512"></kbd>
+
 ### June 6, 2024
 
 New option now available (💎) - **apply suggestions**:
@@ -57,15 +63,6 @@ New option now available (💎) - **apply suggestions**:
 ### May 31, 2024
 
 Check out the new [**PR-Agent Code Fine-tuning Benchmark**](https://pr-agent-docs.codium.ai/finetuning_benchmark/)
-
-### May 23, 2024
-
-We released a new version of [PR-Agent Chrome extension](https://chromewebstore.google.com/detail/pr-agent-chrome-extension/ephlnjeghhogofkifjloamocljapahnl), with two new features:
-
-- PR-Agent filters 🎨
-- Code suggestions interactions 🔗
-
-See more [here](https://www.youtube.com/watch?v=v9bJ1frtPcg)
 
 
 ## Overview

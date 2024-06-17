@@ -112,6 +112,13 @@ class PRCodeSuggestions:
                     pr_body = self.generate_summarized_suggestions(data)
                     get_logger().debug(f"PR output", artifact=pr_body)
 
+                    # require self-review
+                    if get_settings().pr_code_suggestions.demand_code_suggestions_self_review:
+                        text= get_settings().pr_code_suggestions.code_suggestions_self_review_text
+                        pr_body += f"\n\n- [ ]  {text}"
+                        if get_settings().pr_code_suggestions.approve_pr_on_self_review:
+                            pr_body += ' <!-- approve pr self-review -->'
+
                     # add usage guide
                     if get_settings().pr_code_suggestions.enable_help_text:
                         pr_body += "<hr>\n\n<details> <summary><strong>💡 Tool usage guide:</strong></summary><hr> \n\n"
