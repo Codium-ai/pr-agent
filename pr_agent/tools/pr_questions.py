@@ -59,7 +59,7 @@ class PRQuestions:
             self.git_provider.publish_comment("Preparing answer...", is_temporary=True)
 
         # identify image
-        img_path = self.idenfity_image_in_comment()
+        img_path = self.identify_image_in_comment()
         if img_path:
             get_logger().debug(f"Image path identified", artifact=img_path)
 
@@ -78,7 +78,7 @@ class PRQuestions:
             self.git_provider.remove_initial_comment()
         return ""
 
-    def idenfity_image_in_comment(self):
+    def identify_image_in_comment(self):
         img_path = ''
         if '![image]' in self.question_str:
             # assuming structure:
