@@ -100,6 +100,10 @@ max_number_of_calls = 3
 parallel_calls = true
 rank_extended_suggestions = false
 final_clip_factor = 0.8
+# self-review checkbox
+demand_code_suggestions_self_review=false # add a checkbox for the author to self-review the code suggestions
+code_suggestions_self_review_text= "**Author self-review**: I have reviewed the PR code suggestions, and addressed the relevant ones."
+approve_pr_on_self_review=false # Pro feature. if true, the PR will be auto-approved after the author clicks on the self-review checkbox
 
 [pr_add_docs] # /add_docs #
 extra_instructions = ""
