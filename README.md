@@ -44,7 +44,7 @@ CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by p
 
 ### June 17, 2024
 
-New option for a self-review checkbox is now available for the `/improve` tool, along with the option to demand self-review (💎). See more [here](https://pr-agent-docs.codium.ai/tools/improve/#self-review)
+New option for a self-review checkbox is now available for the `/improve` tool, along with the ability(💎) to enable auto-approve, or demand self-review in addition to human reviewer. See more [here](https://pr-agent-docs.codium.ai/tools/improve/#self-review).
 
 <kbd><img src="https://www.codium.ai/images/pr_agent/self_review_1.png" width="512"></kbd>
 
