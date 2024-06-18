@@ -211,7 +211,7 @@ class BitbucketServerProvider(GitProvider):
     def remove_comment(self, comment):
         pass
 
-    # funtion to create_inline_comment
+    # function to create_inline_comment
     def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str,
                               absolute_position: int = None):
 
