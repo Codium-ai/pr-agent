@@ -61,7 +61,6 @@ theme:
     - content.tabs.link
     - content.code.annotation
     - content.code.copy
-    - toc.integrate
     - content.tabs.link
   language: en
   custom_dir: overrides
@@ -134,5 +133,7 @@ markdown_extensions:
       title: On this page
       toc_depth: 2
       permalink: true
+
+
 copyright: |
   &copy; 2024 <a href="https://www.codium.ai/"  target="_blank" rel="noopener">CodiumAI</a>
