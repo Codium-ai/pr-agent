@@ -4,7 +4,7 @@ repo_name: Codium-ai/pr-agent
 
 nav:
   - Overview:
-    - 'overview/index.md'
+    - 'index.md'
     - 💎 PR-Agent Pro: 'overview/pr_agent_pro.md'
     - Data Privacy: 'overview/data_privacy.md'
   - Installation:
@@ -134,6 +134,5 @@ markdown_extensions:
       title: On this page
       toc_depth: 2
       permalink: true
-  - attr_list
 copyright: |
   &copy; 2024 <a href="https://www.codium.ai/"  target="_blank" rel="noopener">CodiumAI</a>
