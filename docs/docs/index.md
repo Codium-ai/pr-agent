@@ -8,8 +8,8 @@ CodiumAI PR-Agent is an open-source tool to help efficiently review and handle p
 
 - See the [Tools Guide](./tools/index.md) for a detailed description of the different tools.
 
-
 ## PR-Agent Features
+
 PR-Agent offers extensive pull request functionalities across various git providers.
 
 |       |                                                                                                                       | GitHub | Gitlab | Bitbucket | Azure DevOps |
@@ -44,24 +44,23 @@ PR-Agent offers extensive pull request functionalities across various git provid
 
 💎 marks a feature available only in [PR-Agent Pro](https://www.codium.ai/pricing/){:target="_blank"}
 
-
 ## Example Results
 
 #### [/describe](https://github.com/Codium-ai/pr-agent/pull/530)
-![/describe](https://www.codium.ai/images/pr_agent/describe_new_short_main.png){: width=“512px”}
-<hr>
+
+![/describe](https://www.codium.ai/images/pr_agent/describe_new_short_main.png)
 
 #### [/review](https://github.com/Codium-ai/pr-agent/pull/732#issuecomment-1975099151)
-![/review](https://www.codium.ai/images/pr_agent/review_new_short_main.png){: width=“512px”}
-<hr>
+
+![/review](https://www.codium.ai/images/pr_agent/review_new_short_main.png)
 
 #### [/improve](https://github.com/Codium-ai/pr-agent/pull/732#issuecomment-1975099159)
-![/improve](https://www.codium.ai/images/pr_agent/improve_new_short_main.png){: width=“512px”}
-<hr>
+
+![/improve](https://www.codium.ai/images/pr_agent/improve_new_short_main.png)
 
 #### [/generate_labels](https://github.com/Codium-ai/pr-agent/pull/530)
-![/generate_labels](https://www.codium.ai/images/pr_agent/geneare_custom_labels_main_short.png){: width=“300px”}
-<hr>
+
+![/generate_labels](https://www.codium.ai/images/pr_agent/geneare_custom_labels_main_short.png)
 
 ## How it Works
 
