@@ -60,25 +60,25 @@ Note that the extended mode divides the PR code changes into chunks, up to the t
 Hence, the total number of suggestions is proportional to the number of chunks, i.e., the size of the PR.
 
 ### Self-review
-if you set in a configuration file:
+If you set in a configuration file:
 ```
 [pr_code_suggestions]
 demand_code_suggestions_self_review = true
 ```
-The `improve` tool will add a checkbox below the suggestions, asking the user to confirm that they have reviewed the suggestions.
-You can control the content of the checkbox text by setting:
+The `improve` tool will add a checkbox below the suggestions, prompting user to acknowledge that they have reviewed the suggestions.
+You can set the content of the checkbox text via:
 ```
 [pr_code_suggestions]
 code_suggestions_self_review_text = "... (your text here) ..."
 ```
 ![self_review_1](https://codium.ai/images/pr_agent/self_review_1.png){width=512}
 
-In addition, a configuration flag of:
+💎 In addition, by setting:
 ```
 [pr_code_suggestions]
 approve_pr_on_self_review = true
 ```
-enables the tool to automatically approve the PR when the user checks the self-review checkbox.
+the tool can automatically approve the PR when the user checks the self-review checkbox.
 
 !!! tip "Demanding self-review from the PR author"
   If you set the number of required reviewers for a PR to 2, this effectively means that the PR author must click the self-review checkbox before the PR can be merged (in addition to a human reviewer).
