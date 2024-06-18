@@ -48,11 +48,11 @@ PR-Agent offers extensive pull request functionalities across various git provid
 
 #### [/describe](https://github.com/Codium-ai/pr-agent/pull/530)
 
-![/describe](https://www.codium.ai/images/pr_agent/describe_new_short_main.png){: width=“512px”}
+![/describe](https://www.codium.ai/images/pr_agent/describe_new_short_main.png)
 
 #### [/review](https://github.com/Codium-ai/pr-agent/pull/732#issuecomment-1975099151)
 
-![/review](https://www.codium.ai/images/pr_agent/review_new_short_main.png){: width=“512px”}
+![/review](https://www.codium.ai/images/pr_agent/review_new_short_main.png)
 
 #### [/improve](https://github.com/Codium-ai/pr-agent/pull/732#issuecomment-1975099159)
 
