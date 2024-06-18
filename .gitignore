@@ -8,5 +8,3 @@ dist/
 *.egg-info/
 build/
 .DS_Store
-docs/.cache/
-.aider*
