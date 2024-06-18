@@ -7,7 +7,7 @@ https://openai.com/enterprise-privacy
 
 - When using PR-Agent Pro 💎, hosted by CodiumAI, we will not store any of your data, nor will we use it for training. You will also benefit from an OpenAI account with zero data retention.
 
-- For certain clients, CodiumAI-hosted PR-Agent Pro will use CodiumAI’s proprietary models — if this is the case, you will be notified.
+- For certain clients, CodiumAI-hosted PR-Agent Pro will use CodiumAI’s proprietary models. If this is the case, you will be notified.
 
 - No passive collection of Code and Pull Requests’ data — PR-Agent will be active only when you invoke it, and it will then extract and analyze only data relevant to the executed command and queried pull request.
 
