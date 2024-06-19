@@ -14,7 +14,14 @@ class GitProvider(ABC):
         pass
 
     @abstractmethod
+    def get_files(self) -> list:
+        pass
+
+    @abstractmethod
     def get_diff_files(self) -> list[FilePatchInfo]:
+        pass
+
+    def get_incremental_commits(self, is_incremental):
         pass
 
     @abstractmethod

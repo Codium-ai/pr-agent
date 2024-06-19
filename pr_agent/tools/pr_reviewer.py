@@ -11,7 +11,7 @@ from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.algo.utils import convert_to_markdown, github_action_output, load_yaml, ModelType, \
     show_relevant_configurations
 from pr_agent.config_loader import get_settings
-from pr_agent.git_providers import get_git_provider
+from pr_agent.git_providers import get_git_provider, get_git_provider_with_context
 from pr_agent.git_providers.git_provider import IncrementalPR, get_main_pr_language
 from pr_agent.log import get_logger
 from pr_agent.servers.help import HelpMessage
@@ -37,7 +37,10 @@ class PRReviewer:
         self.args = args
         self.parse_args(args)  # -i command
 
-        self.git_provider = get_git_provider()(pr_url, incremental=self.incremental)
+        self.git_provider = get_git_provider_with_context(pr_url)
+        if self.incremental and self.incremental.is_incremental:
+            self.git_provider.get_incremental_commits(self.incremental)
+
         self.main_language = get_main_pr_language(
             self.git_provider.get_languages(), self.git_provider.get_files()
         )
