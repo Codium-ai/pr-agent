@@ -11,7 +11,7 @@ from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.algo.utils import convert_to_markdown, github_action_output, load_yaml, ModelType, \
     show_relevant_configurations
 from pr_agent.config_loader import get_settings
-from pr_agent.git_providers import get_git_provider
+from pr_agent.git_providers import get_git_provider, get_git_provider_with_context
 from pr_agent.git_providers.git_provider import IncrementalPR, get_main_pr_language
 from pr_agent.log import get_logger
 from pr_agent.servers.help import HelpMessage
@@ -34,10 +34,12 @@ class PRReviewer:
             ai_handler (BaseAiHandler): The AI handler to be used for the review. Defaults to None.
             args (list, optional): List of arguments passed to the PRReviewer class. Defaults to None.
         """
+        self.git_provider = get_git_provider_with_context(pr_url)
         self.args = args
-        self.parse_args(args)  # -i command
+        self.incremental = self.parse_incremental(args)  # -i command
+        if self.incremental and self.incremental.is_incremental:
+            self.git_provider.get_incremental_commits(self.incremental)
 
-        self.git_provider = get_git_provider()(pr_url, incremental=self.incremental)
         self.main_language = get_main_pr_language(
             self.git_provider.get_languages(), self.git_provider.get_files()
         )
@@ -82,22 +84,14 @@ class PRReviewer:
             get_settings().pr_review_prompt.user
         )
 
-    def parse_args(self, args: List[str]) -> None:
-        """
-        Parse the arguments passed to the PRReviewer class and set the 'incremental' attribute accordingly.
-
-        Args:
-            args: A list of arguments passed to the PRReviewer class.
-
-        Returns:
-            None
-        """
+    def parse_incremental(self, args: List[str]):
         is_incremental = False
         if args and len(args) >= 1:
             arg = args[0]
             if arg == "-i":
                 is_incremental = True
-        self.incremental = IncrementalPR(is_incremental)
+        incremental = IncrementalPR(is_incremental)
+        return incremental
 
     async def run(self) -> None:
         try:

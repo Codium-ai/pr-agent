@@ -5,12 +5,13 @@ import tempfile
 from dynaconf import Dynaconf
 
 from pr_agent.config_loader import get_settings
-from pr_agent.git_providers import get_git_provider
+from pr_agent.git_providers import get_git_provider, get_git_provider_with_context
 from pr_agent.log import get_logger
 from starlette_context import context
 
 
 def apply_repo_settings(pr_url):
+    git_provider = get_git_provider_with_context(pr_url)
     if get_settings().config.use_repo_settings_file:
         repo_settings_file = None
         try:
@@ -20,7 +21,6 @@ def apply_repo_settings(pr_url):
                 repo_settings = None
                 pass
             if repo_settings is None:  # None is different from "", which is a valid value
-                git_provider = get_git_provider()(pr_url)
                 repo_settings = git_provider.get_repo_settings()
                 try:
                     context["repo_settings"] = repo_settings

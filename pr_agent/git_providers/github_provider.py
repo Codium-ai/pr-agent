@@ -19,7 +19,7 @@ from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
 
 
 class GithubProvider(GitProvider):
-    def __init__(self, pr_url: Optional[str] = None, incremental=IncrementalPR(False)):
+    def __init__(self, pr_url: Optional[str] = None):
         self.repo_obj = None
         try:
             self.installation_id = context.get("installation_id", None)
@@ -34,17 +34,20 @@ class GithubProvider(GitProvider):
         self.github_user_id = None
         self.diff_files = None
         self.git_files = None
-        self.incremental = incremental
+        self.incremental = IncrementalPR(False)
         if pr_url and 'pull' in pr_url:
             self.set_pr(pr_url)
             self.pr_commits = list(self.pr.get_commits())
-            if self.incremental.is_incremental:
-                self.unreviewed_files_set = dict()
-                self.get_incremental_commits()
             self.last_commit_id = self.pr_commits[-1]
             self.pr_url = self.get_pr_url() # pr_url for github actions can be as api.github.com, so we need to get the url from the pr object
         else:
             self.pr_commits = None
+
+    def get_incremental_commits(self, incremental=IncrementalPR(False)):
+        self.incremental = incremental
+        if self.incremental.is_incremental:
+            self.unreviewed_files_set = dict()
+            self._get_incremental_commits()
 
     def is_supported(self, capability: str) -> bool:
         return True
@@ -56,7 +59,7 @@ class GithubProvider(GitProvider):
         self.repo, self.pr_num = self._parse_pr_url(pr_url)
         self.pr = self._get_pr()
 
-    def get_incremental_commits(self):
+    def _get_incremental_commits(self):
         if not self.pr_commits:
             self.pr_commits = list(self.pr.get_commits())
 
