@@ -21,6 +21,7 @@ ai_disclaimer_title=""  # Pro feature, title for a collapsible disclaimer to AI 
 ai_disclaimer=""  # Pro feature, full text for the AI disclaimer
 output_relevant_configurations=false
 large_patch_policy = "clip" # "clip", "skip"
+is_auto_command=false
 
 [pr_reviewer] # /review #
 # enable/disable features
