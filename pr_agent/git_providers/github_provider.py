@@ -38,6 +38,7 @@ class GithubProvider(GitProvider):
         if pr_url and 'pull' in pr_url:
             self.set_pr(pr_url)
             self.pr_commits = list(self.pr.get_commits())
+            self.last_commit_id = self.pr_commits[-1]
             self.pr_url = self.get_pr_url() # pr_url for github actions can be as api.github.com, so we need to get the url from the pr object
         else:
             self.pr_commits = None
@@ -47,8 +48,6 @@ class GithubProvider(GitProvider):
         if self.incremental.is_incremental:
             self.unreviewed_files_set = dict()
             self._get_incremental_commits()
-        self.last_commit_id = self.pr_commits[-1]
-
 
     def is_supported(self, capability: str) -> bool:
         return True
