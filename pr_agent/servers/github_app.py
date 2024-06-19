@@ -128,6 +128,7 @@ async def handle_new_pr_opened(body: Dict[str, Any],
                                log_context: Dict[str, Any],
                                agent: PRAgent):
     title = body.get("pull_request", {}).get("title", "")
+    get_settings().config.is_auto_command = True
 
     # logic to ignore PRs with specific titles (e.g. "[Auto] ...")
     ignore_pr_title_re = get_settings().get("GITHUB_APP.IGNORE_PR_TITLE", [])
