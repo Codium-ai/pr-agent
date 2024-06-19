@@ -182,9 +182,11 @@ Specifically, set the following values:
 [bitbucket_app]
 pr_commands = [
     "/review --pr_reviewer.num_code_suggestions=0",
-    "/improve --pr_code_suggestions.commitable_code_suggestions=true",
+    "/improve --pr_code_suggestions.commitable_code_suggestions=true --pr_code_suggestions.suggestions_score_threshold=7",
 ]
 ```
+Note that we set specifically for bitbucket, we recommend using: `--pr_code_suggestions.suggestions_score_threshold=7` and that is the default value we set for bitbucket.
+Since this platform only supports inline code suggestions, we want to limit the number of suggestions, and only present a limited number.
 
 ## Azure DevOps provider
 
