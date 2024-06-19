@@ -34,10 +34,9 @@ class PRReviewer:
             ai_handler (BaseAiHandler): The AI handler to be used for the review. Defaults to None.
             args (list, optional): List of arguments passed to the PRReviewer class. Defaults to None.
         """
-        self.args = args
-        self.parse_args(args)  # -i command
-
         self.git_provider = get_git_provider_with_context(pr_url)
+        self.args = args
+        self.incremental = self.parse_incremental(args)  # -i command
         if self.incremental and self.incremental.is_incremental:
             self.git_provider.get_incremental_commits(self.incremental)
 
@@ -85,22 +84,14 @@ class PRReviewer:
             get_settings().pr_review_prompt.user
         )
 
-    def parse_args(self, args: List[str]) -> None:
-        """
-        Parse the arguments passed to the PRReviewer class and set the 'incremental' attribute accordingly.
-
-        Args:
-            args: A list of arguments passed to the PRReviewer class.
-
-        Returns:
-            None
-        """
+    def parse_incremental(self, args: List[str]):
         is_incremental = False
         if args and len(args) >= 1:
             arg = args[0]
             if arg == "-i":
                 is_incremental = True
-        self.incremental = IncrementalPR(is_incremental)
+        incremental = IncrementalPR(is_incremental)
+        return incremental
 
     async def run(self) -> None:
         try:
