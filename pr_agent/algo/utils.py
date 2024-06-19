@@ -489,7 +489,25 @@ def try_fix_yaml(response_text: str, keys_fix_yaml: List[str] = []) -> dict:
     except:
         pass
 
-    # fourth fallback - try to remove last lines
+    # fourth fallback - try to remove the head lines to start yaml
+    clean_response_text = response_text
+    snippet_count = response_text.count('```')
+    if snippet_count == 1:
+        clean_response_text = response_text.replace('```', '')
+    first_line = response_text_lines[0].strip()
+    if not first_line.endswith(':'):
+        yaml_pattern = re.compile(r'^\s*\w+:\s', re.MULTILINE)
+        match = yaml_pattern.search(clean_response_text)
+        if match:
+            yaml_start = match.start()
+            try:
+                data = yaml.safe_load(clean_response_text[yaml_start:])
+                get_logger().info(f"Successfully parsed AI prediction after removing head lines")
+                return data
+            except yaml.YAMLError as exc:
+                pass
+
+    # fifth fallback - try to remove last lines
     data = {}
     for i in range(1, len(response_text_lines)):
         response_text_lines_tmp = '\n'.join(response_text_lines[:-i])
