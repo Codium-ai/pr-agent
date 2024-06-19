@@ -46,8 +46,9 @@ class GithubProvider(GitProvider):
         self.incremental = incremental
         if self.incremental.is_incremental:
             self.unreviewed_files_set = dict()
-            self.get_incremental_commits()
+            self._get_incremental_commits()
         self.last_commit_id = self.pr_commits[-1]
+
 
     def is_supported(self, capability: str) -> bool:
         return True
@@ -59,7 +60,7 @@ class GithubProvider(GitProvider):
         self.repo, self.pr_num = self._parse_pr_url(pr_url)
         self.pr = self._get_pr()
 
-    def get_incremental_commits(self):
+    def _get_incremental_commits(self):
         if not self.pr_commits:
             self.pr_commits = list(self.pr.get_commits())
 
