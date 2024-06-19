@@ -40,8 +40,8 @@ After that, rank each response. Criterions to rank each response:
 - How well does the response follow the specific task instructions and requirements?
 - How well does the response analyze and understand the PR code diff?
 - How well will a person perceive it as a good response that correctly addresses the task?
-- How well does the reponse prioritize key feedback, related to the task instructions, that a human reader seeing that feedback would also consider as important?
-- Don't neccessarily rank higher a response that is longer. A shorter response might be better if it is more concise, and still addresses the task better.
+- How well does the response prioritize key feedback, related to the task instructions, that a human reader seeing that feedback would also consider as important?
+- Don't necessarily rank higher a response that is longer. A shorter response might be better if it is more concise, and still addresses the task better.
 
 
 The output must be a YAML object equivalent to type $PRRankRespones, according to the following Pydantic definitions:

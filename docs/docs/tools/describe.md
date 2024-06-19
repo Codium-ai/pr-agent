@@ -108,7 +108,7 @@ If you prefer to have the file summaries appear in the "Files changed" tab on ev
 
 ![Diffview table](https://codium.ai/images/pr_agent/diffview-table.png){width=512}
 
-- `true`: A collapsable file comment with changes title and a changes summary for each file in the PR.
+- `true`: A collapsible file comment with changes title and a changes summary for each file in the PR.
 
 ![Diffview changes](https://codium.ai/images/pr_agent/diffview_changes.png){width=512}
 
@@ -194,7 +194,7 @@ The description should be comprehensive and detailed, indicating when to add the
     ```
     pr_commands = ["/describe", ...]
     ```
-    meaning the `describe` tool will run automatically on every PR, with the default configurations. 
+    meaning the `describe` tool will run automatically on every PR, with the default configurations.
 
 
    - Markers are an alternative way to control the generated description, to give maximal control to the user. If you set:
