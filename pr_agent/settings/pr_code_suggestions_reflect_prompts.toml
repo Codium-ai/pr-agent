@@ -64,7 +64,7 @@ code_suggestions:
   relevant_file: "src/file1.py"
   suggestion_score: 6
   why: |
-    The variable name 't' is not descriptive enough
+    The variable name `t` is not descriptive enough.
 ```
 
 
