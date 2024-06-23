@@ -11,14 +11,14 @@ from pr_agent.git_providers.gerrit_provider import GerritProvider
 from starlette_context import context
 
 _GIT_PROVIDERS = {
-    'github': GithubProvider,
-    'gitlab': GitLabProvider,
-    'bitbucket': BitbucketProvider,
-    'bitbucket_server': BitbucketServerProvider,
-    'azure': AzureDevopsProvider,
-    'codecommit': CodeCommitProvider,
-    'local': LocalGitProvider,
-    'gerrit': GerritProvider,
+    "github": GithubProvider,
+    "gitlab": GitLabProvider,
+    "bitbucket": BitbucketProvider,
+    "bitbucket_server": BitbucketServerProvider,
+    "azure": AzureDevopsProvider,
+    "codecommit": CodeCommitProvider,
+    "local": LocalGitProvider,
+    "gerrit": GerritProvider,
 }
 
 
@@ -26,7 +26,9 @@ def get_git_provider():
     try:
         provider_id = get_settings().config.git_provider
     except AttributeError as e:
-        raise ValueError("git_provider is a required attribute in the configuration file") from e
+        raise ValueError(
+            "git_provider is a required attribute in the configuration file"
+        ) from e
     if provider_id not in _GIT_PROVIDERS:
         raise ValueError(f"Unknown git provider: {provider_id}")
     return _GIT_PROVIDERS[provider_id]
@@ -44,7 +46,11 @@ def get_git_provider_with_context(pr_url) -> GitProvider:
         pass  # we are not in a context environment (CLI)
 
     # check if context["git_provider"]["pr_url"] exists
-    if is_context_env and context.get("git_provider", {}).get("pr_url", {}):
+    if (
+        is_context_env
+        and context.get("git_provider")
+        and context.get("git_provider").get("pr_url")
+    ):
         git_provider = context["git_provider"]["pr_url"]
         # possibly check if the git_provider is still valid, or if some reset is needed
         # ...
