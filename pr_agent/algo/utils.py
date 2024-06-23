@@ -505,7 +505,7 @@ def set_custom_labels(variables, git_provider=None):
     if not get_settings().config.enable_custom_labels:
         return
 
-    labels = get_settings().custom_labels
+    labels = get_settings().get('custom_labels', {})
     if not labels:
         # set default labels
         labels = ['Bug fix', 'Tests', 'Bug fix with tests', 'Enhancement', 'Documentation', 'Other']
