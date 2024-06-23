@@ -101,9 +101,9 @@ class PRDescription:
                 pr_title, pr_body, changes_walkthrough, pr_file_changes = self._prepare_pr_answer_with_markers()
             else:
                 pr_title, pr_body, changes_walkthrough, pr_file_changes = self._prepare_pr_answer()
-            if not self.git_provider.is_supported(
-                    "publish_file_comments") or not get_settings().pr_description.inline_file_summary:
-                pr_body += "\n\n" + changes_walkthrough
+                if not self.git_provider.is_supported(
+                        "publish_file_comments") or not get_settings().pr_description.inline_file_summary:
+                    pr_body += "\n\n" + changes_walkthrough
             get_logger().debug("PR output", artifact={"title": pr_title, "body": pr_body})
 
             # Add help text if gfm_markdown is supported
