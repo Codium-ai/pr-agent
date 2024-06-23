@@ -48,7 +48,7 @@ async def handle_github_webhooks(background_tasks: BackgroundTasks, request: Req
     installation_id = body.get("installation", {}).get("id")
     context["installation_id"] = installation_id
     context["settings"] = copy.deepcopy(global_settings)
-    context["git_provider"] = None
+    context["git_provider"] = {}
     background_tasks.add_task(handle_request, body, event=request.headers.get("X-GitHub-Event", None))
     return {}
 
