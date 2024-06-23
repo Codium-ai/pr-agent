@@ -59,12 +59,13 @@ class PRCodeSuggestionsFeedback(BaseModel):
 Example output:
 ```yaml
 code_suggestions:
-- suggestion_content: |
+- suggestion_summary: |
     Use a more descriptive variable name here
   relevant_file: "src/file1.py"
   suggestion_score: 6
   why: |
     The variable name 't' is not descriptive enough
+- ...
 ```
 
 
