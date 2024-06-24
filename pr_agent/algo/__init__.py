@@ -26,7 +26,7 @@ MAX_TOKENS = {
     'vertex_ai/claude-3-haiku@20240307': 100000,
     'vertex_ai/claude-3-sonnet@20240229': 100000,
     'vertex_ai/claude-3-opus@20240229': 100000,
-    'google/gemini-1.5-pro' : 1048576,
+    'vertex_ai/google/gemini-1.5-pro' : 1048576,
     'codechat-bison': 6144,
     'codechat-bison-32k': 32000,
     'anthropic.claude-instant-v1': 100000,
