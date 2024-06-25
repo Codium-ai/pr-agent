@@ -12,11 +12,7 @@ def send_notification(data: dict, git_provider: GitProvider):
         # Send a message to the slack channel
         slack_token = slack_setting.token
         client = WebClient(token=slack_token)
-        mr_details = git_provider.pr
-        # Check if is already reviewed with pr agent
-        for comment in mr_details.notes.list(get_all=True)[::-1]:
-            if comment.body.startswith("## PR Review"):
-                return
+        mr_details = git_provider.mr
         review_effort = data['review']['estimated_effort_to_review_[1-5]']
         # Grab the number from review effort
         review_effort = re.findall(r'\d+', review_effort) if review_effort else []
