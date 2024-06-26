@@ -23,6 +23,10 @@ class ModelType(str, Enum):
     REGULAR = "regular"
     TURBO = "turbo"
 
+class PrReviewTitles(str, Enum):
+    REGULAR = "## PR Reviewer Guide"
+    INCREMENTAL = "## Incremental PR Reviewer Guide"
+
 def get_setting(key: str) -> Any:
     try:
         key = key.upper()
