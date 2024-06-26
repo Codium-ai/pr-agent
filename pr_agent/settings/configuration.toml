@@ -74,7 +74,10 @@ inline_file_summary=false # false, true, 'table'
 # markers
 use_description_markers=false
 include_generated_by_header=true
-
+# large pr mode
+enable_large_pr_handling=true
+max_ai_calls=3
+mention_extra_files=true
 #custom_labels = ['Bug fix', 'Tests', 'Bug fix with tests', 'Enhancement', 'Documentation', 'Other']
 
 [pr_questions] # /ask #
@@ -105,16 +108,34 @@ final_clip_factor = 0.8
 demand_code_suggestions_self_review=false # add a checkbox for the author to self-review the code suggestions
 code_suggestions_self_review_text= "**Author self-review**: I have reviewed the PR code suggestions, and addressed the relevant ones."
 approve_pr_on_self_review=false # Pro feature. if true, the PR will be auto-approved after the author clicks on the self-review checkbox
+# Suggestion impact
+publish_post_process_suggestion_impact=true
+
+[pr_custom_prompt] # /custom_prompt #
+prompt = """\
+The code suggestions should focus only on the following:
+- ...
+- ...
+...
+"""
+suggestions_score_threshold=0
+num_code_suggestions_per_chunk=4
+self_reflect_on_custom_suggestions=true
+enable_help_text=false
+
 
 [pr_add_docs] # /add_docs #
 extra_instructions = ""
-docs_style = "Sphinx Style" # "Google Style with Args, Returns, Attributes...etc", "Numpy Style", "Sphinx Style", "PEP257", "reStructuredText"
+docs_style = "Sphinx" # "Google Style with Args, Returns, Attributes...etc", "Numpy Style", "Sphinx Style", "PEP257", "reStructuredText"
+file = ""              # in case there are several components with the same name, you can specify the relevant file
+class_name = ""        # in case there are several methods with the same name in the same file, you can specify the relevant class name
 
 [pr_update_changelog] # /update_changelog #
 push_changelog_changes=false
 extra_instructions = ""
 
 [pr_analyze] # /analyze #
+enable_help_text=true
 
 [pr_test] # /test #
 extra_instructions = ""
@@ -129,13 +150,14 @@ enable_help_text=false
 num_code_suggestions=4
 extra_instructions = ""
 file = ""              # in case there are several components with the same name, you can specify the relevant file
-class_name = ""
+class_name = ""        # in case there are several methods with the same name in the same file, you can specify the relevant class name
 
 [checks] # /checks (pro feature) #
 enable_auto_checks_feedback=true
 excluded_checks_list=["lint"] # list of checks to exclude, for example: ["check1", "check2"]
 persistent_comment=true
 enable_help_text=true
+final_update_message = false
 
 [pr_help] # /help #
 
@@ -148,15 +170,16 @@ ratelimit_retries = 5
 base_url = "https://api.github.com"
 publish_inline_comments_fallback_with_verification = true
 try_fix_invalid_inline_comments = true
+app_name = "pr-agent"
 
 [github_action_config]
 # auto_review = true    # set as env var in .github/workflows/pr-agent.yaml
 # auto_describe = true  # set as env var in .github/workflows/pr-agent.yaml
 # auto_improve = true   # set as env var in .github/workflows/pr-agent.yaml
-# enable_output = true   # set as env var in .github/workflows/pr-agent.yaml
 
 [github_app]
 # these toggles allows running the github app from custom deployments
+bot_user = "github-actions[bot]"
 override_deployment_type = true
 # settings for "pull_request" event
 handle_pr_actions = ['opened', 'reopened', 'ready_for_review']
@@ -180,7 +203,14 @@ ignore_pr_title = []
 ignore_bot_pr = true
 
 [gitlab]
-url = "https://gitlab.com" # URL to the gitlab service
+# URL to the gitlab service
+url = "https://gitlab.com"
+# Polling (either project id or namespace/project_name) syntax can be used
+projects_to_monitor = ['org_name/repo_name']
+# Polling trigger
+magic_word = "AutoReview"
+# Polling interval
+polling_interval_seconds = 30
 pr_commands = [
     "/describe",
     "/review --pr_reviewer.num_code_suggestions=0",
@@ -228,6 +258,14 @@ skip_comments = false
 force_update_dataset = false
 max_issues_to_scan = 500
 vectordb = "pinecone"
+
+[pr_find_similar_component]
+class_name = ""
+file = ""
+search_from_org = false
+allow_fallback_less_words = true
+number_of_keywords = 5
+number_of_results = 5
 
 [pinecone]
 # fill and place in .secrets.toml
