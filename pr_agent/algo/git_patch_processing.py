@@ -136,7 +136,7 @@ def handle_patch_deletions(patch: str, original_file_content_str: str,
         str: The modified patch with deletion hunks omitted.
 
     """
-    if not new_file_content_str and edit_type != EDIT_TYPE.ADDED:
+    if not new_file_content_str and (edit_type == EDIT_TYPE.DELETED or edit_type == EDIT_TYPE.UNKNOWN):
         # logic for handling deleted files - don't show patch, just show that the file was deleted
         if get_settings().config.verbosity_level > 0:
             get_logger().info(f"Processing file: {file_name}, minimizing deletion file")
