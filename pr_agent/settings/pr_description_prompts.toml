@@ -37,7 +37,7 @@ class PRType(str, Enum):
 
 {%- if enable_semantic_files_types %}
 
-Class FileDescription(BaseModel):
+class FileDescription(BaseModel):
     filename: str = Field(description="the relevant file full path")
     language: str = Field(description="the relevant file language")
     changes_summary: str = Field(description="concise summary of the changes in the relevant file, in bullet points (1-4 bullet points).")
@@ -45,7 +45,7 @@ Class FileDescription(BaseModel):
     label: str = Field(description="a single semantic label that represents a type of code changes that occurred in the File. Possible values (partial list): 'bug fix', 'tests', 'enhancement', 'documentation', 'error handling', 'configuration changes', 'dependencies', 'formatting', 'miscellaneous', ...")
 {%- endif %}
 
-Class PRDescription(BaseModel):
+class PRDescription(BaseModel):
     type: List[PRType] = Field(description="one or more types that describe the PR content. Return the label member value (e.g. 'Bug fix', not 'bug_fix')")
 {%- if enable_semantic_files_types %}
     pr_files[List[FileDescription]] = Field(max_items=15, description="a list of the files in the PR, and their changes summary.")
