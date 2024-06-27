@@ -168,7 +168,8 @@ class PRDescription:
             return None
 
         large_pr_handling = get_settings().pr_description.enable_large_pr_handling and "pr_description_only_files_prompts" in get_settings()
-        patches_diff = get_pr_diff(self.git_provider, self.token_handler, model, large_pr_handling=large_pr_handling)
+        patches_diff = get_pr_diff(self.git_provider, self.token_handler, model,
+                                   large_pr_handling=large_pr_handling)
         if not large_pr_handling or patches_diff:
             self.patches_diff = patches_diff
             if patches_diff:
@@ -211,29 +212,32 @@ class PRDescription:
                 get_settings().pr_description_only_description_prompts.system,
                 get_settings().pr_description_only_description_prompts.user)
             files_walkthrough = "\n".join(file_description_str_list)
+            files_walkthrough_prompt = copy.deepcopy(files_walkthrough)
             if remaining_files_list:
-                files_walkthrough += "\n\nNo more token budget. Additional unprocessed files:"
+                files_walkthrough_prompt += "\n\nNo more token budget. Additional unprocessed files:"
                 for file in remaining_files_list:
-                    files_walkthrough += f"\n- {file}"
+                    files_walkthrough_prompt += f"\n- {file}"
             if deleted_files_list:
-                files_walkthrough += "\n\nAdditional deleted files:"
+                files_walkthrough_prompt += "\n\nAdditional deleted files:"
                 for file in deleted_files_list:
-                    files_walkthrough += f"\n- {file}"
-            tokens_files_walkthrough = len(token_handler_only_description_prompt.encoder.encode(files_walkthrough))
+                    files_walkthrough_prompt += f"\n- {file}"
+            tokens_files_walkthrough = len(
+                token_handler_only_description_prompt.encoder.encode(files_walkthrough_prompt))
             total_tokens = token_handler_only_description_prompt.prompt_tokens + tokens_files_walkthrough
             max_tokens_model = get_max_tokens(model)
             if total_tokens > max_tokens_model - OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD:
                 # clip files_walkthrough to git the tokens within the limit
-                files_walkthrough = clip_tokens(files_walkthrough,
-                                                max_tokens_model - OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD - token_handler_only_description_prompt.prompt_tokens,
-                                                num_input_tokens=tokens_files_walkthrough)
+                files_walkthrough_prompt = clip_tokens(files_walkthrough_prompt,
+                                                       max_tokens_model - OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD - token_handler_only_description_prompt.prompt_tokens,
+                                                       num_input_tokens=tokens_files_walkthrough)
 
             # PR header inference
-            # toDo - add deleted and unprocessed files to the prompt ('files_walkthrough'), as extra data
-            get_logger().debug(f"PR diff only description", artifact=files_walkthrough)
-            prediction_headers = await self._get_prediction(model, patches_diff=files_walkthrough,
+            get_logger().debug(f"PR diff only description", artifact=files_walkthrough_prompt)
+            prediction_headers = await self._get_prediction(model, patches_diff=files_walkthrough_prompt,
                                                             prompt="pr_description_only_description_prompts")
             prediction_headers = prediction_headers.strip().removeprefix('```yaml').strip('`').strip()
+
+            # manually add extra files to final prediction
             if get_settings().pr_description.mention_extra_files:
                 for file in remaining_files_list:
                     extra_file_yaml = f"""\
@@ -247,7 +251,6 @@ class PRDescription:
     not processed (token-limit)
 """
                     files_walkthrough = files_walkthrough.strip() + "\n" + extra_file_yaml.strip()
-
             # final processing
             self.prediction = prediction_headers + "\n" + "pr_files:\n" + files_walkthrough
             if not load_yaml(self.prediction):
@@ -255,6 +258,7 @@ class PRDescription:
                 if load_yaml(prediction_headers):
                     get_logger().debug(f"Using only headers for describe {self.pr_id}")
                     self.prediction = prediction_headers
+
 
     async def _get_prediction(self, model: str, patches_diff: str, prompt="pr_description_prompt") -> str:
         variables = copy.deepcopy(self.vars)
