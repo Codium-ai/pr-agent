@@ -10,7 +10,7 @@ from starlette_context import context
 
 from ..algo.file_filter import filter_ignored
 from ..algo.language_handler import is_valid_file
-from ..algo.utils import PrReviewTitles, load_large_diff, clip_tokens, find_line_number_of_relevant_line_in_file
+from ..algo.utils import PrReviewTitle, load_large_diff, clip_tokens, find_line_number_of_relevant_line_in_file
 from ..config_loader import get_settings
 from ..log import get_logger
 from ..servers.utils import RateLimitExceeded
@@ -96,9 +96,9 @@ class GithubProvider(GitProvider):
             self.comments = list(self.pr.get_issue_comments())
         prefixes = []
         if full:
-            prefixes.append({PrReviewTitles.REGULAR})
+            prefixes.append({PrReviewTitle.REGULAR})
         if incremental:
-            prefixes.append({PrReviewTitles.INCREMENTAL})
+            prefixes.append({PrReviewTitle.INCREMENTAL})
         for index in range(len(self.comments) - 1, -1, -1):
             if any(self.comments[index].body.startswith(prefix) for prefix in prefixes):
                 return self.comments[index]
