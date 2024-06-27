@@ -90,9 +90,9 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool = True, increment
     }
     markdown_text = ""
     if not incremental_review:
-        markdown_text += f"## PR Reviewer Guide 🔍\n\n"
+        markdown_text += f"{PrReviewTitles.REGULAR} 🔍\n\n"
     else:
-        markdown_text += f"## Incremental PR Reviewer Guide 🔍\n\n"
+        markdown_text += f"{PrReviewTitles.INCREMENTAL} 🔍\n\n"
         markdown_text += f"⏮️ Review for commits since previous PR-Agent review {incremental_review}.\n\n"
     if gfm_supported:
         markdown_text += "<table>\n"
