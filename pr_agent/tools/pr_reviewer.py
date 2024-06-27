@@ -134,7 +134,7 @@ class PRReviewer:
                 if get_settings().pr_reviewer.persistent_comment and not self.incremental.is_incremental:
                     final_update_message = get_settings().pr_reviewer.final_update_message
                     self.git_provider.publish_persistent_comment(pr_review,
-                                                                 initial_header=f"{PrReviewTitle.REGULAR} 🔍",
+                                                                 initial_header=f"{PrReviewTitle.REGULAR.value} 🔍",
                                                                  update_header=True,
                                                                  final_update_message=final_update_message, )
                 else:

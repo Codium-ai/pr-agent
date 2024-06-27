@@ -96,9 +96,9 @@ class GithubProvider(GitProvider):
             self.comments = list(self.pr.get_issue_comments())
         prefixes = []
         if full:
-            prefixes.append({PrReviewTitle.REGULAR})
+            prefixes.append({PrReviewTitle.REGULAR.value})
         if incremental:
-            prefixes.append({PrReviewTitle.INCREMENTAL})
+            prefixes.append({PrReviewTitle.INCREMENTAL.value})
         for index in range(len(self.comments) - 1, -1, -1):
             if any(self.comments[index].body.startswith(prefix) for prefix in prefixes):
                 return self.comments[index]
