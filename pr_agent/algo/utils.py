@@ -23,9 +23,11 @@ class ModelType(str, Enum):
     REGULAR = "regular"
     TURBO = "turbo"
 
-class ReviewHeaderTitle(str, Enum):
+
+class PRReviewHeader(str, Enum):
     REGULAR = "## PR Reviewer Guide"
     INCREMENTAL = "## Incremental PR Reviewer Guide"
+
 
 def get_setting(key: str) -> Any:
     try:
@@ -90,9 +92,9 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool = True, increment
     }
     markdown_text = ""
     if not incremental_review:
-        markdown_text += f"{ReviewHeaderTitle.REGULAR.value} 🔍\n\n"
+        markdown_text += f"{PRReviewHeader.REGULAR.value} 🔍\n\n"
     else:
-        markdown_text += f"{ReviewHeaderTitle.INCREMENTAL.value} 🔍\n\n"
+        markdown_text += f"{PRReviewHeader.INCREMENTAL.value} 🔍\n\n"
         markdown_text += f"⏮️ Review for commits since previous PR-Agent review {incremental_review}.\n\n"
     if gfm_supported:
         markdown_text += "<table>\n"
