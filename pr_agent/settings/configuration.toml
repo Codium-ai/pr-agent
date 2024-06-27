@@ -74,7 +74,7 @@ inline_file_summary=false # false, true, 'table'
 # markers
 use_description_markers=false
 include_generated_by_header=true
-# large pr mode
+# large pr mode 💎
 enable_large_pr_handling=true
 max_ai_calls=3
 mention_extra_files=true
