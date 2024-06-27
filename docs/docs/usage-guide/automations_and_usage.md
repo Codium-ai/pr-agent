@@ -81,7 +81,7 @@ Every time you run the `describe` tool, including automatic runs, the PR title w
 To cancel the automatic run of all the tools, set:
 ```
 [github_app]
-handle_pr_actions = []
+pr_commands = []
 ```
 
 You can also disable automatic runs for PRs with specific titles, by setting the `ignore_pr_titles` parameter with the relevant regex. For example:
