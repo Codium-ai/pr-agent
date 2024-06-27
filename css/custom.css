@@ -1,0 +1,36 @@
+
+
+:root {
+    --md-primary-fg-color: #765bfa;
+    --md-accent-fg-color: #AEA1F1;
+  }
+
+.md-nav--primary {
+    .md-nav__link {
+    font-size: 18px; /* Change the font size as per your preference */
+    }
+}
+
+/*.md-nav__title, .md-nav__link  {*/
+/*    font-size: 18px;*/
+/*    margin-top: 14px; !* Adjust the space as needed *!*/
+/*    margin-bottom: 14px; !* Adjust the space as needed *!*/
+/*}*/
+
+.md-tabs__link  {
+    font-size: 18px;
+}
+
+.md-header__title {
+    font-size: 20px;
+    margin-left: 0px !important;
+}
+
+.md-content img {
+    border-width: 1px;
+    border-style: solid;
+    border-color: black;
+    outline-width: 1px;
+    outline-style: solid;
+    outline-color: darkgray;
+  }
