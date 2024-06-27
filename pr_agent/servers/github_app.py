@@ -130,19 +130,21 @@ async def handle_new_pr_opened(body: Dict[str, Any],
     title = body.get("pull_request", {}).get("title", "")
     get_settings().config.is_auto_command = True
 
-    # logic to ignore PRs with specific titles (e.g. "[Auto] ...")
-    ignore_pr_title_re = get_settings().get("GITHUB_APP.IGNORE_PR_TITLE", [])
-    if not isinstance(ignore_pr_title_re, list):
-        ignore_pr_title_re = [ignore_pr_title_re]
-    if ignore_pr_title_re and any(re.search(regex, title) for regex in ignore_pr_title_re):
-        get_logger().info(f"Ignoring PR with title '{title}' due to github_app.ignore_pr_title setting")
-        return {}
 
     pull_request, api_url = _check_pull_request_event(action, body, log_context)
     if not (pull_request and api_url):
         get_logger().info(f"Invalid PR event: {action=} {api_url=}")
         return {}
     if action in get_settings().github_app.handle_pr_actions:  # ['opened', 'reopened', 'ready_for_review']
+        # logic to ignore PRs with specific titles (e.g. "[Auto] ...")
+        apply_repo_settings(api_url)
+        ignore_pr_title_re = get_settings().get("GITHUB_APP.IGNORE_PR_TITLE", [])
+        if not isinstance(ignore_pr_title_re, list):
+            ignore_pr_title_re = [ignore_pr_title_re]
+        if ignore_pr_title_re and any(re.search(regex, title) for regex in ignore_pr_title_re):
+            get_logger().info(f"Ignoring PR with title '{title}' due to github_app.ignore_pr_title setting")
+            return {}
+
         if get_identity_provider().verify_eligibility("github", sender_id, api_url) is not Eligibility.NOT_ELIGIBLE:
                 await _perform_auto_commands_github("pr_commands", agent, body, api_url, log_context)
         else:

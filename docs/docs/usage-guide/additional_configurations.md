@@ -2,8 +2,7 @@
 
 In some cases, you may want to exclude specific files or directories from the analysis performed by CodiumAI PR-Agent. This can be useful, for example, when you have files that are generated automatically or files that shouldn't be reviewed, like vendored code.
 
-The default ignore settings are defined in **[ignore.toml](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/ignore.toml)** configuration file. This setting also exposes the following environment variables:
-
+You can ignore files or folders using the following methods:
  - `IGNORE.GLOB`
  - `IGNORE.REGEX`
 
