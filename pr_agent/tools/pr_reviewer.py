@@ -8,7 +8,7 @@ from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAIHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import convert_to_markdown, github_action_output, load_yaml, ModelType, \
+from pr_agent.algo.utils import PrReviewTitles, convert_to_markdown, github_action_output, load_yaml, ModelType, \
     show_relevant_configurations
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider, get_git_provider_with_context
@@ -134,7 +134,7 @@ class PRReviewer:
                 if get_settings().pr_reviewer.persistent_comment and not self.incremental.is_incremental:
                     final_update_message = get_settings().pr_reviewer.final_update_message
                     self.git_provider.publish_persistent_comment(pr_review,
-                                                                 initial_header="## PR Reviewer Guide 🔍",
+                                                                 initial_header=f"{PrReviewTitles.REGULAR} 🔍",
                                                                  update_header=True,
                                                                  final_update_message=final_update_message, )
                 else:
