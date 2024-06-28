@@ -354,6 +354,11 @@ class AzureDevopsProvider(GitProvider):
                     file, new_file_content_str, original_file_content_str, show_warning=False
                 ).rstrip()
 
+                # count number of lines added and removed
+                patch_lines = patch.splitlines(keepends=True)
+                num_plus_lines = len([line for line in patch_lines if line.startswith('+')])
+                num_minus_lines = len([line for line in patch_lines if line.startswith('-')])
+
                 diff_files.append(
                     FilePatchInfo(
                         original_file_content_str,
@@ -361,6 +366,8 @@ class AzureDevopsProvider(GitProvider):
                         patch=patch,
                         filename=file,
                         edit_type=edit_type,
+                        num_plus_lines=num_plus_lines,
+                        num_minus_lines=num_minus_lines,
                     )
                 )
             get_logger().info(f"Invalid files: {invalid_files_names}")
