@@ -545,13 +545,6 @@ class PRCodeSuggestions:
 
 {example_code.rstrip()}                   
 """
-                    if (get_settings().pr_code_suggestions.apply_suggestions_checkbox and
-                            (isinstance(self.git_provider, GithubProvider) or isinstance(self.git_provider,
-                                                                                         GitLabProvider))):
-                        # add a checkbox line, to create a committal suggestion from the table suggestion
-                        if '...' not in patch:
-                            pr_body += f"""\n- [ ] **Apply this suggestion** <!-- /improve --apply_suggestion={counter_suggestions} -->\n\n"""
-
                     if get_settings().pr_code_suggestions.self_reflect_on_suggestions:
                         pr_body += f"<details><summary>Suggestion importance[1-10]: {suggestion['score']}</summary>\n\n"
                         pr_body += f"Why: {suggestion['score_why']}\n\n"
