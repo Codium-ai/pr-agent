@@ -11,7 +11,7 @@ from pr_agent.algo.pr_processing import get_pr_diff, get_pr_multi_diffs, retry_w
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.algo.utils import load_yaml, replace_code_tags, ModelType, show_relevant_configurations
 from pr_agent.config_loader import get_settings
-from pr_agent.git_providers import get_git_provider, get_git_provider_with_context
+from pr_agent.git_providers import get_git_provider, get_git_provider_with_context, GithubProvider, GitLabProvider
 from pr_agent.git_providers.git_provider import get_main_pr_language
 from pr_agent.log import get_logger
 from pr_agent.servers.help import HelpMessage
@@ -545,13 +545,6 @@ class PRCodeSuggestions:
 
 {example_code.rstrip()}                   
 """
-                    if (get_settings().pr_code_suggestions.apply_suggestions_checkbox and
-                            (isinstance(self.git_provider, GithubProvider) or isinstance(self.git_provider,
-                                                                                         GitLabProvider))):
-                        # add a checkbox line, to create a committal suggestion from the table suggestion
-                        if '...' not in patch:
-                            pr_body += f"""\n- [ ] **Apply this suggestion** <!-- /improve --apply_suggestion={counter_suggestions} -->\n\n"""
-
                     if get_settings().pr_code_suggestions.self_reflect_on_suggestions:
                         pr_body += f"<details><summary>Suggestion importance[1-10]: {suggestion['score']}</summary>\n\n"
                         pr_body += f"Why: {suggestion['score_why']}\n\n"
@@ -602,40 +595,3 @@ class PRCodeSuggestions:
             return ""
         return response_reflect
 
-    async def handle_apply_suggestion(self):
-        try:
-            get_logger().info('Processing "apply" suggestion...')
-            suggestion_number = get_settings().apply_suggestion
-            comment_after = get_settings().pr_code_suggestions.get('comment_after', None)
-            if suggestion_number is None or comment_after is None:
-                get_logger().error('Invalid suggestion number or comment_after')
-                return False
-            suggestions = parse_suggestions_content(comment_after)
-            if not suggestions:
-                get_logger().error('Failed to parse suggestions')
-                return False
-            suggestion = suggestions[suggestion_number]
-            if hasattr(self, 'main_language'):
-                self.git_provider.main_language = self.main_language
-            relevant_file = suggestion['suggestion_orig_location']['filename']
-            relevant_lines_start = int(suggestion['suggestion_orig_location']['start_line'])
-            relevant_lines_end = int(suggestion['suggestion_orig_location']['end_line'])
-            content = suggestion['suggestion_summary']
-            new_code_snippet = suggestion['new_code_snippet']
-            label = suggestion['category']
-            score = suggestion['score']
-            if new_code_snippet:
-                new_code_snippet = self.dedent_code(relevant_file, relevant_lines_start, new_code_snippet)
-            body = f"**Suggestion:** {content} [{label}, importance: {score}]\n```suggestion\n" + new_code_snippet + "\n```"
-            original_suggestion = suggestion
-            code_suggestions = [({'original_suggestion': original_suggestion,
-                                  'body': body, 'relevant_file': relevant_file,
-                                  'relevant_lines_start': relevant_lines_start,
-                                  'relevant_lines_end': relevant_lines_end})]
-            is_successful = self.git_provider.publish_code_suggestions(code_suggestions)
-            get_settings().set("suggestion_score", score)
-            get_settings().set("suggestion_label", label)
-        except Exception as e:
-            get_logger().info(f"Failed to apply suggestion, error: {e}")
-            is_successful = False
-        return is_successful
