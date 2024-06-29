@@ -31,7 +31,7 @@ def get_setting(key: str) -> Any:
         return global_settings.get(key, None)
 
 
-def emphasize_header(text: str) -> str:
+def emphasize_header(text: str, only_markdown=False) -> str:
     try:
         # Finding the position of the first occurrence of ": "
         colon_position = text.find(": ")
@@ -39,7 +39,10 @@ def emphasize_header(text: str) -> str:
         # Splitting the string and wrapping the first part in <strong> tags
         if colon_position != -1:
             # Everything before the colon (inclusive) is wrapped in <strong> tags
-            transformed_string = "<strong>" + text[:colon_position + 1] + "</strong>" +'<br>' + text[colon_position + 1:]
+            if only_markdown:
+                transformed_string = f"**{text[:colon_position + 1]}**\n" + text[colon_position + 1:]
+            else:
+                transformed_string = "<strong>" + text[:colon_position + 1] + "</strong>" +'<br>' + text[colon_position + 1:]
         else:
             # If there's no ": ", return the original string
             transformed_string = text
@@ -164,6 +167,110 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool = True, increment
     return markdown_text
 
 
+def convert_to_markdown_v2(output_data: dict, gfm_supported: bool = True, incremental_review=None) -> str:
+    """
+    Convert a dictionary of data into markdown format.
+    Args:
+        output_data (dict): A dictionary containing data to be converted to markdown format.
+    Returns:
+        str: The markdown formatted text generated from the input dictionary.
+    """
+
+    emojis = {
+        "Can be split": "🔀",
+        "Possible issues": "⚡",
+        "Key issues to review": "⚡",
+        "Score": "🏅",
+        "Relevant tests": "🧪",
+        "Focused PR": "✨",
+        "Relevant ticket": "🎫",
+        "Security concerns": "🔒",
+        "Insights from user's answers": "📝",
+        "Code feedback": "🤖",
+        "Estimated effort to review [1-5]": "⏱️",
+    }
+    markdown_text = ""
+    if not incremental_review:
+        markdown_text += f"## PR Reviewer Guide 🔍\n\n"
+    else:
+        markdown_text += f"## Incremental PR Reviewer Guide 🔍\n\n"
+        markdown_text += f"⏮️ Review for commits since previous PR-Agent review {incremental_review}.\n\n"
+
+    # if not output_data or not output_data.get('review', {}):
+    #     return ""
+
+    for key, value in output_data['review'].items():
+        if value is None or value == '' or value == {} or value == []:
+            if key.lower() != 'can_be_split':
+                continue
+        key_nice = key.replace('_', ' ').capitalize()
+        emoji = emojis.get(key_nice, "")
+        if 'Estimated effort to review' in key_nice:
+            key_nice = 'Estimated effort to review [1-5]'
+            value_int = int(value)
+            blue_bars = '🔵' * value_int
+            white_bars = '⚪' * (5 - value_int)
+            value = f"{value.strip()} {blue_bars}{white_bars}"
+            markdown_text += f"### {emoji} {key_nice}: {value}\n\n"
+        elif 'relevant tests' in key_nice.lower():
+            value = value.strip().lower()
+            if is_value_no(value):
+                markdown_text += f'### {emoji} No relevant tests\n\n'
+            else:
+                markdown_text += f"### PR contains tests\n\n"
+        elif 'security concerns' in key_nice.lower():
+            if is_value_no(value):
+                markdown_text += f'### {emoji} No security concerns identified\n\n'
+            else:
+                markdown_text += f"### {emoji} Security concerns\n\n"
+                value = emphasize_header(value.strip())
+                markdown_text += f"{value}\n\n"
+        elif 'can be split' in key_nice.lower():
+            markdown_text += process_can_be_split(emoji, value)
+        elif 'key issues to review' in key_nice.lower():
+            value = value.strip()
+            issues = value.split('\n- ')
+            for i, _ in enumerate(issues):
+                issues[i] = issues[i].strip().strip('-').strip()
+            issues = unique_strings(issues) # remove duplicates
+            markdown_text += f"### {emoji} Key issues to review\n\n"
+            for i, issue in enumerate(issues):
+                if not issue:
+                    continue
+                issue = emphasize_header(issue, only_markdown=True)
+                markdown_text += f"{issue}\n\n"
+            # else:
+            #     value = emphasize_header(value.strip('-').strip())
+            #     # value = replace_code_tags(value)
+            #     # markdown_text += f"<tr><td> {emoji}&nbsp;<strong>{key_nice}</strong></td><td>\n{value}\n\n</td></tr>\n"
+            #     markdown_text += f"### {emoji} {key_nice}: {value}\n\n"
+        else:
+            # markdown_text += f"<tr><td> {emoji}&nbsp;<strong>{key_nice}</strong></td><td>\n{value}\n\n</td></tr>\n"
+            markdown_text += f"### {emoji} {key_nice}: {value}\n\n"
+    print(markdown_text)
+
+
+    if 'code_feedback' in output_data:
+        if gfm_supported:
+            markdown_text += f"\n\n"
+            markdown_text += f"<details><summary> <strong>Code feedback:</strong></summary>\n\n"
+            markdown_text += "<hr>"
+        else:
+            markdown_text += f"\n\n** Code feedback:**\n\n"
+        for i, value in enumerate(output_data['code_feedback']):
+            if value is None or value == '' or value == {} or value == []:
+                continue
+            markdown_text += parse_code_suggestion(value, i, gfm_supported)+"\n\n"
+        if markdown_text.endswith('<hr>'):
+            markdown_text= markdown_text[:-4]
+        if gfm_supported:
+            markdown_text += f"</details>"
+    #print(markdown_text)
+
+
+    return markdown_text
+
+
 def process_can_be_split(emoji, value):
     try:
         # key_nice = "Can this PR be split?"
@@ -171,29 +278,46 @@ def process_can_be_split(emoji, value):
         markdown_text = ""
         if not value or isinstance(value, list) and len(value) == 1:
             value = "No"
-            markdown_text += f"<tr><td> {emoji}&nbsp;<strong>{key_nice}</strong></td><td>\n\n{value}\n\n</td></tr>\n"
+            # markdown_text += f"<tr><td> {emoji}&nbsp;<strong>{key_nice}</strong></td><td>\n\n{value}\n\n</td></tr>\n"
+            markdown_text += f"### {emoji} No multiple PR themes\n\n"
         else:
-            number_of_splits = len(value)
-            markdown_text += f"<tr><td rowspan={number_of_splits}> {emoji}&nbsp;<strong>{key_nice}</strong></td>\n"
+            markdown_text += f"### {emoji} {key_nice}\n\n"
             for i, split in enumerate(value):
                 title = split.get('title', '')
                 relevant_files = split.get('relevant_files', [])
-                if i == 0:
-                    markdown_text += f"<td><details><summary>\nSub-PR theme:<br><strong>{title}</strong></summary>\n\n"
-                    markdown_text += f"<hr>\n"
-                    markdown_text += f"Relevant files:\n"
-                    markdown_text += f"<ul>\n"
-                    for file in relevant_files:
-                        markdown_text += f"<li>{file}</li>\n"
-                    markdown_text += f"</ul>\n\n</details></td></tr>\n"
-                else:
-                    markdown_text += f"<tr>\n<td><details><summary>\nSub-PR theme:<br><strong>{title}</strong></summary>\n\n"
-                    markdown_text += f"<hr>\n"
-                    markdown_text += f"Relevant files:\n"
-                    markdown_text += f"<ul>\n"
-                    for file in relevant_files:
-                        markdown_text += f"<li>{file}</li>\n"
-                    markdown_text += f"</ul>\n\n</details></td></tr>\n"
+                markdown_text += f"<details><summary>\nSub-PR theme: <b>{title}</b></summary>\n\n"
+                markdown_text += f"___\n\nRelevant files:\n\n"
+                for file in relevant_files:
+                    markdown_text += f"- {file}\n"
+                markdown_text += f"___\n\n"
+                markdown_text += f"</details>\n\n"
+
+                # markdown_text += f"#### Sub-PR theme: {title}\n\n"
+                # markdown_text += f"Relevant files:\n\n"
+                # for file in relevant_files:
+                #     markdown_text += f"- {file}\n"
+                # markdown_text += "\n"
+            # number_of_splits = len(value)
+            # markdown_text += f"<tr><td rowspan={number_of_splits}> {emoji}&nbsp;<strong>{key_nice}</strong></td>\n"
+            # for i, split in enumerate(value):
+            #     title = split.get('title', '')
+            #     relevant_files = split.get('relevant_files', [])
+            #     if i == 0:
+            #         markdown_text += f"<td><details><summary>\nSub-PR theme:<br><strong>{title}</strong></summary>\n\n"
+            #         markdown_text += f"<hr>\n"
+            #         markdown_text += f"Relevant files:\n"
+            #         markdown_text += f"<ul>\n"
+            #         for file in relevant_files:
+            #             markdown_text += f"<li>{file}</li>\n"
+            #         markdown_text += f"</ul>\n\n</details></td></tr>\n"
+            #     else:
+            #         markdown_text += f"<tr>\n<td><details><summary>\nSub-PR theme:<br><strong>{title}</strong></summary>\n\n"
+            #         markdown_text += f"<hr>\n"
+            #         markdown_text += f"Relevant files:\n"
+            #         markdown_text += f"<ul>\n"
+            #         for file in relevant_files:
+            #             markdown_text += f"<li>{file}</li>\n"
+            #         markdown_text += f"</ul>\n\n</details></td></tr>\n"
     except Exception as e:
         get_logger().exception(f"Failed to process can be split: {e}")
         return ""
@@ -772,3 +896,11 @@ def show_relevant_configurations(relevant_section: str) -> str:
     markdown_text += "\n```"
     markdown_text += "\n</details>\n"
     return markdown_text
+
+def is_value_no(value):
+    if value is None:
+        return True
+    value_str = str(value).strip().lower()
+    if value_str == 'no' or value_str == 'none' or value_str == 'false':
+        return True
+    return False
