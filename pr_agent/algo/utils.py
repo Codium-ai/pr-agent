@@ -197,11 +197,10 @@ def convert_to_markdown_v2(output_data: dict, gfm_supported: bool = True, increm
     }
     markdown_text = ""
     if not incremental_review:
-        markdown_text += f"## PR Reviewer Guide 🔍\n\n"
+        markdown_text += f"{PRReviewHeader.REGULAR.value} 🔍\n\n"
     else:
-        markdown_text += f"## Incremental PR Reviewer Guide 🔍\n\n"
+        markdown_text += f"{PRReviewHeader.INCREMENTAL.value} 🔍\n\n"
         markdown_text += f"⏮️ Review for commits since previous PR-Agent review {incremental_review}.\n\n"
-
     # if not output_data or not output_data.get('review', {}):
     #     return ""
 
@@ -253,8 +252,6 @@ def convert_to_markdown_v2(output_data: dict, gfm_supported: bool = True, increm
         else:
             # markdown_text += f"<tr><td> {emoji}&nbsp;<strong>{key_nice}</strong></td><td>\n{value}\n\n</td></tr>\n"
             markdown_text += f"### {emoji} {key_nice}: {value}\n\n"
-    print(markdown_text)
-
 
     if 'code_feedback' in output_data:
         if gfm_supported:
@@ -271,8 +268,6 @@ def convert_to_markdown_v2(output_data: dict, gfm_supported: bool = True, increm
             markdown_text= markdown_text[:-4]
         if gfm_supported:
             markdown_text += f"</details>"
-    #print(markdown_text)
-
 
     return markdown_text
 
