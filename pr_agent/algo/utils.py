@@ -206,7 +206,7 @@ def convert_to_markdown_v2(output_data: dict, gfm_supported: bool = True, increm
         key_nice = key.replace('_', ' ').capitalize()
         emoji = emojis.get(key_nice, "")
         if 'Estimated effort to review' in key_nice:
-            key_nice = 'Estimated effort to review [1-5]'
+            key_nice = 'Estimated effort to review'
             value_int = int(value)
             blue_bars = '🔵' * value_int
             white_bars = '⚪' * (5 - value_int)
