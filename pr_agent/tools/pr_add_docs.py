@@ -71,10 +71,6 @@ class PRAddDocs:
     async def _prepare_prediction(self, model: str):
         get_logger().info('Getting PR diff...')
 
-        # Disable adding docs to scripts and other non-relevant text files
-        from pr_agent.algo.language_handler import bad_extensions
-        bad_extensions += get_settings().docs_blacklist_extensions.docs_blacklist
-
         self.patches_diff = get_pr_diff(self.git_provider,
                                         self.token_handler,
                                         model,
