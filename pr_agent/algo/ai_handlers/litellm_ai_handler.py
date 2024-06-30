@@ -102,7 +102,7 @@ class LiteLLMAIHandler(BaseAiHandler):
         return get_settings().get("OPENAI.DEPLOYMENT_ID", None)
 
     @retry(
-        retry=retry_if_exception_type((openai.APIError, openai.APIConnectionError, openai.Timeout)), # No retry on RateLimitError
+        retry=retry_if_exception_type((openai.APIError, openai.APIConnectionError, openai.APITimeoutError)), # No retry on RateLimitError
         stop=stop_after_attempt(OPENAI_RETRIES)
     )
     async def chat_completion(self, model: str, system: str, user: str, temperature: float = 0.2, img_path: str = None):
@@ -146,7 +146,7 @@ class LiteLLMAIHandler(BaseAiHandler):
                 get_logger().info(f"\nUser prompt:\n{user}")
 
             response = await acompletion(**kwargs)
-        except (openai.APIError, openai.Timeout) as e:
+        except (openai.APIError, openai.APITimeoutError) as e:
             get_logger().error("Error during OpenAI inference: ", e)
             raise
         except (Exception) as e:
