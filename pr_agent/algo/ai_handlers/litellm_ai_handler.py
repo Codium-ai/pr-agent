@@ -64,6 +64,9 @@ class LiteLLMAIHandler(BaseAiHandler):
         if get_settings().get("OLLAMA.API_BASE", None):
             litellm.api_base = get_settings().ollama.api_base
             self.api_base = get_settings().ollama.api_base
+        if get_settings().get("ANTHROPIC.API_BASE", None):
+            litellm.api_base = get_settings().anthropic.api_base
+            self.api_base = get_settings().anthropic.api_base
         if get_settings().get("HUGGINGFACE.REPETITION_PENALTY", None):
             self.repetition_penalty = float(get_settings().huggingface.repetition_penalty)
         if get_settings().get("VERTEXAI.VERTEX_PROJECT", None):
