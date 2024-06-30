@@ -1,3 +1,4 @@
+import asyncio
 import copy
 import re
 from functools import partial
@@ -168,8 +169,7 @@ class PRDescription:
             return None
 
         large_pr_handling = get_settings().pr_description.enable_large_pr_handling and "pr_description_only_files_prompts" in get_settings()
-        patches_diff = get_pr_diff(self.git_provider, self.token_handler, model,
-                                   large_pr_handling=large_pr_handling)
+        patches_diff = get_pr_diff(self.git_provider, self.token_handler, model, large_pr_handling=large_pr_handling)
         if not large_pr_handling or patches_diff:
             self.patches_diff = patches_diff
             if patches_diff:
@@ -192,13 +192,27 @@ class PRDescription:
                 self.git_provider, token_handler_only_files_prompt, model)
 
             # get the files prediction for each patch
+            if not get_settings().pr_description.async_ai_calls:
+                results = []
+                for i, patches in enumerate(patches_compressed_list):  # sync calls
+                    patches_diff = "\n".join(patches)
+                    get_logger().debug(f"PR diff number {i + 1} for describe files")
+                    prediction_files = await self._get_prediction(model, patches_diff,
+                                                                  prompt="pr_description_only_files_prompts")
+                    results.append(prediction_files)
+            else:  # async calls
+                tasks = []
+                for i, patches in enumerate(patches_compressed_list):
+                    patches_diff = "\n".join(patches)
+                    get_logger().debug(f"PR diff number {i + 1} for describe files")
+                    task = asyncio.create_task(
+                        self._get_prediction(model, patches_diff, prompt="pr_description_only_files_prompts"))
+                    tasks.append(task)
+                # Wait for all tasks to complete
+                results = await asyncio.gather(*tasks)
             file_description_str_list = []
-            for i, patches in enumerate(patches_compressed_list):
-                patches_diff = "\n".join(patches)
-                get_logger().debug(f"PR diff number {i + 1} for describe files")
-                prediction_files = await self._get_prediction(model, patches_diff,
-                                                              prompt="pr_description_only_files_prompts")
-                prediction_files = prediction_files.strip().removeprefix('```yaml').strip('`').strip()
+            for i, result in enumerate(results):
+                prediction_files = result.strip().removeprefix('```yaml').strip('`').strip()
                 if load_yaml(prediction_files) and prediction_files.startswith('pr_files'):
                     prediction_files = prediction_files.removeprefix('pr_files:').strip()
                     file_description_str_list.append(prediction_files)
@@ -248,7 +262,7 @@ class PRDescription:
   changes_title: |
     ...
   label: |
-    not processed (token-limit)
+    additional files (token-limit)
 """
                     files_walkthrough = files_walkthrough.strip() + "\n" + extra_file_yaml.strip()
             # final processing
@@ -258,7 +272,6 @@ class PRDescription:
                 if load_yaml(prediction_headers):
                     get_logger().debug(f"Using only headers for describe {self.pr_id}")
                     self.prediction = prediction_headers
-
 
     async def _get_prediction(self, model: str, patches_diff: str, prompt="pr_description_prompt") -> str:
         variables = copy.deepcopy(self.vars)
@@ -481,9 +494,9 @@ class PRDescription:
                     filename_publish = f"<strong>{filename_publish}</strong><dd>{file_changes_title_code_br}</dd>"
                     diff_plus_minus = ""
                     delta_nbsp = ""
-                    diff_files = self.git_provider.diff_files
+                    diff_files = self.git_provider.get_diff_files()
                     for f in diff_files:
-                        if f.filename.lower() == filename.lower():
+                        if f.filename.lower().strip('/') == filename.lower().strip('/'):
                             num_plus_lines = f.num_plus_lines
                             num_minus_lines = f.num_minus_lines
                             diff_plus_minus += f"+{num_plus_lines}/-{num_minus_lines}"
