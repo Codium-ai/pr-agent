@@ -166,7 +166,7 @@ def get_pr_diff_multiple_patchs(git_provider: GitProvider, token_handler: TokenH
             pass
 
     patches_compressed_list, total_tokens_list, deleted_files_list, remaining_files_list, file_dict, files_in_patches_list = \
-        pr_generate_compressed_diff(pr_languages, token_handler, model, add_line_numbers_to_hunks)
+        pr_generate_compressed_diff(pr_languages, token_handler, model, add_line_numbers_to_hunks, large_pr_handling=True)
 
     return patches_compressed_list, total_tokens_list, deleted_files_list, remaining_files_list, file_dict, files_in_patches_list
 
