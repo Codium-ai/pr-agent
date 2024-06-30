@@ -49,5 +49,31 @@ PR Feedback:
         assert load_yaml(yaml_str) == expected_output
 
 
+    def test_load_invalid_yaml3(self):
+        yaml_str = '''\
+I suggest following codes.
 
+code_suggestions:
+- relevant_file: |
+    src/index.ts
+  language: |
+    typescript
+  suggestion_content: |
+    use const keyword
+  existing_code: |
+    var foo = 1
+  improved_code: |
+    const foo = 1
+  one_sentence_summary: |
+    use const keyword
+  relevant_lines_start: 50
+  relevant_lines_end: 52
+  label: |
+    best practice
+```
+'''
+        with pytest.raises(ScannerError):
+            yaml.safe_load(yaml_str)
+        expected_output = {'code_suggestions': [{'relevant_file': 'src/index.ts\n', 'language': 'typescript\n', 'suggestion_content': 'use const keyword\n', 'existing_code': 'var foo = 1\n', 'improved_code': 'const foo = 1\n', 'one_sentence_summary': 'use const keyword\n', 'relevant_lines_start': 50, 'relevant_lines_end': 52, 'label': 'best practice\n'}]}
+        assert load_yaml(yaml_str) == expected_output
 
