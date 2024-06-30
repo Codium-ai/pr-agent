@@ -149,9 +149,6 @@ class LiteLLMAIHandler(BaseAiHandler):
         except (openai.APIError, openai.Timeout) as e:
             get_logger().error("Error during OpenAI inference: ", e)
             raise
-        except (openai.RateLimitError) as e:
-            get_logger().error("Rate limit error during OpenAI inference: ", e)
-            raise
         except (Exception) as e:
             get_logger().error("Unknown error during OpenAI inference: ", e)
             raise openai.APIError from e
