@@ -149,6 +149,9 @@ class LiteLLMAIHandler(BaseAiHandler):
         except (openai.APIError, openai.APITimeoutError) as e:
             get_logger().error("Error during OpenAI inference: ", e)
             raise
+        except (openai.AuthenticationError, ValueError) as e:
+            get_logger().error(f"Specific error during OpenAI inference: {type(e).__name__}", e)
+            raise
         except (Exception) as e:
             get_logger().error("Unknown error during OpenAI inference: ", e)
             raise openai.APIError from e
