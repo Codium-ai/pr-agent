@@ -269,9 +269,10 @@ def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler, mo
                                                                                  file_dict,
                                                                                   max_tokens_model,
                                                                                   remaining_files_list, token_handler)
-                patches_list.append(patches)
-                total_tokens_list.append(total_tokens)
-                files_in_patches_list.append(files_in_patch_list)
+                if patches:
+                    patches_list.append(patches)
+                    total_tokens_list.append(total_tokens)
+                    files_in_patches_list.append(files_in_patch_list)
             else:
                 break
 
