@@ -92,7 +92,8 @@ commitable_code_suggestions = false
 extra_instructions = ""
 rank_suggestions = false
 enable_help_text=false
-persistent_comment=false
+persistent_comment=true
+max_history_len=4
 # enable to apply suggestion 💎
 apply_suggestions_checkbox=true
 # suggestions scoring

@@ -231,24 +231,7 @@ class GithubProvider(GitProvider):
                                    update_header: bool = True,
                                    name='review',
                                    final_update_message=True):
-        prev_comments = list(self.pr.get_issue_comments())
-        for comment in prev_comments:
-            body = comment.body
-            if body.startswith(initial_header):
-                latest_commit_url = self.get_latest_commit_url()
-                comment_url = self.get_comment_url(comment)
-                if update_header:
-                    updated_header = f"{initial_header}\n\n#### ({name.capitalize()} updated until commit {latest_commit_url})\n"
-                    pr_comment_updated = pr_comment.replace(initial_header, updated_header)
-                else:
-                    pr_comment_updated = pr_comment
-                get_logger().info(f"Persistent mode- updating comment {comment_url} to latest review message")
-                response = comment.edit(pr_comment_updated)
-                if final_update_message:
-                    self.publish_comment(
-                        f"**[Persistent {name}]({comment_url})** updated to latest commit {latest_commit_url}")
-                return
-        self.publish_comment(pr_comment)
+        self.publish_persistent_comment_full(pr_comment, initial_header, update_header, name, final_update_message)
 
     def publish_comment(self, pr_comment: str, is_temporary: bool = False):
         if is_temporary and not get_settings().config.publish_output_progress:

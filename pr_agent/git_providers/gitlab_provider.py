@@ -173,26 +173,7 @@ class GitLabProvider(GitProvider):
                                    update_header: bool = True,
                                    name='review',
                                    final_update_message=True):
-        try:
-            for comment in self.mr.notes.list(get_all=True)[::-1]:
-                if comment.body.startswith(initial_header):
-                    latest_commit_url = self.get_latest_commit_url()
-                    comment_url = self.get_comment_url(comment)
-                    if update_header:
-                        updated_header = f"{initial_header}\n\n#### ({name.capitalize()} updated until commit {latest_commit_url})\n"
-                        pr_comment_updated = pr_comment.replace(initial_header, updated_header)
-                    else:
-                        pr_comment_updated = pr_comment
-                    get_logger().info(f"Persistent mode - updating comment {comment_url} to latest {name} message")
-                    response = self.mr.notes.update(comment.id, {'body': pr_comment_updated})
-                    if final_update_message:
-                        self.publish_comment(
-                            f"**[Persistent {name}]({comment_url})** updated to latest commit {latest_commit_url}")
-                    return
-        except Exception as e:
-            get_logger().exception(f"Failed to update persistent review, error: {e}")
-            pass
-        self.publish_comment(pr_comment)
+        self.publish_persistent_comment_full(pr_comment, initial_header, update_header, name, final_update_message)
 
     def publish_comment(self, mr_comment: str, is_temporary: bool = False):
         comment = self.mr.notes.create({'body': mr_comment})
@@ -202,6 +183,11 @@ class GitLabProvider(GitProvider):
 
     def edit_comment(self, comment, body: str):
         self.mr.notes.update(comment.id,{'body': body} )
+
+    def edit_comment_from_comment_id(self, comment_id: int, body: str):
+        comment = self.mr.notes.get(comment_id)
+        comment.body = body
+        comment.save()
 
     def reply_to_comment_from_comment_id(self, comment_id: int, body: str):
         discussion = self.mr.discussions.get(comment_id)
@@ -218,6 +204,10 @@ class GitLabProvider(GitProvider):
 
     def create_inline_comments(self, comments: list[dict]):
         raise NotImplementedError("Gitlab provider does not support publishing inline comments yet")
+
+    def get_comment_body_from_comment_id(self, comment_id: int):
+        comment = self.mr.notes.get(comment_id)
+        return comment
 
     def send_inline_comment(self,body: str,edit_type: str,found: bool,relevant_file: str,relevant_line_in_file: int,
                             source_line_no: int, target_file: str,target_line_no: int) -> None:
@@ -381,7 +371,7 @@ class GitLabProvider(GitProvider):
         return self.mr.description
 
     def get_issue_comments(self):
-        raise NotImplementedError("GitLab provider does not support issue comments yet")
+        return self.mr.notes.list(get_all=True)[::-1]
 
     def get_repo_settings(self):
         try:
