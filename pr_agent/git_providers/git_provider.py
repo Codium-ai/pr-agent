@@ -138,6 +138,34 @@ class GitProvider(ABC):
                                    final_update_message=True):
         self.publish_comment(pr_comment)
 
+    def publish_persistent_comment_full(self, pr_comment: str,
+                                   initial_header: str,
+                                   update_header: bool = True,
+                                   name='review',
+                                   final_update_message=True):
+        try:
+            prev_comments = list(self.get_issue_comments())
+            for comment in prev_comments:
+                if comment.body.startswith(initial_header):
+                    latest_commit_url = self.get_latest_commit_url()
+                    comment_url = self.get_comment_url(comment)
+                    if update_header:
+                        updated_header = f"{initial_header}\n\n#### ({name.capitalize()} updated until commit {latest_commit_url})\n"
+                        pr_comment_updated = pr_comment.replace(initial_header, updated_header)
+                    else:
+                        pr_comment_updated = pr_comment
+                    get_logger().info(f"Persistent mode - updating comment {comment_url} to latest {name} message")
+                    # response = self.mr.notes.update(comment.id, {'body': pr_comment_updated})
+                    self.edit_comment(comment, pr_comment_updated)
+                    if final_update_message:
+                        self.publish_comment(
+                            f"**[Persistent {name}]({comment_url})** updated to latest commit {latest_commit_url}")
+                    return
+        except Exception as e:
+            get_logger().exception(f"Failed to update persistent review, error: {e}")
+            pass
+        self.publish_comment(pr_comment)
+
     @abstractmethod
     def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
         pass
