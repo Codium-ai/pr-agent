@@ -231,7 +231,8 @@ class PRCodeSuggestions:
 
     def _prepare_pr_code_suggestions(self, predictions: str) -> Dict:
         data = load_yaml(predictions.strip(),
-                         keys_fix_yaml=["relevant_file", "suggestion_content", "existing_code", "improved_code"])
+                         keys_fix_yaml=["relevant_file", "suggestion_content", "existing_code", "improved_code"],
+                         first_key="code_suggestions",last_key="label")
         if isinstance(data, list):
             data = {'code_suggestions': data}
 

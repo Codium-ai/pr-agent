@@ -565,7 +565,7 @@ def try_fix_yaml(response_text: str,
     except:
         pass
 
-    # forth fallback - try to extract yaml snippet by first_key and 'last_key'
+    # forth fallback - try to extract yaml snippet by 'first_key' and 'last_key'
     # note that 'last_key' can be in practice a key that is not the last key in the yaml snippet.
     # it just needs to be some inner key, so we can look for newlines after it
     if first_key and last_key:
