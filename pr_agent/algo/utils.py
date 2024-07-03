@@ -37,7 +37,7 @@ def get_setting(key: str) -> Any:
         return global_settings.get(key, None)
 
 
-def emphasize_header(text: str) -> str:
+def emphasize_header(text: str, only_markdown=False) -> str:
     try:
         # Finding the position of the first occurrence of ": "
         colon_position = text.find(": ")
@@ -45,7 +45,10 @@ def emphasize_header(text: str) -> str:
         # Splitting the string and wrapping the first part in <strong> tags
         if colon_position != -1:
             # Everything before the colon (inclusive) is wrapped in <strong> tags
-            transformed_string = "<strong>" + text[:colon_position + 1] + "</strong>" +'<br>' + text[colon_position + 1:]
+            if only_markdown:
+                transformed_string = f"**{text[:colon_position + 1]}**\n" + text[colon_position + 1:]
+            else:
+                transformed_string = "<strong>" + text[:colon_position + 1] + "</strong>" +'<br>' + text[colon_position + 1:]
         else:
             # If there's no ": ", return the original string
             transformed_string = text
@@ -67,8 +70,7 @@ def unique_strings(input_list: List[str]) -> List[str]:
             seen.add(item)
     return unique_list
 
-
-def convert_to_markdown(output_data: dict, gfm_supported: bool = True, incremental_review=None) -> str:
+def convert_to_markdown_v2(output_data: dict, gfm_supported: bool = True, incremental_review=None) -> str:
     """
     Convert a dictionary of data into markdown format.
     Args:
@@ -96,12 +98,11 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool = True, increment
     else:
         markdown_text += f"{PRReviewHeader.INCREMENTAL.value} 🔍\n\n"
         markdown_text += f"⏮️ Review for commits since previous PR-Agent review {incremental_review}.\n\n"
+    # if not output_data or not output_data.get('review', {}):
+    #     return ""
+
     if gfm_supported:
         markdown_text += "<table>\n"
-        # markdown_text += """<td> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Feedback&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td> <td></td></tr>"""
-
-    if not output_data or not output_data.get('review', {}):
-        return ""
 
     for key, value in output_data['review'].items():
         if value is None or value == '' or value == {} or value == []:
@@ -109,43 +110,87 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool = True, increment
                 continue
         key_nice = key.replace('_', ' ').capitalize()
         emoji = emojis.get(key_nice, "")
-        if gfm_supported:
-            if 'Estimated effort to review' in key_nice:
-                key_nice = 'Estimated&nbsp;effort&nbsp;to&nbsp;review [1-5]'
-            if 'security concerns' in key_nice.lower():
-                value = emphasize_header(value.strip())
-                markdown_text += f"<tr><td> {emoji}&nbsp;<strong>{key_nice}</strong></td><td>\n{value}\n\n</td></tr>\n"
-            elif 'can be split' in key_nice.lower():
-                markdown_text += process_can_be_split(emoji, value)
-            elif 'key issues to review' in key_nice.lower():
-                value = value.strip()
-                issues = value.split('\n- ')
-                for i, _ in enumerate(issues):
-                    issues[i] = issues[i].strip().strip('-').strip()
-                issues = unique_strings(issues) # remove duplicates
-                number_of_issues = len(issues)
-                if number_of_issues > 1:
-                    markdown_text += f"<tr><td rowspan={number_of_issues}> {emoji}&nbsp;<strong>{key_nice}</strong></td>\n"
-                    for i, issue in enumerate(issues):
-                        if not issue:
-                            continue
-                        issue = emphasize_header(issue)
-                        issue = replace_code_tags(issue)
-                        if i == 0:
-                            markdown_text += f"<td>\n{issue}</td></tr>\n"
-                        else:
-                            markdown_text += f"<tr>\n<td>\n{issue}</td></tr>\n"
+        if 'Estimated effort to review' in key_nice:
+            key_nice = 'Estimated effort to review'
+            value_int = int(value)
+            blue_bars = '🔵' * value_int
+            white_bars = '⚪' * (5 - value_int)
+            value = f"{value.strip()} {blue_bars}{white_bars}"
+            if gfm_supported:
+                markdown_text += f"<tr><td>"
+                markdown_text += f"{emoji}&nbsp;<strong>{key_nice}</strong>: {value}"
+                markdown_text += f"</td></tr>\n"
+            else:
+                markdown_text += f"### {emoji} {key_nice}: {value}\n\n"
+        elif 'relevant tests' in key_nice.lower():
+            value = value.strip().lower()
+            if gfm_supported:
+                markdown_text += f"<tr><td>"
+                if is_value_no(value):
+                    markdown_text += f"{emoji}&nbsp;<strong>No relevant tests</strong>"
                 else:
-                    value = emphasize_header(value.strip('-').strip())
-                    value = replace_code_tags(value)
-                    markdown_text += f"<tr><td> {emoji}&nbsp;<strong>{key_nice}</strong></td><td>\n{value}\n\n</td></tr>\n"
+                    markdown_text += f"{emoji}&nbsp;<strong>PR contains tests</strong>"
+                markdown_text += f"</td></tr>\n"
             else:
-                markdown_text += f"<tr><td> {emoji}&nbsp;<strong>{key_nice}</strong></td><td>\n{value}\n\n</td></tr>\n"
+                if gfm_supported:
+                    markdown_text += f"<tr><td>"
+                    if is_value_no(value):
+                        markdown_text += f"{emoji}&nbsp;<strong>No relevant tests</strong>"
+                    else:
+                        markdown_text += f"{emoji}&nbsp;<strong>PR contains tests</strong>"
+                else:
+                    if is_value_no(value):
+                        markdown_text += f'### {emoji} No relevant tests\n\n'
+                    else:
+                        markdown_text += f"### PR contains tests\n\n"
+        elif 'security concerns' in key_nice.lower():
+            if gfm_supported:
+                markdown_text += f"<tr><td>"
+                if is_value_no(value):
+                    markdown_text += f"{emoji}&nbsp;<strong>No security concerns identified</strong>"
+                else:
+                    markdown_text += f"{emoji}&nbsp;<strong>Security concerns</strong><br><br>\n\n"
+                    value = emphasize_header(value.strip())
+                    markdown_text += f"{value}"
+                markdown_text += f"</td></tr>\n"
+            else:
+                if is_value_no(value):
+                    markdown_text += f'### {emoji} No security concerns identified\n\n'
+                else:
+                    markdown_text += f"### {emoji} Security concerns\n\n"
+                    value = emphasize_header(value.strip())
+                    markdown_text += f"{value}\n\n"
+        elif 'can be split' in key_nice.lower():
+            if gfm_supported:
+                markdown_text += f"<tr><td>"
+                markdown_text += process_can_be_split(emoji, value)
+                markdown_text += f"</td></tr>\n"
+        elif 'key issues to review' in key_nice.lower():
+            value = value.strip()
+            issues = value.split('\n- ')
+            for i, _ in enumerate(issues):
+                issues[i] = issues[i].strip().strip('-').strip()
+            issues = unique_strings(issues) # remove duplicates
+            if gfm_supported:
+                markdown_text += f"<tr><td>"
+                markdown_text += f"{emoji}&nbsp;<strong>{key_nice}</strong><br><br>\n\n"
+            else:
+                markdown_text += f"### {emoji} Key issues to review:\n\n"
+            for i, issue in enumerate(issues):
+                if not issue:
+                    continue
+                issue = emphasize_header(issue, only_markdown=True)
+                markdown_text += f"{issue}\n\n"
+            if gfm_supported:
+                markdown_text += f"</td></tr>\n"
         else:
-            if len(value.split()) > 1:
-                markdown_text += f"{emoji} **{key_nice}:**\n\n {value}\n\n"
+            if gfm_supported:
+                markdown_text += f"<tr><td>"
+                markdown_text += f"{emoji}&nbsp;<strong>{key_nice}</strong>: {value}"
+                markdown_text += f"</td></tr>\n"
             else:
-                markdown_text += f"{emoji} **{key_nice}:** {value}\n\n"
+                markdown_text += f"### {emoji} {key_nice}: {value}\n\n"
+
     if gfm_supported:
         markdown_text += "</table>\n"
 
@@ -155,17 +200,15 @@ def convert_to_markdown(output_data: dict, gfm_supported: bool = True, increment
             markdown_text += f"<details><summary> <strong>Code feedback:</strong></summary>\n\n"
             markdown_text += "<hr>"
         else:
-            markdown_text += f"\n\n** Code feedback:**\n\n"
+            markdown_text += f"\n\n### Code feedback:\n\n"
         for i, value in enumerate(output_data['code_feedback']):
             if value is None or value == '' or value == {} or value == []:
                 continue
             markdown_text += parse_code_suggestion(value, i, gfm_supported)+"\n\n"
         if markdown_text.endswith('<hr>'):
-            markdown_text = markdown_text[:-4]
+            markdown_text= markdown_text[:-4]
         if gfm_supported:
             markdown_text += f"</details>"
-    #print(markdown_text)
-
 
     return markdown_text
 
@@ -177,29 +220,47 @@ def process_can_be_split(emoji, value):
         markdown_text = ""
         if not value or isinstance(value, list) and len(value) == 1:
             value = "No"
-            markdown_text += f"<tr><td> {emoji}&nbsp;<strong>{key_nice}</strong></td><td>\n\n{value}\n\n</td></tr>\n"
+            # markdown_text += f"<tr><td> {emoji}&nbsp;<strong>{key_nice}</strong></td><td>\n\n{value}\n\n</td></tr>\n"
+            # markdown_text += f"### {emoji} No multiple PR themes\n\n"
+            markdown_text += f"{emoji} <strong>No multiple PR themes</strong>\n\n"
         else:
-            number_of_splits = len(value)
-            markdown_text += f"<tr><td rowspan={number_of_splits}> {emoji}&nbsp;<strong>{key_nice}</strong></td>\n"
+            markdown_text += f"{emoji} <strong>{key_nice}</strong><br><br>\n\n"
             for i, split in enumerate(value):
                 title = split.get('title', '')
                 relevant_files = split.get('relevant_files', [])
-                if i == 0:
-                    markdown_text += f"<td><details><summary>\nSub-PR theme:<br><strong>{title}</strong></summary>\n\n"
-                    markdown_text += f"<hr>\n"
-                    markdown_text += f"Relevant files:\n"
-                    markdown_text += f"<ul>\n"
-                    for file in relevant_files:
-                        markdown_text += f"<li>{file}</li>\n"
-                    markdown_text += f"</ul>\n\n</details></td></tr>\n"
-                else:
-                    markdown_text += f"<tr>\n<td><details><summary>\nSub-PR theme:<br><strong>{title}</strong></summary>\n\n"
-                    markdown_text += f"<hr>\n"
-                    markdown_text += f"Relevant files:\n"
-                    markdown_text += f"<ul>\n"
-                    for file in relevant_files:
-                        markdown_text += f"<li>{file}</li>\n"
-                    markdown_text += f"</ul>\n\n</details></td></tr>\n"
+                markdown_text += f"<details><summary>\nSub-PR theme: <b>{title}</b></summary>\n\n"
+                markdown_text += f"___\n\nRelevant files:\n\n"
+                for file in relevant_files:
+                    markdown_text += f"- {file}\n"
+                markdown_text += f"___\n\n"
+                markdown_text += f"</details>\n\n"
+
+                # markdown_text += f"#### Sub-PR theme: {title}\n\n"
+                # markdown_text += f"Relevant files:\n\n"
+                # for file in relevant_files:
+                #     markdown_text += f"- {file}\n"
+                # markdown_text += "\n"
+            # number_of_splits = len(value)
+            # markdown_text += f"<tr><td rowspan={number_of_splits}> {emoji}&nbsp;<strong>{key_nice}</strong></td>\n"
+            # for i, split in enumerate(value):
+            #     title = split.get('title', '')
+            #     relevant_files = split.get('relevant_files', [])
+            #     if i == 0:
+            #         markdown_text += f"<td><details><summary>\nSub-PR theme:<br><strong>{title}</strong></summary>\n\n"
+            #         markdown_text += f"<hr>\n"
+            #         markdown_text += f"Relevant files:\n"
+            #         markdown_text += f"<ul>\n"
+            #         for file in relevant_files:
+            #             markdown_text += f"<li>{file}</li>\n"
+            #         markdown_text += f"</ul>\n\n</details></td></tr>\n"
+            #     else:
+            #         markdown_text += f"<tr>\n<td><details><summary>\nSub-PR theme:<br><strong>{title}</strong></summary>\n\n"
+            #         markdown_text += f"<hr>\n"
+            #         markdown_text += f"Relevant files:\n"
+            #         markdown_text += f"<ul>\n"
+            #         for file in relevant_files:
+            #             markdown_text += f"<li>{file}</li>\n"
+            #         markdown_text += f"</ul>\n\n</details></td></tr>\n"
     except Exception as e:
         get_logger().exception(f"Failed to process can be split: {e}")
         return ""
@@ -778,3 +839,11 @@ def show_relevant_configurations(relevant_section: str) -> str:
     markdown_text += "\n```"
     markdown_text += "\n</details>\n"
     return markdown_text
+
+def is_value_no(value):
+    if value is None:
+        return True
+    value_str = str(value).strip().lower()
+    if value_str == 'no' or value_str == 'none' or value_str == 'false':
+        return True
+    return False
