@@ -98,8 +98,8 @@ def convert_to_markdown_v2(output_data: dict, gfm_supported: bool = True, increm
     else:
         markdown_text += f"{PRReviewHeader.INCREMENTAL.value} 🔍\n\n"
         markdown_text += f"⏮️ Review for commits since previous PR-Agent review {incremental_review}.\n\n"
-    # if not output_data or not output_data.get('review', {}):
-    #     return ""
+    if not output_data or not output_data.get('review', {}):
+        return ""
 
     if gfm_supported:
         markdown_text += "<table>\n"
@@ -112,10 +112,16 @@ def convert_to_markdown_v2(output_data: dict, gfm_supported: bool = True, increm
         emoji = emojis.get(key_nice, "")
         if 'Estimated effort to review' in key_nice:
             key_nice = 'Estimated effort to review'
-            value_int = int(value)
+            if value.isnumeric():
+                value_int = int(value)
+            else:
+                try:
+                    value_int = int(value.split(',')[0])
+                except ValueError:
+                    continue
             blue_bars = '🔵' * value_int
             white_bars = '⚪' * (5 - value_int)
-            value = f"{value.strip()} {blue_bars}{white_bars}"
+            value = f"{value_int} {blue_bars}{white_bars}"
             if gfm_supported:
                 markdown_text += f"<tr><td>"
                 markdown_text += f"{emoji}&nbsp;<strong>{key_nice}</strong>: {value}"
