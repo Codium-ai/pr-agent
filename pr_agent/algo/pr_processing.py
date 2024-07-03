@@ -21,8 +21,8 @@ MORE_MODIFIED_FILES_ = "Additional modified files (insufficient token budget to 
 
 ADDED_FILES_ = "Additional added files (insufficient token budget to process):\n"
 
-OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD = 1000
-OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD = 600
+OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD = 1500
+OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD = 1000
 
 
 
