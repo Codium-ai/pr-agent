@@ -168,9 +168,9 @@ class PRCodeSuggestions:
                                    name='review',
                                    final_update_message=True,
                                    max_previous_comments=4):
-        history_header = f"#### Previous Suggestions\n"
+        history_header = f"#### Previous suggestions\n"
         last_commit_num = self.git_provider.get_latest_commit_url().split('/')[-1][:7]
-        latest_suggestion_header = f"Latest Suggestions up to {last_commit_num}"
+        latest_suggestion_header = f"Latest suggestions up to {last_commit_num}"
         latest_commit_html_comment = f"<!-- {last_commit_num} -->"
         found_comment = None
 
