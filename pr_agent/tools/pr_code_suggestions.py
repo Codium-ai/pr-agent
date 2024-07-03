@@ -162,6 +162,7 @@ class PRCodeSuggestions:
                     self.git_provider.publish_comment(f"Failed to generate code suggestions for PR")
                 except Exception as e:
                     pass
+
     def publish_persistent_comment_with_history(self, pr_comment: str,
                                    initial_header: str,
                                    update_header: bool = True,
