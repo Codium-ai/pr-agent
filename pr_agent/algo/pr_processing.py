@@ -26,8 +26,12 @@ OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD = 600
 
 
 
-def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler, model: str,
-                add_line_numbers_to_hunks: bool = False, disable_extra_lines: bool = False, large_pr_handling=False) -> str:
+def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler,
+                model: str,
+                add_line_numbers_to_hunks: bool = False,
+                disable_extra_lines: bool = False,
+                large_pr_handling=False,
+                return_remaining_files=False):
     if disable_extra_lines:
         PATCH_EXTRA_LINES = 0
     else:
@@ -72,7 +76,7 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler, model: s
     get_logger().info(f"Tokens: {total_tokens}, total tokens over limit: {get_max_tokens(model)}, "
                       f"pruning diff.")
     patches_compressed_list, total_tokens_list, deleted_files_list, remaining_files_list, file_dict, files_in_patches_list = \
-        pr_generate_compressed_diff(pr_languages, token_handler, model, add_line_numbers_to_hunks)
+        pr_generate_compressed_diff(pr_languages, token_handler, model, add_line_numbers_to_hunks, large_pr_handling)
 
     if large_pr_handling and len(patches_compressed_list) > 1:
         get_logger().info(f"Large PR handling mode, and found {len(patches_compressed_list)} patches with original diff.")
@@ -129,7 +133,10 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler, model: s
 
     get_logger().debug(f"After pruning, added_list_str: {added_list_str}, modified_list_str: {modified_list_str}, "
                        f"deleted_list_str: {deleted_list_str}")
-    return final_diff
+    if not return_remaining_files:
+        return final_diff
+    else:
+        return final_diff, remaining_files_list
 
 
 def get_pr_diff_multiple_patchs(git_provider: GitProvider, token_handler: TokenHandler, model: str,
@@ -159,7 +166,7 @@ def get_pr_diff_multiple_patchs(git_provider: GitProvider, token_handler: TokenH
             pass
 
     patches_compressed_list, total_tokens_list, deleted_files_list, remaining_files_list, file_dict, files_in_patches_list = \
-        pr_generate_compressed_diff(pr_languages, token_handler, model, add_line_numbers_to_hunks)
+        pr_generate_compressed_diff(pr_languages, token_handler, model, add_line_numbers_to_hunks, large_pr_handling=True)
 
     return patches_compressed_list, total_tokens_list, deleted_files_list, remaining_files_list, file_dict, files_in_patches_list
 
@@ -208,7 +215,8 @@ def pr_generate_extended_diff(pr_languages: list,
 
 
 def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler, model: str,
-                                convert_hunks_to_line_numbers: bool) -> Tuple[list, list, list, list, dict, list]:
+                                convert_hunks_to_line_numbers: bool,
+                                large_pr_handling: bool) -> Tuple[list, list, list, list, dict, list]:
     deleted_files_list = []
 
     # sort each one of the languages in top_langs by the number of tokens in the diff
@@ -253,18 +261,20 @@ def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler, mo
     files_in_patches_list.append(files_in_patch_list)
 
     # additional iterations (if needed)
-    NUMBER_OF_ALLOWED_ITERATIONS = get_settings().pr_description.max_ai_calls - 1 # one more call is to summarize
-    for i in range(NUMBER_OF_ALLOWED_ITERATIONS-1):
-        if remaining_files_list:
-            total_tokens, patches, remaining_files_list, files_in_patch_list = generate_full_patch(convert_hunks_to_line_numbers,
-                                                                             file_dict,
-                                                                              max_tokens_model,
-                                                                              remaining_files_list, token_handler)
-            patches_list.append(patches)
-            total_tokens_list.append(total_tokens)
-            files_in_patches_list.append(files_in_patch_list)
-        else:
-            break
+    if large_pr_handling:
+        NUMBER_OF_ALLOWED_ITERATIONS = get_settings().pr_description.max_ai_calls - 1 # one more call is to summarize
+        for i in range(NUMBER_OF_ALLOWED_ITERATIONS-1):
+            if remaining_files_list:
+                total_tokens, patches, remaining_files_list, files_in_patch_list = generate_full_patch(convert_hunks_to_line_numbers,
+                                                                                 file_dict,
+                                                                                  max_tokens_model,
+                                                                                  remaining_files_list, token_handler)
+                if patches:
+                    patches_list.append(patches)
+                    total_tokens_list.append(total_tokens)
+                    files_in_patches_list.append(files_in_patch_list)
+            else:
+                break
 
     return patches_list, total_tokens_list, deleted_files_list, remaining_files_list, file_dict, files_in_patches_list
 
