@@ -117,7 +117,7 @@ def convert_to_markdown_v2(output_data: dict, gfm_supported: bool = True, increm
             else:
                 try:
                     value_int = int(value.split(',')[0])
-                except:
+                except ValueError:
                     continue
             blue_bars = '🔵' * value_int
             white_bars = '⚪' * (5 - value_int)
