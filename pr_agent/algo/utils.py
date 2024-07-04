@@ -173,22 +173,30 @@ def convert_to_markdown_v2(output_data: dict, gfm_supported: bool = True, increm
                 markdown_text += f"</td></tr>\n"
         elif 'key issues to review' in key_nice.lower():
             value = value.strip()
-            issues = value.split('\n- ')
-            for i, _ in enumerate(issues):
-                issues[i] = issues[i].strip().strip('-').strip()
-            issues = unique_strings(issues) # remove duplicates
-            if gfm_supported:
-                markdown_text += f"<tr><td>"
-                markdown_text += f"{emoji}&nbsp;<strong>{key_nice}</strong><br><br>\n\n"
+            if is_value_no(value):
+                if gfm_supported:
+                    markdown_text += f"<tr><td>"
+                    markdown_text += f"{emoji}&nbsp;<strong>No key issues to review</strong>"
+                    markdown_text += f"</td></tr>\n"
+                else:
+                    markdown_text += f"### {emoji} No key issues to review\n\n"
             else:
-                markdown_text += f"### {emoji} Key issues to review:\n\n"
-            for i, issue in enumerate(issues):
-                if not issue:
-                    continue
-                issue = emphasize_header(issue, only_markdown=True)
-                markdown_text += f"{issue}\n\n"
-            if gfm_supported:
-                markdown_text += f"</td></tr>\n"
+                issues = value.split('\n- ')
+                for i, _ in enumerate(issues):
+                    issues[i] = issues[i].strip().strip('-').strip()
+                issues = unique_strings(issues) # remove duplicates
+                if gfm_supported:
+                    markdown_text += f"<tr><td>"
+                    markdown_text += f"{emoji}&nbsp;<strong>{key_nice}</strong><br><br>\n\n"
+                else:
+                    markdown_text += f"### {emoji} Key issues to review:\n\n"
+                for i, issue in enumerate(issues):
+                    if not issue:
+                        continue
+                    issue = emphasize_header(issue, only_markdown=True)
+                    markdown_text += f"{issue}\n\n"
+                if gfm_supported:
+                    markdown_text += f"</td></tr>\n"
         else:
             if gfm_supported:
                 markdown_text += f"<tr><td>"
