@@ -33,6 +33,7 @@ class LiteLLMAIHandler(BaseAiHandler):
         elif 'OPENAI_API_KEY' not in os.environ:
             litellm.api_key = "dummy_key"
         if get_settings().get("aws.AWS_ACCESS_KEY_ID"):
+            assert get_settings().aws.AWS_SECRET_ACCESS_KEY and get_settings().aws.AWS_REGION_NAME, "AWS credentials are incomplete"
             os.environ["AWS_ACCESS_KEY_ID"] = get_settings().aws.AWS_ACCESS_KEY_ID
             os.environ["AWS_SECRET_ACCESS_KEY"] = get_settings().aws.AWS_SECRET_ACCESS_KEY
             os.environ["AWS_REGION_NAME"] = get_settings().aws.AWS_REGION_NAME
