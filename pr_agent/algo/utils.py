@@ -511,25 +511,28 @@ def _fix_key_value(key: str, value: str):
     return key, value
 
 
-def load_yaml(response_text: str, keys_fix_yaml: List[str] = []) -> dict:
+def load_yaml(response_text: str, keys_fix_yaml: List[str] = [], first_key="", last_key="") -> dict:
     response_text = response_text.removeprefix('```yaml').rstrip('`')
     try:
         data = yaml.safe_load(response_text)
     except Exception as e:
         get_logger().error(f"Failed to parse AI prediction: {e}")
-        data = try_fix_yaml(response_text, keys_fix_yaml=keys_fix_yaml)
+        data = try_fix_yaml(response_text, keys_fix_yaml=keys_fix_yaml, first_key=first_key, last_key=last_key)
     return data
 
 
-def try_fix_yaml(response_text: str, keys_fix_yaml: List[str] = []) -> dict:
+def try_fix_yaml(response_text: str,
+                 keys_fix_yaml: List[str] = [],
+                 first_key="",
+                 last_key="",) -> dict:
     response_text_lines = response_text.split('\n')
 
-    keys = ['relevant line:', 'suggestion content:', 'relevant file:', 'existing code:', 'improved code:']
-    keys = keys + keys_fix_yaml
+    keys_yaml = ['relevant line:', 'suggestion content:', 'relevant file:', 'existing code:', 'improved code:']
+    keys_yaml = keys_yaml + keys_fix_yaml
     # first fallback - try to convert 'relevant line: ...' to relevant line: |-\n        ...'
     response_text_lines_copy = response_text_lines.copy()
     for i in range(0, len(response_text_lines_copy)):
-        for key in keys:
+        for key in keys_yaml:
             if key in response_text_lines_copy[i] and not '|-' in response_text_lines_copy[i]:
                 response_text_lines_copy[i] = response_text_lines_copy[i].replace(f'{key}',
                                                                                   f'{key} |-\n        ')
@@ -540,14 +543,14 @@ def try_fix_yaml(response_text: str, keys_fix_yaml: List[str] = []) -> dict:
     except:
         get_logger().info(f"Failed to parse AI prediction after adding |-\n")
 
-    # second fallback - try to extract only range from first ```yaml to ````
+    # second fallback - try to extract only range from first ```yaml to ```
     snippet_pattern = r'```(yaml)?[\s\S]*?```'
     snippet = re.search(snippet_pattern, '\n'.join(response_text_lines_copy))
     if snippet:
         snippet_text = snippet.group()
         try:
             data = yaml.safe_load(snippet_text.removeprefix('```yaml').rstrip('`'))
-            get_logger().info(f"Successfully parsed AI prediction after extracting yaml snippet")
+            get_logger().info(f"Successfully parsed AI prediction after extracting yaml snippet with second fallback")
             return data
         except:
             pass
@@ -562,7 +565,27 @@ def try_fix_yaml(response_text: str, keys_fix_yaml: List[str] = []) -> dict:
     except:
         pass
 
-    # fourth fallback - try to remove last lines
+    # forth fallback - try to extract yaml snippet by 'first_key' and 'last_key'
+    # note that 'last_key' can be in practice a key that is not the last key in the yaml snippet.
+    # it just needs to be some inner key, so we can look for newlines after it
+    if first_key and last_key:
+        index_start = response_text.find(f"\n{first_key}:")
+        if index_start == -1:
+            index_start = response_text.find(f"{first_key}:")
+        index_last_code = response_text.rfind(f"{last_key}:")
+        index_end = response_text.find("\n\n", index_last_code) # look for newlines after last_key
+        if index_end == -1:
+            index_end = len(response_text)
+        response_text_copy = response_text[index_start:index_end].strip().strip('```yaml').strip('`').strip()
+        try:
+            data = yaml.safe_load(response_text_copy)
+            get_logger().info(f"Successfully parsed AI prediction after extracting yaml snippet")
+            return data
+        except:
+            pass
+
+
+    # fifth fallback - try to remove last lines
     data = {}
     for i in range(1, len(response_text_lines)):
         response_text_lines_tmp = '\n'.join(response_text_lines[:-i])

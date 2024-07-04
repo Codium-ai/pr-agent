@@ -186,9 +186,12 @@ class PRReviewer:
         Prepare the PR review by processing the AI prediction and generating a markdown-formatted text that summarizes
         the feedback.
         """
+        first_key = 'review'
+        last_key = 'security_concerns'
         data = load_yaml(self.prediction.strip(),
                          keys_fix_yaml=["estimated_effort_to_review_[1-5]:", "security_concerns:", "key_issues_to_review:",
-                                        "relevant_file:", "relevant_line:", "suggestion:"])
+                                        "relevant_file:", "relevant_line:", "suggestion:"],
+                         first_key=first_key, last_key=last_key)
         github_action_output(data, 'review')
 
         # move data['review'] 'key_issues_to_review' key to the end of the dictionary
@@ -258,9 +261,12 @@ class PRReviewer:
         if get_settings().pr_reviewer.num_code_suggestions == 0:
             return
 
+        first_key = 'review'
+        last_key = 'security_concerns'
         data = load_yaml(self.prediction.strip(),
                          keys_fix_yaml=["estimated_effort_to_review_[1-5]:", "security_concerns:", "key_issues_to_review:",
-                                        "relevant_file:", "relevant_line:", "suggestion:"])
+                                        "relevant_file:", "relevant_line:", "suggestion:"],
+                         first_key=first_key, last_key=last_key)
         comments: List[str] = []
         for suggestion in data.get('code_feedback', []):
             relevant_file = suggestion.get('relevant_file', '').strip()
