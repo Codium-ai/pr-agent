@@ -464,6 +464,7 @@ class PRCodeSuggestions:
         if self.patches_diff_list:
             get_logger().info(f"Number of PR chunk calls: {len(self.patches_diff_list)}")
             get_logger().debug(f"PR diff:", artifact=self.patches_diff_list)
+            get_logger().info(self.patches_diff_list)
 
             # parallelize calls to AI:
             if get_settings().pr_code_suggestions.parallel_calls:

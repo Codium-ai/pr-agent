@@ -27,6 +27,22 @@ class LiteLLMAIHandler(BaseAiHandler):
         self.azure = False
         self.api_base = None
         self.repetition_penalty = None
+        """
+        get_settings().set("watsonx.url", watsonx_url)
+        get_settings().set("watsonx.iam_api_key", iam_api_key)
+        get_settings().set("watsonx.project_id", project_id)
+        common_cloud_provider_auth_params: dict = {
+          "params": ["project", "region_name", "token"],
+          "providers": ["vertex_ai", "bedrock", "watsonx", "azure"],
+        }
+        """
+        if get_settings().get("watsonx.url", None) and \
+           get_settings().get("watsonx.iam_api_key", None) and \
+           get_settings().get("watsonx.project_id", None):
+            os.environ["WATSONX_URL"] = get_settings().watsonx.url
+            os.environ["WATSONX_APIKEY"] = get_settings().watsonx.iam_api_key
+            os.environ["WATSONX_PROJECT_ID"] = get_settings().watsonx.project_id
+
         if get_settings().get("OPENAI.KEY", None):
             openai.api_key = get_settings().openai.key
             litellm.openai_key = get_settings().openai.key

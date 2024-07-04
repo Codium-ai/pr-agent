@@ -44,4 +44,5 @@ MAX_TOKENS = {
     'groq/llama3-8b-8192': 8192,
     'groq/llama3-70b-8192': 8192,
     'ollama/llama3': 4096,
+    'watsonx/meta-llama/llama-3-8b-instruct': 100000
 }
