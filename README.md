@@ -42,6 +42,10 @@ CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by p
   
 ## News and Updates
 
+### July 4, 2024
+
+Added improved support for claude-sonnet-3.5 model (anthropic, vertex, bedrock), including dedicated prompts.
+
 ### June 17, 2024
 
 New option for a self-review checkbox is now available for the `/improve` tool, along with the ability(💎) to enable auto-approve, or demand self-review in addition to human reviewer. See more [here](https://pr-agent-docs.codium.ai/tools/improve/#self-review).
@@ -58,11 +62,6 @@ New option now available (💎) - **apply suggestions**:
 
 <kbd><img src="https://www.codium.ai/images/pr_agent/apply_suggestion_2.png" width="512"></kbd>
 
-
-
-### May 31, 2024
-
-Check out the new [**PR-Agent Code Fine-tuning Benchmark**](https://pr-agent-docs.codium.ai/finetuning_benchmark/)
 
 
 ## Overview

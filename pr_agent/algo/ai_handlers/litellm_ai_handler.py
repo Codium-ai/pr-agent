@@ -25,12 +25,18 @@ class LiteLLMAIHandler(BaseAiHandler):
         Raises a ValueError if the OpenAI key is missing.
         """
         self.azure = False
-        self.aws_bedrock_client = None
         self.api_base = None
         self.repetition_penalty = None
         if get_settings().get("OPENAI.KEY", None):
             openai.api_key = get_settings().openai.key
             litellm.openai_key = get_settings().openai.key
+        elif 'OPENAI_API_KEY' not in os.environ:
+            litellm.api_key = "dummy_key"
+        if get_settings().get("aws.AWS_ACCESS_KEY_ID"):
+            assert get_settings().aws.AWS_SECRET_ACCESS_KEY and get_settings().aws.AWS_REGION_NAME, "AWS credentials are incomplete"
+            os.environ["AWS_ACCESS_KEY_ID"] = get_settings().aws.AWS_ACCESS_KEY_ID
+            os.environ["AWS_SECRET_ACCESS_KEY"] = get_settings().aws.AWS_SECRET_ACCESS_KEY
+            os.environ["AWS_REGION_NAME"] = get_settings().aws.AWS_REGION_NAME
         if get_settings().get("litellm.use_client"):
             litellm_token = get_settings().get("litellm.LITELLM_TOKEN")
             assert litellm_token, "LITELLM_TOKEN is required"
@@ -71,14 +77,6 @@ class LiteLLMAIHandler(BaseAiHandler):
             litellm.vertex_location = get_settings().get(
                 "VERTEXAI.VERTEX_LOCATION", None
             )
-        if get_settings().get("AWS.BEDROCK_REGION", None):
-            litellm.AmazonAnthropicConfig.max_tokens_to_sample = 2000
-            litellm.AmazonAnthropicClaude3Config.max_tokens = 2000
-            self.aws_bedrock_client = boto3.client(
-                service_name="bedrock-runtime",
-                region_name=get_settings().aws.bedrock_region,
-            )
-
     def prepare_logs(self, response, system, user, resp, finish_reason):
         response_log = response.dict().copy()
         response_log['system'] = system
@@ -131,8 +129,6 @@ class LiteLLMAIHandler(BaseAiHandler):
                 "force_timeout": get_settings().config.ai_timeout,
                 "api_base": self.api_base,
             }
-            if self.aws_bedrock_client:
-                kwargs["aws_bedrock_client"] = self.aws_bedrock_client
             if self.repetition_penalty:
                 kwargs["repetition_penalty"] = self.repetition_penalty
 
