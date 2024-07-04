@@ -40,6 +40,7 @@ MAX_TOKENS = {
     'bedrock/anthropic.claude-v2:1': 100000,
     'bedrock/anthropic.claude-3-sonnet-20240229-v1:0': 100000,
     'bedrock/anthropic.claude-3-haiku-20240307-v1:0': 100000,
+    'bedrock/anthropic.claude-3-5-sonnet-20240620-v1:0': 100000,
     'groq/llama3-8b-8192': 8192,
     'groq/llama3-70b-8192': 8192,
     'ollama/llama3': 4096,

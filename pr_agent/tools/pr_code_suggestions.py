@@ -61,9 +61,15 @@ class PRCodeSuggestions:
             "extra_instructions": get_settings().pr_code_suggestions.extra_instructions,
             "commit_messages_str": self.git_provider.get_commit_messages(),
         }
+        if 'claude' in get_settings().config.model:
+            # prompt for Claude, with minor adjustments
+            self.pr_code_suggestions_prompt_system = get_settings().pr_code_suggestions_prompt_claude.system
+        else:
+            self.pr_code_suggestions_prompt_system = get_settings().pr_code_suggestions_prompt.system
+
         self.token_handler = TokenHandler(self.git_provider.pr,
                                           self.vars,
-                                          get_settings().pr_code_suggestions_prompt.system,
+                                          self.pr_code_suggestions_prompt_system,
                                           get_settings().pr_code_suggestions_prompt.user)
 
         self.progress = f"## Generating PR code suggestions\n\n"
@@ -280,7 +286,7 @@ class PRCodeSuggestions:
         variables = copy.deepcopy(self.vars)
         variables["diff"] = patches_diff  # update diff
         environment = Environment(undefined=StrictUndefined)
-        system_prompt = environment.from_string(get_settings().pr_code_suggestions_prompt.system).render(variables)
+        system_prompt = environment.from_string(self.pr_code_suggestions_prompt_system).render(variables)
         user_prompt = environment.from_string(get_settings().pr_code_suggestions_prompt.user).render(variables)
         response, finish_reason = await self.ai_handler.chat_completion(model=model, temperature=0.2,
                                                                         system=system_prompt, user=user_prompt)
