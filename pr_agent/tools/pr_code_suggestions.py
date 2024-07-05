@@ -143,11 +143,10 @@ class PRCodeSuggestions:
                                                                      initial_header="## PR Code Suggestions ✨",
                                                                      update_header=True,
                                                                      name="suggestions",
-                                                                     final_update_message = final_update_message,
-                                                                     max_previous_comments = get_settings().pr_code_suggestions.max_history_len,
-                                                                     progress_response = self.progress_response)
+                                                                     final_update_message=final_update_message,
+                                                                     max_previous_comments=get_settings().pr_code_suggestions.max_history_len,
+                                                                     progress_response=self.progress_response)
                     else:
-
                         if self.progress_response:
                             self.git_provider.edit_comment(self.progress_response, body=pr_body)
                         else:
@@ -232,6 +231,7 @@ class PRCodeSuggestions:
                             # Add to the prev_suggestions section
                             last_prev_table = f"\n<details><summary>{tick}{name.capitalize()}{up_to_commit_txt}</summary>\n<br>{latest_table}\n\n</details>"
                             prev_suggestion_table = last_prev_table + "\n" + prev_suggestion_table
+
                             new_suggestion_table = pr_comment.replace(initial_header, "").strip()
 
                             pr_comment_updated = f"{initial_header}\n"
@@ -243,8 +243,8 @@ class PRCodeSuggestions:
 
                         get_logger().info(f"Persistent mode - updating comment {comment_url} to latest {name} message")
                         if progress_response: # publish to 'progress_response' comment, because it refreshes immediately
-                            comment.delete()
                             self.git_provider.edit_comment(progress_response, pr_comment_updated)
+                            comment.delete()
                         else:
                             self.git_provider.edit_comment(comment, pr_comment_updated)
                         return
@@ -252,10 +252,11 @@ class PRCodeSuggestions:
                 get_logger().exception(f"Failed to update persistent review, error: {e}")
                 pass
 
+        # if we are here, we did not find a previous comment to update
         body = pr_comment.replace(initial_header, "").strip()
         pr_comment = f"{initial_header}\n\n{latest_commit_html_comment}\n\n{body}\n\n"
-        if found_comment is not None:
-            self.git_provider.edit_comment(found_comment, pr_comment)
+        if progress_response:
+            self.git_provider.edit_comment(progress_response, pr_comment)
         else:
             self.git_provider.publish_comment(pr_comment)
 
