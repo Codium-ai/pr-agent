@@ -144,9 +144,8 @@ class PRCodeSuggestions:
                                                                      update_header=True,
                                                                      name="suggestions",
                                                                      final_update_message = final_update_message,
-                                                                     max_previous_comments = get_settings().pr_code_suggestions.max_history_len)
-                        if self.progress_response:
-                            self.progress_response.delete()
+                                                                     max_previous_comments = get_settings().pr_code_suggestions.max_history_len,
+                                                                     progress_response = self.progress_response)
                     else:
 
                         if self.progress_response:
@@ -174,7 +173,8 @@ class PRCodeSuggestions:
                                    update_header: bool = True,
                                    name='review',
                                    final_update_message=True,
-                                   max_previous_comments=4):
+                                   max_previous_comments=4,
+                                   progress_response=None):
         history_header = f"#### Previous suggestions\n"
         last_commit_num = self.git_provider.get_latest_commit_url().split('/')[-1][:7]
         latest_suggestion_header = f"Latest suggestions up to {last_commit_num}"
@@ -242,8 +242,11 @@ class PRCodeSuggestions:
                             pr_comment_updated += f"{prev_suggestion_table}\n"
 
                         get_logger().info(f"Persistent mode - updating comment {comment_url} to latest {name} message")
-
-                        self.git_provider.edit_comment(comment, pr_comment_updated)
+                        if progress_response: # publish to 'progress_response' comment, because it refreshes immediately
+                            comment.delete()
+                            self.git_provider.edit_comment(progress_response, pr_comment_updated)
+                        else:
+                            self.git_provider.edit_comment(comment, pr_comment_updated)
                         return
             except Exception as e:
                 get_logger().exception(f"Failed to update persistent review, error: {e}")
