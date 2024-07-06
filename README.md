@@ -42,6 +42,10 @@ CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by p
   
 ## News and Updates
 
+### July 6, 2024
+
+v0.23 has been released. See full log changes [here](https://github.com/Codium-ai/pr-agent/releases/tag/v0.23).
+
 ### July 4, 2024
 
 Added improved support for claude-sonnet-3.5 model (anthropic, vertex, bedrock), including dedicated prompts.
