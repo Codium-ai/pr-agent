@@ -105,7 +105,7 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler,
                     added_list_str = ADDED_FILES_ + f"\n{filename}"
                 else:
                     added_list_str = added_list_str + f"\n{filename}"
-            elif file_values['edit_type'] == EDIT_TYPE.MODIFIED or EDIT_TYPE.RENAMED:
+            elif file_values['edit_type'] in [EDIT_TYPE.MODIFIED, EDIT_TYPE.RENAMED]:
                 unprocessed_files.append(filename)
                 if not modified_list_str:
                     modified_list_str = MORE_MODIFIED_FILES_ + f"\n{filename}"
