@@ -164,6 +164,7 @@ class PRGenerateLabels:
                 pr_types = self.data['labels']
             elif type(self.data['labels']) == str:
                 pr_types = self.data['labels'].split(',')
+        pr_types = [label.strip() for label in pr_types]
 
         # convert lowercase labels to original case
         try:

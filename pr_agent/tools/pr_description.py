@@ -367,6 +367,7 @@ class PRDescription:
                 pr_types = self.data['type']
             elif type(self.data['type']) == str:
                 pr_types = self.data['type'].split(',')
+        pr_types = [label.strip() for label in pr_types]
 
         # convert lowercase labels to original case
         try:
@@ -470,7 +471,7 @@ class PRDescription:
             else:
                 # if the value is a list, join its items by comma
                 if isinstance(value, list):
-                    value = ', '.join(v for v in value)
+                    value = ', '.join(v.rstrip() for v in value)
                 pr_body += f"{value}\n"
             if idx < len(self.data) - 1:
                 pr_body += "\n\n___\n\n"
