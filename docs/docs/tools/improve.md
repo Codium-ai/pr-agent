@@ -71,7 +71,9 @@ You can set the content of the checkbox text via:
 [pr_code_suggestions]
 code_suggestions_self_review_text = "... (your text here) ..."
 ```
+
 ![self_review_1](https://codium.ai/images/pr_agent/self_review_1.png){width=512}
+
 
 💎 In addition, by setting:
 ```
@@ -82,6 +84,7 @@ the tool can automatically approve the PR when the user checks the self-review c
 
 !!! tip "Demanding self-review from the PR author"
   If you set the number of required reviewers for a PR to 2, this effectively means that the PR author must click the self-review checkbox before the PR can be merged (in addition to a human reviewer).
+  
   ![self_review_2](https://codium.ai/images/pr_agent/self_review_2.png){width=512}
 
 
