@@ -16,3 +16,4 @@
     - (Feature): [**Custom labels**](./tools/describe.md/#handle-custom-labels-from-the-repos-labels-page)
     - (Feature): [**Global and wiki configuration**](./usage-guide/configuration_options.md/#wiki-configuration-file)
     - (Feature): [**Inline file summary**](https://pr-agent-docs.codium.ai/tools/describe/#inline-file-summary)
+5. **Support self-hosted git servers** - PR-Agent Pro can be installed on GitHub Enterprise Server, GitLab, and BitBucket. For more information, see the [installation guide](./installation/pr_agent_pro.md/).

@@ -524,9 +524,6 @@ class GithubProvider(GitProvider):
     def _parse_pr_url(pr_url: str) -> Tuple[str, int]:
         parsed_url = urlparse(pr_url)
 
-        if 'github.com' not in parsed_url.netloc:
-            raise ValueError("The provided URL is not a valid GitHub URL")
-
         path_parts = parsed_url.path.strip('/').split('/')
         if 'api.github.com' in parsed_url.netloc:
             if len(path_parts) < 5 or path_parts[3] != 'pulls':
