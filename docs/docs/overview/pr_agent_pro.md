@@ -18,4 +18,4 @@
     - (Feature): [**Inline file summary**](https://pr-agent-docs.codium.ai/tools/describe/#inline-file-summary)
     - (Feature): [**Apply suggestions**](https://pr-agent-docs.codium.ai/tools/improve/#example-usage)
     - (Feature): [**Advanced usage statistics**](https://www.codium.ai/contact/#/)
-5. **Support self-hosted git servers** - PR-Agent Pro can be installed on GitHub Enterprise Server, GitLab, and BitBucket. For more information, see the [installation guide](./installation/pr_agent_pro.md/).
+5. **Support self-hosted git servers** - PR-Agent Pro can be installed on GitHub Enterprise Server, GitLab, and BitBucket. For more information, see the [installation guide](https://pr-agent-docs.codium.ai/installation/pr_agent_pro/).
