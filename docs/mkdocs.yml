@@ -131,7 +131,7 @@ markdown_extensions:
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - toc:
       title: On this page
-      toc_depth: 2
+      toc_depth: 3
       permalink: true
 
 
