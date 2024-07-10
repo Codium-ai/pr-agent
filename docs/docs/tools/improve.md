@@ -47,17 +47,7 @@ num_code_suggestions_per_chunk = ...
 - The `pr_commands` lists commands that will be executed automatically when a PR is opened.
 - The `[pr_code_suggestions]` section contains the configurations for the `improve` tool you want to edit (if any)
 
-### Extended mode
-
-An extended mode, which does not involve PR Compression and provides more comprehensive suggestions, can be invoked by commenting on any PR by setting:
-```
-[pr_code_suggestions]
-auto_extended_mode=true
-```
-(This mode is true by default).
-
-Note that the extended mode divides the PR code changes into chunks, up to the token limits, where each chunk is handled separately (might use multiple calls to GPT-4 for large PRs).
-Hence, the total number of suggestions is proportional to the number of chunks, i.e., the size of the PR.
+## Usage Tips
 
 ### Self-review
 If you set in a configuration file:
@@ -82,11 +72,53 @@ approve_pr_on_self_review = true
 ```
 the tool can automatically approve the PR when the user checks the self-review checkbox.
 
-!!! tip "Demanding self-review from the PR author"
-  If you set the number of required reviewers for a PR to 2, this effectively means that the PR author must click the self-review checkbox before the PR can be merged (in addition to a human reviewer).
-  
-  ![self_review_2](https://codium.ai/images/pr_agent/self_review_2.png){width=512}
+!!! tip "Tip - demanding self-review from the PR author"
+    If you set the number of required reviewers for a PR to 2, this effectively means that the PR author must click the self-review checkbox before the PR can be merged (in addition to a human reviewer).
 
+    ![self_review_2](https://codium.ai/images/pr_agent/self_review_2.png){width=512}
+
+### `Extra instructions` and `best practices`
+
+#### Extra instructions
+You can use the `extra_instructions` configuration option to give the AI model additional instructions for the `improve` tool.
+Be specific, clear, and concise in the instructions. With extra instructions, you are the prompter. Specify relevant aspects that you want the model to focus on.
+    
+Examples for possible instructions:
+```
+[pr_code_suggestions]
+extra_instructions="""\
+(1) Answer in japanese
+(2) Don't suggest to add try-excpet block
+(3) Ignore changes in toml files
+...
+"""
+```
+Use triple quotes to write multi-line instructions. Use bullet points or numbers to make the instructions more readable.
+
+#### Best practices 💎
+Another option to give additional guidance to the AI model is by creating a dedicated [**wiki page**](https://github.com/Codium-ai/pr-agent/wiki) called `best_practices.md`. 
+This page can contain a list of best practices, coding standards, and guidelines that are specific to your repo/organization (up to 800 lines are allowed)
+
+The AI model will use this page as a reference, and in case the PR code violates any of the guidelines, it will suggest improvements accordingly.
+Examples for possible best practices:
+```
+## Here are the organization's best practices for writing code:
+- avoid nested loops
+- avoid typos
+- use meaningful variable names
+- follow the DRY principle
+- keep functions short and simple, typically within 10-30 lines of code.
+...
+```
+When a PR code violates any of the guidelines, the AI model will suggest improvements accordingly, with a dedicated label: `Organization
+best practice`. 
+
+Example results:
+
+![best_practice](https://codium.ai/images/pr_agent/org_best_practice.png){width=512}
+
+Note that while the `extra instructions` are more related to the way the `improve` tool behaves, the `best_practices.md` file is a general guideline for the way code should be written in the repo.
+Using a combination of both can help the AI model to provide relevant and tailored suggestions.
 
 ## Configuration options
 
@@ -155,34 +187,6 @@ the tool can automatically approve the PR when the user checks the self-review c
     <td>Factor to remove suggestions with low confidence. Default is 0.9.</td>
   </tr>
 </table>
-
-## Usage Tips
-
-!!! tip "Extra instructions"
-
-    Extra instructions are very important for the `improve` tool, since they enable you to guide the model to suggestions that are more relevant to the specific needs of the project.
-    
-    Be specific, clear, and concise in the instructions. With extra instructions, you are the prompter. Specify relevant aspects that you want the model to focus on.
-    
-    Examples for extra instructions:
-    ```
-    [pr_code_suggestions] # /improve #
-    extra_instructions="""\
-    Emphasize the following aspects:
-    - Does the code logic cover relevant edge cases?
-    - Is the code logic clear and easy to understand?
-    - Is the code logic efficient?
-    ...
-    """
-    ```
-    Use triple quotes to write multi-line instructions. Use bullet points to make the instructions more readable.
-
-!!! tip "Review vs. Improve tools comparison"
-
-    - The [review](https://pr-agent-docs.codium.ai/tools/review/) tool includes a section called 'Possible issues', that also provide feedback on the PR Code.
-    In this section, the model is instructed to focus **only** on [major bugs and issues](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/pr_reviewer_prompts.toml#L71).
-    - The `improve` tool, on the other hand, has a broader mandate, and in addition to bugs and issues, it can also give suggestions for improving code quality and making the code more efficient, readable, and maintainable (see [here](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/pr_code_suggestions_prompts.toml#L34)).
-    - Hence, if you are interested only in feedback about clear bugs, the `review` tool might suffice. If you want a more detailed feedback, including broader suggestions for improving the PR code, also enable the `improve` tool to run on each PR.
 
 ## A note on code suggestions quality
 

@@ -34,7 +34,7 @@ Suggestions should always focus on ways to improve the new code lines introduced
 
 
 Specific instructions for generating code suggestions:
-- Provide up to {{ num_code_suggestions }} code suggestions. The suggestions should be diverse and insightful.
+- Provide in total up to {{ num_code_suggestions }} code suggestions. The suggestions should be diverse and insightful.
 - The suggestions should focus on improving the new code introduced the PR, meaning lines from '__new hunk__' sections, starting with '+' (after the line numbers).
 - Prioritize suggestions that address possible issues, major problems, and bugs in the PR code.
 - Don't suggest to add docstring, type hints, or comments, or to remove unused imports.
@@ -149,7 +149,7 @@ Suggestions should always focus on ways to improve the new code lines introduced
 
 
 Specific instructions for generating code suggestions:
-- Provide up to {{ num_code_suggestions }} code suggestions. The suggestions should be diverse and insightful.
+- Provide in total up to {{ num_code_suggestions }} code suggestions. The suggestions should be diverse and insightful.
 - The suggestions should focus on improving the new code introduced the PR, meaning lines from '__new hunk__' sections, starting with '+' (after the line numbers).
 - Prioritize suggestions that address possible issues, major problems, and bugs in the PR code.
 - Don't suggest to add docstring, type hints, or comments, or to remove unused imports.
@@ -179,7 +179,8 @@ class CodeSuggestion(BaseModel):
     one_sentence_summary: str = Field(description="a short summary of the suggestion action, in a single sentence. Focus on the 'what'. Be general, and avoid method or variable names.")
     relevant_lines_start: int = Field(description="The relevant line number, from a '__new hunk__' section, where the suggestion starts (inclusive). Should be derived from the hunk line numbers, and correspond to the 'existing code' snippet above")
     relevant_lines_end: int = Field(description="The relevant line number, from a '__new hunk__' section, where the suggestion ends (inclusive). Should be derived from the hunk line numbers, and correspond to the 'existing code' snippet above")
-    label: str = Field(description="a single label for the suggestion, to help understand the suggestion type. For example: 'security', 'possible bug', 'possible issue', 'performance', 'enhancement', 'best practice', 'maintainability', etc. Other labels are also allowed")
+    label: str = Field(description="a single label for the suggestion, to help the user understand the suggestion type. For example: 'security', 'possible bug', 'possible issue', 'performance', 'enhancement', 'best practice', 'maintainability', etc. Other labels are also allowed")
+
 
 class PRCodeSuggestions(BaseModel):
     code_suggestions: List[CodeSuggestion]
