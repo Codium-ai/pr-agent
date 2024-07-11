@@ -177,8 +177,11 @@ class PRCodeSuggestions:
                                                 final_update_message=True,
                                                 max_previous_comments=4,
                                                 progress_response=None):
-        if isinstance(self.git_provider,AzureDevopsProvider):
-            self.git_provider.publish_comment(pr_comment)
+        if isinstance(self.git_provider, AzureDevopsProvider): # get_latest_commit_url is not supported yet
+            if progress_response:
+                self.git_provider.edit_comment(progress_response, pr_comment)
+            else:
+                self.git_provider.publish_comment(pr_comment)
             return
 
         history_header = f"#### Previous suggestions\n"
