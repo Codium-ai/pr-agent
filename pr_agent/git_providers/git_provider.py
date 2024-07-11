@@ -193,6 +193,9 @@ class GitProvider(ABC):
     def get_comment_url(self, comment) -> str:
         return ""
 
+    def delete_comment(self, comment):
+        comment.delete()
+
     #### labels operations ####
     @abstractmethod
     def publish_labels(self, labels):

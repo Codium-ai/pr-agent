@@ -11,7 +11,8 @@ from pr_agent.algo.pr_processing import get_pr_diff, get_pr_multi_diffs, retry_w
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.algo.utils import load_yaml, replace_code_tags, ModelType, show_relevant_configurations
 from pr_agent.config_loader import get_settings
-from pr_agent.git_providers import get_git_provider, get_git_provider_with_context, GithubProvider, GitLabProvider
+from pr_agent.git_providers import get_git_provider, get_git_provider_with_context, GithubProvider, GitLabProvider, \
+    AzureDevopsProvider
 from pr_agent.git_providers.git_provider import get_main_pr_language
 from pr_agent.log import get_logger
 from pr_agent.servers.help import HelpMessage
@@ -176,6 +177,10 @@ class PRCodeSuggestions:
                                                 final_update_message=True,
                                                 max_previous_comments=4,
                                                 progress_response=None):
+        if isinstance(self.git_provider,AzureDevopsProvider):
+            self.git_provider.publish_comment(pr_comment)
+            return
+
         history_header = f"#### Previous suggestions\n"
         last_commit_num = self.git_provider.get_latest_commit_url().split('/')[-1][:7]
         latest_suggestion_header = f"Latest suggestions up to {last_commit_num}"
@@ -248,7 +253,7 @@ class PRCodeSuggestions:
                         get_logger().info(f"Persistent mode - updating comment {comment_url} to latest {name} message")
                         if progress_response:  # publish to 'progress_response' comment, because it refreshes immediately
                             self.git_provider.edit_comment(progress_response, pr_comment_updated)
-                            comment.delete()
+                            self.git_provider.delete_comment(comment)
                         else:
                             self.git_provider.edit_comment(comment, pr_comment_updated)
                         return
