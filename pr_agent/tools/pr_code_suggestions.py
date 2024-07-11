@@ -432,7 +432,8 @@ class PRCodeSuggestions:
                     body = f"**Suggestion:** {content} [{label}]\n```suggestion\n" + new_code_snippet + "\n```"
                 code_suggestions.append({'body': body, 'relevant_file': relevant_file,
                                          'relevant_lines_start': relevant_lines_start,
-                                         'relevant_lines_end': relevant_lines_end})
+                                         'relevant_lines_end': relevant_lines_end,
+                                         'original_suggestion': d})
             except Exception:
                 get_logger().info(f"Could not parse suggestion: {d}")
 

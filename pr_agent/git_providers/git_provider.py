@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 # enum EDIT_TYPE (ADDED, DELETED, MODIFIED, RENAMED)
 from typing import Optional
 
+from pr_agent.algo.utils import Range
 from pr_agent.config_loader import get_settings
 from pr_agent.algo.types import FilePatchInfo
 from pr_agent.log import get_logger
