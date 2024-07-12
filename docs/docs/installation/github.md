@@ -26,7 +26,9 @@ jobs:
           OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
-** if you want to pin your action to a specific release (v2.0 for example) for stability reasons, use:
+
+
+if you want to pin your action to a specific release (v2.0 for example) for stability reasons, use:
 ```yaml
 ...
     steps:
@@ -35,6 +37,7 @@ jobs:
         uses: Codium-ai/pr-agent@v2.0
 ...
 ```
+
 2) Add the following secret to your repository under `Settings > Secrets and variables > Actions > New repository secret > Add secret`:
 
 ```
