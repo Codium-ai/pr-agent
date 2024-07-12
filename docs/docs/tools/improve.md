@@ -97,21 +97,17 @@ Use triple quotes to write multi-line instructions. Use bullet points or numbers
 
 #### Best practices 💎
 Another option to give additional guidance to the AI model is by creating a dedicated [**wiki page**](https://github.com/Codium-ai/pr-agent/wiki) called `best_practices.md`. 
-This page can contain a list of best practices, coding standards, and guidelines that are specific to your repo/organization (up to 800 lines are allowed)
+This page can contain a list of best practices, coding standards, and guidelines that are specific to your repo/organization
 
-The AI model will use this page as a reference, and in case the PR code violates any of the guidelines, it will suggest improvements accordingly.
-Examples for possible best practices:
-```
-## Here are the organization's best practices for writing code:
-- avoid nested loops
-- avoid typos
-- use meaningful variable names
-- follow the DRY principle
-- keep functions short and simple, typically within 10-30 lines of code.
-...
-```
-When a PR code violates any of the guidelines, the AI model will suggest improvements accordingly, with a dedicated label: `Organization
+The AI model will use this page as a reference, and in case the PR code violates any of the guidelines, it will suggest improvements accordingly, with a dedicated label: `Organization
 best practice`. 
+
+Example for a `best_practices.md` content can be found [here](https://pr-agent-docs.codium.ai/usage-guide/EXAMPLE_BEST_PRACTICE.md) (adapted from Google's [pyguide](https://google.github.io/styleguide/pyguide.html)).
+This file is only an example. Since it is used as a prompt for an AI model, we want to emphasize the following:
+- It should be written in a clear and concise manner
+- If needed, it should give short relevant code snippets as examples
+- Up to 800 lines are allowed
+
 
 Example results:
 
