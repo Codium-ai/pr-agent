@@ -43,15 +43,23 @@ num_code_suggestions = ...
 - The `pr_commands` lists commands that will be executed automatically when a PR is opened.
 - The `[pr_reviewer]` section contains the configurations for the `review` tool you want to edit (if any).
 
-### Incremental Mode
-Incremental review only considers changes since the last PR-Agent review. This can be useful when working on the PR in an iterative manner, and you want to focus on the changes since the last review instead of reviewing the entire PR again.
-For invoking the incremental mode, the following command can be used:
-```
-/review -i
-```
-Note that the incremental mode is only available for GitHub.
+[//]: # ()
+[//]: # (### Incremental Mode)
 
-![incremental review](https://codium.ai/images/pr_agent/incremental_review_2.png){width=512}
+[//]: # (Incremental review only considers changes since the last PR-Agent review. This can be useful when working on the PR in an iterative manner, and you want to focus on the changes since the last review instead of reviewing the entire PR again.)
+
+[//]: # (For invoking the incremental mode, the following command can be used:)
+
+[//]: # (```)
+
+[//]: # (/review -i)
+
+[//]: # (```)
+
+[//]: # (Note that the incremental mode is only available for GitHub.)
+
+[//]: # ()
+[//]: # (![incremental review]&#40;https://codium.ai/images/pr_agent/incremental_review_2.png&#41;{width=512})
 
 [//]: # (### PR Reflection)
 
