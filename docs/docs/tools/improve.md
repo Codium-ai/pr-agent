@@ -102,8 +102,9 @@ This page can contain a list of best practices, coding standards, and guidelines
 The AI model will use this page as a reference, and in case the PR code violates any of the guidelines, it will suggest improvements accordingly, with a dedicated label: `Organization
 best practice`. 
 
-Example for a `best_practices.md` content can be found [here](https://pr-agent-docs.codium.ai/usage-guide/EXAMPLE_BEST_PRACTICE.md) (adapted from Google's [pyguide](https://google.github.io/styleguide/pyguide.html)).
+Example for a `best_practices.md` content can be found [here](https://github.com/Codium-ai/pr-agent/blob/main/docs/docs/usage-guide/EXAMPLE_BEST_PRACTICE.md) (adapted from Google's [pyguide](https://google.github.io/styleguide/pyguide.html)).
 This file is only an example. Since it is used as a prompt for an AI model, we want to emphasize the following:
+
 - It should be written in a clear and concise manner
 - If needed, it should give short relevant code snippets as examples
 - Up to 800 lines are allowed
