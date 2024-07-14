@@ -56,7 +56,7 @@ Code Documentation:
   items:
     relevant file:
       type: string
-      description: The complete file path of the relevant file.
+      description: The full file path of the relevant file.
     relevant line:
       type: integer
       description: |-

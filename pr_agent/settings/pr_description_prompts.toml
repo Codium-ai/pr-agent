@@ -38,7 +38,7 @@ class PRType(str, Enum):
 {%- if enable_semantic_files_types %}
 
 class FileDescription(BaseModel):
-    filename: str = Field(description="The complete file path of the relevant file.")
+    filename: str = Field(description="The full file path of the relevant file.")
     language: str = Field(description="The programming language of the relevant file.")
     changes_summary: str = Field(description="concise summary of the changes in the relevant file, in bullet points (1-4 bullet points).")
     changes_title: str = Field(description="an informative title for the changes in the files, describing its main theme (5-10 words).")

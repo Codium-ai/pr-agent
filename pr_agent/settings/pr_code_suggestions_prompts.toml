@@ -57,7 +57,7 @@ Extra instructions from the user, that should be taken into account with high pr
 The output must be a YAML object equivalent to type $PRCodeSuggestions, according to the following Pydantic definitions:
 =====
 class CodeSuggestion(BaseModel):
-    relevant_file: str = Field(description="The complete file path of the relevant file.")
+    relevant_file: str = Field(description="The full file path of the relevant file.")
     language: str = Field(description="The programming language of the relevant file.")
     suggestion_content: str = Field(description="an actionable suggestion for meaningfully improving the new code introduced in the PR")
     existing_code: str = Field(description="a short code snippet, demonstrating the relevant code lines from a '__new hunk__' section. It must be without line numbers. Use abbreviations if needed")
@@ -171,7 +171,7 @@ Extra instructions from the user, that should be taken into account with high pr
 The output must be a YAML object equivalent to type $PRCodeSuggestions, according to the following Pydantic definitions:
 =====
 class CodeSuggestion(BaseModel):
-    relevant_file: str = Field(description="The complete file path of the relevant file.")
+    relevant_file: str = Field(description="The full file path of the relevant file.")
     language: str = Field(description="The programming language of the relevant file.")
     suggestion_content: str = Field(description="an actionable suggestion for meaningfully improving the new code introduced in the PR. Don't present here actual code snippets, just the suggestion. Be short and concise ")
     existing_code: str = Field(description="a short code snippet, demonstrating the relevant code lines from a '__new hunk__' section. It must be without line numbers. Use abbreviations ("...") if needed")
