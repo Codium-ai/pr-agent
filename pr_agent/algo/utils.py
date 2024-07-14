@@ -123,7 +123,7 @@ def convert_to_markdown_v2(output_data: dict,
 
     for key, value in output_data['review'].items():
         if value is None or value == '' or value == {} or value == []:
-            if key.lower() != 'can_be_split' and key.lower() != 'key_issues_to_review':
+            if key.lower() not in ['can_be_split', 'key_issues_to_review']:
                 continue
         key_nice = key.replace('_', ' ').capitalize()
         emoji = emojis.get(key_nice, "")
