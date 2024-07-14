@@ -78,8 +78,8 @@ class Review(BaseModel):
 {%- if num_code_suggestions > 0 %}
 
 class CodeSuggestion(BaseModel):
-    relevant_file: str = Field(description="the relevant file full path")
-    language: str = Field(description="the language of the relevant file")
+    relevant_file: str = Field(description="The full file path of the relevant file.")
+    language: str = Field(description="The programming language of the relevant file.")
     suggestion: str = Field(description="a concrete suggestion for meaningfully improving the new PR code. Also describe how, specifically, the suggestion can be applied to new PR code. Add tags with importance measure that matches each suggestion ('important' or 'medium'). Do not make suggestions for updating or adding docstrings, renaming PR title and description, or linter like.")
     relevant_line: str = Field(description="a single code line taken from the relevant file, to which the suggestion applies. The code line should start with a '+'. Make sure to output the line exactly as it appears in the relevant file")
 {%- endif %}
