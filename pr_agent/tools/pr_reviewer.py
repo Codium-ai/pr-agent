@@ -75,6 +75,7 @@ class PRReviewer:
             "commit_messages_str": self.git_provider.get_commit_messages(),
             "custom_labels": "",
             "enable_custom_labels": get_settings().config.enable_custom_labels,
+            "extra_issue_links": get_settings().pr_reviewer.extra_issue_links,
         }
 
         self.token_handler = TokenHandler(
@@ -147,7 +148,12 @@ class PRReviewer:
             get_logger().error(f"Failed to review PR: {e}")
 
     async def _prepare_prediction(self, model: str) -> None:
-        self.patches_diff = get_pr_diff(self.git_provider, self.token_handler, model)
+        self.patches_diff = get_pr_diff(self.git_provider,
+                                        self.token_handler,
+                                        model,
+                                        add_line_numbers_to_hunks=True,
+                                        disable_extra_lines=True,)
+
         if self.patches_diff:
             get_logger().debug(f"PR diff", diff=self.patches_diff)
             self.prediction = await self._get_prediction(model)
@@ -234,7 +240,7 @@ class PRReviewer:
             incremental_review_markdown_text = f"Starting from commit {last_commit_url}"
 
         markdown_text = convert_to_markdown_v2(data, self.git_provider.is_supported("gfm_markdown"),
-                                            incremental_review_markdown_text)
+                                            incremental_review_markdown_text, git_provider=self.git_provider)
 
         # Add help text if gfm_markdown is supported
         if self.git_provider.is_supported("gfm_markdown") and get_settings().pr_reviewer.enable_help_text:
