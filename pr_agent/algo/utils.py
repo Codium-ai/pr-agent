@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import difflib
 import json
 import os
@@ -44,7 +45,7 @@ def get_setting(key: str) -> Any:
         return global_settings.get(key, None)
 
 
-def emphasize_header(text: str, only_markdown=False) -> str:
+def emphasize_header(text: str, only_markdown=False, reference_link=None) -> str:
     try:
         # Finding the position of the first occurrence of ": "
         colon_position = text.find(": ")
@@ -53,9 +54,15 @@ def emphasize_header(text: str, only_markdown=False) -> str:
         if colon_position != -1:
             # Everything before the colon (inclusive) is wrapped in <strong> tags
             if only_markdown:
-                transformed_string = f"**{text[:colon_position + 1]}**\n" + text[colon_position + 1:]
+                if reference_link:
+                    transformed_string = f"[**{text[:colon_position + 1]}**]({reference_link})\n" + text[colon_position + 1:]
+                else:
+                    transformed_string = f"**{text[:colon_position + 1]}**\n" + text[colon_position + 1:]
             else:
-                transformed_string = "<strong>" + text[:colon_position + 1] + "</strong>" +'<br>' + text[colon_position + 1:]
+                if reference_link:
+                    transformed_string = f"<strong><a href='{reference_link}'>{text[:colon_position + 1]}</a></strong><br>" + text[colon_position + 1:]
+                else:
+                    transformed_string = "<strong>" + text[:colon_position + 1] + "</strong>" +'<br>' + text[colon_position + 1:]
         else:
             # If there's no ": ", return the original string
             transformed_string = text
@@ -77,7 +84,10 @@ def unique_strings(input_list: List[str]) -> List[str]:
             seen.add(item)
     return unique_list
 
-def convert_to_markdown_v2(output_data: dict, gfm_supported: bool = True, incremental_review=None) -> str:
+def convert_to_markdown_v2(output_data: dict,
+                           gfm_supported: bool = True,
+                           incremental_review=None,
+                           git_provider=None) -> str:
     """
     Convert a dictionary of data into markdown format.
     Args:
@@ -113,12 +123,13 @@ def convert_to_markdown_v2(output_data: dict, gfm_supported: bool = True, increm
 
     for key, value in output_data['review'].items():
         if value is None or value == '' or value == {} or value == []:
-            if key.lower() != 'can_be_split':
+            if key.lower() not in ['can_be_split', 'key_issues_to_review']:
                 continue
         key_nice = key.replace('_', ' ').capitalize()
         emoji = emojis.get(key_nice, "")
         if 'Estimated effort to review' in key_nice:
             key_nice = 'Estimated effort to review'
+            value = str(value).strip()
             if value.isnumeric():
                 value_int = int(value)
             else:
@@ -179,7 +190,7 @@ def convert_to_markdown_v2(output_data: dict, gfm_supported: bool = True, increm
                 markdown_text += process_can_be_split(emoji, value)
                 markdown_text += f"</td></tr>\n"
         elif 'key issues to review' in key_nice.lower():
-            value = value.strip()
+            # value is a list of issues
             if is_value_no(value):
                 if gfm_supported:
                     markdown_text += f"<tr><td>"
@@ -188,20 +199,46 @@ def convert_to_markdown_v2(output_data: dict, gfm_supported: bool = True, increm
                 else:
                     markdown_text += f"### {emoji} No key issues to review\n\n"
             else:
-                issues = value.split('\n- ')
-                for i, _ in enumerate(issues):
-                    issues[i] = issues[i].strip().strip('-').strip()
-                issues = unique_strings(issues) # remove duplicates
+                # issues = value.split('\n- ')
+                issues =value
+                # for i, _ in enumerate(issues):
+                #     issues[i] = issues[i].strip().strip('-').strip()
                 if gfm_supported:
                     markdown_text += f"<tr><td>"
                     markdown_text += f"{emoji}&nbsp;<strong>{key_nice}</strong><br><br>\n\n"
                 else:
-                    markdown_text += f"### {emoji} Key issues to review:\n\n"
+                    markdown_text += f"### {emoji} Key issues to review\n\n#### \n"
                 for i, issue in enumerate(issues):
-                    if not issue:
-                        continue
-                    issue = emphasize_header(issue, only_markdown=True)
-                    markdown_text += f"{issue}\n\n"
+                    try:
+                        if not issue:
+                            continue
+                        relevant_file = issue.get('relevant_file', '').strip()
+                        issue_header = issue.get('issue_header', '').strip()
+                        issue_content = issue.get('issue_content', '').strip()
+                        start_line = int(str(issue.get('start_line', 0)).strip())
+                        end_line = int(str(issue.get('end_line', 0)).strip())
+                        reference_link = git_provider.get_line_link(relevant_file, start_line, end_line)
+
+                        if gfm_supported:
+                            if get_settings().pr_reviewer.extra_issue_links:
+                                issue_content_linked =copy.deepcopy(issue_content)
+                                referenced_variables_list = issue.get('referenced_variables', [])
+                                for component in referenced_variables_list:
+                                    name = component['variable_name'].strip().strip('`')
+
+                                    ind = issue_content.find(name)
+                                    if ind != -1:
+                                        reference_link_component = git_provider.get_line_link(relevant_file, component['relevant_line'], component['relevant_line'])
+                                        issue_content_linked = issue_content_linked[:ind-1] + f"[`{name}`]({reference_link_component})" + issue_content_linked[ind+len(name)+1:]
+                                    else:
+                                        get_logger().info(f"Failed to find variable in issue content: {component['variable_name'].strip()}")
+                                issue_content = issue_content_linked
+                            issue_str = f"<a href='{reference_link}'><strong>{issue_header}</strong></a><br>{issue_content}"
+                        else:
+                            issue_str = f"[**{issue_header}**]({reference_link})\n\n{issue_content}\n\n"
+                        markdown_text += f"{issue_str}\n\n"
+                    except Exception as e:
+                        get_logger().exception(f"Failed to process key issues to review: {e}")
                 if gfm_supported:
                     markdown_text += f"</td></tr>\n"
         else:
@@ -536,6 +573,7 @@ def load_yaml(response_text: str, keys_fix_yaml: List[str] = [], first_key="", l
     return data
 
 
+
 def try_fix_yaml(response_text: str,
                  keys_fix_yaml: List[str] = [],
                  first_key="",
@@ -558,14 +596,14 @@ def try_fix_yaml(response_text: str,
     except:
         get_logger().info(f"Failed to parse AI prediction after adding |-\n")
 
-    # second fallback - try to extract only range from first ```yaml to ```
+    # second fallback - try to extract only range from first ```yaml to ````
     snippet_pattern = r'```(yaml)?[\s\S]*?```'
     snippet = re.search(snippet_pattern, '\n'.join(response_text_lines_copy))
     if snippet:
         snippet_text = snippet.group()
         try:
             data = yaml.safe_load(snippet_text.removeprefix('```yaml').rstrip('`'))
-            get_logger().info(f"Successfully parsed AI prediction after extracting yaml snippet with second fallback")
+            get_logger().info(f"Successfully parsed AI prediction after extracting yaml snippet")
             return data
         except:
             pass
@@ -579,6 +617,7 @@ def try_fix_yaml(response_text: str,
         return data
     except:
         pass
+
 
     # forth fallback - try to extract yaml snippet by 'first_key' and 'last_key'
     # note that 'last_key' can be in practice a key that is not the last key in the yaml snippet.
@@ -885,7 +924,7 @@ def show_relevant_configurations(relevant_section: str) -> str:
     return markdown_text
 
 def is_value_no(value):
-    if value is None:
+    if not value:
         return True
     value_str = str(value).strip().lower()
     if value_str == 'no' or value_str == 'none' or value_str == 'false':
