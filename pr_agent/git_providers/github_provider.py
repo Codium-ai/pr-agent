@@ -628,10 +628,6 @@ class GithubProvider(GitProvider):
     @staticmethod
     def _parse_issue_url(issue_url: str) -> Tuple[str, int]:
         parsed_url = urlparse(issue_url)
-
-        if 'github.com' not in parsed_url.netloc:
-            raise ValueError("The provided URL is not a valid GitHub URL")
-
         path_parts = parsed_url.path.strip('/').split('/')
         if 'api.github.com' in parsed_url.netloc:
             if len(path_parts) < 5 or path_parts[3] != 'issues':
