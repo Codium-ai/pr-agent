@@ -38,6 +38,16 @@ if you want to pin your action to a specific release (v0.23 for example) for sta
 ...
 ```
 
+For enhanced security, you can also specify the Docker image by its digest:
+```yaml
+...
+    steps:
+      - name: PR Agent action step
+        id: pragent
+        uses: docker://codiumai/pr-agent@sha256:14165e525678ace7d9b51cda8652c2d74abb4e1d76b57c4a6ccaeba84663cc64
+...
+```
+
 2) Add the following secret to your repository under `Settings > Secrets and variables > Actions > New repository secret > Add secret`:
 
 ```
