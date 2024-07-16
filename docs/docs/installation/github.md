@@ -28,13 +28,13 @@ jobs:
 ```
 
 
-if you want to pin your action to a specific release (v2.0 for example) for stability reasons, use:
+if you want to pin your action to a specific release (v0.23 for example) for stability reasons, use:
 ```yaml
 ...
     steps:
       - name: PR Agent action step
         id: pragent
-        uses: Codium-ai/pr-agent@v2.0
+        uses: docker://codiumai/pr-agent:0.23-github_action
 ...
 ```
 
