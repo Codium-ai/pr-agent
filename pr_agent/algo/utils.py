@@ -156,17 +156,10 @@ def convert_to_markdown_v2(output_data: dict,
                     markdown_text += f"{emoji}&nbsp;<strong>PR contains tests</strong>"
                 markdown_text += f"</td></tr>\n"
             else:
-                if gfm_supported:
-                    markdown_text += f"<tr><td>"
-                    if is_value_no(value):
-                        markdown_text += f"{emoji}&nbsp;<strong>No relevant tests</strong>"
-                    else:
-                        markdown_text += f"{emoji}&nbsp;<strong>PR contains tests</strong>"
+                if is_value_no(value):
+                    markdown_text += f'### {emoji} No relevant tests\n\n'
                 else:
-                    if is_value_no(value):
-                        markdown_text += f'### {emoji} No relevant tests\n\n'
-                    else:
-                        markdown_text += f"### PR contains tests\n\n"
+                    markdown_text += f"### PR contains tests\n\n"
         elif 'security concerns' in key_nice.lower():
             if gfm_supported:
                 markdown_text += f"<tr><td>"
