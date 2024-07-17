@@ -3,7 +3,7 @@
 The default models used by PR-Agent Pro are OpenAI's GPT-4 models. We use a combination of GPT-4-Turbo and GPT-4o to strike a balance between speed and quality.
 
 However, users can change the model used by PR-Agent Pro to Claude-3.5-sonnet, which also excels in code tasks. 
-To do so, add the following you [configuration](https://pr-agent-docs.codium.ai/usage-guide/configuration_options/) file:
+To do so, add the following to your [configuration](https://pr-agent-docs.codium.ai/usage-guide/configuration_options/) file:
 
 ```
 [config]
