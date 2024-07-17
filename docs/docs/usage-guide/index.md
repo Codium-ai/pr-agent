@@ -21,3 +21,4 @@ This page provides a detailed guide on how to use PR-Agent. It includes informat
     - [Changing a model](./additional_configurations.md#changing-a-model)
     - [Patch Extra Lines](./additional_configurations.md#patch-extra-lines)
     - [Editing the prompts](./additional_configurations.md#editing-the-prompts)
+- [PR-Agent Pro Models](./PR_agent_pro_models.md)
