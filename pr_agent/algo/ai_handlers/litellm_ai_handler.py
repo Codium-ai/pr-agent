@@ -58,6 +58,8 @@ class LiteLLMAIHandler(BaseAiHandler):
             litellm.use_client = True
         if get_settings().get("LITELLM.DROP_PARAMS", None):
             litellm.drop_params = get_settings().litellm.drop_params
+        if get_settings().get("litellm.set_verbose", None):
+            litellm.set_verbose = get_settings().litellm.set_verbose
         if get_settings().get("OPENAI.ORG", None):
             litellm.organization = get_settings().openai.org
         if get_settings().get("OPENAI.API_TYPE", None):

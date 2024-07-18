@@ -256,6 +256,7 @@ url = ""
 [litellm]
 # use_client = false
 # drop_params = false
+# set_verbose = false
 
 [pr_similar_issue]
 skip_comments = false
