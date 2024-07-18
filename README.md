@@ -73,40 +73,40 @@ New option now available (💎) - **apply suggestions**:
 
 Supported commands per platform:
 
-|       |                                                                                                         | GitHub             | Gitlab             | Bitbucket          | Azure DevOps       |
-|-------|---------------------------------------------------------------------------------------------------------|:--------------------:|:--------------------:|:--------------------:|:--------------------:|
-| TOOLS | Review                                                                                                  | ✅ | ✅ | ✅ | ✅ |
-|       | ⮑ Incremental                                                                                           | ✅ |                    |                    |                    |
-|       | ⮑ [SOC2 Compliance](https://pr-agent-docs.codium.ai/tools/review/#soc2-ticket-compliance) 💎            | ✅ | ✅ | ✅ | ✅ |
-|       | Describe                                                                                                | ✅ | ✅ | ✅ | ✅ |
-|       | ⮑ [Inline File Summary](https://pr-agent-docs.codium.ai/tools/describe#inline-file-summary) 💎          | ✅ |                    |                    |                    |
-|       | Improve                                                                                                 | ✅ | ✅ | ✅ | ✅ |
-|       | ⮑ Extended                                                                                              | ✅ | ✅ | ✅ | ✅ |
-|       | Ask                                                                                                     | ✅ | ✅ | ✅ | ✅ |
-|       | ⮑ [Ask on code lines](https://pr-agent-docs.codium.ai/tools/ask#ask-lines)                              | ✅ | ✅ |                    |                    |
-|       | [Custom Prompt](https://pr-agent-docs.codium.ai/tools/custom_prompt/) 💎                                | ✅ | ✅ | ✅ | ✅ |
-|       | [Test](https://pr-agent-docs.codium.ai/tools/test/) 💎                                                  | ✅ | ✅ |                    | ✅ |
-|       | Reflect and Review                                                                                      | ✅ | ✅ | ✅ | ✅ |
-|       | Update CHANGELOG.md                                                                                     | ✅ | ✅ | ✅ | ✅ |
-|       | Find Similar Issue                                                                                      | ✅ |                    |                    |                    |
-|       | [Add PR Documentation](https://pr-agent-docs.codium.ai/tools/documentation/) 💎                         | ✅ | ✅ |                   | ✅ |
-|       | [Custom Labels](https://pr-agent-docs.codium.ai/tools/custom_labels/) 💎                                | ✅ | ✅ |                    | ✅ |
-|       | [Analyze](https://pr-agent-docs.codium.ai/tools/analyze/) 💎                                            | ✅ | ✅ |                    | ✅ |
-|       | [CI Feedback](https://pr-agent-docs.codium.ai/tools/ci_feedback/) 💎                                    | ✅ |                    |                    |                    |
-|       | [Similar Code](https://pr-agent-docs.codium.ai/tools/similar_code/) 💎                                  | ✅ |                    |                    |                    |
-|       |                                                                                                         |                    |                    |                    |                    |
-| USAGE | CLI                                                                                                     | ✅ | ✅ | ✅ | ✅ |
-|       | App / webhook                                                                                           | ✅ | ✅ | ✅ | ✅ |
-|       | Tagging bot                                                                                             | ✅ |                    |                    |                    |
-|       | Actions                                                                                                 | ✅ |                    | ✅ |                    |
-|       |                                                                                                         |                    |                    |                    |                    |
-| CORE  | PR compression                                                                                          | ✅ | ✅ | ✅ | ✅ |
-|       | Repo language prioritization                                                                            | ✅ | ✅ | ✅ | ✅ |
-|       | Adaptive and token-aware file patch fitting                                                             | ✅ | ✅ | ✅ | ✅ |
-|       | Multiple models support                                                                                 | ✅ | ✅ | ✅ | ✅ |
-|       | [Static code analysis](https://pr-agent-docs.codium.ai/core-abilities/#static-code-analysis) 💎         | ✅ | ✅ | ✅ | ✅ |
-|       | [Global and wiki configurations](https://pr-agent-docs.codium.ai/usage-guide/configuration_options/) 💎 | ✅ | ✅ | ✅ | ✅ |
-|       | [PR interactive actions](https://www.codium.ai/images/pr_agent/pr-actions.mp4) 💎                       | ✅ |                    |                    |                    |
+|       |                                                                                                         | GitHub             | Gitlab             | Bitbucket          | Azure DevOps |
+|-------|---------------------------------------------------------------------------------------------------------|:--------------------:|:--------------------:|:--------------------:|:------------:|
+| TOOLS | Review                                                                                                  | ✅ | ✅ | ✅ |      ✅       |
+|       | ⮑ Incremental                                                                                           | ✅ |                    |                    |              |
+|       | ⮑ [SOC2 Compliance](https://pr-agent-docs.codium.ai/tools/review/#soc2-ticket-compliance) 💎            | ✅ | ✅ | ✅ |              |
+|       | Describe                                                                                                | ✅ | ✅ | ✅ |      ✅       |
+|       | ⮑ [Inline File Summary](https://pr-agent-docs.codium.ai/tools/describe#inline-file-summary) 💎          | ✅ |                    |                    |              |
+|       | Improve                                                                                                 | ✅ | ✅ | ✅ |      ✅       |
+|       | ⮑ Extended                                                                                              | ✅ | ✅ | ✅ |      ✅       |
+|       | Ask                                                                                                     | ✅ | ✅ | ✅ |      ✅       |
+|       | ⮑ [Ask on code lines](https://pr-agent-docs.codium.ai/tools/ask#ask-lines)                              | ✅ | ✅ |                    |              |
+|       | [Custom Prompt](https://pr-agent-docs.codium.ai/tools/custom_prompt/) 💎                                | ✅ | ✅ | ✅ |              |
+|       | [Test](https://pr-agent-docs.codium.ai/tools/test/) 💎                                                  | ✅ | ✅ |                    |              |
+|       | Reflect and Review                                                                                      | ✅ | ✅ | ✅ |      ✅       |
+|       | Update CHANGELOG.md                                                                                     | ✅ | ✅ | ✅ |      ✅       |
+|       | Find Similar Issue                                                                                      | ✅ |                    |                    |              |
+|       | [Add PR Documentation](https://pr-agent-docs.codium.ai/tools/documentation/) 💎                         | ✅ | ✅ |                   |              |
+|       | [Custom Labels](https://pr-agent-docs.codium.ai/tools/custom_labels/) 💎                                | ✅ | ✅ |                    |              |
+|       | [Analyze](https://pr-agent-docs.codium.ai/tools/analyze/) 💎                                            | ✅ | ✅ |                    |              |
+|       | [CI Feedback](https://pr-agent-docs.codium.ai/tools/ci_feedback/) 💎                                    | ✅ |                    |                    |              |
+|       | [Similar Code](https://pr-agent-docs.codium.ai/tools/similar_code/) 💎                                  | ✅ |                    |                    |              |
+|       |                                                                                                         |                    |                    |                    |              |
+| USAGE | CLI                                                                                                     | ✅ | ✅ | ✅ |      ✅       |
+|       | App / webhook                                                                                           | ✅ | ✅ | ✅ |      ✅       |
+|       | Tagging bot                                                                                             | ✅ |                    |                    |              |
+|       | Actions                                                                                                 | ✅ |                    | ✅ |              |
+|       |                                                                                                         |                    |                    |                    |              |
+| CORE  | PR compression                                                                                          | ✅ | ✅ | ✅ |      ✅       |
+|       | Repo language prioritization                                                                            | ✅ | ✅ | ✅ |      ✅       |
+|       | Adaptive and token-aware file patch fitting                                                             | ✅ | ✅ | ✅ |      ✅       |
+|       | Multiple models support                                                                                 | ✅ | ✅ | ✅ |      ✅       |
+|       | [Static code analysis](https://pr-agent-docs.codium.ai/core-abilities/#static-code-analysis) 💎         | ✅ | ✅ | ✅ |              |
+|       | [Global and wiki configurations](https://pr-agent-docs.codium.ai/usage-guide/configuration_options/) 💎 | ✅ | ✅ | ✅ |              |
+|       | [PR interactive actions](https://www.codium.ai/images/pr_agent/pr-actions.mp4) 💎                       | ✅ |        ✅           |                    |              |
 - 💎 means this feature is available only in [PR-Agent Pro](https://www.codium.ai/pricing/)
 
 [//]: # (- Support for additional git providers is described in [here]&#40;./docs/Full_environments.md&#41;)
@@ -225,7 +225,12 @@ For example, add a comment to any pull request with the following text:
 ```
 @CodiumAI-Agent /review
 ```
-and the agent will respond with a review of your PR
+and the agent will respond with a review of your PR.
+
+Note that this is a promotional bot, suitable only for initial experimentation.
+It does not have `edit` access to you repo, for example, so it cannot update the PR description or add labels.
+Comment: `@CodiumAI-Agent /describe --pr_description.publish_description_as_comment=true` to publish the description as a comment in the PR.
+`@CodiumAI-Agent /review` and `@CodiumAI-Agent /improve` should work as-is.
 
 ![Review generation process](https://www.codium.ai/images/demo-2.gif)
 
@@ -235,43 +240,6 @@ Note that when you set your own PR-Agent or use CodiumAI hosted PR-Agent, there 
 
 ---
 
-[//]: # (## Installation)
-
-[//]: # (To use your own version of PR-Agent, you first need to acquire two tokens:)
-
-[//]: # ()
-[//]: # (1. An OpenAI key from [here]&#40;https://platform.openai.com/&#41;, with access to GPT-4.)
-
-[//]: # (2. A GitHub personal access token &#40;classic&#41; with the repo scope.)
-
-[//]: # ()
-[//]: # (There are several ways to use PR-Agent:)
-
-[//]: # ()
-[//]: # (**Locally**)
-
-[//]: # (- [Using pip package]&#40;https://pr-agent-docs.codium.ai/installation/locally/#using-pip-package&#41;)
-
-[//]: # (- [Using Docker image]&#40;https://pr-agent-docs.codium.ai/installation/locally/#using-docker-image&#41;)
-
-[//]: # (- [Run from source]&#40;https://pr-agent-docs.codium.ai/installation/locally/#run-from-source&#41;)
-
-[//]: # ()
-[//]: # (**GitHub specific methods**)
-
-[//]: # (- [Run as a GitHub Action]&#40;https://pr-agent-docs.codium.ai/installation/github/#run-as-a-github-action&#41;)
-
-[//]: # (- [Run as a GitHub App]&#40;https://pr-agent-docs.codium.ai/installation/github/#run-as-a-github-app&#41;)
-
-[//]: # ()
-[//]: # (**GitLab specific methods**)
-
-[//]: # (- [Run a GitLab webhook server]&#40;https://pr-agent-docs.codium.ai/installation/gitlab/&#41;)
-
-[//]: # ()
-[//]: # (**BitBucket specific methods**)
-
-[//]: # (- [Run as a Bitbucket Pipeline]&#40;https://pr-agent-docs.codium.ai/installation/bitbucket/&#41;)
 
 ## PR-Agent Pro 💎
 [PR-Agent Pro](https://www.codium.ai/pricing/) is a hosted version of PR-Agent, provided by CodiumAI. It is available for a monthly fee, and provides the following benefits:

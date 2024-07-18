@@ -11,6 +11,19 @@
     }
 }
 
+.md-nav--primary {
+    position: relative; /* Ensure the element is positioned */
+}
+
+.md-nav--primary::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 10px; /* Move the border 10 pixels to the right */
+    width: 2px;
+    height: 100%;
+    background-color: #f5f5f5; /* Match the border color */
+}
 /*.md-nav__title, .md-nav__link  {*/
 /*    font-size: 18px;*/
 /*    margin-top: 14px; !* Adjust the space as needed *!*/

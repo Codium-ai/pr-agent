@@ -14,33 +14,33 @@ PR-Agent offers extensive pull request functionalities across various git provid
 
 |       |                                                                                                                       | GitHub | Gitlab | Bitbucket | Azure DevOps |
 |-------|-----------------------------------------------------------------------------------------------------------------------|:------:|:------:|:---------:|:------------:|
-| TOOLS | Review                                                                                                                |   ✅    |   ✅    |   ✅       |      ✅      |
+| TOOLS | Review                                                                                                                |   ✅    |   ✅    |   ✅       |      ✅       |
 |       | ⮑ Incremental                                                                                                         |   ✅    |        |            |              |
-|       | ⮑ [SOC2 Compliance](https://pr-agent-docs.codium.ai/tools/review/#soc2-ticket-compliance){:target="_blank"} 💎        |   ✅    |   ✅    |   ✅        |      ✅      |
-|       | Ask                                                                                                                   |   ✅    |   ✅    |   ✅        |      ✅      |
-|       | Describe                                                                                                              |   ✅    |   ✅    |   ✅        |      ✅      |
-|       | ⮑ [Inline file summary](https://pr-agent-docs.codium.ai/tools/describe/#inline-file-summary){:target="_blank"} 💎     |   ✅    |   ✅    |           |      ✅      |
-|       | Improve                                                                                                               |   ✅    |   ✅    |   ✅        |      ✅      |
-|       | ⮑ Extended                                                                                                            |   ✅    |   ✅    |   ✅        |      ✅      |
-|       | [Custom Prompt](./tools/custom_prompt.md){:target="_blank"} 💎                                                        |   ✅    |   ✅    |   ✅        |      ✅      |
-|       | Reflect and Review                                                                                                    |   ✅    |   ✅    |   ✅        |      ✅      |
+|       | ⮑ [SOC2 Compliance](https://pr-agent-docs.codium.ai/tools/review/#soc2-ticket-compliance){:target="_blank"} 💎        |   ✅    |   ✅    |   ✅        |              |
+|       | Ask                                                                                                                   |   ✅    |   ✅    |   ✅        |      ✅       |
+|       | Describe                                                                                                              |   ✅    |   ✅    |   ✅        |      ✅       |
+|       | ⮑ [Inline file summary](https://pr-agent-docs.codium.ai/tools/describe/#inline-file-summary){:target="_blank"} 💎     |   ✅    |   ✅    |           |              |
+|       | Improve                                                                                                               |   ✅    |   ✅    |   ✅        |      ✅       |
+|       | ⮑ Extended                                                                                                            |   ✅    |   ✅    |   ✅        |      ✅       |
+|       | [Custom Prompt](./tools/custom_prompt.md){:target="_blank"} 💎                                                        |   ✅    |   ✅    |   ✅        |              |
+|       | Reflect and Review                                                                                                    |   ✅    |   ✅    |   ✅        |              |
 |       | Update CHANGELOG.md                                                                                                   |   ✅    |   ✅    |   ✅        |      ️       |
 |       | Find Similar Issue                                                                                                    |   ✅    |        |             |      ️       |
-|       | [Add PR Documentation](./tools/documentation.md){:target="_blank"} 💎                                                 |   ✅    |   ✅    |          |      ✅      |
-|       | [Generate Custom Labels](./tools/describe.md#handle-custom-labels-from-the-repos-labels-page-💎){:target="_blank"} 💎 |   ✅    |   ✅    |            |      ✅      |
-|       | [Analyze PR Components](./tools/analyze.md){:target="_blank"} 💎                                                      |   ✅    |   ✅    |       |      ✅      |
+|       | [Add PR Documentation](./tools/documentation.md){:target="_blank"} 💎                                                 |   ✅    |   ✅    |          |              |
+|       | [Generate Custom Labels](./tools/describe.md#handle-custom-labels-from-the-repos-labels-page-💎){:target="_blank"} 💎 |   ✅    |   ✅    |            |              |
+|       | [Analyze PR Components](./tools/analyze.md){:target="_blank"} 💎                                                      |   ✅    |   ✅    |       |              |
 |       |                                                                                                                       |        |        |            |      ️       |
-| USAGE | CLI                                                                                                                   |   ✅    |   ✅    |   ✅       |      ✅      |
-|       | App / webhook                                                                                                         |   ✅    |   ✅    |    ✅        |      ✅      |
+| USAGE | CLI                                                                                                                   |   ✅    |   ✅    |   ✅       |      ✅       |
+|       | App / webhook                                                                                                         |   ✅    |   ✅    |    ✅        |      ✅       |
 |       | Actions                                                                                                               |   ✅    |        |            |      ️       |
 |       |                                                                                                                       |        |        |            |
-| CORE  | PR compression                                                                                                        |   ✅    |   ✅    |   ✅       |   ✅        |
-|       | Repo language prioritization                                                                                          |   ✅    |   ✅    |   ✅       |   ✅        |
-|       | Adaptive and token-aware file patch fitting                                                                           |   ✅    |   ✅    |   ✅     |   ✅        |
-|       | Multiple models support                                                                                               |   ✅    |   ✅    |   ✅       |   ✅        |
-|       | Incremental PR review                                                                                                 |   ✅    |        |            |           |
-|       | [Static code analysis](./tools/analyze.md/){:target="_blank"} 💎                                                      |   ✅    |   ✅     |    ✅    |   ✅        |
-|       | [Multiple configuration options](./usage-guide/configuration_options.md){:target="_blank"} 💎                         |   ✅    |   ✅     |    ✅    |   ✅        |
+| CORE  | PR compression                                                                                                        |   ✅    |   ✅    |   ✅       |      ✅       |
+|       | Repo language prioritization                                                                                          |   ✅    |   ✅    |   ✅       |      ✅       |
+|       | Adaptive and token-aware file patch fitting                                                                           |   ✅    |   ✅    |   ✅     |      ✅       |
+|       | Multiple models support                                                                                               |   ✅    |   ✅    |   ✅       |      ✅       |
+|       | Incremental PR review                                                                                                 |   ✅    |        |            |              |
+|       | [Static code analysis](./tools/analyze.md/){:target="_blank"} 💎                                                      |   ✅    |   ✅     |    ✅    |              |
+|       | [Multiple configuration options](./usage-guide/configuration_options.md){:target="_blank"} 💎                         |   ✅    |   ✅     |    ✅    |              |
 
 💎 marks a feature available only in [PR-Agent Pro](https://www.codium.ai/pricing/){:target="_blank"}
 
