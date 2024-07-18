@@ -1,10 +1,11 @@
 # Usage guide
 
-This page provides a detailed guide on how to use PR-Agent. It includes information on how to adjust PR-Agent configurations, define which tools will run automatically, manage mail notifications, and other advanced configurations.
+This page provides a detailed guide on how to use PR-Agent. 
+It includes information on how to adjust PR-Agent configurations, define which tools will run automatically, and other advanced configurations.
 
 
 - [Introduction](./introduction.md)
-- [Configuration Options](./configuration_options.md)
+- [Configuration File](./configuration_options.md)
 - [Usage and Automation](./automations_and_usage.md)
     - [Local Repo (CLI)](./automations_and_usage.md#local-repo-cli)
     - [Online Usage](./automations_and_usage.md#online-usage)

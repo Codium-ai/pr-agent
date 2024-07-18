@@ -18,9 +18,9 @@ nav:
   - Usage Guide:
     - 'usage-guide/index.md'
     - Introduction: 'usage-guide/introduction.md'
-    - Configuration Options: 'usage-guide/configuration_options.md'
-    - Managing Mail Notifications: 'usage-guide/mail_notifications.md'
+    - Configuration File: 'usage-guide/configuration_options.md'
     - Usage and Automation: 'usage-guide/automations_and_usage.md'
+    - Managing Mail Notifications: 'usage-guide/mail_notifications.md'
     - Additional Configurations: 'usage-guide/additional_configurations.md'
   - Tools:
     - 'tools/index.md'
