@@ -27,6 +27,20 @@ class LiteLLMAIHandler(BaseAiHandler):
         self.azure = False
         self.api_base = None
         self.repetition_penalty = None
+
+        if get_settings().get("litellm.traceloop.enabled"):
+            from traceloop.sdk import Traceloop
+            os.environ["TRACELOOP_BASE_URL"] = os.getenv("TRACELOOP_BASE_URL", get_settings().litellm.traceloop.base_url)
+            os.environ["TRACELOOP_API_KEY"] = os.getenv("TRACELOOP_API_KEY", get_settings().litellm.traceloop.api_key)
+            Traceloop.init(app_name=get_settings().get("litellm.traceloop.app_name"), disable_batch=True)
+            litellm.success_callback = ["traceloop"]
+
+        if "watsonx" in get_settings().config.model:
+            # env vars take precedence over `.secrets.toml`
+            os.environ["WATSONX_URL"] = os.getenv("WATSONX_URL", get_settings().watsonx.url)
+            os.environ["WATSONX_APIKEY"] = os.getenv("WATSONX_APIKEY", get_settings().watsonx.api_key)
+            os.environ["WATSONX_PROJECT_ID"] = os.getenv("WATSONX_PROJECT_ID", get_settings().watsonx.project_id)
+
         if get_settings().get("OPENAI.KEY", None):
             openai.api_key = get_settings().openai.key
             litellm.openai_key = get_settings().openai.key
@@ -126,6 +140,7 @@ class LiteLLMAIHandler(BaseAiHandler):
                 "deployment_id": deployment_id,
                 "messages": messages,
                 "temperature": temperature,
+                "max_tokens": get_settings().config.max_model_tokens,
                 "force_timeout": get_settings().config.ai_timeout,
                 "api_base": self.api_base,
             }

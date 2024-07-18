@@ -180,7 +180,7 @@ class PRReviewer:
 
         response, finish_reason = await self.ai_handler.chat_completion(
             model=model,
-            temperature=0.2,
+            temperature=get_settings().config.temperature,
             system=system_prompt,
             user=user_prompt
         )
