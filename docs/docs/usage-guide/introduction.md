@@ -8,6 +8,6 @@ After [installation](https://pr-agent-docs.codium.ai/installation/), there are t
 
 Specifically, CLI commands can be issued by invoking a pre-built [docker image](https://pr-agent-docs.codium.ai/installation/locally/#using-docker-image), or by invoking a [locally cloned repo](https://pr-agent-docs.codium.ai/installation/locally/#run-from-source).
 
-For online usage, you will need to setup either a [GitHub App](https://pr-agent-docs.codium.ai/installation/github/#run-as-a-github-app) or a [GitHub Action](https://pr-agent-docs.codium.ai/installation/github/#run-as-a-github-action) (GitHub), a [GitLab webhook](https://pr-agent-docs.codium.ai/installation/gitlab/#run-a-gitlab-webhook-server) (GitLub), or a [BitBucket App](https://pr-agent-docs.codium.ai/installation/bitbucket/#run-using-codiumai-hosted-bitbucket-app) (BitBucket).
+For online usage, you will need to setup either a [GitHub App](https://pr-agent-docs.codium.ai/installation/github/#run-as-a-github-app) or a [GitHub Action](https://pr-agent-docs.codium.ai/installation/github/#run-as-a-github-action) (GitHub), a [GitLab webhook](https://pr-agent-docs.codium.ai/installation/gitlab/#run-a-gitlab-webhook-server) (GitLab), or a [BitBucket App](https://pr-agent-docs.codium.ai/installation/bitbucket/#run-using-codiumai-hosted-bitbucket-app) (BitBucket).
 These platforms also enable to run PR-Agent specific tools automatically when a new PR is opened, or on each push to a branch.
 
