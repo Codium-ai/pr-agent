@@ -59,7 +59,7 @@ Then you can give a list of extra instructions to the `review` tool.
 
 ## Global configuration file 💎
 
-`Platforms supported: GitHub, GitLab, Bitbucket, Azure DevOps`
+`Platforms supported: GitHub, GitLab, Bitbucket`
 
 If you create a repo called `pr-agent-settings` in your **organization**, it's configuration file `.pr_agent.toml` will be used as a global configuration file for any other repo that belongs to the same organization.
 Parameters from a local `.pr_agent.toml` file, in a specific repo, will override the global configuration parameters.
