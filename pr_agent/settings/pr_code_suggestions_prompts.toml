@@ -95,6 +95,7 @@ code_suggestions:
 
 
 Each YAML output MUST be after a newline, indented, with block scalar indicator ('|').
+Your response should be in French.
 """
 
 user="""PR Info:

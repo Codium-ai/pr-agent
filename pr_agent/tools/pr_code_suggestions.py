@@ -75,8 +75,8 @@ class PRCodeSuggestions:
                                           self.pr_code_suggestions_prompt_system,
                                           get_settings().pr_code_suggestions_prompt.user)
 
-        self.progress = f"## Generating PR code suggestions\n\n"
-        self.progress += f"""\nWork in progress ...<br>\n<img src="https://codium.ai/images/pr_agent/dual_ball_loading-crop.gif" width=48>"""
+        self.progress = f"## Génération de suggestions\n\n"
+        self.progress += f"""\nEn cours de traitement ...<br>\n<img src="https://codium.ai/images/pr_agent/dual_ball_loading-crop.gif" width=48>"""
         self.progress_response = None
 
     async def run(self):
@@ -90,7 +90,7 @@ class PRCodeSuggestions:
                 if self.git_provider.is_supported("gfm_markdown"):
                     self.progress_response = self.git_provider.publish_comment(self.progress)
                 else:
-                    self.git_provider.publish_comment("Preparing suggestions...", is_temporary=True)
+                    self.git_provider.publish_comment("Preparation des suggestions...", is_temporary=True)
 
             if not self.is_extended:
                 data = await retry_with_fallback_models(self._prepare_prediction)
@@ -143,7 +143,7 @@ class PRCodeSuggestions:
                     if get_settings().pr_code_suggestions.persistent_comment:
                         final_update_message = False
                         self.publish_persistent_comment_with_history(pr_body,
-                                                                     initial_header="## PR Code Suggestions ✨",
+                                                                     initial_header="## Suggestions ✨",
                                                                      update_header=True,
                                                                      name="suggestions",
                                                                      final_update_message=final_update_message,
