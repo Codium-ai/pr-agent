@@ -1,0 +1,14 @@
+version: '3.4'
+
+services:
+
+  pr-agent:
+    image: pr-agent:github-app
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: github_app
+    ports:
+      - "3010:3000"
+
+
