@@ -165,7 +165,7 @@ review:
 {%- endif %}
 
 {%- if num_code_suggestions > 0 %}
-code_feedback
+code_feedback:
 - relevant_file: |
     directory/xxx.py
   language: |
