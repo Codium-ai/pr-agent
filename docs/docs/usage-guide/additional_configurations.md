@@ -194,9 +194,6 @@ To use Amazon Bedrock and its foundational models, add the below configuration:
 model="bedrock/anthropic.claude-3-sonnet-20240229-v1:0"
 model_turbo="bedrock/anthropic.claude-3-sonnet-20240229-v1:0"
 fallback_models=["bedrock/anthropic.claude-v2:1"]
-
-[aws] # in .secrets.toml
-bedrock_region = "us-east-1"
 ```
 
 Note that you have to add access to foundational models before using them. Please refer to [this document](https://docs.aws.amazon.com/bedrock/latest/userguide/setting-up.html) for more details.
@@ -207,7 +204,7 @@ If you are using the claude-3 model, please configure the following settings as 
 drop_params = true
 ```
 
-AWS session is automatically authenticated from your environment, but you can also explicitly set `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables.
+AWS session is automatically authenticated from your environment, but you can also explicitly set `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_REGION_NAME` environment variables. Please refer to [this document](https://litellm.vercel.app/docs/providers/bedrock) for more details.
 
 
 ## Patch Extra Lines
