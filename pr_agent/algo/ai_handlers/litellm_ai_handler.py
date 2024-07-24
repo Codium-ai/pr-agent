@@ -28,13 +28,6 @@ class LiteLLMAIHandler(BaseAiHandler):
         self.api_base = None
         self.repetition_penalty = None
 
-        if get_settings().get("litellm.traceloop.enabled"):
-            from traceloop.sdk import Traceloop
-            os.environ["TRACELOOP_BASE_URL"] = os.getenv("TRACELOOP_BASE_URL", get_settings().litellm.traceloop.base_url)
-            os.environ["TRACELOOP_API_KEY"] = os.getenv("TRACELOOP_API_KEY", get_settings().litellm.traceloop.api_key)
-            Traceloop.init(app_name=get_settings().get("litellm.traceloop.app_name"), disable_batch=True)
-            litellm.success_callback = ["traceloop"]
-
         if "watsonx" in get_settings().config.model:
             # env vars take precedence over `.secrets.toml`
             os.environ["WATSONX_URL"] = os.getenv("WATSONX_URL", get_settings().watsonx.url)

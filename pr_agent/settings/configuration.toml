@@ -14,7 +14,6 @@ ai_timeout=120 # 2minutes
 max_description_tokens = 500
 max_commits_tokens = 500
 max_model_tokens = 32000 # Limits the maximum number of tokens that can be used by any model, regardless of the model's default capabilities.
-temperature = 0.2
 patch_extra_lines = 1
 secret_provider=""
 cli_mode=false
