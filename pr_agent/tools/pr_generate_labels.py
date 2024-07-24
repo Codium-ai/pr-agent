@@ -142,7 +142,7 @@ class PRGenerateLabels:
 
         response, finish_reason = await self.ai_handler.chat_completion(
             model=model,
-            temperature=get_settings().config.temperature,
+            temperature=0.2,
             system=system_prompt,
             user=user_prompt
         )
