@@ -206,14 +206,7 @@ ignore_pr_title = []
 ignore_bot_pr = true
 
 [gitlab]
-# URL to the gitlab service
 url = "https://gitlab.com"
-# Polling (either project id or namespace/project_name) syntax can be used
-projects_to_monitor = ['org_name/repo_name']
-# Polling trigger
-magic_word = "AutoReview"
-# Polling interval
-polling_interval_seconds = 30
 pr_commands = [
     "/describe",
     "/review --pr_reviewer.num_code_suggestions=0",
