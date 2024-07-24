@@ -135,7 +135,7 @@ class LiteLLMAIHandler(BaseAiHandler):
                 "deployment_id": deployment_id,
                 "messages": messages,
                 "temperature": temperature,
-                "max_tokens": get_settings().config.max_model_tokens,
+                "max_tokens": get_settings().config.max_tokens,
                 "force_timeout": get_settings().config.ai_timeout,
                 "api_base": self.api_base,
             }
