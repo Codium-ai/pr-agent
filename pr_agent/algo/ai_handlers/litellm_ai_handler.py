@@ -6,6 +6,7 @@ import openai
 from litellm import acompletion
 from tenacity import retry, retry_if_exception_type, stop_after_attempt
 from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
+from pr_agent.algo.utils import get_max_tokens
 from pr_agent.config_loader import get_settings
 from pr_agent.log import get_logger
 
@@ -135,7 +136,7 @@ class LiteLLMAIHandler(BaseAiHandler):
                 "deployment_id": deployment_id,
                 "messages": messages,
                 "temperature": temperature,
-                "max_tokens": get_settings().config.max_tokens,
+                "max_tokens": get_max_tokens(model),
                 "force_timeout": get_settings().config.ai_timeout,
                 "api_base": self.api_base,
             }
