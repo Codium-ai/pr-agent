@@ -23,6 +23,7 @@ Here are the results:
 | QWEN-1.5-32B                | 32             | 29                                           |
 |                             |                |                                              |
 | **CodeQwen1.5-7B**          | **7**          | **35.4**                                     |
+| Llama-3.1-8B-Instruct       | 8              | 35.2                                         |
 | Granite-8b-code-instruct    | 8              | 34.2                                         |
 | CodeLlama-7b-hf             | 7              | 31.8                                         |
 | Gemma-7B                    | 7              | 27.2                                         |
