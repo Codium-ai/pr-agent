@@ -695,12 +695,14 @@ def get_user_labels(current_labels: List[str] = None):
 def get_max_tokens(model):
     settings = get_settings()
     if model in MAX_TOKENS:
-        max_tokens_model = MAX_TOKENS[model]
+        if settings.config.max_model_tokens:
+            return min(MAX_TOKENS[model], settings.config.max_model_tokens)
+        else:
+            return MAX_TOKENS[model]
     elif settings.config.max_model_tokens:
-        max_tokens_model = min(settings.config.max_model_tokens, max_tokens_model)
+        return settings.config.max_model_tokens
     else:
-        raise Exception(f"MAX_TOKENS must be set for model {model} in ./pr_agent/algo/__init__.py or in settings")
-    return max_tokens_model
+        raise ValueError(f"MAX_TOKENS must be set for model {model} in ./pr_agent/algo/__init__.py or in settings")
 
 
 def clip_tokens(text: str, max_tokens: int, add_three_dots=True, num_input_tokens=None, delete_last_line=False) -> str:
