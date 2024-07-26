@@ -540,7 +540,9 @@ def update_settings_from_args(args: List[str]) -> List[str]:
                     continue
                 key, value = _fix_key_value(*vals)
                 get_settings().set(key, value)
-                get_logger().info(f'Updated setting {key} to: "{value}"')
+                # Redact secrets
+                log_value = '[REDACTED]' if key.lower() in ['aws.aws_secret_access_key', 'github.webhook_secret'] else value
+                get_logger().info(f'Updated setting {key} to: "{log_value}"')
             else:
                 other_args.append(arg)
     return other_args
