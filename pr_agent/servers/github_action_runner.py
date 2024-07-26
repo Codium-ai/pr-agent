@@ -58,6 +58,13 @@ async def run_action():
         print("OPENAI_KEY not set")
     if OPENAI_ORG:
         get_settings().set("OPENAI.ORG", OPENAI_ORG)
+
+    if get_settings().get("aws.AWS_ACCESS_KEY_ID"):
+        assert get_settings().aws.AWS_SECRET_ACCESS_KEY and get_settings().aws.AWS_REGION_NAME, "AWS credentials are incomplete"
+        os.environ["AWS_ACCESS_KEY_ID"] = get_settings().aws.AWS_ACCESS_KEY_ID
+        os.environ["AWS_SECRET_ACCESS_KEY"] = get_settings().aws.AWS_SECRET_ACCESS_KEY
+        os.environ["AWS_REGION_NAME"] = get_settings().aws.AWS_REGION_NAME
+
     get_settings().set("GITHUB.USER_TOKEN", GITHUB_TOKEN)
     get_settings().set("GITHUB.DEPLOYMENT_TYPE", "user")
     enable_output = get_setting_or_env("GITHUB_ACTION_CONFIG.ENABLE_OUTPUT", True)
