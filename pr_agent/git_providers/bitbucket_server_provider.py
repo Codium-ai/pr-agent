@@ -248,6 +248,13 @@ class BitbucketServerProvider(GitProvider):
         except Exception as e:
             get_logger().error(f"Failed to publish inline comment to '{file}' at line {from_line}, error: {e}")
             raise e
+        
+    def get_line_link(self, relevant_file: str, relevant_line_start: int, relevant_line_end: int = None) -> str:
+        if relevant_line_start == -1:
+            link = f"{self.pr_url}/diff#{quote_plus(relevant_file)}"
+        else:
+            link = f"{self.pr_url}/diff#{quote_plus(relevant_file)}?t={relevant_line_start}"
+        return link
 
     def generate_link_to_relevant_line_number(self, suggestion) -> str:
         try:
