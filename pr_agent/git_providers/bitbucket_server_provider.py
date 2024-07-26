@@ -16,7 +16,7 @@ from ..log import get_logger
 
 class BitbucketServerProvider(GitProvider):
     def __init__(
-        self, pr_url: Optional[str] = None, incremental: Optional[bool] = False
+            self, pr_url: Optional[str] = None, incremental: Optional[bool] = False
     ):
         s = requests.Session()
         try:
@@ -59,7 +59,7 @@ class BitbucketServerProvider(GitProvider):
             return contents
         except Exception:
             return ""
-        
+
     def get_pr_id(self):
         return self.pr_num
 
@@ -115,8 +115,11 @@ class BitbucketServerProvider(GitProvider):
                 get_logger().error(f"Failed to publish code suggestion, error: {e}")
             return False
 
+    def publish_file_comments(self, file_comments: list) -> bool:
+        pass
+
     def is_supported(self, capability: str) -> bool:
-        if capability in ['get_issue_comments', 'get_labels', 'gfm_markdown']:
+        if capability in ['get_issue_comments', 'get_labels', 'gfm_markdown', 'publish_file_comments']:
             return False
         return True
 
@@ -284,10 +287,10 @@ class BitbucketServerProvider(GitProvider):
         for comment in comments:
             if 'position' in comment:
                 self.publish_inline_comment(comment['body'], comment['position'], comment['path'])
-            elif 'start_line' in comment: # multi-line comment
+            elif 'start_line' in comment:  # multi-line comment
                 # note that bitbucket does not seem to support range - only a comment on a single line - https://community.developer.atlassian.com/t/api-post-endpoint-for-inline-pull-request-comments/60452
                 self.publish_inline_comment(comment['body'], comment['start_line'], comment['path'])
-            elif 'line' in comment: # single-line comment
+            elif 'line' in comment:  # single-line comment
                 self.publish_inline_comment(comment['body'], comment['line'], comment['path'])
             else:
                 get_logger().error(f"Could not publish inline comment: {comment}")
@@ -300,6 +303,9 @@ class BitbucketServerProvider(GitProvider):
 
     def get_pr_branch(self):
         return self.pr.fromRef['displayId']
+
+    def get_pr_owner_id(self) -> str | None:
+        return self.workspace_slug
 
     def get_pr_description_full(self):
         if hasattr(self.pr, "description"):
@@ -323,14 +329,29 @@ class BitbucketServerProvider(GitProvider):
 
     @staticmethod
     def _parse_bitbucket_server(url: str) -> str:
+        # pr url format: f"{bitbucket_server}/projects/{project_name}/repos/{repository_name}/pull-requests/{pr_id}"
         parsed_url = urlparse(url)
+        server_path = parsed_url.path.split("/projects/")
+        if len(server_path) > 1:
+            server_path = server_path[0].strip("/")
+            return f"{parsed_url.scheme}://{parsed_url.netloc}/{server_path}".strip("/")
         return f"{parsed_url.scheme}://{parsed_url.netloc}"
 
     @staticmethod
     def _parse_pr_url(pr_url: str) -> Tuple[str, str, int]:
+        # pr url format: f"{bitbucket_server}/projects/{project_name}/repos/{repository_name}/pull-requests/{pr_id}"
         parsed_url = urlparse(pr_url)
+
         path_parts = parsed_url.path.strip("/").split("/")
-        if len(path_parts) < 6 or path_parts[4] != "pull-requests":
+
+        try:
+            projects_index = path_parts.index("projects")
+        except ValueError as e:
+            raise ValueError(f"The provided URL '{pr_url}' does not appear to be a Bitbucket PR URL")
+
+        path_parts = path_parts[projects_index:]
+
+        if len(path_parts) < 6 or path_parts[2] != "repos" or path_parts[4] != "pull-requests":
             raise ValueError(
                 f"The provided URL '{pr_url}' does not appear to be a Bitbucket PR URL"
             )
@@ -350,34 +371,38 @@ class BitbucketServerProvider(GitProvider):
         return self.repo
 
     def _get_pr(self):
-        pr = self.bitbucket_client.get_pull_request(self.workspace_slug, self.repo_slug, pull_request_id=self.pr_num)
-        return type('new_dict', (object,), pr)
+        try:
+            pr = self.bitbucket_client.get_pull_request(self.workspace_slug, self.repo_slug,
+                                                        pull_request_id=self.pr_num)
+            return type('new_dict', (object,), pr)
+        except Exception as e:
+            get_logger().error(f"Failed to get pull request, error: {e}")
+            raise e
 
     def _get_pr_file_content(self, remote_link: str):
         return ""
 
     def get_commit_messages(self):
-        def get_commit_messages(self):
-            raise NotImplementedError("Get commit messages function not implemented yet.")
+        return ""
+
     # bitbucket does not support labels
     def publish_description(self, pr_title: str, description: str):
         payload = {
             "version": self.pr.version,
             "description": description,
             "title": pr_title,
-            "reviewers": self.pr.reviewers # needs to be sent otherwise gets wiped
+            "reviewers": self.pr.reviewers  # needs to be sent otherwise gets wiped
         }
         try:
             self.bitbucket_client.update_pull_request(self.workspace_slug, self.repo_slug, str(self.pr_num), payload)
         except Exception as e:
             get_logger().error(f"Failed to update pull request, error: {e}")
             raise e
-        
 
     # bitbucket does not support labels
     def publish_labels(self, pr_types: list):
         pass
-    
+
     # bitbucket does not support labels
     def get_pr_labels(self, update=False):
         pass
