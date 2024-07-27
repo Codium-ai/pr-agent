@@ -27,8 +27,8 @@ output_relevant_configurations=false
 large_patch_policy = "clip" # "clip", "skip"
 is_auto_command=false
 # seed
-seed=0 # set positive value to fix the seed
-temperature=0
+seed=-1 # set positive value to fix the seed (and ensure temperature=0)
+temperature=0.2
 
 [pr_reviewer] # /review #
 # enable/disable features
