@@ -108,12 +108,12 @@ class PRQuestions:
         user_prompt = environment.from_string(get_settings().pr_questions_prompt.user).render(variables)
         if 'img_path' in variables:
             img_path = self.vars['img_path']
-            response, finish_reason = await self.ai_handler.chat_completion(model=model, temperature=0.2,
-                                                                            system=system_prompt, user=user_prompt,
-                                                                            img_path=img_path)
+            response, finish_reason = await (self.ai_handler.chat_completion
+                                             (model=model, temperature=get_settings().config.temperature,
+                                              system=system_prompt, user=user_prompt, img_path=img_path))
         else:
-            response, finish_reason = await self.ai_handler.chat_completion(model=model, temperature=0.2,
-                                                                            system=system_prompt, user=user_prompt)
+            response, finish_reason = await self.ai_handler.chat_completion(
+                model=model, temperature=get_settings().config.temperature, system=system_prompt, user=user_prompt)
         return response
 
     def _prepare_pr_answer(self) -> str:
