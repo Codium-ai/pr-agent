@@ -27,8 +27,8 @@ output_relevant_configurations=false
 large_patch_policy = "clip" # "clip", "skip"
 is_auto_command=false
 # seed
-seed=-1 # set positive value to fix the seed
-temperature=0.2
+seed=0 # set positive value to fix the seed
+temperature=0
 
 [pr_reviewer] # /review #
 # enable/disable features
@@ -73,7 +73,7 @@ final_update_message = true
 enable_help_text=false
 enable_help_comment=true
 # describe as comment
-publish_description_as_comment=false
+publish_description_as_comment=true
 publish_description_as_comment_persistent=true
 ## changes walkthrough section
 enable_semantic_files_types=true
