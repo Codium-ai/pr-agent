@@ -131,7 +131,7 @@ class LiteLLMAIHandler(BaseAiHandler):
             }
             seed = get_settings().config.get("seed", -1)
             if temperature > 0 and seed >= 0:
-                raise ValueError("Seed is not supported with temperature > 0")
+                raise ValueError(f"Seed ({seed}) is not supported with temperature ({temperature}) > 0")
             elif seed >= 0:
                 get_logger().info(f"Using fixed seed of {seed}")
                 kwargs["seed"] = seed
