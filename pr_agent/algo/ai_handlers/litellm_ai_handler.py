@@ -134,7 +134,7 @@ class LiteLLMAIHandler(BaseAiHandler):
                 raise ValueError("Seed is not supported with temperature > 0")
             elif seed >= 0:
                 get_logger().info(f"Using fixed seed of {seed}")
-                kwargs["seed"] = get_settings().config.seed
+                kwargs["seed"] = seed
 
             if self.repetition_penalty:
                 kwargs["repetition_penalty"] = self.repetition_penalty
