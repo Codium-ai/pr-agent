@@ -45,6 +45,7 @@ CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by p
 ### July 28, 2024
 
 (1) improved support for bitbucket server - [auto commands](https://github.com/Codium-ai/pr-agent/pull/1059) and [direct links](https://github.com/Codium-ai/pr-agent/pull/1061)
+
 (2) custom models are now [supported](https://pr-agent-docs.codium.ai/usage-guide/changing_a_model/#custom-models)
 
 ### July 6, 2024
