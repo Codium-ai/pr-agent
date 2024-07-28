@@ -1,16 +1,20 @@
 [config]
+# models
 model="gpt-4-turbo-2024-04-09"
 model_turbo="gpt-4o"
 fallback_models=["gpt-4-0125-preview"]
+# CLI
 git_provider="github"
 publish_output=true
 publish_output_progress=true
 verbosity_level=0 # 0,1,2
 use_extra_bad_extensions=false
+# Configurations
 use_wiki_settings_file=true
 use_repo_settings_file=true
 use_global_settings_file=true
 ai_timeout=120 # 2minutes
+# token limits
 max_description_tokens = 500
 max_commits_tokens = 500
 max_model_tokens = 32000 # Limits the maximum number of tokens that can be used by any model, regardless of the model's default capabilities.
@@ -22,6 +26,9 @@ ai_disclaimer=""  # Pro feature, full text for the AI disclaimer
 output_relevant_configurations=false
 large_patch_policy = "clip" # "clip", "skip"
 is_auto_command=false
+# seed
+seed=-1 # set positive value to fix the seed (and ensure temperature=0)
+temperature=0.2
 
 [pr_reviewer] # /review #
 # enable/disable features
