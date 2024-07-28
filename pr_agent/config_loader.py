@@ -78,3 +78,6 @@ def _find_pyproject() -> Optional[Path]:
 pyproject_path = _find_pyproject()
 if pyproject_path is not None:
     get_settings().load_file(pyproject_path, env=f'tool.{PR_AGENT_TOML_KEY}')
+
+if __name__ == "__main__":
+    print(get_settings().github.private_key)

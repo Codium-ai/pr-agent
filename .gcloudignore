@@ -1,4 +1,5 @@
 .venv/
+.git/
 pics/
 pr_agent.egg-info/
 build/

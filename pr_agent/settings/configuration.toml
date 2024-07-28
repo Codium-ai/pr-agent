@@ -36,7 +36,7 @@ require_soc2_ticket=false
 soc2_ticket_prompt="Does the PR description include a link to ticket in a project management system (e.g., Jira, Asana, Trello, etc.) ?"
 # general options
 num_code_suggestions=0
-inline_code_comments = false
+inline_code_comments = true
 ask_and_reflect=false
 #automatic_review=true
 persistent_comment=true
@@ -71,7 +71,7 @@ publish_description_as_comment_persistent=true
 ## changes walkthrough section
 enable_semantic_files_types=true
 collapsible_file_list='adaptive' # true, false, 'adaptive'
-inline_file_summary=false # false, true, 'table'
+inline_file_summary=true # false, true, 'table'
 # markers
 use_description_markers=false
 include_generated_by_header=true
@@ -168,7 +168,7 @@ final_update_message = false
 
 [github]
 # The type of deployment to create. Valid values are 'app' or 'user'.
-deployment_type = "user"
+deployment_type = "app"
 ratelimit_retries = 5
 base_url = "https://api.github.com"
 publish_inline_comments_fallback_with_verification = true
@@ -188,11 +188,11 @@ override_deployment_type = true
 handle_pr_actions = ['opened', 'reopened', 'ready_for_review']
 pr_commands = [
     "/describe --pr_description.final_update_message=false",
-    "/review --pr_reviewer.num_code_suggestions=0",
+    "/review --pr_reviewer.num_code_suggestions=4",
     "/improve",
 ]
 # settings for "pull_request" event with "synchronize" action - used to detect and handle push triggers for new commits
-handle_push_trigger = false
+handle_push_trigger = true
 push_trigger_ignore_bot_commits = true
 push_trigger_ignore_merge_commits = true
 push_trigger_wait_for_initial_review = true
