@@ -27,7 +27,7 @@ is_auto_command=false
 # enable/disable features
 require_score_review=false
 require_tests_review=true
-requirxe_estimate_effort_to_review=true
+require_estimate_effort_to_review=true
 require_can_be_split_review=false
 require_security_review=true
 extra_issue_links=false
