@@ -100,8 +100,8 @@ class PRCodeSuggestions:
                 data = {"code_suggestions": []}
 
             if data is None or 'code_suggestions' not in data or not data['code_suggestions']:
-                get_logger().error('No code suggestions found for PR.')
-                pr_body = "## PR Code Suggestions ✨\n\nNo code suggestions found for PR."
+                get_logger().error('No code suggestions found for the PR.')
+                pr_body = "## PR Code Suggestions ✨\n\nNo code suggestions found for the PR."
                 get_logger().debug(f"PR output", artifact=pr_body)
                 if self.progress_response:
                     self.git_provider.edit_comment(self.progress_response, body=pr_body)
@@ -304,8 +304,8 @@ class PRCodeSuggestions:
         environment = Environment(undefined=StrictUndefined)
         system_prompt = environment.from_string(self.pr_code_suggestions_prompt_system).render(variables)
         user_prompt = environment.from_string(get_settings().pr_code_suggestions_prompt.user).render(variables)
-        response, finish_reason = await self.ai_handler.chat_completion(model=model, temperature=0.2,
-                                                                        system=system_prompt, user=user_prompt)
+        response, finish_reason = await self.ai_handler.chat_completion(
+            model=model, temperature=get_settings().config.temperature, system=system_prompt, user=user_prompt)
 
         # load suggestions from the AI response
         data = self._prepare_pr_code_suggestions(response)

@@ -103,8 +103,8 @@ class PRUpdateChangelog:
         environment = Environment(undefined=StrictUndefined)
         system_prompt = environment.from_string(get_settings().pr_update_changelog_prompt.system).render(variables)
         user_prompt = environment.from_string(get_settings().pr_update_changelog_prompt.user).render(variables)
-        response, finish_reason = await self.ai_handler.chat_completion(model=model, temperature=0.2,
-                                                                        system=system_prompt, user=user_prompt)
+        response, finish_reason = await self.ai_handler.chat_completion(
+            model=model, system=system_prompt, user=user_prompt, temperature=get_settings().config.temperature)
 
         return response
 

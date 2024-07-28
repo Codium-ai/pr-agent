@@ -129,6 +129,13 @@ class LiteLLMAIHandler(BaseAiHandler):
                 "force_timeout": get_settings().config.ai_timeout,
                 "api_base": self.api_base,
             }
+            seed = get_settings().config.get("seed", -1)
+            if temperature > 0 and seed >= 0:
+                raise ValueError(f"Seed ({seed}) is not supported with temperature ({temperature}) > 0")
+            elif seed >= 0:
+                get_logger().info(f"Using fixed seed of {seed}")
+                kwargs["seed"] = seed
+
             if self.repetition_penalty:
                 kwargs["repetition_penalty"] = self.repetition_penalty
 

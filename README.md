@@ -10,7 +10,7 @@
 
 </picture>
 <br/>
-CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by providing AI feedbacks and suggestions
+CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by providing AI feedback and suggestions
 </div>
 
 [![GitHub license](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/Codium-ai/pr-agent/blob/main/LICENSE)
@@ -18,6 +18,7 @@ CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by p
 [![Static Badge](https://img.shields.io/badge/Code-Benchmark-blue)](https://pr-agent-docs.codium.ai/finetuning_benchmark/)
 [![Discord](https://badgen.net/badge/icon/discord?icon=discord&label&color=purple)](https://discord.com/channels/1057273017547378788/1126104260430528613)
 [![Twitter](https://img.shields.io/twitter/follow/codiumai)](https://twitter.com/codiumai)
+[![Cheat Sheet](https://img.shields.io/badge/Cheat-Sheet-red)](https://www.codium.ai/images/pr_agent/cheat_sheet.pdf)
     <a href="https://github.com/Codium-ai/pr-agent/commits/main">
     <img alt="GitHub" src="https://img.shields.io/github/last-commit/Codium-ai/pr-agent/main?style=for-the-badge" height="20">
     </a>
@@ -41,6 +42,12 @@ CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by p
 - [Why use PR-Agent?](#why-use-pr-agent)
   
 ## News and Updates
+
+### July 28, 2024
+
+(1) improved support for bitbucket server - [auto commands](https://github.com/Codium-ai/pr-agent/pull/1059) and [direct links](https://github.com/Codium-ai/pr-agent/pull/1061)
+
+(2) custom models are now [supported](https://pr-agent-docs.codium.ai/usage-guide/changing_a_model/#custom-models)
 
 ### July 6, 2024
 
