@@ -15,6 +15,7 @@ It includes information on how to adjust PR-Agent configurations, define which t
     - [BitBucket App](./automations_and_usage.md#bitbucket-app)
     - [Azure DevOps Provider](./automations_and_usage.md#azure-devops-provider)
 - [Managing Mail Notifications](./mail_notifications.md)
+- [Changing a Model](./changing_a_model.md)
 - [Additional Configurations Walkthrough](./additional_configurations.md)
     - [Ignoring files from analysis](./additional_configurations.md#ignoring-files-from-analysis)
     - [Extra instructions](./additional_configurations.md#extra-instructions)
@@ -22,4 +23,4 @@ It includes information on how to adjust PR-Agent configurations, define which t
     - [Changing a model](./additional_configurations.md#changing-a-model)
     - [Patch Extra Lines](./additional_configurations.md#patch-extra-lines)
     - [Editing the prompts](./additional_configurations.md#editing-the-prompts)
-- [PR-Agent Pro Models](./PR_agent_pro_models.md)
+- [PR-Agent Pro Models 💎](./PR_agent_pro_models.md)

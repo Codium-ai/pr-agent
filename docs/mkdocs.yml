@@ -21,7 +21,9 @@ nav:
     - Configuration File: 'usage-guide/configuration_options.md'
     - Usage and Automation: 'usage-guide/automations_and_usage.md'
     - Managing Mail Notifications: 'usage-guide/mail_notifications.md'
+    - Changing a Model: 'usage-guide/changing_a_model.md'
     - Additional Configurations: 'usage-guide/additional_configurations.md'
+    - 💎 PR-Agent Pro Models: 'usage-guide/PR_agent_pro_models'
   - Tools:
     - 'tools/index.md'
     - Describe: 'tools/describe.md'
