@@ -705,7 +705,7 @@ def get_max_tokens(model):
     settings = get_settings()
     if model in MAX_TOKENS:
         max_tokens_model = MAX_TOKENS[model]
-    elif model in settings.config.custom_model_max_tokens > 0:
+    elif settings.config.custom_model_max_tokens > 0:
         max_tokens_model = settings.config.custom_model_max_tokens
     else:
         raise Exception(f"MAX_TOKENS must be set for model {model} in ./pr_agent/algo/__init__.py, or set config.custom_model_max_tokens")
