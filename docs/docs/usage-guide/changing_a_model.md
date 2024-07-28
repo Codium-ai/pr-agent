@@ -1,7 +1,7 @@
 ## Changing a model
 
-See [here](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/algo/__init__.py) for the list of available models.
-To use a different model than the default (GPT-4), you need to edit [configuration file](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L2) the fields:
+See [here](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/algo/__init__.py) for a list of available models.
+To use a different model than the default (GPT-4), you need to edit in the [configuration file](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L2) the fields:
 ```
 [config]
 model = "..."
@@ -10,7 +10,7 @@ fallback_models = ["..."]
 ```
 
 For models and environments not from OpenAI, you might need to provide additional keys and other parameters. 
-You can give parameters via a configuration file (see below for instructions), or from environment variables. see [litellm documentation](https://litellm.vercel.app/docs/proxy/quick_start#supported-llms) for the environment variables you can set per model.
+You can give parameters via a configuration file (see below for instructions), or from environment variables. See [litellm documentation](https://litellm.vercel.app/docs/proxy/quick_start#supported-llms) for the environment variables relevant per model.
 
 ### Azure
 
@@ -131,7 +131,7 @@ vertex_location = ""
 
 Your [application default credentials](https://cloud.google.com/docs/authentication/application-default-credentials) will be used for authentication so there is no need to set explicit credentials in most environments.
 
-If you do want to set explicit credentials then you can use the `GOOGLE_APPLICATION_CREDENTIALS` environment variable set to a path to a json credentials file.
+If you do want to set explicit credentials, then you can use the `GOOGLE_APPLICATION_CREDENTIALS` environment variable set to a path to a json credentials file.
 
 ### Anthropic
 
@@ -171,7 +171,9 @@ drop_params = true
 AWS session is automatically authenticated from your environment, but you can also explicitly set `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_REGION_NAME` environment variables. Please refer to [this document](https://litellm.vercel.app/docs/providers/bedrock) for more details.
 
 ### Custom models
+
 If the relevant model doesn't appear [here](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/algo/__init__.py), you can still use it as a custom model:
+
 (1) Set the model name in the configuration file:
 ```
 [config]
