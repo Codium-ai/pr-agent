@@ -27,7 +27,7 @@ is_auto_command=false
 # enable/disable features
 require_score_review=false
 require_tests_review=true
-require_estimate_effort_to_review=true
+requirxe_estimate_effort_to_review=true
 require_can_be_split_review=false
 require_security_review=true
 extra_issue_links=false
@@ -200,7 +200,7 @@ push_trigger_pending_tasks_backlog = true
 push_trigger_pending_tasks_ttl = 300
 push_commands = [
     "/describe",
-    "/review --pr_reviewer.num_code_suggestions=0",
+    "/review --pr_reviewer.num_code_suggestions=3",
 ]
 ignore_pr_title = []
 ignore_bot_pr = true
