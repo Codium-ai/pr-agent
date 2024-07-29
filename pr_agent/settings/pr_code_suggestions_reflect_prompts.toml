@@ -6,10 +6,10 @@ Your goal is to inspect, review and score the suggestsions.
 Be aware - the suggestions may not always be correct or accurate, and you should evaluate them in relation to the actual PR code diff presented. Sometimes the suggestion may ignore parts of the actual code diff, and in that case, you should give it a score of 0.
 
 Specific instructions:
-- Carefully review both the suggestion content, and the related PR code diff. Mistakes in the suggestions can occur. Make sure the suggestions are correct, and properly derived from the PR code diff.
+- Carefully review both the suggestion content, and the related PR code diff. Mistakes in the suggestions can occur. Make sure the suggestions are logical and correct, and properly derived from the PR code diff.
 - In addition to the exact code lines mentioned in each suggestion, review the code around them, to ensure that the suggestions are contextually accurate.
-- Also check that the 'existing_code' and 'improved_code' fields correctly reflect the suggested changes.
-- Make sure the suggestions focus on new code introduced in the PR, and not on existing code that was not changed.
+- Check that the 'existing_code' field is valid. The 'existing_code' content should match, or be derived, from code lines from a 'new hunk' section in the PR code diff.
+- Check that the 'improved_code' section correctly reflects the suggestion content.
 - High scores (8 to 10) should be given to correct suggestions that address major bugs and issues, or security concerns. Lower scores (3 to 7) should be for correct suggestions addressing minor issues, code style, code readability, maintainability, etc. Don't give high scores to suggestions that are not crucial, and bring only small improvement or optimization.
 - Order the feedback the same way the suggestions are ordered in the input.
 
@@ -39,8 +39,9 @@ __old hunk__
 ...
 ======
 - In this format, we separated each hunk of code to '__new hunk__' and '__old hunk__' sections. The '__new hunk__' section contains the new code of the chunk, and the '__old hunk__' section contains the old code that was removed.
+- We added line numbers for the '__new hunk__' sections, to help you refer to the code lines in your suggestions. These line numbers are not part of the actual code, and are only used for reference.
 - Code lines are prefixed symbols ('+', '-', ' '). The '+' symbol indicates new code added in the PR, the '-' symbol indicates code removed in the PR, and the ' ' symbol indicates unchanged code.
-- We also added line numbers for the '__new hunk__' sections, to help you refer to the code lines in your suggestions. These line numbers are not part of the actual code, and are only used for reference.
+
 
 
 The output must be a YAML object equivalent to type $PRCodeSuggestionsFeedback, according to the following Pydantic definitions:
@@ -48,7 +49,7 @@ The output must be a YAML object equivalent to type $PRCodeSuggestionsFeedback, 
 class CodeSuggestionFeedback(BaseModel):
     suggestion_summary: str = Field(description="repeated from the input")
     relevant_file: str = Field(description="repeated from the input")
-    suggestion_score: int = Field(description="The actual output - the score of the suggestion, from 0 to 10. Give 0 if the suggestion is plain wrong. Otherwise, give a score from 1 to 10 (inclusive), where 1 is the lowest and 10 is the highest.")
+    suggestion_score: int = Field(description="The actual output - the score of the suggestion, from 0 to 10. Give 0 if the suggestion is wrong. Otherwise, give a score from 1 to 10 (inclusive), where 1 is the lowest and 10 is the highest.")
     why: str = Field(description="Short and concise explanation of why the suggestion received the score (one to two sentences).")
 
 class PRCodeSuggestionsFeedback(BaseModel):
@@ -59,12 +60,13 @@ class PRCodeSuggestionsFeedback(BaseModel):
 Example output:
 ```yaml
 code_suggestions:
-- suggestion_content: |
+- suggestion_summary: |
     Use a more descriptive variable name here
   relevant_file: "src/file1.py"
   suggestion_score: 6
   why: |
     The variable name 't' is not descriptive enough
+- ...
 ```
 
 

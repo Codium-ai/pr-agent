@@ -33,7 +33,7 @@ environment = "..."
 These parameters can be obtained by registering to [Pinecone](https://app.pinecone.io/?sessionType=signup/).
 
 
-## How to use:
+## How to use
 - To invoke the 'similar issue' tool from **CLI**, run:
 `python3 cli.py --issue_url=... similar_issue`
 

@@ -25,12 +25,18 @@ class LiteLLMAIHandler(BaseAiHandler):
         Raises a ValueError if the OpenAI key is missing.
         """
         self.azure = False
-        self.aws_bedrock_client = None
         self.api_base = None
         self.repetition_penalty = None
         if get_settings().get("OPENAI.KEY", None):
             openai.api_key = get_settings().openai.key
             litellm.openai_key = get_settings().openai.key
+        elif 'OPENAI_API_KEY' not in os.environ:
+            litellm.api_key = "dummy_key"
+        if get_settings().get("aws.AWS_ACCESS_KEY_ID"):
+            assert get_settings().aws.AWS_SECRET_ACCESS_KEY and get_settings().aws.AWS_REGION_NAME, "AWS credentials are incomplete"
+            os.environ["AWS_ACCESS_KEY_ID"] = get_settings().aws.AWS_ACCESS_KEY_ID
+            os.environ["AWS_SECRET_ACCESS_KEY"] = get_settings().aws.AWS_SECRET_ACCESS_KEY
+            os.environ["AWS_REGION_NAME"] = get_settings().aws.AWS_REGION_NAME
         if get_settings().get("litellm.use_client"):
             litellm_token = get_settings().get("litellm.LITELLM_TOKEN")
             assert litellm_token, "LITELLM_TOKEN is required"
@@ -61,24 +67,16 @@ class LiteLLMAIHandler(BaseAiHandler):
         if get_settings().get("HUGGINGFACE.API_BASE", None) and 'huggingface' in get_settings().config.model:
             litellm.api_base = get_settings().huggingface.api_base
             self.api_base = get_settings().huggingface.api_base
-        if get_settings().get("OLLAMA.API_BASE", None) :
+        if get_settings().get("OLLAMA.API_BASE", None):
             litellm.api_base = get_settings().ollama.api_base
             self.api_base = get_settings().ollama.api_base
-        if get_settings().get("HUGGINGFACE.REPITITION_PENALTY", None):
+        if get_settings().get("HUGGINGFACE.REPETITION_PENALTY", None):
             self.repetition_penalty = float(get_settings().huggingface.repetition_penalty)
         if get_settings().get("VERTEXAI.VERTEX_PROJECT", None):
             litellm.vertex_project = get_settings().vertexai.vertex_project
             litellm.vertex_location = get_settings().get(
                 "VERTEXAI.VERTEX_LOCATION", None
             )
-        if get_settings().get("AWS.BEDROCK_REGION", None):
-            litellm.AmazonAnthropicConfig.max_tokens_to_sample = 2000
-            litellm.AmazonAnthropicClaude3Config.max_tokens = 2000
-            self.aws_bedrock_client = boto3.client(
-                service_name="bedrock-runtime",
-                region_name=get_settings().aws.bedrock_region,
-            )
-
     def prepare_logs(self, response, system, user, resp, finish_reason):
         response_log = response.dict().copy()
         response_log['system'] = system
@@ -99,7 +97,7 @@ class LiteLLMAIHandler(BaseAiHandler):
         return get_settings().get("OPENAI.DEPLOYMENT_ID", None)
 
     @retry(
-        retry=retry_if_exception_type((openai.APIError, openai.APIConnectionError, openai.Timeout)), # No retry on RateLimitError
+        retry=retry_if_exception_type((openai.APIError, openai.APIConnectionError, openai.APITimeoutError)), # No retry on RateLimitError
         stop=stop_after_attempt(OPENAI_RETRIES)
     )
     async def chat_completion(self, model: str, system: str, user: str, temperature: float = 0.2, img_path: str = None):
@@ -129,10 +127,15 @@ class LiteLLMAIHandler(BaseAiHandler):
                 "messages": messages,
                 "temperature": temperature,
                 "force_timeout": get_settings().config.ai_timeout,
-                "api_base" : self.api_base,
+                "api_base": self.api_base,
             }
-            if self.aws_bedrock_client:
-                kwargs["aws_bedrock_client"] = self.aws_bedrock_client
+            seed = get_settings().config.get("seed", -1)
+            if temperature > 0 and seed >= 0:
+                raise ValueError(f"Seed ({seed}) is not supported with temperature ({temperature}) > 0")
+            elif seed >= 0:
+                get_logger().info(f"Using fixed seed of {seed}")
+                kwargs["seed"] = seed
+
             if self.repetition_penalty:
                 kwargs["repetition_penalty"] = self.repetition_penalty
 
@@ -143,7 +146,7 @@ class LiteLLMAIHandler(BaseAiHandler):
                 get_logger().info(f"\nUser prompt:\n{user}")
 
             response = await acompletion(**kwargs)
-        except (openai.APIError, openai.Timeout) as e:
+        except (openai.APIError, openai.APITimeoutError) as e:
             get_logger().error("Error during OpenAI inference: ", e)
             raise
         except (openai.RateLimitError) as e:

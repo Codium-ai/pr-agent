@@ -1,10 +1,13 @@
-site_name: PR-Agent Documentation 
+site_name: PR-Agent Documentation
 repo_url: https://github.com/Codium-ai/pr-agent
 repo_name: Codium-ai/pr-agent
 
-nav: 
-  - Overview: 'index.md'
-  - Installation: 
+nav:
+  - Overview:
+    - 'index.md'
+    - 💎 PR-Agent Pro: 'overview/pr_agent_pro.md'
+    - Data Privacy: 'overview/data_privacy.md'
+  - Installation:
     - 'installation/index.md'
     - Locally: 'installation/locally.md'
     - GitHub: 'installation/github.md'
@@ -12,14 +15,16 @@ nav:
     - BitBucket: 'installation/bitbucket.md'
     - Azure DevOps: 'installation/azure.md'
     - 💎 PR-Agent Pro: 'installation/pr_agent_pro.md'
-  - Usage Guide: 
+  - Usage Guide:
     - 'usage-guide/index.md'
     - Introduction: 'usage-guide/introduction.md'
-    - Configuration Options: 'usage-guide/configuration_options.md'
-    - Managing Mail Notifications: 'usage-guide/mail_notifications.md'
+    - Configuration File: 'usage-guide/configuration_options.md'
     - Usage and Automation: 'usage-guide/automations_and_usage.md'
+    - Managing Mail Notifications: 'usage-guide/mail_notifications.md'
+    - Changing a Model: 'usage-guide/changing_a_model.md'
     - Additional Configurations: 'usage-guide/additional_configurations.md'
-  - Tools: 
+    - 💎 PR-Agent Pro Models: 'usage-guide/PR_agent_pro_models'
+  - Tools:
     - 'tools/index.md'
     - Describe: 'tools/describe.md'
     - Review: 'tools/review.md'
@@ -38,6 +43,7 @@ nav:
     - 💎 Similar Code: 'tools/similar_code.md'
   - Core Abilities: 'core-abilities/index.md'
   - Chrome Extension: 'chrome-extension/index.md'
+  - Code Fine-tuning Benchmark: 'finetuning_benchmark/index.md'
 
 theme:
   logo: assets/logo.svg
@@ -57,10 +63,10 @@ theme:
     - content.tabs.link
     - content.code.annotation
     - content.code.copy
-    - toc.integrate
+    - content.tabs.link
   language: en
   custom_dir: overrides
-    
+
   palette:
     - media: "(prefers-color-scheme)"
       toggle:
@@ -69,15 +75,15 @@ theme:
     - media: "(prefers-color-scheme: light)"
       scheme: default
       toggle:
-        icon: material/toggle-switch-off-outline 
+        icon: material/toggle-switch-off-outline
         name: Switch to dark mode
       primary: custom
       accent: custom
     - media: "(prefers-color-scheme: dark)"
-      scheme: slate 
+      scheme: slate
       toggle:
         icon: material/toggle-switch
-        name: Switch to light mode    
+        name: Switch to light mode
       primary: custom
       accent: custom
 
@@ -129,6 +135,7 @@ markdown_extensions:
       title: On this page
       toc_depth: 3
       permalink: true
-  
+
+
 copyright: |
   &copy; 2024 <a href="https://www.codium.ai/"  target="_blank" rel="noopener">CodiumAI</a>

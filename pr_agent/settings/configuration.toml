@@ -1,25 +1,36 @@
 [config]
+# models
 model="gpt-4-turbo-2024-04-09"
 model_turbo="gpt-4o"
 fallback_models=["gpt-4-0125-preview"]
+# CLI
 git_provider="github"
 publish_output=true
 publish_output_progress=true
 verbosity_level=0 # 0,1,2
 use_extra_bad_extensions=false
+# Configurations
 use_wiki_settings_file=true
 use_repo_settings_file=true
 use_global_settings_file=true
 ai_timeout=120 # 2minutes
+# token limits
 max_description_tokens = 500
 max_commits_tokens = 500
 max_model_tokens = 32000 # Limits the maximum number of tokens that can be used by any model, regardless of the model's default capabilities.
+custom_model_max_tokens=-1 # for models not in the default list
+#
 patch_extra_lines = 1
-secret_provider="google_cloud_storage"
+secret_provider=""
 cli_mode=false
 ai_disclaimer_title=""  # Pro feature, title for a collapsible disclaimer to AI outputs
 ai_disclaimer=""  # Pro feature, full text for the AI disclaimer
 output_relevant_configurations=false
+large_patch_policy = "clip" # "clip", "skip"
+is_auto_command=false
+# seed
+seed=-1 # set positive value to fix the seed (and ensure temperature=0)
+temperature=0.2
 
 [pr_reviewer] # /review #
 # enable/disable features
@@ -27,11 +38,13 @@ require_score_review=false
 require_tests_review=true
 require_estimate_effort_to_review=true
 require_can_be_split_review=false
+require_security_review=true
+extra_issue_links=false
 # soc2
 require_soc2_ticket=false
 soc2_ticket_prompt="Does the PR description include a link to ticket in a project management system (e.g., Jira, Asana, Trello, etc.) ?"
 # general options
-num_code_suggestions=4
+num_code_suggestions=0
 inline_code_comments = false
 ask_and_reflect=false
 #automatic_review=true
@@ -58,7 +71,7 @@ generate_ai_title=false
 use_bullet_points=true
 extra_instructions = ""
 enable_pr_type=true
-final_update_message = false
+final_update_message = true
 enable_help_text=false
 enable_help_comment=true
 # describe as comment
@@ -71,7 +84,11 @@ inline_file_summary=false # false, true, 'table'
 # markers
 use_description_markers=false
 include_generated_by_header=true
-
+# large pr mode 💎
+enable_large_pr_handling=true
+max_ai_calls=4
+async_ai_calls=true
+mention_extra_files=true
 #custom_labels = ['Bug fix', 'Tests', 'Bug fix with tests', 'Enhancement', 'Documentation', 'Other']
 
 [pr_questions] # /ask #
@@ -79,13 +96,16 @@ enable_help_text=false
 
 
 [pr_code_suggestions] # /improve #
-max_context_tokens=8000
+max_context_tokens=10000
 num_code_suggestions=4
 commitable_code_suggestions = false
 extra_instructions = ""
 rank_suggestions = false
 enable_help_text=false
-persistent_comment=false
+persistent_comment=true
+max_history_len=4
+# enable to apply suggestion 💎
+apply_suggestions_checkbox=true
 # suggestions scoring
 self_reflect_on_suggestions=true
 suggestions_score_threshold=0 # [0-10]. highly recommend not to set this value above 8, since above it may clip highly relevant suggestions
@@ -96,16 +116,38 @@ max_number_of_calls = 3
 parallel_calls = true
 rank_extended_suggestions = false
 final_clip_factor = 0.8
+# self-review checkbox
+demand_code_suggestions_self_review=false # add a checkbox for the author to self-review the code suggestions
+code_suggestions_self_review_text= "**Author self-review**: I have reviewed the PR code suggestions, and addressed the relevant ones."
+approve_pr_on_self_review=false # Pro feature. if true, the PR will be auto-approved after the author clicks on the self-review checkbox
+# Suggestion impact
+publish_post_process_suggestion_impact=true
+
+[pr_custom_prompt] # /custom_prompt #
+prompt = """\
+The code suggestions should focus only on the following:
+- ...
+- ...
+...
+"""
+suggestions_score_threshold=0
+num_code_suggestions_per_chunk=4
+self_reflect_on_custom_suggestions=true
+enable_help_text=false
+
 
 [pr_add_docs] # /add_docs #
 extra_instructions = ""
-docs_style = "Sphinx Style" # "Google Style with Args, Returns, Attributes...etc", "Numpy Style", "Sphinx Style", "PEP257", "reStructuredText"
+docs_style = "Sphinx" # "Google Style with Args, Returns, Attributes...etc", "Numpy Style", "Sphinx Style", "PEP257", "reStructuredText"
+file = ""              # in case there are several components with the same name, you can specify the relevant file
+class_name = ""        # in case there are several methods with the same name in the same file, you can specify the relevant class name
 
 [pr_update_changelog] # /update_changelog #
 push_changelog_changes=false
 extra_instructions = ""
 
 [pr_analyze] # /analyze #
+enable_help_text=true
 
 [pr_test] # /test #
 extra_instructions = ""
@@ -120,13 +162,14 @@ enable_help_text=false
 num_code_suggestions=4
 extra_instructions = ""
 file = ""              # in case there are several components with the same name, you can specify the relevant file
-class_name = ""
+class_name = ""        # in case there are several methods with the same name in the same file, you can specify the relevant class name
 
 [checks] # /checks (pro feature) #
 enable_auto_checks_feedback=true
 excluded_checks_list=["lint"] # list of checks to exclude, for example: ["check1", "check2"]
 persistent_comment=true
 enable_help_text=true
+final_update_message = false
 
 [pr_help] # /help #
 
@@ -139,20 +182,21 @@ ratelimit_retries = 5
 base_url = "https://api.github.com"
 publish_inline_comments_fallback_with_verification = true
 try_fix_invalid_inline_comments = true
+app_name = "pr-agent"
 
 [github_action_config]
 # auto_review = true    # set as env var in .github/workflows/pr-agent.yaml
 # auto_describe = true  # set as env var in .github/workflows/pr-agent.yaml
 # auto_improve = true   # set as env var in .github/workflows/pr-agent.yaml
-# enable_output = true   # set as env var in .github/workflows/pr-agent.yaml
 
 [github_app]
 # these toggles allows running the github app from custom deployments
+bot_user = "github-actions[bot]"
 override_deployment_type = true
 # settings for "pull_request" event
 handle_pr_actions = ['opened', 'reopened', 'ready_for_review']
 pr_commands = [
-    "/describe",
+    "/describe --pr_description.final_update_message=false",
     "/review --pr_reviewer.num_code_suggestions=0",
     "/improve",
 ]
@@ -171,17 +215,22 @@ ignore_pr_title = []
 ignore_bot_pr = true
 
 [gitlab]
-url = "https://gitlab.com" # URL to the gitlab service
+url = "https://gitlab.com"
 pr_commands = [
     "/describe",
     "/review --pr_reviewer.num_code_suggestions=0",
     "/improve",
 ]
+handle_push_trigger = false
+push_commands = [
+    "/describe",
+    "/review --pr_reviewer.num_code_suggestions=0",
+]
 
 [bitbucket_app]
 pr_commands = [
     "/review --pr_reviewer.num_code_suggestions=0",
-    "/improve --pr_code_suggestions.commitable_code_suggestions=true",
+    "/improve --pr_code_suggestions.commitable_code_suggestions=true --pr_code_suggestions.suggestions_score_threshold=7",
 ]
 
 
@@ -215,6 +264,14 @@ force_update_dataset = false
 max_issues_to_scan = 500
 vectordb = "pinecone"
 
+[pr_find_similar_component]
+class_name = ""
+file = ""
+search_from_org = false
+allow_fallback_less_words = true
+number_of_keywords = 5
+number_of_results = 5
+
 [pinecone]
 # fill and place in .secrets.toml
 #api_key = ...
@@ -222,3 +279,7 @@ vectordb = "pinecone"
 
 [lancedb]
 uri = "./lancedb"
+
+[best_practices]
+content = ""
+max_lines_allowed = 800

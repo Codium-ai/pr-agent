@@ -5,17 +5,20 @@ from pr_agent.config_loader import get_settings
 
 
 
-# Bad Extensions, source: https://github.com/EleutherAI/github-downloader/blob/345e7c4cbb9e0dc8a0615fd995a08bf9d73b3fe6/download_repo_text.py  # noqa: E501
-bad_extensions = get_settings().bad_extensions.default
-if get_settings().config.use_extra_bad_extensions:
-    bad_extensions += get_settings().bad_extensions.extra
-
 
 def filter_bad_extensions(files):
-    return [f for f in files if f.filename is not None and is_valid_file(f.filename)]
+    # Bad Extensions, source: https://github.com/EleutherAI/github-downloader/blob/345e7c4cbb9e0dc8a0615fd995a08bf9d73b3fe6/download_repo_text.py  # noqa: E501
+    bad_extensions = get_settings().bad_extensions.default
+    if get_settings().config.use_extra_bad_extensions:
+        bad_extensions += get_settings().bad_extensions.extra
+    return [f for f in files if f.filename is not None and is_valid_file(f.filename, bad_extensions)]
 
 
-def is_valid_file(filename):
+def is_valid_file(filename, bad_extensions=None):
+    if not bad_extensions:
+        bad_extensions = get_settings().bad_extensions.default
+        if get_settings().config.use_extra_bad_extensions:
+            bad_extensions += get_settings().bad_extensions.extra
     return filename.split('.')[-1] not in bad_extensions
 
 

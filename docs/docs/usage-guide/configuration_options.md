@@ -18,22 +18,28 @@ In terms of precedence, wiki configurations will override local configurations, 
 
 ## Wiki configuration file 💎
 
-Specifically for GitHub, with PR-Agent-Pro you can set configurations by creating a page called `.pr_agent.toml` in the [wiki](https://github.com/Codium-ai/pr-agent/wiki/pr_agent.toml) of the repo. 
+`Platforms supported: GitHub, GitLab`
+
+With PR-Agent-Pro, you can set configurations by creating a page called `.pr_agent.toml` in the [wiki](https://github.com/Codium-ai/pr-agent/wiki/pr_agent.toml) of the repo. 
 The advantage of this method is that it allows to set configurations without needing to commit new content to the repo - just edit the wiki page and **save**.
+
 
 ![wiki_configuration](https://codium.ai/images/pr_agent/wiki_configuration.png){width=512}
 
-Click [here](https://codium.ai/images/pr_agent/wiki_configuration_pr_agent.mp4) to see a short instructional video. We recommend surrounding the configuration content with triple-quotes, to allow better presentation when displayed in the wiki as markdown.
+Click [here](https://codium.ai/images/pr_agent/wiki_configuration_pr_agent.mp4) to see a short instructional video. We recommend surrounding the configuration content with triple-quotes (or \`\`\`toml), to allow better presentation when displayed in the wiki as markdown.
 An example content:
 
-```
+```toml
 [pr_description]
 generate_ai_title=true
 ```
 
-PR-Agent will know to remove the triple-quotes when reading the configuration content.
+PR-Agent will know to remove the surrounding quotes when reading the configuration content.
 
 ## Local configuration file
+
+`Platforms supported: GitHub, GitLab, Bitbucket, Azure DevOps`
+
 
 By uploading a local `.pr_agent.toml` file to the root of the repo's main branch, you can edit and customize any configuration parameter. Note that you need to upload `.pr_agent.toml` prior to creating a PR, in order for the configuration to take effect.
 
@@ -53,9 +59,13 @@ Then you can give a list of extra instructions to the `review` tool.
 
 ## Global configuration file 💎
 
+`Platforms supported: GitHub, GitLab, Bitbucket`
+
 If you create a repo called `pr-agent-settings` in your **organization**, it's configuration file `.pr_agent.toml` will be used as a global configuration file for any other repo that belongs to the same organization.
 Parameters from a local `.pr_agent.toml` file, in a specific repo, will override the global configuration parameters.
 
 For example, in the GitHub organization `Codium-ai`:
-- The repo [`https://github.com/Codium-ai/pr-agent-settings`](https://github.com/Codium-ai/pr-agent-settings/blob/main/.pr_agent.toml) contains a `.pr_agent.toml` file that serves as a global configuration file for all the repos in the GitHub organization `Codium-ai`.
+
+- The file [`https://github.com/Codium-ai/pr-agent-settings/.pr_agent.toml`](https://github.com/Codium-ai/pr-agent-settings/blob/main/.pr_agent.toml)  serves as a global configuration file for all the repos in the GitHub organization `Codium-ai`.
+
 - The repo [`https://github.com/Codium-ai/pr-agent`](https://github.com/Codium-ai/pr-agent/blob/main/.pr_agent.toml) inherits the global configuration file from `pr-agent-settings`.

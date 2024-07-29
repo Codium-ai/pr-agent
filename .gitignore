@@ -1,4 +1,6 @@
 .idea/
+.lsp/
+.vscode/
 venv/
 lib/
 bin/

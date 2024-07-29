@@ -59,7 +59,7 @@ class PRQuestions:
             self.git_provider.publish_comment("Preparing answer...", is_temporary=True)
 
         # identify image
-        img_path = self.idenfity_image_in_comment()
+        img_path = self.identify_image_in_comment()
         if img_path:
             get_logger().debug(f"Image path identified", artifact=img_path)
 
@@ -78,7 +78,7 @@ class PRQuestions:
             self.git_provider.remove_initial_comment()
         return ""
 
-    def idenfity_image_in_comment(self):
+    def identify_image_in_comment(self):
         img_path = ''
         if '![image]' in self.question_str:
             # assuming structure:
@@ -108,12 +108,12 @@ class PRQuestions:
         user_prompt = environment.from_string(get_settings().pr_questions_prompt.user).render(variables)
         if 'img_path' in variables:
             img_path = self.vars['img_path']
-            response, finish_reason = await self.ai_handler.chat_completion(model=model, temperature=0.2,
-                                                                            system=system_prompt, user=user_prompt,
-                                                                            img_path=img_path)
+            response, finish_reason = await (self.ai_handler.chat_completion
+                                             (model=model, temperature=get_settings().config.temperature,
+                                              system=system_prompt, user=user_prompt, img_path=img_path))
         else:
-            response, finish_reason = await self.ai_handler.chat_completion(model=model, temperature=0.2,
-                                                                            system=system_prompt, user=user_prompt)
+            response, finish_reason = await self.ai_handler.chat_completion(
+                model=model, temperature=get_settings().config.temperature, system=system_prompt, user=user_prompt)
         return response
 
     def _prepare_pr_answer(self) -> str:

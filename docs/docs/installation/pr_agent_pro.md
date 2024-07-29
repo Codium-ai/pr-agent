@@ -16,6 +16,10 @@ Once a user acquires a seat, they gain the flexibility to use PR-Agent Pro acros
 Users without a purchased seat who interact with a repository featuring PR-Agent Pro are entitled to receive up to five complimentary feedbacks.
 Beyond this limit, PR-Agent Pro will cease to respond to their inquiries unless a seat is purchased.
 
+## Install PR-Agent Pro for GitHub Enterprise Server
+You can install PR-Agent Pro application on your GitHub Enterprise Server, and enjoy two weeks of free trial.
+After the trial period, to continue using PR-Agent Pro, you will need to contact us for an [Enterprise license](https://www.codium.ai/pricing/).
+
 
 ## Install PR-Agent Pro for GitLab (Teams & Enterprise)
 

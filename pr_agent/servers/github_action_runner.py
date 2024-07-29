@@ -37,7 +37,7 @@ async def run_action():
     OPENAI_KEY = os.environ.get('OPENAI_KEY') or os.environ.get('OPENAI.KEY')
     OPENAI_ORG = os.environ.get('OPENAI_ORG') or os.environ.get('OPENAI.ORG')
     GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN')
-    get_settings().set("CONFIG.PUBLISH_OUTPUT_PROGRESS", False)
+    # get_settings().set("CONFIG.PUBLISH_OUTPUT_PROGRESS", False)
 
     # Check if required environment variables are set
     if not GITHUB_EVENT_NAME:
@@ -99,6 +99,7 @@ async def run_action():
 
                 # invoke by default all three tools
                 if auto_describe is None or is_true(auto_describe):
+                    get_settings().pr_description.final_update_message = False  # No final update message when auto_describe is enabled
                     await PRDescription(pr_url).run()
                 if auto_review is None or is_true(auto_review):
                     await PRReviewer(pr_url).run()
@@ -126,7 +127,7 @@ async def run_action():
                 if event_payload.get("issue", {}).get("pull_request"):
                     url = event_payload.get("issue", {}).get("pull_request", {}).get("url")
                     is_pr = True
-                elif event_payload.get("comment", {}).get("pull_request_url"): # for 'pull_request_review_comment
+                elif event_payload.get("comment", {}).get("pull_request_url"):  # for 'pull_request_review_comment
                     url = event_payload.get("comment", {}).get("pull_request_url")
                     is_pr = True
                     disable_eyes = True
@@ -138,8 +139,11 @@ async def run_action():
                     comment_id = event_payload.get("comment", {}).get("id")
                     provider = get_git_provider()(pr_url=url)
                     if is_pr:
-                        await PRAgent().handle_request(url, body,
-                                    notify=lambda: provider.add_eyes_reaction(comment_id, disable_eyes=disable_eyes))
+                        await PRAgent().handle_request(
+                            url, body, notify=lambda: provider.add_eyes_reaction(
+                                comment_id, disable_eyes=disable_eyes
+                            )
+                        )
                     else:
                         await PRAgent().handle_request(url, body)
 

@@ -26,15 +26,28 @@ jobs:
           OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
-** if you want to pin your action to a specific release (v2.0 for example) for stability reasons, use:
+
+
+if you want to pin your action to a specific release (v0.23 for example) for stability reasons, use:
 ```yaml
 ...
     steps:
       - name: PR Agent action step
         id: pragent
-        uses: Codium-ai/pr-agent@v2.0
+        uses: docker://codiumai/pr-agent:0.23-github_action
 ...
 ```
+
+For enhanced security, you can also specify the Docker image by its digest:
+```yaml
+...
+    steps:
+      - name: PR Agent action step
+        id: pragent
+        uses: docker://codiumai/pr-agent@sha256:14165e525678ace7d9b51cda8652c2d74abb4e1d76b57c4a6ccaeba84663cc64
+...
+```
+
 2) Add the following secret to your repository under `Settings > Secrets and variables > Actions > New repository secret > Add secret`:
 
 ```

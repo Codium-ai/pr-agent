@@ -142,7 +142,7 @@ class PRGenerateLabels:
 
         response, finish_reason = await self.ai_handler.chat_completion(
             model=model,
-            temperature=0.2,
+            temperature=get_settings().config.temperature,
             system=system_prompt,
             user=user_prompt
         )
@@ -164,6 +164,7 @@ class PRGenerateLabels:
                 pr_types = self.data['labels']
             elif type(self.data['labels']) == str:
                 pr_types = self.data['labels'].split(',')
+        pr_types = [label.strip() for label in pr_types]
 
         # convert lowercase labels to original case
         try:

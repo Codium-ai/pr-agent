@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+
 class BaseAiHandler(ABC):
     """
     This class defines the interface for an AI handler to be used by the PR Agents.  
@@ -14,7 +15,7 @@ class BaseAiHandler(ABC):
     def deployment_id(self):
         pass
 
-    @abstractmethod   
+    @abstractmethod
     async def chat_completion(self, model: str, system: str, user: str, temperature: float = 0.2, img_path: str = None):
         """
         This method should be implemented to return a chat completion from the AI model.
@@ -25,4 +26,3 @@ class BaseAiHandler(ABC):
             temperature (float): the temperature to use for the chat completion    
         """
         pass
-

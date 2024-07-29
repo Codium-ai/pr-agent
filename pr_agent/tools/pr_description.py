@@ -1,17 +1,22 @@
+import asyncio
 import copy
 import re
 from functools import partial
 from typing import List, Tuple
 
+import yaml
 from jinja2 import Environment, StrictUndefined
 
 from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAIHandler
-from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
+from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models, get_pr_diff_multiple_patchs, \
+    OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import load_yaml, set_custom_labels, get_user_labels, ModelType, show_relevant_configurations
+from pr_agent.algo.utils import set_custom_labels
+from pr_agent.algo.utils import load_yaml, get_user_labels, ModelType, show_relevant_configurations, get_max_tokens, \
+    clip_tokens
 from pr_agent.config_loader import get_settings
-from pr_agent.git_providers import get_git_provider
+from pr_agent.git_providers import get_git_provider, GithubProvider, get_git_provider_with_context
 from pr_agent.git_providers.git_provider import get_main_pr_language
 from pr_agent.log import get_logger
 from pr_agent.servers.help import HelpMessage
@@ -28,7 +33,7 @@ class PRDescription:
             args (list, optional): List of arguments passed to the PRDescription class. Defaults to None.
         """
         # Initialize the git provider and main PR language
-        self.git_provider = get_git_provider()(pr_url)
+        self.git_provider = get_git_provider_with_context(pr_url)
         self.main_pr_language = get_main_pr_language(
             self.git_provider.get_languages(), self.git_provider.get_files()
         )
@@ -43,7 +48,6 @@ class PRDescription:
         self.ai_handler = ai_handler()
         self.ai_handler.main_pr_language = self.main_pr_language
 
-    
         # Initialize the variables dictionary
         self.vars = {
             "title": self.git_provider.pr.title,
@@ -57,6 +61,7 @@ class PRDescription:
             "custom_labels_class": "",  # will be filled if necessary in 'set_custom_labels' function
             "enable_semantic_files_types": get_settings().pr_description.enable_semantic_files_types,
         }
+
         self.user_description = self.git_provider.get_user_description()
 
         # Initialize the token handler
@@ -79,7 +84,7 @@ class PRDescription:
             relevant_configs = {'pr_description': dict(get_settings().pr_description),
                                 'config': dict(get_settings().config)}
             get_logger().debug("Relevant configs", artifacts=relevant_configs)
-            if get_settings().config.publish_output:
+            if get_settings().config.publish_output and not get_settings().config.get('is_auto_command', False):
                 self.git_provider.publish_comment("Preparing PR description...", is_temporary=True)
 
             await retry_with_fallback_models(self._prepare_prediction, ModelType.TURBO)
@@ -102,9 +107,9 @@ class PRDescription:
                 pr_title, pr_body, changes_walkthrough, pr_file_changes = self._prepare_pr_answer_with_markers()
             else:
                 pr_title, pr_body, changes_walkthrough, pr_file_changes = self._prepare_pr_answer()
-            if not self.git_provider.is_supported(
-                    "publish_file_comments") or not get_settings().pr_description.inline_file_summary:
-                pr_body += "\n\n" + changes_walkthrough
+                if not self.git_provider.is_supported(
+                        "publish_file_comments") or not get_settings().pr_description.inline_file_summary:
+                    pr_body += "\n\n" + changes_walkthrough
             get_logger().debug("PR output", artifact={"title": pr_title, "body": pr_body})
 
             # Add help text if gfm_markdown is supported
@@ -157,43 +162,170 @@ class PRDescription:
                 self.git_provider.remove_initial_comment()
         except Exception as e:
             get_logger().error(f"Error generating PR description {self.pr_id}: {e}")
-        
+
         return ""
 
     async def _prepare_prediction(self, model: str) -> None:
         if get_settings().pr_description.use_description_markers and 'pr_agent:' not in self.user_description:
             return None
 
-        self.patches_diff = get_pr_diff(self.git_provider, self.token_handler, model)
-        if self.patches_diff:
-            get_logger().debug(f"PR diff", artifact=self.patches_diff)
-            self.prediction = await self._get_prediction(model)
+        large_pr_handling = get_settings().pr_description.enable_large_pr_handling and "pr_description_only_files_prompts" in get_settings()
+        output = get_pr_diff(self.git_provider, self.token_handler, model, large_pr_handling=large_pr_handling, return_remaining_files=True)
+        if isinstance(output, tuple):
+            patches_diff, remaining_files_list = output
         else:
-            get_logger().error(f"Error getting PR diff {self.pr_id}")
-            self.prediction = None
+            patches_diff = output
+            remaining_files_list = []
+        if not large_pr_handling or patches_diff:
+            self.patches_diff = patches_diff
+            if patches_diff:
+                get_logger().debug(f"PR diff", artifact=self.patches_diff)
+                self.prediction = await self._get_prediction(model, patches_diff, prompt="pr_description_prompt")
+                if (remaining_files_list and 'pr_files' in self.prediction and 'label:' in self.prediction and
+                        get_settings().pr_description.mention_extra_files):
+                    get_logger().debug(f"Extending additional files, {len(remaining_files_list)} files")
+                    self.prediction = await self.extend_additional_files(remaining_files_list)
+            else:
+                get_logger().error(f"Error getting PR diff {self.pr_id}")
+                self.prediction = None
+        else:
+            # get the diff in multiple patches, with the token handler only for the files prompt
+            get_logger().debug('large_pr_handling for describe')
+            token_handler_only_files_prompt = TokenHandler(
+                self.git_provider.pr,
+                self.vars,
+                get_settings().pr_description_only_files_prompts.system,
+                get_settings().pr_description_only_files_prompts.user,
+            )
+            (patches_compressed_list, total_tokens_list, deleted_files_list, remaining_files_list, file_dict,
+             files_in_patches_list) = get_pr_diff_multiple_patchs(
+                self.git_provider, token_handler_only_files_prompt, model)
 
-    async def _get_prediction(self, model: str) -> str:
-        """
-        Generate an AI prediction for the PR description based on the provided model.
+            # get the files prediction for each patch
+            if not get_settings().pr_description.async_ai_calls:
+                results = []
+                for i, patches in enumerate(patches_compressed_list):  # sync calls
+                    patches_diff = "\n".join(patches)
+                    get_logger().debug(f"PR diff number {i + 1} for describe files")
+                    prediction_files = await self._get_prediction(model, patches_diff,
+                                                                  prompt="pr_description_only_files_prompts")
+                    results.append(prediction_files)
+            else:  # async calls
+                tasks = []
+                for i, patches in enumerate(patches_compressed_list):
+                    patches_diff = "\n".join(patches)
+                    get_logger().debug(f"PR diff number {i + 1} for describe files")
+                    task = asyncio.create_task(
+                        self._get_prediction(model, patches_diff, prompt="pr_description_only_files_prompts"))
+                    tasks.append(task)
+                # Wait for all tasks to complete
+                results = await asyncio.gather(*tasks)
+            file_description_str_list = []
+            for i, result in enumerate(results):
+                prediction_files = result.strip().removeprefix('```yaml').strip('`').strip()
+                if load_yaml(prediction_files) and prediction_files.startswith('pr_files'):
+                    prediction_files = prediction_files.removeprefix('pr_files:').strip()
+                    file_description_str_list.append(prediction_files)
+                else:
+                    get_logger().debug(f"failed to generate predictions in iteration {i + 1} for describe files")
 
-        Args:
-            model (str): The name of the model to be used for generating the prediction.
+            # generate files_walkthrough string, with proper token handling
+            token_handler_only_description_prompt = TokenHandler(
+                self.git_provider.pr,
+                self.vars,
+                get_settings().pr_description_only_description_prompts.system,
+                get_settings().pr_description_only_description_prompts.user)
+            files_walkthrough = "\n".join(file_description_str_list)
+            files_walkthrough_prompt = copy.deepcopy(files_walkthrough)
+            if remaining_files_list:
+                files_walkthrough_prompt += "\n\nNo more token budget. Additional unprocessed files:"
+                for file in remaining_files_list:
+                    files_walkthrough_prompt += f"\n- {file}"
+            if deleted_files_list:
+                files_walkthrough_prompt += "\n\nAdditional deleted files:"
+                for file in deleted_files_list:
+                    files_walkthrough_prompt += f"\n- {file}"
+            tokens_files_walkthrough = len(
+                token_handler_only_description_prompt.encoder.encode(files_walkthrough_prompt))
+            total_tokens = token_handler_only_description_prompt.prompt_tokens + tokens_files_walkthrough
+            max_tokens_model = get_max_tokens(model)
+            if total_tokens > max_tokens_model - OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD:
+                # clip files_walkthrough to git the tokens within the limit
+                files_walkthrough_prompt = clip_tokens(files_walkthrough_prompt,
+                                                       max_tokens_model - OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD - token_handler_only_description_prompt.prompt_tokens,
+                                                       num_input_tokens=tokens_files_walkthrough)
 
-        Returns:
-            str: The generated AI prediction.
-        """
+            # PR header inference
+            get_logger().debug(f"PR diff only description", artifact=files_walkthrough_prompt)
+            prediction_headers = await self._get_prediction(model, patches_diff=files_walkthrough_prompt,
+                                                            prompt="pr_description_only_description_prompts")
+            prediction_headers = prediction_headers.strip().removeprefix('```yaml').strip('`').strip()
+
+            # manually add extra files to final prediction
+            if get_settings().pr_description.mention_extra_files:
+                for file in remaining_files_list:
+                    extra_file_yaml = f"""\
+- filename: |
+    {file}
+  changes_summary: |
+    ...
+  changes_title: |
+    ...
+  label: |
+    additional files (token-limit)
+"""
+                    files_walkthrough = files_walkthrough.strip() + "\n" + extra_file_yaml.strip()
+            # final processing
+            self.prediction = prediction_headers + "\n" + "pr_files:\n" + files_walkthrough
+            if not load_yaml(self.prediction):
+                get_logger().error(f"Error getting valid YAML in large PR handling for describe {self.pr_id}")
+                if load_yaml(prediction_headers):
+                    get_logger().debug(f"Using only headers for describe {self.pr_id}")
+                    self.prediction = prediction_headers
+
+    async def extend_additional_files(self, remaining_files_list) -> str:
+        prediction = self.prediction
+        try:
+            original_prediction_dict = load_yaml(self.prediction)
+            prediction_extra = "pr_files:"
+            for file in remaining_files_list:
+                extra_file_yaml = f"""\
+- filename: |
+    {file}
+  changes_summary: |
+    ...
+  changes_title: |
+    ...
+  label: |
+    additional files (token-limit)
+"""
+                prediction_extra = prediction_extra + "\n" + extra_file_yaml.strip()
+            prediction_extra_dict = load_yaml(prediction_extra)
+            # merge the two dictionaries
+            if isinstance(original_prediction_dict, dict) and isinstance(prediction_extra_dict, dict):
+                    original_prediction_dict["pr_files"].extend(prediction_extra_dict["pr_files"])
+                    new_yaml = yaml.dump(original_prediction_dict)
+                    if load_yaml(new_yaml):
+                        prediction = new_yaml
+            return prediction
+        except Exception as e:
+            get_logger().error(f"Error extending additional files {self.pr_id}: {e}")
+            return self.prediction
+
+    async def _get_prediction(self, model: str, patches_diff: str, prompt="pr_description_prompt") -> str:
         variables = copy.deepcopy(self.vars)
-        variables["diff"] = self.patches_diff  # update diff
+        variables["diff"] = patches_diff  # update diff
 
         environment = Environment(undefined=StrictUndefined)
         set_custom_labels(variables, self.git_provider)
         self.variables = variables
-        system_prompt = environment.from_string(get_settings().pr_description_prompt.system).render(variables)
-        user_prompt = environment.from_string(get_settings().pr_description_prompt.user).render(variables)
+
+        system_prompt = environment.from_string(get_settings().get(prompt, {}).get("system", "")).render(variables)
+        user_prompt = environment.from_string(get_settings().get(prompt, {}).get("user", "")).render(variables)
 
         response, finish_reason = await self.ai_handler.chat_completion(
             model=model,
-            temperature=0.2,
+            temperature=get_settings().config.temperature,
             system=system_prompt,
             user=user_prompt
         )
@@ -221,9 +353,6 @@ class PRDescription:
         if 'pr_files' in self.data:
             self.data['pr_files'] = self.data.pop('pr_files')
 
-
-
-
     def _prepare_labels(self) -> List[str]:
         pr_types = []
 
@@ -238,6 +367,7 @@ class PRDescription:
                 pr_types = self.data['type']
             elif type(self.data['type']) == str:
                 pr_types = self.data['type'].split(',')
+        pr_types = [label.strip() for label in pr_types]
 
         # convert lowercase labels to original case
         try:
@@ -321,7 +451,7 @@ class PRDescription:
                 value = self.file_label_dict
             else:
                 key_publish = key.rstrip(':').replace("_", " ").capitalize()
-                if key_publish== "Type":
+                if key_publish == "Type":
                     key_publish = "PR Type"
                 # elif key_publish == "Description":
                 #     key_publish = "PR Description"
@@ -341,7 +471,7 @@ class PRDescription:
             else:
                 # if the value is a list, join its items by comma
                 if isinstance(value, list):
-                    value = ', '.join(v for v in value)
+                    value = ', '.join(v.rstrip() for v in value)
                 pr_body += f"{value}\n"
             if idx < len(self.data) - 1:
                 pr_body += "\n\n___\n\n"
@@ -355,7 +485,7 @@ class PRDescription:
                 filename = file['filename'].replace("'", "`").replace('"', '`')
                 changes_summary = file['changes_summary']
                 changes_title = file['changes_title'].strip()
-                label = file.get('label')
+                label = file.get('label').strip().lower()
                 if label not in file_label_dict:
                     file_label_dict[label] = []
                 file_label_dict[label].append((filename, changes_title, changes_summary))
@@ -396,6 +526,7 @@ class PRDescription:
                 for filename, file_changes_title, file_change_description in list_tuples:
                     filename = filename.replace("'", "`").rstrip()
                     filename_publish = filename.split("/")[-1]
+
                     file_changes_title_code = f"<code>{file_changes_title}</code>"
                     file_changes_title_code_br = insert_br_after_x_chars(file_changes_title_code, x=(delta - 5)).strip()
                     if len(file_changes_title_code_br) < (delta - 5):
@@ -403,9 +534,9 @@ class PRDescription:
                     filename_publish = f"<strong>{filename_publish}</strong><dd>{file_changes_title_code_br}</dd>"
                     diff_plus_minus = ""
                     delta_nbsp = ""
-                    diff_files = self.git_provider.diff_files
+                    diff_files = self.git_provider.get_diff_files()
                     for f in diff_files:
-                        if f.filename.lower() == filename.lower():
+                        if f.filename.lower().strip('/') == filename.lower().strip('/'):
                             num_plus_lines = f.num_plus_lines
                             num_minus_lines = f.num_minus_lines
                             diff_plus_minus += f"+{num_plus_lines}/-{num_minus_lines}"
@@ -427,14 +558,16 @@ class PRDescription:
 <hr>
 
 {filename}
+
 {file_change_description_br}
 
 
 </details>
-    
+
 
   </td>
   <td><a href="{link}">{diff_plus_minus}</a>{delta_nbsp}</td>
+
 </tr>                    
 """
                 if use_collapsible_file_list:
@@ -511,6 +644,7 @@ def insert_br_after_x_chars(text, x=70):
         if "</code>" in word:
             is_inside_code = False
     return ''.join(new_text).strip()
+
 
 def replace_code_tags(text):
     """

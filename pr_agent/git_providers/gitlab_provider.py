@@ -4,12 +4,14 @@ from typing import Optional, Tuple
 from urllib.parse import urlparse
 
 import gitlab
+import requests
 from gitlab import GitlabGetError
 
+from ..algo.file_filter import filter_ignored
 from ..algo.language_handler import is_valid_file
 from ..algo.utils import load_large_diff, clip_tokens, find_line_number_of_relevant_line_in_file
 from ..config_loader import get_settings
-from .git_provider import GitProvider
+from .git_provider import GitProvider, MAX_FILES_ALLOWED_FULL
 from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
 from ..log import get_logger
 
@@ -44,7 +46,8 @@ class GitLabProvider(GitProvider):
         self.incremental = incremental
 
     def is_supported(self, capability: str) -> bool:
-        if capability in ['get_issue_comments', 'create_inline_comment', 'publish_inline_comments']: # gfm_markdown is supported in gitlab !
+        if capability in ['get_issue_comments', 'create_inline_comment', 'publish_inline_comments',
+            'publish_file_comments']: # gfm_markdown is supported in gitlab !
             return False
         return True
 
@@ -84,53 +87,81 @@ class GitLabProvider(GitProvider):
         if self.diff_files:
             return self.diff_files
 
-        diffs = self.mr.changes()['changes']
+        # filter files using [ignore] patterns
+        diffs_original = self.mr.changes()['changes']
+        diffs = filter_ignored(diffs_original, 'gitlab')
+        if diffs != diffs_original:
+            try:
+                names_original = [diff['new_path'] for diff in diffs_original]
+                names_filtered = [diff['new_path'] for diff in diffs]
+                get_logger().info(f"Filtered out [ignore] files for merge request {self.id_mr}", extra={
+                    'original_files': names_original,
+                    'filtered_files': names_filtered
+                })
+            except Exception as e:
+                pass
+
         diff_files = []
+        invalid_files_names = []
+        counter_valid = 0
         for diff in diffs:
-            if is_valid_file(diff['new_path']):
+            if not is_valid_file(diff['new_path']):
+                invalid_files_names.append(diff['new_path'])
+                continue
+
+            # allow only a limited number of files to be fully loaded. We can manage the rest with diffs only
+            counter_valid += 1
+            if counter_valid < MAX_FILES_ALLOWED_FULL or not diff['diff']:
                 original_file_content_str = self.get_pr_file_content(diff['old_path'], self.mr.diff_refs['base_sha'])
                 new_file_content_str = self.get_pr_file_content(diff['new_path'], self.mr.diff_refs['head_sha'])
+            else:
+                if counter_valid == MAX_FILES_ALLOWED_FULL:
+                    get_logger().info(f"Too many files in PR, will avoid loading full content for rest of files")
+                original_file_content_str = ''
+                new_file_content_str = ''
 
-                try:
-                    if isinstance(original_file_content_str, bytes):
-                        original_file_content_str = bytes.decode(original_file_content_str, 'utf-8')
-                    if isinstance(new_file_content_str, bytes):
-                        new_file_content_str = bytes.decode(new_file_content_str, 'utf-8')
-                except UnicodeDecodeError:
-                    get_logger().warning(
-                        f"Cannot decode file {diff['old_path']} or {diff['new_path']} in merge request {self.id_mr}")
+            try:
+                if isinstance(original_file_content_str, bytes):
+                    original_file_content_str = bytes.decode(original_file_content_str, 'utf-8')
+                if isinstance(new_file_content_str, bytes):
+                    new_file_content_str = bytes.decode(new_file_content_str, 'utf-8')
+            except UnicodeDecodeError:
+                get_logger().warning(
+                    f"Cannot decode file {diff['old_path']} or {diff['new_path']} in merge request {self.id_mr}")
 
-                edit_type = EDIT_TYPE.MODIFIED
-                if diff['new_file']:
-                    edit_type = EDIT_TYPE.ADDED
-                elif diff['deleted_file']:
-                    edit_type = EDIT_TYPE.DELETED
-                elif diff['renamed_file']:
-                    edit_type = EDIT_TYPE.RENAMED
+            edit_type = EDIT_TYPE.MODIFIED
+            if diff['new_file']:
+                edit_type = EDIT_TYPE.ADDED
+            elif diff['deleted_file']:
+                edit_type = EDIT_TYPE.DELETED
+            elif diff['renamed_file']:
+                edit_type = EDIT_TYPE.RENAMED
 
-                filename = diff['new_path']
-                patch = diff['diff']
-                if not patch:
-                    patch = load_large_diff(filename, new_file_content_str, original_file_content_str)
+            filename = diff['new_path']
+            patch = diff['diff']
+            if not patch:
+                patch = load_large_diff(filename, new_file_content_str, original_file_content_str)
 
 
-                # count number of lines added and removed
-                patch_lines = patch.splitlines(keepends=True)
-                num_plus_lines = len([line for line in patch_lines if line.startswith('+')])
-                num_minus_lines = len([line for line in patch_lines if line.startswith('-')])
-                diff_files.append(
-                    FilePatchInfo(original_file_content_str, new_file_content_str,
-                                  patch=patch,
-                                  filename=filename,
-                                  edit_type=edit_type,
-                                  old_filename=None if diff['old_path'] == diff['new_path'] else diff['old_path'],
-                                  num_plus_lines=num_plus_lines,
-                                  num_minus_lines=num_minus_lines, ))
+            # count number of lines added and removed
+            patch_lines = patch.splitlines(keepends=True)
+            num_plus_lines = len([line for line in patch_lines if line.startswith('+')])
+            num_minus_lines = len([line for line in patch_lines if line.startswith('-')])
+            diff_files.append(
+                FilePatchInfo(original_file_content_str, new_file_content_str,
+                              patch=patch,
+                              filename=filename,
+                              edit_type=edit_type,
+                              old_filename=None if diff['old_path'] == diff['new_path'] else diff['old_path'],
+                              num_plus_lines=num_plus_lines,
+                              num_minus_lines=num_minus_lines, ))
+        if invalid_files_names:
+            get_logger().info(f"Filtered out files with invalid extensions: {invalid_files_names}")
 
         self.diff_files = diff_files
         return diff_files
 
-    def get_files(self):
+    def get_files(self) -> list:
         if not self.git_files:
             self.git_files = [change['new_path'] for change in self.mr.changes()['changes']]
         return self.git_files
@@ -154,26 +185,7 @@ class GitLabProvider(GitProvider):
                                    update_header: bool = True,
                                    name='review',
                                    final_update_message=True):
-        try:
-            for comment in self.mr.notes.list(get_all=True)[::-1]:
-                if comment.body.startswith(initial_header):
-                    latest_commit_url = self.get_latest_commit_url()
-                    comment_url = self.get_comment_url(comment)
-                    if update_header:
-                        updated_header = f"{initial_header}\n\n### ({name.capitalize()} updated until commit {latest_commit_url})\n"
-                        pr_comment_updated = pr_comment.replace(initial_header, updated_header)
-                    else:
-                        pr_comment_updated = pr_comment
-                    get_logger().info(f"Persistent mode - updating comment {comment_url} to latest {name} message")
-                    response = self.mr.notes.update(comment.id, {'body': pr_comment_updated})
-                    if final_update_message:
-                        self.publish_comment(
-                            f"**[Persistent {name}]({comment_url})** updated to latest commit {latest_commit_url}")
-                    return
-        except Exception as e:
-            get_logger().exception(f"Failed to update persistent review, error: {e}")
-            pass
-        self.publish_comment(pr_comment)
+        self.publish_persistent_comment_full(pr_comment, initial_header, update_header, name, final_update_message)
 
     def publish_comment(self, mr_comment: str, is_temporary: bool = False):
         comment = self.mr.notes.create({'body': mr_comment})
@@ -183,6 +195,11 @@ class GitLabProvider(GitProvider):
 
     def edit_comment(self, comment, body: str):
         self.mr.notes.update(comment.id,{'body': body} )
+
+    def edit_comment_from_comment_id(self, comment_id: int, body: str):
+        comment = self.mr.notes.get(comment_id)
+        comment.body = body
+        comment.save()
 
     def reply_to_comment_from_comment_id(self, comment_id: int, body: str):
         discussion = self.mr.discussions.get(comment_id)
@@ -200,8 +217,12 @@ class GitLabProvider(GitProvider):
     def create_inline_comments(self, comments: list[dict]):
         raise NotImplementedError("Gitlab provider does not support publishing inline comments yet")
 
+    def get_comment_body_from_comment_id(self, comment_id: int):
+        comment = self.mr.notes.get(comment_id).body
+        return comment
+
     def send_inline_comment(self,body: str,edit_type: str,found: bool,relevant_file: str,relevant_line_in_file: int,
-                            source_line_no: int, target_file: str,target_line_no: int) -> None:
+                            source_line_no: int, target_file: str,target_line_no: int, original_suggestion) -> None:
         if not found:
             get_logger().info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
         else:
@@ -221,12 +242,46 @@ class GitLabProvider(GitProvider):
             else:
                 pos_obj['new_line'] = target_line_no - 1
                 pos_obj['old_line'] = source_line_no - 1
-            get_logger().debug(f"Creating comment in {self.id_mr} with body {body} and position {pos_obj}")
+            get_logger().debug(f"Creating comment in MR {self.id_mr} with body {body} and position {pos_obj}")
             try:
                 self.mr.discussions.create({'body': body, 'position': pos_obj})
             except Exception as e:
-                get_logger().debug(
-                    f"Failed to create comment in {self.id_mr} with position {pos_obj} (probably not a '+' line)")
+                try:
+                    # fallback - create a general note on the file in the MR
+                    line_start = original_suggestion['suggestion_orig_location']['start_line']
+                    line_end = original_suggestion['suggestion_orig_location']['end_line']
+                    old_code_snippet = original_suggestion['prev_code_snippet']
+                    new_code_snippet = original_suggestion['new_code_snippet']
+                    content = original_suggestion['suggestion_summary']
+                    label = original_suggestion['category']
+                    score = original_suggestion['score']
+
+                    if hasattr(self, 'main_language'):
+                        language = self.main_language
+                    else:
+                        language = ''
+                    link = self.get_line_link(relevant_file, line_start, line_end)
+                    body_fallback =f"**Suggestion:** {content} [{label}, importance: {score}]\n___\n"
+                    body_fallback +=f"\n\nReplace  lines ([{line_start}-{line_end}]({link}))\n\n```{language}\n{old_code_snippet}\n````\n\n"
+                    body_fallback +=f"with\n\n```{language}\n{new_code_snippet}\n````"
+                    body_fallback += f"\n\n___\n\n`(Cannot implement this suggestion directly, as gitlab API does not enable committing to a non -+ line in a PR)`"
+
+                    # Create a general note on the file in the MR
+                    self.mr.notes.create({
+                        'body': body_fallback,
+                        'position': {
+                            'base_sha': diff.base_commit_sha,
+                            'start_sha': diff.start_commit_sha,
+                            'head_sha': diff.head_commit_sha,
+                            'position_type': 'text',
+                            'file_path': f'{target_file.filename}',
+                        }
+                    })
+
+                    # get_logger().debug(
+                    #     f"Failed to create comment in MR {self.id_mr} with position {pos_obj} (probably not a '+' line)")
+                except Exception as e:
+                    get_logger().exception(f"Failed to create comment in MR {self.id_mr} with position {pos_obj}: {e}")
 
     def get_relevant_diff(self, relevant_file: str, relevant_line_in_file: int) -> Optional[dict]:
         changes = self.mr.changes()  # Retrieve the changes for the merge request once
@@ -248,6 +303,7 @@ class GitLabProvider(GitProvider):
     def publish_code_suggestions(self, code_suggestions: list) -> bool:
         for suggestion in code_suggestions:
             try:
+                original_suggestion = suggestion['original_suggestion']
                 body = suggestion['body']
                 relevant_file = suggestion['relevant_file']
                 relevant_lines_start = suggestion['relevant_lines_start']
@@ -274,12 +330,15 @@ class GitLabProvider(GitProvider):
                 edit_type = 'addition'
 
                 self.send_inline_comment(body, edit_type, found, relevant_file, relevant_line_in_file, source_line_no,
-                                         target_file, target_line_no)
+                                         target_file, target_line_no, original_suggestion)
             except Exception as e:
                 get_logger().exception(f"Could not publish code suggestion:\nsuggestion: {suggestion}\nerror: {e}")
 
         # note that we publish suggestions one-by-one. so, if one fails, the rest will still be published
         return True
+
+    def publish_file_comments(self, file_comments: list) -> bool:
+        pass
 
     def search_line(self, relevant_file, relevant_line_in_file):
         target_file = None
@@ -362,7 +421,7 @@ class GitLabProvider(GitProvider):
         return self.mr.description
 
     def get_issue_comments(self):
-        raise NotImplementedError("GitLab provider does not support issue comments yet")
+        return self.mr.notes.list(get_all=True)[::-1]
 
     def get_repo_settings(self):
         try:
@@ -370,6 +429,9 @@ class GitLabProvider(GitProvider):
             return contents
         except Exception:
             return ""
+
+    def get_workspace_name(self):
+        return self.id_project.split('/')[0]
 
     def add_eyes_reaction(self, issue_comment_id: int, disable_eyes: bool = False) -> Optional[int]:
         return True

@@ -1,0 +1,46 @@
+name: PR-Agent E2E tests
+
+on:
+  workflow_dispatch:
+#  schedule:
+#    - cron: '0 0 * * *' # This cron expression runs the workflow every night at midnight UTC
+
+jobs:
+  pr_agent_job:
+    runs-on: ubuntu-latest
+    name: PR-Agent E2E GitHub App Test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - id: build
+        name: Build dev docker
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./docker/Dockerfile
+          push: false
+          load: true
+          tags: codiumai/pr-agent:test
+          cache-from: type=gha,scope=dev
+          cache-to: type=gha,mode=max,scope=dev
+          target: test
+
+      - id: test1
+        name: E2E test github app
+        run: |
+           docker run -e GITHUB.USER_TOKEN=${{ secrets.TOKEN_GITHUB }} --rm codiumai/pr-agent:test pytest -v tests/e2e_tests/test_github_app.py
+
+      - id: test2
+        name: E2E gitlab webhook
+        run: |
+          docker run -e gitlab.PERSONAL_ACCESS_TOKEN=${{ secrets.TOKEN_GITLAB }} --rm codiumai/pr-agent:test pytest -v tests/e2e_tests/test_gitlab_webhook.py
+
+
+      - id: test3
+        name: E2E bitbucket app
+        run: |
+          docker run -e BITBUCKET.USERNAME=${{ secrets.BITBUCKET_USERNAME }}  -e BITBUCKET.PASSWORD=${{ secrets.BITBUCKET_PASSWORD }} --rm codiumai/pr-agent:test pytest -v tests/e2e_tests/test_bitbucket_app.py

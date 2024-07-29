@@ -26,6 +26,16 @@ verbosity_level=2
 ```
 This is useful for debugging or experimenting with different tools.
 
+(3)
+
+**git provider**: The [git_provider](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L5) field in a configuration file determines the GIT provider that will be used by PR-Agent. Currently, the following providers are supported:
+`
+"github", "gitlab", "bitbucket", "azure", "codecommit", "local", "gerrit"
+`
+
+Default is "github".
+
+
 
 ### Online usage
 
@@ -81,7 +91,7 @@ Every time you run the `describe` tool, including automatic runs, the PR title w
 To cancel the automatic run of all the tools, set:
 ```
 [github_app]
-handle_pr_actions = []
+pr_commands = []
 ```
 
 You can also disable automatic runs for PRs with specific titles, by setting the `ignore_pr_titles` parameter with the relevant regex. For example:
@@ -118,7 +128,6 @@ Specifically, start by setting the following environment variables:
         github_action_config.auto_review: "true" # enable\disable auto review
         github_action_config.auto_describe: "true" # enable\disable auto describe
         github_action_config.auto_improve: "true" # enable\disable auto improve
-        github_action_config.enable_output: "true" # enable\disable github actions output parameter
 ```
 `github_action_config.auto_review`, `github_action_config.auto_describe` and `github_action_config.auto_improve` are used to enable/disable automatic tools that run when a new PR is opened.
 If not set, the default configuration is for all three tools to run automatically when a new PR is opened.
@@ -137,7 +146,7 @@ publish_labels = false
 to prevent PR-Agent from publishing labels when running the `describe` tool.
 
 ## GitLab Webhook
-After setting up a GitLab webhook, to control which commands will run automatically when a new PR is opened, you can set the `pr_commands` parameter in the configuration file, similar to the GitHub App:
+After setting up a GitLab webhook, to control which commands will run automatically when a new MR is opened, you can set the `pr_commands` parameter in the configuration file, similar to the GitHub App:
 ```
 [gitlab]
 pr_commands = [
@@ -146,6 +155,20 @@ pr_commands = [
     "/improve",
 ]
 ```
+
+the GitLab webhook can also respond to new code that is pushed to an open MR.
+The configuration toggle `handle_push_trigger` can be used to enable this feature.  
+The configuration parameter `push_commands` defines the list of tools that will be **run automatically** when new code is pushed to the MR.
+```
+[gitlab]
+handle_push_trigger = true
+push_commands = [
+    "/describe",
+    "/review  --pr_reviewer.num_code_suggestions=0 --pr_reviewer.final_update_message=false",
+]
+```
+
+Note that to use the 'handle_push_trigger' feature, you need to give the gitlab webhook also the "Push events" scope.
 
 ## BitBucket App
 Similar to GitHub app, when running PR-Agent from BitBucket App, the default [configuration file](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml) from a pre-built docker will be initially loaded.
@@ -169,9 +192,11 @@ Specifically, set the following values:
 [bitbucket_app]
 pr_commands = [
     "/review --pr_reviewer.num_code_suggestions=0",
-    "/improve --pr_code_suggestions.commitable_code_suggestions=true",
+    "/improve --pr_code_suggestions.commitable_code_suggestions=true --pr_code_suggestions.suggestions_score_threshold=7",
 ]
 ```
+Note that we set specifically for bitbucket, we recommend using: `--pr_code_suggestions.suggestions_score_threshold=7` and that is the default value we set for bitbucket.
+Since this platform only supports inline code suggestions, we want to limit the number of suggestions, and only present a limited number.
 
 ## Azure DevOps provider
 

@@ -2,6 +2,7 @@ import os
 from typing import Optional, Tuple
 from urllib.parse import urlparse
 
+from ..algo.file_filter import filter_ignored
 from ..log import get_logger
 from ..algo.language_handler import is_valid_file
 from ..algo.utils import clip_tokens, find_line_number_of_relevant_line_in_file, load_large_diff
@@ -128,6 +129,18 @@ class AzureDevopsProvider(GitProvider):
 
     def get_pr_description_full(self) -> str:
         return self.pr.description
+
+    def delete_comment(self, comment):
+        try:
+            self.azure_devops_client.delete_comment(
+                repository_id=self.repo_slug,
+                pull_request_id=self.pr_num,
+                thread_id=comment.thread_id,
+                comment_id=comment.id,
+                project=self.workspace_slug,
+            )
+        except Exception as e:
+            get_logger().exception(f"Failed to delete comment, error: {e}")
 
     def edit_comment(self, comment, body: str):
         try:
@@ -284,8 +297,20 @@ class AzureDevopsProvider(GitProvider):
             #
             # diffs = list(set(diffs))
 
+            diffs_original = diffs
+            diffs = filter_ignored(diffs_original, 'azure')
+            if diffs_original != diffs:
+                try:
+                    get_logger().info(f"Filtered out [ignore] files for pull request:", extra=
+                    {"files": diffs_original,  # diffs is just a list of names
+                     "filtered_files": diffs})
+                except Exception:
+                    pass
+
+            invalid_files_names = []
             for file in diffs:
                 if not is_valid_file(file):
+                    invalid_files_names.append(file)
                     continue
 
                 version = GitVersionDescriptor(
@@ -341,6 +366,11 @@ class AzureDevopsProvider(GitProvider):
                     file, new_file_content_str, original_file_content_str, show_warning=False
                 ).rstrip()
 
+                # count number of lines added and removed
+                patch_lines = patch.splitlines(keepends=True)
+                num_plus_lines = len([line for line in patch_lines if line.startswith('+')])
+                num_minus_lines = len([line for line in patch_lines if line.startswith('-')])
+
                 diff_files.append(
                     FilePatchInfo(
                         original_file_content_str,
@@ -348,8 +378,12 @@ class AzureDevopsProvider(GitProvider):
                         patch=patch,
                         filename=file,
                         edit_type=edit_type,
+                        num_plus_lines=num_plus_lines,
+                        num_minus_lines=num_minus_lines,
                     )
                 )
+            get_logger().info(f"Invalid files: {invalid_files_names}")
+
             self.diff_files = diff_files
             return diff_files
         except Exception as e:
@@ -430,7 +464,7 @@ class AzureDevopsProvider(GitProvider):
         return dict(body=body, path=path, position=position, absolute_position=absolute_position) if subject_type == "LINE" else {}
 
     def publish_inline_comments(self, comments: list[dict], disable_fallback: bool = False):
-            overall_sucess = True
+            overall_success = True
             for comment in comments:
                 try:
                     self.publish_comment(comment["body"],
@@ -452,8 +486,8 @@ class AzureDevopsProvider(GitProvider):
                 except Exception as e:
                     if get_settings().config.verbosity_level >= 2:
                         get_logger().error(f"Failed to publish code suggestion, error: {e}")
-                    overall_sucess = False
-            return overall_sucess
+                    overall_success = False
+            return overall_success
 
     def get_title(self):
         return self.pr.title
@@ -503,10 +537,18 @@ class AzureDevopsProvider(GitProvider):
     def get_user_id(self):
         return 0
 
+
     def get_issue_comments(self):
-        raise NotImplementedError(
-            "Azure DevOps provider does not support issue comments yet"
-        )
+        threads = self.azure_devops_client.get_threads(repository_id=self.repo_slug, pull_request_id=self.pr_num, project=self.workspace_slug)
+        threads.reverse()
+        comment_list = []
+        for thread in threads:
+            for comment in thread.comments:
+                if comment.content and comment not in comment_list:
+                    comment.body = comment.content
+                    comment.thread_id = thread.id
+                    comment_list.append(comment)
+        return comment_list
 
     def add_eyes_reaction(self, issue_comment_id: int, disable_eyes: bool = False) -> Optional[int]:
         return True

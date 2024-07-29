@@ -23,7 +23,10 @@ def extend_patch(original_file_str, patch_str, num_lines) -> str:
         return patch_str
 
     if type(original_file_str) == bytes:
-        original_file_str = original_file_str.decode('utf-8')
+        try:
+            original_file_str = original_file_str.decode('utf-8')
+        except UnicodeDecodeError:
+            return ""
 
     original_lines = original_file_str.splitlines()
     patch_lines = patch_str.splitlines()
@@ -133,7 +136,7 @@ def handle_patch_deletions(patch: str, original_file_content_str: str,
         str: The modified patch with deletion hunks omitted.
 
     """
-    if not new_file_content_str and edit_type != EDIT_TYPE.ADDED:
+    if not new_file_content_str and (edit_type == EDIT_TYPE.DELETED or edit_type == EDIT_TYPE.UNKNOWN):
         # logic for handling deleted files - don't show patch, just show that the file was deleted
         if get_settings().config.verbosity_level > 0:
             get_logger().info(f"Processing file: {file_name}, minimizing deletion file")

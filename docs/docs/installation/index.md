@@ -15,8 +15,7 @@ There are several ways to use self-hosted PR-Agent:
 - [Azure DevOps](./azure.md)
 
 ## PR-Agent Pro 💎
-PR-Agent Pro, an app for GitHub\GitLab\BitBucket hosted by CodiumAI, is also available. 
+PR-Agent Pro, an app hosted by CodiumAI for GitHub\GitLab\BitBucket, is also available. 
 <br>
-With PR-Agent Pro Installation is as simple as signing up and adding the PR-Agent app to your relevant repo.
-<br>
+With PR-Agent Pro, installation is as simple as signing up and adding the PR-Agent app to your relevant repo. 
 See [here](./pr_agent_pro.md) for more details.
