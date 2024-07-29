@@ -177,7 +177,7 @@ final_update_message = false
 
 [github]
 # The type of deployment to create. Valid values are 'app' or 'user'.
-deployment_type = "user"
+deployment_type = "app"
 ratelimit_retries = 5
 base_url = "https://api.github.com"
 publish_inline_comments_fallback_with_verification = true
