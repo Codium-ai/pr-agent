@@ -9,6 +9,20 @@ services:
       dockerfile: docker/Dockerfile
       target: github_app
     ports:
-      - "3010:3000"
-
-
+      - "5432:5432"
+    volumes:
+      - ./pr_agent/settings/.secrets.toml:/app/pr_agent/settings/.secrets.toml
+  
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: prod-stage
+    container_name: PR-Agent-NGINX
+    ports:
+      - "8888:8888"
+    depends_on:
+      - pr-agent
+    restart: always
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf

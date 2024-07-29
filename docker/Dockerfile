@@ -39,3 +39,8 @@ ADD tests tests
 FROM base as cli
 ADD pr_agent pr_agent
 ENTRYPOINT ["python", "pr_agent/cli.py"]
+
+# Nginx setup
+FROM --platform=linux/amd64 nginx:1.21.1-alpine AS prod-stage
+COPY ./nginx.conf /etc/nginx/conf.d/default.conf
+CMD ["nginx", "-g", "daemon off;"]
