@@ -10,3 +10,4 @@ build/
 .DS_Store
 docs/.cache/
 **/node_modules/
+smeeio.js
