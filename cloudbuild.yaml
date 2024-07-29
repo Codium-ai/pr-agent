@@ -1,0 +1,87 @@
+availableSecrets:
+  secretManager:
+    - versionName: projects/$PROJECT_ID/secrets/github-repo-access-key/versions/latest
+      env: SSH_KEY
+    - versionName: projects/$PROJECT_ID/secrets/pr-agent-secret/versions/latest
+      env: SECRETS_FILE
+
+steps:
+- id: 'add ssh key'
+  name: 'gcr.io/cloud-builders/git'
+  secretEnv: ['SSH_KEY']
+  entrypoint: 'bash'
+  args:
+  - -c
+  - |
+    echo "$$SSH_KEY" >> /root/.ssh/id_rsa
+    chmod 400 /root/.ssh/id_rsa
+  volumes:
+  - name: 'ssh'
+    path: /root/.ssh
+  
+# Check if the Docker image already exists, and if it does, skip the build and push steps
+- id: 'check if image exists then skip build and push'
+  name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'bash'
+  args:
+  - -c
+  - |
+    if docker pull $LOCATION-docker.pkg.dev/$PROJECT_ID/docker-registry/pr-agent:$COMMIT_SHA; then
+      echo "Image already exists, skipping build and push."
+      touch skip_build_push
+    else
+      echo "Image does not exist, proceeding with the build."
+    fi
+  timeout: 600s  # Set a timeout for the check step.
+
+# Build Docker image (only executed if the image does not exist)
+- id: 'build docker image'
+  name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'bash'
+  args:
+  - -c
+  - |
+    if [ ! -e ./skip_build_push ]; then
+      docker build -t $LOCATION-docker.pkg.dev/$PROJECT_ID/docker-registry/pr-agent:$COMMIT_SHA --cache-from $LOCATION-docker.pkg.dev/$PROJECT_ID/docker-registry/pr-agent:$COMMIT_SHA --ssh default=/root/.ssh/id_rsa .
+    else
+      echo "Skipping build as instructed."
+    fi
+  env:
+    - "DOCKER_BUILDKIT=1"
+  volumes:
+  - name: 'ssh'
+    path: /root/.ssh
+
+# Push Docker image (only executed if the image does not exist)
+- id: 'push docker image'
+  name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'bash'
+  args:
+  - -c
+  - |
+    if [ ! -e ./skip_build_push ]; then
+      docker push $LOCATION-docker.pkg.dev/$PROJECT_ID/docker-registry/pr-agent:$COMMIT_SHA
+    else
+      echo "Skipping push as instructed."
+    fi
+
+- id: 'inject secrets file'
+  name: 'gcr.io/cloud-builders/bash'
+  secretEnv: ['SECRETS_FILE']
+  entrypoint: 'bash'
+  args:
+  - -c
+  - |
+    mkdir -p /app/pr_agent/settings
+    echo "$$SECRETS_FILE" > /app/pr_agent/settings/.secrets.toml
+
+- id: 'deploy service to Cloud Run'
+  name: 'gcr.io/cloud-builders/gcloud'
+  args: ['run', 'deploy', 'pr-agent', '--image', '$LOCATION-docker.pkg.dev/$PROJECT_ID/docker-registry/pr-agent:$COMMIT_SHA', '--platform', 'managed', '--region', 'us-central1', '--allow-unauthenticated']
+  timeout: 600s  # Set a timeout for the deployment step.
+
+# https://cloud.google.com/compute/docs/general-purpose-machines#e2_machine_types
+options:
+  machineType: E2_HIGHCPU_32
+
+images: ['$LOCATION-docker.pkg.dev/$PROJECT_ID/docker-registry/pr-agent:$COMMIT_SHA']

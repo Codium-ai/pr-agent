@@ -3,3 +3,4 @@
 pics/
 pr_agent.egg-info/
 build/
+pr_agent/settings/.secrets.toml

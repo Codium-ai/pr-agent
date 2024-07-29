@@ -34,7 +34,7 @@ temperature=0.2
 
 [pr_reviewer] # /review #
 # enable/disable features
-require_score_review=false
+require_score_review=true
 require_tests_review=true
 require_estimate_effort_to_review=true
 require_can_be_split_review=false
@@ -44,7 +44,7 @@ extra_issue_links=false
 require_soc2_ticket=false
 soc2_ticket_prompt="Does the PR description include a link to ticket in a project management system (e.g., Jira, Asana, Trello, etc.) ?"
 # general options
-num_code_suggestions=0
+num_code_suggestions=4
 inline_code_comments = true
 ask_and_reflect=false
 #automatic_review=true
@@ -58,7 +58,7 @@ enable_review_labels_effort=true
 require_all_thresholds_for_incremental_review=false
 minimal_commits_for_incremental_review=0
 minimal_minutes_for_incremental_review=0
-enable_help_text=false # Determines whether to include help text in the PR review. Enabled by default.
+enable_help_text=true # Determines whether to include help text in the PR review. Enabled by default.
 # auto approval
 enable_auto_approval=false
 maximal_review_effort=5
@@ -72,7 +72,7 @@ use_bullet_points=true
 extra_instructions = ""
 enable_pr_type=true
 final_update_message = true
-enable_help_text=false
+enable_help_text=true
 enable_help_comment=true
 # describe as comment
 publish_description_as_comment=false
@@ -82,17 +82,17 @@ enable_semantic_files_types=true
 collapsible_file_list='adaptive' # true, false, 'adaptive'
 inline_file_summary=true # false, true, 'table'
 # markers
-use_description_markers=false
+use_description_markers=true
 include_generated_by_header=true
 # large pr mode 💎
 enable_large_pr_handling=true
-max_ai_calls=4
+max_ai_calls=6
 async_ai_calls=true
 mention_extra_files=true
 #custom_labels = ['Bug fix', 'Tests', 'Bug fix with tests', 'Enhancement', 'Documentation', 'Other']
 
 [pr_questions] # /ask #
-enable_help_text=false
+enable_help_text=true
 
 
 [pr_code_suggestions] # /improve #
@@ -101,7 +101,7 @@ num_code_suggestions=4
 commitable_code_suggestions = false
 extra_instructions = ""
 rank_suggestions = false
-enable_help_text=false
+enable_help_text=true
 persistent_comment=true
 max_history_len=4
 # enable to apply suggestion 💎
@@ -112,12 +112,12 @@ suggestions_score_threshold=0 # [0-10]. highly recommend not to set this value a
 # params for '/improve --extended' mode
 auto_extended_mode=true
 num_code_suggestions_per_chunk=4
-max_number_of_calls = 3
+max_number_of_calls = 5
 parallel_calls = true
-rank_extended_suggestions = false
+rank_extended_suggestions = true
 final_clip_factor = 0.8
 # self-review checkbox
-demand_code_suggestions_self_review=false # add a checkbox for the author to self-review the code suggestions
+demand_code_suggestions_self_review=true # add a checkbox for the author to self-review the code suggestions
 code_suggestions_self_review_text= "**Author self-review**: I have reviewed the PR code suggestions, and addressed the relevant ones."
 approve_pr_on_self_review=false # Pro feature. if true, the PR will be auto-approved after the author clicks on the self-review checkbox
 # Suggestion impact
@@ -133,7 +133,7 @@ The code suggestions should focus only on the following:
 suggestions_score_threshold=0
 num_code_suggestions_per_chunk=4
 self_reflect_on_custom_suggestions=true
-enable_help_text=false
+enable_help_text=true
 
 
 [pr_add_docs] # /add_docs #
@@ -156,7 +156,7 @@ num_tests=3            # number of tests to generate. max 5.
 avoid_mocks=true       # if true, the generated tests will prefer to use real objects instead of mocks
 file = ""              # in case there are several components with the same name, you can specify the relevant file
 class_name = ""        # in case there are several methods with the same name in the same file, you can specify the relevant class name
-enable_help_text=false
+enable_help_text=true
 
 [pr_improve_component] # /improve_component #
 num_code_suggestions=4
