@@ -253,6 +253,11 @@ pr_commands = [
 # URL to the BitBucket Server instance
 # url = "https://git.bitbucket.com"
 url = ""
+pr_commands = [
+    "/describe",
+    "/review --pr_reviewer.num_code_suggestions=0",
+    "/improve --pr_code_suggestions.commitable_code_suggestions=true --pr_code_suggestions.suggestions_score_threshold=7",
+]
 
 [litellm]
 # use_client = false
