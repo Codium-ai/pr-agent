@@ -80,7 +80,7 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler,
 
     if large_pr_handling and len(patches_compressed_list) > 1:
         get_logger().info(f"Large PR handling mode, and found {len(patches_compressed_list)} patches with original diff.")
-        return "" # return empty string, as we generate multiple patches with a different prompt
+        return "" # return empty string, as we want to generate multiple patches with a different prompt
 
     # return the first patch
     patches_compressed = patches_compressed_list[0]
@@ -462,6 +462,10 @@ def get_pr_multi_diffs(git_provider: GitProvider,
             patches = []
             total_tokens = token_handler.prompt_tokens
             call_number += 1
+            if call_number > max_calls: # avoid creating new patches
+                if get_settings().config.verbosity_level >= 2:
+                    get_logger().info(f"Reached max calls ({max_calls})")
+                break
             if get_settings().config.verbosity_level >= 2:
                 get_logger().info(f"Call number: {call_number}")
 
