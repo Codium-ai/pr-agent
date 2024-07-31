@@ -26,15 +26,15 @@ The advantage of this method is that it allows to set configurations without nee
 
 ![wiki_configuration](https://codium.ai/images/pr_agent/wiki_configuration.png){width=512}
 
-Click [here](https://codium.ai/images/pr_agent/wiki_configuration_pr_agent.mp4) to see a short instructional video. We recommend surrounding the configuration content with triple-quotes, to allow better presentation when displayed in the wiki as markdown.
+Click [here](https://codium.ai/images/pr_agent/wiki_configuration_pr_agent.mp4) to see a short instructional video. We recommend surrounding the configuration content with triple-quotes (or \`\`\`toml), to allow better presentation when displayed in the wiki as markdown.
 An example content:
 
-```
+```toml
 [pr_description]
 generate_ai_title=true
 ```
 
-PR-Agent will know to remove the triple-quotes when reading the configuration content.
+PR-Agent will know to remove the surrounding quotes when reading the configuration content.
 
 ## Local configuration file
 

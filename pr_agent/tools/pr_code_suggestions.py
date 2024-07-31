@@ -100,8 +100,8 @@ class PRCodeSuggestions:
                 data = {"code_suggestions": []}
 
             if data is None or 'code_suggestions' not in data or not data['code_suggestions']:
-                get_logger().error('No code suggestions found for PR.')
-                pr_body = "## PR Code Suggestions ✨\n\nNo code suggestions found for PR."
+                get_logger().error('No code suggestions found for the PR.')
+                pr_body = "## PR Code Suggestions ✨\n\nNo code suggestions found for the PR."
                 get_logger().debug(f"PR output", artifact=pr_body)
                 if self.progress_response:
                     self.git_provider.edit_comment(self.progress_response, body=pr_body)

@@ -52,4 +52,10 @@ MAX_TOKENS = {
     'groq/llama-3.1-70b-versatile': 131072,
     'groq/llama-3.1-405b-reasoning': 131072,
     'ollama/llama3': 4096,
+    'watsonx/meta-llama/llama-3-8b-instruct': 4096,
+    "watsonx/meta-llama/llama-3-70b-instruct": 4096,
+    "watsonx/meta-llama/llama-3-405b-instruct": 16384,
+    "watsonx/ibm/granite-13b-chat-v2": 8191,
+    "watsonx/ibm/granite-34b-code-instruct": 8191,
+    "watsonx/mistralai/mistral-large": 32768,
 }
