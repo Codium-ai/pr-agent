@@ -81,6 +81,8 @@ class BitbucketServerProvider(GitProvider):
                 continue
 
             if relevant_lines_end > relevant_lines_start:
+                # Bitbucket does not support multi-line suggestions so use a code block instead - https://jira.atlassian.com/browse/BSERV-4553
+                body = body.replace("```suggestion", "```")
                 post_parameters = {
                     "body": body,
                     "path": relevant_file,
