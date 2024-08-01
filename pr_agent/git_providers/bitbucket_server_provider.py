@@ -2,7 +2,7 @@ import json
 from typing import Optional, Tuple
 from urllib.parse import quote_plus, urlparse
 
-import requests
+from requests.exceptions import HTTPError
 from atlassian.bitbucket import Bitbucket
 from starlette_context import context
 
@@ -18,17 +18,6 @@ class BitbucketServerProvider(GitProvider):
     def __init__(
             self, pr_url: Optional[str] = None, incremental: Optional[bool] = False
     ):
-        s = requests.Session()
-        try:
-            bearer = context.get("bitbucket_bearer_token", None)
-            s.headers["Authorization"] = f"Bearer {bearer}"
-        except Exception:
-            s.headers[
-                "Authorization"
-            ] = f'Bearer {get_settings().get("BITBUCKET_SERVER.BEARER_TOKEN", None)}'
-
-        s.headers["Content-Type"] = "application/json"
-        self.headers = s.headers
         self.bitbucket_server_url = None
         self.workspace_slug = None
         self.repo_slug = None
@@ -50,14 +39,15 @@ class BitbucketServerProvider(GitProvider):
 
     def get_repo_settings(self):
         try:
-            url = (f"{self.bitbucket_server_url}/projects/{self.workspace_slug}/repos/{self.repo_slug}/src/"
-                   f"{self.pr.destination_branch}/.pr_agent.toml")
-            response = requests.request("GET", url, headers=self.headers)
-            if response.status_code == 404:  # not found
-                return ""
-            contents = response.text.encode('utf-8')
-            return contents
-        except Exception:
+            content = self.bitbucket_client.get_content_of_file(self.workspace_slug, self.repo_slug, ".pr_agent.toml", self.get_pr_branch())
+
+            return content
+        except Exception as e:
+            if isinstance(e, HTTPError):
+                if e.response.status_code == 404:  # not found
+                    return ""
+
+            get_logger().error(f"Failed to load .pr_agent.toml file, error: {e}")
             return ""
 
     def get_pr_id(self):
@@ -247,11 +237,11 @@ class BitbucketServerProvider(GitProvider):
         }
 
         try:
-            requests.post(url=self._get_pr_comments_url(), json=payload, headers=self.headers).raise_for_status()
+            self.bitbucket_client.post(self._get_pr_comments_path(), data=payload)
         except Exception as e:
             get_logger().error(f"Failed to publish inline comment to '{file}' at line {from_line}, error: {e}")
             raise e
-        
+
     def get_line_link(self, relevant_file: str, relevant_line_start: int, relevant_line_end: int = None) -> str:
         if relevant_line_start == -1:
             link = f"{self.pr_url}/diff#{quote_plus(relevant_file)}"
@@ -414,5 +404,5 @@ class BitbucketServerProvider(GitProvider):
     def get_pr_labels(self, update=False):
         pass
 
-    def _get_pr_comments_url(self):
-        return f"{self.bitbucket_server_url}/rest/api/latest/projects/{self.workspace_slug}/repos/{self.repo_slug}/pull-requests/{self.pr_num}/comments"
+    def _get_pr_comments_path(self):
+        return f"rest/api/latest/projects/{self.workspace_slug}/repos/{self.repo_slug}/pull-requests/{self.pr_num}/comments"
