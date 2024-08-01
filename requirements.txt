@@ -1,4 +1,4 @@
-aiohttp==3.9.1
+aiohttp==3.9.4
 anthropic[vertex]==0.21.3
 atlassian-python-api==3.41.4
 azure-devops==7.1.0b3
@@ -6,7 +6,7 @@ azure-identity==1.15.0
 boto3==1.33.6
 dynaconf==3.2.4
 fastapi==0.111.0
-GitPython==3.1.32
+GitPython==3.1.41
 google-cloud-aiplatform==1.38.0
 google-cloud-storage==2.10.0
 Jinja2==3.1.2
@@ -24,7 +24,7 @@ tiktoken==0.7.0
 ujson==5.8.0
 uvicorn==0.22.0
 tenacity==8.2.3
-gunicorn==20.1.0
+gunicorn==22.0.0
 # Uncomment the following lines to enable the 'similar issue' tool
 # pinecone-client
 # pinecone-datasets @ git+https://github.com/mrT23/pinecone-datasets.git@main
