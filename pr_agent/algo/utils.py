@@ -557,7 +557,7 @@ def _fix_key_value(key: str, value: str):
 
 
 def load_yaml(response_text: str, keys_fix_yaml: List[str] = [], first_key="", last_key="") -> dict:
-    response_text = response_text.strip('\n').removeprefix('```yaml').rstrip('`')
+    response_text = response_text.strip('\n').removeprefix('```yaml').rstrip().removesuffix('```')
     try:
         data = yaml.safe_load(response_text)
     except Exception as e:
