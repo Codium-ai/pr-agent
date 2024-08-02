@@ -125,7 +125,7 @@ class BitbucketServerProvider(GitProvider):
                                                                      self.repo_slug,
                                                                      path,
                                                                      commit_id)
-        except requests.HTTPError as e:
+        except HTTPError as e:
             get_logger().debug(f"File {path} not found at commit id: {commit_id}")
         return file_content
 
