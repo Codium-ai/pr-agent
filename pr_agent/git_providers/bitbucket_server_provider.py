@@ -32,7 +32,10 @@ class BitbucketServerProvider(GitProvider):
 
         self.bitbucket_server_url = self._parse_bitbucket_server(url=pr_url)
         self.bitbucket_client = Bitbucket(url=self.bitbucket_server_url,
-                                          token=get_settings().get("BITBUCKET_SERVER.BEARER_TOKEN", None))
+                                          token=get_settings().get("BITBUCKET_SERVER.BEARER_TOKEN", None),
+                                          username=get_settings().get("BITBUCKET_SERVER.USERNAME", None),
+                                          password=get_settings().get("BITBUCKET_SERVER.PASSWORD", None)
+                                          )
 
         if pr_url:
             self.set_pr(pr_url)
