@@ -183,7 +183,6 @@ __old hunk__
         line6
            ...
     """
-    
     patch_with_lines_str = f"\n\n## file: '{file.filename.strip()}'\n"
     patch_lines = patch.splitlines()
     RE_HUNK_HEADER = re.compile(
@@ -193,7 +192,7 @@ __old hunk__
     match = None
     start1, size1, start2, size2 = -1, -1, -1, -1
     prev_header_line = []
-    header_line =[]
+    header_line = []
     for line in patch_lines:
         if 'no newline at end of file' in line.lower():
             continue
@@ -201,17 +200,21 @@ __old hunk__
         if line.startswith('@@'):
             header_line = line
             match = RE_HUNK_HEADER.match(line)
-            if match and new_content_lines:  # found a new hunk, split the previous lines
+            if match and (new_content_lines or old_content_lines):  # found a new hunk, split the previous lines
+                if prev_header_line:
+                    patch_with_lines_str += f'\n{prev_header_line}\n'
                 if new_content_lines:
-                    if prev_header_line:
-                        patch_with_lines_str += f'\n{prev_header_line}\n'
-                    patch_with_lines_str = patch_with_lines_str.rstrip()+'\n__new hunk__\n'
-                    for i, line_new in enumerate(new_content_lines):
-                        patch_with_lines_str += f"{start2 + i} {line_new}\n"
+                    is_plus_lines = any([line.startswith('+') for line in new_content_lines])
+                    if is_plus_lines:
+                        patch_with_lines_str = patch_with_lines_str.rstrip() + '\n__new hunk__\n'
+                        for i, line_new in enumerate(new_content_lines):
+                            patch_with_lines_str += f"{start2 + i} {line_new}\n"
                 if old_content_lines:
-                    patch_with_lines_str = patch_with_lines_str.rstrip()+'\n__old hunk__\n'
-                    for line_old in old_content_lines:
-                        patch_with_lines_str += f"{line_old}\n"
+                    is_minus_lines = any([line.startswith('-') for line in old_content_lines])
+                    if is_minus_lines:
+                        patch_with_lines_str = patch_with_lines_str.rstrip() + '\n__old hunk__\n'
+                        for line_old in old_content_lines:
+                            patch_with_lines_str += f"{line_old}\n"
                 new_content_lines = []
                 old_content_lines = []
             if match:
@@ -223,7 +226,7 @@ __old hunk__
                     res[i] = 0
             try:
                 start1, size1, start2, size2 = map(int, res[:4])
-            except: # '@@ -0,0 +1 @@' case
+            except:  # '@@ -0,0 +1 @@' case
                 start1, size1, size2 = map(int, res[:3])
                 start2 = 0
 
@@ -237,15 +240,19 @@ __old hunk__
 
     # finishing last hunk
     if match and new_content_lines:
+        patch_with_lines_str += f'\n{header_line}\n'
         if new_content_lines:
-            patch_with_lines_str += f'\n{header_line}\n'
-            patch_with_lines_str = patch_with_lines_str.rstrip()+ '\n__new hunk__\n'
-            for i, line_new in enumerate(new_content_lines):
-                patch_with_lines_str += f"{start2 + i} {line_new}\n"
+            is_plus_lines = any([line.startswith('+') for line in new_content_lines])
+            if is_plus_lines:
+                patch_with_lines_str = patch_with_lines_str.rstrip() + '\n__new hunk__\n'
+                for i, line_new in enumerate(new_content_lines):
+                    patch_with_lines_str += f"{start2 + i} {line_new}\n"
         if old_content_lines:
-            patch_with_lines_str = patch_with_lines_str.rstrip() + '\n__old hunk__\n'
-            for line_old in old_content_lines:
-                patch_with_lines_str += f"{line_old}\n"
+            is_minus_lines = any([line.startswith('-') for line in old_content_lines])
+            if is_minus_lines:
+                patch_with_lines_str = patch_with_lines_str.rstrip() + '\n__old hunk__\n'
+                for line_old in old_content_lines:
+                    patch_with_lines_str += f"{line_old}\n"
 
     return patch_with_lines_str.rstrip()
 

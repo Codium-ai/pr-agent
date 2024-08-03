@@ -21,11 +21,11 @@ The format that is used to present the PR code diff is as follows:
 @@ ... @@ def func1():
 __new hunk__
 12  code line1 that remained unchanged in the PR
-13 +new hunk code line2 added in the PR
+13 +new code line2 added in the PR
 14  code line3 that remained unchanged in the PR
 __old hunk__
  code line1 that remained unchanged in the PR
--old hunk code line2 that was removed in the PR
+-old code line2 that was removed in the PR
  code line3 that remained unchanged in the PR
 
 @@ ... @@ def func2():
@@ -39,9 +39,9 @@ __old hunk__
 ...
 ======
 - In this format, we separated each hunk of code to '__new hunk__' and '__old hunk__' sections. The '__new hunk__' section contains the new code of the chunk, and the '__old hunk__' section contains the old code that was removed.
+- If no new code was added in a specific hunk, '__new hunk__' section will not be presented. If no code was removed, '__old hunk__' section will not be presented.
 - We added line numbers for the '__new hunk__' sections, to help you refer to the code lines in your suggestions. These line numbers are not part of the actual code, and are only used for reference.
 - Code lines are prefixed symbols ('+', '-', ' '). The '+' symbol indicates new code added in the PR, the '-' symbol indicates code removed in the PR, and the ' ' symbol indicates unchanged code.
-
 
 
 The output must be a YAML object equivalent to type $PRCodeSuggestionsFeedback, according to the following Pydantic definitions:

@@ -1,4 +1,4 @@
-FROM python:3.10 AS base
+FROM python:3.12 AS base
 
 WORKDIR /app
 ADD pyproject.toml .

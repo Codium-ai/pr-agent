@@ -10,11 +10,11 @@ The format we will use to present the PR code diff:
 @@ ... @@ def func1():
 __new hunk__
 12  code line1 that remained unchanged in the PR
-13 +new hunk code line2 added in the PR
+13 +new code line2 added in the PR
 14  code line3 that remained unchanged in the PR
 __old hunk__
  code line1 that remained unchanged in the PR
--old hunk code line2 that was removed in the PR
+-old code line2 that was removed in the PR
  code line3 that remained unchanged in the PR
 
 @@ ... @@ def func2():
@@ -31,6 +31,7 @@ __old hunk__
 - We also added line numbers for the '__new hunk__' sections, to help you refer to the code lines in your suggestions. These line numbers are not part of the actual code, and are only used for reference.
 - Code lines are prefixed with symbols ('+', '-', ' '). The '+' symbol indicates new code added in the PR, the '-' symbol indicates code removed in the PR, and the ' ' symbol indicates unchanged code. \
 Suggestions should always focus on ways to improve the new code lines introduced in the PR, meaning lines in the '__new hunk__' sections that begin with a '+' symbol (after the line numbers). The '__old hunk__' sections code is for context and reference only.
+- If no new code was added in a specific hunk, '__new hunk__' section will not be presented. If no code was removed, '__old hunk__' section will not be presented.
 
 
 Specific instructions for generating code suggestions:
@@ -57,10 +58,10 @@ Extra instructions from the user, that should be taken into account with high pr
 The output must be a YAML object equivalent to type $PRCodeSuggestions, according to the following Pydantic definitions:
 =====
 class CodeSuggestion(BaseModel):
-    relevant_file: str = Field(description="The full file path of the relevant file.")
-    language: str = Field(description="The programming language of the relevant file.")
+    relevant_file: str = Field(description="The full file path of the relevant file")
+    language: str = Field(description="The programming language of the relevant file")
     suggestion_content: str = Field(description="an actionable suggestion for meaningfully improving the new code introduced in the PR")
-    existing_code: str = Field(description="a short code snippet, demonstrating the relevant code lines from a '__new hunk__' section. It must be without line numbers. Use abbreviations if needed")
+    existing_code: str = Field(description="a short code snippet, demonstrating the relevant code lines from a '__new hunk__' section. It must be without line numbers. Quote only full code lines, not partial ones. Use abbreviations ("...") of full lines if needed")
     improved_code: str = Field(description="a new code snippet, that can be used to replace the relevant 'existing_code' lines in '__new hunk__' code after applying the suggestion")
     one_sentence_summary: str = Field(description="a short summary of the suggestion action, in a single sentence. Focus on the 'what'. Be general, and avoid method or variable names.")
     relevant_lines_start: int = Field(description="The relevant line number, from a '__new hunk__' section, where the suggestion starts (inclusive). Should be derived from the hunk line numbers, and correspond to the 'existing code' snippet above")
@@ -125,11 +126,11 @@ The format we will use to present the PR code diff:
 @@ ... @@ def func1():
 __new hunk__
 12  code line1 that remained unchanged in the PR
-13 +new hunk code line2 added in the PR
+13 +new code line2 added in the PR
 14  code line3 that remained unchanged in the PR
 __old hunk__
  code line1 that remained unchanged in the PR
--old hunk code line2 that was removed in the PR
+-old code line2 that was removed in the PR
  code line3 that remained unchanged in the PR
 
 @@ ... @@ def func2():
@@ -146,6 +147,7 @@ __old hunk__
 - We also added line numbers for the '__new hunk__' sections, to help you refer to the code lines in your suggestions. These line numbers are not part of the actual code, and are only used for reference.
 - Code lines are prefixed with symbols ('+', '-', ' '). The '+' symbol indicates new code added in the PR, the '-' symbol indicates code removed in the PR, and the ' ' symbol indicates unchanged code. \
 Suggestions should always focus on ways to improve the new code lines introduced in the PR, meaning lines in the '__new hunk__' sections that begin with a '+' symbol (after the line numbers). The '__old hunk__' sections code is for context and reference only.
+- If no new code was added in a specific hunk, '__new hunk__' section will not be presented. If no code was removed, '__old hunk__' section will not be presented.
 
 
 Specific instructions for generating code suggestions:
@@ -171,10 +173,10 @@ Extra instructions from the user, that should be taken into account with high pr
 The output must be a YAML object equivalent to type $PRCodeSuggestions, according to the following Pydantic definitions:
 =====
 class CodeSuggestion(BaseModel):
-    relevant_file: str = Field(description="The full file path of the relevant file.")
-    language: str = Field(description="The programming language of the relevant file.")
+    relevant_file: str = Field(description="The full file path of the relevant file")
+    language: str = Field(description="the programming language of the relevant file")
     suggestion_content: str = Field(description="an actionable suggestion for meaningfully improving the new code introduced in the PR. Don't present here actual code snippets, just the suggestion. Be short and concise ")
-    existing_code: str = Field(description="a short code snippet, demonstrating the relevant code lines from a '__new hunk__' section. It must be without line numbers. Use abbreviations ("...") if needed")
+    existing_code: str = Field(description="a short code snippet, demonstrating the relevant code lines from a '__new hunk__' section. It must be without line numbers. Quote only full code lines, not partial ones. Use abbreviations ("...") of full lines if needed")
     improved_code: str = Field(description="a new code snippet, that can be used to replace the relevant 'existing_code' lines in '__new hunk__' code after applying the suggestion")
     one_sentence_summary: str = Field(description="a short summary of the suggestion action, in a single sentence. Focus on the 'what'. Be general, and avoid method or variable names.")
     relevant_lines_start: int = Field(description="The relevant line number, from a '__new hunk__' section, where the suggestion starts (inclusive). Should be derived from the hunk line numbers, and correspond to the 'existing code' snippet above")
