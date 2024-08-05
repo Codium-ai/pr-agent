@@ -43,6 +43,9 @@ CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by p
   
 ## News and Updates
 
+### August 5, 2024
+Added support for [GitLab pipeline](https://pr-agent-docs.codium.ai/installation/gitlab/#run-as-a-gitlab-pipeline) - you can now run easily PR-Agent as a GitLab pipeline, without needing to set up your own server.
+
 ### July 28, 2024
 
 (1) improved support for bitbucket server - [auto commands](https://github.com/Codium-ai/pr-agent/pull/1059) and [direct links](https://github.com/Codium-ai/pr-agent/pull/1061)
