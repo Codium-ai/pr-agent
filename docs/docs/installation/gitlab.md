@@ -25,12 +25,14 @@ pr_agent_job:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_STATE == "opened"'
 ```
-Note that this script will run PR-Agent on every new merge request. You can modify the `rules` section to run PR-Agent on different events.
+This script will run PR-Agent on every new merge request. You can modify the `rules` section to run PR-Agent on different events.
 You can also modify the `script` section to run different PR-Agent commands, or with different parameters by exporting different environment variables.
 
 
 (2) Add the following masked variables to your GitLab repository (CI/CD -> Variables):
+
 - `GITLAB_PERSONAL_ACCESS_TOKEN`: Your GitLab personal access token.
+
 - `OPENAI_KEY`: Your OpenAI key.
 
 Note that if your base branches are not protected, don't set the variables as `protected`, since the pipeline will not have access to them.
