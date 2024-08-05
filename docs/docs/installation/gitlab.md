@@ -23,13 +23,13 @@ pr_agent_job:
     - python -m pr_agent.cli --pr_url="$MR_URL" review
     - python -m pr_agent.cli --pr_url="$MR_URL" improve
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_EVENT_TYPE == "merge_request" && $CI_MERGE_REQUEST_STATE == "opened"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_STATE == "opened"'
 ```
 Note that this script will run PR-Agent on every new merge request. You can modify the `rules` section to run PR-Agent on different events.
 You can also modify the `script` section to run different PR-Agent commands, or with different parameters by exporting different environment variables.
 
 
-(2) Add the following variables to your GitLab repository (CI/CD -> Variables):
+(2) Add the following masked variables to your GitLab repository (CI/CD -> Variables):
 - `GITLAB_PERSONAL_ACCESS_TOKEN`: Your GitLab personal access token.
 - `OPENAI_KEY`: Your OpenAI key.
 
