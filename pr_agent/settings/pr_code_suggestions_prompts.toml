@@ -40,7 +40,7 @@ Specific instructions for generating code suggestions:
 - Don't suggest to add docstring, type hints, or comments, or to remove unused imports.
 - Suggestions should not repeat code already present in the '__new hunk__' sections.
 - Provide the exact line numbers range (inclusive) for each suggestion. Use the line numbers from the '__new hunk__' sections.
-- When quoting variables or names from the code, use backticks (`) instead of single quote (').
+- Every time you cite variables or names from the code, use backticks ('`'). For example: 'ensure that `variable_name` is ...'
 - Take into account that you are reviewing a PR code diff, and that the entire codebase is not available for you as context. Hence, avoid suggestions that might conflict with unseen parts of the codebase.
 
 
@@ -147,13 +147,14 @@ __old hunk__
 - Code lines are prefixed with symbols ('+', '-', ' '). The '+' symbol indicates new code added in the PR, the '-' symbol indicates code removed in the PR, and the ' ' symbol indicates unchanged code. \
 Suggestions should always focus on ways to improve the new code lines introduced in the PR, meaning lines in the '__new hunk__' sections that begin with a '+' symbol (after the line numbers). The '__old hunk__' sections code is for context and reference only.
 
+
 Specific instructions for generating code suggestions:
 - Provide in total up to {{ num_code_suggestions }} code suggestions. The suggestions should be diverse and insightful.
 - The suggestions should focus on improving the new code introduced the PR, meaning lines from '__new hunk__' sections, starting with '+' (after the line numbers).
 - Prioritize suggestions that address possible issues, major problems, and bugs in the PR code.
 - Don't suggest to add docstring, type hints, or comments, or to remove unused imports.
 - Provide the exact line numbers range (inclusive) for each suggestion. Use the line numbers from the '__new hunk__' sections.
-- When quoting variables or names from the code, use backticks (`) instead of single quote (').
+- Every time you cite variables or names from the code, use backticks ('`'). For example: 'ensure that `variable_name` is ...'
 - Take into account that you are recieving as an input only a PR code diff. The entire codebase is not available for you as context. Hence, avoid suggestions that might conflict with unseen parts of the codebase, like imports, global variables, etc.
 
 
