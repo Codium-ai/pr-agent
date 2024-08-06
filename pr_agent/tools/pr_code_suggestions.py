@@ -656,6 +656,11 @@ class PRCodeSuggestions:
                     else:
                         pr_body += f"""<tr><td>\n\n"""
                     suggestion_summary = suggestion['one_sentence_summary'].strip().rstrip('.')
+                    if "'<" in suggestion_summary and ">'" in suggestion_summary:
+                        # escape the '<' and '>' characters, otherwise they are interpreted as html tags
+                        get_logger().info(f"Escaped suggestion summary: {suggestion_summary}")
+                        suggestion_summary = suggestion_summary.replace("'<", "`<")
+                        suggestion_summary = suggestion_summary.replace(">'", ">`")
                     if '`' in suggestion_summary:
                         suggestion_summary = replace_code_tags(suggestion_summary)
 
