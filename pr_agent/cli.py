@@ -76,6 +76,7 @@ def run(inargs=None, args=None):
     else:
         result = asyncio.run(PRAgent().handle_request(args.pr_url, [command] + args.rest))
     if not result:
+        print("printing help")
         parser.print_help()
 
 
