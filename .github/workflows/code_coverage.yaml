@@ -1,9 +1,10 @@
 name: Code-coverage
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+  # push:
+  #   branches:
+  #     - main
   pull_request:
     branches:
       - main
@@ -36,15 +37,11 @@ jobs:
       - id: code_cov
         name: Test dev docker
         run: |
-          docker run --rm codiumai/pr-agent:test pytest tests/unittest --cov=pr_agent
+          docker run --name test_container codiumai/pr-agent:test  pytest  tests/unittest --cov=pr_agent --cov-report term --cov-report xml:coverage.xml 
+          docker cp test_container:/app/coverage.xml coverage.xml
+
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4.0.1
         with:
-          files: ./coverage.xml
           token: ${{ secrets.CODECOV_TOKEN }}
-          flags: unittests
-          name: code-coverage
-          fail_ci_if_error: true
-        
-          
