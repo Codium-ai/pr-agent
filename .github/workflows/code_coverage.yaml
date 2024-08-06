@@ -41,6 +41,12 @@ jobs:
           docker cp test_container:/app/coverage.xml coverage.xml
 
 
+      - name: Validate coverage report
+        run: |
+          if [ ! -f coverage.xml ]; then
+            echo "Coverage report not found"
+            exit 1
+          fi
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4.0.1
         with:
