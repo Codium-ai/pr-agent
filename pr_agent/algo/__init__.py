@@ -18,6 +18,7 @@ MAX_TOKENS = {
     'gpt-4-turbo': 128000,  # 128K, but may be limited by config.max_model_tokens
     'gpt-4o-mini': 128000,  # 128K, but may be limited by config.max_model_tokens
     'gpt-4o-mini-2024-07-18': 128000,  # 128K, but may be limited by config.max_model_tokens
+    'gpt-4o-2024-08-06': 128000,  # 128K, but may be limited by config.max_model_tokens
     'claude-instant-1': 100000,
     'claude-2': 100000,
     'command-nightly': 4096,
