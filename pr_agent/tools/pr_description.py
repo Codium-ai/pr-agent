@@ -452,7 +452,7 @@ class PRDescription:
             else:
                 key_publish = key.rstrip(':').replace("_", " ").capitalize()
                 if key_publish == "Type":
-                    key_publish = "PR Type"
+                    key_publish = "PR Type test"
                 # elif key_publish == "Description":
                 #     key_publish = "PR Description"
                 pr_body += f"### **{key_publish}**\n"
