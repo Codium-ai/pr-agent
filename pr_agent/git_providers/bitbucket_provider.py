@@ -170,7 +170,7 @@ class BitbucketProvider(GitProvider):
             diff_files.append(file_patch_canonic_structure)
 
         if invalid_files_names:
-            get_logger().info(f"Invalid file names: {invalid_files_names}")
+            get_logger().info(f"Disregarding files with invalid extensions:\n{invalid_files_names}")
 
 
         self.diff_files = diff_files

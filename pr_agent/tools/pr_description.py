@@ -465,7 +465,7 @@ class PRDescription:
                     pr_body += f'- `{filename}`: {description}\n'
                 if self.git_provider.is_supported("gfm_markdown"):
                     pr_body += "</details>\n"
-            elif 'pr_files' in key.lower():
+            elif 'pr_files' in key.lower() and get_settings().pr_description.enable_semantic_files_types:
                 changes_walkthrough, pr_file_changes = self.process_pr_files_prediction(changes_walkthrough, value)
                 changes_walkthrough = f"### **Changes walkthrough** 📝\n{changes_walkthrough}"
             else:
@@ -506,7 +506,7 @@ class PRDescription:
             use_collapsible_file_list = num_files > self.COLLAPSIBLE_FILE_LIST_THRESHOLD
 
         if not self.git_provider.is_supported("gfm_markdown"):
-            return pr_body
+            return pr_body, pr_comments
         try:
             pr_body += "<table>"
             header = f"Relevant files"
