@@ -198,7 +198,7 @@ handle_pr_actions = ['opened', 'reopened', 'ready_for_review']
 pr_commands = [
     "/describe --pr_description.final_update_message=false",
     "/review --pr_reviewer.num_code_suggestions=0",
-    "/improve",
+    "/improve --pr_code_suggestions.commitable_code_suggestions=true",
 ]
 # settings for "pull_request" event with "synchronize" action - used to detect and handle push triggers for new commits
 handle_push_trigger = false
@@ -210,6 +210,7 @@ push_trigger_pending_tasks_ttl = 300
 push_commands = [
     "/describe",
     "/review --pr_reviewer.num_code_suggestions=0",
+    "/improve --pr_code_suggestions.commitable_code_suggestions=true",
 ]
 ignore_pr_title = []
 ignore_bot_pr = true
