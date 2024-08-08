@@ -410,7 +410,7 @@ def get_pr_multi_diffs(git_provider: GitProvider,
     patches_extended, total_tokens, patches_extended_tokens = pr_generate_extended_diff(
         pr_languages, token_handler, add_line_numbers_to_hunks=True)
     if total_tokens + OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD < get_max_tokens(model):
-        return ["\n".join(patches_extended)]
+        return ["\n".join(patches_extended)] if patches_extended else []
 
     patches = []
     final_diff_list = []
