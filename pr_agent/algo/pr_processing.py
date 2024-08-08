@@ -70,10 +70,7 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler,
     if total_tokens + OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD < get_max_tokens(model):
         get_logger().info(f"Tokens: {total_tokens}, total tokens under limit: {get_max_tokens(model)}, "
                           f"returning full diff.")
-        if patches_extended :
-            return ["\n".join(patches_extended)]
-        else:
-            return []        
+        return "\n".join(patches_extended)
 
     # if we are over the limit, start pruning
     get_logger().info(f"Tokens: {total_tokens}, total tokens over limit: {get_max_tokens(model)}, "
@@ -413,7 +410,7 @@ def get_pr_multi_diffs(git_provider: GitProvider,
     patches_extended, total_tokens, patches_extended_tokens = pr_generate_extended_diff(
         pr_languages, token_handler, add_line_numbers_to_hunks=True)
     if total_tokens + OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD < get_max_tokens(model):
-        return ["\n".join(patches_extended)]
+        return ["\n".join(patches_extended)] if patches_extended else []
 
     patches = []
     final_diff_list = []
