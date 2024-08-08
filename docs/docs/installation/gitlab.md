@@ -55,7 +55,7 @@ WEBHOOK_SECRET=$(python -c "import secrets; print(secrets.token_hex(10))")
     - In the [gitlab] section, fill in personal_access_token and shared_secret. The access token can be a personal access token, or a group or project access token.
     - Set deployment_type to 'gitlab' in [configuration.toml](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml)
    
-5. Create a webhook in GitLab. Set the URL to ````http[s]://<PR_AGENT_HOSTNAME>/webhook````. Set the secret token to the generated secret from step 2.
+5. Create a webhook in GitLab. Set the URL to ```http[s]://<PR_AGENT_HOSTNAME>/webhook```. Set the secret token to the generated secret from step 2.
 In the "Trigger" section, check the ‘comments’ and ‘merge request events’ boxes.
 
 6. Test your installation by opening a merge request or commenting or a merge request using one of CodiumAI's commands.
