@@ -117,7 +117,7 @@ class PRDescription:
                 pr_body += "<hr>\n\n<details> <summary><strong>✨ Describe tool usage guide:</strong></summary><hr> \n\n"
                 pr_body += HelpMessage.get_describe_usage_guide()
                 pr_body += "\n</details>\n"
-            elif get_settings().pr_description.enable_help_comment:
+            elif self.git_provider.is_supported("gfm_markdown") and get_settings().pr_description.enable_help_comment:
                 pr_body += "\n\n___\n\n> 💡 **PR-Agent usage**:"
                 pr_body += "\n>Comment `/help` on the PR to get a list of all available PR-Agent tools and their descriptions\n\n"
 
@@ -167,11 +167,13 @@ class PRDescription:
 
     async def _prepare_prediction(self, model: str) -> None:
         if get_settings().pr_description.use_description_markers and 'pr_agent:' not in self.user_description:
-            get_logger().info("Markers were enabled, but user description does not contain markers. skipping AI prediction")
+            get_logger().info(
+                "Markers were enabled, but user description does not contain markers. skipping AI prediction")
             return None
 
         large_pr_handling = get_settings().pr_description.enable_large_pr_handling and "pr_description_only_files_prompts" in get_settings()
-        output = get_pr_diff(self.git_provider, self.token_handler, model, large_pr_handling=large_pr_handling, return_remaining_files=True)
+        output = get_pr_diff(self.git_provider, self.token_handler, model, large_pr_handling=large_pr_handling,
+                             return_remaining_files=True)
         if isinstance(output, tuple):
             patches_diff, remaining_files_list = output
         else:
@@ -214,11 +216,12 @@ class PRDescription:
             else:  # async calls
                 tasks = []
                 for i, patches in enumerate(patches_compressed_list):
-                    patches_diff = "\n".join(patches)
-                    get_logger().debug(f"PR diff number {i + 1} for describe files")
-                    task = asyncio.create_task(
-                        self._get_prediction(model, patches_diff, prompt="pr_description_only_files_prompts"))
-                    tasks.append(task)
+                    if patches:
+                        patches_diff = "\n".join(patches)
+                        get_logger().debug(f"PR diff number {i + 1} for describe files")
+                        task = asyncio.create_task(
+                            self._get_prediction(model, patches_diff, prompt="pr_description_only_files_prompts"))
+                        tasks.append(task)
                 # Wait for all tasks to complete
                 results = await asyncio.gather(*tasks)
             file_description_str_list = []
@@ -238,14 +241,23 @@ class PRDescription:
                 get_settings().pr_description_only_description_prompts.user)
             files_walkthrough = "\n".join(file_description_str_list)
             files_walkthrough_prompt = copy.deepcopy(files_walkthrough)
+            MAX_EXTRA_FILES_TO_PROMPT = 50
             if remaining_files_list:
                 files_walkthrough_prompt += "\n\nNo more token budget. Additional unprocessed files:"
-                for file in remaining_files_list:
+                for i, file in enumerate(remaining_files_list):
                     files_walkthrough_prompt += f"\n- {file}"
+                    if i >= MAX_EXTRA_FILES_TO_PROMPT:
+                        get_logger().debug(f"Too many remaining files, clipping to {MAX_EXTRA_FILES_TO_PROMPT}")
+                        files_walkthrough_prompt += f"\n... and {len(remaining_files_list) - MAX_EXTRA_FILES_TO_PROMPT} more"
+                        break
             if deleted_files_list:
                 files_walkthrough_prompt += "\n\nAdditional deleted files:"
-                for file in deleted_files_list:
+                for i, file in enumerate(deleted_files_list):
                     files_walkthrough_prompt += f"\n- {file}"
+                    if i >= MAX_EXTRA_FILES_TO_PROMPT:
+                        get_logger().debug(f"Too many deleted files, clipping to {MAX_EXTRA_FILES_TO_PROMPT}")
+                        files_walkthrough_prompt += f"\n... and {len(deleted_files_list) - MAX_EXTRA_FILES_TO_PROMPT} more"
+                        break
             tokens_files_walkthrough = len(
                 token_handler_only_description_prompt.encoder.encode(files_walkthrough_prompt))
             total_tokens = token_handler_only_description_prompt.prompt_tokens + tokens_files_walkthrough
@@ -263,8 +275,9 @@ class PRDescription:
             prediction_headers = prediction_headers.strip().removeprefix('```yaml').strip('`').strip()
 
             # manually add extra files to final prediction
+            MAX_EXTRA_FILES_TO_OUTPUT = 100
             if get_settings().pr_description.mention_extra_files:
-                for file in remaining_files_list:
+                for i, file in enumerate(remaining_files_list):
                     extra_file_yaml = f"""\
 - filename: |
     {file}
@@ -276,6 +289,20 @@ class PRDescription:
     additional files (token-limit)
 """
                     files_walkthrough = files_walkthrough.strip() + "\n" + extra_file_yaml.strip()
+                    if i >= MAX_EXTRA_FILES_TO_OUTPUT:
+                        files_walkthrough += f"""\
+extra_file_yaml = 
+- filename: |
+    Additional {len(remaining_files_list) - MAX_EXTRA_FILES_TO_OUTPUT} files not shown
+  changes_summary: |
+    ...
+  changes_title: |
+    ...
+  label: |
+    additional files (token-limit)
+"""
+                        break
+
             # final processing
             self.prediction = prediction_headers + "\n" + "pr_files:\n" + files_walkthrough
             if not load_yaml(self.prediction):
@@ -304,10 +331,10 @@ class PRDescription:
             prediction_extra_dict = load_yaml(prediction_extra)
             # merge the two dictionaries
             if isinstance(original_prediction_dict, dict) and isinstance(prediction_extra_dict, dict):
-                    original_prediction_dict["pr_files"].extend(prediction_extra_dict["pr_files"])
-                    new_yaml = yaml.dump(original_prediction_dict)
-                    if load_yaml(new_yaml):
-                        prediction = new_yaml
+                original_prediction_dict["pr_files"].extend(prediction_extra_dict["pr_files"])
+                new_yaml = yaml.dump(original_prediction_dict)
+                if load_yaml(new_yaml):
+                    prediction = new_yaml
             return prediction
         except Exception as e:
             get_logger().error(f"Error extending additional files {self.pr_id}: {e}")
