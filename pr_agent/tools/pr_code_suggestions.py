@@ -116,9 +116,14 @@ class PRCodeSuggestions:
 
             if get_settings().config.publish_output:
                 self.git_provider.remove_initial_comment()
-                if ((not get_settings().pr_code_suggestions.commitable_code_suggestions) and
-                        self.git_provider.is_supported("gfm_markdown")):
 
+                post_as_summary = not get_settings().pr_code_suggestions.commitable_code_suggestions
+
+                if post_as_summary and not self.git_provider.is_supported("gfm_markdown"):
+                    get_logger().warning(f"Git provider does not support summary code suggestions. Reverting to commitable_code_suggestions=True.")
+                    post_as_summary = False
+
+                if post_as_summary:
                     # generate summarized suggestions
                     pr_body = self.generate_summarized_suggestions(data)
                     get_logger().debug(f"PR output", artifact=pr_body)
