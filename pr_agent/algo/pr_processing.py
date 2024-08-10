@@ -33,9 +33,11 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler,
                 large_pr_handling=False,
                 return_remaining_files=False):
     if disable_extra_lines:
-        PATCH_EXTRA_LINES = 0
+        PATCH_EXTRA_LINES_BEFORE = 0
+        PATCH_EXTRA_LINES_AFTER = 0
     else:
-        PATCH_EXTRA_LINES = get_settings().config.patch_extra_lines
+        PATCH_EXTRA_LINES_BEFORE = get_settings().config.patch_extra_lines_before
+        PATCH_EXTRA_LINES_AFTER = get_settings().config.patch_extra_lines_after
 
     try:
         diff_files_original = git_provider.get_diff_files()
@@ -64,7 +66,8 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler,
 
     # generate a standard diff string, with patch extension
     patches_extended, total_tokens, patches_extended_tokens = pr_generate_extended_diff(
-        pr_languages, token_handler, add_line_numbers_to_hunks, patch_extra_lines=PATCH_EXTRA_LINES)
+        pr_languages, token_handler, add_line_numbers_to_hunks,
+        patch_extra_lines_before=PATCH_EXTRA_LINES_BEFORE, patch_extra_lines_after=PATCH_EXTRA_LINES_AFTER)
 
     # if we are under the limit, return the full diff
     if total_tokens + OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD < get_max_tokens(model):
@@ -174,17 +177,8 @@ def get_pr_diff_multiple_patchs(git_provider: GitProvider, token_handler: TokenH
 def pr_generate_extended_diff(pr_languages: list,
                               token_handler: TokenHandler,
                               add_line_numbers_to_hunks: bool,
-                              patch_extra_lines: int = 0) -> Tuple[list, int, list]:
-    """
-    Generate a standard diff string with patch extension, while counting the number of tokens used and applying diff
-    minimization techniques if needed.
-
-    Args:
-    - pr_languages: A list of dictionaries representing the languages used in the pull request and their corresponding
-      files.
-    - token_handler: An object of the TokenHandler class used for handling tokens in the context of the pull request.
-    - add_line_numbers_to_hunks: A boolean indicating whether to add line numbers to the hunks in the diff.
-    """
+                              patch_extra_lines_before: int = 0,
+                              patch_extra_lines_after: int = 0) -> Tuple[list, int, list]:
     total_tokens = token_handler.prompt_tokens  # initial tokens
     patches_extended = []
     patches_extended_tokens = []
@@ -196,7 +190,8 @@ def pr_generate_extended_diff(pr_languages: list,
                 continue
 
             # extend each patch with extra lines of context
-            extended_patch = extend_patch(original_file_content_str, patch, num_lines=patch_extra_lines)
+            extended_patch = extend_patch(original_file_content_str, patch,
+                                          patch_extra_lines_before, patch_extra_lines_after)
             if not extended_patch:
                 get_logger().warning(f"Failed to extend patch for file: {file.filename}")
                 continue

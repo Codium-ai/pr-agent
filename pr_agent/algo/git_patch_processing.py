@@ -7,19 +7,8 @@ from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
 from pr_agent.log import get_logger
 
 
-def extend_patch(original_file_str, patch_str, num_lines) -> str:
-    """
-    Extends the given patch to include a specified number of surrounding lines.
-    
-    Args:
-        original_file_str (str): The original file to which the patch will be applied.
-        patch_str (str): The patch to be applied to the original file.
-        num_lines (int): The number of surrounding lines to include in the extended patch.
-        
-    Returns:
-        str: The extended patch string.
-    """
-    if not patch_str or num_lines == 0:
+def extend_patch(original_file_str, patch_str, patch_extra_lines_before=0, patch_extra_lines_after=0) -> str:
+    if not patch_str or (patch_extra_lines_before == 0 and patch_extra_lines_after == 0):
         return patch_str
 
     if type(original_file_str) == bytes:
@@ -43,7 +32,7 @@ def extend_patch(original_file_str, patch_str, num_lines) -> str:
                     # finish previous hunk
                     if start1 != -1:
                         extended_patch_lines.extend(
-                            original_lines[start1 + size1 - 1:start1 + size1 - 1 + num_lines])
+                            original_lines[start1 + size1 - 1:start1 + size1 - 1 + patch_extra_lines_after])
 
                     res = list(match.groups())
                     for i in range(len(res)):
@@ -55,10 +44,10 @@ def extend_patch(original_file_str, patch_str, num_lines) -> str:
                         start1, size1, size2 = map(int, res[:3])
                         start2 = 0
                     section_header = res[4]
-                    extended_start1 = max(1, start1 - num_lines)
-                    extended_size1 = size1 + (start1 - extended_start1) + num_lines
-                    extended_start2 = max(1, start2 - num_lines)
-                    extended_size2 = size2 + (start2 - extended_start2) + num_lines
+                    extended_start1 = max(1, start1 - patch_extra_lines_before)
+                    extended_size1 = size1 + (start1 - extended_start1) + patch_extra_lines_after
+                    extended_start2 = max(1, start2 - patch_extra_lines_before)
+                    extended_size2 = size2 + (start2 - extended_start2) + patch_extra_lines_after
                     extended_patch_lines.append(
                         f'@@ -{extended_start1},{extended_size1} '
                         f'+{extended_start2},{extended_size2} @@ {section_header}')
@@ -74,7 +63,7 @@ def extend_patch(original_file_str, patch_str, num_lines) -> str:
     # finish previous hunk
     if start1 != -1:
         extended_patch_lines.extend(
-            original_lines[start1 + size1 - 1:start1 + size1 - 1 + num_lines])
+            original_lines[start1 + size1 - 1:start1 + size1 - 1 + patch_extra_lines_after])
 
     extended_patch_str = '\n'.join(extended_patch_lines)
     return extended_patch_str
