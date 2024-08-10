@@ -44,7 +44,7 @@ CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by p
 ## News and Updates
 
 ### August 10, 2024
-Added support for [Azure devops pipeline](https://pr-agent-docs.codium.ai/installation/azure.md) - you can now run easily PR-Agent as a Azure devops pipeline, without needing to set up your own server.
+Added support for [Azure devops pipeline](https://pr-agent-docs.codium.ai/installation/azure/) - you can now easily run PR-Agent as an Azure devops pipeline, without needing to set up your own server.
 
 
 ### August 5, 2024
