@@ -112,7 +112,7 @@ Supported commands per platform:
 | USAGE | CLI                                                                                                     | ✅ | ✅ | ✅ |      ✅       |
 |       | App / webhook                                                                                           | ✅ | ✅ | ✅ |      ✅       |
 |       | Tagging bot                                                                                             | ✅ |                    |                    |              |
-|       | Actions                                                                                                 | ✅ |                    | ✅ |              |
+|       | Actions                                                                                                 | ✅ |✅| ✅ |✅|
 |       |                                                                                                         |                    |                    |                    |              |
 | CORE  | PR compression                                                                                          | ✅ | ✅ | ✅ |      ✅       |
 |       | Repo language prioritization                                                                            | ✅ | ✅ | ✅ |      ✅       |
