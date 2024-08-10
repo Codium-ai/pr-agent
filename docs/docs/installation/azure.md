@@ -1,4 +1,62 @@
-## Azure DevOps provider
+## Azure DevOps Pipeline
+You can use a pre-built Action Docker image to run PR-Agent as an Azure devops pipeline.
+add the following file to your repository under `azure-pipelines.yml`:
+```yaml
+# Opt out of CI triggers
+trigger: none
+
+# Configure PR trigger
+pr:
+  branches:
+    include:
+    - '*'
+  autoCancel: true
+  drafts: false
+
+stages:
+- stage: pr_agent
+  displayName: 'PR Agent Stage'
+  jobs:
+  - job: pr_agent_job
+    displayName: 'PR Agent Job'
+    pool:
+      vmImage: 'ubuntu-latest'
+    container:
+      image: codiumai/pr-agent:latest
+      options: --entrypoint ""
+    variables:
+      - group: pr_agent
+    steps:
+    - script: |
+        echo "Running PR Agent action step"
+
+        # Construct PR_URL
+        PR_URL="${SYSTEM_COLLECTIONURI}${SYSTEM_TEAMPROJECT}/_git/${BUILD_REPOSITORY_NAME}/pullrequest/${SYSTEM_PULLREQUEST_PULLREQUESTID}"
+        echo "PR_URL=$PR_URL"
+
+        # Extract organization URL from System.CollectionUri
+        ORG_URL=$(echo "$(System.CollectionUri)" | sed 's/\/$//') # Remove trailing slash if present
+        echo "Organization URL: $ORG_URL"
+
+        export azure_devops__org="$ORG_URL"
+        export config__git_provider="azure"
+        
+        pr-agent --pr_url="$PR_URL" describe
+        pr-agent --pr_url="$PR_URL" review
+        pr-agent --pr_url="$PR_URL" improve
+      env:
+        azure_devops__pat: $(azure_devops_pat)
+        openai__key: $(OPENAI_KEY)
+      displayName: 'Run PR Agent'
+```
+This script will run PR-Agent on every new merge request, with the `improve`, `review`, and `describe` commands.
+Note that you need to export the `azure_devops__pat` and `OPENAI_KEY` variables in the Azure DevOps pipeline settings (Pipelines -> Library -> + Variable group):
+![PR Agent Pro](https://codium.ai/images/pr_agent/azure_devops_pipeline_secrets.png){width=468}
+
+Make sure to give pipeline permissions to the `pr_agent` variable group.
+
+
+## Azure DevOps from CLI
 
 To use Azure DevOps provider use the following settings in configuration.toml:
 ```
