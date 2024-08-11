@@ -75,7 +75,7 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler,
                           f"returning full diff.")
         return "\n".join(patches_extended)
 
-    # if we are over the limit, start pruning
+    # if we are over the limit, start pruning (If we got here, we will not extend the patches with extra lines)
     get_logger().info(f"Tokens: {total_tokens}, total tokens over limit: {get_max_tokens(model)}, "
                       f"pruning diff.")
     patches_compressed_list, total_tokens_list, deleted_files_list, remaining_files_list, file_dict, files_in_patches_list = \
