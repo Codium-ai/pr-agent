@@ -51,11 +51,12 @@ def extend_patch(original_file_str, patch_str, patch_extra_lines_before=0, patch
                         extended_start1 = max(1, start1 - patch_extra_lines_before)
                         extended_size1 = size1 + (start1 - extended_start1) + patch_extra_lines_after
                         if extended_start1 - 1 + extended_size1 > len(original_lines):
+                            # we cannot extend beyond the original file
                             extended_size1 = len_original_lines - extended_start1 + 1
                         extended_start2 = max(1, start2 - patch_extra_lines_before)
                         extended_size2 = size2 + (start2 - extended_start2) + patch_extra_lines_after
-                        if extended_start2 - 1 + extended_size2 > len_original_lines:
-                            extended_size2 = len_original_lines - extended_start2 + 1
+                        # if extended_start2 - 1 + extended_size2 > len_original_lines: # incorrect - after the PR, the file may have more lines
+                        #     extended_size2 = len_original_lines - extended_start2 + 1
                         delta_lines = original_lines[extended_start1 - 1:start1 - 1]
                         delta_lines = [f' {line}' for line in delta_lines]
                         if section_header:
