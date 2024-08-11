@@ -8,9 +8,9 @@ class TestExtendPatch:
     # Tests that the function works correctly with valid input
     def test_happy_path(self):
         original_file_str = 'line1\nline2\nline3\nline4\nline5'
-        patch_str = '@@ -2,2 +2,2 @@ init()\n-line2\n+new_line2\nline3'
+        patch_str = '@@ -2,2 +2,2 @@ init()\n-line2\n+new_line2\n line3'
         num_lines = 1
-        expected_output = '@@ -1,4 +1,4 @@ init()\nline1\n-line2\n+new_line2\nline3\nline4'
+        expected_output = '@@ -1,4 +1,4 @@ init()\n line1\n-line2\n+new_line2\n line3\n line4'
         actual_output = extend_patch(original_file_str, patch_str,
                                      patch_extra_lines_before=num_lines, patch_extra_lines_after=num_lines)
         assert actual_output == expected_output
@@ -43,10 +43,10 @@ class TestExtendPatch:
     # Tests that the function extends a patch with a single hunk correctly
     def test_single_hunk(self):
         original_file_str = 'line1\nline2\nline3\nline4\nline5'
-        patch_str = '@@ -2,3 +2,3 @@ init()\n-line2\n+new_line2\nline3\nline4'
+        patch_str = '@@ -2,3 +2,3 @@ init()\n-line2\n+new_line2\n line3\n line4'
 
         for num_lines in [1, 2, 3]: # check that even if we are over the number of lines in the file, the function still works
-            expected_output = '@@ -1,5 +1,5 @@ init()\nline1\n-line2\n+new_line2\nline3\nline4\nline5'
+            expected_output = '@@ -1,5 +1,5 @@ init()\n line1\n-line2\n+new_line2\n line3\n line4\n line5'
             actual_output = extend_patch(original_file_str, patch_str,
                                          patch_extra_lines_before=num_lines, patch_extra_lines_after=num_lines)
             assert actual_output == expected_output
@@ -54,9 +54,9 @@ class TestExtendPatch:
     # Tests the functionality of extending a patch with multiple hunks.
     def test_multiple_hunks(self):
         original_file_str = 'line1\nline2\nline3\nline4\nline5\nline6'
-        patch_str = '@@ -2,3 +2,3 @@ init()\n-line2\n+new_line2\nline3\nline4\n@@ -4,1 +4,1 @@ init2()\n-line4\n+new_line4'  # noqa: E501
+        patch_str = '@@ -2,3 +2,3 @@ init()\n-line2\n+new_line2\n line3\n line4\n@@ -4,1 +4,1 @@ init2()\n-line4\n+new_line4'  # noqa: E501
         num_lines = 1
-        expected_output = '@@ -1,5 +1,5 @@ init()\nline1\n-line2\n+new_line2\nline3\nline4\nline5\n@@ -3,3 +3,3 @@ init2()\nline3\n-line4\n+new_line4\nline5'  # noqa: E501
+        expected_output = '@@ -1,5 +1,5 @@ init()\n line1\n-line2\n+new_line2\n line3\n line4\n line5\n@@ -3,3 +3,3 @@ init2()\n line3\n-line4\n+new_line4\n line5'  # noqa: E501
         actual_output = extend_patch(original_file_str, patch_str,
                                      patch_extra_lines_before=num_lines, patch_extra_lines_after=num_lines)
         assert actual_output == expected_output
@@ -83,7 +83,7 @@ class TestExtendedPatchMoreLines:
             {
                 'files': [
                     self.File(base_file="line000\nline00\nline0\nline1\noriginal content\nline2\nline3\nline4\nline5\nline6\nline7\nline8\nline9\nline10",
-                              patch="@@ -5,5 +5,5 @@\n-original content\n+modified content\nline2\nline3\nline4\nline5",
+                              patch="@@ -5,5 +5,5 @@\n-original content\n+modified content\n line2\n line3\n line4\n line5",
                               filename="file1"),
                     self.File(base_file="original content\nline2\nline3\nline4\nline5\nline6\nline7\nline8\nline9\nline10",
                               patch="@@ -6,5 +6,5 @@\nline6\nline7\nline8\n-line9\n+modified line9\nline10",
@@ -112,4 +112,4 @@ class TestExtendedPatchMoreLines:
         )
 
         p0_extended = patches_extended_with_extra_lines[0].strip()
-        assert p0_extended == '## file1\n\n@@ -3,8 +3,8 @@ \nline0\nline1\n-original content\n+modified content\nline2\nline3\nline4\nline5\nline6'
+        assert p0_extended == '## file1\n\n@@ -3,8 +3,8 @@ \n line0\n line1\n-original content\n+modified content\n line2\n line3\n line4\n line5\n line6'

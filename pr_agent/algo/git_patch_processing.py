@@ -32,8 +32,9 @@ def extend_patch(original_file_str, patch_str, patch_extra_lines_before=0, patch
                 if match:
                     # finish last hunk
                     if start1 != -1 and patch_extra_lines_after > 0:
-                        extended_patch_lines.extend(
-                            original_lines[start1 + size1 - 1:start1 + size1 - 1 + patch_extra_lines_after])
+                        delta_lines = original_lines[start1 + size1 - 1:start1 + size1 - 1 + patch_extra_lines_after]
+                        delta_lines = [f' {line}' for line in delta_lines]
+                        extended_patch_lines.extend(delta_lines)
 
                     res = list(match.groups())
                     for i in range(len(res)):
@@ -56,8 +57,9 @@ def extend_patch(original_file_str, patch_str, patch_extra_lines_before=0, patch
                     extended_patch_lines.append(
                         f'@@ -{extended_start1},{extended_size1} '
                         f'+{extended_start2},{extended_size2} @@ {section_header}')
-                    extended_patch_lines.extend(
-                        original_lines[extended_start1 - 1:start1 - 1])  # one to zero based
+                    delta_lines = original_lines[extended_start1 - 1:start1 - 1]
+                    delta_lines = [f' {line}' for line in delta_lines]
+                    extended_patch_lines.extend(delta_lines)  # one to zero based
                     continue
             extended_patch_lines.append(line)
     except Exception as e:
@@ -67,8 +69,10 @@ def extend_patch(original_file_str, patch_str, patch_extra_lines_before=0, patch
 
     # finish last hunk
     if start1 != -1 and patch_extra_lines_after > 0:
-        extended_patch_lines.extend(
-            original_lines[start1 + size1 - 1:start1 + size1 - 1 + patch_extra_lines_after])
+        delta_lines = original_lines[start1 + size1 - 1:start1 + size1 - 1 + patch_extra_lines_after]
+        # add space at the beginning of each extra line
+        delta_lines = [f' {line}' for line in delta_lines]
+        extended_patch_lines.extend(delta_lines)
 
     extended_patch_str = '\n'.join(extended_patch_lines)
     return extended_patch_str
