@@ -55,8 +55,8 @@ def extend_patch(original_file_str, patch_str, patch_extra_lines_before=0, patch
                         if extended_start1 - 1 + extended_size1 > len(original_lines):
                             # we cannot extend beyond the original file
                             delta_cap = extended_start1 - 1 + extended_size1 - len(original_lines)
-                            extended_size1 = extended_size1 - delta_cap
-                            extended_size2 = extended_size2 - delta_cap
+                            extended_size1 = max(extended_size1 - delta_cap, size1)
+                            extended_size2 = max(extended_size2 - delta_cap, size2)
                         delta_lines = original_lines[extended_start1 - 1:start1 - 1]
                         delta_lines = [f' {line}' for line in delta_lines]
                         if section_header:
