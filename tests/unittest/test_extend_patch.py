@@ -1,5 +1,6 @@
 import pytest
 from pr_agent.algo.git_patch_processing import extend_patch
+from pr_agent.algo.pr_processing import pr_generate_extended_diff
 from pr_agent.algo.token_handler import TokenHandler
 
 
@@ -60,7 +61,7 @@ class TestExtendPatch:
         assert actual_output == expected_output
 
 
-class PRProcessingTest:
+class TestExtendedPatchMoreLines:
     class File:
         def __init__(self, base_file, patch, filename):
             self.base_file = base_file

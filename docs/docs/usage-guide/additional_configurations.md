@@ -66,7 +66,7 @@ By default, around any change in your PR, git patch provides three lines of cont
 For the `review`, `describe`, `ask` and `add_docs` tools, if the token budget allows, PR-Agent tries to increase the number of lines of context, via the parameter:
 ```
 [config]
-patch_extra_lines_before=6
+patch_extra_lines_before=4
 patch_extra_lines_after=2
 ```
 
