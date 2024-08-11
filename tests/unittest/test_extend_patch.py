@@ -44,11 +44,12 @@ class TestExtendPatch:
     def test_single_hunk(self):
         original_file_str = 'line1\nline2\nline3\nline4\nline5'
         patch_str = '@@ -2,3 +2,3 @@ init()\n-line2\n+new_line2\nline3\nline4'
-        num_lines = 1
-        expected_output = '@@ -1,5 +1,5 @@ init()\nline1\n-line2\n+new_line2\nline3\nline4\nline5'
-        actual_output = extend_patch(original_file_str, patch_str,
-                                     patch_extra_lines_before=num_lines, patch_extra_lines_after=num_lines)
-        assert actual_output == expected_output
+
+        for num_lines in [1, 2, 3]: # check that even if we are over the number of lines in the file, the function still works
+            expected_output = '@@ -1,5 +1,5 @@ init()\nline1\n-line2\n+new_line2\nline3\nline4\nline5'
+            actual_output = extend_patch(original_file_str, patch_str,
+                                         patch_extra_lines_before=num_lines, patch_extra_lines_after=num_lines)
+            assert actual_output == expected_output
 
     # Tests the functionality of extending a patch with multiple hunks.
     def test_multiple_hunks(self):

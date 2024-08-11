@@ -18,6 +18,7 @@ def extend_patch(original_file_str, patch_str, patch_extra_lines_before=0, patch
             return ""
 
     original_lines = original_file_str.splitlines()
+    len_original_lines = len(original_lines)
     patch_lines = patch_str.splitlines()
     extended_patch_lines = []
 
@@ -29,8 +30,8 @@ def extend_patch(original_file_str, patch_str, patch_extra_lines_before=0, patch
             if line.startswith('@@'):
                 match = RE_HUNK_HEADER.match(line)
                 if match:
-                    # finish previous hunk
-                    if start1 != -1:
+                    # finish last hunk
+                    if start1 != -1 and patch_extra_lines_after > 0:
                         extended_patch_lines.extend(
                             original_lines[start1 + size1 - 1:start1 + size1 - 1 + patch_extra_lines_after])
 
@@ -46,8 +47,12 @@ def extend_patch(original_file_str, patch_str, patch_extra_lines_before=0, patch
                     section_header = res[4]
                     extended_start1 = max(1, start1 - patch_extra_lines_before)
                     extended_size1 = size1 + (start1 - extended_start1) + patch_extra_lines_after
+                    if extended_start1 - 1 + extended_size1 > len(original_lines):
+                        extended_size1 = len_original_lines - extended_start1 + 1
                     extended_start2 = max(1, start2 - patch_extra_lines_before)
                     extended_size2 = size2 + (start2 - extended_start2) + patch_extra_lines_after
+                    if extended_start2 - 1 + extended_size2 > len_original_lines:
+                        extended_size2 = len_original_lines - extended_start2 + 1
                     extended_patch_lines.append(
                         f'@@ -{extended_start1},{extended_size1} '
                         f'+{extended_start2},{extended_size2} @@ {section_header}')
@@ -60,8 +65,8 @@ def extend_patch(original_file_str, patch_str, patch_extra_lines_before=0, patch
             get_logger().error(f"Failed to extend patch: {e}")
         return patch_str
 
-    # finish previous hunk
-    if start1 != -1:
+    # finish last hunk
+    if start1 != -1 and patch_extra_lines_after > 0:
         extended_patch_lines.extend(
             original_lines[start1 + size1 - 1:start1 + size1 - 1 + patch_extra_lines_after])
 
