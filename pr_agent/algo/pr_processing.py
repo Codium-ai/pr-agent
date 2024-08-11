@@ -400,10 +400,13 @@ def get_pr_multi_diffs(git_provider: GitProvider,
     for lang in pr_languages:
         sorted_files.extend(sorted(lang['files'], key=lambda x: x.tokens, reverse=True))
 
-
     # try first a single run with standard diff string, with patch extension, and no deletions
     patches_extended, total_tokens, patches_extended_tokens = pr_generate_extended_diff(
-        pr_languages, token_handler, add_line_numbers_to_hunks=True)
+        pr_languages, token_handler, add_line_numbers_to_hunks=True,
+        patch_extra_lines_before=get_settings().config.patch_extra_lines_before,
+        patch_extra_lines_after=get_settings().config.patch_extra_lines_after)
+
+    # if we are under the limit, return the full diff
     if total_tokens + OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD < get_max_tokens(model):
         return ["\n".join(patches_extended)] if patches_extended else []
 
