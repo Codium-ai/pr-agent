@@ -10,7 +10,7 @@ class TestExtendPatch:
         original_file_str = 'line1\nline2\nline3\nline4\nline5'
         patch_str = '@@ -2,2 +2,2 @@ init()\n-line2\n+new_line2\n line3'
         num_lines = 1
-        expected_output = '@@ -1,4 +1,4 @@ init()\n line1\n-line2\n+new_line2\n line3\n line4'
+        expected_output = '\n@@ -1,4 +1,4 @@ init()\n line1\n-line2\n+new_line2\n line3\n line4'
         actual_output = extend_patch(original_file_str, patch_str,
                                      patch_extra_lines_before=num_lines, patch_extra_lines_after=num_lines)
         assert actual_output == expected_output
@@ -46,7 +46,7 @@ class TestExtendPatch:
         patch_str = '@@ -2,3 +2,3 @@ init()\n-line2\n+new_line2\n line3\n line4'
 
         for num_lines in [1, 2, 3]: # check that even if we are over the number of lines in the file, the function still works
-            expected_output = '@@ -1,5 +1,5 @@ init()\n line1\n-line2\n+new_line2\n line3\n line4\n line5'
+            expected_output = '\n@@ -1,5 +1,5 @@ init()\n line1\n-line2\n+new_line2\n line3\n line4\n line5'
             actual_output = extend_patch(original_file_str, patch_str,
                                          patch_extra_lines_before=num_lines, patch_extra_lines_after=num_lines)
             assert actual_output == expected_output
@@ -56,7 +56,7 @@ class TestExtendPatch:
         original_file_str = 'line1\nline2\nline3\nline4\nline5\nline6'
         patch_str = '@@ -2,3 +2,3 @@ init()\n-line2\n+new_line2\n line3\n line4\n@@ -4,1 +4,1 @@ init2()\n-line4\n+new_line4'  # noqa: E501
         num_lines = 1
-        expected_output = '@@ -1,5 +1,5 @@ init()\n line1\n-line2\n+new_line2\n line3\n line4\n line5\n@@ -3,3 +3,3 @@ init2()\n line3\n-line4\n+new_line4\n line5'  # noqa: E501
+        expected_output = '\n@@ -1,5 +1,5 @@ init()\n line1\n-line2\n+new_line2\n line3\n line4\n line5\n\n@@ -3,3 +3,3 @@ init2()\n line3\n-line4\n+new_line4\n line5' # noqa: E501
         actual_output = extend_patch(original_file_str, patch_str,
                                      patch_extra_lines_before=num_lines, patch_extra_lines_after=num_lines)
         assert actual_output == expected_output
@@ -102,8 +102,8 @@ class TestExtendedPatchMoreLines:
         # Check that with no extra lines, the patches are the same as the original patches
         p0 = patches_extended_no_extra_lines[0].strip()
         p1 = patches_extended_no_extra_lines[1].strip()
-        assert p0 == '## file1\n\n' + pr_languages[0]['files'][0].patch.strip()
-        assert p1 == '## file2\n\n' + pr_languages[0]['files'][1].patch.strip()
+        assert p0 == '## file1\n' + pr_languages[0]['files'][0].patch.strip()
+        assert p1 == '## file2\n' + pr_languages[0]['files'][1].patch.strip()
 
         patches_extended_with_extra_lines, total_tokens, patches_extended_tokens = pr_generate_extended_diff(
             pr_languages, token_handler, add_line_numbers_to_hunks=False,
