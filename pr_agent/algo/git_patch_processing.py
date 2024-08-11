@@ -70,6 +70,7 @@ def extend_patch(original_file_str, patch_str, patch_extra_lines_before=0, patch
                         extended_start2 = start2
                         extended_size2 = size2
                         delta_lines = []
+                    extended_patch_lines.append('')
                     extended_patch_lines.append(
                         f'@@ -{extended_start1},{extended_size1} '
                         f'+{extended_start2},{extended_size2} @@ {section_header}')
