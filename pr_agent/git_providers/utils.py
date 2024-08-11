@@ -47,3 +47,17 @@ def apply_repo_settings(pr_url):
                     os.remove(repo_settings_file)
                 except Exception as e:
                     get_logger().error(f"Failed to remove temporary settings file {repo_settings_file}", e)
+
+    # enable switching models with a short definition
+    if get_settings().config.model.lower()=='claude-3-5-sonnet':
+        set_claude_model()
+
+
+def set_claude_model():
+    """
+    set the claude-sonnet-3.5 model easily (even by users), just by stating: --config.model='claude-3-5-sonnet'
+    """
+    model_claude = "bedrock/anthropic.claude-3-5-sonnet-20240620-v1:0"
+    get_settings().set('config.model', model_claude)
+    get_settings().set('config.model_turbo', model_claude)
+    get_settings().set('config.fallback_models', [model_claude])
