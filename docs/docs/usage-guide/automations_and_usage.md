@@ -44,7 +44,7 @@ Commands for invoking the different tools via comments:
 
 - **Review**:       `/review`
 - **Describe**:     `/describe`
-- **Improve**:      `/improve`
+- **Improve**:      `/improve`  (or `/improve_code` for bitbucket, since `/improve` is sometimes reserved)
 - **Ask**:          `/ask "..."`
 - **Reflect**:      `/reflect`
 - **Update Changelog**:      `/update_changelog`
