@@ -33,6 +33,7 @@ class GitLabProvider(GitProvider):
             url=gitlab_url,
             oauth_token=gitlab_access_token
         )
+        self.max_comment_chars = 65000
         self.id_project = None
         self.id_mr = None
         self.mr = None
@@ -188,24 +189,29 @@ class GitLabProvider(GitProvider):
         self.publish_persistent_comment_full(pr_comment, initial_header, update_header, name, final_update_message)
 
     def publish_comment(self, mr_comment: str, is_temporary: bool = False):
+        mr_comment = self.limit_output_characters(mr_comment, self.max_comment_chars)
         comment = self.mr.notes.create({'body': mr_comment})
         if is_temporary:
             self.temp_comments.append(comment)
         return comment
 
     def edit_comment(self, comment, body: str):
+        body = self.limit_output_characters(body, self.max_comment_chars)
         self.mr.notes.update(comment.id,{'body': body} )
 
     def edit_comment_from_comment_id(self, comment_id: int, body: str):
+        body = self.limit_output_characters(body, self.max_comment_chars)
         comment = self.mr.notes.get(comment_id)
         comment.body = body
         comment.save()
 
     def reply_to_comment_from_comment_id(self, comment_id: int, body: str):
+        body = self.limit_output_characters(body, self.max_comment_chars)
         discussion = self.mr.discussions.get(comment_id)
         discussion.notes.create({'body': body})
 
     def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
+        body = self.limit_output_characters(body, self.max_comment_chars)
         edit_type, found, source_line_no, target_file, target_line_no = self.search_line(relevant_file,
                                                                                          relevant_line_in_file)
         self.send_inline_comment(body, edit_type, found, relevant_file, relevant_line_in_file, source_line_no,

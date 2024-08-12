@@ -26,6 +26,7 @@ class GithubProvider(GitProvider):
             self.installation_id = context.get("installation_id", None)
         except Exception:
             self.installation_id = None
+        self.max_comment_chars = 65000
         self.base_url = get_settings().get("GITHUB.BASE_URL", "https://api.github.com").rstrip("/")
         self.base_url_html = self.base_url.split("api/")[0].rstrip("/") if "api/" in self.base_url else "https://github.com"
         self.github_client = self._get_github_client()
@@ -254,7 +255,7 @@ class GithubProvider(GitProvider):
         if is_temporary and not get_settings().config.publish_output_progress:
             get_logger().debug(f"Skipping publish_comment for temporary comment: {pr_comment}")
             return
-
+        pr_comment = self.limit_output_characters(pr_comment, self.max_comment_chars)
         response = self.pr.create_issue_comment(pr_comment)
         if hasattr(response, "user") and hasattr(response.user, "login"):
             self.github_user_id = response.user.login
@@ -265,11 +266,13 @@ class GithubProvider(GitProvider):
         return response
 
     def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
+        body = self.limit_output_characters(body, self.max_comment_chars)
         self.publish_inline_comments([self.create_inline_comment(body, relevant_file, relevant_line_in_file)])
 
 
     def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str,
                               absolute_position: int = None):
+        body = self.limit_output_characters(body, self.max_comment_chars)
         position, absolute_position = find_line_number_of_relevant_line_in_file(self.diff_files,
                                                                                 relevant_file.strip('`'),
                                                                                 relevant_line_in_file,
@@ -442,10 +445,12 @@ class GithubProvider(GitProvider):
             return False
 
     def edit_comment(self, comment, body: str):
+        body = self.limit_output_characters(body, self.max_comment_chars)
         comment.edit(body=body)
 
     def edit_comment_from_comment_id(self, comment_id: int, body: str):
         try:
+            body = self.limit_output_characters(body, self.max_comment_chars)
             # self.pr.get_issue_comment(comment_id).edit(body)
             headers, data_patch = self.pr._requester.requestJsonAndCheck(
                 "PATCH", f"{self.base_url}/repos/{self.repo}/issues/comments/{comment_id}",
@@ -456,6 +461,7 @@ class GithubProvider(GitProvider):
 
     def reply_to_comment_from_comment_id(self, comment_id: int, body: str):
         try:
+            body = self.limit_output_characters(body, self.max_comment_chars)
             # self.pr.get_issue_comment(comment_id).edit(body)
             headers, data_patch = self.pr._requester.requestJsonAndCheck(
                 "POST", f"{self.base_url}/repos/{self.repo}/pulls/{self.pr_num}/comments/{comment_id}/replies",

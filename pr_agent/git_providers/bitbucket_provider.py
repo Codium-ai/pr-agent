@@ -30,6 +30,7 @@ class BitbucketProvider(GitProvider):
         s.headers["Content-Type"] = "application/json"
         self.headers = s.headers
         self.bitbucket_client = Cloud(session=s)
+        self.max_comment_length = 31000
         self.workspace_slug = None
         self.repo_slug = None
         self.repo = None
@@ -237,6 +238,7 @@ class BitbucketProvider(GitProvider):
         self.publish_comment(pr_comment)
 
     def publish_comment(self, pr_comment: str, is_temporary: bool = False):
+        pr_comment = self.limit_output_characters(pr_comment, self.max_comment_length)
         comment = self.pr.comment(pr_comment)
         if is_temporary:
             self.temp_comments.append(comment["id"])
@@ -244,6 +246,7 @@ class BitbucketProvider(GitProvider):
 
     def edit_comment(self, comment, body: str):
         try:
+            body = self.limit_output_characters(body, self.max_comment_length)
             comment.update(body)
         except Exception as e:
             get_logger().exception(f"Failed to update comment, error: {e}")
@@ -263,6 +266,7 @@ class BitbucketProvider(GitProvider):
 
     # function to create_inline_comment
     def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str, absolute_position: int = None):
+        body = self.limit_output_characters(body, self.max_comment_length)
         position, absolute_position = find_line_number_of_relevant_line_in_file(self.get_diff_files(),
                                                                             relevant_file.strip('`'),
                                                                             relevant_line_in_file, absolute_position)
@@ -277,6 +281,7 @@ class BitbucketProvider(GitProvider):
 
 
     def publish_inline_comment(self, comment: str, from_line: int, file: str):
+        comment = self.limit_output_characters(comment, self.max_comment_length)
         payload = json.dumps( {
             "content": {
                 "raw": comment,
