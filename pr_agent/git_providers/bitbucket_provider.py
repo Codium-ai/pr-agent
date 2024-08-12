@@ -150,16 +150,20 @@ class BitbucketProvider(GitProvider):
             return []
         # bitbucket diff has a header for each file, we need to remove it:
         # "diff --git filename
+        # new file mode 100644 (optional)
         #  index caa56f0..61528d7 100644
         #   --- a/pr_agent/cli_pip.py
         #  +++ b/pr_agent/cli_pip.py
         #   @@ -... @@"
         for i, _ in enumerate(diff_split):
             diff_split_lines = diff_split[i].splitlines()
-            if (len(diff_split_lines) > 5 and
-                    diff_split_lines[2].startswith("---") and
-                    diff_split_lines[3].startswith("+++") and
-                    diff_split_lines[4].startswith("@@")):
+            if (len(diff_split_lines) >= 6) and \
+                    ((diff_split_lines[2].startswith("---") and
+                      diff_split_lines[3].startswith("+++") and
+                      diff_split_lines[4].startswith("@@")) or
+                     (diff_split_lines[3].startswith("---") and  # new or deleted file
+                      diff_split_lines[4].startswith("+++") and
+                      diff_split_lines[5].startswith("@@"))):
                 diff_split[i] = "\n".join(diff_split_lines[4:])
             else:
                 get_logger().error(f"Error - failed to remove the bitbucket header from diff {i}")
@@ -173,8 +177,14 @@ class BitbucketProvider(GitProvider):
                 continue
 
             try:
-                original_file_content_str = self._get_pr_file_content(diff.old.get_data("links")['self']['href'])
-                new_file_content_str = self._get_pr_file_content(diff.new.get_data("links")['self']['href'])
+                if diff.old.get_data("links"):
+                    original_file_content_str = self._get_pr_file_content(diff.old.get_data("links")['self']['href'])
+                else:
+                    original_file_content_str = ""
+                if diff.new.get_data("links"):
+                    new_file_content_str = self._get_pr_file_content(diff.new.get_data("links")['self']['href'])
+                else:
+                    new_file_content_str = ""
             except Exception as e:
                 get_logger().exception(f"Error - bitbucket failed to get file content, error: {e}")
                 original_file_content_str = ""
