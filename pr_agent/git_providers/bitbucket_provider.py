@@ -108,8 +108,12 @@ class BitbucketProvider(GitProvider):
                 get_logger().error(f"Failed to publish code suggestion, error: {e}")
             return False
 
+    def publish_file_comments(self, file_comments: list) -> bool:
+        pass
+
     def is_supported(self, capability: str) -> bool:
-        if capability in ['get_issue_comments', 'publish_inline_comments', 'get_labels', 'gfm_markdown']:
+        if capability in ['get_issue_comments', 'publish_inline_comments', 'get_labels', 'gfm_markdown',
+                            'publish_file_comments']:
             return False
         return True
 
@@ -137,9 +141,28 @@ class BitbucketProvider(GitProvider):
             except Exception as e:
                 pass
 
-        diff_split = [
-            "diff --git%s" % x for x in self.pr.diff().split("diff --git") if x.strip()
-        ]
+        # get the pr patches
+        pr_patch = self.pr.diff()
+        diff_split = ["diff --git" + x for x in pr_patch.split("diff --git") if x.strip()]
+        if len(diff_split) != len(diffs):
+            get_logger().error(f"Error - failed to split the diff into {len(diffs)} parts")
+            return []
+        # bitbucket diff has a header for each file, we need to remove it:
+        # "diff --git filename
+        #  index caa56f0..61528d7 100644
+        #   --- a/pr_agent/cli_pip.py
+        #  +++ b/pr_agent/cli_pip.py
+        #   @@ -... @@"
+        for i, _ in enumerate(diff_split):
+            diff_split_lines = diff_split[i].splitlines()
+            if (len(diff_split_lines) > 5 and
+                    diff_split_lines[2].startswith("---") and
+                    diff_split_lines[3].startswith("+++") and
+                    diff_split_lines[4].startswith("@@")):
+                diff_split[i] = "\n".join(diff_split_lines[4:])
+            else:
+                get_logger().error(f"Error - failed to remove the bitbucket header from diff {i}")
+                break
 
         invalid_files_names = []
         diff_files = []
@@ -148,10 +171,14 @@ class BitbucketProvider(GitProvider):
                 invalid_files_names.append(diff.new.path)
                 continue
 
-            original_file_content_str = self._get_pr_file_content(
-                diff.old.get_data("links")
-            )
-            new_file_content_str = self._get_pr_file_content(diff.new.get_data("links"))
+            try:
+                original_file_content_str = self._get_pr_file_content(diff.old.get_data("links")['self']['href'])
+                new_file_content_str = self._get_pr_file_content(diff.new.get_data("links")['self']['href'])
+            except Exception as e:
+                get_logger().exception(f"Error - bitbucket failed to get file content, error: {e}")
+                original_file_content_str = ""
+                new_file_content_str = ""
+
             file_patch_canonic_structure = FilePatchInfo(
                 original_file_content_str,
                 new_file_content_str,
@@ -171,7 +198,6 @@ class BitbucketProvider(GitProvider):
 
         if invalid_files_names:
             get_logger().info(f"Disregarding files with invalid extensions:\n{invalid_files_names}")
-
 
         self.diff_files = diff_files
         return diff_files
@@ -314,6 +340,9 @@ class BitbucketProvider(GitProvider):
     def get_pr_branch(self):
         return self.pr.source_branch
 
+    def get_pr_owner_id(self) -> str | None:
+        return self.workspace_slug
+
     def get_pr_description_full(self):
         return self.pr.description
 
@@ -400,7 +429,14 @@ class BitbucketProvider(GitProvider):
             get_logger().exception(f"Failed to create empty file {file_path} in branch {branch}")
 
     def _get_pr_file_content(self, remote_link: str):
-        return ""
+        try:
+            response = requests.request("GET", remote_link, headers=self.headers)
+            if response.status_code == 404:  # not found
+                return ""
+            contents = response.text
+            return contents
+        except Exception:
+            return ""
 
     def get_commit_messages(self):
         return ""  # not implemented yet

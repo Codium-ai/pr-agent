@@ -8,7 +8,7 @@ from pr_agent.log import get_logger
 
 
 def extend_patch(original_file_str, patch_str, patch_extra_lines_before=0, patch_extra_lines_after=0) -> str:
-    if not patch_str or (patch_extra_lines_before == 0 and patch_extra_lines_after == 0):
+    if not patch_str or (patch_extra_lines_before == 0 and patch_extra_lines_after == 0) or not original_file_str:
         return patch_str
 
     if type(original_file_str) == bytes:
@@ -52,9 +52,9 @@ def extend_patch(original_file_str, patch_str, patch_extra_lines_before=0, patch
                         extended_size1 = size1 + (start1 - extended_start1) + patch_extra_lines_after
                         extended_start2 = max(1, start2 - patch_extra_lines_before)
                         extended_size2 = size2 + (start2 - extended_start2) + patch_extra_lines_after
-                        if extended_start1 - 1 + extended_size1 > len(original_lines):
+                        if extended_start1 - 1 + extended_size1 > len_original_lines:
                             # we cannot extend beyond the original file
-                            delta_cap = extended_start1 - 1 + extended_size1 - len(original_lines)
+                            delta_cap = extended_start1 - 1 + extended_size1 - len_original_lines
                             extended_size1 = max(extended_size1 - delta_cap, size1)
                             extended_size2 = max(extended_size2 - delta_cap, size2)
                         delta_lines = original_lines[extended_start1 - 1:start1 - 1]
