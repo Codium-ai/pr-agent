@@ -93,7 +93,8 @@ async def _perform_commands_bitbucket(commands_conf: str, agent: PRAgent, api_ur
 
 @router.post("/webhook")
 async def handle_github_webhooks(background_tasks: BackgroundTasks, request: Request):
-    log_context = {"server_type": "bitbucket_app"}
+    app_name = get_settings().get("CONFIG.APP_NAME", "Unknown")
+    log_context = {"server_type": "bitbucket_app", "app_name": app_name}
     get_logger().debug(request.headers)
     jwt_header = request.headers.get("authorization", None)
     if jwt_header:
