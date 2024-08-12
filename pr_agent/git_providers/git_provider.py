@@ -256,6 +256,9 @@ class GitProvider(ABC):
         except Exception as e:
             return -1
 
+    def limit_output_characters(self, output: str, max_chars: int):
+        return output[:max_chars] + '...' if len(output) > max_chars else output
+
 
 def get_main_pr_language(languages, files) -> str:
     """
@@ -324,6 +327,8 @@ def get_main_pr_language(languages, files) -> str:
         pass
 
     return main_language_str
+
+
 
 
 class IncrementalPR:
