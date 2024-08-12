@@ -378,6 +378,11 @@ class PRReviewer:
         if not get_settings().config.publish_output:
             return
 
+        if not get_settings().pr_reviewer.require_estimate_effort_to_review:
+            get_settings().pr_reviewer.enable_review_labels_effort = False # we did not generate this output
+        if not get_settings().pr_reviewer.require_security_review:
+            get_settings().pr_reviewer.enable_review_labels_security = False # we did not generate this output
+
         if (get_settings().pr_reviewer.enable_review_labels_security or
                 get_settings().pr_reviewer.enable_review_labels_effort):
             try:
