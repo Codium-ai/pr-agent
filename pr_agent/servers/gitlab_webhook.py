@@ -51,6 +51,7 @@ async def handle_request(api_url: str, body: str, log_context: dict, sender_id: 
     log_context["action"] = body
     log_context["event"] = "pull_request" if body == "/review" else "comment"
     log_context["api_url"] = api_url
+    log_context["app_name"] = get_settings().get("CONFIG.APP_NAME", "Unknown")
 
     with get_logger().contextualize(**log_context):
         await PRAgent().handle_request(api_url, body)
