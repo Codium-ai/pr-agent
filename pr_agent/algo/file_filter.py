@@ -33,9 +33,29 @@ def filter_ignored(files, platform = 'github'):
                 if platform == 'github':
                     files = [f for f in files if (f.filename and not r.match(f.filename))]
                 elif platform == 'bitbucket':
-                    files = [f for f in files if (f.new.path and not r.match(f.new.path))]
+                    # files = [f for f in files if (f.new.path and not r.match(f.new.path))]
+                    files_o = []
+                    for f in files:
+                        if hasattr(f, 'new'):
+                            if f.new and f.new.path and not r.match(f.new.path):
+                                files_o.append(f)
+                                continue
+                        if hasattr(f, 'old'):
+                            if f.old and f.old.path and not r.match(f.old.path):
+                                files_o.append(f)
+                                continue
+                    files = files_o
                 elif platform == 'gitlab':
-                    files = [f for f in files if (f['new_path'] and not r.match(f['new_path']))]
+                    # files = [f for f in files if (f['new_path'] and not r.match(f['new_path']))]
+                    files_o = []
+                    for f in files:
+                        if 'new_path' in f and f['new_path'] and not r.match(f['new_path']):
+                            files_o.append(f)
+                            continue
+                        if 'old_path' in f and f['old_path'] and not r.match(f['old_path']):
+                            files_o.append(f)
+                            continue
+                    files = files_o
                 elif platform == 'azure':
                     files = [f for f in files if not r.match(f)]
 
