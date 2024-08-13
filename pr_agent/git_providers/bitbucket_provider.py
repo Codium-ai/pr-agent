@@ -12,7 +12,7 @@ from ..algo.language_handler import is_valid_file
 from ..algo.utils import find_line_number_of_relevant_line_in_file
 from ..config_loader import get_settings
 from ..log import get_logger
-from .git_provider import GitProvider
+from .git_provider import GitProvider, MAX_FILES_ALLOWED_FULL
 
 
 def _gef_filename(diff):
@@ -198,6 +198,7 @@ class BitbucketProvider(GitProvider):
 
         invalid_files_names = []
         diff_files = []
+        counter_valid = 0
         for index, diff in enumerate(diffs):
             file_path = _gef_filename(diff)
             if not is_valid_file(file_path):
@@ -205,13 +206,22 @@ class BitbucketProvider(GitProvider):
                 continue
 
             try:
-                if diff.old.get_data("links"):
-                    original_file_content_str = self._get_pr_file_content(diff.old.get_data("links")['self']['href'])
+                counter_valid += 1
+                if counter_valid < MAX_FILES_ALLOWED_FULL // 2:  # factor 2 because bitbucket has limited API calls
+                    if diff.old.get_data("links"):
+                        original_file_content_str = self._get_pr_file_content(
+                            diff.old.get_data("links")['self']['href'])
+                    else:
+                        original_file_content_str = ""
+                    if diff.new.get_data("links"):
+                        new_file_content_str = self._get_pr_file_content(diff.new.get_data("links")['self']['href'])
+                    else:
+                        new_file_content_str = ""
                 else:
+                    if counter_valid == MAX_FILES_ALLOWED_FULL // 2:
+                        get_logger().info(
+                            f"Bitbucket too many files in PR, will avoid loading full content for rest of files")
                     original_file_content_str = ""
-                if diff.new.get_data("links"):
-                    new_file_content_str = self._get_pr_file_content(diff.new.get_data("links")['self']['href'])
-                else:
                     new_file_content_str = ""
             except Exception as e:
                 get_logger().exception(f"Error - bitbucket failed to get file content, error: {e}")

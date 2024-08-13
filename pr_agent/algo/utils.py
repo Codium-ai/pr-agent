@@ -781,6 +781,9 @@ def find_line_number_of_relevant_line_in_file(diff_files: List[FilePatchInfo],
     re_hunk_header = re.compile(
         r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@[ ]?(.*)")
 
+    if not diff_files:
+        return position, absolute_position
+
     for file in diff_files:
         if file.filename and (file.filename.strip() == relevant_file):
             patch = file.patch
