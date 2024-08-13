@@ -22,7 +22,7 @@ class GoogleCloudStorageSecretProvider(SecretProvider):
             blob = self.bucket.blob(secret_name)
             return blob.download_as_string()
         except Exception as e:
-            get_logger().error(f"Failed to get secret {secret_name} from Google Cloud Storage: {e}")
+            get_logger().warning(f"Failed to get secret {secret_name} from Google Cloud Storage: {e}")
             return ""
 
     def store_secret(self, secret_name: str, secret_value: str):

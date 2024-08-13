@@ -147,7 +147,7 @@ def convert_to_markdown_v2(output_data: dict,
             else:
                 markdown_text += f"### {emoji} {key_nice}: {value}\n\n"
         elif 'relevant tests' in key_nice.lower():
-            value = value.strip().lower()
+            value = str(value).strip().lower()
             if gfm_supported:
                 markdown_text += f"<tr><td>"
                 if is_value_no(value):
@@ -674,14 +674,16 @@ def get_user_labels(current_labels: List[str] = None):
     Only keep labels that has been added by the user
     """
     try:
+        enable_custom_labels = get_settings().config.get('enable_custom_labels', False)
+        custom_labels = get_settings().get('custom_labels', [])
         if current_labels is None:
             current_labels = []
         user_labels = []
         for label in current_labels:
             if label.lower() in ['bug fix', 'tests', 'enhancement', 'documentation', 'other']:
                 continue
-            if get_settings().config.enable_custom_labels:
-                if label in get_settings().custom_labels:
+            if enable_custom_labels:
+                if label in custom_labels:
                     continue
             user_labels.append(label)
         if user_labels:

@@ -106,6 +106,10 @@ class LiteLLMAIHandler(BaseAiHandler):
             deployment_id = self.deployment_id
             if self.azure:
                 model = 'azure/' + model
+            if 'claude' in model and not system:
+                system = "\n"
+                get_logger().warning(
+                    "Empty system prompt for claude model. Adding a newline character to prevent OpenAI API error.")
             messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
             if img_path:
                 try:

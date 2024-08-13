@@ -510,6 +510,12 @@ extra_file_yaml =
         file_label_dict = {}
         for file in self.data['pr_files']:
             try:
+                required_fields = ['changes_summary', 'changes_title', 'filename', 'label']
+                if not all(field in file for field in required_fields):
+                    # can happen for example if a YAML generation was interrupted in the middle (no more tokens)
+                    get_logger().warning(f"Missing required fields in file label dict {self.pr_id}, skipping file",
+                                         artifact={"file": file})
+                    continue
                 filename = file['filename'].replace("'", "`").replace('"', '`')
                 changes_summary = file['changes_summary']
                 changes_title = file['changes_title'].strip()
