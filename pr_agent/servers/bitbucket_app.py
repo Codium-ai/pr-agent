@@ -108,13 +108,18 @@ async def handle_github_webhooks(background_tasks: BackgroundTasks, request: Req
                     return "OK"
             except KeyError:
                 get_logger().error("Failed to get actor type, check previous logs, this shouldn't happen.")
+
+            # Get the username of the sender
             try:
-                owner = data["data"]["repository"]["owner"]["username"]
-            except Exception as e:
-                get_logger().error(f"Failed to get owner, will continue: {e}")
-                owner = "unknown"
+                username = data["data"]["actor"]["username"]
+            except KeyError:
+                try:
+                    username = data["data"]["actor"]["display_name"]
+                except KeyError:
+                    username = data["data"]["actor"]["nickname"]
+            log_context["sender"] = username
+
             sender_id = data["data"]["actor"]["account_id"]
-            log_context["sender"] = owner
             log_context["sender_id"] = sender_id
             jwt_parts = input_jwt.split(".")
             claim_part = jwt_parts[1]
