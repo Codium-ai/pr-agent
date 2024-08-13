@@ -605,12 +605,11 @@ class GithubProvider(GitProvider):
             get_logger().exception(f"Failed to remove eyes reaction, error: {e}")
             return False
 
-    @staticmethod
-    def _parse_pr_url(pr_url: str) -> Tuple[str, int]:
+    def _parse_pr_url(self, pr_url: str) -> Tuple[str, int]:
         parsed_url = urlparse(pr_url)
 
         path_parts = parsed_url.path.strip('/').split('/')
-        if 'api.github.com' in parsed_url.netloc:
+        if self.base_url in parsed_url.netloc:
             if len(path_parts) < 5 or path_parts[3] != 'pulls':
                 raise ValueError("The provided URL does not appear to be a GitHub PR URL")
             repo_name = '/'.join(path_parts[1:3])
@@ -631,11 +630,10 @@ class GithubProvider(GitProvider):
 
         return repo_name, pr_number
 
-    @staticmethod
-    def _parse_issue_url(issue_url: str) -> Tuple[str, int]:
+    def _parse_issue_url(self, issue_url: str) -> Tuple[str, int]:
         parsed_url = urlparse(issue_url)
         path_parts = parsed_url.path.strip('/').split('/')
-        if 'api.github.com' in parsed_url.netloc:
+        if self.base_url in parsed_url.netloc:
             if len(path_parts) < 5 or path_parts[3] != 'issues':
                 raise ValueError("The provided URL does not appear to be a GitHub ISSUE URL")
             repo_name = '/'.join(path_parts[1:3])
@@ -829,7 +827,7 @@ class GithubProvider(GitProvider):
         """
         line_start = component_range.line_start + 1
         line_end = component_range.line_end + 1
-        link = (f"https://github.com/{self.repo}/blob/{self.last_commit_id.sha}/{filepath}/"
+        link = (f"{self.base_url_html}/{self.repo}/blob/{self.last_commit_id.sha}/{filepath}/"
                 f"#L{line_start}-L{line_end}")
         return link
 
