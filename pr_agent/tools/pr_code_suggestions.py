@@ -452,7 +452,7 @@ class PRCodeSuggestions:
                 if file.filename.strip() == relevant_file:
                     if file.head_file:
                         file_lines = file.head_file.splitlines()
-                        if len(file_lines) >= relevant_lines_start:
+                        if relevant_lines_start > len(file_lines):
                             get_logger().warning(
                                 "Could not dedent code snippet, because relevant_lines_start is out of range",
                                 artifact={'filename': file.filename,
