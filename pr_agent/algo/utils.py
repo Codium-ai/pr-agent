@@ -147,7 +147,7 @@ def convert_to_markdown_v2(output_data: dict,
             else:
                 markdown_text += f"### {emoji} {key_nice}: {value}\n\n"
         elif 'relevant tests' in key_nice.lower():
-            value = value.strip().lower()
+            value = str(value).strip().lower()
             if gfm_supported:
                 markdown_text += f"<tr><td>"
                 if is_value_no(value):
