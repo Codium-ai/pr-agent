@@ -87,6 +87,10 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
         if request.headers.get("X-Gitlab-Token") and secret_provider:
             request_token = request.headers.get("X-Gitlab-Token")
             secret = secret_provider.get_secret(request_token)
+            if not secret:
+                get_logger().warning(f"Empty secret retrieved, request_token: {request_token}")
+                return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED,
+                                    content=jsonable_encoder({"message": "unauthorized"}))
             try:
                 secret_dict = json.loads(secret)
                 gitlab_token = secret_dict["gitlab_token"]
