@@ -134,10 +134,13 @@ class BitbucketProvider(GitProvider):
         if diffs != diffs_original:
             try:
                 names_original = [d.new.path for d in diffs_original]
-                names_filtered = [d.new.path for d in diffs]
+                names_kept = [d.new.path for d in diffs]
+                names_filtered = list(set(names_original) - set(names_kept))
                 get_logger().info(f"Filtered out [ignore] files for PR", extra={
                     'original_files': names_original,
-                    'filtered_files': names_filtered
+                    'names_kept': names_kept,
+                    'names_filtered': names_filtered
+
                 })
             except Exception as e:
                 pass
@@ -145,6 +148,9 @@ class BitbucketProvider(GitProvider):
         # get the pr patches
         pr_patch = self.pr.diff()
         diff_split = ["diff --git" + x for x in pr_patch.split("diff --git") if x.strip()]
+        # filter all elements of 'diff_split' that are of indices in 'diffs_original' that are not in 'diffs'
+        if len(diff_split) > len(diffs) and len(diffs_original) == len(diff_split):
+            diff_split = [diff_split[i] for i in range(len(diff_split)) if diffs_original[i] in diffs]
         if len(diff_split) != len(diffs):
             get_logger().error(f"Error - failed to split the diff into {len(diffs)} parts")
             return []
