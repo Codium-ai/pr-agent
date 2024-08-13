@@ -26,6 +26,7 @@ class GitLabProvider(GitProvider):
         gitlab_url = get_settings().get("GITLAB.URL", None)
         if not gitlab_url:
             raise ValueError("GitLab URL is not set in the config file")
+        self.gitlab_url = gitlab_url
         gitlab_access_token = get_settings().get("GITLAB.PERSONAL_ACCESS_TOKEN", None)
         if not gitlab_access_token:
             raise ValueError("GitLab personal access token is not set in the config file")
@@ -227,8 +228,9 @@ class GitLabProvider(GitProvider):
         comment = self.mr.notes.get(comment_id).body
         return comment
 
-    def send_inline_comment(self,body: str,edit_type: str,found: bool,relevant_file: str,relevant_line_in_file: int,
-                            source_line_no: int, target_file: str,target_line_no: int, original_suggestion) -> None:
+    def send_inline_comment(self, body: str, edit_type: str, found: bool, relevant_file: str,
+                            relevant_line_in_file: str,
+                            source_line_no: int, target_file: str, target_line_no: int, original_suggestion) -> None:
         if not found:
             get_logger().info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
         else:
@@ -254,13 +256,28 @@ class GitLabProvider(GitProvider):
             except Exception as e:
                 try:
                     # fallback - create a general note on the file in the MR
-                    line_start = original_suggestion['suggestion_orig_location']['start_line']
-                    line_end = original_suggestion['suggestion_orig_location']['end_line']
-                    old_code_snippet = original_suggestion['prev_code_snippet']
-                    new_code_snippet = original_suggestion['new_code_snippet']
-                    content = original_suggestion['suggestion_summary']
-                    label = original_suggestion['category']
-                    score = original_suggestion['score']
+                    if 'suggestion_orig_location' in original_suggestion:
+                        line_start = original_suggestion['suggestion_orig_location']['start_line']
+                        line_end = original_suggestion['suggestion_orig_location']['end_line']
+                        old_code_snippet = original_suggestion['prev_code_snippet']
+                        new_code_snippet = original_suggestion['new_code_snippet']
+                        content = original_suggestion['suggestion_summary']
+                        label = original_suggestion['category']
+                        if 'score' in original_suggestion:
+                            score = original_suggestion['score']
+                        else:
+                            score = 7
+                    else:
+                        line_start = original_suggestion['relevant_lines_start']
+                        line_end = original_suggestion['relevant_lines_end']
+                        old_code_snippet = original_suggestion['existing_code']
+                        new_code_snippet = original_suggestion['improved_code']
+                        content = original_suggestion['suggestion_content']
+                        label = original_suggestion['label']
+                        if 'score' in original_suggestion:
+                            score = original_suggestion['score']
+                        else:
+                            score = 7
 
                     if hasattr(self, 'main_language'):
                         language = self.main_language
@@ -287,9 +304,9 @@ class GitLabProvider(GitProvider):
                     # get_logger().debug(
                     #     f"Failed to create comment in MR {self.id_mr} with position {pos_obj} (probably not a '+' line)")
                 except Exception as e:
-                    get_logger().exception(f"Failed to create comment in MR {self.id_mr} with position {pos_obj}: {e}")
+                    get_logger().exception(f"Failed to create comment in MR {self.id_mr}")
 
-    def get_relevant_diff(self, relevant_file: str, relevant_line_in_file: int) -> Optional[dict]:
+    def get_relevant_diff(self, relevant_file: str, relevant_line_in_file: str) -> Optional[dict]:
         changes = self.mr.changes()  # Retrieve the changes for the merge request once
         if not changes:
             get_logger().error('No changes found for the merge request.')
@@ -330,7 +347,7 @@ class GitLabProvider(GitProvider):
                 # edit_type, found, source_line_no, target_file, target_line_no = self.find_in_file(target_file,
                 #                                                                            relevant_line_in_file)
                 # for code suggestions, we want to edit the new code
-                source_line_no = None
+                source_line_no = -1
                 target_line_no = relevant_lines_start + 1
                 found = True
                 edit_type = 'addition'
@@ -422,6 +439,15 @@ class GitLabProvider(GitProvider):
 
     def get_pr_branch(self):
         return self.mr.source_branch
+
+    def get_pr_owner_id(self) -> str | None:
+        if not self.gitlab_url or 'gitlab.com' in self.gitlab_url:
+            if not self.id_project:
+                return None
+            return self.id_project.split('/')[0]
+        # extract host name
+        host = urlparse(self.gitlab_url).hostname
+        return host
 
     def get_pr_description_full(self):
         return self.mr.description
