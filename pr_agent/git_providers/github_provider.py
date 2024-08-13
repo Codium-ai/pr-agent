@@ -29,6 +29,8 @@ class GithubProvider(GitProvider):
         self.max_comment_chars = 65000
         self.base_url = get_settings().get("GITHUB.BASE_URL", "https://api.github.com").rstrip("/")
         self.base_url_html = self.base_url.split("api/")[0].rstrip("/") if "api/" in self.base_url else "https://github.com"
+        self.base_domain = self.base_url.replace("https://", "").replace("http://", "")
+        self.base_domain_html = self.base_url_html.replace("https://", "").replace("http://", "")
         self.github_client = self._get_github_client()
         self.repo = None
         self.pr_num = None
@@ -605,12 +607,11 @@ class GithubProvider(GitProvider):
             get_logger().exception(f"Failed to remove eyes reaction, error: {e}")
             return False
 
-    @staticmethod
-    def _parse_pr_url(pr_url: str) -> Tuple[str, int]:
+    def _parse_pr_url(self, pr_url: str) -> Tuple[str, int]:
         parsed_url = urlparse(pr_url)
 
         path_parts = parsed_url.path.strip('/').split('/')
-        if 'api.github.com' in parsed_url.netloc:
+        if self.base_domain in parsed_url.netloc:
             if len(path_parts) < 5 or path_parts[3] != 'pulls':
                 raise ValueError("The provided URL does not appear to be a GitHub PR URL")
             repo_name = '/'.join(path_parts[1:3])
@@ -631,11 +632,10 @@ class GithubProvider(GitProvider):
 
         return repo_name, pr_number
 
-    @staticmethod
-    def _parse_issue_url(issue_url: str) -> Tuple[str, int]:
+    def _parse_issue_url(self, issue_url: str) -> Tuple[str, int]:
         parsed_url = urlparse(issue_url)
         path_parts = parsed_url.path.strip('/').split('/')
-        if 'api.github.com' in parsed_url.netloc:
+        if self.base_domain in parsed_url.netloc:
             if len(path_parts) < 5 or path_parts[3] != 'issues':
                 raise ValueError("The provided URL does not appear to be a GitHub ISSUE URL")
             repo_name = '/'.join(path_parts[1:3])
@@ -829,7 +829,7 @@ class GithubProvider(GitProvider):
         """
         line_start = component_range.line_start + 1
         line_end = component_range.line_end + 1
-        link = (f"https://github.com/{self.repo}/blob/{self.last_commit_id.sha}/{filepath}/"
+        link = (f"{self.base_url_html}/{self.repo}/blob/{self.last_commit_id.sha}/{filepath}/"
                 f"#L{line_start}-L{line_end}")
         return link
 
