@@ -15,6 +15,12 @@ from ..log import get_logger
 from .git_provider import GitProvider
 
 
+def _gef_filename(diff):
+    if diff.new.path:
+        return diff.new.path
+    return diff.old.path
+
+
 class BitbucketProvider(GitProvider):
     def __init__(
         self, pr_url: Optional[str] = None, incremental: Optional[bool] = False
@@ -123,7 +129,18 @@ class BitbucketProvider(GitProvider):
         self.pr = self._get_pr()
 
     def get_files(self):
-        return [diff.new.path for diff in self.pr.diffstat()]
+        try:
+            git_files = context.get("git_files", None)
+            if git_files:
+                return git_files
+            self.git_files = [_gef_filename(diff) for diff in self.pr.diffstat()]
+            context["git_files"] = self.git_files
+            return self.git_files
+        except Exception:
+            if not self.git_files:
+                self.git_files = [_gef_filename(diff) for diff in self.pr.diffstat()]
+            return self.git_files
+
 
     def get_diff_files(self) -> list[FilePatchInfo]:
         if self.diff_files:
@@ -181,8 +198,9 @@ class BitbucketProvider(GitProvider):
         invalid_files_names = []
         diff_files = []
         for index, diff in enumerate(diffs):
-            if not is_valid_file(diff.new.path):
-                invalid_files_names.append(diff.new.path)
+            file_path = _gef_filename(diff)
+            if not is_valid_file(file_path):
+                invalid_files_names.append(file_path)
                 continue
 
             try:
@@ -203,7 +221,7 @@ class BitbucketProvider(GitProvider):
                 original_file_content_str,
                 new_file_content_str,
                 diff_split[index],
-                diff.new.path,
+                file_path,
             )
 
             if diff.data['status'] == 'added':
