@@ -172,8 +172,11 @@ class BitbucketProvider(GitProvider):
                       diff_split_lines[5].startswith("@@"))):
                 diff_split[i] = "\n".join(diff_split_lines[4:])
             else:
-                get_logger().error(f"Error - failed to remove the bitbucket header from diff {i}")
-                break
+                if diffs[i].data.get('lines_added', 0) == 0 and diffs[i].data.get('lines_removed', 0) == 0:
+                    diff_split[i] = ""
+                else:
+                    get_logger().error(f"Error - failed to remove the bitbucket header from diff {i}")
+                    break
 
         invalid_files_names = []
         diff_files = []
