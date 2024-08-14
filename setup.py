@@ -3,3 +3,5 @@
 from setuptools import setup
 
 setup()
+
+# ok to use
