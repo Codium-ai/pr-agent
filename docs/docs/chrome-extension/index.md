@@ -13,15 +13,17 @@ This chat session is **private**, and won't be visible to other users.
 
 All open-source repositories are supported. For private repositories, you will also need to install PR-Agent Pro.
 
-<img src="https://codium.ai/images/pr_agent/pr_chat1.png" width="512">
-<img src="https://codium.ai/images/pr_agent/pr_chat2.png" width="512">
-
 #### Chat security and privacy
  
 We take your code's security and privacy seriously:
 
-- The Chrome extension does not send any code to external servers.
+- The Chrome extension does not send your code to external servers.
 - For private repositories, we will first validate the user's identity and permissions. After authentication, we generate responses using the existing PR-Agent Pro integration.
+
+
+<img src="https://codium.ai/images/pr_agent/pr_chat1.png" width="768">
+<img src="https://codium.ai/images/pr_agent/pr_chat2.png" width="768">
+
 
 ### Toolbar extension
 With PR-Agent Chrome extension, it's [easier than ever](https://www.youtube.com/watch?v=gT5tli7X4H4) to interactively configure and experiment with the different tools and configuration options.
