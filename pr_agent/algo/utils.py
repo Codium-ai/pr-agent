@@ -175,7 +175,7 @@ def convert_to_markdown_v2(output_data: dict,
                     markdown_text += f'### {emoji} No security concerns identified\n\n'
                 else:
                     markdown_text += f"### {emoji} Security concerns\n\n"
-                    value = emphasize_header(value.strip())
+                    value = emphasize_header(value.strip(), only_markdown=True)
                     markdown_text += f"{value}\n\n"
         elif 'can be split' in key_nice.lower():
             if gfm_supported:
