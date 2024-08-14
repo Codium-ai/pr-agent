@@ -192,9 +192,12 @@ class BitbucketProvider(GitProvider):
             else:
                 if diffs[i].data.get('lines_added', 0) == 0 and diffs[i].data.get('lines_removed', 0) == 0:
                     diff_split[i] = ""
+                elif len(diff_split_lines) <= 3:
+                    diff_split[i] = ""
+                    get_logger().info(f"Disregarding empty diff for file {_gef_filename(diffs[i])}")
                 else:
-                    get_logger().error(f"Error - failed to remove the bitbucket header from diff {i}")
-                    break
+                    get_logger().error(f"Error - failed to get diff for file {_gef_filename(diffs[i])}")
+                    diff_split[i] = ""
 
         invalid_files_names = []
         diff_files = []

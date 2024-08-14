@@ -177,7 +177,7 @@ class AzureDevopsProvider(GitProvider):
                     pull_request_id=self.pr_num,
                 )
         except Exception as e:
-            get_logger().exception(f"Failed to publish labels, error: {e}")
+            get_logger().warning(f"Failed to publish labels, error: {e}")
 
     def get_pr_labels(self, update=False):
         try:
