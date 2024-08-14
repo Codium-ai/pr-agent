@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import html
 import copy
 import difflib
 import json
@@ -770,6 +771,7 @@ def replace_code_tags(text):
     """
     Replace odd instances of ` with <code> and even instances of ` with </code>
     """
+    text = html.escape(text)
     parts = text.split('`')
     for i in range(1, len(parts), 2):
         parts[i] = '<code>' + parts[i] + '</code>'
