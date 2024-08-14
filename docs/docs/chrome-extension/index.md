@@ -16,8 +16,12 @@ All open-source repositories are supported. For private repositories, you will a
 <img src="https://codium.ai/images/pr_agent/pr_chat1.png" width="512">
 <img src="https://codium.ai/images/pr_agent/pr_chat2.png" width="512">
 
-The Chrome extension will not send any code to the server.
-To access code from private repositories, we will first validate the user's identity and permissions, then generate responses using the existing PR-Agent Pro integration.
+#### Chat security and privacy
+ 
+We take your code's security and privacy seriously:
+
+- The Chrome extension does not send any code to external servers.
+- For private repositories, we will first validate the user's identity and permissions. After authentication, we generate responses using the existing PR-Agent Pro integration.
 
 ### Toolbar extension
 With PR-Agent Chrome extension, it's [easier than ever](https://www.youtube.com/watch?v=gT5tli7X4H4) to interactively configure and experiment with the different tools and configuration options.
