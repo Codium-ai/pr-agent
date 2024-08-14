@@ -1,7 +1,27 @@
 ## PR-Agent chrome extension
-PR-Agent Chrome extension is a collection of tools that integrates seamlessly with your GitHub environment, aiming to enhance your PR-Agent usage experience, and providing additional features.
+[PR-Agent Chrome extension](https://chromewebstore.google.com/detail/pr-agent-chrome-extension/ephlnjeghhogofkifjloamocljapahnl) is a collection of tools that integrates seamlessly with your GitHub environment, aiming to enhance your PR-Agent usage experience, and providing additional features.
 
 ## Features
+
+### PR Chat
+
+The PR-Chat feature allows to freely chat with your PR code, within your GitHub environment.
+It will seamlessly add the PR code as context to your chat session, and provide AI-powered feedback.
+
+To enable private chat, simply install the PR-Agent Chrome extension. After installation, each PR's file-changed tab will include a chat box, where you may ask questions about your code.
+This chat session is **private**, and won't be visible to other users.
+
+All open-source repositories are supported. For private repositories, you will also need to install PR-Agent Pro.
+
+<img src="https://codium.ai/images/pr_agent/pr_chat1.png" width="512">
+<img src="https://codium.ai/images/pr_agent/pr_chat2.png" width="512">
+
+#### Chat security and privacy
+ 
+We take your code's security and privacy seriously:
+
+- The Chrome extension does not send any code to external servers.
+- For private repositories, we will first validate the user's identity and permissions. After authentication, we generate responses using the existing PR-Agent Pro integration.
 
 ### Toolbar extension
 With PR-Agent Chrome extension, it's [easier than ever](https://www.youtube.com/watch?v=gT5tli7X4H4) to interactively configure and experiment with the different tools and configuration options.
