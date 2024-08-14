@@ -508,7 +508,7 @@ class GitLabProvider(GitProvider):
             self.mr.labels = list(set(pr_types))
             self.mr.save()
         except Exception as e:
-            get_logger().exception(f"Failed to publish labels, error: {e}")
+            get_logger().warning(f"Failed to publish labels, error: {e}")
 
     def publish_inline_comments(self, comments: list[dict]):
         pass

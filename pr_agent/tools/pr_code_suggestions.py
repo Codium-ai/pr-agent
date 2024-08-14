@@ -292,7 +292,7 @@ class PRCodeSuggestions:
             get_logger().debug(f"PR diff", artifact=self.patches_diff)
             self.prediction = await self._get_prediction(model, self.patches_diff)
         else:
-            get_logger().error(f"Error getting PR diff")
+            get_logger().warning(f"Empty PR diff")
             self.prediction = None
 
         data = self.prediction

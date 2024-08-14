@@ -736,7 +736,7 @@ class GithubProvider(GitProvider):
                 "PUT", f"{self.pr.issue_url}/labels", input=post_parameters
             )
         except Exception as e:
-            get_logger().exception(f"Failed to publish labels, error: {e}")
+            get_logger().warning(f"Failed to publish labels, error: {e}")
 
     def get_pr_labels(self, update=False):
         try:

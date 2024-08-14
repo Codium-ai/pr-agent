@@ -92,7 +92,7 @@ class PRDescription:
             if self.prediction:
                 self._prepare_data()
             else:
-                get_logger().error(f"Error getting AI prediction {self.pr_id}")
+                get_logger().warning(f"Empty prediction, PR: {self.pr_id}")
                 self.git_provider.remove_initial_comment()
                 return None
 
@@ -508,6 +508,8 @@ extra_file_yaml =
 
     def _prepare_file_labels(self):
         file_label_dict = {}
+        if not self.data or 'pr_files' not in self.data:
+            return file_label_dict
         for file in self.data['pr_files']:
             try:
                 required_fields = ['changes_summary', 'changes_title', 'filename', 'label']
