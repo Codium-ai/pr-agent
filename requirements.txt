@@ -10,10 +10,10 @@ GitPython==3.1.41
 google-cloud-aiplatform==1.38.0
 google-cloud-storage==2.10.0
 Jinja2==3.1.2
-litellm==1.40.17
+litellm==1.43.13
 loguru==0.7.2
 msrest==0.7.1
-openai==1.35.1
+openai==1.40.6
 pytest==7.4.0
 PyGithub==1.59.*
 PyYAML==6.0.1
@@ -26,6 +26,7 @@ uvicorn==0.22.0
 tenacity==8.2.3
 gunicorn==22.0.0
 pytest-cov==5.0.0
+pydantic==2.8.2
 # Uncomment the following lines to enable the 'similar issue' tool
 # pinecone-client
 # pinecone-datasets @ git+https://github.com/mrT23/pinecone-datasets.git@main
