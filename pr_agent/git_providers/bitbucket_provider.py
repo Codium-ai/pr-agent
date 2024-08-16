@@ -331,7 +331,7 @@ class BitbucketProvider(GitProvider):
         return dict(body=body, path=path, position=absolute_position) if subject_type == "LINE" else {}
 
 
-    def publish_inline_comment(self, comment: str, from_line: int, file: str):
+    def publish_inline_comment(self, comment: str, from_line: int, file: str, original_suggestion=None):
         comment = self.limit_output_characters(comment, self.max_comment_length)
         payload = json.dumps( {
             "content": {

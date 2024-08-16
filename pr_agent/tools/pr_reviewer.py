@@ -287,7 +287,7 @@ class PRReviewer:
                 if comment:
                     comments.append(comment)
             else:
-                self.git_provider.publish_inline_comment(content, relevant_file, relevant_line_in_file)
+                self.git_provider.publish_inline_comment(content, relevant_file, relevant_line_in_file, suggestion)
 
         if comments:
             self.git_provider.publish_inline_comments(comments)
