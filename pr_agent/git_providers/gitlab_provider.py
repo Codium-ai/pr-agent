@@ -327,7 +327,7 @@ class GitLabProvider(GitProvider):
     def publish_code_suggestions(self, code_suggestions: list) -> bool:
         for suggestion in code_suggestions:
             try:
-                if 'original_suggestion' in suggestion:
+                if suggestion and 'original_suggestion' in suggestion:
                     original_suggestion = suggestion['original_suggestion']
                 else:
                     original_suggestion = suggestion
