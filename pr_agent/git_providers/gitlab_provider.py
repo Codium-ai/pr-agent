@@ -211,12 +211,12 @@ class GitLabProvider(GitProvider):
         discussion = self.mr.discussions.get(comment_id)
         discussion.notes.create({'body': body})
 
-    def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
+    def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str, original_suggestion=None):
         body = self.limit_output_characters(body, self.max_comment_chars)
         edit_type, found, source_line_no, target_file, target_line_no = self.search_line(relevant_file,
                                                                                          relevant_line_in_file)
         self.send_inline_comment(body, edit_type, found, relevant_file, relevant_line_in_file, source_line_no,
-                                 target_file, target_line_no)
+                                 target_file, target_line_no, original_suggestion)
 
     def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str, absolute_position: int = None):
         raise NotImplementedError("Gitlab provider does not support creating inline comments yet")
@@ -230,7 +230,8 @@ class GitLabProvider(GitProvider):
 
     def send_inline_comment(self, body: str, edit_type: str, found: bool, relevant_file: str,
                             relevant_line_in_file: str,
-                            source_line_no: int, target_file: str, target_line_no: int, original_suggestion) -> None:
+                            source_line_no: int, target_file: str, target_line_no: int,
+                            original_suggestion=None) -> None:
         if not found:
             get_logger().info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
         else:
@@ -326,7 +327,10 @@ class GitLabProvider(GitProvider):
     def publish_code_suggestions(self, code_suggestions: list) -> bool:
         for suggestion in code_suggestions:
             try:
-                original_suggestion = suggestion['original_suggestion']
+                if suggestion and 'original_suggestion' in suggestion:
+                    original_suggestion = suggestion['original_suggestion']
+                else:
+                    original_suggestion = suggestion
                 body = suggestion['body']
                 relevant_file = suggestion['relevant_file']
                 relevant_lines_start = suggestion['relevant_lines_start']

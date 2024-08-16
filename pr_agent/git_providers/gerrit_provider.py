@@ -376,7 +376,7 @@ class GerritProvider(GitProvider):
             'provider')
 
     def publish_inline_comment(self, body: str, relevant_file: str,
-                               relevant_line_in_file: str):
+                               relevant_line_in_file: str, original_suggestion=None):
         raise NotImplementedError(
             'Publishing inline comments is not implemented for the gerrit '
             'provider')

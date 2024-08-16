@@ -225,7 +225,7 @@ class CodeCommitProvider(GitProvider):
     def remove_comment(self, comment):
         return ""  # not implemented yet
 
-    def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
+    def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str, original_suggestion=None):
         # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/codecommit/client/post_comment_for_compared_commit.html
         raise NotImplementedError("CodeCommit provider does not support publishing inline comments yet")
 

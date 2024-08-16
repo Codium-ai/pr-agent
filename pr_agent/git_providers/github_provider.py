@@ -267,7 +267,7 @@ class GithubProvider(GitProvider):
         self.pr.comments_list.append(response)
         return response
 
-    def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
+    def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str, original_suggestion=None):
         body = self.limit_output_characters(body, self.max_comment_chars)
         self.publish_inline_comments([self.create_inline_comment(body, relevant_file, relevant_line_in_file)])
 

@@ -224,7 +224,7 @@ class BitbucketServerProvider(GitProvider):
         path = relevant_file.strip()
         return dict(body=body, path=path, position=absolute_position) if subject_type == "LINE" else {}
 
-    def publish_inline_comment(self, comment: str, from_line: int, file: str):
+    def publish_inline_comment(self, comment: str, from_line: int, file: str, original_suggestion=None):
         payload = {
             "text": comment,
             "severity": "NORMAL",

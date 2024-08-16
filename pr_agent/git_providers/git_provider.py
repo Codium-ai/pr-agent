@@ -182,7 +182,7 @@ class GitProvider(ABC):
 
 
     @abstractmethod
-    def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
+    def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str, original_suggestion=None):
         pass
 
     def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str,
