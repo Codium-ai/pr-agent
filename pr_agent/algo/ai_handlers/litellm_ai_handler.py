@@ -89,6 +89,31 @@ class LiteLLMAIHandler(BaseAiHandler):
             response_log['main_pr_language'] = 'unknown'
         return response_log
 
+    def add_callbacks(selfs, kwargs):
+        pr_metadata = []
+
+        def capture_logs(message):
+            # Parsing the log message and context
+            record = message.record
+            log_entry = {}
+            if record.get('extra', {}).get('command', None) is not None:
+                log_entry.update({"command": record['extra']["command"]})
+            if record.get('extra', {}).get('pr_url', None) is not None:
+                log_entry.update({"pr_url": record['extra']["pr_url"]})
+
+            # Append the log entry to the captured_logs list
+            pr_metadata.append(log_entry)
+
+        # Adding the custom sink to Loguru
+        handler_id = get_logger().add(capture_logs)
+        get_logger().debug("Capturing logs for litellm callbacks")
+        get_logger().remove(handler_id)
+
+        # Adding the captured logs to the kwargs
+        kwargs["metadata"] = pr_metadata
+
+        return kwargs
+
     @property
     def deployment_id(self):
         """
@@ -133,6 +158,10 @@ class LiteLLMAIHandler(BaseAiHandler):
                 "force_timeout": get_settings().config.ai_timeout,
                 "api_base": self.api_base,
             }
+
+            if get_settings().litellm.get("enable_callbacks", False):
+                kwargs = self.add_callbacks(kwargs)
+
             seed = get_settings().config.get("seed", -1)
             if temperature > 0 and seed >= 0:
                 raise ValueError(f"Seed ({seed}) is not supported with temperature ({temperature}) > 0")

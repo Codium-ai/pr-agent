@@ -264,6 +264,7 @@ pr_commands = [
 [litellm]
 # use_client = false
 # drop_params = false
+enable_callbacks = false
 
 [pr_similar_issue]
 skip_comments = false
