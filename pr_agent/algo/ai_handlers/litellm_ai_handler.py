@@ -89,7 +89,7 @@ class LiteLLMAIHandler(BaseAiHandler):
             response_log['main_pr_language'] = 'unknown'
         return response_log
 
-    def add_callbacks(selfs, kwargs):
+    def add_litellm_callbacks(selfs, kwargs) -> dict:
         pr_metadata = []
 
         def capture_logs(message):
@@ -160,7 +160,7 @@ class LiteLLMAIHandler(BaseAiHandler):
             }
 
             if get_settings().litellm.get("enable_callbacks", False):
-                kwargs = self.add_callbacks(kwargs)
+                kwargs = self.add_litellm_callbacks(kwargs)
 
             seed = get_settings().config.get("seed", -1)
             if temperature > 0 and seed >= 0:
