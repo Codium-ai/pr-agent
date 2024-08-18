@@ -452,8 +452,8 @@ class GithubProvider(GitProvider):
 
     def edit_comment_from_comment_id(self, comment_id: int, body: str):
         try:
-            body = self.limit_output_characters(body, self.max_comment_chars)
             # self.pr.get_issue_comment(comment_id).edit(body)
+            body = self.limit_output_characters(body, self.max_comment_chars)
             headers, data_patch = self.pr._requester.requestJsonAndCheck(
                 "PATCH", f"{self.base_url}/repos/{self.repo}/issues/comments/{comment_id}",
                 input={"body": body}
@@ -463,8 +463,8 @@ class GithubProvider(GitProvider):
 
     def reply_to_comment_from_comment_id(self, comment_id: int, body: str):
         try:
-            body = self.limit_output_characters(body, self.max_comment_chars)
             # self.pr.get_issue_comment(comment_id).edit(body)
+            body = self.limit_output_characters(body, self.max_comment_chars)
             headers, data_patch = self.pr._requester.requestJsonAndCheck(
                 "POST", f"{self.base_url}/repos/{self.repo}/pulls/{self.pr_num}/comments/{comment_id}/replies",
                 input={"body": body}
@@ -490,6 +490,7 @@ class GithubProvider(GitProvider):
             )
             for comment in file_comments:
                 comment['commit_id'] = self.last_commit_id.sha
+                comment['body'] = self.limit_output_characters(comment['body'], self.max_comment_chars)
 
                 found = False
                 for existing_comment in existing_comments:
@@ -592,7 +593,7 @@ class GithubProvider(GitProvider):
             )
             return data_patch.get("id", None)
         except Exception as e:
-            get_logger().exception(f"Failed to add eyes reaction, error: {e}")
+            get_logger().warning(f"Failed to add eyes reaction, error: {e}")
             return None
 
     def remove_reaction(self, issue_comment_id: int, reaction_id: str) -> bool:
@@ -829,8 +830,11 @@ class GithubProvider(GitProvider):
         """
         line_start = component_range.line_start + 1
         line_end = component_range.line_end + 1
+        # link = (f"https://github.com/{self.repo}/blob/{self.last_commit_id.sha}/{filepath}/"
+        #         f"#L{line_start}-L{line_end}")
         link = (f"{self.base_url_html}/{self.repo}/blob/{self.last_commit_id.sha}/{filepath}/"
                 f"#L{line_start}-L{line_end}")
+
         return link
 
     def get_pr_id(self):

@@ -130,18 +130,6 @@ class AzureDevopsProvider(GitProvider):
     def get_pr_description_full(self) -> str:
         return self.pr.description
 
-    def delete_comment(self, comment):
-        try:
-            self.azure_devops_client.delete_comment(
-                repository_id=self.repo_slug,
-                pull_request_id=self.pr_num,
-                thread_id=comment.thread_id,
-                comment_id=comment.id,
-                project=self.workspace_slug,
-            )
-        except Exception as e:
-            get_logger().exception(f"Failed to delete comment, error: {e}")
-
     def edit_comment(self, comment, body: str):
         try:
             self.azure_devops_client.update_comment(

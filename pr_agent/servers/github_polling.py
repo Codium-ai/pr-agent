@@ -1,4 +1,5 @@
 import asyncio
+import traceback
 from datetime import datetime, timezone
 
 import aiohttp
@@ -15,7 +16,7 @@ NOTIFICATION_URL = "https://api.github.com/notifications"
 def now() -> str:
     """
     Get the current UTC time in ISO 8601 format.
-    
+
     Returns:
         str: The current UTC time in ISO 8601 format.
     """
@@ -35,6 +36,7 @@ async def polling_loop():
     user_id = git_provider.get_user_id()
     agent = PRAgent()
     get_settings().set("CONFIG.PUBLISH_OUTPUT_PROGRESS", False)
+    get_settings().set("pr_description.publish_description_as_comment", True)
 
     try:
         deployment_type = get_settings().github.deployment_type
@@ -92,7 +94,8 @@ async def polling_loop():
                                             comment_body = comment['body'] if 'body' in comment else ''
                                             commenter_github_user = comment['user']['login'] \
                                                 if 'user' in comment else ''
-                                            get_logger().info(f"Commenter: {commenter_github_user}\nComment: {comment_body}")
+                                            get_logger().info(f"Polling, pr_url: {pr_url}",
+                                                              artifact={"comment": comment_body})
                                             user_tag = "@" + user_id
                                             if user_tag not in comment_body:
                                                 continue
@@ -100,7 +103,8 @@ async def polling_loop():
                                             comment_id = comment['id']
                                             git_provider.set_pr(pr_url)
                                             success = await agent.handle_request(pr_url, rest_of_comment,
-                                                                                 notify=lambda: git_provider.add_eyes_reaction(comment_id))  # noqa E501
+                                                                                 notify=lambda: git_provider.add_eyes_reaction(
+                                                                                     comment_id))  # noqa E501
                                             if not success:
                                                 git_provider.set_pr(pr_url)
 
@@ -108,7 +112,8 @@ async def polling_loop():
                         print(f"Failed to fetch notifications. Status code: {response.status}")
 
             except Exception as e:
-                get_logger().error(f"Exception during processing of a notification: {e}")
+                get_logger().error(f"Polling exception during processing of a notification: {e}",
+                                   artifact={"traceback": traceback.format_exc()})
 
 
 if __name__ == '__main__':

@@ -52,6 +52,7 @@ class PRCodeSuggestions:
         self.ai_handler.main_pr_language = self.main_language
         self.patches_diff = None
         self.prediction = None
+        self.pr_url = pr_url
         self.cli_mode = cli_mode
         self.vars = {
             "title": self.git_provider.pr.title,
@@ -81,6 +82,10 @@ class PRCodeSuggestions:
 
     async def run(self):
         try:
+            if not self.git_provider.get_files():
+                get_logger().info(f"PR has no files: {self.pr_url}, skipping code suggestions")
+                return None
+
             get_logger().info('Generating code suggestions for PR...')
             relevant_configs = {'pr_code_suggestions': dict(get_settings().pr_code_suggestions),
                                 'config': dict(get_settings().config)}
@@ -159,6 +164,8 @@ class PRCodeSuggestions:
                     self.push_inline_code_suggestions(data)
                     if self.progress_response:
                         self.progress_response.delete()
+            else:
+                get_logger().info('Code suggestions generated for PR, but not published since publish_output is False.')
         except Exception as e:
             get_logger().error(f"Failed to generate code suggestions for PR, error: {e}")
             if self.progress_response:
@@ -177,6 +184,7 @@ class PRCodeSuggestions:
                                                 final_update_message=True,
                                                 max_previous_comments=4,
                                                 progress_response=None):
+
         if isinstance(self.git_provider, AzureDevopsProvider): # get_latest_commit_url is not supported yet
             if progress_response:
                 self.git_provider.edit_comment(progress_response, pr_comment)
@@ -256,7 +264,7 @@ class PRCodeSuggestions:
                         get_logger().info(f"Persistent mode - updating comment {comment_url} to latest {name} message")
                         if progress_response:  # publish to 'progress_response' comment, because it refreshes immediately
                             self.git_provider.edit_comment(progress_response, pr_comment_updated)
-                            self.git_provider.delete_comment(comment)
+                            self.git_provider.remove_comment(comment)
                         else:
                             self.git_provider.edit_comment(comment, pr_comment_updated)
                         return
@@ -361,12 +369,14 @@ class PRCodeSuggestions:
         one_sentence_summary_list = []
         for i, suggestion in enumerate(data['code_suggestions']):
             try:
-                needed_keys = ['one_sentence_summary', 'label', 'relevant_file', 'relevant_lines_start', 'relevant_lines_end']
+                needed_keys = ['one_sentence_summary', 'label', 'relevant_file', 'relevant_lines_start',
+                               'relevant_lines_end']
                 is_valid_keys = True
                 for key in needed_keys:
                     if key not in suggestion:
                         is_valid_keys = False
-                        get_logger().debug(f"Skipping suggestion {i + 1}, because it does not contain '{key}':\n'{suggestion}")
+                        get_logger().debug(
+                            f"Skipping suggestion {i + 1}, because it does not contain '{key}':\n'{suggestion}")
                         break
                 if not is_valid_keys:
                     continue
@@ -529,7 +539,7 @@ class PRCodeSuggestions:
                             get_logger().error(f"Error getting PR diff for suggestion {i} in call {j}, error: {e}")
             self.data = data
         else:
-            get_logger().error(f"Error getting PR diff")
+            get_logger().warning(f"Empty PR diff list")
             self.data = data = None
         return data
 
