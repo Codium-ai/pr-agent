@@ -229,9 +229,8 @@ For example, add a comment to any pull request with the following text:
 and the agent will respond with a review of your PR.
 
 Note that this is a promotional bot, suitable only for initial experimentation.
-It does not have `edit` access to you repo, for example, so it cannot update the PR description or add labels.
-Comment: `@CodiumAI-Agent /describe --pr_description.publish_description_as_comment=true` to publish the description as a comment in the PR.
-`@CodiumAI-Agent /review` and `@CodiumAI-Agent /improve` should work as-is.
+It does not have 'edit' access to your repo, for example, so it cannot update the PR description or add labels (`@CodiumAI-Agent /describe` will publish PR description as a comment). In addition, the bot cannot be used on private repositories, as it does not have access to the files there.
+
 
 ![Review generation process](https://www.codium.ai/images/demo-2.gif)
 
