@@ -137,6 +137,7 @@ class PRGenerateLabels:
         environment = Environment(undefined=StrictUndefined)
         set_custom_labels(variables, self.git_provider)
         self.variables = variables
+
         system_prompt = environment.from_string(get_settings().pr_custom_labels_prompt.system).render(self.variables)
         user_prompt = environment.from_string(get_settings().pr_custom_labels_prompt.user).render(self.variables)
 
