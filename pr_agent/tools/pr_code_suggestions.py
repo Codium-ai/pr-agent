@@ -264,7 +264,7 @@ class PRCodeSuggestions:
                         get_logger().info(f"Persistent mode - updating comment {comment_url} to latest {name} message")
                         if progress_response:  # publish to 'progress_response' comment, because it refreshes immediately
                             self.git_provider.edit_comment(progress_response, pr_comment_updated)
-                            self.git_provider.delete_comment(comment)
+                            self.git_provider.remove_comment(comment)
                         else:
                             self.git_provider.edit_comment(comment, pr_comment_updated)
                         return
