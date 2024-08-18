@@ -508,7 +508,8 @@ extra_file_yaml =
 
     def _prepare_file_labels(self):
         file_label_dict = {}
-        if not self.data or 'pr_files' not in self.data:
+        if (not self.data or not isinstance(self.data, dict) or
+                'pr_files' not in self.data or not self.data['pr_files']):
             return file_label_dict
         for file in self.data['pr_files']:
             try:
