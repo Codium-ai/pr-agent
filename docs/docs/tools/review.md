@@ -92,11 +92,11 @@ num_code_suggestions = ...
 <table>
   <tr>
     <td><b>num_code_suggestions</b></td>
-    <td>Number of code suggestions provided by the 'review' tool. For manual comments, default is 4. For PR-Agent app auto tools, default is 0, meaning no code suggestions will be provided by the review tool, unless you manually edit pr_commands.</td>
+    <td>Number of code suggestions provided by the 'review' tool. Default is 0, meaning no code suggestions will be provided by the `review` tool.</td>
   </tr>
   <tr>
     <td><b>inline_code_comments</b></td>
-    <td>If set to true, the tool will publish the code suggestions as comments on the code diff. Default is false.</td>
+    <td>If set to true, the tool will publish the code suggestions as comments on the code diff. Default is false. Note that you need to set `num_code_suggestions`>0 to get code suggestions </td>
   </tr>
   <tr>
     <td><b>persistent_comment</b></td>
@@ -174,7 +174,7 @@ If enabled, the `review` tool can approve a PR when a specific comment, `/review
 <table>
   <tr>
     <td><b>enable_auto_approval</b></td>
-    <td>If set to true, the tool will approve the PR when invoked with the 'auto_approve' command. Default is false. This flag can be changed only from configuration file.</td>
+    <td>If set to true, the tool will approve the PR when invoked with the 'auto_approve' command. Default is false. This flag can be changed only from a configuration file.</td>
   </tr>
   <tr>
     <td><b>maximal_review_effort</b></td>
@@ -200,7 +200,7 @@ If enabled, the `review` tool can approve a PR when a specific comment, `/review
     pr_commands = ["/review --pr_reviewer.num_code_suggestions=0", ...]
     ```
     Meaning the `review` tool will run automatically on every PR, without providing code suggestions.
-    Edit this field to enable/disable the tool, or to change the used configurations.
+    Edit this field to enable/disable the tool, or to change the configurations used.
 
 !!! tip "Possible labels from the review tool"
 
@@ -218,7 +218,7 @@ If enabled, the `review` tool can approve a PR when a specific comment, `/review
     
     Be specific, clear, and concise in the instructions. With extra instructions, you are the prompter. Specify the relevant sub-tool, and the relevant aspects of the PR that you want to emphasize.
     
-    Examples for extra instructions:
+    Examples of extra instructions:
     ```
     [pr_reviewer]
     extra_instructions="""\
