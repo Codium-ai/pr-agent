@@ -17,6 +17,15 @@ def extend_patch(original_file_str, patch_str, patch_extra_lines_before=0, patch
         except UnicodeDecodeError:
             return ""
 
+    allow_dynamic_context = get_settings().config.allow_dynamic_context
+    max_extra_lines_before_dynamic_context = get_settings().config.max_extra_lines_before_dynamic_context
+    patch_extra_lines_before_dynamic = patch_extra_lines_before
+    if allow_dynamic_context:
+        if max_extra_lines_before_dynamic_context > patch_extra_lines_before:
+            patch_extra_lines_before_dynamic = max_extra_lines_before_dynamic_context
+        else:
+            get_logger().warning(f"'max_extra_lines_before_dynamic_context' should be greater than 'patch_extra_lines_before'")
+
     original_lines = original_file_str.splitlines()
     len_original_lines = len(original_lines)
     patch_lines = patch_str.splitlines()
@@ -48,18 +57,41 @@ def extend_patch(original_file_str, patch_str, patch_extra_lines_before=0, patch
                     section_header = res[4]
 
                     if patch_extra_lines_before > 0 or patch_extra_lines_after > 0:
-                        extended_start1 = max(1, start1 - patch_extra_lines_before)
-                        extended_size1 = size1 + (start1 - extended_start1) + patch_extra_lines_after
-                        extended_start2 = max(1, start2 - patch_extra_lines_before)
-                        extended_size2 = size2 + (start2 - extended_start2) + patch_extra_lines_after
-                        if extended_start1 - 1 + extended_size1 > len_original_lines:
-                            # we cannot extend beyond the original file
-                            delta_cap = extended_start1 - 1 + extended_size1 - len_original_lines
-                            extended_size1 = max(extended_size1 - delta_cap, size1)
-                            extended_size2 = max(extended_size2 - delta_cap, size2)
+                        def _calc_context_limits(patch_lines_before):
+                            extended_start1 = max(1, start1 - patch_lines_before)
+                            extended_size1 = size1 + (start1 - extended_start1) + patch_extra_lines_after
+                            extended_start2 = max(1, start2 - patch_lines_before)
+                            extended_size2 = size2 + (start2 - extended_start2) + patch_extra_lines_after
+                            if extended_start1 - 1 + extended_size1 > len_original_lines:
+                                # we cannot extend beyond the original file
+                                delta_cap = extended_start1 - 1 + extended_size1 - len_original_lines
+                                extended_size1 = max(extended_size1 - delta_cap, size1)
+                                extended_size2 = max(extended_size2 - delta_cap, size2)
+                            return extended_start1, extended_size1, extended_start2, extended_size2
+
+                        if allow_dynamic_context:
+                            extended_start1, extended_size1, extended_start2, extended_size2 = \
+                                _calc_context_limits(patch_extra_lines_before_dynamic)
+                            lines_before = original_lines[extended_start1 - 1:start1 - 1]
+                            found_header = False
+                            for i,line, in enumerate(lines_before):
+                                if section_header in line:
+                                    found_header = True
+                                    extended_start1 = extended_start1 + i
+                                    get_logger().debug(f"Found section header in line {i} before the hunk")
+                                    section_header = ''
+                                    break
+                            if not found_header:
+                                get_logger().debug(f"Section header not found in the extra lines before the hunk")
+                                extended_start1, extended_size1, extended_start2, extended_size2 = \
+                                    _calc_context_limits(patch_extra_lines_before)
+                        else:
+                            extended_start1, extended_size1, extended_start2, extended_size2 = \
+                                _calc_context_limits(patch_extra_lines_before)
+
                         delta_lines = original_lines[extended_start1 - 1:start1 - 1]
                         delta_lines = [f' {line}' for line in delta_lines]
-                        if section_header:
+                        if section_header and not allow_dynamic_context:
                             for line in delta_lines:
                                 if section_header in line:
                                     section_header = '' # remove section header if it is in the extra delta lines

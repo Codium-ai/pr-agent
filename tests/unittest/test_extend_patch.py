@@ -2,9 +2,13 @@ import pytest
 from pr_agent.algo.git_patch_processing import extend_patch
 from pr_agent.algo.pr_processing import pr_generate_extended_diff
 from pr_agent.algo.token_handler import TokenHandler
+from pr_agent.config_loader import get_settings
 
 
 class TestExtendPatch:
+    def setUp(self):
+        get_settings().config.allow_dynamic_context = False
+
     # Tests that the function works correctly with valid input
     def test_happy_path(self):
         original_file_str = 'line1\nline2\nline3\nline4\nline5'
@@ -61,8 +65,34 @@ class TestExtendPatch:
                                      patch_extra_lines_before=num_lines, patch_extra_lines_after=num_lines)
         assert actual_output == expected_output
 
+    def test_dynamic_context(self):
+        get_settings().config.max_extra_lines_before_dynamic_context = 10
+        original_file_str = "def foo():"
+        for i in range(9):
+            original_file_str += f"\n    line({i})"
+        patch_str ="@@ -11,1 +11,1 @@ def foo():\n-    line(9)\n+    new_line(9)"
+        num_lines=1
+
+        get_settings().config.allow_dynamic_context = True
+        actual_output = extend_patch(original_file_str, patch_str,
+                                     patch_extra_lines_before=num_lines, patch_extra_lines_after=num_lines)
+        expected_output='\n@@ -1,10 +1,10 @@ \n def foo():\n     line(0)\n     line(1)\n     line(2)\n     line(3)\n     line(4)\n     line(5)\n     line(6)\n     line(7)\n     line(8)\n-    line(9)\n+    new_line(9)'
+        assert actual_output == expected_output
+
+        get_settings().config.allow_dynamic_context = False
+        actual_output2 = extend_patch(original_file_str, patch_str,
+                                     patch_extra_lines_before=num_lines, patch_extra_lines_after=num_lines)
+        expected_output_no_dynamic_context = '\n@@ -10,1 +10,1 @@ def foo():\n     line(8)\n-    line(9)\n+    new_line(9)'
+        assert actual_output2 == expected_output_no_dynamic_context
+
+
+
+
 
 class TestExtendedPatchMoreLines:
+    def setUp(self):
+        get_settings().config.allow_dynamic_context = False
+
     class File:
         def __init__(self, base_file, patch, filename):
             self.base_file = base_file
