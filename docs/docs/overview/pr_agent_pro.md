@@ -1,4 +1,5 @@
-[PR-Agent Pro](https://www.codium.ai/pricing/) is a hosted version of PR-Agent, provided by CodiumAI. It is available for a monthly fee, and provides the following benefits:
+[PR-Agent Pro](https://www.codium.ai/pricing/) is a hosted version of PR-Agent, provided by CodiumAI. A complimentary two-week trial is offered, followed by a monthly subscription fee.
+PR-Agent Pro is designed for companies and teams that require additional features and capabilities. It provides the following benefits:
 
 1. **Fully managed** - We take care of everything for you - hosting, models, regular updates, and more. Installation is as simple as signing up and adding the PR-Agent app to your GitHub\GitLab\BitBucket repo.
 
