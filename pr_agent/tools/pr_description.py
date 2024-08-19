@@ -348,8 +348,8 @@ extra_file_yaml =
         set_custom_labels(variables, self.git_provider)
         self.variables = variables
 
-        system_prompt = environment.from_string(get_settings().get(prompt, {}).get("system", "")).render(variables)
-        user_prompt = environment.from_string(get_settings().get(prompt, {}).get("user", "")).render(variables)
+        system_prompt = environment.from_string(get_settings().get(prompt, {}).get("system", "")).render(self.variables)
+        user_prompt = environment.from_string(get_settings().get(prompt, {}).get("user", "")).render(self.variables)
 
         response, finish_reason = await self.ai_handler.chat_completion(
             model=model,
