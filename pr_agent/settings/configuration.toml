@@ -265,6 +265,9 @@ pr_commands = [
 # use_client = false
 # drop_params = false
 enable_callbacks = false
+success_callback = []
+failure_callback = []
+service_callback = []
 
 [pr_similar_issue]
 skip_comments = false

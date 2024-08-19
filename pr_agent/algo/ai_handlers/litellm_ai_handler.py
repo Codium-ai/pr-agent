@@ -1,10 +1,10 @@
 import os
 import requests
-import boto3
 import litellm
 import openai
 from litellm import acompletion
 from tenacity import retry, retry_if_exception_type, stop_after_attempt
+
 from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.config_loader import get_settings
 from pr_agent.log import get_logger
@@ -44,6 +44,12 @@ class LiteLLMAIHandler(BaseAiHandler):
             litellm.use_client = True
         if get_settings().get("LITELLM.DROP_PARAMS", None):
             litellm.drop_params = get_settings().litellm.drop_params
+        if get_settings().get("LITELLM.SUCCESS_CALLBACK", None):
+            litellm.success_callback = get_settings().litellm.success_callback
+        if get_settings().get("LITELLM.FAILURE_CALLBACK", None):
+            litellm.failure_callback = get_settings().litellm.failure_callback
+        if get_settings().get("LITELLM.SERVICE_CALLBACK", None):
+            litellm.service_callback = get_settings().litellm.service_callback
         if get_settings().get("OPENAI.ORG", None):
             litellm.organization = get_settings().openai.org
         if get_settings().get("OPENAI.API_TYPE", None):
@@ -90,27 +96,56 @@ class LiteLLMAIHandler(BaseAiHandler):
         return response_log
 
     def add_litellm_callbacks(selfs, kwargs) -> dict:
-        pr_metadata = []
+        captured_extra = []
 
         def capture_logs(message):
             # Parsing the log message and context
             record = message.record
             log_entry = {}
-            if record.get('extra', {}).get('command', None) is not None:
+            if record.get('extra', None).get('command', None) is not None:
                 log_entry.update({"command": record['extra']["command"]})
             if record.get('extra', {}).get('pr_url', None) is not None:
                 log_entry.update({"pr_url": record['extra']["pr_url"]})
 
             # Append the log entry to the captured_logs list
-            pr_metadata.append(log_entry)
+            captured_extra.append(log_entry)
 
         # Adding the custom sink to Loguru
         handler_id = get_logger().add(capture_logs)
         get_logger().debug("Capturing logs for litellm callbacks")
         get_logger().remove(handler_id)
 
+        context = captured_extra[0] if len(captured_extra) > 0 else None
+
+        command = context.get("command", "unknown")
+        pr_url = context.get("pr_url", "unknown")
+        git_provider = get_settings().config.git_provider
+
+        metadata = dict()
+        callbacks = litellm.success_callback + litellm.failure_callback + litellm.service_callback
+        if "langfuse" in callbacks:
+            metadata.update({
+                "trace_name": command,
+                "tags": [git_provider, command],
+                "trace_metadata": {
+                    "command": command,
+                    "pr_url": pr_url,
+                },
+            })
+        if "langsmith" in callbacks:
+            metadata.update({
+                "run_name": command,
+                "tags": [git_provider, command],
+                "extra": {
+                    "metadata": {
+                        "command": command,
+                        "pr_url": pr_url,
+                    }
+                },
+            })
+
         # Adding the captured logs to the kwargs
-        kwargs["metadata"] = pr_metadata
+        kwargs["metadata"] = metadata
 
         return kwargs
 
