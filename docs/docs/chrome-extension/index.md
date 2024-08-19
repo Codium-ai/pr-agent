@@ -12,7 +12,7 @@ To enable private chat, simply install the PR-Agent Chrome extension. After inst
 This chat session is **private**, and won't be visible to other users.
 
 All open-source repositories are supported.
-For private repositories, you will also need to install PR-Agent Pro, After installation, make sure to open at least one new PR to fully register your orgnaganization. Once done, you can chat with both new and existing PRs across all installed repositories.
+For private repositories, you will also need to install PR-Agent Pro, After installation, make sure to open at least one new PR to fully register your organization. Once done, you can chat with both new and existing PRs across all installed repositories.
 
 #### Chat security and privacy
  
