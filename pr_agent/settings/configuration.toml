@@ -2,7 +2,7 @@
 # models
 model="gpt-4-turbo-2024-04-09"
 model_turbo="gpt-4o-2024-08-06"
-fallback_models=["gpt-4-0125-preview"]
+fallback_models=["gpt-4o-2024-05-13"]
 # CLI
 git_provider="github"
 publish_output=true
@@ -19,7 +19,8 @@ max_description_tokens = 500
 max_commits_tokens = 500
 max_model_tokens = 32000 # Limits the maximum number of tokens that can be used by any model, regardless of the model's default capabilities.
 custom_model_max_tokens=-1 # for models not in the default list
-#
+# patch extension logic
+patch_extension_skip_types =[".md",".txt"]
 allow_dynamic_context=false
 max_extra_lines_before_dynamic_context = 10 # will try to include up to 10 extra lines before the hunk in the patch, until we reach an enclosing function or class
 patch_extra_lines_before = 3 # Number of extra lines (+3 default ones) to include before each hunk in the patch
