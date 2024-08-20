@@ -7,7 +7,8 @@ from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
 from pr_agent.log import get_logger
 
 
-def extend_patch(original_file_str, patch_str, patch_extra_lines_before=0, patch_extra_lines_after=0) -> str:
+def extend_patch(original_file_str, patch_str, patch_extra_lines_before=0,
+                 patch_extra_lines_after=0, filename: str = "") -> str:
     if not patch_str or (patch_extra_lines_before == 0 and patch_extra_lines_after == 0) or not original_file_str:
         return patch_str
 
@@ -17,6 +18,13 @@ def extend_patch(original_file_str, patch_str, patch_extra_lines_before=0, patch
         except UnicodeDecodeError:
             return ""
 
+    # skip patches
+    skip_types = get_settings().config.skip_types #[".md",".txt"]
+    if skip_types:
+        if any([filename.endswith(skip_type) for skip_type in skip_types]):
+            return patch_str
+
+    # dynamic context settings
     allow_dynamic_context = get_settings().config.allow_dynamic_context
     max_extra_lines_before_dynamic_context = get_settings().config.max_extra_lines_before_dynamic_context
     patch_extra_lines_before_dynamic = patch_extra_lines_before
