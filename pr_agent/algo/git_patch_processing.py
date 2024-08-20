@@ -19,8 +19,8 @@ def extend_patch(original_file_str, patch_str, patch_extra_lines_before=0,
             return ""
 
     # skip patches
-    patch_extension_skip_types = get_settings().config.skip_types #[".md",".txt"]
-    if patch_extension_skip_types:
+    patch_extension_skip_types = get_settings().config.patch_extension_skip_types #[".md",".txt"]
+    if patch_extension_skip_types and filename:
         if any([filename.endswith(skip_type) for skip_type in patch_extension_skip_types]):
             return patch_str
 
