@@ -80,6 +80,8 @@ async def polling_loop():
                                 if 'subject' in notification and notification['subject']['type'] == 'PullRequest':
                                     pr_url = notification['subject']['url']
                                     latest_comment = notification['subject']['latest_comment_url']
+                                    if not latest_comment or not isinstance(latest_comment, str):
+                                        continue
                                     async with session.get(latest_comment, headers=headers) as comment_response:
                                         if comment_response.status == 200:
                                             comment = await comment_response.json()
