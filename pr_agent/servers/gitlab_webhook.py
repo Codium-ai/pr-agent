@@ -124,7 +124,7 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
             return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
 
         log_context["sender"] = sender
-        should_skip_draft = get_settings().get("GITLAB.SKIP_DRAFT_MR", False)
+        should_skip_draft = get_settings().get("GITLAB.SKIP_DRAFT_MR", True)
         if data.get('object_kind') == 'merge_request' and data['object_attributes'].get('action') in ['open', 'reopen']:
             url = data['object_attributes'].get('url')
             draft = data['object_attributes'].get('draft')
