@@ -66,6 +66,8 @@ enable_help_text=false # Determines whether to include help text in the PR revie
 # auto approval
 enable_auto_approval=false
 maximal_review_effort=5
+# Minimum tokens for sending to LLM
+minimum_tokens_for_review = 0
 
 
 [pr_description] # /describe #
@@ -126,6 +128,9 @@ code_suggestions_self_review_text= "**Author self-review**: I have reviewed the 
 approve_pr_on_self_review=false # Pro feature. if true, the PR will be auto-approved after the author clicks on the self-review checkbox
 # Suggestion impact
 publish_post_process_suggestion_impact=true
+# Minimum tokens for sending to LLM
+minimum_tokens_for_suggestions = 0
+
 
 [pr_custom_prompt] # /custom_prompt #
 prompt = """\

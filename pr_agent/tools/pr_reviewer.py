@@ -157,8 +157,15 @@ class PRReviewer:
                                         model,
                                         add_line_numbers_to_hunks=True,
                                         disable_extra_lines=True,)
+        
+        minimumTokenValue = self.token_handler.count_tokens(self.patches_diff)
 
-        if self.patches_diff:
+        # Check if the PR is to small to prevent hallucinations
+        if minimumTokenValue <= get_settings().pr_reviewer.minimum_tokens_for_review:
+            get_logger().info(f"Tokens: {minimumTokenValue}, This is to small of a diff, Which could cause a hallucination")
+            self.prediction = None
+        # load suggestions from the AI respons  
+        elif self.patches_diff:
             get_logger().debug(f"PR diff", diff=self.patches_diff)
             self.prediction = await self._get_prediction(model)
         else:
