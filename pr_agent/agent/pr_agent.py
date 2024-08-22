@@ -79,7 +79,7 @@ class PRAgent:
         if action not in command2class:
             get_logger().debug(f"Unknown command: {action}")
             return False
-        with get_logger().contextualize(command=action):
+        with get_logger().contextualize(command=action, pr_url=pr_url):
             get_logger().info("PR-Agent request handler started", analytics=True)
             if action == "reflect_and_review":
                 get_settings().pr_reviewer.ask_and_reflect = True

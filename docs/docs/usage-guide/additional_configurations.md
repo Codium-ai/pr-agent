@@ -91,3 +91,24 @@ user="""
 """
 ```
 Note that the new prompt will need to generate an output compatible with the relevant [post-process function](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/tools/pr_description.py#L137).
+
+## Integrating with Logging Observability Platforms
+
+Various logging observability tools can be used out-of-the box when using the default LiteLLM AI Handler. Simply configure the LiteLLM callback settings in `configuration.toml` and set environment variables according to the LiteLLM [documentation](https://docs.litellm.ai/docs/).
+
+For example, to use [LangSmith](https://www.langchain.com/langsmith) you can add the following to your `configuration.toml` file:
+```
+[litellm]
+...
+success_callback = ["langsmith"]
+failure_callback = ["langsmith"]
+service_callback = []
+```
+
+Then set the following environment variables:
+
+```
+LANGSMITH_API_KEY=<api_key>
+LANGSMITH_PROJECT=<project>
+LANGSMITH_BASE_URL=<url>
+```
