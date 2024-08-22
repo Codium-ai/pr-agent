@@ -124,13 +124,12 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
             return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
 
         log_context["sender"] = sender
-        should_skip_draft = get_settings().get("GITLAB.SKIP_DRAFT_MR", False)
         if data.get('object_kind') == 'merge_request' and data['object_attributes'].get('action') in ['open', 'reopen']:
             url = data['object_attributes'].get('url')
             draft = data['object_attributes'].get('draft')
             get_logger().info(f"New merge request: {url}")
 
-            if draft and should_skip_draft:
+            if draft:
                 get_logger().info(f"Skipping draft MR: {url}")
                 return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
 
@@ -140,7 +139,7 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
                 mr = data['merge_request']
                 url = mr.get('url')
                 draft = mr.get('draft')
-                if draft and should_skip_draft:
+                if draft:
                     get_logger().info(f"Skipping draft MR: {url}")
                     return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
 
