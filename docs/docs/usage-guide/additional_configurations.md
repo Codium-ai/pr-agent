@@ -99,7 +99,7 @@ Various logging observability tools can be used out-of-the box when using the de
 For example, to use [LangSmith](https://www.langchain.com/langsmith) you can add the following to your `configuration.toml` file:
 ```
 [litellm]
-...
+enable_callbacks = true
 success_callback = ["langsmith"]
 failure_callback = ["langsmith"]
 service_callback = []
