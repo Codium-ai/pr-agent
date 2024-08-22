@@ -3,9 +3,10 @@ import json
 from datetime import datetime
 
 import uvicorn
-from fastapi import APIRouter, FastAPI, Request, status
+from fastapi import APIRouter, FastAPI, Request, status, HTTPException
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.background import BackgroundTasks
 from starlette.middleware import Middleware
 from starlette_context import context
@@ -196,14 +197,37 @@ gitlab_url = get_settings().get("GITLAB.URL", None)
 if not gitlab_url:
     raise ValueError("GITLAB.URL is not set")
 get_settings().config.git_provider = "gitlab"
-middleware = [Middleware(RawContextMiddleware)]
-app = FastAPI(middleware=middleware)
-app.include_router(router)
 
+class IPWhitelistMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        whitelisted_ips = get_settings().get("CONFIG.WHITELISTED_IPS", [])
+        client_ip = request.client.host
+
+        # strip port from client_ip if present.
+        if ":" in client_ip:
+            client_ip = client_ip.split(":")[0]
+
+        if client_ip not in whitelisted_ips and whitelisted_ips != []:
+            print (f"Client IP {client_ip} not in whitelisted IPs {whitelisted_ips}")
+            raise HTTPException(status_code=403, detail="Forbidden")
+        response = await call_next(request)
+        return response
+
+app = FastAPI()
+app.include_router(router)
+app.add_middleware(RawContextMiddleware)
+app.add_middleware(IPWhitelistMiddleware)
+
+# Custom exception handler for HTTPException
+@app.exception_handler(HTTPException)
+async def http_exception_handler(_: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"message": exc.detail},
+    )
 
 def start():
     uvicorn.run(app, host="0.0.0.0", port=3000)
-
 
 if __name__ == '__main__':
     start()
