@@ -139,8 +139,7 @@ class BitbucketServerProvider(GitProvider):
     #gets the best common ancestor: https://git-scm.com/docs/git-merge-base
     @staticmethod
     def get_best_common_ancestor(source_commits_list, destination_commits_list, guaranteed_common_ancestor) -> str:
-        destination_commit_hashes = {commit['id'] for commit in destination_commits_list}
-        destination_commit_hashes.add(guaranteed_common_ancestor)
+        destination_commit_hashes = {commit['id'] for commit in destination_commits_list} | {guaranteed_common_ancestor}
 
         for commit in source_commits_list:
             for parent_commit in commit['parents']:

@@ -23,21 +23,17 @@ class TestBitbucketServerProvider:
         assert pr_number == 1
 
     def mock_get_content_of_file(self, project_key, repository_slug, filename, at=None, markup=None):
-        if at == '9c1cffdd9f276074bfb6fb3b70fbee62d298b058':
-            return 'file\nwith\nsome\nlines\nto\nemulate\na\nreal\nfile\n'
-        elif at == '2a1165446bdf991caf114d01f7c88d84ae7399cf':
-            return 'file\nwith\nmultiple \nlines\nto\nemulate\na\nfake\nfile\n'
-        elif at == 'f617708826cdd0b40abb5245eda71630192a17e3':
-            return 'file\nwith\nmultiple \nlines\nto\nemulate\na\nreal\nfile\n'
-        elif at == 'cb68a3027d6dda065a7692ebf2c90bed1bcdec28':
-            return 'file\nwith\nsome\nchanges\nto\nemulate\na\nreal\nfile\n'
-        elif at == '1905dcf16c0aac6ac24f7ab617ad09c73dc1d23b':
-            return 'file\nwith\nsome\nlines\nto\nemulate\na\nfake\ntest\n'
-        elif at == 'ae4eca7f222c96d396927d48ab7538e2ee13ca63':
-            return 'readme\nwithout\nsome\nlines\nto\nsimulate\na\nreal\nfile'
-        elif at == '548f8ba15abc30875a082156314426806c3f4d97':
-            return 'file\nwith\nsome\nlines\nto\nemulate\na\nreal\nfile'
-        return ''
+        content_map = {
+            '9c1cffdd9f276074bfb6fb3b70fbee62d298b058': 'file\nwith\nsome\nlines\nto\nemulate\na\nreal\nfile\n',
+            '2a1165446bdf991caf114d01f7c88d84ae7399cf': 'file\nwith\nmultiple \nlines\nto\nemulate\na\nfake\nfile\n',
+            'f617708826cdd0b40abb5245eda71630192a17e3': 'file\nwith\nmultiple \nlines\nto\nemulate\na\nreal\nfile\n',
+            'cb68a3027d6dda065a7692ebf2c90bed1bcdec28': 'file\nwith\nsome\nchanges\nto\nemulate\na\nreal\nfile\n',
+            '1905dcf16c0aac6ac24f7ab617ad09c73dc1d23b': 'file\nwith\nsome\nlines\nto\nemulate\na\nfake\ntest\n',
+            'ae4eca7f222c96d396927d48ab7538e2ee13ca63': 'readme\nwithout\nsome\nlines\nto\nsimulate\na\nreal\nfile',
+            '548f8ba15abc30875a082156314426806c3f4d97': 'file\nwith\nsome\nlines\nto\nemulate\na\nreal\nfile'
+        }
+
+        return content_map.get(at, '')
 
     '''
     tests the 2-way diff functionality where the diff should be between the HEAD of branch b and node c
