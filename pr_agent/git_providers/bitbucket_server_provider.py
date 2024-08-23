@@ -144,7 +144,7 @@ class BitbucketServerProvider(GitProvider):
 
         for commit in source_commits_list:
             for parent_commit in commit['parents']:
-                if commit['id'] in destination_commit_hashes or parent_commit['id'] in destination_commit_hashes:
+                if parent_commit['id'] in destination_commit_hashes:
                     return parent_commit['id']
 
         return guaranteed_common_ancestor
