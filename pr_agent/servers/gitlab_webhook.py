@@ -126,12 +126,23 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
         log_context["sender"] = sender
         if data.get('object_kind') == 'merge_request' and data['object_attributes'].get('action') in ['open', 'reopen']:
             url = data['object_attributes'].get('url')
+            draft = data['object_attributes'].get('draft')
             get_logger().info(f"New merge request: {url}")
+
+            if draft:
+                get_logger().info(f"Skipping draft MR: {url}")
+                return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
+
             await _perform_commands_gitlab("pr_commands", PRAgent(), url, log_context)
         elif data.get('object_kind') == 'note' and data.get('event_type') == 'note': # comment on MR
             if 'merge_request' in data:
                 mr = data['merge_request']
                 url = mr.get('url')
+                draft = mr.get('draft')
+                if draft:
+                    get_logger().info(f"Skipping draft MR: {url}")
+                    return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
+
                 get_logger().info(f"A comment has been added to a merge request: {url}")
                 body = data.get('object_attributes', {}).get('note')
                 if data.get('object_attributes', {}).get('type') == 'DiffNote' and '/ask' in body: # /ask_line
