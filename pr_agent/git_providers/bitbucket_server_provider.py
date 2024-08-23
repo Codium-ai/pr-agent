@@ -15,7 +15,8 @@ from ..log import get_logger
 
 class BitbucketServerProvider(GitProvider):
     def __init__(
-            self, pr_url: Optional[str] = None, incremental: Optional[bool] = False
+            self, pr_url: Optional[str] = None, incremental: Optional[bool] = False,
+            bitbucket_client: Optional[Bitbucket] = None,
     ):
         self.bitbucket_server_url = None
         self.workspace_slug = None
@@ -30,8 +31,9 @@ class BitbucketServerProvider(GitProvider):
         self.bitbucket_pull_request_api_url = pr_url
 
         self.bitbucket_server_url = self._parse_bitbucket_server(url=pr_url)
-        self.bitbucket_client = Bitbucket(url=self.bitbucket_server_url,
-                                          token=get_settings().get("BITBUCKET_SERVER.BEARER_TOKEN", None))
+        self.bitbucket_client = bitbucket_client or Bitbucket(url=self.bitbucket_server_url,
+                                                              token=get_settings().get("BITBUCKET_SERVER.BEARER_TOKEN",
+                                                                                       None))
 
         if pr_url:
             self.set_pr(pr_url)
@@ -134,11 +136,28 @@ class BitbucketServerProvider(GitProvider):
         diffstat = [change["path"]['toString'] for change in changes]
         return diffstat
 
+    #gets the best common ancestor: https://git-scm.com/docs/git-merge-base
+    @staticmethod
+    def get_best_common_ancestor(source_commits_list, destination_commits_list, guaranteed_common_ancestor) -> str:
+        destination_commit_hashes = {commit['id'] for commit in destination_commits_list}
+        destination_commit_hashes.add(guaranteed_common_ancestor)
+
+        for commit in source_commits_list:
+            for parent_commit in commit['parents']:
+                if commit['id'] in destination_commit_hashes or parent_commit['id'] in destination_commit_hashes:
+                    return parent_commit['id']
+
+        return guaranteed_common_ancestor
+
     def get_diff_files(self) -> list[FilePatchInfo]:
         if self.diff_files:
             return self.diff_files
 
-        base_sha = self.pr.toRef['latestCommit']
+        source_commits_list = list(self.bitbucket_client.get_pull_requests_commits(self.workspace_slug, self.repo_slug, self.pr_num))
+        guaranteed_common_ancestor = source_commits_list[-1]['parents'][0]['id']
+        destination_commits = list(self.bitbucket_client.get_commits(self.workspace_slug, self.repo_slug, guaranteed_common_ancestor, self.pr.toRef['latestCommit']))
+
+        base_sha = self.get_best_common_ancestor(source_commits_list, destination_commits, guaranteed_common_ancestor)
         head_sha = self.pr.fromRef['latestCommit']
 
         diff_files = []
