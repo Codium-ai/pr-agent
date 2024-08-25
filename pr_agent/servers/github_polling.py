@@ -93,7 +93,9 @@ async def polling_loop():
                                             if 'user' in comment and 'login' in comment['user']:
                                                 if comment['user']['login'] == user_id:
                                                     continue
-                                            comment_body = comment['body'] if 'body' in comment else ''
+                                            comment_body = comment.get('body', '')
+                                            if not comment_body:
+                                                continue
                                             commenter_github_user = comment['user']['login'] \
                                                 if 'user' in comment else ''
                                             get_logger().info(f"Polling, pr_url: {pr_url}",
