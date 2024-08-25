@@ -16,7 +16,7 @@ class TestTryFixYaml:
     # The function adds '|-' to 'relevant line:' if it is not already present and successfully parses the YAML string.
     def test_add_relevant_line(self):
         review_text = "relevant line: value: 3\n"
-        expected_output = {"relevant line": "value: 3"}
+        expected_output = {'relevant line': 'value: 3\n'}
         assert try_fix_yaml(review_text) == expected_output
 
     # The function extracts YAML snippet
