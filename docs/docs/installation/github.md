@@ -38,7 +38,7 @@ if you want to pin your action to a specific release (v0.23 for example) for sta
 ...
 ```
 
-For enhanced security, you can also specify the Docker image by its digest:
+For enhanced security, you can also specify the Docker image by its [digest](https://hub.docker.com/repository/docker/codiumai/pr-agent/tags):
 ```yaml
 ...
     steps:

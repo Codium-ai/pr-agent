@@ -522,7 +522,7 @@ class PRCodeSuggestions:
             data = {"code_suggestions": []}
             for j, predictions in enumerate(prediction_list):  # each call adds an element to the list
                 if "code_suggestions" in predictions:
-                    score_threshold = max(1, get_settings().pr_code_suggestions.suggestions_score_threshold)
+                    score_threshold = max(1, int(get_settings().pr_code_suggestions.suggestions_score_threshold))
                     for i, prediction in enumerate(predictions["code_suggestions"]):
                         try:
                             if get_settings().pr_code_suggestions.self_reflect_on_suggestions:
