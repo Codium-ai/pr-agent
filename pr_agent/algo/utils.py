@@ -585,9 +585,9 @@ def try_fix_yaml(response_text: str,
     response_text_lines_copy = response_text_lines.copy()
     for i in range(0, len(response_text_lines_copy)):
         for key in keys_yaml:
-            if key in response_text_lines_copy[i] and not '|-' in response_text_lines_copy[i]:
+            if key in response_text_lines_copy[i] and not '|' in response_text_lines_copy[i]:
                 response_text_lines_copy[i] = response_text_lines_copy[i].replace(f'{key}',
-                                                                                  f'{key} |-\n        ')
+                                                                                  f'{key} |\n        ')
     try:
         data = yaml.safe_load('\n'.join(response_text_lines_copy))
         get_logger().info(f"Successfully parsed AI prediction after adding |-\n")
