@@ -263,6 +263,7 @@ pr_commands = [
     "/review --pr_reviewer.num_code_suggestions=0",
     "/improve --pr_code_suggestions.commitable_code_suggestions=true --pr_code_suggestions.suggestions_score_threshold=7",
 ]
+legacy_diff_calculation = false
 
 [litellm]
 # use_client = false

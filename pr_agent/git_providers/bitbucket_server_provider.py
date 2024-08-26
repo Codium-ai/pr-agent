@@ -156,8 +156,10 @@ class BitbucketServerProvider(GitProvider):
         guaranteed_common_ancestor = source_commits_list[-1]['parents'][0]['id']
         destination_commits = list(self.bitbucket_client.get_commits(self.workspace_slug, self.repo_slug, guaranteed_common_ancestor, self.pr.toRef['latestCommit']))
 
-        base_sha = self.get_best_common_ancestor(source_commits_list, destination_commits, guaranteed_common_ancestor)
+        base_sha = self.pr.toRef['latestCommit']
         head_sha = self.pr.fromRef['latestCommit']
+        if not get_settings().bitbucket_server.get("legacy_diff_calculation", False):
+            base_sha = self.get_best_common_ancestor(source_commits_list, destination_commits, guaranteed_common_ancestor)
 
         diff_files = []
         original_file_content_str = ""
