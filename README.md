@@ -43,6 +43,15 @@ CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by p
   
 ## News and Updates
 
+### August 26, 2024
+
+New version of [PR Agent Chrom Extension](https://chromewebstore.google.com/detail/pr-agent-chrome-extension/ephlnjeghhogofkifjloamocljapahnl) was released, with full support of **PR Chat**. This feature is free to use for any open-source repository. See more details in [here](https://pr-agent-docs.codium.ai/chrome-extension/#pr-chat).
+
+<kbd><img src="https://www.codium.ai/images/pr_agent/pr_chat1.png" width="768"></kbd>
+
+<kbd><img src="https://www.codium.ai/images/pr_agent/pr_chat2.png" width="768"></kbd>
+
+
 ### August 11, 2024
 Increased PR context size for improved results, and enabled [asymmetric context](https://github.com/Codium-ai/pr-agent/pull/1114/files#diff-9290a3ad9a86690b31f0450b77acd37ef1914b41fabc8a08682d4da433a77f90R69-R70)
 
@@ -58,14 +67,6 @@ Added support for [GitLab pipeline](https://pr-agent-docs.codium.ai/installation
 (1) improved support for bitbucket server - [auto commands](https://github.com/Codium-ai/pr-agent/pull/1059) and [direct links](https://github.com/Codium-ai/pr-agent/pull/1061)
 
 (2) custom models are now [supported](https://pr-agent-docs.codium.ai/usage-guide/changing_a_model/#custom-models)
-
-### July 6, 2024
-
-v0.23 has been released. See full log changes [here](https://github.com/Codium-ai/pr-agent/releases/tag/v0.23).
-
-### July 4, 2024
-
-Added improved support for claude-sonnet-3.5 model (anthropic, vertex, bedrock), including dedicated prompts.
 
 
 
