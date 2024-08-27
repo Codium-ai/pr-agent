@@ -1,7 +1,6 @@
 ## Self-hosted PR-Agent
 
-- If you host PR-Agent with your OpenAI API key, it is between you and OpenAI. You can read their API data privacy policy here:
-https://openai.com/enterprise-privacy
+- If you self-host PR-Agent with your OpenAI (or other LLM provider) API key, it is between you and the provider. We don't send your code data to PR-Agent servers.
 
 ## PR-Agent Pro 💎
 
