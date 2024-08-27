@@ -85,7 +85,9 @@ def extend_patch(original_file_str, patch_str, patch_extra_lines_before=0,
                             for i,line, in enumerate(lines_before):
                                 if section_header in line:
                                     found_header = True
-                                    extended_start1 = extended_start1 + i
+                                    # Update start and size in one line each
+                                    extended_start1, extended_start2 = extended_start1 + i, extended_start2 + i
+                                    extended_size1, extended_size2 = extended_size1 - i, extended_size2 - i
                                     get_logger().debug(f"Found section header in line {i} before the hunk")
                                     section_header = ''
                                     break
@@ -236,6 +238,10 @@ __old hunk__
         line6
            ...
     """
+    # if the file was deleted, return a message indicating that the file was deleted
+    if hasattr(file, 'edit_type') and file.edit_type == EDIT_TYPE.DELETED:
+        return f"\n\n## file '{file.filename.strip()}' was deleted\n"
+
     patch_with_lines_str = f"\n\n## file: '{file.filename.strip()}'\n"
     patch_lines = patch.splitlines()
     RE_HUNK_HEADER = re.compile(
