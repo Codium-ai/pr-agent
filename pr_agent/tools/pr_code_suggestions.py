@@ -168,14 +168,15 @@ class PRCodeSuggestions:
                 get_logger().info('Code suggestions generated for PR, but not published since publish_output is False.')
         except Exception as e:
             get_logger().error(f"Failed to generate code suggestions for PR, error: {e}")
-            if self.progress_response:
-                self.progress_response.delete()
-            else:
-                try:
-                    self.git_provider.remove_initial_comment()
-                    self.git_provider.publish_comment(f"Failed to generate code suggestions for PR")
-                except Exception as e:
-                    pass
+            if get_settings().config.publish_output:
+                if self.progress_response:
+                    self.progress_response.delete()
+                else:
+                    try:
+                        self.git_provider.remove_initial_comment()
+                        self.git_provider.publish_comment(f"Failed to generate code suggestions for PR")
+                    except Exception as e:
+                        pass
 
     def publish_persistent_comment_with_history(self, pr_comment: str,
                                                 initial_header: str,
