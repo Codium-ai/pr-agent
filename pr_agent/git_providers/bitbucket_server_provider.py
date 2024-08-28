@@ -1,9 +1,9 @@
+from distutils.version import LooseVersion
+from requests.exceptions import HTTPError
 from typing import Optional, Tuple
 from urllib.parse import quote_plus, urlparse
 
-from requests.exceptions import HTTPError
 from atlassian.bitbucket import Bitbucket
-from starlette_context import context
 
 from .git_provider import GitProvider
 from ..algo.types import EDIT_TYPE, FilePatchInfo
@@ -34,6 +34,10 @@ class BitbucketServerProvider(GitProvider):
         self.bitbucket_client = bitbucket_client or Bitbucket(url=self.bitbucket_server_url,
                                                               token=get_settings().get("BITBUCKET_SERVER.BEARER_TOKEN",
                                                                                        None))
+        try:
+            self.bitbucket_api_version = LooseVersion(self.bitbucket_client.get("rest/api/1.0/application-properties").get('version'))
+        except Exception:
+            self.bitbucket_api_version = None
 
         if pr_url:
             self.set_pr(pr_url)
@@ -152,14 +156,34 @@ class BitbucketServerProvider(GitProvider):
         if self.diff_files:
             return self.diff_files
 
-        source_commits_list = list(self.bitbucket_client.get_pull_requests_commits(self.workspace_slug, self.repo_slug, self.pr_num))
-        guaranteed_common_ancestor = source_commits_list[-1]['parents'][0]['id']
-        destination_commits = list(self.bitbucket_client.get_commits(self.workspace_slug, self.repo_slug, guaranteed_common_ancestor, self.pr.toRef['latestCommit']))
+        source_commits_list = list(self.bitbucket_client.get_pull_requests_commits(
+            self.workspace_slug,
+            self.repo_slug,
+            self.pr_num
+        ))
 
-        base_sha = self.pr.toRef['latestCommit']
-        head_sha = self.pr.fromRef['latestCommit']
-        if not get_settings().bitbucket_server.get("legacy_diff_calculation", False):
-            base_sha = self.get_best_common_ancestor(source_commits_list, destination_commits, guaranteed_common_ancestor)
+        # defaults to basic diff functionality with a guaranteed common ancestor
+        base_sha, head_sha = source_commits_list[-1]['parents'][0]['id'], source_commits_list[0]['id']
+
+        # if Bitbucket api version is greater than or equal to 7.0 then use 2-way diff functionality for the base_sha
+        if self.bitbucket_api_version is not None and self.bitbucket_api_version >= LooseVersion("7.0"):
+            # Bitbucket endpoint for getting merge-base is available as of 8.16
+            if self.bitbucket_api_version >= LooseVersion("8.16"):
+                try:
+                    base_sha = self.bitbucket_client.get(self._get_best_common_ancestor())['id']
+                except Exception as e:
+                    get_logger().error(f"Failed to get the best common ancestor for PR: {self.pr_url}, \nerror: {e}")
+                    raise e
+            # for versions 7.0-8.15 try to calculate the merge-base on our own
+            else:
+                try:
+                    destination_commits = list(
+                        self.bitbucket_client.get_commits(self.workspace_slug, self.repo_slug, base_sha,
+                                                          self.pr.toRef['latestCommit']))
+                    base_sha = self.get_best_common_ancestor(source_commits_list, destination_commits, base_sha)
+                except Exception as e:
+                    get_logger().error(f"Failed to get the commit list for calculating best common ancestor for PR: {self.pr_url}, \nerror: {e}")
+                    raise e
 
         diff_files = []
         original_file_content_str = ""
@@ -427,3 +451,6 @@ class BitbucketServerProvider(GitProvider):
 
     def _get_pr_comments_path(self):
         return f"rest/api/latest/projects/{self.workspace_slug}/repos/{self.repo_slug}/pull-requests/{self.pr_num}/comments"
+
+    def _get_best_common_ancestor(self):
+        return f"rest/api/latest/projects/{self.workspace_slug}/repos/{self.repo_slug}/pull-requests/{self.pr_num}/merge-base"

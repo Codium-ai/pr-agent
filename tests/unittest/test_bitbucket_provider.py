@@ -30,10 +30,38 @@ class TestBitbucketServerProvider:
             'cb68a3027d6dda065a7692ebf2c90bed1bcdec28': 'file\nwith\nsome\nchanges\nto\nemulate\na\nreal\nfile\n',
             '1905dcf16c0aac6ac24f7ab617ad09c73dc1d23b': 'file\nwith\nsome\nlines\nto\nemulate\na\nfake\ntest\n',
             'ae4eca7f222c96d396927d48ab7538e2ee13ca63': 'readme\nwithout\nsome\nlines\nto\nsimulate\na\nreal\nfile',
-            '548f8ba15abc30875a082156314426806c3f4d97': 'file\nwith\nsome\nlines\nto\nemulate\na\nreal\nfile'
+            '548f8ba15abc30875a082156314426806c3f4d97': 'file\nwith\nsome\nlines\nto\nemulate\na\nreal\nfile',
+            '0e898cb355a5170d8c8771b25d43fcaa1d2d9489': 'file\nwith\nmultiple\nlines\nto\nemulate\na\nreal\nfile'
         }
-
         return content_map.get(at, '')
+
+    def mock_get_from_bitbucket_60(self, url):
+        response_map = {
+            "rest/api/1.0/application-properties": {
+                "version": "6.0"
+            }
+        }
+        return response_map.get(url, '')
+
+    def mock_get_from_bitbucket_70(self, url):
+        response_map = {
+            "rest/api/1.0/application-properties": {
+                "version": "7.0"
+            }
+        }
+        return response_map.get(url, '')
+
+    def mock_get_from_bitbucket_816(self, url):
+        response_map = {
+            "rest/api/1.0/application-properties": {
+                "version": "8.16"
+            },
+            "rest/api/latest/projects/AAA/repos/my-repo/pull-requests/1/merge-base": {
+                'id': '548f8ba15abc30875a082156314426806c3f4d97'
+            }
+        }
+        return response_map.get(url, '')
+
 
     '''
     tests the 2-way diff functionality where the diff should be between the HEAD of branch b and node c
@@ -44,8 +72,7 @@ class TestBitbucketServerProvider:
     o - o - o  main
         ^ node c
     '''
-
-    def test_get_diff_files_simple_diverge(self):
+    def test_get_diff_files_simple_diverge_70(self):
         bitbucket_client = MagicMock(Bitbucket)
         bitbucket_client.get_pull_request.return_value = {
             'toRef': {'latestCommit': '9c1cffdd9f276074bfb6fb3b70fbee62d298b058'},
@@ -66,6 +93,7 @@ class TestBitbucketServerProvider:
             }
         ]
 
+        bitbucket_client.get.side_effect = self.mock_get_from_bitbucket_70
         bitbucket_client.get_content_of_file.side_effect = self.mock_get_content_of_file
 
         provider = BitbucketServerProvider(
@@ -87,6 +115,7 @@ class TestBitbucketServerProvider:
 
         assert actual == expected
 
+
     '''
     tests the 2-way diff functionality where the diff should be between the HEAD of branch b and node c
     NOT between the HEAD of main and the HEAD of branch b
@@ -96,8 +125,7 @@ class TestBitbucketServerProvider:
     o - o -- o - o     main
              ^ node c
     '''
-
-    def test_get_diff_files_diverge_with_merge_commit(self):
+    def test_get_diff_files_diverge_with_merge_commit_70(self):
         bitbucket_client = MagicMock(Bitbucket)
         bitbucket_client.get_pull_request.return_value = {
             'toRef': {'latestCommit': 'cb68a3027d6dda065a7692ebf2c90bed1bcdec28'},
@@ -125,6 +153,7 @@ class TestBitbucketServerProvider:
             }
         ]
 
+        bitbucket_client.get.side_effect = self.mock_get_from_bitbucket_70
         bitbucket_client.get_content_of_file.side_effect = self.mock_get_content_of_file
 
         provider = BitbucketServerProvider(
@@ -146,6 +175,7 @@ class TestBitbucketServerProvider:
 
         assert actual == expected
 
+
     '''
     tests the 2-way diff functionality where the diff should be between the HEAD of branch c and node d
     NOT between the HEAD of main and the HEAD of branch c
@@ -157,8 +187,7 @@ class TestBitbucketServerProvider:
         o - o - o      main
             ^ node d
     '''
-
-    def test_get_diff_files_multi_merge_diverge(self):
+    def get_multi_merge_diverge_mock_client(self, api_version):
         bitbucket_client = MagicMock(Bitbucket)
         bitbucket_client.get_pull_request.return_value = {
             'toRef': {'latestCommit': '9569922b22fe4fd0968be6a50ed99f71efcd0504'},
@@ -192,6 +221,61 @@ class TestBitbucketServerProvider:
         ]
 
         bitbucket_client.get_content_of_file.side_effect = self.mock_get_content_of_file
+        if api_version == 60:
+            bitbucket_client.get.side_effect = self.mock_get_from_bitbucket_60
+        elif api_version == 70:
+            bitbucket_client.get.side_effect = self.mock_get_from_bitbucket_70
+        elif api_version == 816:
+            bitbucket_client.get.side_effect = self.mock_get_from_bitbucket_816
+
+        return bitbucket_client
+
+    def test_get_diff_files_multi_merge_diverge_60(self):
+        bitbucket_client = self.get_multi_merge_diverge_mock_client(60)
+
+        provider = BitbucketServerProvider(
+            "https://git.onpreminstance.com/projects/AAA/repos/my-repo/pull-requests/1",
+            bitbucket_client=bitbucket_client
+        )
+
+        expected = [
+            FilePatchInfo(
+                'file\nwith\nmultiple\nlines\nto\nemulate\na\nreal\nfile',
+                'readme\nwithout\nsome\nlines\nto\nsimulate\na\nreal\nfile',
+                '--- \n+++ \n@@ -1,9 +1,9 @@\n-file\n-with\n-multiple\n+readme\n+without\n+some\n lines\n to\n-emulate\n+simulate\n a\n real\n file',
+                'Readme.md',
+                edit_type=EDIT_TYPE.MODIFIED,
+            )
+        ]
+
+        actual = provider.get_diff_files()
+
+        assert actual == expected
+
+    def test_get_diff_files_multi_merge_diverge_70(self):
+        bitbucket_client = self.get_multi_merge_diverge_mock_client(70)
+
+        provider = BitbucketServerProvider(
+            "https://git.onpreminstance.com/projects/AAA/repos/my-repo/pull-requests/1",
+            bitbucket_client=bitbucket_client
+        )
+
+        expected = [
+            FilePatchInfo(
+                'file\nwith\nsome\nlines\nto\nemulate\na\nreal\nfile',
+                'readme\nwithout\nsome\nlines\nto\nsimulate\na\nreal\nfile',
+                '--- \n+++ \n@@ -1,9 +1,9 @@\n-file\n-with\n+readme\n+without\n some\n lines\n to\n-emulate\n+simulate\n a\n real\n file',
+                'Readme.md',
+                edit_type=EDIT_TYPE.MODIFIED,
+            )
+        ]
+
+        actual = provider.get_diff_files()
+
+        assert actual == expected
+
+    def test_get_diff_files_multi_merge_diverge_816(self):
+        bitbucket_client = self.get_multi_merge_diverge_mock_client(816)
 
         provider = BitbucketServerProvider(
             "https://git.onpreminstance.com/projects/AAA/repos/my-repo/pull-requests/1",
