@@ -190,7 +190,7 @@ class LiteLLMAIHandler(BaseAiHandler):
                 "deployment_id": deployment_id,
                 "messages": messages,
                 "temperature": temperature,
-                "force_timeout": get_settings().config.ai_timeout,
+                "timeout": get_settings().config.ai_timeout,
                 "api_base": self.api_base,
             }
 
