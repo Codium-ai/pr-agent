@@ -124,10 +124,25 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
             return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
 
         log_context["sender"] = sender
+        excluded_source_branches = get_settings().get("gitlab.excluded_source_branches", [])
+        excluded_target_branches = get_settings().get("gitlab.excluded_target_branches", [])
+        excluded_labels = get_settings().get("gitlab.excluded_labels", [])
         if data.get('object_kind') == 'merge_request' and data['object_attributes'].get('action') in ['open', 'reopen']:
             url = data['object_attributes'].get('url')
             draft = data['object_attributes'].get('draft')
+            source_branch = data['object_attributes'].get('source_branch')
+            target_branch = data['object_attributes'].get('target_branch')
+            labels = data['object_attributes'].get('labels').map(lambda x: x['title'])
+
             get_logger().info(f"New merge request: {url}")
+
+            if target_branch in excluded_target_branches or source_branch in excluded_source_branches:
+                get_logger().info(f"Skipping excluded branch MR: {url}")
+                return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
+
+            if labels.intersection(excluded_labels):
+                get_logger().info(f"Skipping excluded label MR: {url}")
+                return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
 
             if draft:
                 get_logger().info(f"Skipping draft MR: {url}")
@@ -138,7 +153,7 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
             if 'merge_request' in data:
                 mr = data['merge_request']
                 url = mr.get('url')
-                
+
                 get_logger().info(f"A comment has been added to a merge request: {url}")
                 body = data.get('object_attributes', {}).get('note')
                 if data.get('object_attributes', {}).get('type') == 'DiffNote' and '/ask' in body: # /ask_line

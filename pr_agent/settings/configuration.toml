@@ -230,6 +230,9 @@ push_commands = [
     "/describe",
     "/review --pr_reviewer.num_code_suggestions=0",
 ]
+excluded_target_branches = []
+excluded_source_branches = []
+excluded_labels = []
 
 [bitbucket_app]
 pr_commands = [
