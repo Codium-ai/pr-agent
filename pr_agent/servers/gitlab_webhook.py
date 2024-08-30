@@ -132,10 +132,9 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
             draft = data['object_attributes'].get('draft')
             source_branch = data['object_attributes'].get('source_branch')
             target_branch = data['object_attributes'].get('target_branch')
-            labels = data['object_attributes'].get('labels').map(lambda x: x['title'])
+            labels = [label['title'] for label in data['object_attributes'].get('labels', [])]
 
             get_logger().info(f"New merge request: {url}")
-
             if target_branch in excluded_target_branches or source_branch in excluded_source_branches:
                 get_logger().info(f"Skipping excluded branch MR: {url}")
                 return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
