@@ -130,7 +130,7 @@ class PRUpdateChangelog:
             file_path="CHANGELOG.md",
             branch=self.git_provider.get_pr_branch(),
             contents=new_file_content,
-            message="Update CHANGELOG.md",
+            message="[skip ci] Update CHANGELOG.md",
         )
 
         sleep(5)  # wait for the file to be updated
