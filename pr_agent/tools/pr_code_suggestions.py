@@ -104,7 +104,8 @@ class PRCodeSuggestions:
             if not data:
                 data = {"code_suggestions": []}
 
-            if data is None or 'code_suggestions' not in data or not data['code_suggestions']:
+            if (data is None or 'code_suggestions' not in data or not data['code_suggestions'] 
+                and get_settings().config.publish_output):
                 get_logger().warning('No code suggestions found for the PR.')
                 pr_body = "## PR Code Suggestions ✨\n\nNo code suggestions found for the PR."
                 get_logger().debug(f"PR output", artifact=pr_body)
