@@ -1,9 +1,16 @@
 ## Overview
-The `improve` tool scans the PR code changes, and automatically generates suggestions for improving the PR code.
+The `improve` tool scans the PR code changes, and automatically generates [meaningful](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/pr_code_suggestions_prompts.toml#L41) suggestions for improving the PR code.
 The tool can be triggered automatically every time a new PR is [opened](../usage-guide/automations_and_usage.md#github-app-automatic-tools-when-a-new-pr-is-opened), or it can be invoked manually by commenting on any PR:
 ```
 /improve
 ```
+
+![code_suggestions_as_comment_closed.png](https://codium.ai/images/pr_agent/code_suggestions_as_comment_closed.png){width=512}
+
+![code_suggestions_as_comment_open.png](https://codium.ai/images/pr_agent/code_suggestions_as_comment_open.png){width=512}
+
+Note that the `Apply this suggestion` checkbox, which converts a suggestion into a commitable code comment, is available only for PR-Agent Pro 💎 users.
+
 
 ## Example usage
 
@@ -11,14 +18,12 @@ The tool can be triggered automatically every time a new PR is [opened](../usage
 
 Invoke the tool manually by commenting `/improve` on any PR. The code suggestions by default are presented as a single comment:
 
-![code suggestions as comment](https://codium.ai/images/pr_agent/code_suggestions_as_comment.png){width=512}
-
 To edit [configurations](#configuration-options) related to the improve tool, use the following template:
 ```
 /improve --pr_code_suggestions.some_config1=... --pr_code_suggestions.some_config2=...
 ```
 
-For example, you can choose to present the suggestions as commitable code comments, by running the following command:
+For example, you can choose to present all the suggestions as commitable code comments, by running the following command:
 ```
 /improve --pr_code_suggestions.commitable_code_suggestions=true
 ```
@@ -26,8 +31,8 @@ For example, you can choose to present the suggestions as commitable code commen
 ![improve](https://codium.ai/images/pr_agent/improve.png){width=512}
 
 
-Note that a single comment has a significantly smaller PR footprint. We recommend this mode for most cases.
-Also note that collapsible are not supported in _Bitbucket_. Hence, the suggestions are presented there as code comments.
+As can be seen, a single table comment has a significantly smaller PR footprint. We recommend this mode for most cases.
+Also note that collapsible are not supported in _Bitbucket_. Hence, the suggestions can only be presented in Bitbucket as code comments.
 
 ### Automatic triggering
 
@@ -46,6 +51,22 @@ num_code_suggestions_per_chunk = ...
 
 - The `pr_commands` lists commands that will be executed automatically when a PR is opened.
 - The `[pr_code_suggestions]` section contains the configurations for the `improve` tool you want to edit (if any)
+
+### Assessing Impact 💎
+
+Note that PR-Agent pro tracks two types of implementations:
+
+- Direct implementation - when the user directly applies the suggestion by clicking the `Apply` checkbox.
+- Indirect implementation - when the user implements the suggestion in their IDE environment. In this case, PR-Agent will utilize, after each commit, a dedicated logic to identify if a suggestion was implemented, and will mark it as implemented.
+
+![code_suggestions_asses_impact](https://codium.ai/images/pr_agent/code_suggestions_asses_impact.png){width=512}
+
+In post-process, PR-Agent counts the number of suggestions that were implemented, and provides general statistics and insights about the suggestions' impact on the PR process.
+
+![code_suggestions_asses_impact_stats_1](https://codium.ai/images/pr_agent/code_suggestions_asses_impact_stats_1.png.png){width=384}
+
+![code_suggestions_asses_impact_stats_2](https://codium.ai/images/pr_agent/code_suggestions_asses_impact_stats_2.png.png){width=384}
+
 
 ## Usage Tips
 
