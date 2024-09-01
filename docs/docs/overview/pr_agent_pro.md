@@ -11,6 +11,8 @@ PR-Agent Pro is designed for companies and teams that require additional feature
 
 **Additional features:**
 
+Here are some of the additional features and capabilities that PR-Agent Pro offers:
+
 | Feature                                                                                                              | Description                                                                                                                                                      |
 |----------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [**Model selection**](https://pr-agent-docs.codium.ai/usage-guide/PR_agent_pro_models/#pr-agent-pro-models)          | Choose the model that best fits your needs, among top models like `GPT4` and `Claude-Sonnet-3.5`                                                                 
@@ -25,6 +27,8 @@ PR-Agent Pro is designed for companies and teams that require additional feature
 | [**Custom labels**](https://pr-agent-docs.codium.ai/tools/describe/#handle-custom-labels-from-the-repos-labels-page) | Define custom labels for PR-Agent to assign to the PR                                                                                                            |
 
 **Additional tools:**
+
+Here are additional tools that are available only for PR-Agent Pro users:
 
 | Feature | Description |
 |---------|-------------|
