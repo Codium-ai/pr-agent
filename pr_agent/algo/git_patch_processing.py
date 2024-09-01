@@ -164,9 +164,10 @@ def omit_deletion_hunks(patch_lines) -> str:
                 inside_hunk = True
         else:
             temp_hunk.append(line)
-            edit_type = line[0]
-            if edit_type == '+':
-                add_hunk = True
+            if line:
+                edit_type = line[0]
+                if edit_type == '+':
+                    add_hunk = True
     if inside_hunk and add_hunk:
         added_patched.extend(temp_hunk)
 

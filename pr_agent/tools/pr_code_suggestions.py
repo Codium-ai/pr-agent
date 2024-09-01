@@ -104,8 +104,8 @@ class PRCodeSuggestions:
             if not data:
                 data = {"code_suggestions": []}
 
-            if (data is None or 'code_suggestions' not in data or not data['code_suggestions'] 
-                and get_settings().config.publish_output):
+            if (data is None or 'code_suggestions' not in data or not data['code_suggestions']
+                    and get_settings().config.publish_output):
                 get_logger().warning('No code suggestions found for the PR.')
                 pr_body = "## PR Code Suggestions ✨\n\nNo code suggestions found for the PR."
                 get_logger().debug(f"PR output", artifact=pr_body)
@@ -528,7 +528,7 @@ class PRCodeSuggestions:
                     for i, prediction in enumerate(predictions["code_suggestions"]):
                         try:
                             if get_settings().pr_code_suggestions.self_reflect_on_suggestions:
-                                score = int(prediction["score"])
+                                score = int(prediction.get("score", 1))
                                 if score >= score_threshold:
                                     data["code_suggestions"].append(prediction)
                                 else:
