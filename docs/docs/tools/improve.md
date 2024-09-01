@@ -63,9 +63,9 @@ Note that PR-Agent pro tracks two types of implementations:
 
 In post-process, PR-Agent counts the number of suggestions that were implemented, and provides general statistics and insights about the suggestions' impact on the PR process.
 
-![code_suggestions_asses_impact_stats_1.png](https://codium.ai/images/pr_agent/code_suggestions_asses_impact_stats_1.png.png){width=384}
+![code_suggestions_asses_impact_stats_1](https://codium.ai/images/pr_agent/code_suggestions_asses_impact_stats_1.png.png){width=384}
 
-![code_suggestions_asses_impact_stats_2.png](https://codium.ai/images/pr_agent/code_suggestions_asses_impact_stats_2.png.png){width=384}
+![code_suggestions_asses_impact_stats_2](https://codium.ai/images/pr_agent/code_suggestions_asses_impact_stats_2.png.png){width=384}
 
 
 ## Usage Tips
