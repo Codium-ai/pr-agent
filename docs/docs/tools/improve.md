@@ -54,11 +54,10 @@ num_code_suggestions_per_chunk = ...
 
 ### Assessing Impact 💎
 
-With PR-Agent pro, every time a user implements a code suggestion, PR-Agent will automatically add a ✅ prefix to the suggestion label. This way, the user\reviewr\manager can track the impact of the suggestions on the PR code.
-Note that PR-Agent pro tracks two type of implementations:
+Note that PR-Agent pro tracks two types of implementations:
 
 - Direct implementation - when the user directly applies the suggestion by clicking the `Apply` checkbox.
-- Indirect implementation - when the user implements the suggestion in his IDE environment. In this case, PR-Agent will utilize, after each commit, a dedicated logic to identify if a suggestion was implemented, and will mark it as implemented.
+- Indirect implementation - when the user implements the suggestion in their IDE environment. In this case, PR-Agent will utilize, after each commit, a dedicated logic to identify if a suggestion was implemented, and will mark it as implemented.
 
 ![code_suggestions_asses_impact](https://codium.ai/images/pr_agent/code_suggestions_asses_impact.png){width=512}
 
