@@ -7,25 +7,30 @@ PR-Agent Pro is designed for companies and teams that require additional feature
 
 3. **Improved support** - PR-Agent Pro users will receive priority support, and will be able to request new features and capabilities.
 
-4. **Additional tools**
-     - [**Custom Prompt Suggestions**](https://pr-agent-docs.codium.ai/tools/custom_prompt/)
-     - [**Tests**](https://pr-agent-docs.codium.ai/tools/test/)
-     - [**PR documentation**](https://pr-agent-docs.codium.ai/tools/documentation/)
-     - [**Improve Component**](https://pr-agent-docs.codium.ai/tools/improve_component/)
-     - [**Similar code search**](https://pr-agent-docs.codium.ai/tools/similar_code/)
-     - [**CI feedback**](https://pr-agent-docs.codium.ai/tools/ci_feedback/)
-     - [**Analyze PR components**](https://pr-agent-docs.codium.ai/tools/analyze/)
+4. **Supporting self-hosted git servers** - PR-Agent Pro can be installed on GitHub Enterprise Server, GitLab, and BitBucket. For more information, see the [installation guide](https://pr-agent-docs.codium.ai/installation/pr_agent_pro/).
+
+**Additional features:**
+
+| Feature                                                                                                              | Description                                                                                                                                                       |
+|----------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [**Model selection**](https://pr-agent-docs.codium.ai/usage-guide/PR_agent_pro_models/#pr-agent-pro-models)          | Choose the model that best fits your needs, among top models like `GPT4` and `Claude-Sonnet-3.5`                                                                  
+| [**Global and wiki configuration**](https://pr-agent-docs.codium.ai/usage-guide/configuration_options/)              | Control configurations for many repositories from a single location; <br>Edit configuration of a single repo without commiting code                               |
+| [**Apply suggestions**](https://pr-agent-docs.codium.ai/tools/improve/#overview)                                     | Generate commitable code from the relevant suggestions interactively by clicking on a checkbox                                                                    |
+| [**Suggestions impact**](https://pr-agent-docs.codium.ai/tools/improve/#assessing-impact-💎)                         | Automatically mark with ✅ suggestions that were implemented by the user (either directly in GitHub, or indirectly in the IDE)                                     |
+| [**Advanced usage statistics**](https://www.codium.ai/contact/#/)                                                    | PR-Agent Pro offers detailed statistics at user, repository, and company levels, including metrics about PR-Agent usage, and also general statistics and insights |
+| [**Incorporating companies' best practices**](https://pr-agent-docs.codium.ai/tools/improve/#best-practices)         | Use the companies' best practices as reference to increase the effectiveness and the relevance of the code suggestions                                            |
+| [**Interactive triggering**](https://pr-agent-docs.codium.ai/tools/analyze/#example-usage)                           | Interactively apply different tools via the `analyze` command                                                                                                     |
+| [**SOC2 compliance check**](https://pr-agent-docs.codium.ai/tools/review/#configuration-options)                     | Ensures the PR contains a ticket to a project management system (e.g., Jira, Asana, Trello, etc.)                                                                 
+| [**Custom labels**](https://pr-agent-docs.codium.ai/tools/describe/#handle-custom-labels-from-the-repos-labels-page) | Define custom labels for PR-Agent to assign to the PR                                                                                                             |
+
+**Additional tools:**
+
+- [**Custom Prompt Suggestions**](https://pr-agent-docs.codium.ai/tools/custom_prompt/)
+- [**Tests**](https://pr-agent-docs.codium.ai/tools/test/)
+- [**PR documentation**](https://pr-agent-docs.codium.ai/tools/documentation/)
+- [**Improve Component**](https://pr-agent-docs.codium.ai/tools/improve_component/)
+- [**Similar code search**](https://pr-agent-docs.codium.ai/tools/similar_code/)
+- [**CI feedback**](https://pr-agent-docs.codium.ai/tools/ci_feedback/)
+- [**Analyze PR components**](https://pr-agent-docs.codium.ai/tools/analyze/)
 
 
-5. **Additional features**
-     - [**Global and wiki configuration**](https://pr-agent-docs.codium.ai/usage-guide/configuration_options/)
-     - [**Interactive triggering**](https://pr-agent-docs.codium.ai/tools/analyze/#overview)
-     - [**Apply suggestions**](https://pr-agent-docs.codium.ai/tools/improve/#example-usage)
-     - [**Advanced usage statistics**](https://www.codium.ai/contact/#/)
-     - [**Incorporating companies' best practices**](https://pr-agent-docs.codium.ai/tools/improve/#best-practices)
-     - [**SOC2 compliance check**](https://pr-agent-docs.codium.ai/tools/review/#configuration-options)
-     - [**Custom labels**](https://pr-agent-docs.codium.ai/tools/describe/#handle-custom-labels-from-the-repos-labels-page)
-     - [**Inline file summary**](https://pr-agent-docs.codium.ai/tools/describe/#inline-file-summary)
-     - More ...
-
-6. **Supporting self-hosted git servers** - PR-Agent Pro can be installed on GitHub Enterprise Server, GitLab, and BitBucket. For more information, see the [installation guide](https://pr-agent-docs.codium.ai/installation/pr_agent_pro/).
