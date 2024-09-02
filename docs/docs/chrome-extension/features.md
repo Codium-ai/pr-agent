@@ -1,4 +1,3 @@
-## Features
 
 ### PR Chat
 

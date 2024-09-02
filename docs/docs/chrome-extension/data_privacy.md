@@ -1,5 +1,3 @@
-## Data security and privacy
- 
 We take your code's security and privacy seriously:
 
 - The Chrome extension will not send your code to any external servers.
