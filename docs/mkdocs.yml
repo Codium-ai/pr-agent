@@ -42,7 +42,10 @@ nav:
     - 💎 CI Feedback: 'tools/ci_feedback.md'
     - 💎 Similar Code: 'tools/similar_code.md'
   - Core Abilities: 'core-abilities/index.md'
-  - Chrome Extension: 'chrome-extension/index.md'
+  - Chrome Extension:
+      - 'chrome-extension/index.md'
+      - Features: 'chrome-extension/features.md'
+      - Data Privacy: 'chrome-extension/data_privacy.md'
   - Code Fine-tuning Benchmark: 'finetuning_benchmark/index.md'
 
 theme:

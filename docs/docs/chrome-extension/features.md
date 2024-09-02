@@ -1,0 +1,48 @@
+## Features
+
+### PR Chat
+
+The PR-Chat feature allows to freely chat with your PR code, within your GitHub environment.
+It will seamlessly add the PR code as context to your chat session, and provide AI-powered feedback.
+
+To enable private chat, simply install the PR-Agent Chrome extension. After installation, each PR's file-changed tab will include a chat box, where you may ask questions about your code.
+This chat session is **private**, and won't be visible to other users.
+
+All open-source repositories are supported.
+For private repositories, you will also need to install PR-Agent Pro, After installation, make sure to open at least one new PR to fully register your organization. Once done, you can chat with both new and existing PRs across all installed repositories.
+
+<img src="https://codium.ai/images/pr_agent/pr_chat1.png" width="768">
+<img src="https://codium.ai/images/pr_agent/pr_chat2.png" width="768">
+
+
+### Toolbar extension
+With PR-Agent Chrome extension, it's [easier than ever](https://www.youtube.com/watch?v=gT5tli7X4H4) to interactively configure and experiment with the different tools and configuration options.
+
+For private repositories, after you found the setup that works for you, you can also easily export it as a persistent configuration file, and use it for automatic commands.
+
+<img src="https://codium.ai/images/pr_agent/toolbar1.png" width="512">
+
+<img src="https://codium.ai/images/pr_agent/toolbar2.png" width="512">
+
+### PR-Agent filters
+
+PR-Agent filters is a sidepanel option. that allows you to filter different message in the conversation tab.
+
+For example, you can choose to present only message from PR-Agent, or filter those messages, focusing only on user's comments.
+
+<img src="https://codium.ai/images/pr_agent/pr_agent_filters1.png" width="256">
+
+<img src="https://codium.ai/images/pr_agent/pr_agent_filters2.png" width="256">
+
+
+### Enhanced code suggestions
+
+PR-Agent Chrome extension adds the following capabilities to code suggestions tool's comments:
+
+- Auto-expand the table when you are viewing a code block, to avoid clipping.
+- Adding a "quote-and-reply" button, that enables to address and comment on a specific suggestion (for example, asking the author to fix the issue)
+
+
+<img src="https://codium.ai/images/pr_agent/chrome_extension_code_suggestion1.png" width="512">
+
+<img src="https://codium.ai/images/pr_agent/chrome_extension_code_suggestion2.png" width="512">
