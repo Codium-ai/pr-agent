@@ -37,7 +37,7 @@ CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by p
 - [Overview](#overview)
 - [Example results](#example-results)
 - [Try it now](#try-it-now)
-- [PR-Agent Pro 💎](#pr-agent-pro-)
+- [PR-Agent Pro 💎](https://pr-agent-docs.codium.ai/overview/pr_agent_pro/)
 - [How it works](#how-it-works)
 - [Why use PR-Agent?](#why-use-pr-agent)
   
