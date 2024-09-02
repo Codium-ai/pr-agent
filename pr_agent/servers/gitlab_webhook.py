@@ -163,7 +163,7 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
                     return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
 
             if ignore_mr_title:
-                if any([re.search(regex, title) for regex in ignore_mr_title]):
+                if any(re.search(regex, title) for regex in ignore_mr_title):
                     get_logger().info(f"Ignoring MR with title '{title}' due to gitlab.ignore_mr_title settings")
                     return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
 
