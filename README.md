@@ -43,6 +43,10 @@ CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by p
   
 ## News and Updates
 
+### September 3, 2024
+
+New version of PR-Agent, v0.24 was released. See the [release notes](https://github.com/Codium-ai/pr-agent/releases/tag/v0.24) for more information.
+
 ### August 26, 2024
 
 New version of [PR Agent Chrom Extension](https://chromewebstore.google.com/detail/pr-agent-chrome-extension/ephlnjeghhogofkifjloamocljapahnl) was released, with full support of context-aware **PR Chat**. This novel feature is free to use for any open-source repository. See more details in [here](https://pr-agent-docs.codium.ai/chrome-extension/#pr-chat).
