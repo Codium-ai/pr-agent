@@ -8,3 +8,7 @@ For private repositories, you will need to install [PR-Agent Pro](https://github
 For a demonstration of how to install PR-Agent Pro and use it with the Chrome extension, please refer to the tutorial video at the provided [link](https://codium.ai/images/pr_agent/private_repos.mp4).
 
 <img src="https://codium.ai/images/pr_agent/PR-AgentChat.gif" width="768">
+
+### Supported browsers
+
+The extension is supported on all Chromium-based browsers, including Google Chrome, Arc, Opera, Brave, and Microsoft Edge.
