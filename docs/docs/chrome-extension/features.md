@@ -10,7 +10,7 @@ This chat session is **private**, and won't be visible to other users.
 All open-source repositories are supported.
 For private repositories, you will also need to install PR-Agent Pro, After installation, make sure to open at least one new PR to fully register your organization. Once done, you can chat with both new and existing PRs across all installed repositories.
 
-#### What does a 'context-aware PR chat' means?
+#### Context-aware PR chat
 
 PR-Agent constructs a comprehensive context for each pull request, incorporating the PR description, commit messages, and code changes with extended dynamic context. This contextual information, along with additional PR-related data, forms the foundation for an AI-powered chat session. The agent then leverages this rich context to provide intelligent, tailored responses to user inquiries about the pull request.
 
