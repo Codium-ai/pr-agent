@@ -164,8 +164,7 @@ async def polling_loop():
     async with aiohttp.ClientSession() as session:
         while True:
             try:
-                await asyncio.sleep(3)
-                get_logger().info("Polling for notifications")
+                await asyncio.sleep(5)
                 headers = {
                     "Accept": "application/vnd.github.v3+json",
                     "Authorization": f"Bearer {token}"
