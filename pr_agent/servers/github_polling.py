@@ -206,12 +206,17 @@ async def polling_loop():
                             else:
                                 get_logger().debug(f"Skipping comment processing for PR: {pr_url}")
 
+                        max_allowed_parallel_tasks = 10
                         if task_queue:
                             processes = []
-                            for func, args in task_queue: # Create  parallel tasks
+                            for i, func, args in enumerate(task_queue):  # Create  parallel tasks
                                 p = multiprocessing.Process(target=func, args=args)
                                 processes.append(p)
                                 p.start()
+                                if i > max_allowed_parallel_tasks:
+                                    get_logger().error(
+                                        f"Dropping {len(task_queue) - max_allowed_parallel_tasks} tasks from polling session")
+                                    break
                             task_queue.clear()
 
                             # Dont wait for all processes to complete. Move on to the next iteration
