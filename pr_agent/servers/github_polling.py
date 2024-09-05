@@ -16,6 +16,15 @@ setup_logger(fmt=LoggingFormat.JSON, level="DEBUG")
 NOTIFICATION_URL = "https://api.github.com/notifications"
 
 
+async def mark_notification_as_read(headers, notification, session):
+    async with session.patch(
+            f"https://api.github.com/notifications/threads/{notification['id']}",
+            headers=headers) as mark_read_response:
+        if mark_read_response.status != 205:
+            get_logger().error(
+                f"Failed to mark notification as read. Status code: {mark_read_response.status}")
+
+
 def now() -> str:
     """
     Get the current UTC time in ISO 8601 format.
@@ -218,18 +227,5 @@ async def polling_loop():
                                    artifact={"traceback": traceback.format_exc()})
 
 
-async def mark_notification_as_read(headers, notification, session):
-    async with session.patch(
-            f"https://api.github.com/notifications/threads/{notification['id']}",
-            headers=headers) as mark_read_response:
-        if mark_read_response.status != 205:
-            get_logger().error(
-                f"Failed to mark notification as read. Status code: {mark_read_response.status}")
-
-
 if __name__ == '__main__':
     asyncio.run(polling_loop())
-
-# # Example usage
-# task_queue = deque([lambda: print("Task executed1"), lambda: print("Task executed2")])
-# asyncio.run(background_task_manager(task_queue))
