@@ -209,7 +209,7 @@ async def polling_loop():
                         max_allowed_parallel_tasks = 10
                         if task_queue:
                             processes = []
-                            for i, func, args in enumerate(task_queue):  # Create  parallel tasks
+                            for i, (func, args) in enumerate(task_queue):  # Create  parallel tasks
                                 p = multiprocessing.Process(target=func, args=args)
                                 processes.append(p)
                                 p.start()
