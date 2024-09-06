@@ -125,7 +125,6 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
             return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
 
         log_context["sender"] = sender
-
         if data.get('object_kind') == 'merge_request' and data['object_attributes'].get('action') in ['open', 'reopen']:
             title = data['object_attributes'].get('title')
             url = data['object_attributes'].get('url')
