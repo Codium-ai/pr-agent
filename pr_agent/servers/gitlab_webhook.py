@@ -133,7 +133,6 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
 
             get_logger().info(f"New merge request: {url}")
 
-            # ignore draft MRs.
             if draft:
                 get_logger().info(f"Skipping draft MR: {url}")
                 return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
