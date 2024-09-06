@@ -138,7 +138,7 @@ async def handle_new_pr_opened(body: Dict[str, Any],
     if action in get_settings().github_app.handle_pr_actions:  # ['opened', 'reopened', 'ready_for_review']
         # logic to ignore PRs with specific titles (e.g. "[Auto] ...")
         apply_repo_settings(api_url)
-        ignore_pr_title_re = get_settings().get("GITHUB_APP.IGNORE_PR_TITLE", [])
+        ignore_pr_title_re = get_settings().get("CONFIG.IGNORE_PR_TITLE", [])
         if not isinstance(ignore_pr_title_re, list):
             ignore_pr_title_re = [ignore_pr_title_re]
 
@@ -147,9 +147,9 @@ async def handle_new_pr_opened(body: Dict[str, Any],
             return {}
 
         # logic to ignore PRs with specific labels or source branches or target branches.
-        ignore_pr_labels = get_settings().get("GITHUB_APP.IGNORE_PR_LABELS", [])
-        ignore_pr_source_branches = get_settings().get("GITHUB_APP.IGNORE_PR_SOURCE_BRANCHES", [])
-        ignore_pr_target_branches = get_settings().get("GITHUB_APP.IGNORE_PR_TARGET_BRANCHES", [])
+        ignore_pr_labels = get_settings().get("CONFIG.IGNORE_PR_LABELS", [])
+        ignore_pr_source_branches = get_settings().get("CONFIG.IGNORE_PR_SOURCE_BRANCHES", [])
+        ignore_pr_target_branches = get_settings().get("CONFIG.IGNORE_PR_TARGET_BRANCHES", [])
 
         if ignore_pr_labels:
             labels = [label['name'] for label in pull_request.get("labels", [])]

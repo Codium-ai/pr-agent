@@ -36,6 +36,15 @@ is_auto_command=false
 seed=-1 # set positive value to fix the seed (and ensure temperature=0)
 temperature=0.2
 
+# a list of regular expressions to match against the PR title to ignore the PR agent
+ignore_pr_title = []
+# a list of regular expressions of target branches to ignore from PR agent when an MR is created
+ignore_pr_target_branches = []
+# a list of regular expressions of source branches to ignore from PR agent when an MR is created
+ignore_pr_source_branches = []
+# labels to ignore from PR agent when an MR is created
+ignore_pr_labels = []
+
 [pr_reviewer] # /review #
 # enable/disable features
 require_score_review=false
@@ -187,6 +196,7 @@ base_url = "https://api.github.com"
 publish_inline_comments_fallback_with_verification = true
 try_fix_invalid_inline_comments = true
 app_name = "pr-agent"
+ignore_bot_pr = true
 
 [github_action_config]
 # auto_review = true    # set as env var in .github/workflows/pr-agent.yaml
@@ -215,16 +225,6 @@ push_commands = [
     "/describe",
     "/review --pr_reviewer.num_code_suggestions=0",
 ]
-# a list of regular expressions to match against the PR title to ignore the PR agent
-ignore_pr_title = []
-# a list of regular expressions of target branches to ignore from PR agent when an MR is created
-ignore_pr_target_branches = []
-# a list of regular expressions of source branches to ignore from PR agent when an MR is created
-ignore_pr_source_branches = []
-# labels to ignore from PR agent when an MR is created
-ignore_pr_labels = []
-# MR titles to ignore from PR agent when an MR is created
-ignore_bot_pr = true
 
 [gitlab]
 url = "https://gitlab.com"

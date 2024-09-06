@@ -139,10 +139,10 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
                 return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
 
             # logic to ignore MRs for titles, labels and source, target branches.
-            ignore_mr_title = get_settings().get("GITLAB.IGNORE_MR_TITLE", [])
-            ignore_mr_labels = get_settings().get("GITLAB.IGNORE_MR_LABELS", [])
-            ignore_mr_source_branches = get_settings().get("GITLAB.IGNORE_MR_SOURCE_BRANCHES", [])
-            ignore_mr_target_branches = get_settings().get("GITLAB.IGNORE_MR_TARGET_BRANCHES", [])
+            ignore_mr_title = get_settings().get("CONFIG.IGNORE_PR_TITLE", [])
+            ignore_mr_labels = get_settings().get("CONFIG.IGNORE_PR_LABELS", [])
+            ignore_mr_source_branches = get_settings().get("CONFIG.IGNORE_PR_SOURCE_BRANCHES", [])
+            ignore_mr_target_branches = get_settings().get("CONFIG.IGNORE_PR_TARGET_BRANCHES", [])
             if ignore_mr_source_branches:
                 source_branch = data['object_attributes'].get('source_branch')
                 if any(re.search(regex, source_branch) for regex in ignore_mr_source_branches):
