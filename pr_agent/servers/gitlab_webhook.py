@@ -130,7 +130,6 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
             title = data['object_attributes'].get('title')
             url = data['object_attributes'].get('url')
             draft = data['object_attributes'].get('draft')
-
             get_logger().info(f"New merge request: {url}")
 
             if draft:
