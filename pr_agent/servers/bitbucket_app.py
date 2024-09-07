@@ -78,6 +78,7 @@ async def handle_manifest(request: Request, response: Response):
 async def _perform_commands_bitbucket(commands_conf: str, agent: PRAgent, api_url: str, log_context: dict):
     apply_repo_settings(api_url)
     commands = get_settings().get(f"bitbucket_app.{commands_conf}", {})
+    get_settings().set("config.is_auto_command", True)
     for command in commands:
         try:
             split_command = command.split(" ")

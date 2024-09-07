@@ -638,9 +638,10 @@ def insert_br_after_x_chars(text, x=70):
     text = replace_code_tags(text)
 
     # convert list items to <li>
-    if text.startswith("- "):
+    if text.startswith("- ") or text.startswith("* "):
         text = "<li>" + text[2:]
     text = text.replace("\n- ", '<br><li> ').replace("\n - ", '<br><li> ')
+    text = text.replace("\n* ", '<br><li> ').replace("\n * ", '<br><li> ')
 
     # convert new lines to <br>
     text = text.replace("\n", '<br>')

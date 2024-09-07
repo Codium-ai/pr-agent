@@ -21,3 +21,4 @@ class FilePatchInfo:
     old_filename: str = None
     num_plus_lines: int = -1
     num_minus_lines: int = -1
+    ai_file_summary: str = None
