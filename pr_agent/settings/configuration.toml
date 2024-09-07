@@ -241,7 +241,7 @@ pr_commands = [
     "/review --pr_reviewer.num_code_suggestions=0",
     "/improve --pr_code_suggestions.commitable_code_suggestions=true --pr_code_suggestions.suggestions_score_threshold=7",
 ]
-
+avoid_full_files = false
 
 [local]
 # LocalGitProvider settings - uncomment to use paths other than default

@@ -176,6 +176,12 @@ inline_code_comments = true
 
 Each time you invoke a `/review` tool, it will use inline code comments.
 
+
+Note that among other limitations, BitBucket provides relatively low rate-limits for applications (up to 1000 requests per hour), and does not provide an API to track the actual rate-limit usage.
+If you experience lack of responses from PR-Agent, you might want to set: `bitbucket_app.avoid_full_files=true` in your configuration file.
+This will prevent PR-Agent from acquiring the full file content, and will only use the diff content. This will reduce the number of requests made to BitBucket, at the cost of small decrease in accuracy, as dynamic context will not be applicable.
+
+
 ### BitBucket Self-Hosted App automatic tools
 
 To control which commands will run automatically when a new PR is opened, you can set the `pr_commands` parameter in the configuration file:
