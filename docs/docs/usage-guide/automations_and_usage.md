@@ -94,13 +94,6 @@ To cancel the automatic run of all the tools, set:
 pr_commands = []
 ```
 
-You can also disable automatic runs for PRs with specific titles, by setting the `ignore_pr_titles` parameter with the relevant regex. For example:
-```
-[github_app]
-ignore_pr_title = ["^[Auto]", ".*ignore.*"]
-```
-will ignore PRs with titles that start with "Auto" or contain the word "ignore".
-
 ### GitHub app automatic tools for push actions (commits to an open PR)
 
 In addition to running automatic tools when a PR is opened, the GitHub app can also respond to new code that is pushed to an open PR.
