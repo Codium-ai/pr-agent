@@ -227,7 +227,10 @@ class BitbucketProvider(GitProvider):
 
             try:
                 counter_valid += 1
-                if counter_valid < MAX_FILES_ALLOWED_FULL // 2:  # factor 2 because bitbucket has limited API calls
+                if get_settings().get("bitbucket_app.avoid_full_files", False):
+                    original_file_content_str = ""
+                    new_file_content_str = ""
+                elif counter_valid < MAX_FILES_ALLOWED_FULL // 2:  # factor 2 because bitbucket has limited API calls
                     if diff.old.get_data("links"):
                         original_file_content_str = self._get_pr_file_content(
                             diff.old.get_data("links")['self']['href'])
