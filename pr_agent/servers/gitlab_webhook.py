@@ -1,4 +1,5 @@
 import copy
+import re
 import json
 from datetime import datetime
 
@@ -125,6 +126,7 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
 
         log_context["sender"] = sender
         if data.get('object_kind') == 'merge_request' and data['object_attributes'].get('action') in ['open', 'reopen']:
+            title = data['object_attributes'].get('title')
             url = data['object_attributes'].get('url')
             draft = data['object_attributes'].get('draft')
             get_logger().info(f"New merge request: {url}")
@@ -133,12 +135,41 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
                 get_logger().info(f"Skipping draft MR: {url}")
                 return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
 
+            # logic to ignore MRs for titles, labels and source, target branches.
+            ignore_mr_title = get_settings().get("CONFIG.IGNORE_PR_TITLE", [])
+            ignore_mr_labels = get_settings().get("CONFIG.IGNORE_PR_LABELS", [])
+            ignore_mr_source_branches = get_settings().get("CONFIG.IGNORE_PR_SOURCE_BRANCHES", [])
+            ignore_mr_target_branches = get_settings().get("CONFIG.IGNORE_PR_TARGET_BRANCHES", [])
+            if ignore_mr_source_branches:
+                source_branch = data['object_attributes'].get('source_branch')
+                if any(re.search(regex, source_branch) for regex in ignore_mr_source_branches):
+                    get_logger().info(f"Ignoring MR with source branch '{source_branch}' due to gitlab.ignore_mr_source_branches settings")
+                    return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
+
+            if ignore_mr_target_branches:
+                target_branch = data['object_attributes'].get('target_branch')
+                if any(re.search(regex, target_branch) for regex in ignore_mr_target_branches):
+                    get_logger().info(f"Ignoring MR with target branch '{target_branch}' due to gitlab.ignore_mr_target_branches settings")
+                    return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
+
+            if ignore_mr_labels:
+                labels = [label['title'] for label in data['object_attributes'].get('labels', [])]
+                if any(label in ignore_mr_labels for label in labels):
+                    labels_str = ", ".join(labels)
+                    get_logger().info(f"Ignoring MR with labels '{labels_str}' due to gitlab.ignore_mr_labels settings")
+                    return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
+
+            if ignore_mr_title:
+                if any(re.search(regex, title) for regex in ignore_mr_title):
+                    get_logger().info(f"Ignoring MR with title '{title}' due to gitlab.ignore_mr_title settings")
+                    return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
+
             await _perform_commands_gitlab("pr_commands", PRAgent(), url, log_context)
         elif data.get('object_kind') == 'note' and data.get('event_type') == 'note': # comment on MR
             if 'merge_request' in data:
                 mr = data['merge_request']
                 url = mr.get('url')
-                
+
                 get_logger().info(f"A comment has been added to a merge request: {url}")
                 body = data.get('object_attributes', {}).get('note')
                 if data.get('object_attributes', {}).get('type') == 'DiffNote' and '/ask' in body: # /ask_line

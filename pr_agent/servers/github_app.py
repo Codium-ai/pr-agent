@@ -138,12 +138,35 @@ async def handle_new_pr_opened(body: Dict[str, Any],
     if action in get_settings().github_app.handle_pr_actions:  # ['opened', 'reopened', 'ready_for_review']
         # logic to ignore PRs with specific titles (e.g. "[Auto] ...")
         apply_repo_settings(api_url)
-        ignore_pr_title_re = get_settings().get("GITHUB_APP.IGNORE_PR_TITLE", [])
+        ignore_pr_title_re = get_settings().get("CONFIG.IGNORE_PR_TITLE", [])
         if not isinstance(ignore_pr_title_re, list):
             ignore_pr_title_re = [ignore_pr_title_re]
+
         if ignore_pr_title_re and any(re.search(regex, title) for regex in ignore_pr_title_re):
             get_logger().info(f"Ignoring PR with title '{title}' due to github_app.ignore_pr_title setting")
             return {}
+
+        # logic to ignore PRs with specific labels or source branches or target branches.
+        ignore_pr_labels = get_settings().get("CONFIG.IGNORE_PR_LABELS", [])
+        ignore_pr_source_branches = get_settings().get("CONFIG.IGNORE_PR_SOURCE_BRANCHES", [])
+        ignore_pr_target_branches = get_settings().get("CONFIG.IGNORE_PR_TARGET_BRANCHES", [])
+
+        if ignore_pr_labels:
+            labels = [label['name'] for label in pull_request.get("labels", [])]
+            if any(label in ignore_pr_labels for label in labels):
+                labels_str = ", ".join(labels)
+                get_logger().info(f"Ignoring PR with labels '{labels_str}' due to github_app.ignore_pr_labels settings")
+                return {}
+
+        if ignore_pr_source_branches or ignore_pr_target_branches:
+            source_branch = pull_request.get("head", {}).get("ref", "")
+            target_branch = pull_request.get("base", {}).get("ref", "")
+            if any(re.search(regex, source_branch) for regex in ignore_pr_source_branches):
+                get_logger().info(f"Ignoring PR with source branch '{source_branch}' due to github_app.ignore_pr_source_branches settings")
+                return {}
+            if any(re.search(regex, target_branch) for regex in ignore_pr_target_branches):
+                get_logger().info(f"Ignoring PR with target branch '{target_branch}' due to github_app.ignore_pr_target_branches settings")
+                return {}
 
         if get_identity_provider().verify_eligibility("github", sender_id, api_url) is not Eligibility.NOT_ELIGIBLE:
                 await _perform_auto_commands_github("pr_commands", agent, body, api_url, log_context)
