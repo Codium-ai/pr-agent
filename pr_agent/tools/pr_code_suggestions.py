@@ -517,8 +517,7 @@ class PRCodeSuggestions:
 
     async def _prepare_prediction_extended(self, model: str) -> dict:
         self.patches_diff_list = get_pr_multi_diffs(self.git_provider, self.token_handler, model,
-                                                    max_calls=get_settings().pr_code_suggestions.max_number_of_calls,
-                                                    pr_description_files =self.pr_description_files)
+                                                    max_calls=get_settings().pr_code_suggestions.max_number_of_calls)
         if self.patches_diff_list:
             get_logger().info(f"Number of PR chunk calls: {len(self.patches_diff_list)}")
             get_logger().debug(f"PR diff:", artifact=self.patches_diff_list)
