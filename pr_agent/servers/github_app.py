@@ -128,7 +128,6 @@ async def handle_new_pr_opened(body: Dict[str, Any],
                                log_context: Dict[str, Any],
                                agent: PRAgent):
     title = body.get("pull_request", {}).get("title", "")
-    get_settings().config.is_auto_command = True
 
     pull_request, api_url = _check_pull_request_event(action, body, log_context)
     if not (pull_request and api_url):
@@ -371,12 +370,14 @@ def _check_pull_request_event(action: str, body: dict, log_context: dict) -> Tup
     return pull_request, api_url
 
 
-async def _perform_auto_commands_github(commands_conf: str, agent: PRAgent, body: dict, api_url: str, log_context: dict):
+async def _perform_auto_commands_github(commands_conf: str, agent: PRAgent, body: dict, api_url: str,
+                                        log_context: dict):
     apply_repo_settings(api_url)
     commands = get_settings().get(f"github_app.{commands_conf}")
     if not commands:
         get_logger().info(f"New PR, but no auto commands configured")
         return
+    get_settings().set("config.is_auto_command", True)
     for command in commands:
         split_command = command.split(" ")
         command = split_command[0]

@@ -94,10 +94,11 @@ class TestExtendedPatchMoreLines:
         get_settings().config.allow_dynamic_context = False
 
     class File:
-        def __init__(self, base_file, patch, filename):
+        def __init__(self, base_file, patch, filename, ai_file_summary=None):
             self.base_file = base_file
             self.patch = patch
             self.filename = filename
+            self.ai_file_summary = ai_file_summary
 
     @pytest.fixture
     def token_handler(self):

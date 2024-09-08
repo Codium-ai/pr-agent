@@ -243,7 +243,7 @@ __old hunk__
     if hasattr(file, 'edit_type') and file.edit_type == EDIT_TYPE.DELETED:
         return f"\n\n## file '{file.filename.strip()}' was deleted\n"
 
-    patch_with_lines_str = f"\n\n## file: '{file.filename.strip()}'\n"
+    patch_with_lines_str = f"\n\n## File: '{file.filename.strip()}'\n"
     patch_lines = patch.splitlines()
     RE_HUNK_HEADER = re.compile(
         r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@[ ]?(.*)")
@@ -319,7 +319,7 @@ __old hunk__
 
 def extract_hunk_lines_from_patch(patch: str, file_name, line_start, line_end, side) -> tuple[str, str]:
 
-    patch_with_lines_str = f"\n\n## file: '{file_name.strip()}'\n\n"
+    patch_with_lines_str = f"\n\n## File: '{file_name.strip()}'\n\n"
     selected_lines = ""
     patch_lines = patch.splitlines()
     RE_HUNK_HEADER = re.compile(

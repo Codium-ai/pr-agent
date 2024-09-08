@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 # enum EDIT_TYPE (ADDED, DELETED, MODIFIED, RENAMED)
 from typing import Optional
 
-from pr_agent.algo.utils import Range
+from pr_agent.algo.utils import Range, process_description
 from pr_agent.config_loader import get_settings
 from pr_agent.algo.types import FilePatchInfo
 from pr_agent.log import get_logger
@@ -61,14 +61,20 @@ class GitProvider(ABC):
     def reply_to_comment_from_comment_id(self, comment_id: int, body: str):
         pass
 
-    def get_pr_description(self, *, full: bool = True) -> str:
+    def get_pr_description(self, full: bool = True, split_changes_walkthrough=False) -> str or tuple:
         from pr_agent.config_loader import get_settings
         from pr_agent.algo.utils import clip_tokens
         max_tokens_description = get_settings().get("CONFIG.MAX_DESCRIPTION_TOKENS", None)
         description = self.get_pr_description_full() if full else self.get_user_description()
-        if max_tokens_description:
-            return clip_tokens(description, max_tokens_description)
-        return description
+        if split_changes_walkthrough:
+            description, files = process_description(description)
+            if max_tokens_description:
+                description = clip_tokens(description, max_tokens_description)
+            return description, files
+        else:
+            if max_tokens_description:
+                description = clip_tokens(description, max_tokens_description)
+            return description
 
     def get_user_description(self) -> str:
         if hasattr(self, 'user_description') and not (self.user_description is None):

@@ -200,6 +200,10 @@ def pr_generate_extended_diff(pr_languages: list,
             if add_line_numbers_to_hunks:
                 full_extended_patch = convert_to_hunks_with_lines_numbers(extended_patch, file)
 
+            # add AI-summary metadata to the patch
+            if file.ai_file_summary and  get_settings().get("config.enable_ai_metadata", False):
+                full_extended_patch = add_ai_summary_top_patch(file, full_extended_patch)
+
             patch_tokens = token_handler.count_tokens(full_extended_patch)
             file.tokens = patch_tokens
             total_tokens += patch_tokens
@@ -238,6 +242,10 @@ def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler, mo
 
         if convert_hunks_to_line_numbers:
             patch = convert_to_hunks_with_lines_numbers(patch, file)
+
+        ## add AI-summary metadata to the patch (disabled, since we are in the compressed diff)
+        # if file.ai_file_summary and get_settings().config.get('config.is_auto_command', False):
+        #     patch = add_ai_summary_top_patch(file, patch)
 
         new_patch_tokens = token_handler.count_tokens(patch)
         file_dict[file.filename] = {'patch': patch, 'tokens': new_patch_tokens, 'edit_type': file.edit_type}
@@ -304,7 +312,7 @@ def generate_full_patch(convert_hunks_to_line_numbers, file_dict, max_tokens_mod
 
         if patch:
             if not convert_hunks_to_line_numbers:
-                patch_final = f"\n\n## file: '{filename.strip()}\n\n{patch.strip()}\n'"
+                patch_final = f"\n\n## File: '{filename.strip()}\n\n{patch.strip()}\n'"
             else:
                 patch_final = "\n\n" + patch.strip()
             patches.append(patch_final)
@@ -432,6 +440,9 @@ def get_pr_multi_diffs(git_provider: GitProvider,
             continue
 
         patch = convert_to_hunks_with_lines_numbers(patch, file)
+        # add AI-summary metadata to the patch
+        if file.ai_file_summary and get_settings().get("config.enable_ai_metadata", False):
+            patch = add_ai_summary_top_patch(file, patch)
         new_patch_tokens = token_handler.count_tokens(patch)
 
         if patch and (token_handler.prompt_tokens + new_patch_tokens) > get_max_tokens(
@@ -479,3 +490,33 @@ def get_pr_multi_diffs(git_provider: GitProvider,
         final_diff_list.append(final_diff)
 
     return final_diff_list
+
+
+def add_ai_metadata_to_diff_files(git_provider, pr_description_files):
+    """
+    Adds AI metadata to the diff files based on the PR description files (FilePatchInfo.ai_file_summary).
+    """
+    diff_files = git_provider.get_diff_files()
+    for file in diff_files:
+        filename = file.filename.strip()
+        found = False
+        for pr_file in pr_description_files:
+            if filename == pr_file['full_file_name'].strip():
+                file.ai_file_summary = pr_file
+                found = True
+                break
+        if not found:
+            get_logger().info(f"File {filename} not found in the PR description files",
+                              artifacts=pr_description_files)
+
+
+def add_ai_summary_top_patch(file, full_extended_patch):
+    # below every instance of '## File: ...' in the patch, add the ai-summary metadata
+    full_extended_patch_lines = full_extended_patch.split("\n")
+    for i, line in enumerate(full_extended_patch_lines):
+        if line.startswith("## File:") or line.startswith("## file:"):
+            full_extended_patch_lines.insert(i + 1,
+                                             f"### AI-generated file summary:\n{file.ai_file_summary['long_summary']}")
+            break
+    full_extended_patch = "\n".join(full_extended_patch_lines)
+    return full_extended_patch

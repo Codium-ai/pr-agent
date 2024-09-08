@@ -31,7 +31,6 @@ ai_disclaimer_title=""  # Pro feature, title for a collapsible disclaimer to AI 
 ai_disclaimer=""  # Pro feature, full text for the AI disclaimer
 output_relevant_configurations=false
 large_patch_policy = "clip" # "clip", "skip"
-is_auto_command=false
 # seed
 seed=-1 # set positive value to fix the seed (and ensure temperature=0)
 temperature=0.2
@@ -40,6 +39,9 @@ ignore_pr_title = ["^\\[Auto\\]", "^Auto"] # a list of regular expressions to ma
 ignore_pr_target_branches = [] # a list of regular expressions of target branches to ignore from PR agent when an PR is created
 ignore_pr_source_branches = [] # a list of regular expressions of source branches to ignore from PR agent when an PR is created
 ignore_pr_labels = [] # labels to ignore from PR agent when an PR is created
+#
+is_auto_command = false # will be auto-set to true if the command is triggered by an automation
+enable_ai_metadata = false # will enable adding ai metadata
 
 [pr_reviewer] # /review #
 # enable/disable features
@@ -48,7 +50,6 @@ require_tests_review=true
 require_estimate_effort_to_review=true
 require_can_be_split_review=false
 require_security_review=true
-extra_issue_links=false
 # soc2
 require_soc2_ticket=false
 soc2_ticket_prompt="Does the PR description include a link to ticket in a project management system (e.g., Jira, Asana, Trello, etc.) ?"
