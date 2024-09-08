@@ -18,7 +18,6 @@ By default, the first command that PR-Agent executes is [`describe`](https://pr-
 These AI-generated outputs are now considered part of the PR metadata, and can be used in subsequent commands like `review` and `improve`.
 This effectively enables chain-of-thought analysis, without doing any additional API calls which will cost time and money.
 
-(3)
 For example, when generating code suggestions for different files, PR-Agent can inject the AI-generated file summary in the prompt:
 
 ```
@@ -47,10 +46,6 @@ __old hunk__
 ...
 ```
 
-(4) The entire PR files that were retrieved are used to expand and enhance the PR context (see [Dynamic Context](https://pr-agent-docs.codium.ai/core-abilities/dynamic-context/)).
+(3) The entire PR files that were retrieved are used to expand and enhance the PR context (see [Dynamic Context](https://pr-agent-docs.codium.ai/core-abilities/dynamic-context/)).
 
-(5) All the metadata described above represent several level of analysis - from hunk level, to file level, to PR level, and enables PR-Agent AI models to generate more accurate and relevant suggestions.
-
-
-## Example result for prompt with metadata injection
-TBD
+(4) All the metadata described above represent several level of analysis - from hunk level, to file level, to PR level, and enables PR-Agent AI models to generate more accurate and relevant suggestions and feedbacks.
