@@ -979,7 +979,9 @@ def process_description(description_full: str):
                         long_summary =  res.group(4).strip()
                         long_summary = long_summary.replace('<br> *', '\n*').replace('<br>','').replace('\n','<br>')
                         long_summary = h.handle(long_summary).strip()
-                        if not long_summary.startswith('*'):
+                        if long_summary.startswith('\\-'):
+                            long_summary = "* " + long_summary[2:]
+                        elif not long_summary.startswith('*'):
                             long_summary = f"* {long_summary}"
 
                         files.append({
