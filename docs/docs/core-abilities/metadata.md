@@ -1,24 +1,26 @@
-## Overview - Local and global metadata injection with multi-stage analysis
+## Local and global metadata injection with multi-stage analysis
 (1)
 PR-Agent initially retrieves for each PR the following data:
+
 - PR title and branch name
 - PR original description
 - Commit messages history
 - PR diff patches, in [hunk diff](https://loicpefferkorn.net/2014/02/diff-files-what-are-hunks-and-how-to-extract-them/) format
 - The entire content of the files that were modified in the PR
 
-In addition, PR-Agent is able to receive from the user additional data, like [`extra_instructions` and `best practices`](https://pr-agent-docs.codium.ai/tools/improve/#extra-instructions-and-best-practices) that can be used to enhance the PR analysis.
+In addition, PR-Agent can incorporate supplementary information provided by the user and more tailored to his specific preferences, like [`extra_instructions` and `organization best practices`](https://pr-agent-docs.codium.ai/tools/improve/#extra-instructions-and-best-practices) that can be used to enhance the PR analysis.
 
 (2)
 By default, the first command that PR-Agent executes is [`describe`](https://pr-agent-docs.codium.ai/tools/describe/), which generates three types of outputs:
+
 - PR Type (e.g. bug fix, feature, refactor, etc)
 - PR Description - a bullet points summary of the PR
 - Changes walkthrough - going file-by-file, PR-Agent generate a one-line summary and longer bullet points summary of the changes in the file
 
-These AI-generated outputs are now considered part of the PR metadata, and can be used in subsequent commands like `review` and `improve`.
-This effectively enables chain-of-thought analysis, without doing any additional API calls which will cost time and money.
+These AI-generated outputs are now considered as part of the PR metadata, and can be used in subsequent commands like `review` and `improve`.
+This effectively enables multi-stage chain-of-thought analysis, without doing any additional API calls which will cost time and money.
 
-For example, when generating code suggestions for different files, PR-Agent can inject the AI-generated file summary in the prompt:
+For example, when generating code suggestions for different files, PR-Agent can inject the AI-generated ["Changes walkthrough"](https://github.com/Codium-ai/pr-agent/pull/1202#issue-2511546839) file summary in the prompt:
 
 ```
 ## File: 'src/file1.py'
@@ -46,6 +48,8 @@ __old hunk__
 ...
 ```
 
-(3) The entire PR files that were retrieved are used to expand and enhance the PR context (see [Dynamic Context](https://pr-agent-docs.codium.ai/core-abilities/dynamic-context/)).
+(3) The entire PR files that where retrieved are also used to expand and enhance the PR context (see [Dynamic Context](https://pr-agent-docs.codium.ai/core-abilities/dynamic-context/)).
 
-(4) All the metadata described above represent several level of analysis - from hunk level, to file level, to PR level, and enables PR-Agent AI models to generate more accurate and relevant suggestions and feedbacks.
+
+(4) All the metadata described above represents several level of cumulative analysis - ranging from hunk level, to file level, to PR level, to organization level.
+This comprehensive approach enables PR-Agent AI models to generate more precise and contextually relevant suggestions and feedback.
