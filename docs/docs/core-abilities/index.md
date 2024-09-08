@@ -5,6 +5,7 @@ PR-Agent utilizes a variety of core abilities to provide a comprehensive and eff
 - [Line localization](/line_localization)
 - [Dynamic context](/dynamic_context)
 - [Self-reflection](/self_reflection)
+- [Impact evaluation](/impact_evaluation)
 - [Interactivity](/interactivity)
 - [Compression strategy](/compression_strategy)
 - [Code-oriented YAML](/code_oriented_yaml)
