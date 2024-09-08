@@ -8,7 +8,8 @@ PR-Agent initially retrieves for each PR the following data:
 - PR diff patches, in [hunk diff](https://loicpefferkorn.net/2014/02/diff-files-what-are-hunks-and-how-to-extract-them/) format
 - The entire content of the files that were modified in the PR
 
-In addition, PR-Agent can incorporate supplementary information provided by the user and more tailored to his specific preferences, like [`extra_instructions` and `organization best practices`](https://pr-agent-docs.codium.ai/tools/improve/#extra-instructions-and-best-practices) that can be used to enhance the PR analysis.
+!!! tip "Tip: Organization-level metadata"
+    In addition to the inputs above, PR-Agent can incorporate supplementary preferences provided by the user, like [`extra_instructions` and `organization best practices`](https://pr-agent-docs.codium.ai/tools/improve/#extra-instructions-and-best-practices). This information can be used to enhance the PR analysis.
 
 (2)
 By default, the first command that PR-Agent executes is [`describe`](https://pr-agent-docs.codium.ai/tools/describe/), which generates three types of outputs:
