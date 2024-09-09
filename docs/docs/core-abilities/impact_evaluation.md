@@ -1,7 +1,7 @@
 # Overview - Impact Evaluation 💎
 
 Demonstrating the return on investment (ROI) of AI-powered initiatives is crucial for modern organizations.
-To address this need, PR-Agent has developed an AI Impact measurement tools and metrics, providing advanced analytics to help businesses quantify the tangible benefits of AI adoption in their development processes.
+To address this need, PR-Agent has developed an AI impact measurement tools and metrics, providing advanced analytics to help businesses quantify the tangible benefits of AI adoption in their development processes.
 
 
 ## Auto Impact Validator - Real-Time Tracking of Implemented PR-Agent Suggestions
@@ -35,7 +35,7 @@ Here are key metrics that the dashboard tracks:
 3. **Quantifies Value and ROI:** The metric directly correlates with the value PR-Agent is providing, showing how frequently it offers improvements relative to the amount of new code being written. This provides a clear, quantifiable way to demonstrate PR-Agent's return on investment to stakeholders.
 
 #### Suggestion Effectiveness Across Categories
-![Impacted_Suggestion_Score](https://codium.ai/images/pr_agent/imact_by_category.png){width=512}
+![Impacted_Suggestion_Score](https://codium.ai/images/pr_agent/impact_by_category.png){width=512}
 > Explanation: This chart illustrates the distribution of implemented suggestions across different categories, enabling teams to better understand PR-Agent's impact on various aspects of code quality and development practices.
 
 #### Suggestion Score Distribution
