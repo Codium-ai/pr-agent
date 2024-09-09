@@ -1,3 +1,25 @@
+## Show possible configurations
+The possible configurations of pr-agent are stored in [here](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml).
+In the [tools](https://pr-agent-docs.codium.ai/tools/) page you can find explanations on how to use these configurations for each tool.
+
+To print all the available configurations as a comment on your PR, you can use the following command:
+```
+/config
+```
+
+![possible_config1](https://codium.ai/images/pr_agent/possible_config1.png){width=512}
+
+
+To view the **actual** configurations used for a specific tool, after all the user settings are applied, you can add for each tool a `--config.output_relevant_configurations=true` suffix.
+For example:
+```
+/improve --config.output_relevant_configurations=true
+```
+Will output an additional field showing the actual configurations used for the `improve` tool.
+
+![possible_config2](https://codium.ai/images/pr_agent/possible_config2.png){width=512}
+
+
 ## Ignoring files from analysis
 
 In some cases, you may want to exclude specific files or directories from the analysis performed by CodiumAI PR-Agent. This can be useful, for example, when you have files that are generated automatically or files that shouldn't be reviewed, like vendored code.
