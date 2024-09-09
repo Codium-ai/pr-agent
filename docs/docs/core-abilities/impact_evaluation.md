@@ -1,7 +1,7 @@
 # Overview - Impact Evaluation 💎
 
 Demonstrating the return on investment (ROI) of AI-powered initiatives is crucial for modern organizations.
-To address this need, PR-Agent has developed an AI impact measurement tools and metrics, providing advanced analytics to help businesses quantify the tangible benefits of AI adoption in their development processes.
+To address this need, PR-Agent has developed an AI impact measurement tools and metrics, providing advanced analytics to help businesses quantify the tangible benefits of AI adoption in their PR review process.
 
 
 ## Auto Impact Validator - Real-Time Tracking of Implemented PR-Agent Suggestions
@@ -27,9 +27,10 @@ Here are key metrics that the dashboard tracks:
 
 #### PR-Agent Impacts per 1K Lines
 ![Dashboard](https://codium.ai/images/pr_agent/impacts_per_1k_llines.png){width=512}
-> Explanation: for every 1K lines of code (additions/edits), PR-Agent had in average ~X suggestions implemented.
+> Explanation: for every 1K lines of code (additions/edits), PR-Agent had on average ~X suggestions implemented.
 
 **Why This Metric Matters:**
+
 1. **Standardized and Comparable Measurement:** By measuring impacts per 1K lines of code additions, you create a standardized metric that can be compared across different projects, teams, customers, and time periods. This standardization is crucial for meaningful analysis, benchmarking, and identifying where PR-Agent is most effective.
 2. **Accounts for PR Variability and Incentivizes Quality:** This metric addresses the fact that "Not all PRs are created equal." By normalizing against lines of code rather than PR count, you account for the variability in PR sizes and focus on the quality and impact of suggestions rather than just the number of PRs affected.
 3. **Quantifies Value and ROI:** The metric directly correlates with the value PR-Agent is providing, showing how frequently it offers improvements relative to the amount of new code being written. This provides a clear, quantifiable way to demonstrate PR-Agent's return on investment to stakeholders.

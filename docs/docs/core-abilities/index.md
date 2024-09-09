@@ -2,7 +2,6 @@
 PR-Agent utilizes a variety of core abilities to provide a comprehensive and efficient code review experience. These abilities include:
 
 - [Local and global metadata](https://pr-agent-docs.codium.ai/core-abilities/metadata/)
-- [Line localization](https://pr-agent-docs.codium.ai/core-abilities/line_localization/)
 - [Dynamic context](https://pr-agent-docs.codium.ai/core-abilities/dynamic_context/)
 - [Self-reflection](https://pr-agent-docs.codium.ai/core-abilities/self_reflection/)
 - [Impact evaluation](https://pr-agent-docs.codium.ai/core-abilities/impact_evaluation/)
