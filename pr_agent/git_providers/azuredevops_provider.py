@@ -516,12 +516,6 @@ class AzureDevopsProvider(GitProvider):
         source_branch = pr_info.source_ref_name.split("/")[-1]
         return source_branch
 
-    def get_pr_description(self, full: bool = True, split_changes_walkthrough=False) -> str:
-        max_tokens = get_settings().get("CONFIG.MAX_DESCRIPTION_TOKENS", None)
-        if max_tokens:
-            return clip_tokens(self.pr.description, max_tokens)
-        return self.pr.description
-
     def get_user_id(self):
         return 0
 
