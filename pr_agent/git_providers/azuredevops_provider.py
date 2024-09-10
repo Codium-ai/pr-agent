@@ -543,18 +543,20 @@ class AzureDevopsProvider(GitProvider):
         parsed_url = urlparse(pr_url)
 
         path_parts = parsed_url.path.strip("/").split("/")
-
-        if len(path_parts) < 6 or path_parts[4] != "pullrequest":
+        if "pullrequest" not in path_parts:
             raise ValueError(
                 "The provided URL does not appear to be a Azure DevOps PR URL"
             )
-
-        workspace_slug = path_parts[1]
-        repo_slug = path_parts[3]
-        try:
+        if len(path_parts) == 6:  # "https://dev.azure.com/organization/project/_git/repo/pullrequest/1"
+            workspace_slug = path_parts[1]
+            repo_slug = path_parts[3]
             pr_number = int(path_parts[5])
-        except ValueError as e:
-            raise ValueError("Unable to convert PR number to integer") from e
+        elif len(path_parts) == 5:  # 'https://organization.visualstudio.com/project/_git/repo/pullrequest/1'
+            workspace_slug = path_parts[0]
+            repo_slug = path_parts[2]
+            pr_number = int(path_parts[4])
+        else:
+            raise ValueError("The provided URL does not appear to be a Azure DevOps PR URL")
 
         return workspace_slug, repo_slug, pr_number
 
