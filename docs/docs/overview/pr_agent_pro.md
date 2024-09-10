@@ -47,6 +47,6 @@ Here are additional tools that are available only for PR-Agent Pro users:
 ### Supported languages
 
 PR-Agent Pro leverages the world's leading code models - Claude 3.5 Sonnet and GPT-4. 
-As a result, all its core tools such as `describe`, `review`, and `improve`, as well as the PR-chat feature, support virtually all programming languages.
+As a result, its primary tools such as `describe`, `review`, and `improve`, as well as the PR-chat feature, support virtually all programming languages.
 
 For specialized commands that require static code analysis, PR-Agent Pro offers support for specific languages. For more details about features that require static code analysis, please refer to the [documentation](https://pr-agent-docs.codium.ai/tools/analyze/#overview).
