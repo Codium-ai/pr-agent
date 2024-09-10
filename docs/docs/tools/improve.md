@@ -179,6 +179,10 @@ Using a combination of both can help the AI model to provide relevant and tailor
     <td><b>enable_help_text</b></td>
     <td>If set to true, the tool will display a help text in the comment. Default is true.</td>
   </tr>
+  <tr>
+    <td><b>enable_chat_text</b></td>
+    <td>If set to true, the tool will display a reference to the PR chat in the comment. Default is true.</td>
+  </tr>
 </table>
 
 !!! example "params for 'extended' mode"

@@ -14,8 +14,8 @@ For private repositories, you will also need to install PR-Agent Pro, After inst
 
 PR-Agent constructs a comprehensive context for each pull request, incorporating the PR description, commit messages, and code changes with extended dynamic context. This contextual information, along with additional PR-related data, forms the foundation for an AI-powered chat session. The agent then leverages this rich context to provide intelligent, tailored responses to user inquiries about the pull request.
 
-<img src="https://codium.ai/images/pr_agent/pr_chat1.png" width="768">
-<img src="https://codium.ai/images/pr_agent/pr_chat2.png" width="768">
+<img src="https://codium.ai/images/pr_agent/pr_chat_1.png" width="768">
+<img src="https://codium.ai/images/pr_agent/pr_chat_2.png" width="768">
 
 
 ### Toolbar extension
