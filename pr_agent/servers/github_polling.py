@@ -79,8 +79,8 @@ async def is_valid_notification(notification, headers, handled_ids, session, use
                 pr_url = notification['subject']['url']
                 latest_comment = notification['subject']['latest_comment_url']
                 if not latest_comment or not isinstance(latest_comment, str):
-                    get_logger().debug(f"not latest_comment, but its ok")
-                    # continue
+                    get_logger().debug(f"no latest_comment")
+                    return False, handled_ids
                 async with session.get(latest_comment, headers=headers) as comment_response:
                     check_prev_comments = False
                     if comment_response.status == 200:

@@ -938,7 +938,10 @@ def is_value_no(value):
     return False
 
 
-def process_description(description_full: str):
+def process_description(description_full: str) -> Tuple[str, List]:
+    if not description_full:
+        return "", []
+
     split_str = "### **Changes walkthrough** 📝"
     description_split = description_full.split(split_str)
     base_description_str = description_split[0]
