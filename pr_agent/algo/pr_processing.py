@@ -500,16 +500,14 @@ def add_ai_metadata_to_diff_files(git_provider, pr_description_files):
         if not pr_description_files:
             get_logger().warning(f"PR description files are empty.")
             return
-        available_files = [pr_file['full_file_name'].strip() for pr_file in pr_description_files]
+        available_files = {pr_file['full_file_name'].strip(): pr_file for pr_file in pr_description_files}
         diff_files = git_provider.get_diff_files()
         found_any_match = False
         for file in diff_files:
             filename = file.filename.strip()
-            index_file = available_files.index(filename)
-            if index_file == -1:
-                continue
-            file.ai_file_summary = pr_description_files[index_file]
-            found_any_match = True
+            if filename in available_files:
+                file.ai_file_summary = available_files[filename]
+                found_any_match = True
         if not found_any_match:
             get_logger().error(f"Failed to find any matching files between PR description and diff files.",
                                artifact={"pr_description_files": pr_description_files})
