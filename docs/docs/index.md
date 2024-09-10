@@ -78,4 +78,4 @@ The following diagram illustrates PR-Agent tools and their flow:
 
 ![PR-Agent Tools](https://codium.ai/images/pr_agent/diagram-v0.9.png)
 
-Check out the [PR Compression strategy](core-abilities/index.md) page for more details on how we convert a code diff to a manageable LLM prompt
+Check out the [core abilities](core-abilities/index.md) page for a comprehensive overview of the variety of core abilities used by PR-Agent.
