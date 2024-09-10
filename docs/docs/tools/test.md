@@ -10,14 +10,10 @@ To get a list of the components that changed in the PR and choose the relevant c
 ## Example usage
 
 Invoke the tool manually by commenting `/test` on any PR:
-
-![test1](https://codium.ai/images/pr_agent/test1.png){width=704}
-
 The tool will generate tests for the selected component (if no component is stated, it will generate tests for largest component):
 
-![test2](https://codium.ai/images/pr_agent/test2.png){width=768}
+![test1](https://codium.ai/images/pr_agent/test1.png){width=768}
 
-![test3](https://codium.ai/images/pr_agent/test3.png){width=768}
 
 (Example taken from [here](https://github.com/Codium-ai/pr-agent/pull/598#issuecomment-1913679429)):
 
