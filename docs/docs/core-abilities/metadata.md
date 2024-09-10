@@ -25,7 +25,7 @@ For example, when generating code suggestions for different files, PR-Agent can 
 
 ```
 ## File: 'src/file1.py'
-### AI-generated file summary:
+### AI-generated changes summary:
 - edited function `func1` that does X
 - Removed function `func2` that was not used
 - ....

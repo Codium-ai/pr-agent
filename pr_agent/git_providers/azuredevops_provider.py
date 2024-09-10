@@ -316,7 +316,7 @@ class AzureDevopsProvider(GitProvider):
 
                     new_file_content_str = new_file_content_str.content
                 except Exception as error:
-                    get_logger().error(f"Failed to retrieve new file content of {file} at version {version}. Error: {str(error)}")
+                    get_logger().error(f"Failed to retrieve new file content of {file} at version {version}", error=error)
                     # get_logger().error(
                     #     "Failed to retrieve new file content of %s at version %s. Error: %s",
                     #     file,
@@ -347,7 +347,7 @@ class AzureDevopsProvider(GitProvider):
                     )
                     original_file_content_str = original_file_content_str.content
                 except Exception as error:
-                    get_logger().error(f"Failed to retrieve original file content of {file} at version {version}. Error: {str(error)}")
+                    get_logger().error(f"Failed to retrieve original file content of {file} at version {version}", error=error)
                     original_file_content_str = ""
 
                 patch = load_large_diff(
@@ -375,7 +375,7 @@ class AzureDevopsProvider(GitProvider):
             self.diff_files = diff_files
             return diff_files
         except Exception as e:
-            print(f"Error: {str(e)}")
+            get_logger().exception(f"Failed to get diff files, error: {e}")
             return []
 
     def publish_comment(self, pr_comment: str, is_temporary: bool = False, thread_context=None):
@@ -519,7 +519,6 @@ class AzureDevopsProvider(GitProvider):
     def get_user_id(self):
         return 0
 
-
     def get_issue_comments(self):
         threads = self.azure_devops_client.get_threads(repository_id=self.repo_slug, pull_request_id=self.pr_num, project=self.workspace_slug)
         threads.reverse()
@@ -613,4 +612,7 @@ class AzureDevopsProvider(GitProvider):
             if get_settings().config.verbosity_level >= 2:
                 get_logger().error(f"Failed to get pr id, error: {e}")
             return ""
+
+    def publish_file_comments(self, file_comments: list) -> bool:
+        pass
 
