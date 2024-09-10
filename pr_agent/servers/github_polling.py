@@ -99,14 +99,14 @@ async def is_valid_notification(notification, headers, handled_ids, session, use
                         if not comment_body:
                             get_logger().debug(f"no comment_body")
                             check_prev_comments = True
-                        commenter_github_user = comment['user']['login'] \
-                            if 'user' in comment else ''
-                        get_logger().info(f"Polling, pr_url: {pr_url}",
-                                          artifact={"comment": comment_body})
-                        user_tag = "@" + user_id
-                        if user_tag not in comment_body:
-                            get_logger().debug(f"user_tag not in comment_body")
-                            check_prev_comments = True
+                        else:
+                            user_tag = "@" + user_id
+                            if user_tag not in comment_body:
+                                get_logger().debug(f"user_tag not in comment_body")
+                                check_prev_comments = True
+                            else:
+                                get_logger().info(f"Polling, pr_url: {pr_url}",
+                                                  artifact={"comment": comment_body})
 
                         if not check_prev_comments:
                             return True, handled_ids, comment, comment_body, pr_url, user_tag
@@ -125,6 +125,8 @@ async def is_valid_notification(notification, headers, handled_ids, session, use
                                     continue
                                 if user_tag in comment_body:
                                     get_logger().info("found user tag in previous comments")
+                                    get_logger().info(f"Polling, pr_url: {pr_url}",
+                                                      artifact={"comment": comment_body})
                                     return True, handled_ids, comment, comment_body, pr_url, user_tag
 
                             get_logger().error(f"Failed to fetch comments for PR: {pr_url}")
@@ -188,6 +190,8 @@ async def polling_loop():
                         get_logger().info(f"Received {len(notifications)} notifications")
                         task_queue = deque()
                         for notification in notifications:
+                            if not notification:
+                                continue
                             # mark notification as read
                             await mark_notification_as_read(headers, notification, session)
 
@@ -204,7 +208,7 @@ async def polling_loop():
                                 task_queue.append((process_comment_sync, (pr_url, rest_of_comment, comment_id)))
                                 get_logger().info(f"Queued comment processing for PR: {pr_url}")
                             else:
-                                get_logger().debug(f"Skipping comment processing for PR: {pr_url}")
+                                get_logger().debug(f"Skipping comment processing for PR")
 
                         max_allowed_parallel_tasks = 10
                         if task_queue:

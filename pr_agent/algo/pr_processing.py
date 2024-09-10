@@ -496,27 +496,40 @@ def add_ai_metadata_to_diff_files(git_provider, pr_description_files):
     """
     Adds AI metadata to the diff files based on the PR description files (FilePatchInfo.ai_file_summary).
     """
-    diff_files = git_provider.get_diff_files()
-    for file in diff_files:
-        filename = file.filename.strip()
-        found = False
-        for pr_file in pr_description_files:
-            if filename == pr_file['full_file_name'].strip():
-                file.ai_file_summary = pr_file
-                found = True
-                break
-        if not found:
-            get_logger().info(f"File {filename} not found in the PR description files",
-                              artifacts=pr_description_files)
+    try:
+        if not pr_description_files:
+            get_logger().warning(f"PR description files are empty.")
+            return
+        available_files = {pr_file['full_file_name'].strip(): pr_file for pr_file in pr_description_files}
+        diff_files = git_provider.get_diff_files()
+        found_any_match = False
+        for file in diff_files:
+            filename = file.filename.strip()
+            if filename in available_files:
+                file.ai_file_summary = available_files[filename]
+                found_any_match = True
+        if not found_any_match:
+            get_logger().error(f"Failed to find any matching files between PR description and diff files.",
+                               artifact={"pr_description_files": pr_description_files})
+    except Exception as e:
+        get_logger().error(f"Failed to add AI metadata to diff files: {e}",
+                           artifact={"traceback": traceback.format_exc()})
 
 
 def add_ai_summary_top_patch(file, full_extended_patch):
-    # below every instance of '## File: ...' in the patch, add the ai-summary metadata
-    full_extended_patch_lines = full_extended_patch.split("\n")
-    for i, line in enumerate(full_extended_patch_lines):
-        if line.startswith("## File:") or line.startswith("## file:"):
-            full_extended_patch_lines.insert(i + 1,
-                                             f"### AI-generated file summary:\n{file.ai_file_summary['long_summary']}")
-            break
-    full_extended_patch = "\n".join(full_extended_patch_lines)
-    return full_extended_patch
+    try:
+        # below every instance of '## File: ...' in the patch, add the ai-summary metadata
+        full_extended_patch_lines = full_extended_patch.split("\n")
+        for i, line in enumerate(full_extended_patch_lines):
+            if line.startswith("## File:") or line.startswith("## file:"):
+                full_extended_patch_lines.insert(i + 1,
+                                                 f"### AI-generated changes summary:\n{file.ai_file_summary['long_summary']}")
+                full_extended_patch = "\n".join(full_extended_patch_lines)
+                return full_extended_patch
+
+        # if no '## File: ...' was found
+        return full_extended_patch
+    except Exception as e:
+        get_logger().error(f"Failed to add AI summary to the top of the patch: {e}",
+                           artifact={"traceback": traceback.format_exc()})
+        return full_extended_patch

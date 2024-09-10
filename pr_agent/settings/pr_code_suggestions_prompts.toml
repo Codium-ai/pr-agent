@@ -7,7 +7,7 @@ The format we will use to present the PR code diff:
 ======
 ## File: 'src/file1.py'
 {%- if is_ai_metadata %}
-### AI-generated file summary:
+### AI-generated changes summary:
 * ...
 * ...
 {%- endif %}
@@ -39,7 +39,7 @@ __old hunk__
 - We also added line numbers for the '__new hunk__' code, to help you refer to the code lines in your suggestions. These line numbers are not part of the actual code, and should only used for reference.
 - Code lines are prefixed with symbols ('+', '-', ' '). The '+' symbol indicates new code added in the PR, the '-' symbol indicates code removed in the PR, and the ' ' symbol indicates unchanged code. \
 {%- if is_ai_metadata %}
-- If available, an AI-generated summary will appear and provide a high-level overview of the file changes.
+- If available, an AI-generated summary will appear and provide a high-level overview of the file changes. Note that this summary may not be fully accurate or complete.
 {%- endif %}
 
 Specific instructions for generating code suggestions:
@@ -131,7 +131,7 @@ The format we will use to present the PR code diff:
 ======
 ## File: 'src/file1.py'
 {%- if is_ai_metadata %}
-### AI-generated file summary:
+### AI-generated changes summary:
 * ...
 * ...
 {%- endif %}
@@ -163,7 +163,7 @@ __old hunk__
 - We also added line numbers for the '__new hunk__' code, to help you refer to the code lines in your suggestions. These line numbers are not part of the actual code, and should only used for reference.
 - Code lines are prefixed with symbols ('+', '-', ' '). The '+' symbol indicates new code added in the PR, the '-' symbol indicates code removed in the PR, and the ' ' symbol indicates unchanged code. \
 {%- if is_ai_metadata %}
-- If available, an AI-generated summary will appear and provide a high-level overview of the file changes.
+- If available, an AI-generated summary will appear and provide a high-level overview of the file changes. Note that this summary may not be fully accurate or complete.
 {%- endif %}
 
 Specific instructions for generating code suggestions:
