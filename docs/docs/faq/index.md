@@ -1,6 +1,6 @@
 # FAQ
 
-??? note "Question: Can PR-Agent serve as a substitute for human code review?"
+??? note "Question: Can PR-Agent serve as a substitute for a human reviewer?"
     #### Answer:<span style="display:none;">1</span>
 
     PR-Agent is designed to assist, not replace, human reviewers.

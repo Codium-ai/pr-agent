@@ -56,7 +56,8 @@ nav:
       - PR-Agent Chrome Extension: 'chrome-extension/index.md'
       - Features: 'chrome-extension/features.md'
       - Data Privacy: 'chrome-extension/data_privacy.md'
-  - FAQ
+  - FAQ:
+      - FAQ: 'faq/index.md'
 #  - Code Fine-tuning Benchmark: 'finetuning_benchmark/index.md'
 
 theme:
