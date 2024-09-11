@@ -5,7 +5,7 @@
 
     PR-Agent is designed to assist, not replace, human reviewers.
 
-    Reviewing PRs is a tedious and time-consuming task, often seen as a "chore". In addition, The longer the PR – the shorter the relative feedback, since long PRs can overwhelm reviewers, both in terms of technical difficulty, and the actual review time.
+    Reviewing PRs is a tedious and time-consuming task often seen as a "chore". In addition, the longer the PR – the shorter the relative feedback, since long PRs can overwhelm reviewers, both in terms of technical difficulty, and the actual review time.
     PR-Agent aims to address these pain points, and to assist and empower both the PR author and reviewer.
 
     However, PR-Agent has built-in safeguards to ensure the developer remains in the driver's seat. For example:
@@ -27,7 +27,7 @@
     #### Answer:<span style="display:none;">2</span>
 
     - Modern AI models, like Claude 3.5 Sonnet and GPT-4, are improving rapidly but remain imperfect. Users should critically evaluate all suggestions rather than accepting them automatically.
-    - AI errors are rare, but possible. A main value from reviewing the code suggestions lies in their high probability of catching **mistakes or bugs made by the PR author**. We believe It's worth spending 30-60 seconds reviewing suggestions, even if some aren't relevant, as this practice can enhances code quality and prevent bugs in production.
+    - AI errors are rare, but possible. A main value from reviewing the code suggestions lies in their high probability of catching **mistakes or bugs made by the PR author**. We believe it's worth spending 30-60 seconds reviewing suggestions, even if some aren't relevant, as this practice can enhances code quality and prevent bugs in production.
 
 
     - The hierarchical structure of the suggestions is designed to help the user to _quickly_ understand them, and to decide which ones are relevant and which are not:
