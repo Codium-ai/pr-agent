@@ -51,11 +51,13 @@ nav:
       - Compression strategy: 'core-abilities/compression_strategy.md'
       - Code-oriented YAML: 'core-abilities/code_oriented_yaml.md'
       - Static code analysis: 'core-abilities/static_code_analysis.md'
+      - Code Fine-tuning Benchmark: 'finetuning_benchmark/index.md'
   - Chrome Extension:
       - PR-Agent Chrome Extension: 'chrome-extension/index.md'
       - Features: 'chrome-extension/features.md'
       - Data Privacy: 'chrome-extension/data_privacy.md'
-  - Code Fine-tuning Benchmark: 'finetuning_benchmark/index.md'
+  - FAQ
+#  - Code Fine-tuning Benchmark: 'finetuning_benchmark/index.md'
 
 theme:
   logo: assets/logo.svg
