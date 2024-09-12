@@ -44,8 +44,8 @@ CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by p
 ## News and Updates
 
 ### September 12, 2024
-[Dynamic context](https://pr-agent-docs.codium.ai/core-abilities/dynamic_context/) is now the default option for all tools. 
-This feature enables PR-Agent to dynamically adjusting the relevant context for each code hunk, while avoiding overflowing the model's with too much information.
+[Dynamic context](https://pr-agent-docs.codium.ai/core-abilities/dynamic_context/) is now the default option for context extension. 
+This feature enables PR-Agent to dynamically adjusting the relevant context for each code hunk, while avoiding overflowing the model with too much information.
 
 ### September 3, 2024
 
