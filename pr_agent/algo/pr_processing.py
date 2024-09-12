@@ -26,6 +26,13 @@ OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD = 1000
 MAX_EXTRA_LINES = 10
 
 
+def cap_and_log_extra_lines(value, direction) -> int:
+    if value > MAX_EXTRA_LINES:
+        get_logger().warning(f"patch_extra_lines_{direction} was {value}, capping to {MAX_EXTRA_LINES}")
+        return MAX_EXTRA_LINES
+    return value
+
+
 def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler,
                 model: str,
                 add_line_numbers_to_hunks: bool = False,
@@ -38,12 +45,8 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler,
     else:
         PATCH_EXTRA_LINES_BEFORE = get_settings().config.patch_extra_lines_before
         PATCH_EXTRA_LINES_AFTER = get_settings().config.patch_extra_lines_after
-        if PATCH_EXTRA_LINES_BEFORE > MAX_EXTRA_LINES:
-            PATCH_EXTRA_LINES_BEFORE = MAX_EXTRA_LINES
-            get_logger().warning(f"patch_extra_lines_before was {PATCH_EXTRA_LINES_BEFORE}, capping to {MAX_EXTRA_LINES}")
-        if PATCH_EXTRA_LINES_AFTER > MAX_EXTRA_LINES:
-            PATCH_EXTRA_LINES_AFTER = MAX_EXTRA_LINES
-            get_logger().warning(f"patch_extra_lines_after was {PATCH_EXTRA_LINES_AFTER}, capping to {MAX_EXTRA_LINES}")
+        PATCH_EXTRA_LINES_BEFORE = cap_and_log_extra_lines(PATCH_EXTRA_LINES_BEFORE, "before")
+        PATCH_EXTRA_LINES_AFTER = cap_and_log_extra_lines(PATCH_EXTRA_LINES_AFTER, "after")
 
     try:
         diff_files_original = git_provider.get_diff_files()
@@ -417,12 +420,8 @@ def get_pr_multi_diffs(git_provider: GitProvider,
     # Get the maximum number of extra lines before and after the patch
     PATCH_EXTRA_LINES_BEFORE = get_settings().config.patch_extra_lines_before
     PATCH_EXTRA_LINES_AFTER = get_settings().config.patch_extra_lines_after
-    if PATCH_EXTRA_LINES_BEFORE > MAX_EXTRA_LINES:
-        PATCH_EXTRA_LINES_BEFORE = MAX_EXTRA_LINES
-        get_logger().warning(f"patch_extra_lines_before was {PATCH_EXTRA_LINES_BEFORE}, capping to {MAX_EXTRA_LINES}")
-    if PATCH_EXTRA_LINES_AFTER > MAX_EXTRA_LINES:
-        PATCH_EXTRA_LINES_AFTER = MAX_EXTRA_LINES
-        get_logger().warning(f"patch_extra_lines_after was {PATCH_EXTRA_LINES_AFTER}, capping to {MAX_EXTRA_LINES}")
+    PATCH_EXTRA_LINES_BEFORE = cap_and_log_extra_lines(PATCH_EXTRA_LINES_BEFORE, "before")
+    PATCH_EXTRA_LINES_AFTER = cap_and_log_extra_lines(PATCH_EXTRA_LINES_AFTER, "after")
 
     # try first a single run with standard diff string, with patch extension, and no deletions
     patches_extended, total_tokens, patches_extended_tokens = pr_generate_extended_diff(
