@@ -23,7 +23,7 @@ ADDED_FILES_ = "Additional added files (insufficient token budget to process):\n
 
 OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD = 1500
 OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD = 1000
-
+MAX_EXTRA_LINES = 10
 
 
 def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler,
@@ -38,6 +38,12 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler,
     else:
         PATCH_EXTRA_LINES_BEFORE = get_settings().config.patch_extra_lines_before
         PATCH_EXTRA_LINES_AFTER = get_settings().config.patch_extra_lines_after
+        if PATCH_EXTRA_LINES_BEFORE > MAX_EXTRA_LINES:
+            PATCH_EXTRA_LINES_BEFORE = MAX_EXTRA_LINES
+            get_logger().warning(f"patch_extra_lines_before was {PATCH_EXTRA_LINES_BEFORE}, capping to {MAX_EXTRA_LINES}")
+        if PATCH_EXTRA_LINES_AFTER > MAX_EXTRA_LINES:
+            PATCH_EXTRA_LINES_AFTER = MAX_EXTRA_LINES
+            get_logger().warning(f"patch_extra_lines_after was {PATCH_EXTRA_LINES_AFTER}, capping to {MAX_EXTRA_LINES}")
 
     try:
         diff_files_original = git_provider.get_diff_files()
@@ -408,11 +414,21 @@ def get_pr_multi_diffs(git_provider: GitProvider,
     for lang in pr_languages:
         sorted_files.extend(sorted(lang['files'], key=lambda x: x.tokens, reverse=True))
 
+    # Get the maximum number of extra lines before and after the patch
+    PATCH_EXTRA_LINES_BEFORE = get_settings().config.patch_extra_lines_before
+    PATCH_EXTRA_LINES_AFTER = get_settings().config.patch_extra_lines_after
+    if PATCH_EXTRA_LINES_BEFORE > MAX_EXTRA_LINES:
+        PATCH_EXTRA_LINES_BEFORE = MAX_EXTRA_LINES
+        get_logger().warning(f"patch_extra_lines_before was {PATCH_EXTRA_LINES_BEFORE}, capping to {MAX_EXTRA_LINES}")
+    if PATCH_EXTRA_LINES_AFTER > MAX_EXTRA_LINES:
+        PATCH_EXTRA_LINES_AFTER = MAX_EXTRA_LINES
+        get_logger().warning(f"patch_extra_lines_after was {PATCH_EXTRA_LINES_AFTER}, capping to {MAX_EXTRA_LINES}")
+
     # try first a single run with standard diff string, with patch extension, and no deletions
     patches_extended, total_tokens, patches_extended_tokens = pr_generate_extended_diff(
         pr_languages, token_handler, add_line_numbers_to_hunks=True,
-        patch_extra_lines_before=get_settings().config.patch_extra_lines_before,
-        patch_extra_lines_after=get_settings().config.patch_extra_lines_after)
+        patch_extra_lines_before=PATCH_EXTRA_LINES_BEFORE,
+        patch_extra_lines_after=PATCH_EXTRA_LINES_AFTER)
 
     # if we are under the limit, return the full diff
     if total_tokens + OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD < get_max_tokens(model):
