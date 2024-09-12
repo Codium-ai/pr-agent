@@ -49,8 +49,8 @@ By independently adjusting each context window, PR-Agent can supply the model wi
 
 **Dynamic:**
 
-We also employs a "dynamic" context strategy.
-We recognize that the optimal context for a code change often corresponds to its enclosing code component (e.g., function, class), rather than a fixed number of lines. 
+We also employ a "dynamic" context strategy.
+We start by recognizing that the optimal context for a code change often corresponds to its enclosing code component (e.g., function, class), rather than a fixed number of lines. 
 Consequently, we dynamically adjust the context window based on the code's structure, ensuring the model receives the most pertinent information for each modification.
 
 To prevent overwhelming the model with excessive context, we impose a limit on the number of lines searched when identifying the enclosing component. 
