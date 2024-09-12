@@ -20,7 +20,7 @@
 
     Read more about this issue in our [blog](https://www.codium.ai/blog/understanding-the-challenges-and-pain-points-of-the-pull-request-cycle/)
 
-   
+___
 
 ??? note "Question: I received an incorrect or irrelevant suggestion. Why?"
 
@@ -38,10 +38,14 @@
     - In addition, we recommend to use the [`extra_instructions`](https://pr-agent-docs.codium.ai/tools/improve/#extra-instructions-and-best-practices) field to guide the model to suggestions that are more relevant to the specific needs of the project. 
     - The interactive [PR chat](https://pr-agent-docs.codium.ai/chrome-extension/) also provides an easy way to get more tailored suggestions and feedback from the AI model.
 
+___
+
 ??? note "Question: How can I get more tailored suggestions?"
     #### Answer:<span style="display:none;">3</span>
 
     See [here](https://pr-agent-docs.codium.ai/tools/improve/#extra-instructions-and-best-practices) for more information on how to use the `extra_instructions` and `best_practices` configuration options, to guide the model to more tailored suggestions.
+
+___
 
 ??? note "Question: Will you store my code ? Are you using my code to train models?"
     #### Answer:<span style="display:none;">4</span>
@@ -50,6 +54,8 @@
     
     For a detailed overview of our data privacy policy, please refer to [this link](https://pr-agent-docs.codium.ai/overview/data_privacy/)
 
+___
+
 ??? note "Question: Can I use my own LLM keys with PR-Agent?"
     #### Answer:<span style="display:none;">5</span>
 
@@ -57,3 +63,5 @@
 
     PR-Agent Pro with SaaS deployment is a hosted version of PR-Agent, where Codium AI manages the infrastructure and the keys.
     For enterprise customers, on-prem deployment is also available. [Contact us](https://www.codium.ai/contact/#pricing) for more information.
+
+___

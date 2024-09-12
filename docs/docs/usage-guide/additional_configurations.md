@@ -92,8 +92,8 @@ patch_extra_lines_before=4
 patch_extra_lines_after=2
 ```
 
-Increasing this number provides more context to the model, but will also increase the token budget.
-If the PR is too large (see [PR Compression strategy](https://github.com/Codium-ai/pr-agent/blob/main/PR_COMPRESSION.md)), PR-Agent automatically sets this number to 0, using the original git patch.
+Increasing this number provides more context to the model, but will also increase the token budget, and may overwhelm the model with too much information, unrelated to the actual PR code changes.
+If the PR is too large (see [PR Compression strategy](https://github.com/Codium-ai/pr-agent/blob/main/PR_COMPRESSION.md)), PR-Agent automatically may set this number to 0, and will use the original git patch.
 
 
 ## Editing the prompts
