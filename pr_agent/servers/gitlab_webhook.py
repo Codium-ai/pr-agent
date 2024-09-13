@@ -173,7 +173,7 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
         # ignore bot users
         if is_bot_user(data):
             return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
-        if data.get('event_type') != 'note': # not a comment
+        if data.get('event_type') != 'note' and data.get('object_attributes', {}): # not a comment
             # ignore MRs based on title, labels, source and target branches
             if not should_process_pr_logic(data, data['object_attributes'].get('title')):
                 return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
