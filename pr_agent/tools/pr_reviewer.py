@@ -164,7 +164,7 @@ class PRReviewer:
                                         self.token_handler,
                                         model,
                                         add_line_numbers_to_hunks=True,
-                                        disable_extra_lines=True,)
+                                        disable_extra_lines=False,)
 
         if self.patches_diff:
             get_logger().debug(f"PR diff", diff=self.patches_diff)
