@@ -215,13 +215,13 @@ class LiteLLMAIHandler(BaseAiHandler):
 
             response = await acompletion(**kwargs)
         except (openai.APIError, openai.APITimeoutError) as e:
-            get_logger().warning("Error during LLM inference: {e}")
+            get_logger().warning(f"Error during LLM inference: {e}")
             raise
         except (openai.RateLimitError) as e:
-            get_logger().error("Rate limit error during LLM inference: {e}")
+            get_logger().error(f"Rate limit error during LLM inference: {e}")
             raise
         except (Exception) as e:
-            get_logger().warning("Unknown error during LLM inference: {e}")
+            get_logger().warning(f"Unknown error during LLM inference: {e}")
             raise openai.APIError from e
         if response is None or len(response["choices"]) == 0:
             raise openai.APIError
