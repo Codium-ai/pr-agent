@@ -98,9 +98,12 @@ the tool can automatically approve the PR when the user checks the self-review c
 
     ![self_review_2](https://codium.ai/images/pr_agent/self_review_2.png){width=512}
 
-### `Extra instructions` and `best practices`
+### 'Extra instructions' and 'best practices'
 
 #### Extra instructions
+
+>`Platforms supported: GitHub, GitLab, Bitbucket`
+
 You can use the `extra_instructions` configuration option to give the AI model additional instructions for the `improve` tool.
 Be specific, clear, and concise in the instructions. With extra instructions, you are the prompter. Specify relevant aspects that you want the model to focus on.
     
@@ -117,10 +120,13 @@ extra_instructions="""\
 Use triple quotes to write multi-line instructions. Use bullet points or numbers to make the instructions more readable.
 
 #### Best practices 💎
-Another option to give additional guidance to the AI model is by creating a dedicated [**wiki page**](https://github.com/Codium-ai/pr-agent/wiki) called `best_practices.md`. 
-This page can contain a list of best practices, coding standards, and guidelines that are specific to your repo/organization
 
-The AI model will use this page as a reference, and in case the PR code violates any of the guidelines, it will suggest improvements accordingly, with a dedicated label: `Organization
+>`Platforms supported: GitHub, GitLab`
+
+Another option to give additional guidance to the AI model is by creating a dedicated [**wiki page**](https://github.com/Codium-ai/pr-agent/wiki) called `best_practices.md`. 
+This page can contain a list of best practices, coding standards, and guidelines that are specific to your repo/organization.
+
+The AI model will use this wiki page as a reference, and in case the PR code violates any of the guidelines, it will suggest improvements accordingly, with a dedicated label: `Organization
 best practice`. 
 
 Example for a `best_practices.md` content can be found [here](https://github.com/Codium-ai/pr-agent/blob/main/docs/docs/usage-guide/EXAMPLE_BEST_PRACTICE.md) (adapted from Google's [pyguide](https://google.github.io/styleguide/pyguide.html)).
@@ -128,14 +134,35 @@ This file is only an example. Since it is used as a prompt for an AI model, we w
 
 - It should be written in a clear and concise manner
 - If needed, it should give short relevant code snippets as examples
-- Up to 800 lines are allowed
+- Recommended to limit the text to 800 lines or fewer. Here’s why:
 
+     1) Extremely long best practices documents may not be fully processed by the AI model.
+  
+     2) A lengthy file probably represent a more "**generic**" set of guidelines, which the AI model is already familiar with. The objective is to focus on a more targeted set of guidelines tailored to the specific needs of this project.
 
-Example results:
+##### Local and global best practices
+By default, PR-Agent will look for a local `best_practices.md` wiki file in the root of the relevant local repo.
+
+If you want to enable also a global `best_practices.md` wiki file, set first in the global configuration file:
+
+```
+[best_practices]
+enable_global_best_practices = false
+```
+
+Then, create a `best_practices.md` wiki file in the root of [global](https://pr-agent-docs.codium.ai/usage-guide/configuration_options/#global-configuration-file) configuration repository,  `pr-agent-settings`.
+
+##### Example results
 
 ![best_practice](https://codium.ai/images/pr_agent/org_best_practice.png){width=512}
 
-Note that while the `extra instructions` are more related to the way the `improve` tool behaves, the `best_practices.md` file is a general guideline for the way code should be written in the repo.
+
+#### How to combine `extra instructions` and `best practices`
+
+The `extra instructions` configuration is more related to the `improve` tool prompt. It can be used, for example, to avoid specific suggestions ("Don't suggest to add try-except block", "Ignore changes in toml files", ...) or to emphasize specific aspects or formats ("Answer in Japanese", "Give only short suggestions", ...)
+
+In contrast, the `best_practices.md` file is a general guideline for the way code should be written in the repo.
+
 Using a combination of both can help the AI model to provide relevant and tailored suggestions.
 
 ## Configuration options
