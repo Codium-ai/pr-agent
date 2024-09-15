@@ -147,7 +147,7 @@ If you want to enable also a global `best_practices.md` wiki file, set first in 
 
 ```
 [best_practices]
-enable_global_best_practices = false
+enable_global_best_practices = true
 ```
 
 Then, create a `best_practices.md` wiki file in the root of [global](https://pr-agent-docs.codium.ai/usage-guide/configuration_options/#global-configuration-file) configuration repository,  `pr-agent-settings`.
