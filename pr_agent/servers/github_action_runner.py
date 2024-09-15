@@ -83,7 +83,11 @@ async def run_action():
     # Handle pull request event
     if GITHUB_EVENT_NAME == "pull_request":
         action = event_payload.get("action")
-        if action in ["opened", "reopened", "ready_for_review", "review_requested"]:
+
+        # Retrieve the list of actions from the configuration
+        pr_actions = get_settings().get("GITHUB_ACTION_CONFIG.PR_ACTIONS", ["opened", "reopened", "ready_for_review", "review_requested"])
+
+        if action in pr_actions:
             pr_url = event_payload.get("pull_request", {}).get("url")
             if pr_url:
                 # legacy - supporting both GITHUB_ACTION and GITHUB_ACTION_CONFIG
