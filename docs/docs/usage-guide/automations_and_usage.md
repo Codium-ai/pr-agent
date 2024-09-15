@@ -121,9 +121,13 @@ Specifically, start by setting the following environment variables:
         github_action_config.auto_review: "true" # enable\disable auto review
         github_action_config.auto_describe: "true" # enable\disable auto describe
         github_action_config.auto_improve: "true" # enable\disable auto improve
+        github_action_config.pr_actions: ["opened", "reopened", "ready_for_review", "review_requested"]
 ```
 `github_action_config.auto_review`, `github_action_config.auto_describe` and `github_action_config.auto_improve` are used to enable/disable automatic tools that run when a new PR is opened.
 If not set, the default configuration is for all three tools to run automatically when a new PR is opened.
+
+`github_action_config.pr_actions` is used to configure which `pull_requests` events will trigger the enabled auto flags
+If not set, the default configuration is `["opened", "reopened", "ready_for_review", "review_requested"]`
 
 `github_action_config.enable_output` are used to enable/disable github actions [output parameter](https://docs.github.com/en/actions/creating-actions/metadata-syntax-for-github-actions#outputs-for-docker-container-and-javascript-actions) (default is `true`). 
 Review result is output as JSON to `steps.{step-id}.outputs.review` property.
