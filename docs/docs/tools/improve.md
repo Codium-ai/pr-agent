@@ -128,7 +128,9 @@ This file is only an example. Since it is used as a prompt for an AI model, we w
 
 - It should be written in a clear and concise manner
 - If needed, it should give short relevant code snippets as examples
-- Up to 800 lines are allowed
+- No more than 800 lines of text are allowed. Why:
+    - Very long best practices file may not be fully processed by the AI model.
+    - A very long file may represent a more "**generic**" set of guidelines, similar to what the AI model was already trained on. The goal here is to distill a more specific set of guidelines, that are relevant to the specific needs of the project.
 
 
 Example results:
