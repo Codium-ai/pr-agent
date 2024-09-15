@@ -167,75 +167,75 @@ Using a combination of both can help the AI model to provide relevant and tailor
 
 ## Configuration options
 
-!!! example "General options"
+??? example "General options"
+    
+    <table>
+      <tr>
+        <td><b>num_code_suggestions</b></td>
+        <td>Number of code suggestions provided by the 'improve' tool. Default is 4 for CLI, 0 for auto tools.</td>
+      </tr>
+      <tr>
+        <td><b>extra_instructions</b></td>
+        <td>Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".</td>
+      </tr>
+      <tr>
+        <td><b>rank_suggestions</b></td>
+        <td>If set to true, the tool will rank the suggestions, based on importance. Default is false.</td>
+      </tr>
+      <tr>
+        <td><b>commitable_code_suggestions</b></td>
+        <td>If set to true, the tool will display the suggestions as commitable code comments. Default is false.</td>
+      </tr>
+      <tr>
+        <td><b>persistent_comment</b></td>
+        <td>If set to true, the improve comment will be persistent, meaning that every new improve request will edit the previous one. Default is false.</td>
+      </tr>
+      <tr>
+        <td><b>self_reflect_on_suggestions</b></td>
+        <td>If set to true, the improve tool will calculate an importance score for each suggestion [1-10], and sort the suggestion labels group based on this score. Default is true.</td>
+      </tr>
+      <tr>
+        <td><b>suggestions_score_threshold</b></td>
+        <td> Any suggestion with importance score less than this threshold will be removed. Default is 0. Highly recommend not to set this value above 7-8, since above it may clip relevant suggestions that can be useful. </td>
+      </tr>
+      <tr>
+        <td><b>apply_suggestions_checkbox</b></td>
+        <td> Enable the checkbox to create a committable suggestion. Default is true.</td>
+      </tr>
+      <tr>
+        <td><b>enable_help_text</b></td>
+        <td>If set to true, the tool will display a help text in the comment. Default is true.</td>
+      </tr>
+      <tr>
+        <td><b>enable_chat_text</b></td>
+        <td>If set to true, the tool will display a reference to the PR chat in the comment. Default is true.</td>
+      </tr>
+    </table>
 
-<table>
-  <tr>
-    <td><b>num_code_suggestions</b></td>
-    <td>Number of code suggestions provided by the 'improve' tool. Default is 4 for CLI, 0 for auto tools.</td>
-  </tr>
-  <tr>
-    <td><b>extra_instructions</b></td>
-    <td>Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".</td>
-  </tr>
-  <tr>
-    <td><b>rank_suggestions</b></td>
-    <td>If set to true, the tool will rank the suggestions, based on importance. Default is false.</td>
-  </tr>
-  <tr>
-    <td><b>commitable_code_suggestions</b></td>
-    <td>If set to true, the tool will display the suggestions as commitable code comments. Default is false.</td>
-  </tr>
-  <tr>
-    <td><b>persistent_comment</b></td>
-    <td>If set to true, the improve comment will be persistent, meaning that every new improve request will edit the previous one. Default is false.</td>
-  </tr>
-  <tr>
-    <td><b>self_reflect_on_suggestions</b></td>
-    <td>If set to true, the improve tool will calculate an importance score for each suggestion [1-10], and sort the suggestion labels group based on this score. Default is true.</td>
-  </tr>
-  <tr>
-    <td><b>suggestions_score_threshold</b></td>
-    <td> Any suggestion with importance score less than this threshold will be removed. Default is 0. Highly recommend not to set this value above 7-8, since above it may clip relevant suggestions that can be useful. </td>
-  </tr>
-  <tr>
-    <td><b>apply_suggestions_checkbox</b></td>
-    <td> Enable the checkbox to create a committable suggestion. Default is true.</td>
-  </tr>
-  <tr>
-    <td><b>enable_help_text</b></td>
-    <td>If set to true, the tool will display a help text in the comment. Default is true.</td>
-  </tr>
-  <tr>
-    <td><b>enable_chat_text</b></td>
-    <td>If set to true, the tool will display a reference to the PR chat in the comment. Default is true.</td>
-  </tr>
-</table>
+??? example "params for 'extended' mode"
 
-!!! example "params for 'extended' mode"
-
-<table>
-  <tr>
-    <td><b>auto_extended_mode</b></td>
-    <td>Enable extended mode automatically (no need for the --extended option). Default is true.</td>
-  </tr>
-  <tr>
-    <td><b>num_code_suggestions_per_chunk</b></td>
-    <td>Number of code suggestions provided by the 'improve' tool, per chunk. Default is 5.</td>
-  </tr>
-  <tr>
-    <td><b>rank_extended_suggestions</b></td>
-    <td>If set to true, the tool will rank the suggestions, based on importance. Default is true.</td>
-  </tr>
-  <tr>
-    <td><b>max_number_of_calls</b></td>
-    <td>Maximum number of chunks. Default is 5.</td>
-  </tr>
-  <tr>
-    <td><b>final_clip_factor</b></td>
-    <td>Factor to remove suggestions with low confidence. Default is 0.9.</td>
-  </tr>
-</table>
+    <table>
+      <tr>
+        <td><b>auto_extended_mode</b></td>
+        <td>Enable extended mode automatically (no need for the --extended option). Default is true.</td>
+      </tr>
+      <tr>
+        <td><b>num_code_suggestions_per_chunk</b></td>
+        <td>Number of code suggestions provided by the 'improve' tool, per chunk. Default is 5.</td>
+      </tr>
+      <tr>
+        <td><b>rank_extended_suggestions</b></td>
+        <td>If set to true, the tool will rank the suggestions, based on importance. Default is true.</td>
+      </tr>
+      <tr>
+        <td><b>max_number_of_calls</b></td>
+        <td>Maximum number of chunks. Default is 5.</td>
+      </tr>
+      <tr>
+        <td><b>final_clip_factor</b></td>
+        <td>Factor to remove suggestions with low confidence. Default is 0.9.</td>
+      </tr>
+    </table>
 
 ## A note on code suggestions quality
 
