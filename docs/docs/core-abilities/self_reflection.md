@@ -1,5 +1,11 @@
+## TL;DR
 
-### Introduction - fast review with hierarchical structure
+PR-Agent implements a **self-reflection** process where the AI model reflects, scores, and re-ranks its own suggestions, eliminating irrelevant or incorrect ones. 
+This approach improves the quality and relevance of suggestions, saving users time and enhancing their experience. 
+Configuration options allow users to set a score threshold for further filtering out suggestions.
+
+## Introduction - Efficient Review with Hierarchical Presentation
+
 
 Given that not all generated code suggestions will be relevant, it is crucial to enable users to review them in a fast and efficient way, allowing quick identification and filtering of non-applicable ones.
 
@@ -9,9 +15,10 @@ To achieve this goal, PR-Agent offers a dedicated hierarchical structure when pr
 - Each suggestion is first described by a one-line summary, which can be expanded to a full description by clicking on a collapsible.
 - Upon expanding a suggestion, the user receives a more comprehensive description, and a code snippet demonstrating the recommendation.
 
-This hierarchical structure is designed to facilitate rapid review of each suggestion, with users spending an average of ~5-10 seconds per item.
+!!! note "Fast Review"
+    This hierarchical structure is designed to facilitate rapid review of each suggestion, with users spending an average of ~5-10 seconds per item.
 
-### Self-reflection and re-ranking
+## Self-reflection and Re-ranking
 
 The AI model is initially tasked with generating suggestions, and outputting them in order of importance.
 However, in practice we observe that models often struggle to simultaneously generate high-quality code suggestions and rank them well in a single pass.
@@ -30,13 +37,13 @@ Note that presenting all generated suggestions simultaneously provides the model
 To conclude, the self-reflection process enables PR-Agent to prioritize suggestions based on their importance, eliminate inaccurate or irrelevant proposals, and optionally exclude suggestions that fall below a specified threshold of significance.
 This results in a more refined and valuable set of suggestions for the user, saving time and improving the overall experience.
 
-### Example results
+## Example Results
 
 ![self_reflection](https://codium.ai/images/pr_agent/self_reflection1.png){width=768}
 ![self_reflection](https://codium.ai/images/pr_agent/self_reflection2.png){width=768}
 
 
-### Appendix - relevant configuration options
+## Appendix - Relevant Configuration Options
 ```
 [pr_code_suggestions]
 self_reflect_on_suggestions	= true # Enable self-reflection on code suggestions
