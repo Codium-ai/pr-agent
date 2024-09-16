@@ -1,3 +1,8 @@
+## TL;DR
+
+PR-Agent uses an **asymmetric and dynamic context strategy** to improve AI analysis of code changes in pull requests. 
+It provides more context before changes than after, and dynamically adjusts the context based on code structure (e.g., enclosing functions or classes). 
+This approach balances providing sufficient context for accurate analysis, while avoiding needle-in-the-haystack information overload that could degrade AI performance or exceed token limits.
 
 ## Introduction
 

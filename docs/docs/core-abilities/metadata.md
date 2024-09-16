@@ -15,8 +15,8 @@ PR-Agent initially retrieves for each PR the following data:
 By default, the first command that PR-Agent executes is [`describe`](https://pr-agent-docs.codium.ai/tools/describe/), which generates three types of outputs:
 
 - PR Type (e.g. bug fix, feature, refactor, etc)
-- PR Description - a bullet points summary of the PR
-- Changes walkthrough - going file-by-file, PR-Agent generate a one-line summary and longer bullet points summary of the changes in the file
+- PR Description - a bullet point summary of the PR
+- Changes walkthrough - for each modified file, provide a one-line summary followed by a detailed bullet point list of the changes.
 
 These AI-generated outputs are now considered as part of the PR metadata, and can be used in subsequent commands like `review` and `improve`.
 This effectively enables multi-stage chain-of-thought analysis, without doing any additional API calls which will cost time and money.
@@ -25,7 +25,7 @@ For example, when generating code suggestions for different files, PR-Agent can 
 
 ```
 ## File: 'src/file1.py'
-### AI-generated changes summary:
+### AI-generated file summary:
 - edited function `func1` that does X
 - Removed function `func2` that was not used
 - ....
@@ -49,7 +49,7 @@ __old hunk__
 ...
 ```
 
-(3) The entire PR files that where retrieved are also used to expand and enhance the PR context (see [Dynamic Context](https://pr-agent-docs.codium.ai/core-abilities/dynamic-context/)).
+(3) The entire PR files that were retrieved are also used to expand and enhance the PR context (see [Dynamic Context](https://pr-agent-docs.codium.ai/core-abilities/dynamic-context/)).
 
 
 (4) All the metadata described above represents several level of cumulative analysis - ranging from hunk level, to file level, to PR level, to organization level.
