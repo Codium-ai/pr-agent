@@ -176,7 +176,7 @@ class PRCodeSuggestions:
                 else:
                     self.push_inline_code_suggestions(data)
                     if self.progress_response:
-                        self.progress_response.delete()
+                        self.git_provider.remove_comment(self.progress_response)
             else:
                 get_logger().info('Code suggestions generated for PR, but not published since publish_output is False.')
         except Exception as e:
