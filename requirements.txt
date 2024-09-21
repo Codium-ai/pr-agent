@@ -1,4 +1,4 @@
-aiohttp==3.9.4
+aiohttp==3.9.5
 anthropic[vertex]==0.21.3
 atlassian-python-api==3.41.4
 azure-devops==7.1.0b3
@@ -13,7 +13,7 @@ Jinja2==3.1.2
 litellm==1.43.13
 loguru==0.7.2
 msrest==0.7.1
-openai==1.40.6
+openai==1.46.0
 pytest==7.4.0
 PyGithub==1.59.*
 PyYAML==6.0.1
@@ -28,6 +28,12 @@ gunicorn==22.0.0
 pytest-cov==5.0.0
 pydantic==2.8.2
 html2text==2024.2.26
+# help bot
+langchain==0.3.0
+langchain-openai==0.2.0
+langchain-pinecone==0.2.0
+langchain-chroma==0.1.4
+chromadb==0.5.7
 # Uncomment the following lines to enable the 'similar issue' tool
 # pinecone-client
 # pinecone-datasets @ git+https://github.com/mrT23/pinecone-datasets.git@main

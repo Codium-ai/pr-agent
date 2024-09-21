@@ -183,6 +183,7 @@ enable_help_text=true
 final_update_message = false
 
 [pr_help] # /help #
+force_local_db=false
 
 [pr_config] # /config #
 
