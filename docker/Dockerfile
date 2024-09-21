@@ -1,6 +1,7 @@
 FROM python:3.12.3 AS base
 
 WORKDIR /app
+ADD docs/chroma_db.zip /app/docs/chroma_db.zip
 ADD pyproject.toml .
 ADD requirements.txt .
 RUN pip install . && rm pyproject.toml requirements.txt
