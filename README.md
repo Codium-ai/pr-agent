@@ -43,6 +43,12 @@ CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by p
   
 ## News and Updates
 
+### September 21, 2024
+Need help with PR-Agent? New feature - simply comment `/help "your question"` in a pull request, and PR-Agent will provide you with the [relevant documentation](https://github.com/Codium-ai/pr-agent/pull/1241#issuecomment-2365259334).
+
+<kbd><img src="https://www.codium.ai/images/pr_agent/pr_help_chat.png" width="768"></kbd>
+
+
 ### September 12, 2024
 [Dynamic context](https://pr-agent-docs.codium.ai/core-abilities/dynamic_context/) is now the default option for context extension. 
 This feature enables PR-Agent to dynamically adjusting the relevant context for each code hunk, while avoiding overflowing the model with too much information.

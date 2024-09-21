@@ -105,8 +105,10 @@ class PRHelpMessage:
             get_logger().info("Loading the Chroma index...")
             db_path = "./docs/chroma_db.zip"
             if not os.path.exists(db_path):
-                get_logger().error("Local db not found")
-                return sim_results
+                db_path= "/app/docs/chroma_db.zip"
+                if not os.path.exists(db_path):
+                    get_logger().error("Local db not found")
+                    return sim_results
             with tempfile.TemporaryDirectory() as temp_dir:
 
                 # Extract the ZIP file
@@ -169,6 +171,9 @@ class PRHelpMessage:
                     if not sim_results:
                         get_logger().info("Failed to load the S3 index. Loading the local index...")
                         sim_results = self.get_sim_results_from_local_db(embeddings)
+                if not sim_results:
+                    get_logger().error("Failed to retrieve similar snippets. Exiting...")
+                    return
 
                 # Prepare relevant snippets
                 relevant_pages_full, relevant_snippets_full_header, relevant_snippets_str =\
