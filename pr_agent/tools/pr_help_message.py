@@ -71,18 +71,19 @@ class PRHelpMessage:
         sim_results = []
         try:
             from langchain_chroma import Chroma
-            import boto3
+            from urllib import request
             with tempfile.TemporaryDirectory() as temp_dir:
                 # Define the local file path within the temporary directory
                 local_file_path = os.path.join(temp_dir, 'chroma_db.zip')
 
-                # Initialize the S3 client
-                s3 = boto3.client('s3')
-
-                # Download the file from S3 to the temporary directory
                 bucket = 'pr-agent'
                 file_name = 'chroma_db.zip'
-                s3.download_file(bucket, file_name, local_file_path)
+                s3_url = f'https://{bucket}.s3.amazonaws.com/{file_name}'
+                request.urlretrieve(s3_url, local_file_path)
+
+                # # Download the file from S3 to the temporary directory
+                # s3 = boto3.client('s3')
+                # s3.download_file(bucket, file_name, local_file_path)
 
                 # Extract the contents of the zip file
                 with zipfile.ZipFile(local_file_path, 'r') as zip_ref:
@@ -102,8 +103,11 @@ class PRHelpMessage:
         try:
             from langchain_chroma import Chroma
             get_logger().info("Loading the Chroma index...")
+            db_path = "./docs/chroma_db.zip"
+            if not os.path.exists(db_path):
+                get_logger().error("Local db not found")
+                return sim_results
             with tempfile.TemporaryDirectory() as temp_dir:
-                db_path = "./docs/chroma_db.zip"
 
                 # Extract the ZIP file
                 with zipfile.ZipFile(db_path, 'r') as zip_ref:
@@ -302,8 +306,6 @@ class PRHelpMessage:
 
     async def prepare_relevant_snippets(self, sim_results):
         # Get relevant snippets
-        relevant_pages = []
-        relevant_snippets = []
         relevant_snippets_full = []
         relevant_pages_full = []
         relevant_snippets_full_header = []
@@ -315,13 +317,6 @@ class PRHelpMessage:
             relevant_snippets_full.append(content)
             relevant_snippets_full_header.append(extract_header(content))
             relevant_pages_full.append(page)
-            if not relevant_pages:
-                relevant_pages.append(page)
-                relevant_snippets.append(content)
-            elif score > th:
-                if page not in relevant_pages:
-                    relevant_pages.append(page)
-                    relevant_snippets.append(content)
         # build the snippets string
         relevant_snippets_str = ""
         for i, s in enumerate(relevant_snippets_full):
