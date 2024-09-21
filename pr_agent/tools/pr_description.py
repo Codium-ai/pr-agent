@@ -117,9 +117,8 @@ class PRDescription:
                 pr_body += "<hr>\n\n<details> <summary><strong>✨ Describe tool usage guide:</strong></summary><hr> \n\n"
                 pr_body += HelpMessage.get_describe_usage_guide()
                 pr_body += "\n</details>\n"
-            elif self.git_provider.is_supported("gfm_markdown") and get_settings().pr_description.enable_help_comment:
-                pr_body += "\n\n___\n\n> 💡 **PR-Agent usage**:"
-                pr_body += "\n>Comment `/help` on the PR to get a list of all available PR-Agent tools and their descriptions\n\n"
+            elif get_settings().pr_description.enable_help_comment:
+                pr_body += '\n\n___\n\n> 💡 **PR-Agent usage**: Comment `/help "your question"` on any pull request to receive relevant information'
 
             # Output the relevant configurations if enabled
             if get_settings().get('config', {}).get('output_relevant_configurations', False):
