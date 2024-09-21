@@ -27,8 +27,9 @@ global_settings = Dynaconf(
         "settings/pr_update_changelog_prompts.toml",
         "settings/pr_custom_labels.toml",
         "settings/pr_add_docs.toml",
+        "settings/custom_labels.toml",
+        "settings/pr_help_prompts.toml",
         "settings_prod/.secrets.toml",
-        "settings/custom_labels.toml"
     ]]
 )
 
