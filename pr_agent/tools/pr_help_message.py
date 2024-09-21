@@ -142,12 +142,12 @@ class PRHelpMessage:
             if self.question_str:
                 get_logger().info(f'Answering a PR question about the PR {self.git_provider.pr_url} ')
 
-                if not get_settings().openai.key:
+                if not get_settings().get('openai.key'):
                     if get_settings().config.publish_output:
                         self.git_provider.publish_comment(
-                            "The `Help` tool chat requires an OpenAI API key, which is not configured.")
+                            "The `Help` tool chat feature requires an OpenAI API key for calculating embeddings")
                     else:
-                        get_logger().error("The `Help` tool chat requires an OpenAI API key, which is not configured.")
+                        get_logger().error("The `Help` tool chat feature requires an OpenAI API key for calculating embeddings")
                     return
 
                 # Initialize embeddings
@@ -158,7 +158,7 @@ class PRHelpMessage:
                 # Get similar snippets via similarity search
                 if get_settings().pr_help.force_local_db:
                     sim_results = self.get_sim_results_from_local_db(embeddings)
-                elif get_settings().pinecone.api_key:
+                elif get_settings().get('pinecone.api_key'):
                     sim_results = self.get_sim_results_from_pinecone_db(embeddings)
                 else:
                     sim_results = self.get_sim_results_from_s3_db(embeddings)
