@@ -158,7 +158,7 @@ class PRHelpMessage:
 
                 # Initialize embeddings
                 from langchain_openai import OpenAIEmbeddings
-                embeddings = OpenAIEmbeddings(model="text-embedding-ada-002",
+                embeddings = OpenAIEmbeddings(model="text-embedding-3-small",
                                               api_key=get_settings().openai.key)
 
                 # Get similar snippets via similarity search
@@ -207,7 +207,7 @@ class PRHelpMessage:
                 if get_settings().config.publish_output:
                     self.git_provider.publish_comment(answer_str)
                 else:
-                    get_logger().info(f"Answer: {response}")
+                    get_logger().info(f"Answer:\n{answer_str}")
             else:
                 if not isinstance(self.git_provider, BitbucketServerProvider) and not self.git_provider.is_supported("gfm_markdown"):
                     self.git_provider.publish_comment(
@@ -325,7 +325,7 @@ class PRHelpMessage:
         # build the snippets string
         relevant_snippets_str = ""
         for i, s in enumerate(relevant_snippets_full):
-            relevant_snippets_str += f"Snippet {i}:\n\n{s}\n\n"
+            relevant_snippets_str += f"Snippet {i+1}:\n\n{s}\n\n"
             relevant_snippets_str += "-------------------\n\n"
         return relevant_pages_full, relevant_snippets_full_header, relevant_snippets_str
 
