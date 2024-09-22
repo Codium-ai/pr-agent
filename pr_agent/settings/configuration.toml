@@ -183,6 +183,7 @@ final_update_message = false
 
 [pr_help] # /help #
 force_local_db=false
+num_retrieved_snippets=5
 
 [pr_config] # /config #
 
