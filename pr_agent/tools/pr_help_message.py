@@ -188,13 +188,12 @@ class PRHelpMessage:
                 relevant_snippets_numbers = response_yaml.get('relevant_snippets')
 
                 if not relevant_snippets_numbers:
+                    get_logger().info(f"Could not find relevant snippets for the question: {self.question_str}")
                     if get_settings().config.publish_output:
                         answer_str = f"### Question: \n{self.question_str}\n\n"
                         answer_str += f"### Answer:\n\n"
                         answer_str += f"Could not find relevant information to answer the question. Please provide more details and try again."
                         self.git_provider.publish_comment(answer_str)
-                    else:
-                        get_logger().info(f"Could not find relevant snippets for the question: {self.question_str}")
                     return ""
 
                 # prepare the answer
