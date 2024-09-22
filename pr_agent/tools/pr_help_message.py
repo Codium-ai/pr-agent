@@ -195,7 +195,7 @@ class PRHelpMessage:
                         self.git_provider.publish_comment(answer_str)
                     else:
                         get_logger().info(f"Could not find relevant snippets for the question: {self.question_str}")
-                        return
+                    return ""
 
                 # prepare the answer
                 answer_str = ""
