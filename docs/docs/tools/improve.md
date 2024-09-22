@@ -86,30 +86,39 @@ code_suggestions_self_review_text = "... (your text here) ..."
 ![self_review_1](https://codium.ai/images/pr_agent/self_review_1.png){width=512}
 
 
-💎 In addition, by setting:
-```
-[pr_code_suggestions]
-approve_pr_on_self_review = true
-```
-the tool can automatically approve the PR when the user checks the self-review checkbox.
 
-!!! tip "Tip - demanding self-review from the PR author"
-    If you set the number of required reviewers for a PR to 2, this effectively means that the PR author must click the self-review checkbox before the PR can be merged (in addition to a human reviewer).
+
+!!! tip "Tip - demanding self-review from the PR author 💎"
+
+    By setting:
+    ```
+    [pr_code_suggestions]
+    approve_pr_on_self_review = true
+    ```
+    the tool can automatically add an approval when the PR author clicks the self-review checkbox.
+
+
+    - If you set the number of required reviewers for a PR to 2, this effectively means that the PR author must click the self-review checkbox before the PR can be merged (in addition to a human reviewer).
 
     ![self_review_2](https://codium.ai/images/pr_agent/self_review_2.png){width=512}
+
+    - If you keep the number of required reviewers for a PR to 1 and enable this configuration, this effectively means that the PR author can approve the PR by actively clicking the self-review checkbox.
+    
+        To prevent unauthorized approvals, this configuration defaults to false, and cannot be altered through online comments; enabling requires a direct update to the configuration file and a commit to the repository. This ensures that utilizing the feature demands a deliberate documented decision by the repository owner.
+ 
 
 ### How many code suggestions are generated?
 PR-Agent uses a dynamic strategy to generate code suggestions based on the size of the pull request (PR). Here's how it works:
 
-1. Chunking large PRs:
+1) Chunking large PRs:
 
-   - PR-Agent divides large PRs into 'chunks'.
-   - Each chunk contains up to `pr_code_suggestions.max_context_tokens` tokens (default: 14,000).
+- PR-Agent divides large PRs into 'chunks'.
+- Each chunk contains up to `pr_code_suggestions.max_context_tokens` tokens (default: 14,000).
 
 
-2. Generating suggestions:
+2) Generating suggestions:
 
-   - For each chunk, PR-Agent generates up to `pr_code_suggestions.num_code_suggestions_per_chunk` suggestions (default: 4).
+- For each chunk, PR-Agent generates up to `pr_code_suggestions.num_code_suggestions_per_chunk` suggestions (default: 4).
 
 
 This approach has two main benefits:
