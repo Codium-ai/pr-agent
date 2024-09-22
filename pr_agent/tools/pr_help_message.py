@@ -207,7 +207,7 @@ class PRHelpMessage:
                 if get_settings().config.publish_output:
                     self.git_provider.publish_comment(answer_str)
                 else:
-                    get_logger().info(f"Answer: {response}")
+                    get_logger().info(f"Answer:\n{answer_str}")
             else:
                 if not isinstance(self.git_provider, BitbucketServerProvider) and not self.git_provider.is_supported("gfm_markdown"):
                     self.git_provider.publish_comment(
