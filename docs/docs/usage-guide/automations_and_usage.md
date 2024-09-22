@@ -175,10 +175,10 @@ By uploading a local `.pr_agent.toml` file to the root of the repo's main branch
 For example, if your local `.pr_agent.toml` file contains:
 ```
 [pr_reviewer]
-inline_code_comments = true
+extra_instructions = "Answer in japanese"
 ```
 
-Each time you invoke a `/review` tool, it will use inline code comments.
+Each time you invoke a `/review` tool, it will use the extra instructions you set in the local configuration file.
 
 
 Note that among other limitations, BitBucket provides relatively low rate-limits for applications (up to 1000 requests per hour), and does not provide an API to track the actual rate-limit usage.
