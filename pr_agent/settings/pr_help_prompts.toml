@@ -11,7 +11,7 @@ Additional instructions:
 
 The output must be a YAML object equivalent to type $DocHelper, according to the following Pydantic definitions:
 =====
-class $DocHelper(BaseModel):
+class DocHelper(BaseModel):
     user_question: str = Field(description="The user's question")
     response: str = Field(description="The response to the user's question")
     relevant_snippets: List[int] = Field(description="One-based index of the relevant snippets in the list of snippets provided. Order the by relevance, with the most relevant first. If a snippet was not relevant, do not include it in the list.")
