@@ -36,6 +36,7 @@ class PRHelpMessage:
         self.git_provider = get_git_provider_with_context(pr_url)
         self.ai_handler = ai_handler()
         self.question_str = self.parse_args(args)
+        self.num_retrieved_snippets = get_settings().get('pr_help.num_retrieved_snippets', 5)
         if self.question_str:
             self.vars = {
                 "question": self.question_str,
@@ -91,7 +92,7 @@ class PRHelpMessage:
 
                 vectorstore = Chroma(persist_directory=temp_dir + "/chroma_db",
                                      embedding_function=embeddings)
-                sim_results = vectorstore.similarity_search_with_score(self.question_str, k=4)
+                sim_results = vectorstore.similarity_search_with_score(self.question_str, k=self.num_retrieved_snippets)
         except Exception as e:
             get_logger().error(f"Error while getting sim from S3: {e}",
                                artifact={"traceback": traceback.format_exc()})
@@ -119,7 +120,7 @@ class PRHelpMessage:
                                      embedding_function=embeddings)
 
                 # Do similarity search
-                sim_results = vectorstore.similarity_search_with_score(self.question_str, k=4)
+                sim_results = vectorstore.similarity_search_with_score(self.question_str, k=self.num_retrieved_snippets)
         except Exception as e:
             get_logger().error(f"Error while getting sim from local db: {e}",
                                artifact={"traceback": traceback.format_exc()})
@@ -137,7 +138,7 @@ class PRHelpMessage:
             )
 
             # Do similarity search
-            sim_results = vectorstore.similarity_search_with_score(self.question_str, k=4)
+            sim_results = vectorstore.similarity_search_with_score(self.question_str, k=self.num_retrieved_snippets)
         except Exception as e:
             get_logger().error(f"Error while getting sim from Pinecone db: {e}",
                                artifact={"traceback": traceback.format_exc()})
@@ -185,6 +186,16 @@ class PRHelpMessage:
                 response_yaml = load_yaml(response)
                 response_str = response_yaml.get('response')
                 relevant_snippets_numbers = response_yaml.get('relevant_snippets')
+
+                if not relevant_snippets_numbers:
+                    if get_settings().config.publish_output:
+                        answer_str = f"### Question: \n{self.question_str}\n\n"
+                        answer_str += f"### Answer:\n\n"
+                        answer_str += f"Could not find relevant information to answer the question. Please provide more details and try again."
+                        self.git_provider.publish_comment(answer_str)
+                    else:
+                        get_logger().info(f"Could not find relevant snippets for the question: {self.question_str}")
+                        return
 
                 # prepare the answer
                 answer_str = ""
