@@ -325,7 +325,7 @@ class PRHelpMessage:
         # build the snippets string
         relevant_snippets_str = ""
         for i, s in enumerate(relevant_snippets_full):
-            relevant_snippets_str += f"Snippet {i}:\n\n{s}\n\n"
+            relevant_snippets_str += f"Snippet {i+1}:\n\n{s}\n\n"
             relevant_snippets_str += "-------------------\n\n"
         return relevant_pages_full, relevant_snippets_full_header, relevant_snippets_str
 
