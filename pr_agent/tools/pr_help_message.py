@@ -158,7 +158,7 @@ class PRHelpMessage:
 
                 # Initialize embeddings
                 from langchain_openai import OpenAIEmbeddings
-                embeddings = OpenAIEmbeddings(model="text-embedding-ada-002",
+                embeddings = OpenAIEmbeddings(model="text-embedding-3-small",
                                               api_key=get_settings().openai.key)
 
                 # Get similar snippets via similarity search
