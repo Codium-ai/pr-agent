@@ -108,7 +108,6 @@ enable_help_text=false
 
 [pr_code_suggestions] # /improve #
 max_context_tokens=14000
-num_code_suggestions=4
 commitable_code_suggestions = false
 extra_instructions = ""
 rank_suggestions = false
