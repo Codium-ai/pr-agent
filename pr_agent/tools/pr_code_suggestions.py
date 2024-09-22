@@ -44,10 +44,8 @@ class PRCodeSuggestions:
             self.is_extended = self._get_is_extended(args or [])
         except:
             self.is_extended = False
-        if self.is_extended:
-            num_code_suggestions = get_settings().pr_code_suggestions.num_code_suggestions_per_chunk
-        else:
-            num_code_suggestions = get_settings().pr_code_suggestions.num_code_suggestions
+        num_code_suggestions = get_settings().pr_code_suggestions.num_code_suggestions_per_chunk
+
 
         self.ai_handler = ai_handler()
         self.ai_handler.main_pr_language = self.main_language
@@ -601,7 +599,6 @@ class PRCodeSuggestions:
             if get_settings().pr_code_suggestions.final_clip_factor != 1:
                 max_len = max(
                     len(data_sorted),
-                    get_settings().pr_code_suggestions.num_code_suggestions,
                     get_settings().pr_code_suggestions.num_code_suggestions_per_chunk,
                 )
                 new_len = int(0.5 + max_len * get_settings().pr_code_suggestions.final_clip_factor)

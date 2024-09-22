@@ -86,17 +86,48 @@ code_suggestions_self_review_text = "... (your text here) ..."
 ![self_review_1](https://codium.ai/images/pr_agent/self_review_1.png){width=512}
 
 
-💎 In addition, by setting:
-```
-[pr_code_suggestions]
-approve_pr_on_self_review = true
-```
-the tool can automatically approve the PR when the user checks the self-review checkbox.
 
-!!! tip "Tip - demanding self-review from the PR author"
-    If you set the number of required reviewers for a PR to 2, this effectively means that the PR author must click the self-review checkbox before the PR can be merged (in addition to a human reviewer).
+
+!!! tip "Tip - demanding self-review from the PR author 💎"
+
+    By setting:
+    ```
+    [pr_code_suggestions]
+    approve_pr_on_self_review = true
+    ```
+    the tool can automatically add an approval when the PR author clicks the self-review checkbox.
+
+
+    - If you set the number of required reviewers for a PR to 2, this effectively means that the PR author must click the self-review checkbox before the PR can be merged (in addition to a human reviewer).
 
     ![self_review_2](https://codium.ai/images/pr_agent/self_review_2.png){width=512}
+
+    - If you keep the number of required reviewers for a PR to 1 and enable this configuration, this effectively means that the PR author can approve the PR by actively clicking the self-review checkbox.
+    
+        To prevent unauthorized approvals, this configuration defaults to false, and cannot be altered through online comments; enabling requires a direct update to the configuration file and a commit to the repository. This ensures that utilizing the feature demands a deliberate documented decision by the repository owner.
+ 
+
+### How many code suggestions are generated?
+PR-Agent uses a dynamic strategy to generate code suggestions based on the size of the pull request (PR). Here's how it works:
+
+1) Chunking large PRs:
+
+- PR-Agent divides large PRs into 'chunks'.
+- Each chunk contains up to `pr_code_suggestions.max_context_tokens` tokens (default: 14,000).
+
+
+2) Generating suggestions:
+
+- For each chunk, PR-Agent generates up to `pr_code_suggestions.num_code_suggestions_per_chunk` suggestions (default: 4).
+
+
+This approach has two main benefits:
+
+- Scalability: The number of suggestions scales with the PR size, rather than being fixed.
+- Quality: By processing smaller chunks, the AI can maintain higher quality suggestions, as larger contexts tend to decrease AI performance.
+
+Note: Chunking is primarily relevant for large PRs. For most PRs (up to 500 lines of code), PR-Agent will be able to process the entire code in a single call.
+
 
 ### 'Extra instructions' and 'best practices'
 
@@ -171,16 +202,8 @@ Using a combination of both can help the AI model to provide relevant and tailor
     
     <table>
       <tr>
-        <td><b>num_code_suggestions</b></td>
-        <td>Number of code suggestions provided by the 'improve' tool. Default is 4 for CLI, 0 for auto tools.</td>
-      </tr>
-      <tr>
         <td><b>extra_instructions</b></td>
         <td>Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".</td>
-      </tr>
-      <tr>
-        <td><b>rank_suggestions</b></td>
-        <td>If set to true, the tool will rank the suggestions, based on importance. Default is false.</td>
       </tr>
       <tr>
         <td><b>commitable_code_suggestions</b></td>
@@ -212,28 +235,24 @@ Using a combination of both can help the AI model to provide relevant and tailor
       </tr>
     </table>
 
-??? example "params for 'extended' mode"
+??? example "Params for number of suggestions and AI calls"
 
     <table>
       <tr>
         <td><b>auto_extended_mode</b></td>
-        <td>Enable extended mode automatically (no need for the --extended option). Default is true.</td>
+        <td>Enable chunking the PR code and running the tool on each chunk. Default is true.</td>
       </tr>
       <tr>
         <td><b>num_code_suggestions_per_chunk</b></td>
-        <td>Number of code suggestions provided by the 'improve' tool, per chunk. Default is 5.</td>
+        <td>Number of code suggestions provided by the 'improve' tool, per chunk. Default is 4.</td>
+      </tr>
+      <tr>
+        <td><b>max_number_of_calls</b></td>
+        <td>Maximum number of chunks. Default is 3.</td>
       </tr>
       <tr>
         <td><b>rank_extended_suggestions</b></td>
         <td>If set to true, the tool will rank the suggestions, based on importance. Default is true.</td>
-      </tr>
-      <tr>
-        <td><b>max_number_of_calls</b></td>
-        <td>Maximum number of chunks. Default is 5.</td>
-      </tr>
-      <tr>
-        <td><b>final_clip_factor</b></td>
-        <td>Factor to remove suggestions with low confidence. Default is 0.9.</td>
       </tr>
     </table>
 
