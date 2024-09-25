@@ -35,7 +35,7 @@ __old hunk__
 ...
 ======
 
-- In the format above, the diff is organized into seperate '__new hunk__' and '__old hunk__' sections for each code chunk. '__new hunk__' contains the updated code, while '__old hunk__' shows the removed code. If no code was added or removed in a specific chunk, the corresponding section will be omitted.
+- In the format above, the diff is organized into separate '__new hunk__' and '__old hunk__' sections for each code chunk. '__new hunk__' contains the updated code, while '__old hunk__' shows the removed code. If no code was added or removed in a specific chunk, the corresponding section will be omitted.
 - Line numbers are included for the '__new hunk__' sections to enable referencing specific lines in the code suggestions. These numbers are for reference only and are not part of the actual code.
 - Code lines are prefixed with symbols: '+' for new code added in the PR, '-' for code removed, and ' ' for unchanged code.
 {%- if is_ai_metadata %}
@@ -65,7 +65,7 @@ Extra user-provided instructions (should be addressed with high priority):
 The output must be a YAML object equivalent to type $PRCodeSuggestions, according to the following Pydantic definitions:
 =====
 class CodeSuggestion(BaseModel):
-    relevant_file: str = Field(description="Full path of the of the relevant file")
+    relevant_file: str = Field(description="Full path of the relevant file")
     language: str = Field(description="Programming language used by the relevant file")
     suggestion_content: str = Field(description="An actionable recommendation to enhance new code introduced in the PR, without including actual code snippets. Be short and concise")
     existing_code: str = Field(description="A short code snippet from a '__new hunk__' section that the suggestion aims to enhance or fix. Include only complete code lines without line numbers, using ellipsis (...) for brevity if needed. This snippet should represent the specific PR code targeted for improvement.")
