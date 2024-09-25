@@ -8,7 +8,7 @@ stages:
 
 pr_agent_job:
   stage: pr_agent
-  image: 
+  image:
     name: codiumai/pr-agent:latest
     entrypoint: [""]
   script:
@@ -16,7 +16,8 @@ pr_agent_job:
     - echo "Running PR Agent action step"
     - export MR_URL="$CI_MERGE_REQUEST_PROJECT_URL/merge_requests/$CI_MERGE_REQUEST_IID"
     - echo "MR_URL=$MR_URL"
-    - export gitlab__PERSONAL_ACCESS_TOKEN=$GITLAB_PERSONAL_ACCESS_TOKEN 
+    - export gitlab__url=$CI_SERVER_PROTOCOL://$CI_SERVER_FQDN
+    - export gitlab__PERSONAL_ACCESS_TOKEN=$GITLAB_PERSONAL_ACCESS_TOKEN
     - export config__git_provider="gitlab"
     - export openai__key=$OPENAI_KEY
     - python -m pr_agent.cli --pr_url="$MR_URL" describe
@@ -54,7 +55,7 @@ WEBHOOK_SECRET=$(python -c "import secrets; print(secrets.token_hex(10))")
     - Your OpenAI key.
     - In the [gitlab] section, fill in personal_access_token and shared_secret. The access token can be a personal access token, or a group or project access token.
     - Set deployment_type to 'gitlab' in [configuration.toml](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml)
-   
+
 5. Create a webhook in GitLab. Set the URL to ```http[s]://<PR_AGENT_HOSTNAME>/webhook```. Set the secret token to the generated secret from step 2.
 In the "Trigger" section, check the ‘comments’ and ‘merge request events’ boxes.
 
