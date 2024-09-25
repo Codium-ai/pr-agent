@@ -101,11 +101,11 @@ def process_patch_lines(patch_str, original_file_str, patch_extra_lines_before, 
                                     # Update start and size in one line each
                                     extended_start1, extended_start2 = extended_start1 + i, extended_start2 + i
                                     extended_size1, extended_size2 = extended_size1 - i, extended_size2 - i
-                                    get_logger().debug(f"Found section header in line {i} before the hunk")
+                                    # get_logger().debug(f"Found section header in line {i} before the hunk")
                                     section_header = ''
                                     break
                             if not found_header:
-                                get_logger().debug(f"Section header not found in the extra lines before the hunk")
+                                # get_logger().debug(f"Section header not found in the extra lines before the hunk")
                                 extended_start1, extended_size1, extended_start2, extended_size2 = \
                                     _calc_context_limits(patch_extra_lines_before)
                         else:

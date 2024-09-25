@@ -75,11 +75,7 @@ class PRCodeSuggestions:
             "relevant_best_practices": "",
             "is_ai_metadata": get_settings().get("config.enable_ai_metadata", False),
         }
-        if 'claude' in get_settings().config.model:
-            # prompt for Claude, with minor adjustments
-            self.pr_code_suggestions_prompt_system = get_settings().pr_code_suggestions_prompt_claude.system
-        else:
-            self.pr_code_suggestions_prompt_system = get_settings().pr_code_suggestions_prompt.system
+        self.pr_code_suggestions_prompt_system = get_settings().pr_code_suggestions_prompt.system
 
         self.token_handler = TokenHandler(self.git_provider.pr,
                                           self.vars,
@@ -687,7 +683,7 @@ class PRCodeSuggestions:
                     patch = "\n".join(patch_orig.splitlines()[5:]).strip('\n')
 
                     example_code = ""
-                    example_code += f"```diff\n{patch}\n```\n"
+                    example_code += f"```diff\n{patch.rstrip()}\n```\n"
                     if i == 0:
                         pr_body += f"""<td>\n\n"""
                     else:
@@ -743,7 +739,8 @@ class PRCodeSuggestions:
             variables = {'suggestion_list': suggestion_list,
                          'suggestion_str': suggestion_str,
                          "diff": patches_diff,
-                         'num_code_suggestions': len(suggestion_list)}
+                         'num_code_suggestions': len(suggestion_list),
+                         "is_ai_metadata": get_settings().get("config.enable_ai_metadata", False)}
             environment = Environment(undefined=StrictUndefined)
             system_prompt_reflect = environment.from_string(
                 get_settings().pr_code_suggestions_reflect_prompt.system).render(
