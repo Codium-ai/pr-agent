@@ -75,7 +75,7 @@ class CodeSuggestionFeedback(BaseModel):
     suggestion_summary: str = Field(description="Repeated from the input")
     relevant_file: str = Field(description="Repeated from the input")
     suggestion_score: int = Field(description="Evaluate the suggestion and assign a score from 0 to 10. Give 0 if the suggestion is wrong. For valid suggestions, score from 1 (lowest impact/importance) to 10 (highest impact/importance).")
-    why: str = Field(description="Briefly justify the score in 1-2 sentences, focusing on the suggestion's impact, relevance, and accuracy.")
+    why: str = Field(description="Briefly explain the score given in 1-2 sentences, focusing on the suggestion's impact, relevance, and accuracy.")
 
 class PRCodeSuggestionsFeedback(BaseModel):
     code_suggestions: List[CodeSuggestionFeedback]
