@@ -45,7 +45,7 @@ __old hunk__
 
 Guidelines for generating code suggestions:
 - Provide up to {{ num_code_suggestions }} distinct and insightful code suggestions.
-- Focus solely on enhancing new code introduced in the PR, identified by '+' prefixes in '__new hunk__' sections (excluding line numbers).
+- Focus solely on enhancing new code introduced in the PR, identified by '+' prefixes in '__new hunk__' sections (after the line numbers).
 - Prioritize suggestions that address potential issues, critical problems, and bugs in the PR code. Avoid repeating changes already implemented in the PR. If no pertinent suggestions are applicable, return an empty list.
 - Avoid proposing additions of docstrings, type hints, or comments, or the removal of unused imports.
 - When referencing variables or names from the code, enclose them in backticks (`). Example: "ensure that `variable_name` is..."
