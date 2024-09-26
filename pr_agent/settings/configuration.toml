@@ -69,9 +69,7 @@ enable_review_labels_effort=true
 require_all_thresholds_for_incremental_review=false
 minimal_commits_for_incremental_review=0
 minimal_minutes_for_incremental_review=0
-enable_intro_text=true
 enable_help_text=false # Determines whether to include help text in the PR review. Enabled by default.
-enable_chat_text=false
 # auto approval
 enable_auto_approval=false
 maximal_review_effort=5
@@ -114,6 +112,8 @@ commitable_code_suggestions = false
 extra_instructions = ""
 rank_suggestions = false
 enable_help_text=false
+enable_chat_text=true
+enable_intro_text=true
 persistent_comment=true
 max_history_len=4
 # enable to apply suggestion 💎
