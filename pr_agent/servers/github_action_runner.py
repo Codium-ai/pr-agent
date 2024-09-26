@@ -80,7 +80,7 @@ async def run_action():
     except Exception as e:
         get_logger().info(f"github action: failed to apply repo settings: {e}")
 
-    # Handle pull request event
+    # Handle pull request opened event
     if GITHUB_EVENT_NAME == "pull_request":
         action = event_payload.get("action")
 
@@ -101,9 +101,13 @@ async def run_action():
                 if auto_improve is None:
                     auto_improve = get_setting_or_env("GITHUB_ACTION_CONFIG.AUTO_IMPROVE", None)
 
+                # Set the configuration for auto actions
+                get_settings().config.is_auto_command = True # Set the flag to indicate that the command is auto
+                get_settings().pr_description.final_update_message = False  # No final update message when auto_describe is enabled
+                get_logger().info(f"Running auto actions: auto_describe={auto_describe}, auto_review={auto_review}, auto_improve={auto_improve}")
+
                 # invoke by default all three tools
                 if auto_describe is None or is_true(auto_describe):
-                    get_settings().pr_description.final_update_message = False  # No final update message when auto_describe is enabled
                     await PRDescription(pr_url).run()
                 if auto_review is None or is_true(auto_review):
                     await PRReviewer(pr_url).run()
