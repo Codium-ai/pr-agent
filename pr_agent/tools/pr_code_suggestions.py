@@ -615,20 +615,18 @@ class PRCodeSuggestions:
         try:
             pr_body = "## PR Code Suggestions ✨\n\n"
 
-            if get_settings().pr_code_suggestions.enable_intro_text and get_settings().config.is_auto_command:
-                pr_body += "Explore these optional code suggestions:\n\n"
-
             if len(data.get('code_suggestions', [])) == 0:
                 pr_body += "No suggestions found to improve this PR."
                 return pr_body
+
+            if get_settings().pr_code_suggestions.enable_intro_text and get_settings().config.is_auto_command:
+                pr_body += "Explore these optional code suggestions:\n\n"
 
             language_extension_map_org = get_settings().language_extension_map_org
             extension_to_language = {}
             for language, extensions in language_extension_map_org.items():
                 for ext in extensions:
                     extension_to_language[ext] = language
-
-            pr_body = "## PR Code Suggestions ✨\n\n"
 
             pr_body += "<table>"
             header = f"Suggestion"
