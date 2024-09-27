@@ -8,9 +8,19 @@ CodiumAI PR-Agent is an open-source tool to help efficiently review and handle p
 
 - See the [Tools Guide](./tools/index.md) for a detailed description of the different tools.
 
-To search the documentation site using natural language, simply comment `/help "your question"` in a pull request where PR-Agent is installed. PR-Agent will then provide you with an [answer](https://github.com/Codium-ai/pr-agent/pull/1241#issuecomment-2365259334), including relevant documentation links.
+
+## PR-Agent Docs Smart Search
+
+To search the documentation site using natural language:
+
+1. Comment `/help "your question"` in either:
+   - A pull request where PR-Agent is installed
+   - A [PR Chat](https://pr-agent-docs.codium.ai/chrome-extension/features/#pr-chat)
+
+2. PR-Agent will respond with an [answer](https://github.com/Codium-ai/pr-agent/pull/1241#issuecomment-2365259334) that includes relevant documentation links.
 
 ## PR-Agent Features
+
 PR-Agent offers extensive pull request functionalities across various git providers.
 
 |       |                                                                                                                       | GitHub | Gitlab | Bitbucket | Azure DevOps |
