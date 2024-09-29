@@ -9,7 +9,7 @@ The tool can be triggered automatically every time a new PR is [opened](../usage
 
 ![code_suggestions_as_comment_open.png](https://codium.ai/images/pr_agent/code_suggestions_as_comment_open.png){width=512}
 
-Note that the `Apply this suggestion` checkbox, which interactively converts a suggestion into a commitable code comment, is available only for PR-Agent Pro 💎 users.
+Note that the `Apply this suggestion` checkbox, which interactively converts a suggestion into a commitable code comment, is available only for Qodo Merge Pro 💎 users.
 
 
 ## Example usage
@@ -36,7 +36,7 @@ Also note that collapsible are not supported in _Bitbucket_. Hence, the suggesti
 
 ### Automatic triggering
 
-To run the `improve` automatically when a PR is opened, define in a [configuration file](https://pr-agent-docs.codium.ai/usage-guide/configuration_options/#wiki-configuration-file):
+To run the `improve` automatically when a PR is opened, define in a [configuration file](https://qodo-merge-docs.qodo.ai/usage-guide/configuration_options/#wiki-configuration-file):
 ```
 [github_app]
 pr_commands = [
@@ -54,14 +54,14 @@ num_code_suggestions_per_chunk = ...
 
 ### Assessing Impact 💎
 
-Note that PR-Agent pro tracks two types of implementations:
+Note that Qodo Merge pro tracks two types of implementations:
 
 - Direct implementation - when the user directly applies the suggestion by clicking the `Apply` checkbox.
-- Indirect implementation - when the user implements the suggestion in their IDE environment. In this case, PR-Agent will utilize, after each commit, a dedicated logic to identify if a suggestion was implemented, and will mark it as implemented.
+- Indirect implementation - when the user implements the suggestion in their IDE environment. In this case, Qodo Merge will utilize, after each commit, a dedicated logic to identify if a suggestion was implemented, and will mark it as implemented.
 
 ![code_suggestions_asses_impact](https://codium.ai/images/pr_agent/code_suggestions_asses_impact.png){width=512}
 
-In post-process, PR-Agent counts the number of suggestions that were implemented, and provides general statistics and insights about the suggestions' impact on the PR process.
+In post-process, Qodo Merge counts the number of suggestions that were implemented, and provides general statistics and insights about the suggestions' impact on the PR process.
 
 ![code_suggestions_asses_impact_stats_1](https://codium.ai/images/pr_agent/code_suggestions_asses_impact_stats_1.png){width=512}
 
@@ -108,17 +108,17 @@ code_suggestions_self_review_text = "... (your text here) ..."
  
 
 ### How many code suggestions are generated?
-PR-Agent uses a dynamic strategy to generate code suggestions based on the size of the pull request (PR). Here's how it works:
+Qodo Merge uses a dynamic strategy to generate code suggestions based on the size of the pull request (PR). Here's how it works:
 
 1) Chunking large PRs:
 
-- PR-Agent divides large PRs into 'chunks'.
+- Qodo Merge divides large PRs into 'chunks'.
 - Each chunk contains up to `pr_code_suggestions.max_context_tokens` tokens (default: 14,000).
 
 
 2) Generating suggestions:
 
-- For each chunk, PR-Agent generates up to `pr_code_suggestions.num_code_suggestions_per_chunk` suggestions (default: 4).
+- For each chunk, Qodo Merge generates up to `pr_code_suggestions.num_code_suggestions_per_chunk` suggestions (default: 4).
 
 
 This approach has two main benefits:
@@ -126,7 +126,7 @@ This approach has two main benefits:
 - Scalability: The number of suggestions scales with the PR size, rather than being fixed.
 - Quality: By processing smaller chunks, the AI can maintain higher quality suggestions, as larger contexts tend to decrease AI performance.
 
-Note: Chunking is primarily relevant for large PRs. For most PRs (up to 500 lines of code), PR-Agent will be able to process the entire code in a single call.
+Note: Chunking is primarily relevant for large PRs. For most PRs (up to 500 lines of code), Qodo Merge will be able to process the entire code in a single call.
 
 
 ### 'Extra instructions' and 'best practices'
@@ -172,7 +172,7 @@ This file is only an example. Since it is used as a prompt for an AI model, we w
      2) A lengthy file probably represent a more "**generic**" set of guidelines, which the AI model is already familiar with. The objective is to focus on a more targeted set of guidelines tailored to the specific needs of this project.
 
 ##### Local and global best practices
-By default, PR-Agent will look for a local `best_practices.md` wiki file in the root of the relevant local repo.
+By default, Qodo Merge will look for a local `best_practices.md` wiki file in the root of the relevant local repo.
 
 If you want to enable also a global `best_practices.md` wiki file, set first in the global configuration file:
 
@@ -181,7 +181,7 @@ If you want to enable also a global `best_practices.md` wiki file, set first in 
 enable_global_best_practices = true
 ```
 
-Then, create a `best_practices.md` wiki file in the root of [global](https://pr-agent-docs.codium.ai/usage-guide/configuration_options/#global-configuration-file) configuration repository,  `pr-agent-settings`.
+Then, create a `best_practices.md` wiki file in the root of [global](https://qodo-merge-docs.qodo.ai/usage-guide/configuration_options/#global-configuration-file) configuration repository,  `pr-agent-settings`.
 
 ##### Example results
 
@@ -259,11 +259,11 @@ Using a combination of both can help the AI model to provide relevant and tailor
 ## A note on code suggestions quality
 
 - AI models for code are getting better and better (Sonnet-3.5 and GPT-4), but they are not flawless. Not all the suggestions will be perfect, and a user should not accept all of them automatically. Critical reading and judgment are required.
-- While mistakes of the AI are rare but can happen, a real benefit from the suggestions of the `improve` (and [`review`](https://pr-agent-docs.codium.ai/tools/review/)) tool is to catch, with high probability, **mistakes or bugs done by the PR author**, when they happen. So, it's a good practice to spend the needed ~30-60 seconds to review the suggestions, even if not all of them are always relevant.
+- While mistakes of the AI are rare but can happen, a real benefit from the suggestions of the `improve` (and [`review`](https://qodo-merge-docs.qodo.ai/tools/review/)) tool is to catch, with high probability, **mistakes or bugs done by the PR author**, when they happen. So, it's a good practice to spend the needed ~30-60 seconds to review the suggestions, even if not all of them are always relevant.
 - The hierarchical structure of the suggestions is designed to help the user to _quickly_ understand them, and to decide which ones are relevant and which are not:
 
     - Only if the `Category` header is relevant, the user should move to the summarized suggestion description
     - Only if the summarized suggestion description is relevant, the user should click on the collapsible, to read the full suggestion description with a code preview example.
 
-- In addition, we recommend to use the [`extra_instructions`](https://pr-agent-docs.codium.ai/tools/improve/#extra-instructions-and-best-practices) field to guide the model to suggestions that are more relevant to the specific needs of the project. 
-- The interactive [PR chat](https://pr-agent-docs.codium.ai/chrome-extension/) also provides an easy way to get more tailored suggestions and feedback from the AI model.
+- In addition, we recommend to use the [`extra_instructions`](https://qodo-merge-docs.qodo.ai/tools/improve/#extra-instructions-and-best-practices) field to guide the model to suggestions that are more relevant to the specific needs of the project. 
+- The interactive [PR chat](https://qodo-merge-docs.qodo.ai/chrome-extension/) also provides an easy way to get more tailored suggestions and feedback from the AI model.

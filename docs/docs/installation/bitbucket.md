@@ -1,7 +1,7 @@
 ## Run as a Bitbucket Pipeline
 
 
-You can use the Bitbucket Pipeline system to run PR-Agent on every pull request open or update.
+You can use the Bitbucket Pipeline system to run Qodo Merge on every pull request open or update.
 
 1. Add the following file in your repository bitbucket_pipelines.yml
 
@@ -29,7 +29,7 @@ Note that comments on a PR are not supported in Bitbucket Pipeline.
 
 ## Run using CodiumAI-hosted Bitbucket app 💎
 
-Please contact visit [PR-Agent pro](https://www.codium.ai/pricing/) if you're interested in a hosted BitBucket app solution that provides full functionality including PR reviews and comment handling. It's based on the [bitbucket_app.py](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/git_providers/bitbucket_provider.py) implementation.
+Please contact visit [Qodo Merge Pro](https://www.codium.ai/pricing/) if you're interested in a hosted BitBucket app solution that provides full functionality including PR reviews and comment handling. It's based on the [bitbucket_app.py](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/git_providers/bitbucket_provider.py) implementation.
 
 
 ## Bitbucket Server and Data Center
