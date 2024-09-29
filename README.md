@@ -25,11 +25,11 @@ CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by p
 </div>
 
 ### [Documentation](https://pr-agent-docs.codium.ai/)
-- See the [Installation Guide](https://pr-agent-docs.codium.ai/installation/) for instructions on installing PR-Agent on different platforms.
+- See the [Installation Guide](https://qodo-merge-docs.qodo.ai/installation/) for instructions on installing PR-Agent on different platforms.
 
-- See the [Usage Guide](https://pr-agent-docs.codium.ai/usage-guide/) for instructions on running PR-Agent tools via different interfaces, such as CLI, PR Comments, or by automatically triggering them when a new PR is opened.
+- See the [Usage Guide](https://qodo-merge-docs.qodo.ai/usage-guide/) for instructions on running PR-Agent tools via different interfaces, such as CLI, PR Comments, or by automatically triggering them when a new PR is opened.
 
-- See the [Tools Guide](https://pr-agent-docs.codium.ai/tools/) for a detailed description of the different tools, and the available configurations for each tool.
+- See the [Tools Guide](https://qodo-merge-docs.qodo.ai/tools/) for a detailed description of the different tools, and the available configurations for each tool.
 
 
 ## Table of Contents
@@ -262,7 +262,7 @@ Note that when you set your own PR-Agent or use CodiumAI hosted PR-Agent, there 
 2. **Improved privacy** - No data will be stored or used to train models. PR-Agent Pro will employ zero data retention, and will use an OpenAI account with zero data retention.
 3. **Improved support** - PR-Agent Pro users will receive priority support, and will be able to request new features and capabilities.
 4. **Extra features** -In addition to the benefits listed above, PR-Agent Pro will emphasize more customization, and the usage of static code analysis, in addition to LLM logic, to improve results. 
-See [here](https://pr-agent-docs.codium.ai/#pr-agent-pro) for a list of features available in PR-Agent Pro.
+See [here](https://qodo-merge-docs.qodo.ai/overview/pr_agent_pro/) for a list of features available in PR-Agent Pro.
 
 
 
