@@ -1,5 +1,5 @@
 ## Run as a GitLab Pipeline
-You can use a pre-built Action Docker image to run PR-Agent as a GitLab pipeline. This is a simple way to get started with PR-Agent without setting up your own server.
+You can use a pre-built Action Docker image to run Qodo Merge as a GitLab pipeline. This is a simple way to get started with Qodo Merge without setting up your own server.
 
 (1) Add the following file to your repository under `.gitlab-ci.yml`:
 ```yaml
@@ -26,8 +26,8 @@ pr_agent_job:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
 ```
-This script will run PR-Agent on every new merge request. You can modify the `rules` section to run PR-Agent on different events.
-You can also modify the `script` section to run different PR-Agent commands, or with different parameters by exporting different environment variables.
+This script will run Qodo Merge on every new merge request. You can modify the `rules` section to run Qodo Merge on different events.
+You can also modify the `script` section to run different Qodo Merge commands, or with different parameters by exporting different environment variables.
 
 
 (2) Add the following masked variables to your GitLab repository (CI/CD -> Variables):
@@ -49,7 +49,7 @@ Note that if your base branches are not protected, don't set the variables as `p
 ```
 WEBHOOK_SECRET=$(python -c "import secrets; print(secrets.token_hex(10))")
 ```
-3. Follow the instructions to build the Docker image, setup a secrets file and deploy on your own server from [here](https://pr-agent-docs.codium.ai/installation/github/#run-as-a-github-app) steps 4-7.
+3. Follow the instructions to build the Docker image, setup a secrets file and deploy on your own server from [here](https://qodo-merge-docs.qodo.ai/installation/github/#run-as-a-github-app) steps 4-7.
 
 4. In the secrets file, fill in the following:
     - Your OpenAI key.

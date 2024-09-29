@@ -4,22 +4,22 @@
 The PR-Chat feature allows to freely chat with your PR code, within your GitHub environment.
 It will seamlessly use the PR as context to your chat session, and provide AI-powered feedback.
 
-To enable private chat, simply install the PR-Agent Chrome extension. After installation, each PR's file-changed tab will include a chat box, where you may ask questions about your code.
+To enable private chat, simply install the Qodo Merge Chrome extension. After installation, each PR's file-changed tab will include a chat box, where you may ask questions about your code.
 This chat session is **private**, and won't be visible to other users.
 
 All open-source repositories are supported.
-For private repositories, you will also need to install PR-Agent Pro, After installation, make sure to open at least one new PR to fully register your organization. Once done, you can chat with both new and existing PRs across all installed repositories.
+For private repositories, you will also need to install Qodo Merge Pro, After installation, make sure to open at least one new PR to fully register your organization. Once done, you can chat with both new and existing PRs across all installed repositories.
 
 #### Context-aware PR chat
 
-PR-Agent constructs a comprehensive context for each pull request, incorporating the PR description, commit messages, and code changes with extended dynamic context. This contextual information, along with additional PR-related data, forms the foundation for an AI-powered chat session. The agent then leverages this rich context to provide intelligent, tailored responses to user inquiries about the pull request.
+Qodo Merge constructs a comprehensive context for each pull request, incorporating the PR description, commit messages, and code changes with extended dynamic context. This contextual information, along with additional PR-related data, forms the foundation for an AI-powered chat session. The agent then leverages this rich context to provide intelligent, tailored responses to user inquiries about the pull request.
 
 <img src="https://codium.ai/images/pr_agent/pr_chat_1.png" width="768">
 <img src="https://codium.ai/images/pr_agent/pr_chat_2.png" width="768">
 
 
 ### Toolbar extension
-With PR-Agent Chrome extension, it's [easier than ever](https://www.youtube.com/watch?v=gT5tli7X4H4) to interactively configure and experiment with the different tools and configuration options.
+With Qodo Merge Chrome extension, it's [easier than ever](https://www.youtube.com/watch?v=gT5tli7X4H4) to interactively configure and experiment with the different tools and configuration options.
 
 For private repositories, after you found the setup that works for you, you can also easily export it as a persistent configuration file, and use it for automatic commands.
 
@@ -27,11 +27,11 @@ For private repositories, after you found the setup that works for you, you can 
 
 <img src="https://codium.ai/images/pr_agent/toolbar2.png" width="512">
 
-### PR-Agent filters
+### Qodo Merge filters
 
-PR-Agent filters is a sidepanel option. that allows you to filter different message in the conversation tab.
+Qodo Merge filters is a sidepanel option. that allows you to filter different message in the conversation tab.
 
-For example, you can choose to present only message from PR-Agent, or filter those messages, focusing only on user's comments.
+For example, you can choose to present only message from Qodo Merge, or filter those messages, focusing only on user's comments.
 
 <img src="https://codium.ai/images/pr_agent/pr_agent_filters1.png" width="256">
 
@@ -40,7 +40,7 @@ For example, you can choose to present only message from PR-Agent, or filter tho
 
 ### Enhanced code suggestions
 
-PR-Agent Chrome extension adds the following capabilities to code suggestions tool's comments:
+Qodo Merge Chrome extension adds the following capabilities to code suggestions tool's comments:
 
 - Auto-expand the table when you are viewing a code block, to avoid clipping.
 - Adding a "quote-and-reply" button, that enables to address and comment on a specific suggestion (for example, asking the author to fix the issue)

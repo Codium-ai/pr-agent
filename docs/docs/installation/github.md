@@ -1,6 +1,6 @@
 ## Run as a GitHub Action
 
-You can use our pre-built Github Action Docker image to run PR-Agent as a Github Action.
+You can use our pre-built Github Action Docker image to run Qodo Merge as a Github Action.
 
 1) Add the following file to your repository under `.github/workflows/pr_agent.yml`:
 
@@ -60,7 +60,7 @@ The GITHUB_TOKEN secret is automatically created by GitHub.
 3) Merge this change to your main branch.
 When you open your next PR, you should see a comment from `github-actions` bot with a review of your PR, and instructions on how to use the rest of the tools.
 
-4) You may configure PR-Agent by adding environment variables under the env section corresponding to any configurable property in the [configuration](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml) file. Some examples:
+4) You may configure Qodo Merge by adding environment variables under the env section corresponding to any configurable property in the [configuration](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml) file. Some examples:
 ```yaml
       env:
         # ... previous environment values
@@ -68,7 +68,7 @@ When you open your next PR, you should see a comment from `github-actions` bot w
         PR_REVIEWER.REQUIRE_TESTS_REVIEW: "false" # Disable tests review
         PR_CODE_SUGGESTIONS.NUM_CODE_SUGGESTIONS: 6 # Increase number of code suggestions
 ```
-See detailed usage instructions in the [USAGE GUIDE](https://pr-agent-docs.codium.ai/usage-guide/automations_and_usage/#github-action)
+See detailed usage instructions in the [USAGE GUIDE](https://qodo-merge-docs.qodo.ai/usage-guide/automations_and_usage/#github-action)
 
 ---
 
@@ -155,7 +155,7 @@ cp pr_agent/settings/.secrets_template.toml pr_agent/settings/.secrets.toml
 
 9. Install the app by navigating to the "Install App" tab and selecting your desired repositories.
 
-> **Note:** When running PR-Agent from GitHub App, the default configuration file (configuration.toml) will be loaded.
+> **Note:** When running Qodo Merge from GitHub app, the default configuration file (configuration.toml) will be loaded.
 > However, you can override the default tool parameters by uploading a local configuration file `.pr_agent.toml`
 > For more information please check out the [USAGE GUIDE](../usage-guide/automations_and_usage.md#github-app)
 ---

@@ -1,7 +1,7 @@
 # Usage guide
 
-This page provides a detailed guide on how to use PR-Agent. 
-It includes information on how to adjust PR-Agent configurations, define which tools will run automatically, and other advanced configurations.
+This page provides a detailed guide on how to use Qodo Merge. 
+It includes information on how to adjust Qodo Merge configurations, define which tools will run automatically, and other advanced configurations.
 
 
 - [Introduction](./introduction.md)
@@ -23,4 +23,4 @@ It includes information on how to adjust PR-Agent configurations, define which t
     - [Changing a model](./additional_configurations.md#changing-a-model)
     - [Patch Extra Lines](./additional_configurations.md#patch-extra-lines)
     - [Editing the prompts](./additional_configurations.md#editing-the-prompts)
-- [PR-Agent Pro Models](./PR_agent_pro_models.md)
+- [Qodo Merge Pro Models](./PR_agent_pro_models.md)

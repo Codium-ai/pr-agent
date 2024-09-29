@@ -1,10 +1,10 @@
-# PR-Agent Code Fine-tuning Benchmark
+# Qodo Merge Code Fine-tuning Benchmark
 
 On coding tasks, the gap between open-source models and top closed-source models such as GPT4 is significant.
 <br>
 In practice, open-source models are unsuitable for most real-world code tasks, and require further fine-tuning to produce acceptable results.
 
-_PR-Agent fine-tuning benchmark_ aims to benchmark open-source models on their ability to be fine-tuned for a coding task.
+_Qodo Merge fine-tuning benchmark_ aims to benchmark open-source models on their ability to be fine-tuned for a coding task.
 Specifically, we chose to fine-tune open-source models on the task of analyzing a pull request, and providing useful feedback and code suggestions.
 
 Here are the results:
@@ -53,8 +53,8 @@ Here are the results:
 
 ### Training dataset
 
-Our training dataset comprises 25,000 pull requests, aggregated from permissive license repos. For each pull request, we generated responses for the three main tools of PR-Agent:
-[Describe](https://pr-agent-docs.codium.ai/tools/describe/), [Review](https://pr-agent-docs.codium.ai/tools/improve/) and [Improve](https://pr-agent-docs.codium.ai/tools/improve/).
+Our training dataset comprises 25,000 pull requests, aggregated from permissive license repos. For each pull request, we generated responses for the three main tools of Qodo Merge:
+[Describe](https://qodo-merge-docs.qodo.ai/tools/describe/), [Review](https://qodo-merge-docs.qodo.ai/tools/improve/) and [Improve](https://qodo-merge-docs.qodo.ai/tools/improve/).
 
 On the raw data collected, we employed various automatic and manual cleaning techniques to ensure the outputs were of the highest quality, and suitable for instruct-tuning.
 

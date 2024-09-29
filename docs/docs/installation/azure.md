@@ -1,5 +1,5 @@
 ## Azure DevOps Pipeline
-You can use a pre-built Action Docker image to run PR-Agent as an Azure devops pipeline.
+You can use a pre-built Action Docker image to run Qodo Merge as an Azure devops pipeline.
 add the following file to your repository under `azure-pipelines.yml`:
 ```yaml
 # Opt out of CI triggers
@@ -47,11 +47,11 @@ stages:
       env:
         azure_devops__pat: $(azure_devops_pat)
         openai__key: $(OPENAI_KEY)
-      displayName: 'Run PR Agent'
+      displayName: 'Run Qodo Merge'
 ```
-This script will run PR-Agent on every new merge request, with the `improve`, `review`, and `describe` commands.
+This script will run Qodo Merge on every new merge request, with the `improve`, `review`, and `describe` commands.
 Note that you need to export the `azure_devops__pat` and `OPENAI_KEY` variables in the Azure DevOps pipeline settings (Pipelines -> Library -> + Variable group):
-![PR Agent Pro](https://codium.ai/images/pr_agent/azure_devops_pipeline_secrets.png){width=468}
+![Qodo Merge Pro](https://codium.ai/images/pr_agent/azure_devops_pipeline_secrets.png){width=468}
 
 Make sure to give pipeline permissions to the `pr_agent` variable group.
 

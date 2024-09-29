@@ -1,33 +1,33 @@
 
-## Getting Started with PR-Agent Pro
+## Getting Started with Qodo Merge Pro
 
-PR-Agent Pro is a versatile application compatible with GitHub, GitLab, and BitBucket, hosted by CodiumAI.
-See [here](https://pr-agent-docs.codium.ai/#pr-agent-pro) for more details about the benefits of using PR-Agent Pro.
+Qodo Merge Pro is a versatile application compatible with GitHub, GitLab, and BitBucket, hosted by CodiumAI.
+See [here](https://qodo-merge-docs.qodo.ai/#pr-agent-pro) for more details about the benefits of using Qodo Merge Pro.
 
-Interested parties can subscribe to PR-Agent Pro through the following [link](https://www.codium.ai/pricing/). 
+Interested parties can subscribe to Qodo Merge Pro through the following [link](https://www.codium.ai/pricing/). 
 After subscribing, you are granted the ability to easily install the application across any of your repositories.
 
-![PR Agent Pro](https://codium.ai/images/pr_agent/pr_agent_pro_install.png){width=468}
+![Qodo Merge Pro](https://codium.ai/images/pr_agent/pr_agent_pro_install.png){width=468}
 
-Each user who wants to use PR-Agent pro needs to buy a seat. 
+Each user who wants to use Qodo Merge pro needs to buy a seat. 
 Initially, CodiumAI offers a two-week trial period at no cost, after which continued access requires each user to secure a personal seat.
-Once a user acquires a seat, they gain the flexibility to use PR-Agent Pro across any repository where it was enabled.
+Once a user acquires a seat, they gain the flexibility to use Qodo Merge Pro across any repository where it was enabled.
 
-Users without a purchased seat who interact with a repository featuring PR-Agent Pro are entitled to receive up to five complimentary feedbacks.
-Beyond this limit, PR-Agent Pro will cease to respond to their inquiries unless a seat is purchased.
+Users without a purchased seat who interact with a repository featuring Qodo Merge Pro are entitled to receive up to five complimentary feedbacks.
+Beyond this limit, Qodo Merge Pro will cease to respond to their inquiries unless a seat is purchased.
 
-## Install PR-Agent Pro for GitHub Enterprise Server
-You can install PR-Agent Pro application on your GitHub Enterprise Server, and enjoy two weeks of free trial.
-After the trial period, to continue using PR-Agent Pro, you will need to contact us for an [Enterprise license](https://www.codium.ai/pricing/).
+## Install Qodo Merge Pro for GitHub Enterprise Server
+You can install Qodo Merge Pro application on your GitHub Enterprise Server, and enjoy two weeks of free trial.
+After the trial period, to continue using Qodo Merge Pro, you will need to contact us for an [Enterprise license](https://www.codium.ai/pricing/).
 
 
-## Install PR-Agent Pro for GitLab (Teams & Enterprise)
+## Install Qodo Merge Pro for GitLab (Teams & Enterprise)
 
-Since GitLab platform does not support apps, installing PR-Agent Pro for GitLab is a bit more involved, and requires the following steps:
+Since GitLab platform does not support apps, installing Qodo Merge Pro for GitLab is a bit more involved, and requires the following steps:
 
 ### Step 1
 
-Acquire a personal, project or group level access token. Enable the “api” scope in order to allow PR-Agent to read pull requests, comment and respond to requests.
+Acquire a personal, project or group level access token. Enable the “api” scope in order to allow Qodo Merge to read pull requests, comment and respond to requests.
 
 <figure markdown="1">
 ![Step 1](https://www.codium.ai/images/pr_agent/gitlab_pro_pat.png){width=750}
@@ -65,4 +65,4 @@ Enable SSL verification: Check the box.
 
 You’re all set!
 
-Open a new merge request or add a MR comment with one of PR-Agent’s commands such as /review, /describe or /improve.
+Open a new merge request or add a MR comment with one of Qodo Merge’s commands such as /review, /describe or /improve.

@@ -28,7 +28,7 @@ When working from CLI, you need to apply the [configuration changes](#configurat
 To enable custom labels, you need to apply the [configuration changes](#configuration-options) to the local `.pr_agent.toml` file in you repository.
 
 #### 3. Handle custom labels from the Repo's labels page 💎
-> This feature is available only in PR-Agent Pro 
+> This feature is available only in Qodo Merge Pro 
 
 * GitHub : `https://github.com/{owner}/{repo}/labels`, or click on the "Labels" tab in the issues or PRs page.
 * GitLab : `https://gitlab.com/{owner}/{repo}/-/labels`, or click on "Manage" -> "Labels" on the left menu.
