@@ -80,7 +80,7 @@ pr_commands = [
 This means that when a new PR is opened/reopened or marked as ready for review, Qodo Merge will run the `describe`, `review` and `improve` tools.  
 For the `review` tool, for example, the `num_code_suggestions` parameter will be set to 0.
 
-You can override the default tool parameters by using one the three options for a [configuration file](https://codium-ai.github.io/Docs-PR-Agent/usage-guide/#configuration-options): **wiki**, **local**, or **global**. 
+You can override the default tool parameters by using one the three options for a [configuration file](https://qodo-merge-docs.qodo.ai/usage-guide/configuration_options/): **wiki**, **local**, or **global**. 
 For example, if your local `.pr_agent.toml` file contains:
 ```
 [pr_description]

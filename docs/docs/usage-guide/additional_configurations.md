@@ -1,5 +1,5 @@
 ## Show possible configurations
-The possible configurations of pr-agent are stored in [here](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml).
+The possible configurations of Qodo Merge are stored in [here](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml).
 In the [tools](https://qodo-merge-docs.qodo.ai/tools/) page you can find explanations on how to use these configurations for each tool.
 
 To print all the available configurations as a comment on your PR, you can use the following command:
@@ -64,8 +64,8 @@ This mode provides a very good speed-quality-cost tradeoff, and can handle most 
 When the PR is above the token limit, it employs a [PR Compression strategy](../core-abilities/index.md).
 
 However, for very large PRs, or in case you want to emphasize quality over speed and cost, there are two possible solutions:
-1) [Use a model](https://codium-ai.github.io/Docs-PR-Agent/usage-guide/#changing-a-model) with larger context, like GPT-32K, or claude-100K. This solution will be applicable for all the tools.
-2) For the `/improve` tool, there is an ['extended' mode](https://codium-ai.github.io/Docs-PR-Agent/tools/#improve) (`/improve --extended`),
+1) [Use a model](https://qodo-merge-docs.qodo.ai/usage-guide/changing_a_model/) with larger context, like GPT-32K, or claude-100K. This solution will be applicable for all the tools.
+2) For the `/improve` tool, there is an ['extended' mode](https://qodo-merge-docs.qodo.ai/tools/improve/) (`/improve --extended`),
 which divides the PR into chunks, and processes each chunk separately. With this mode, regardless of the model, no compression will be done (but for large PRs, multiple model calls may occur)
 
 

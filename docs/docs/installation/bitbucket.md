@@ -58,7 +58,7 @@ python cli.py --pr_url https://git.onpreminstanceofbitbucket.com/projects/PROJEC
 
 ### Run it as service
 
-To run pr-agent as webhook, build the docker image:
+To run Qodo Merge as webhook, build the docker image:
 ```
 docker build . -t codiumai/pr-agent:bitbucket_server_webhook --target bitbucket_server_webhook -f docker/Dockerfile
 docker push codiumai/pr-agent:bitbucket_server_webhook  # Push to your Docker repository
