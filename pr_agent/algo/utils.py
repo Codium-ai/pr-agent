@@ -120,6 +120,9 @@ def convert_to_markdown_v2(output_data: dict,
     if not output_data or not output_data.get('review', {}):
         return ""
 
+    if get_settings().get("pr_reviewer.enable_intro_text", False):
+        markdown_text += f"Here are some relevant observations to aid the review process:\n\n"
+
     if gfm_supported:
         markdown_text += "<table>\n"
 
