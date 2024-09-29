@@ -121,7 +121,7 @@ def convert_to_markdown_v2(output_data: dict,
         return ""
 
     if get_settings().get("pr_reviewer.enable_intro_text", False):
-        markdown_text += f"Here are some relevant observations to aid the review process:\n\n"
+        markdown_text += f"Here are some key observations to aid the review process:\n\n"
 
     if gfm_supported:
         markdown_text += "<table>\n"
