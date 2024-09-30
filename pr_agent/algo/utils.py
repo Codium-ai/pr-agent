@@ -101,7 +101,7 @@ def convert_to_markdown_v2(output_data: dict,
     emojis = {
         "Can be split": "🔀",
         "Key issues to review": "⚡",
-        "Recommended review focus areas": "⚡",
+        "Recommended focus areas for review": "⚡",
         "Score": "🏅",
         "Relevant tests": "🧪",
         "Focused PR": "✨",
@@ -201,9 +201,9 @@ def convert_to_markdown_v2(output_data: dict,
                 if gfm_supported:
                     markdown_text += f"<tr><td>"
                     # markdown_text += f"{emoji}&nbsp;<strong>{key_nice}</strong><br><br>\n\n"
-                    markdown_text += f"{emoji}&nbsp;<strong>Recommended review focus areas</strong><br><br>\n\n"
+                    markdown_text += f"{emoji}&nbsp;<strong>Recommended focus areas for review</strong><br><br>\n\n"
                 else:
-                    markdown_text += f"### {emoji} Recommended review focus areas\n\n#### \n"
+                    markdown_text += f"### {emoji} Recommended focus areas for review\n\n#### \n"
                 for i, issue in enumerate(issues):
                     try:
                         if not issue or not isinstance(issue, dict):
@@ -221,7 +221,7 @@ def convert_to_markdown_v2(output_data: dict,
                             issue_str = f"[**{issue_header}**]({reference_link})\n\n{issue_content}\n\n"
                         markdown_text += f"{issue_str}\n\n"
                     except Exception as e:
-                        get_logger().exception(f"Failed to process 'Recommended review focus areas': {e}")
+                        get_logger().exception(f"Failed to process 'Recommended focus areas for review': {e}")
                 if gfm_supported:
                     markdown_text += f"</td></tr>\n"
         else:
