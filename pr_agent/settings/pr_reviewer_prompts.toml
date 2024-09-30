@@ -99,7 +99,7 @@ class Review(BaseModel):
 {%- if question_str %}
     insights_from_user_answers: str = Field(description="shortly summarize the insights you gained from the user's answers to the questions")
 {%- endif %}
-    key_issues_to_review: List[KeyIssuesComponentLink] = Field("A list of bugs, issue or major performance concerns introduced in this PR, which the PR reviewer should further investigate")
+    key_issues_to_review: List[KeyIssuesComponentLink] = Field("A diverse list of bugs, issue or major performance concerns introduced in this PR, which the PR reviewer should further investigate")
 {%- if require_security_review %}
     security_concerns: str = Field(description="Does this PR code introduce possible vulnerabilities such as exposure of sensitive information (e.g., API keys, secrets, passwords), or security concerns like SQL injection, XSS, CSRF, and others ? Answer 'No' (without explaining why) if there are no possible issues. If there are security concerns or issues, start your answer with a short header, such as: 'Sensitive information exposure: ...', 'SQL injection: ...' etc. Explain your answer. Be specific and give examples if possible")
 {%- endif %}
