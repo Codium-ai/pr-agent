@@ -100,8 +100,8 @@ def convert_to_markdown_v2(output_data: dict,
 
     emojis = {
         "Can be split": "🔀",
-        "Possible issues": "⚡",
         "Key issues to review": "⚡",
+        "Recommended review focus areas": "⚡",
         "Score": "🏅",
         "Relevant tests": "🧪",
         "Focused PR": "✨",
@@ -192,23 +192,21 @@ def convert_to_markdown_v2(output_data: dict,
             if is_value_no(value):
                 if gfm_supported:
                     markdown_text += f"<tr><td>"
-                    markdown_text += f"{emoji}&nbsp;<strong>No key issues to review</strong>"
+                    markdown_text += f"{emoji}&nbsp;<strong>No major issues detected</strong>"
                     markdown_text += f"</td></tr>\n"
                 else:
-                    markdown_text += f"### {emoji} No key issues to review\n\n"
+                    markdown_text += f"### {emoji} No major issues detected\n\n"
             else:
-                # issues = value.split('\n- ')
-                issues =value
-                # for i, _ in enumerate(issues):
-                #     issues[i] = issues[i].strip().strip('-').strip()
+                issues = value
                 if gfm_supported:
                     markdown_text += f"<tr><td>"
-                    markdown_text += f"{emoji}&nbsp;<strong>{key_nice}</strong><br><br>\n\n"
+                    # markdown_text += f"{emoji}&nbsp;<strong>{key_nice}</strong><br><br>\n\n"
+                    markdown_text += f"{emoji}&nbsp;<strong>Recommended review focus areas</strong><br><br>\n\n"
                 else:
-                    markdown_text += f"### {emoji} Key issues to review\n\n#### \n"
+                    markdown_text += f"### {emoji} Recommended review focus areas\n\n#### \n"
                 for i, issue in enumerate(issues):
                     try:
-                        if not issue:
+                        if not issue or not isinstance(issue, dict):
                             continue
                         relevant_file = issue.get('relevant_file', '').strip()
                         issue_header = issue.get('issue_header', '').strip()
@@ -223,7 +221,7 @@ def convert_to_markdown_v2(output_data: dict,
                             issue_str = f"[**{issue_header}**]({reference_link})\n\n{issue_content}\n\n"
                         markdown_text += f"{issue_str}\n\n"
                     except Exception as e:
-                        get_logger().exception(f"Failed to process key issues to review: {e}")
+                        get_logger().exception(f"Failed to process 'Recommended review focus areas': {e}")
                 if gfm_supported:
                     markdown_text += f"</td></tr>\n"
         else:

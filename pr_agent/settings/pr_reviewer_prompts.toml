@@ -81,10 +81,10 @@ class SubPR(BaseModel):
 
 class KeyIssuesComponentLink(BaseModel):
     relevant_file: str = Field(description="The full file path of the relevant file")
-    issue_header: str = Field(description="one or two word title for the the issue. For example: 'Possible Bug', 'Performance Issue', 'Code Smell', etc.")
-    issue_content: str = Field(description="a short and concise description of the issue that needs to be reviewed")
-    start_line: int = Field(description="the start line that corresponds to this issue in the relevant file")
-    end_line: int = Field(description="the end line that corresponds to this issue in the relevant file")
+    issue_header: str = Field(description="One or two word title for the the issue. For example: 'Possible Bug', 'Performance Issue', 'Code Smell', etc.")
+    issue_content: str = Field(description="A short and concise summary of what should be further inspected and validated during the PR review process for this issue. Don't state line numbers here")
+    start_line: int = Field(description="The start line that corresponds to this issue in the relevant file")
+    end_line: int = Field(description="The end line that corresponds to this issue in the relevant file")
 
 class Review(BaseModel):
 {%- if require_estimate_effort_to_review %}
