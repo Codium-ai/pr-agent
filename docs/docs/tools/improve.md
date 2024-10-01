@@ -70,6 +70,17 @@ In post-process, Qodo Merge counts the number of suggestions that were implement
 
 ## Usage Tips
 
+### Implementing the proposed code suggestions
+Each generated suggestion consists of three key elements:
+
+1. A single-line summary of the proposed change
+2. An expandable section containing a comprehensive description of the suggestion
+3. A diff snippet showing the recommended code modification (before and after)
+
+We advise users to apply critical analysis and judgment when implementing the proposed suggestions.
+In addition to mistakes (which may happen, but are rare), sometimes the presented code modification may serve more as an _illustrative example_ than a direct applicable solution.
+In such cases, we recommend prioritizing the suggestion's detailed description, using the diff snippet primarily as a supporting reference.
+
 ### Duel publishing mode
 Our recommended approach for presenting code suggestions is through a [table](https://qodo-merge-docs.qodo.ai/tools/improve/#overview) (`--pr_code_suggestions.commitable_code_suggestions=false`). 
 This method significantly reduces the PR footprint and allows for quick and easy digestion of multiple suggestions.
