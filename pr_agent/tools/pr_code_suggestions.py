@@ -151,11 +151,11 @@ class PRCodeSuggestions:
                         pr_body += HelpMessage.get_improve_usage_guide()
                         pr_body += "\n</details>\n"
 
-
                     # Output the relevant configurations if enabled
                     if get_settings().get('config', {}).get('output_relevant_configurations', False):
                         pr_body += show_relevant_configurations(relevant_section='pr_code_suggestions')
 
+                    # publish the PR comment
                     if get_settings().pr_code_suggestions.persistent_comment:
                         final_update_message = False
                         self.publish_persistent_comment_with_history(pr_body,
@@ -165,6 +165,25 @@ class PRCodeSuggestions:
                                                                      final_update_message=final_update_message,
                                                                      max_previous_comments=get_settings().pr_code_suggestions.max_history_len,
                                                                      progress_response=self.progress_response)
+
+                    # duel publishing mode
+                    if int(get_settings().pr_code_suggestions.duel_publishing_score_threshold) > 0:
+                        data_above_threshold = {'code_suggestions': []}
+                        try:
+                            for suggestion in data['code_suggestions']:
+                                if int(suggestion.get('score', 0)) >= int(get_settings().pr_code_suggestions.duel_publishing_score_threshold) \
+                                        and suggestion.get('improved_code'):
+                                    data_above_threshold['code_suggestions'].append(suggestion)
+                                    if not data_above_threshold['code_suggestions'][-1]['existing_code']:
+                                        get_logger().info(f'Identical existing and improved code for duel publishing found')
+                                        data_above_threshold['code_suggestions'][-1]['existing_code'] = suggestion[
+                                            'improved_code']
+                            if data_above_threshold['code_suggestions']:
+                                get_logger().info(
+                                    f"Publishing {len(data_above_threshold['code_suggestions'])} suggestions in duel publishing mode")
+                                self.push_inline_code_suggestions(data_above_threshold)
+                        except Exception as e:
+                            get_logger().error(f"Failed to publish duel publishing suggestions, error: {e}")
                     else:
                         if self.progress_response:
                             self.git_provider.edit_comment(self.progress_response, body=pr_body)

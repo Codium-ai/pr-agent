@@ -109,7 +109,10 @@ enable_help_text=false
 
 [pr_code_suggestions] # /improve #
 max_context_tokens=14000
+#
 commitable_code_suggestions = false
+duel_publishing_score_threshold=7 # -1 to disable, [0-10] to set the threshold (>=) for publishing a code suggestion both in a table and as commitable
+#
 extra_instructions = ""
 rank_suggestions = false
 enable_help_text=false
@@ -121,7 +124,7 @@ max_history_len=4
 apply_suggestions_checkbox=true
 # suggestions scoring
 self_reflect_on_suggestions=true
-suggestions_score_threshold=0 # [0-10]. highly recommend not to set this value above 8, since above it may clip highly relevant suggestions
+suggestions_score_threshold=0 # [0-10]| recommend not to set this value above 8, since above it may clip highly relevant suggestions
 # params for '/improve --extended' mode
 auto_extended_mode=true
 num_code_suggestions_per_chunk=4
