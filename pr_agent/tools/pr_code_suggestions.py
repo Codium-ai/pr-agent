@@ -165,6 +165,11 @@ class PRCodeSuggestions:
                                                                      final_update_message=final_update_message,
                                                                      max_previous_comments=get_settings().pr_code_suggestions.max_history_len,
                                                                      progress_response=self.progress_response)
+                    else:
+                        if self.progress_response:
+                            self.git_provider.edit_comment(self.progress_response, body=pr_body)
+                        else:
+                            self.git_provider.publish_comment(pr_body)
 
                     # dual publishing mode
                     if int(get_settings().pr_code_suggestions.dual_publishing_score_threshold) > 0:
@@ -184,12 +189,6 @@ class PRCodeSuggestions:
                                 self.push_inline_code_suggestions(data_above_threshold)
                         except Exception as e:
                             get_logger().error(f"Failed to publish dual publishing suggestions, error: {e}")
-                    else:
-                        if self.progress_response:
-                            self.git_provider.edit_comment(self.progress_response, body=pr_body)
-                        else:
-                            self.git_provider.publish_comment(pr_body)
-
                 else:
                     self.push_inline_code_suggestions(data)
                     if self.progress_response:
