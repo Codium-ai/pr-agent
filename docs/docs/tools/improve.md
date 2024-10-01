@@ -1,7 +1,7 @@
 ## Overview
 The `improve` tool scans the PR code changes, and automatically generates [meaningful](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/pr_code_suggestions_prompts.toml#L41) suggestions for improving the PR code.
 The tool can be triggered automatically every time a new PR is [opened](../usage-guide/automations_and_usage.md#github-app-automatic-tools-when-a-new-pr-is-opened), or it can be invoked manually by commenting on any PR:
-```
+```toml
 /improve
 ```
 
@@ -19,12 +19,12 @@ Note that the `Apply this suggestion` checkbox, which interactively converts a s
 Invoke the tool manually by commenting `/improve` on any PR. The code suggestions by default are presented as a single comment:
 
 To edit [configurations](#configuration-options) related to the improve tool, use the following template:
-```
+```toml
 /improve --pr_code_suggestions.some_config1=... --pr_code_suggestions.some_config2=...
 ```
 
 For example, you can choose to present all the suggestions as commitable code comments, by running the following command:
-```
+```toml
 /improve --pr_code_suggestions.commitable_code_suggestions=true
 ```
 
@@ -37,7 +37,7 @@ Also note that collapsible are not supported in _Bitbucket_. Hence, the suggesti
 ### Automatic triggering
 
 To run the `improve` automatically when a PR is opened, define in a [configuration file](https://qodo-merge-docs.qodo.ai/usage-guide/configuration_options/#wiki-configuration-file):
-```
+```toml
 [github_app]
 pr_commands = [
     "/improve",
@@ -70,15 +70,43 @@ In post-process, Qodo Merge counts the number of suggestions that were implement
 
 ## Usage Tips
 
+### Implementing the proposed code suggestions
+Each generated suggestion consists of three key elements:
+
+1. A single-line summary of the proposed change
+2. An expandable section containing a comprehensive description of the suggestion
+3. A diff snippet showing the recommended code modification (before and after)
+
+We advise users to apply critical analysis and judgment when implementing the proposed suggestions.
+In addition to mistakes (which may happen, but are rare), sometimes the presented code modification may serve more as an _illustrative example_ than a direct applicable solution.
+In such cases, we recommend prioritizing the suggestion's detailed description, using the diff snippet primarily as a supporting reference.
+
+### Dual publishing mode
+Our recommended approach for presenting code suggestions is through a [table](https://qodo-merge-docs.qodo.ai/tools/improve/#overview) (`--pr_code_suggestions.commitable_code_suggestions=false`). 
+This method significantly reduces the PR footprint and allows for quick and easy digestion of multiple suggestions.
+
+We also offer a complementary **dual publishing mode**. When enabled, suggestions exceeding a certain score threshold are not only displayed in the table, but also presented as commitable PR comments. 
+This mode helps highlight suggestions deemed more critical.
+
+To activate dual publishing mode, use the following setting:
+
+```toml
+[pr_code_suggestions]
+dual_publishing_score_threshold = x
+```
+
+Where x represents the minimum score threshold (>=) for suggestions to be presented as commitable PR comments in addition to the table. Default is -1 (disabled).
+
 ### Self-review
 If you set in a configuration file:
-```
+```toml
 [pr_code_suggestions]
 demand_code_suggestions_self_review = true
 ```
+
 The `improve` tool will add a checkbox below the suggestions, prompting user to acknowledge that they have reviewed the suggestions.
 You can set the content of the checkbox text via:
-```
+```toml
 [pr_code_suggestions]
 code_suggestions_self_review_text = "... (your text here) ..."
 ```
@@ -91,7 +119,7 @@ code_suggestions_self_review_text = "... (your text here) ..."
 !!! tip "Tip - demanding self-review from the PR author 💎"
 
     By setting:
-    ```
+    ```toml
     [pr_code_suggestions]
     approve_pr_on_self_review = true
     ```
@@ -139,7 +167,7 @@ You can use the `extra_instructions` configuration option to give the AI model a
 Be specific, clear, and concise in the instructions. With extra instructions, you are the prompter. Specify relevant aspects that you want the model to focus on.
     
 Examples for possible instructions:
-```
+```toml
 [pr_code_suggestions]
 extra_instructions="""\
 (1) Answer in japanese
@@ -176,7 +204,7 @@ By default, Qodo Merge will look for a local `best_practices.md` wiki file in th
 
 If you want to enable also a global `best_practices.md` wiki file, set first in the global configuration file:
 
-```
+```toml
 [best_practices]
 enable_global_best_practices = true
 ```
@@ -208,6 +236,10 @@ Using a combination of both can help the AI model to provide relevant and tailor
       <tr>
         <td><b>commitable_code_suggestions</b></td>
         <td>If set to true, the tool will display the suggestions as commitable code comments. Default is false.</td>
+      </tr>
+      <tr>
+        <td><b>dual_publishing_score_threshold</b></td>
+        <td>Minimum score threshold for suggestions to be presented as commitable PR comments in addition to the table. Default is -1 (disabled).</td>
       </tr>
       <tr>
         <td><b>persistent_comment</b></td>
