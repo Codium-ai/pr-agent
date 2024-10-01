@@ -166,24 +166,24 @@ class PRCodeSuggestions:
                                                                      max_previous_comments=get_settings().pr_code_suggestions.max_history_len,
                                                                      progress_response=self.progress_response)
 
-                    # duel publishing mode
-                    if int(get_settings().pr_code_suggestions.duel_publishing_score_threshold) > 0:
+                    # dual publishing mode
+                    if int(get_settings().pr_code_suggestions.dual_publishing_score_threshold) > 0:
                         data_above_threshold = {'code_suggestions': []}
                         try:
                             for suggestion in data['code_suggestions']:
-                                if int(suggestion.get('score', 0)) >= int(get_settings().pr_code_suggestions.duel_publishing_score_threshold) \
+                                if int(suggestion.get('score', 0)) >= int(get_settings().pr_code_suggestions.dual_publishing_score_threshold) \
                                         and suggestion.get('improved_code'):
                                     data_above_threshold['code_suggestions'].append(suggestion)
                                     if not data_above_threshold['code_suggestions'][-1]['existing_code']:
-                                        get_logger().info(f'Identical existing and improved code for duel publishing found')
+                                        get_logger().info(f'Identical existing and improved code for dual publishing found')
                                         data_above_threshold['code_suggestions'][-1]['existing_code'] = suggestion[
                                             'improved_code']
                             if data_above_threshold['code_suggestions']:
                                 get_logger().info(
-                                    f"Publishing {len(data_above_threshold['code_suggestions'])} suggestions in duel publishing mode")
+                                    f"Publishing {len(data_above_threshold['code_suggestions'])} suggestions in dual publishing mode")
                                 self.push_inline_code_suggestions(data_above_threshold)
                         except Exception as e:
-                            get_logger().error(f"Failed to publish duel publishing suggestions, error: {e}")
+                            get_logger().error(f"Failed to publish dual publishing suggestions, error: {e}")
                     else:
                         if self.progress_response:
                             self.git_provider.edit_comment(self.progress_response, body=pr_body)

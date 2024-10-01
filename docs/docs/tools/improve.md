@@ -81,7 +81,7 @@ We advise users to apply critical analysis and judgment when implementing the pr
 In addition to mistakes (which may happen, but are rare), sometimes the presented code modification may serve more as an _illustrative example_ than a direct applicable solution.
 In such cases, we recommend prioritizing the suggestion's detailed description, using the diff snippet primarily as a supporting reference.
 
-### Duel publishing mode
+### Dual publishing mode
 Our recommended approach for presenting code suggestions is through a [table](https://qodo-merge-docs.qodo.ai/tools/improve/#overview) (`--pr_code_suggestions.commitable_code_suggestions=false`). 
 This method significantly reduces the PR footprint and allows for quick and easy digestion of multiple suggestions.
 
@@ -92,7 +92,7 @@ To activate dual publishing mode, use the following setting:
 
 ```toml
 [pr_code_suggestions]
-duel_publishing_score_threshold = x
+dual_publishing_score_threshold = x
 ```
 
 Where x represents the minimum score threshold (>=) for suggestions to be presented as commitable PR comments in addition to the table. Default is -1 (disabled).
@@ -238,7 +238,7 @@ Using a combination of both can help the AI model to provide relevant and tailor
         <td>If set to true, the tool will display the suggestions as commitable code comments. Default is false.</td>
       </tr>
       <tr>
-        <td><b>duel_publishing_score_threshold</b></td>
+        <td><b>dual_publishing_score_threshold</b></td>
         <td>Minimum score threshold for suggestions to be presented as commitable PR comments in addition to the table. Default is -1 (disabled).</td>
       </tr>
       <tr>
