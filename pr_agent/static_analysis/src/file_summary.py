@@ -8,6 +8,11 @@ from grep_ast.parsers import PARSERS
 from tree_sitter_languages import get_language, get_parser
 
 
+def filename_to_lang(filename):
+    file_extension = os.path.splitext(filename)[1]
+    lang = PARSERS.get(file_extension)
+    return lang
+
 class FileSummary:
     """
     This class is used to summarize the content of a file using tree-sitter queries.
@@ -22,9 +27,7 @@ class FileSummary:
             print(f"File {fname_full_path} does not exist")
         with open(fname_full_path, "r") as f:
             code = f.read()
-            if not code.endswith("\n"):
-                code += "\n"
-            self.code = code
+        self.code = code.rstrip("\n") + "\n"
         self.parent_context = parent_context
         self.child_context = child_context
         self.header_max = header_max
@@ -34,7 +37,7 @@ class FileSummary:
         summary_str = self.query_processing(query_results)
         return summary_str
 
-    def render_tree_sitter(self, lines_of_interest: list):
+    def render_file_summary(self, lines_of_interest: list):
         code = self.code
         fname_rel = self.fname_rel
         context = TreeContext(
@@ -66,28 +69,22 @@ class FileSummary:
         def_lines = [q['line'] for q in query_results if q['kind'] == "def"]
         output += "\n"
         output += query_results[0]['fname'] + ":\n"
-        output += self.render_tree_sitter(def_lines)
+        output += self.render_file_summary(def_lines)
         return output
 
     def get_queries_scheme(self, lang) -> str:
-        # Load the relevant queries
         try:
+            # Load the relevant queries
             path = os.path.join(self.main_queries_path, f"tree-sitter-{lang}-tags.scm")
             with open(path, "r") as f:
                 return f.read()
-
         except KeyError:
             return ""
-
-    def filename_to_lang(self, filename):
-        file_extension = os.path.splitext(filename)[1]
-        lang = PARSERS.get(file_extension)
-        return lang
 
     def get_query_results(self):
         fname_rel = self.fname_rel
         code = self.code
-        lang = self.filename_to_lang(fname_rel)
+        lang = filename_to_lang(fname_rel)
         if not lang:
             return
 
@@ -142,10 +139,10 @@ class FileSummary:
         # tokens = list(lexer.get_tokens(code))
         # tokens = [token[1] for token in tokens if token[0] in Token.Name]
         #
-        # for token in tokens:
+        # for t in tokens:
         #     result = dict(
         #         fname=fname,
-        #         name=token,
+        #         name=t,
         #         kind="ref",
         #         line=-1,
         #     )
