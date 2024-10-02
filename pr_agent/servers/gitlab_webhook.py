@@ -59,8 +59,10 @@ async def handle_request(api_url: str, body: str, log_context: dict, sender_id: 
 
 
 async def _perform_commands_gitlab(commands_conf: str, agent: PRAgent, api_url: str,
-                                   log_context: dict):
+                                   log_context: dict, data=None):
     apply_repo_settings(api_url)
+    if not should_process_pr_logic(data): # Here we already updated the configurations
+        return
     commands = get_settings().get(f"gitlab.{commands_conf}", {})
     get_settings().set("config.is_auto_command", True)
     for command in commands:
@@ -90,8 +92,12 @@ def is_bot_user(data) -> bool:
     return False
 
 
-def should_process_pr_logic(data, title) -> bool:
+def should_process_pr_logic(data) -> bool:
     try:
+        if not data.get('object_attributes', {}):
+            return False
+        title = data['object_attributes'].get('title')
+
         # logic to ignore MRs for titles, labels and source, target branches.
         ignore_mr_title = get_settings().get("CONFIG.IGNORE_PR_TITLE", [])
         ignore_mr_labels = get_settings().get("CONFIG.IGNORE_PR_LABELS", [])
@@ -173,9 +179,9 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
         # ignore bot users
         if is_bot_user(data):
             return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
-        if data.get('event_type') != 'note' and data.get('object_attributes', {}): # not a comment
+        if data.get('event_type') != 'note': # not a comment
             # ignore MRs based on title, labels, source and target branches
-            if not should_process_pr_logic(data, data['object_attributes'].get('title')):
+            if not should_process_pr_logic(data):
                 return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
 
         log_context["sender"] = sender
@@ -220,7 +226,7 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
                                         content=jsonable_encoder({"message": "success"}))
 
                 get_logger().debug(f'A push event has been received: {url}')
-                await _perform_commands_gitlab("push_commands", PRAgent(), url, log_context)
+                await _perform_commands_gitlab("push_commands", PRAgent(), url, log_context, data)
             except Exception as e:
                 get_logger().error(f"Failed to handle push event: {e}")
 
