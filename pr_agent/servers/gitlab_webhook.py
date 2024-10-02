@@ -194,7 +194,7 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
                 get_logger().info(f"Skipping draft MR: {url}")
                 return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
 
-            await _perform_commands_gitlab("pr_commands", PRAgent(), url, log_context)
+            await _perform_commands_gitlab("pr_commands", PRAgent(), url, log_context, data)
         elif data.get('object_kind') == 'note' and data.get('event_type') == 'note': # comment on MR
             if 'merge_request' in data:
                 mr = data['merge_request']
