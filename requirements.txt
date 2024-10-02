@@ -34,6 +34,12 @@ langchain-openai==0.2.0
 langchain-pinecone==0.2.0
 langchain-chroma==0.1.4
 chromadb==0.5.7
+#
+tree_sitter==0.21.3
+tree_sitter_languages==1.10.2
+grep_ast==0.3.3
+#Pygments==2.18.0
+
 # Uncomment the following lines to enable the 'similar issue' tool
 # pinecone-client
 # pinecone-datasets @ git+https://github.com/mrT23/pinecone-datasets.git@main
