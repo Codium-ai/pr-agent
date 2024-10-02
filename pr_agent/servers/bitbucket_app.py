@@ -75,7 +75,7 @@ async def handle_manifest(request: Request, response: Response):
     return JSONResponse(manifest_obj)
 
 
-async def _perform_commands_bitbucket(commands_conf: str, agent: PRAgent, api_url: str, log_context: dict, data):
+async def _perform_commands_bitbucket(commands_conf: str, agent: PRAgent, api_url: str, log_context: dict, data: dict):
     apply_repo_settings(api_url)
     if data.get("event", "") == "pullrequest:created":
         if not should_process_pr_logic(data):
