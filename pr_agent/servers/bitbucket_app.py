@@ -75,8 +75,11 @@ async def handle_manifest(request: Request, response: Response):
     return JSONResponse(manifest_obj)
 
 
-async def _perform_commands_bitbucket(commands_conf: str, agent: PRAgent, api_url: str, log_context: dict):
+async def _perform_commands_bitbucket(commands_conf: str, agent: PRAgent, api_url: str, log_context: dict, data: dict):
     apply_repo_settings(api_url)
+    if data.get("event", "") == "pullrequest:created":
+        if not should_process_pr_logic(data):
+            return
     commands = get_settings().get(f"bitbucket_app.{commands_conf}", {})
     get_settings().set("config.is_auto_command", True)
     for command in commands:
@@ -193,7 +196,7 @@ async def handle_github_webhooks(background_tasks: BackgroundTasks, request: Req
                         if get_identity_provider().verify_eligibility("bitbucket",
                                                         sender_id, pr_url) is not Eligibility.NOT_ELIGIBLE:
                             if get_settings().get("bitbucket_app.pr_commands"):
-                                await _perform_commands_bitbucket("pr_commands", PRAgent(), pr_url, log_context)
+                                await _perform_commands_bitbucket("pr_commands", PRAgent(), pr_url, log_context, data)
             elif event == "pullrequest:comment_created":
                 pr_url = data["data"]["pullrequest"]["links"]["html"]["href"]
                 log_context["api_url"] = pr_url

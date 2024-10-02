@@ -249,7 +249,7 @@ def is_bot_user(sender, sender_type):
     return False
 
 
-def should_process_pr_logic(sender_type, sender, body) -> bool:
+def should_process_pr_logic(body) -> bool:
     try:
         pull_request = body.get("pull_request", {})
         title = pull_request.get("title", "")
@@ -306,10 +306,10 @@ async def handle_request(body: Dict[str, Any], event: str):
     log_context, sender, sender_id, sender_type = get_log_context(body, event, action, build_number)
 
     # logic to ignore PRs opened by bot, PRs with specific titles, labels, source branches, or target branches
-    if is_bot_user(sender, sender_type):
+    if is_bot_user(sender, sender_type) and 'check_run' not in body:
         return {}
     if action != 'created' and 'check_run' not in body:
-        if not should_process_pr_logic(sender_type, sender, body):
+        if not should_process_pr_logic(body):
             return {}
 
     if 'check_run' in body:  # handle failed checks
@@ -373,6 +373,8 @@ def _check_pull_request_event(action: str, body: dict, log_context: dict) -> Tup
 async def _perform_auto_commands_github(commands_conf: str, agent: PRAgent, body: dict, api_url: str,
                                         log_context: dict):
     apply_repo_settings(api_url)
+    if not should_process_pr_logic(body): # Here we already updated the configuration with the repo settings
+        return {}
     commands = get_settings().get(f"github_app.{commands_conf}")
     if not commands:
         get_logger().info(f"New PR, but no auto commands configured")
