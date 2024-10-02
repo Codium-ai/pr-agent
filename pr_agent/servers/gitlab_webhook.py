@@ -59,7 +59,7 @@ async def handle_request(api_url: str, body: str, log_context: dict, sender_id: 
 
 
 async def _perform_commands_gitlab(commands_conf: str, agent: PRAgent, api_url: str,
-                                   log_context: dict, data=None):
+                                   log_context: dict, data: dict):
     apply_repo_settings(api_url)
     if not should_process_pr_logic(data): # Here we already updated the configurations
         return
