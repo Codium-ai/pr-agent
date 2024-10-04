@@ -49,7 +49,7 @@ __old hunk__
 ...
 ```
 
-(3) The entire PR files that were retrieved are also used to expand and enhance the PR context (see [Dynamic Context](https://qodo-merge-docs.qodo.ai/core-abilities/dynamic-context/)).
+(3) The entire PR files that were retrieved are also used to expand and enhance the PR context (see [Dynamic Context](https://qodo-merge-docs.qodo.ai/core-abilities/dynamic_context/)).
 
 
 (4) All the metadata described above represents several level of cumulative analysis - ranging from hunk level, to file level, to PR level, to organization level.
