@@ -1,4 +1,5 @@
 import itertools
+import re
 import time
 import hashlib
 from datetime import datetime
@@ -618,7 +619,7 @@ class GithubProvider(GitProvider):
     def _parse_pr_url(self, pr_url: str) -> Tuple[str, int]:
         parsed_url = urlparse(pr_url)
 
-        pattern = r'/repos/([^/]+)/([^/]+)/pulls?/(\d+)'
+        pattern = r'/repos/([^/]+/[^/]+)/pulls?/(\d+)'
         match = re.match(pattern, parsed_url.path)
 
         if match:
@@ -629,13 +630,13 @@ class GithubProvider(GitProvider):
                 raise ValueError("Unable to convert PR number to integer") from e
             return repo_name, pr_number
         else:
-            raise ValueError("The provided URL does not appear to be a GitHub PR URL") from e
+            raise ValueError("The provided URL does not appear to be a GitHub PR URL")
 
     def _parse_issue_url(self, issue_url: str) -> Tuple[str, int]:
         parsed_url = urlparse(issue_url)
         path = parsed_url.path
         
-        pattern = r'/repos/([^/]+)/([^/]+)/issues/(\d+)'
+        pattern = r'/repos/([^/]+/[^/]+)/issues/(\d+)'
         match = re.match(pattern, path)
         
         if match:
@@ -646,7 +647,7 @@ class GithubProvider(GitProvider):
                 raise ValueError("Unable to convert issue number to integer") from e
             return repo_name, issue_number
         else:
-            raise ValueError("The provided URL does not appear to be a GitHub issue URL") from e
+            raise ValueError("The provided URL does not appear to be a GitHub issue URL")
 
     def _get_github_client(self):
         deployment_type = get_settings().get("GITHUB.DEPLOYMENT_TYPE", "user")
