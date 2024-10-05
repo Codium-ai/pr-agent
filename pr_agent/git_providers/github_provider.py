@@ -28,7 +28,14 @@ class GithubProvider(GitProvider):
             self.installation_id = None
         self.max_comment_chars = 65000
         self.base_url = get_settings().get("GITHUB.BASE_URL", "https://api.github.com").rstrip("/")
-        self.base_url_html = self.base_url.split("api/")[0].rstrip("/") if "api/" in self.base_url else "https://github.com"
+        if self.base_url.endswith("/api/v3"):
+            # enterprise server with api/v3
+            self.base_url_html = self.base_url[:len("/api/v3")]
+        elif self.base_url == "https://api.github.com":
+            # github cloud
+            self.base_url_html = "https://github.com"
+        else:
+            self.base_url_html = self.base_url
         self.base_domain = self.base_url.replace("https://", "").replace("http://", "")
         self.base_domain_html = self.base_url_html.replace("https://", "").replace("http://", "")
         self.github_client = self._get_github_client()
@@ -611,51 +618,35 @@ class GithubProvider(GitProvider):
     def _parse_pr_url(self, pr_url: str) -> Tuple[str, int]:
         parsed_url = urlparse(pr_url)
 
-        path_parts = parsed_url.path.strip('/').split('/')
-        if self.base_domain in parsed_url.netloc:
-            if len(path_parts) < 5 or path_parts[3] != 'pulls':
-                raise ValueError("The provided URL does not appear to be a GitHub PR URL")
-            repo_name = '/'.join(path_parts[1:3])
+        pattern = r'/repos/([^/]+)/([^/]+)/pulls?/(\d+)'
+        match = re.match(pattern, parsed_url.path)
+
+        if match:
+            repo_name = match.group(1)
             try:
-                pr_number = int(path_parts[4])
+                pr_number = int(match.group(2))
             except ValueError as e:
                 raise ValueError("Unable to convert PR number to integer") from e
             return repo_name, pr_number
-
-        if len(path_parts) < 4 or path_parts[2] != 'pull':
-            raise ValueError("The provided URL does not appear to be a GitHub PR URL")
-
-        repo_name = '/'.join(path_parts[:2])
-        try:
-            pr_number = int(path_parts[3])
-        except ValueError as e:
-            raise ValueError("Unable to convert PR number to integer") from e
-
-        return repo_name, pr_number
+        else:
+            raise ValueError("The provided URL does not appear to be a GitHub PR URL") from e
 
     def _parse_issue_url(self, issue_url: str) -> Tuple[str, int]:
         parsed_url = urlparse(issue_url)
-        path_parts = parsed_url.path.strip('/').split('/')
-        if self.base_domain in parsed_url.netloc:
-            if len(path_parts) < 5 or path_parts[3] != 'issues':
-                raise ValueError("The provided URL does not appear to be a GitHub ISSUE URL")
-            repo_name = '/'.join(path_parts[1:3])
+        path = parsed_url.path
+        
+        pattern = r'/repos/([^/]+)/([^/]+)/issues/(\d+)'
+        match = re.match(pattern, path)
+        
+        if match:
+            repo_name = match.group(1)
             try:
-                issue_number = int(path_parts[4])
+                issue_number = int(match.group(2))
             except ValueError as e:
                 raise ValueError("Unable to convert issue number to integer") from e
             return repo_name, issue_number
-
-        if len(path_parts) < 4 or path_parts[2] != 'issues':
-            raise ValueError("The provided URL does not appear to be a GitHub PR issue")
-
-        repo_name = '/'.join(path_parts[:2])
-        try:
-            issue_number = int(path_parts[3])
-        except ValueError as e:
-            raise ValueError("Unable to convert issue number to integer") from e
-
-        return repo_name, issue_number
+        else:
+            raise ValueError("The provided URL does not appear to be a GitHub issue URL") from e
 
     def _get_github_client(self):
         deployment_type = get_settings().get("GITHUB.DEPLOYMENT_TYPE", "user")
