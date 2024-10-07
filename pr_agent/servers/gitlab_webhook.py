@@ -139,6 +139,7 @@ def should_process_pr_logic(data) -> bool:
 async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
     start_time = datetime.now()
     request_json = await request.json()
+    context["settings"] = copy.deepcopy(global_settings)
 
     async def inner(data: dict):
         log_context = {"server_type": "gitlab_app"}
@@ -154,7 +155,6 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
                 secret_dict = json.loads(secret)
                 gitlab_token = secret_dict["gitlab_token"]
                 log_context["token_id"] = secret_dict.get("token_name", secret_dict.get("id", "unknown"))
-                context["settings"] = copy.deepcopy(global_settings)
                 context["settings"].gitlab.personal_access_token = gitlab_token
             except Exception as e:
                 get_logger().error(f"Failed to validate secret {request_token}: {e}")
