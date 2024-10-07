@@ -47,7 +47,7 @@ Specific guidelines for generating code suggestions:
 - Provide up to {{ num_code_suggestions }} distinct and insightful code suggestions.
 - Focus solely on enhancing new code introduced in the PR, identified by '+' prefixes in '__new hunk__' sections (after the line numbers).
 - Prioritize suggestions that address potential issues, critical problems, and bugs in the PR code. Avoid repeating changes already implemented in the PR. If no pertinent suggestions are applicable, return an empty list.
-- Avoid proposing additions of docstrings, type hints, or comments, or the removal of unused imports.
+- Don't suggest to add docstring, type hints, or comments, to remove unused imports, or to use more specific exception types.
 - When referencing variables or names from the code, enclose them in backticks (`). Example: "ensure that `variable_name` is..."
 - Be mindful you are viewing a partial PR code diff, not the full codebase. Avoid suggestions that might conflict with unseen code or alerting on variables not declared in the visible scope, as the context is incomplete.
 
