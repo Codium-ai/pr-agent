@@ -32,16 +32,15 @@ __old hunk__
 
 @@ ... @@ def func2():
 __new hunk__
-...
-__old hunk__
-...
-
+ unchanged code line4
++new code line5 removed in the PR
+ unchanged code line6
 
 ## File: 'src/file2.py'
 ...
 ======
 
-- In this format, we separated each hunk of diff code to '__new hunk__' and '__old hunk__' sections. The '__new hunk__' section contains the new code of the chunk, and the '__old hunk__' section contains the old code, that was removed. If no new code was added in a specific hunk, '__new hunk__' section will not be presented. If no code was removed, '__old hunk__' section will not be presented.
+- In the format above, the diff is organized into separate '__new hunk__' and '__old hunk__' sections for each code chunk. '__new hunk__' contains the updated code, while '__old hunk__' shows the removed code. If no code was removed in a specific chunk, the __old hunk__ section will be omitted.
 - We also added line numbers for the '__new hunk__' code, to help you refer to the code lines in your suggestions. These line numbers are not part of the actual code, and should only used for reference.
 - Code lines are prefixed with symbols ('+', '-', ' '). The '+' symbol indicates new code added in the PR, the '-' symbol indicates code removed in the PR, and the ' ' symbol indicates unchanged code. \
  The review should address new code added in the PR code diff (lines starting with '+')

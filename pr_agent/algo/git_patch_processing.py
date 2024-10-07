@@ -281,7 +281,7 @@ __old hunk__
     prev_header_line = []
     header_line = []
     for line_i, line in enumerate(patch_lines):
-        if 'no newline at end of file' in line.lower().strip().strip('//'):
+        if 'no newline at end of file' in line.lower():
             continue
 
         if line.startswith('@@'):
@@ -290,18 +290,19 @@ __old hunk__
             if match and (new_content_lines or old_content_lines):  # found a new hunk, split the previous lines
                 if prev_header_line:
                     patch_with_lines_str += f'\n{prev_header_line}\n'
+                is_plus_lines = is_minus_lines = False
                 if new_content_lines:
                     is_plus_lines = any([line.startswith('+') for line in new_content_lines])
-                    if is_plus_lines:
-                        patch_with_lines_str = patch_with_lines_str.rstrip() + '\n__new hunk__\n'
-                        for i, line_new in enumerate(new_content_lines):
-                            patch_with_lines_str += f"{start2 + i} {line_new}\n"
                 if old_content_lines:
                     is_minus_lines = any([line.startswith('-') for line in old_content_lines])
-                    if is_minus_lines:
-                        patch_with_lines_str = patch_with_lines_str.rstrip() + '\n__old hunk__\n'
-                        for line_old in old_content_lines:
-                            patch_with_lines_str += f"{line_old}\n"
+                if is_plus_lines or is_minus_lines: # notice 'True' here - we always present __new hunk__ for section, otherwise LLM gets confused
+                    patch_with_lines_str = patch_with_lines_str.rstrip() + '\n__new hunk__\n'
+                    for i, line_new in enumerate(new_content_lines):
+                        patch_with_lines_str += f"{start2 + i} {line_new}\n"
+                if is_minus_lines:
+                    patch_with_lines_str = patch_with_lines_str.rstrip() + '\n__old hunk__\n'
+                    for line_old in old_content_lines:
+                        patch_with_lines_str += f"{line_old}\n"
                 new_content_lines = []
                 old_content_lines = []
             if match:
@@ -325,18 +326,19 @@ __old hunk__
     # finishing last hunk
     if match and new_content_lines:
         patch_with_lines_str += f'\n{header_line}\n'
+        is_plus_lines = is_minus_lines = False
         if new_content_lines:
             is_plus_lines = any([line.startswith('+') for line in new_content_lines])
-            if is_plus_lines:
-                patch_with_lines_str = patch_with_lines_str.rstrip() + '\n__new hunk__\n'
-                for i, line_new in enumerate(new_content_lines):
-                    patch_with_lines_str += f"{start2 + i} {line_new}\n"
         if old_content_lines:
             is_minus_lines = any([line.startswith('-') for line in old_content_lines])
-            if is_minus_lines:
-                patch_with_lines_str = patch_with_lines_str.rstrip() + '\n__old hunk__\n'
-                for line_old in old_content_lines:
-                    patch_with_lines_str += f"{line_old}\n"
+        if is_plus_lines or is_minus_lines:  # notice 'True' here - we always present __new hunk__ for section, otherwise LLM gets confused
+            patch_with_lines_str = patch_with_lines_str.rstrip() + '\n__new hunk__\n'
+            for i, line_new in enumerate(new_content_lines):
+                patch_with_lines_str += f"{start2 + i} {line_new}\n"
+        if is_minus_lines:
+            patch_with_lines_str = patch_with_lines_str.rstrip() + '\n__old hunk__\n'
+            for line_old in old_content_lines:
+                patch_with_lines_str += f"{line_old}\n"
 
     return patch_with_lines_str.rstrip()
 

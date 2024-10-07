@@ -29,6 +29,14 @@ Key guidelines for evaluation:
   - Avoid inflating scores for suggestions that, while correct, offer only marginal improvements or optimizations.
 - Maintain the original order of suggestions in your feedback, corresponding to their input sequence.
 
+Additional scoring considerations:
+- If the suggestion is not actionable, and only asks the user to verify or ensure a change, reduce its score by 1-2 points.
+- Assign a score of 0 to suggestions aiming at:
+   - Adding docstring, type hints, or comments
+   - Remove unused imports or variables
+   - Using more specific exception types.
+
+
 
 The PR code diff will be presented in the following structured format:
 ======

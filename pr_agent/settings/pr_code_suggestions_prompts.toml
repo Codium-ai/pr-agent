@@ -26,16 +26,15 @@ __old hunk__
 
 @@ ... @@ def func2():
 __new hunk__
-...
-__old hunk__
-...
-
+ unchanged code line4
++new code line5 removed in the PR
+ unchanged code line6
 
 ## File: 'src/file2.py'
 ...
 ======
 
-- In the format above, the diff is organized into separate '__new hunk__' and '__old hunk__' sections for each code chunk. '__new hunk__' contains the updated code, while '__old hunk__' shows the removed code. If no code was added or removed in a specific chunk, the corresponding section will be omitted.
+- In the format above, the diff is organized into separate '__new hunk__' and '__old hunk__' sections for each code chunk. '__new hunk__' contains the updated code, while '__old hunk__' shows the removed code. If no code was removed in a specific chunk, the __old hunk__ section will be omitted.
 - Line numbers were added for the '__new hunk__' sections to help referencing specific lines in the code suggestions. These numbers are for reference only and are not part of the actual code.
 - Code lines are prefixed with symbols: '+' for new code added in the PR, '-' for code removed, and ' ' for unchanged code.
 {%- if is_ai_metadata %}
@@ -49,7 +48,7 @@ Specific guidelines for generating code suggestions:
 - Prioritize suggestions that address potential issues, critical problems, and bugs in the PR code. Avoid repeating changes already implemented in the PR. If no pertinent suggestions are applicable, return an empty list.
 - Don't suggest to add docstring, type hints, or comments, to remove unused imports, or to use more specific exception types.
 - When referencing variables or names from the code, enclose them in backticks (`). Example: "ensure that `variable_name` is..."
-- Be mindful you are viewing a partial PR code diff, not the full codebase. Avoid suggestions that might conflict with unseen code or alerting on variables not declared in the visible scope, as the context is incomplete.
+- Be mindful you are viewing a partial PR code diff, not the full codebase. Avoid suggestions that might conflict with unseen code or alerting variables not declared in the visible scope, as the context is incomplete.
 
 
 {%- if extra_instructions %}
