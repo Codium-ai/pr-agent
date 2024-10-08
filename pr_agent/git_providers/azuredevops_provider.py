@@ -336,19 +336,22 @@ class AzureDevopsProvider(GitProvider):
                 version = GitVersionDescriptor(
                     version=base_sha.commit_id, version_type="commit"
                 )
-                try:
-                    original_file_content_str = self.azure_devops_client.get_item(
-                        repository_id=self.repo_slug,
-                        path=file,
-                        project=self.workspace_slug,
-                        version_descriptor=version,
-                        download=False,
-                        include_content=True,
-                    )
-                    original_file_content_str = original_file_content_str.content
-                except Exception as error:
-                    get_logger().error(f"Failed to retrieve original file content of {file} at version {version}", error=error)
+                if edit_type == EDIT_TYPE.ADDED:
                     original_file_content_str = ""
+                else:
+                    try:
+                        original_file_content_str = self.azure_devops_client.get_item(
+                            repository_id=self.repo_slug,
+                            path=file,
+                            project=self.workspace_slug,
+                            version_descriptor=version,
+                            download=False,
+                            include_content=True,
+                        )
+                        original_file_content_str = original_file_content_str.content
+                    except Exception as error:
+                        get_logger().error(f"Failed to retrieve original file content of {file} at version {version}", error=error)
+                        original_file_content_str = ""
 
                 patch = load_large_diff(
                     file, new_file_content_str, original_file_content_str, show_warning=False
