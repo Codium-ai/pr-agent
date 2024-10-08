@@ -114,9 +114,16 @@ code_suggestions_self_review_text = "... (your text here) ..."
 ![self_review_1](https://codium.ai/images/pr_agent/self_review_1.png){width=512}
 
 
+!!! tip "Tip - Reducing visual footprint after self-review 💎"
+
+    The configuration parameter `pr_code_suggestions.fold_suggestions_on_self_review` (default is True)
+    can be used to automatically fold the suggestions after the user clicks the self-review checkbox.
+
+    This reduces the visual footprint of the suggestions, and also indicates to the PR reviewer that the suggestions have been reviewed by the PR author, and don't require further attention.
 
 
-!!! tip "Tip - demanding self-review from the PR author 💎"
+
+!!! tip "Tip - Demanding self-review from the PR author 💎"
 
     By setting:
     ```toml
