@@ -171,6 +171,7 @@ class LiteLLMAIHandler(BaseAiHandler):
                 get_logger().warning(
                     "Empty system prompt for claude model. Adding a newline character to prevent OpenAI API error.")
             messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
+
             if img_path:
                 try:
                     # check if the image link is alive
@@ -185,14 +186,29 @@ class LiteLLMAIHandler(BaseAiHandler):
                 messages[1]["content"] = [{"type": "text", "text": messages[1]["content"]},
                                           {"type": "image_url", "image_url": {"url": img_path}}]
 
-            kwargs = {
-                "model": model,
-                "deployment_id": deployment_id,
-                "messages": messages,
-                "temperature": temperature,
-                "timeout": get_settings().config.ai_timeout,
-                "api_base": self.api_base,
-            }
+            # Currently O1 does not support separate system and user prompts
+            O1_MODEL_PREFIX = 'o1-'
+            if model.startswith(O1_MODEL_PREFIX):
+                user = f"{system}\n\n\n{user}"
+                system = ""
+                get_logger().info(f"Using O1 model, combining system and user prompts")
+                messages = [{"role": "user", "content": user}]
+                kwargs = {
+                    "model": model,
+                    "deployment_id": deployment_id,
+                    "messages": messages,
+                    "timeout": get_settings().config.ai_timeout,
+                    "api_base": self.api_base,
+                }
+            else:
+                kwargs = {
+                    "model": model,
+                    "deployment_id": deployment_id,
+                    "messages": messages,
+                    "temperature": temperature,
+                    "timeout": get_settings().config.ai_timeout,
+                    "api_base": self.api_base,
+                }
 
             if get_settings().litellm.get("enable_callbacks", False):
                 kwargs = self.add_litellm_callbacks(kwargs)
