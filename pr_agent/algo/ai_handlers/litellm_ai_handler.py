@@ -187,7 +187,8 @@ class LiteLLMAIHandler(BaseAiHandler):
                                           {"type": "image_url", "image_url": {"url": img_path}}]
 
             # Currently O1 does not support separate system and user prompts
-            if model.startswith('o1-'):
+            O1_MODEL_PREFIX = 'o1-'
+            if model.startswith(O1_MODEL_PREFIX):
                 user = f"{system}\n\n\n{user}"
                 system = ""
                 get_logger().info(f"Using O1 model, combining system and user prompts")
