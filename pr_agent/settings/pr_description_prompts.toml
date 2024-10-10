@@ -78,9 +78,9 @@ pr_files:
     ...
 ...
 {%- endif %}
-description: |-
+description: |
   ...
-title: |-
+title: |
   ...
 {%- if enable_custom_labels %}
 labels:
@@ -94,7 +94,26 @@ labels:
 Answer should be a valid YAML, and nothing else. Each YAML output MUST be after a newline, with proper indent, and block scalar indicator ('|')
 """
 
-user="""PR Info:
+user="""
+{%- if related_tickets %}
+Related Ticket Info:
+{% for ticket in related_tickets %}
+=====
+Ticket Title: '{{ ticket.title }}'
+{%- if ticket.labels %}
+Ticket Labels: {{ ticket.labels }}
+{%- endif %}
+{%- if ticket.body %}
+Ticket Description:
+#####
+{{ ticket.body }}
+#####
+{%- endif %}
+=====
+{% endfor %}
+{%- endif %}
+
+PR Info:
 
 Previous title: '{{title}}'
 

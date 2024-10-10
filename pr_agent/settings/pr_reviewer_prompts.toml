@@ -85,7 +85,20 @@ class KeyIssuesComponentLink(BaseModel):
     start_line: int = Field(description="The start line that corresponds to this issue in the relevant file")
     end_line: int = Field(description="The end line that corresponds to this issue in the relevant file")
 
+{%- if related_tickets %}
+
+class TicketCompliance(BaseModel):
+    ticket_url: str = Field(description="Ticket URL or ID")
+    ticket_requirements: str = Field(description="Repeat, in your own words, all ticket requirements, in bullet points")
+    fully_compliant_requirements: str = Field(description="A list, in bullet points, of which requirements are met by the PR code. Don't explain how the requirements are met, just list them shortly. Can be empty")
+    not_compliant_requirements: str = Field(description="A list, in bullet points, of which requirements are not met by the PR code. Don't explain how the requirements are not met, just list them shortly. Can be empty")
+    overall_compliance_level: str = Field(description="Overall give this PR one of these three values in relation to the ticket: 'Fully compliant', 'Partially compliant', or 'Not compliant'")
+{%- endif %}
+
 class Review(BaseModel):
+{%- if related_tickets %}
+    ticket_compliance_check: List[TicketCompliance] = Field(description="A list of compliance checks for the related tickets")
+{%- endif %}
 {%- if require_estimate_effort_to_review %}
     estimated_effort_to_review_[1-5]: int = Field(description="Estimate, on a scale of 1-5 (inclusive), the time and effort required to review this PR by an experienced and knowledgeable developer. 1 means short and easy review , 5 means long and hard review. Take into account the size, complexity, quality, and the needed changes of the PR code diff.")
 {%- endif %}
@@ -130,6 +143,19 @@ class PRReview(BaseModel):
 Example output:
 ```yaml
 review:
+{%- if related_tickets %}
+  ticket_compliance_check:
+    - ticket_url: |
+        ...
+      ticket_requirements: |
+        ...
+      fully_compliant_requirements: |
+        ...
+      not_compliant_requirements: |
+        ...
+      overall_compliance_level: |
+        ...
+{%- endif %}
 {%- if require_estimate_effort_to_review %}
   estimated_effort_to_review_[1-5]: |
     3
@@ -176,7 +202,33 @@ code_feedback:
 Answer should be a valid YAML, and nothing else. Each YAML output MUST be after a newline, with proper indent, and block scalar indicator ('|')
 """
 
-user="""--PR Info--
+user="""
+{%- if related_tickets %}
+--PR Ticket Info--
+{%- for ticket in related_tickets %}
+=====
+Ticket URL: '{{ ticket.ticket_url }}'
+
+Ticket Title: '{{ ticket.title }}'
+
+{%- if ticket.labels %}
+
+Ticket Labels: {{ ticket.labels }}
+
+{%- endif %}
+{%- if ticket.body %}
+
+Ticket Description:
+#####
+{{ ticket.body }}
+#####
+{%- endif %}
+=====
+{% endfor %}
+{%- endif %}
+
+
+--PR Info--
 
 Title: '{{title}}'
 

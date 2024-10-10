@@ -43,6 +43,12 @@ CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by p
   
 ## News and Updates
 
+### October 10, 2024
+New ability for the `review` tool - **ticket compliance feedback**. If the PR contains a ticket number, PR-Agent will check if the PR code actually complies with the ticket requirements.
+
+<kbd><img src="https://www.codium.ai/images/pr_agent/ticket_compliance.png" width="768"></kbd>
+
+
 ### September 21, 2024
 Need help with PR-Agent? New feature - simply comment `/help "your question"` in a pull request, and PR-Agent will provide you with the [relevant documentation](https://github.com/Codium-ai/pr-agent/pull/1241#issuecomment-2365259334).
 
@@ -93,7 +99,6 @@ Supported commands per platform:
 |-------|---------------------------------------------------------------------------------------------------------|:--------------------:|:--------------------:|:--------------------:|:------------:|
 | TOOLS | Review                                                                                                  | ✅ | ✅ | ✅ |      ✅       |
 |       | ⮑ Incremental                                                                                           | ✅ |                    |                    |              |
-|       | ⮑ [SOC2 Compliance](https://pr-agent-docs.codium.ai/tools/review/#soc2-ticket-compliance) 💎            | ✅ | ✅ | ✅ |              |
 |       | Describe                                                                                                | ✅ | ✅ | ✅ |      ✅       |
 |       | ⮑ [Inline File Summary](https://pr-agent-docs.codium.ai/tools/describe#inline-file-summary) 💎          | ✅ |                    |                    |              |
 |       | Improve                                                                                                 | ✅ | ✅ | ✅ |      ✅       |

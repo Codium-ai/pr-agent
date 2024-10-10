@@ -51,9 +51,7 @@ require_tests_review=true
 require_estimate_effort_to_review=true
 require_can_be_split_review=false
 require_security_review=true
-# soc2
-require_soc2_ticket=false
-soc2_ticket_prompt="Does the PR description include a link to ticket in a project management system (e.g., Jira, Asana, Trello, etc.) ?"
+require_ticket_analysis_review=true
 # general options
 num_code_suggestions=0
 inline_code_comments = false
