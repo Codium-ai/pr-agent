@@ -27,7 +27,6 @@ Here are some of the additional features and capabilities that Qodo Merge Pro of
 | [**Advanced usage statistics**](https://www.codium.ai/contact/#/)                                                    | Qodo Merge Pro offers detailed statistics at user, repository, and company levels, including metrics about Qodo Merge usage, and also general statistics and insights |
 | [**Incorporating companies' best practices**](https://qodo-merge-docs.qodo.ai/tools/improve/#best-practices)         | Use the companies' best practices as reference to increase the effectiveness and the relevance of the code suggestions                                           |
 | [**Interactive triggering**](https://qodo-merge-docs.qodo.ai/tools/analyze/#example-usage)                           | Interactively apply different tools via the `analyze` command                                                                                                    |
-| [**SOC2 compliance check**](https://qodo-merge-docs.qodo.ai/tools/review/#configuration-options)                     | Ensures the PR contains a ticket to a project management system (e.g., Jira, Asana, Trello, etc.)                                                                
 | [**Custom labels**](https://qodo-merge-docs.qodo.ai/tools/describe/#handle-custom-labels-from-the-repos-labels-page) | Define custom labels for Qodo Merge to assign to the PR                                                                                                            |
 
 ### Additional tools

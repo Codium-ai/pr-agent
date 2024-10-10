@@ -138,20 +138,9 @@ num_code_suggestions = ...
     <td><b>require_security_review</b></td>
     <td>If set to true, the tool will add a section that checks if the PR contains a possible security or vulnerability issue. Default is true.</td>
   </tr>
-</table>
-
-!!! example "SOC2 ticket compliance 💎"
-
-This sub-tool checks if the PR description properly contains a ticket to a project management system (e.g., Jira, Asana, Trello, etc.), as required by SOC2 compliance. If not, it will add a label to the PR: "Missing SOC2 ticket".
-    
-<table>
   <tr>
-    <td><b>require_soc2_ticket</b></td>
-    <td>If set to true, the SOC2 ticket checker sub-tool will be enabled. Default is false.</td>
-  </tr>
-  <tr>
-    <td><b>soc2_ticket_prompt</b></td>
-    <td>The prompt for the SOC2 ticket review. Default is: `Does the PR description include a link to ticket in a project management system (e.g., Jira, Asana, Trello, etc.) ?`. Edit this field if your compliance requirements are different.</td>
+    <td><b>require_ticket_analysis_review</b></td>
+    <td>If set to true, and the PR contains a GitHub ticket number, the tool will add a section that checks if the PR in fact fulfilled the ticket requirements. Default is true.</td>
   </tr>
 </table>
 
@@ -193,7 +182,7 @@ If enabled, the `review` tool can approve a PR when a specific comment, `/review
     It is recommended to review the [Configuration options](#configuration-options) section, and choose the relevant options for your use case.
     
     Some of the features that are disabled by default are quite useful, and should be considered for enabling. For example: 
-    `require_score_review`, `require_soc2_ticket`, and more.
+    `require_score_review`, and more.
     
     On the other hand, if you find one of the enabled features to be irrelevant for your use case, disable it. No default configuration can fit all use cases.
 
