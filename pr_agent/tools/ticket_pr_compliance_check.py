@@ -34,20 +34,26 @@ def extract_ticket_links_from_pr_description(pr_description, repo_path):
     """
     github_tickets = []
     try:
-        # example link to search for: https://github.com/Codium-ai/pr-agent-pro/issues/525
-        pattern = r'https://github[^/]+/[^/]+/[^/]+/issues/\d+' # should support also github server (for example 'https://github.company.ai/Codium-ai/pr-agent-pro/issues/525')
+        # Pattern to match full GitHub issue URLs and shorthand notations like owner/repo#issue_number or https://github.com/owner/repo/issues/issue_number
+        pattern = r'(https://github[^/]+/[^/]+/[^/]+/issues/\d+)|(\b(\w+)/(\w+)#(\d+)\b)'
 
-        # Find all matches in the text
-        github_tickets = re.findall(pattern, pr_description)
-
-        # Find all issues referenced like #123 and add them as https://github.com/{repo_path}/issues/{issue_number}
-        issue_number_pattern = r'#\d+'
-        issue_numbers = re.findall(issue_number_pattern, pr_description)
-        for issue_number in issue_numbers:
-            issue_number = issue_number[1:]  # remove #
-            # check if issue_number is a valid number and len(issue_number) < 5
-            if issue_number.isdigit() and len(issue_number) < 5:
-                github_tickets.append(f'https://github.com/{repo_path}/issues/{issue_number}')
+        matches = re.findall(pattern, pr_description)
+        for match in matches:
+            if match[0]:  # Full URL match
+                github_tickets.append(match[0])
+            else:  # Shorthand notation match
+                owner, repo, issue_number = match[2], match[3], match[4]
+                github_tickets.append(f'https://github.com/{owner}/{repo}/issues/{issue_number}')
+        if not github_tickets:
+            # Search for #123 format within the same repo
+            issue_number_pattern = r'#\d+'
+            issue_numbers = re.findall(issue_number_pattern, pr_description)
+            for issue_number in issue_numbers:
+                issue_number = issue_number[1:]  # remove #
+                if issue_number.isdigit() and len(issue_number) < 5:
+                    issue_url = f'https://github.com/{repo_path}/issues/{issue_number}'
+                    if issue_url not in github_tickets:
+                        github_tickets.append(issue_url)
     except Exception as e:
         get_logger().error(f"Error extracting tickets error= {e}",
                            artifact={"traceback": traceback.format_exc()})
