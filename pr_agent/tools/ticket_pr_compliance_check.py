@@ -40,14 +40,13 @@ def extract_ticket_links_from_pr_description(pr_description, repo_path):
     github_tickets = re.findall(pattern, pr_description)
 
     # Find all issues referenced like #123 and add them as https://github.com/{repo_path}/issues/{issue_number}
-    # (unneeded, since when you pull the actual comment, it appears as a full link)
-    # issue_number_pattern = r'#\d+'
-    # issue_numbers = re.findall(issue_number_pattern, pr_description)
-    # for issue_number in issue_numbers:
-    #     issue_number = issue_number[1:]  # remove #
-    #     # check if issue_number is a valid number and len(issue_number) < 5
-    #     if issue_number.isdigit() and len(issue_number) < 5:
-    #         github_tickets.append(f'https://github.com/{repo_path}/issues/{issue_number}')
+    issue_number_pattern = r'#\d+'
+    issue_numbers = re.findall(issue_number_pattern, pr_description)
+    for issue_number in issue_numbers:
+        issue_number = issue_number[1:]  # remove #
+        # check if issue_number is a valid number and len(issue_number) < 5
+        if issue_number.isdigit() and len(issue_number) < 5:
+            github_tickets.append(f'https://github.com/{repo_path}/issues/{issue_number}')
 
     return github_tickets
 
@@ -65,12 +64,19 @@ async def extract_tickets(git_provider):
                     repo_name, original_issue_number = git_provider._parse_issue_url(ticket)
 
                     # get the ticket object
-                    issue_main = git_provider.repo_obj.get_issue(original_issue_number)
+                    try:
+                        issue_main = git_provider.repo_obj.get_issue(original_issue_number)
+                    except Exception as e:
+                        get_logger().error(f"Error getting issue_main error= {e}",
+                                           artifact={"traceback": traceback.format_exc()})
+                        continue
 
                     # clip issue_main.body max length
-                    issue_body = issue_main.body
-                    if len(issue_main.body) > MAX_TICKET_CHARACTERS:
-                        issue_body = issue_main.body[:MAX_TICKET_CHARACTERS] + "..."
+                    issue_body_str = issue_main.body
+                    if not issue_body_str:
+                        issue_body_str = ""
+                    if len(issue_body_str) > MAX_TICKET_CHARACTERS:
+                        issue_body_str = issue_body_str[:MAX_TICKET_CHARACTERS] + "..."
 
                     # extract labels
                     labels = []
@@ -85,7 +91,7 @@ async def extract_tickets(git_provider):
                                            artifact={"traceback": traceback.format_exc()})
                     tickets_content.append(
                         {'ticket_id': issue_main.number,
-                         'ticket_url': ticket, 'title': issue_main.title, 'body': issue_body,
+                         'ticket_url': ticket, 'title': issue_main.title, 'body': issue_body_str,
                          'labels': ", ".join(labels)})
                 return tickets_content
 
