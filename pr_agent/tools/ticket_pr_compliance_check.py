@@ -10,7 +10,6 @@ GITHUB_TICKET_PATTERN = re.compile(
      r'(https://github[^/]+/[^/]+/[^/]+/issues/\d+)|(\b(\w+)/(\w+)#(\d+)\b)|(#\d+)'
 )
 
-
 def find_jira_tickets(text):
     # Regular expression patterns for JIRA tickets
     patterns = [
@@ -33,7 +32,7 @@ def find_jira_tickets(text):
     return list(tickets)
 
 
-def extract_ticket_links_from_pr_description(pr_description, repo_path):
+def extract_ticket_links_from_pr_description(pr_description, repo_path, base_url_html='https://github.com'):
     """
     Extract all ticket links from PR description
     """
@@ -47,11 +46,11 @@ def extract_ticket_links_from_pr_description(pr_description, repo_path):
                 github_tickets.add(match[0])
             elif match[1]:  # Shorthand notation match: owner/repo#issue_number
                 owner, repo, issue_number = match[2], match[3], match[4]
-                github_tickets.add(f'https://github.com/{owner}/{repo}/issues/{issue_number}')
+                github_tickets.add(f'{base_url_html.strip("/")}/{owner}/{repo}/issues/{issue_number}')
             else:  # #123 format
                 issue_number = match[5][1:]  # remove #
                 if issue_number.isdigit() and len(issue_number) < 5 and repo_path:
-                    github_tickets.add(f'https://github.com/{repo_path}/issues/{issue_number}')
+                    github_tickets.add(f'{base_url_html.strip("/")}/{repo_path}/issues/{issue_number}')
     except Exception as e:
         get_logger().error(f"Error extracting tickets error= {e}",
                            artifact={"traceback": traceback.format_exc()})
@@ -64,7 +63,7 @@ async def extract_tickets(git_provider):
     try:
         if isinstance(git_provider, GithubProvider):
             user_description = git_provider.get_user_description()
-            tickets = extract_ticket_links_from_pr_description(user_description, git_provider.repo)
+            tickets = extract_ticket_links_from_pr_description(user_description, git_provider.repo, git_provider.base_url_html)
             tickets_content = []
             if tickets:
                 for ticket in tickets:
