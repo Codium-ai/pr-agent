@@ -5,6 +5,8 @@ from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import GithubProvider
 from pr_agent.log import get_logger
 
+# Compile the regex pattern once, outside the function
+GITHUB_TICKET_PATTERN = re.compile(r'(https://github[^/]+/[^/]+/[^/]+/issues/\d+)|(\b(\w+)/(\w+)#(\d+)\b)')
 
 def find_jira_tickets(text):
     # Regular expression patterns for JIRA tickets
@@ -35,9 +37,8 @@ def extract_ticket_links_from_pr_description(pr_description, repo_path):
     github_tickets = []
     try:
         # Pattern to match full GitHub issue URLs and shorthand notations like owner/repo#issue_number or https://github.com/owner/repo/issues/issue_number
-        pattern = r'(https://github[^/]+/[^/]+/[^/]+/issues/\d+)|(\b(\w+)/(\w+)#(\d+)\b)'
-
-        matches = re.findall(pattern, pr_description)
+        matches = GITHUB_TICKET_PATTERN.findall(pr_description)
+        
         for match in matches:
             if match[0]:  # Full URL match
                 github_tickets.append(match[0])
