@@ -8,6 +8,7 @@ from pr_agent.log import get_logger
 # Compile the regex pattern once, outside the function
 GITHUB_TICKET_PATTERN = re.compile(r'(https://github[^/]+/[^/]+/[^/]+/issues/\d+)|(\b(\w+)/(\w+)#(\d+)\b)')
 
+
 def find_jira_tickets(text):
     # Regular expression patterns for JIRA tickets
     patterns = [
