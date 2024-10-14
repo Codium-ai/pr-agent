@@ -6,7 +6,9 @@ from pr_agent.git_providers import GithubProvider
 from pr_agent.log import get_logger
 
 # Compile the regex pattern once, outside the function
-GITHUB_TICKET_PATTERN = re.compile(r'(https://github[^/]+/[^/]+/[^/]+/issues/\d+)|(\b(\w+)/(\w+)#(\d+)\b)')
+GITHUB_TICKET_PATTERN = re.compile(
+     r'(https://github[^/]+/[^/]+/[^/]+/issues/\d+)|(\b(\w+)/(\w+)#(\d+)\b)|(#\d+)'
+)
 
 
 def find_jira_tickets(text):
@@ -35,32 +37,26 @@ def extract_ticket_links_from_pr_description(pr_description, repo_path):
     """
     Extract all ticket links from PR description
     """
-    github_tickets = []
+    github_tickets = set()
     try:
-        # Pattern to match full GitHub issue URLs and shorthand notations like owner/repo#issue_number or https://github.com/owner/repo/issues/issue_number
+        # Use the updated pattern to find matches
         matches = GITHUB_TICKET_PATTERN.findall(pr_description)
-        
+
         for match in matches:
             if match[0]:  # Full URL match
-                github_tickets.append(match[0])
-            else:  # Shorthand notation match
+                github_tickets.add(match[0])
+            elif match[1]:  # Shorthand notation match: owner/repo#issue_number
                 owner, repo, issue_number = match[2], match[3], match[4]
-                github_tickets.append(f'https://github.com/{owner}/{repo}/issues/{issue_number}')
-        if not github_tickets:
-            # Search for #123 format within the same repo
-            issue_number_pattern = r'#\d+'
-            issue_numbers = re.findall(issue_number_pattern, pr_description)
-            for issue_number in issue_numbers:
-                issue_number = issue_number[1:]  # remove #
+                github_tickets.add(f'https://github.com/{owner}/{repo}/issues/{issue_number}')
+            else:  # #123 format
+                issue_number = match[5][1:]  # remove #
                 if issue_number.isdigit() and len(issue_number) < 5:
-                    issue_url = f'https://github.com/{repo_path}/issues/{issue_number}'
-                    if issue_url not in github_tickets:
-                        github_tickets.append(issue_url)
+                    github_tickets.add(f'https://github.com/{repo_path}/issues/{issue_number}')
     except Exception as e:
         get_logger().error(f"Error extracting tickets error= {e}",
                            artifact={"traceback": traceback.format_exc()})
 
-    return github_tickets
+    return list(github_tickets)
 
 
 async def extract_tickets(git_provider):
