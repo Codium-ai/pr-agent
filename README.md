@@ -43,6 +43,9 @@ CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by p
   
 ## News and Updates
 
+### October 14, 2024
+Improved support for GitHub enterprise server with [GitHub Actions](https://qodo-merge-docs.qodo.ai/installation/github/#action-for-github-enterprise-server)
+
 ### October 10, 2024
 New ability for the `review` tool - **ticket compliance feedback**. If the PR contains a ticket number, PR-Agent will check if the PR code actually [complies](https://github.com/Codium-ai/pr-agent/pull/1279#issuecomment-2404042130) with the ticket requirements.
 
@@ -53,40 +56,6 @@ New ability for the `review` tool - **ticket compliance feedback**. If the PR co
 Need help with PR-Agent? New feature - simply comment `/help "your question"` in a pull request, and PR-Agent will provide you with the [relevant documentation](https://github.com/Codium-ai/pr-agent/pull/1241#issuecomment-2365259334).
 
 <kbd><img src="https://www.codium.ai/images/pr_agent/pr_help_chat.png" width="768"></kbd>
-
-
-### September 12, 2024
-[Dynamic context](https://pr-agent-docs.codium.ai/core-abilities/dynamic_context/) is now the default option for context extension. 
-This feature enables PR-Agent to dynamically adjusting the relevant context for each code hunk, while avoiding overflowing the model with too much information.
-
-### September 3, 2024
-
-New version of PR-Agent, v0.24 was released. See the [release notes](https://github.com/Codium-ai/pr-agent/releases/tag/v0.24) for more information.
-
-### August 26, 2024
-
-New version of [PR Agent Chrome Extension](https://chromewebstore.google.com/detail/pr-agent-chrome-extension/ephlnjeghhogofkifjloamocljapahnl) was released, with full support of context-aware **PR Chat**. This novel feature is free to use for any open-source repository. See more details in [here](https://pr-agent-docs.codium.ai/chrome-extension/#pr-chat).
-
-<kbd><img src="https://www.codium.ai/images/pr_agent/pr_chat_1.png" width="768"></kbd>
-
-<kbd><img src="https://www.codium.ai/images/pr_agent/pr_chat_2.png" width="768"></kbd>
-
-
-### August 11, 2024
-Increased PR context size for improved results, and enabled [asymmetric context](https://github.com/Codium-ai/pr-agent/pull/1114/files#diff-9290a3ad9a86690b31f0450b77acd37ef1914b41fabc8a08682d4da433a77f90R69-R70)
-
-### August 10, 2024
-Added support for [Azure devops pipeline](https://pr-agent-docs.codium.ai/installation/azure/) - you can now easily run PR-Agent as an Azure devops pipeline, without needing to set up your own server.
-
-
-### August 5, 2024
-Added support for [GitLab pipeline](https://pr-agent-docs.codium.ai/installation/gitlab/#run-as-a-gitlab-pipeline) - you can now run easily PR-Agent as a GitLab pipeline, without needing to set up your own server.
-
-### July 28, 2024
-
-(1) improved support for bitbucket server - [auto commands](https://github.com/Codium-ai/pr-agent/pull/1059) and [direct links](https://github.com/Codium-ai/pr-agent/pull/1061)
-
-(2) custom models are now [supported](https://pr-agent-docs.codium.ai/usage-guide/changing_a_model/#custom-models)
 
 
 
