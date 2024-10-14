@@ -18,7 +18,7 @@ Beyond this limit, Qodo Merge Pro will cease to respond to their inquiries unles
 
 ## Install Qodo Merge Pro for GitHub Enterprise Server
 
-To using Qodo Merge Pro application on your private GitHub Enterprise Server, you will need to contact us for starting an [Enterprise](https://www.codium.ai/pricing/) trial.
+To use Qodo Merge Pro application on your private GitHub Enterprise Server, you will need to contact us for starting an [Enterprise](https://www.codium.ai/pricing/) trial.
 
 
 ## Install Qodo Merge Pro for GitLab (Teams & Enterprise)
