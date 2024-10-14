@@ -50,7 +50,7 @@ def extract_ticket_links_from_pr_description(pr_description, repo_path):
                 github_tickets.add(f'https://github.com/{owner}/{repo}/issues/{issue_number}')
             else:  # #123 format
                 issue_number = match[5][1:]  # remove #
-                if issue_number.isdigit() and len(issue_number) < 5:
+                if issue_number.isdigit() and len(issue_number) < 5 and repo_path:
                     github_tickets.add(f'https://github.com/{repo_path}/issues/{issue_number}')
     except Exception as e:
         get_logger().error(f"Error extracting tickets error= {e}",
