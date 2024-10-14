@@ -20,8 +20,7 @@ from .git_provider import FilePatchInfo, GitProvider, IncrementalPR, MAX_FILES_A
 
 
 class GithubProvider(GitProvider):
-    def __init__(self, pr_url: Optional[str] = None, github_client = None):
-        self.auto = None
+    def __init__(self, pr_url: Optional[str] = None):
         self.repo_obj = None
         try:
             self.installation_id = context.get("installation_id", None)
