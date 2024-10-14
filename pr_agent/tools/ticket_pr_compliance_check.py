@@ -5,6 +5,10 @@ from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import GithubProvider
 from pr_agent.log import get_logger
 
+# Compile the regex pattern once, outside the function
+GITHUB_TICKET_PATTERN = re.compile(
+     r'(https://github[^/]+/[^/]+/[^/]+/issues/\d+)|(\b(\w+)/(\w+)#(\d+)\b)|(#\d+)'
+)
 
 def find_jira_tickets(text):
     # Regular expression patterns for JIRA tickets
@@ -28,31 +32,30 @@ def find_jira_tickets(text):
     return list(tickets)
 
 
-def extract_ticket_links_from_pr_description(pr_description, repo_path):
+def extract_ticket_links_from_pr_description(pr_description, repo_path, base_url_html='https://github.com'):
     """
     Extract all ticket links from PR description
     """
-    github_tickets = []
+    github_tickets = set()
     try:
-        # example link to search for: https://github.com/Codium-ai/pr-agent-pro/issues/525
-        pattern = r'https://github[^/]+/[^/]+/[^/]+/issues/\d+' # should support also github server (for example 'https://github.company.ai/Codium-ai/pr-agent-pro/issues/525')
+        # Use the updated pattern to find matches
+        matches = GITHUB_TICKET_PATTERN.findall(pr_description)
 
-        # Find all matches in the text
-        github_tickets = re.findall(pattern, pr_description)
-
-        # Find all issues referenced like #123 and add them as https://github.com/{repo_path}/issues/{issue_number}
-        issue_number_pattern = r'#\d+'
-        issue_numbers = re.findall(issue_number_pattern, pr_description)
-        for issue_number in issue_numbers:
-            issue_number = issue_number[1:]  # remove #
-            # check if issue_number is a valid number and len(issue_number) < 5
-            if issue_number.isdigit() and len(issue_number) < 5:
-                github_tickets.append(f'https://github.com/{repo_path}/issues/{issue_number}')
+        for match in matches:
+            if match[0]:  # Full URL match
+                github_tickets.add(match[0])
+            elif match[1]:  # Shorthand notation match: owner/repo#issue_number
+                owner, repo, issue_number = match[2], match[3], match[4]
+                github_tickets.add(f'{base_url_html.strip("/")}/{owner}/{repo}/issues/{issue_number}')
+            else:  # #123 format
+                issue_number = match[5][1:]  # remove #
+                if issue_number.isdigit() and len(issue_number) < 5 and repo_path:
+                    github_tickets.add(f'{base_url_html.strip("/")}/{repo_path}/issues/{issue_number}')
     except Exception as e:
         get_logger().error(f"Error extracting tickets error= {e}",
                            artifact={"traceback": traceback.format_exc()})
 
-    return github_tickets
+    return list(github_tickets)
 
 
 async def extract_tickets(git_provider):
@@ -60,7 +63,7 @@ async def extract_tickets(git_provider):
     try:
         if isinstance(git_provider, GithubProvider):
             user_description = git_provider.get_user_description()
-            tickets = extract_ticket_links_from_pr_description(user_description, git_provider.repo)
+            tickets = extract_ticket_links_from_pr_description(user_description, git_provider.repo, git_provider.base_url_html)
             tickets_content = []
             if tickets:
                 for ticket in tickets:
