@@ -34,7 +34,7 @@ pr_commands = [
 ]
 
 [pr_description]
-publish_labels = ...
+publish_labels = true
 ...
 ```
 
@@ -49,7 +49,7 @@ publish_labels = ...
 <table>
   <tr>
     <td><b>publish_labels</b></td>
-    <td>If set to true, the tool will publish the labels to the PR. Default is true.</td>
+    <td>If set to true, the tool will publish labels to the PR. Default is false.</td>
   </tr>
   <tr>
     <td><b>publish_description_as_comment</b></td>
