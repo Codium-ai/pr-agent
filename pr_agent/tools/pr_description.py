@@ -133,7 +133,7 @@ class PRDescription:
 
             if get_settings().config.publish_output:
                 # publish labels
-                if get_settings().pr_description.publish_labels and self.git_provider.is_supported("get_labels"):
+                if get_settings().pr_description.publish_labels and pr_labels and self.git_provider.is_supported("get_labels"):
                     original_labels = self.git_provider.get_pr_labels(update=True)
                     get_logger().debug(f"original labels", artifact=original_labels)
                     user_labels = get_user_labels(original_labels)
