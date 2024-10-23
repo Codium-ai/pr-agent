@@ -1,5 +1,5 @@
 aiohttp==3.9.5
-anthropic[vertex]==0.21.3
+anthropic[vertex]==0.37.1
 atlassian-python-api==3.41.4
 azure-devops==7.1.0b3
 azure-identity==1.15.0
