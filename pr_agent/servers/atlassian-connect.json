@@ -16,8 +16,9 @@
   },
   "scopes": [
     "account",
-    "repository",
-    "pullrequest"
+    "repository:write",
+    "pullrequest:write",
+    "wiki"
   ],
   "contexts": [
     "account"
