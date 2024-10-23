@@ -1,11 +1,20 @@
 FROM python:3.10-slim as base
 
 WORKDIR /app
-ADD pyproject.toml .
-ADD requirements.txt .
-RUN pip install . && rm pyproject.toml requirements.txt
+
+# Set environment variable
 ENV PYTHONPATH=/app
-ADD pr_agent pr_agent
-ADD github_action/entrypoint.sh /
+
+# Install dependencies
+COPY pyproject.toml requirements.txt ./
+RUN pip install --no-cache-dir . && rm pyproject.toml requirements.txt
+
+# Copy application code
+COPY pr_agent pr_agent
+COPY github_action/entrypoint.sh /entrypoint.sh
+
+# Ensure the entrypoint script is executable
 RUN chmod +x /entrypoint.sh
+
+# Run the application
 ENTRYPOINT ["/entrypoint.sh"]
