@@ -18,7 +18,7 @@ In terms of precedence, wiki configurations will override local configurations, 
 
 ## Wiki configuration file 💎
 
-`Platforms supported: GitHub, GitLab`
+`Platforms supported: GitHub, GitLab, Bitbucket`
 
 With Qodo Merge Pro, you can set configurations by creating a page called `.pr_agent.toml` in the [wiki](https://github.com/Codium-ai/pr-agent/wiki/pr_agent.toml) of the repo. 
 The advantage of this method is that it allows to set configurations without needing to commit new content to the repo - just edit the wiki page and **save**.
