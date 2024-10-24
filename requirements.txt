@@ -28,12 +28,6 @@ gunicorn==22.0.0
 pytest-cov==5.0.0
 pydantic==2.8.2
 html2text==2024.2.26
-# help bot
-langchain==0.3.0
-langchain-openai==0.2.0
-langchain-pinecone==0.2.0
-langchain-chroma==0.1.4
-chromadb==0.5.7
 # Uncomment the following lines to enable the 'similar issue' tool
 # pinecone-client
 # pinecone-datasets @ git+https://github.com/mrT23/pinecone-datasets.git@main
