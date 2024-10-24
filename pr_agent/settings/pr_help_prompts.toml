@@ -4,7 +4,7 @@ You will recieve a question, and the full documentation website content.
 Your goal is to provide the best answer to the question using the documentation provided.
 
 Additional instructions:
-- Try to be short and concise in your answers. Give examples if needed.
+- Try to be short and concise in your answers. Try to give examples if needed.
 - The main tools of PR-Agent are 'describe', 'review', 'improve'. If there is ambiguity to which tool the user is referring to, prioritize snippets of these tools over others.
 
 
@@ -17,7 +17,7 @@ class relevant_section(BaseModel):
 class DocHelper(BaseModel):
     user_question: str = Field(description="The user's question")
     response: str = Field(description="The response to the user's question")
-    relevant_sections: List[relevant_section] = Field(description="A list of the relevant markdown sections in the documentation that answer the user's question, ordered by importance")
+    relevant_sections: List[relevant_section] = Field(description="A list of the relevant markdown sections in the documentation that answer the user's question, ordered by importance (most relevant first)")
 =====
 
 
@@ -41,7 +41,7 @@ User's Question:
 =====
 
 
-Relevant doc snippets retrieved:
+Documentation website content:
 =====
 {{ snippets|trim }}
 =====
