@@ -83,7 +83,7 @@ class PRHelpMessage:
                 # get all the 'md' files inside docs_path and its subdirectories
                 md_files = list(docs_path.glob('**/*.md'))
                 folders_to_exclude = ['/finetuning_benchmark/']
-                files_to_exclude = ['EXAMPLE_BEST_PRACTICE.md', 'compression_strategy.md', '/docs/overview/index.md']
+                files_to_exclude = {'EXAMPLE_BEST_PRACTICE.md', 'compression_strategy.md', '/docs/overview/index.md'}
                 md_files = [file for file in md_files if not any(folder in str(file) for folder in folders_to_exclude) and not any(file.name == file_to_exclude for file_to_exclude in files_to_exclude)]
 
                 # sort the 'md_files' so that 'priority_files' will be at the top
@@ -96,9 +96,12 @@ class PRHelpMessage:
 
                 docs_prompt = ""
                 for file in md_files:
-                    with open(file, 'r') as f:
-                        file_path = str(file).replace(str(docs_path), '')
-                        docs_prompt += f"==file name:==\n\n{file_path}\n\n==file content:==\n\n{f.read().strip()}\n=========\n\n"
+                    try:
+                        with open(file, 'r') as f:
+                            file_path = str(file).replace(str(docs_path), '')
+                            docs_prompt += f"==file name:==\n\n{file_path}\n\n==file content:==\n\n{f.read().strip()}\n=========\n\n"
+                    except Exception as e:
+                        get_logger().error(f"Error while reading the file {file}: {e}")
                 token_count = self.token_handler.count_tokens(docs_prompt)
                 get_logger().debug(f"Token count of full documentation website: {token_count}")
 
