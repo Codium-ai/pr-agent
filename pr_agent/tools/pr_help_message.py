@@ -99,7 +99,7 @@ class PRHelpMessage:
                     try:
                         with open(file, 'r') as f:
                             file_path = str(file).replace(str(docs_path), '')
-                            docs_prompt += f"==file name:==\n\n{file_path}\n\n==file content:==\n\n{f.read().strip()}\n=========\n\n"
+                            docs_prompt += f"\n==file name==\n\n{file_path}\n\n==file content==\n\n{f.read().strip()}\n=========\n\n"
                     except Exception as e:
                         get_logger().error(f"Error while reading the file {file}: {e}")
                 token_count = self.token_handler.count_tokens(docs_prompt)
@@ -137,8 +137,11 @@ class PRHelpMessage:
                     base_path = "https://qodo-merge-docs.qodo.ai/"
                     for section in relevant_sections:
                         file = section.get('file_name').strip().removesuffix('.md')
-                        markdown_header = section['relevant_section_header_string'].strip().strip('#').strip().lower().replace(' ', '-')
-                        answer_str += f"> - {base_path}{file}#{markdown_header}\n"
+                        if str(section['relevant_section_header_string']).strip():
+                            markdown_header = section['relevant_section_header_string'].strip().strip('#').strip().lower().replace(' ', '-')
+                            answer_str += f"> - {base_path}{file}#{markdown_header}\n"
+                        else:
+                            answer_str += f"> - {base_path}{file}\n"
 
 
                 # publish the answer
