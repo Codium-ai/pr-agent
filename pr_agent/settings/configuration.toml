@@ -135,8 +135,9 @@ demand_code_suggestions_self_review=false # add a checkbox for the author to sel
 code_suggestions_self_review_text= "**Author self-review**: I have reviewed the PR code suggestions, and addressed the relevant ones."
 approve_pr_on_self_review=false # Pro feature. if true, the PR will be auto-approved after the author clicks on the self-review checkbox
 fold_suggestions_on_self_review=true # Pro feature. if true, the code suggestions will be folded after the author clicks on the self-review checkbox
-# Suggestion impact
+# Suggestion impact 💎
 publish_post_process_suggestion_impact=true
+wiki_page_accepted_suggestions=true
 
 [pr_custom_prompt] # /custom_prompt #
 prompt = """\

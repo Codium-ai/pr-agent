@@ -67,6 +67,31 @@ In post-process, Qodo Merge counts the number of suggestions that were implement
 
 ![code_suggestions_asses_impact_stats_2](https://codium.ai/images/pr_agent/code_suggestions_asses_impact_stats_2.png){width=512}
 
+## Suggestion tracking 💎
+`Platforms supported: GitHub, GitLab`
+
+Qodo Merge employs an innovative detection system to automatically [identify](https://qodo-merge-docs.qodo.ai/core-abilities/impact_evaluation/) code suggestions that PR authors have accepted and implemented.
+
+Accepted suggestions are also automatically documented in a dedicated wiki page called `.pr_agent_accepted_suggestions`, allowing users to track historical changes, assess the tool's effectiveness, and learn from previously implemented recommendations in the repository.
+An example [result](https://github.com/Codium-ai/pr-agent/wiki/.pr_agent_accepted_suggestions):
+
+[![pr_agent_accepted_suggestions1.png](https://qodo.ai/images/pr_agent/pr_agent_accepted_suggestions1.png){width=768}](https://github.com/Codium-ai/pr-agent/wiki/.pr_agent_accepted_suggestions)
+
+This dedicated wiki page will also serve as a foundation for future AI model improvements, allowing it to learn from historically implemented suggestions and generate more targeted, contextually relevant recommendations.
+
+This feature is controlled by a boolean configuration parameter: `pr_code_suggestions.wiki_page_accepted_suggestions` (default is true).
+
+!!! note "Wiki must be enabled"
+    While the aggregation process is automatic, GitHub repositories require a one-time manual wiki setup.
+    
+    To initialize the wiki: navigate to `Wiki`, select `Create the first page`, then click `Save page`. 
+
+    ![pr_agent_accepted_suggestions_create_first_page.png](https://qodo.ai/images/pr_agent/pr_agent_accepted_suggestions_create_first_page.png){width=768}
+
+    Once a wiki repo is created, the tool will automatically use this wiki for tracking suggestions.
+
+
+
 
 ## Usage Tips
 
@@ -271,6 +296,10 @@ Using a combination of both can help the AI model to provide relevant and tailor
       <tr>
         <td><b>enable_chat_text</b></td>
         <td>If set to true, the tool will display a reference to the PR chat in the comment. Default is true.</td>
+      </tr>
+      <tr>
+        <td><b>wiki_page_accepted_suggestions</b></td>
+        <td>If set to true, the tool will automatically track accepted suggestions in a dedicated wiki page called `.pr_agent_accepted_suggestions`. Default is true.</td>
       </tr>
     </table>
 
