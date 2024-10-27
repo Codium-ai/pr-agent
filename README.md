@@ -43,6 +43,17 @@ CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by p
   
 ## News and Updates
 
+### October 27, 2024
+
+Qodo Merge PR Agent will now automatically document accepted code suggestions in a dedicated wiki page (`.pr_agent_accepted_suggestions`), enabling users to track historical changes, assess the tool's effectiveness, and learn from previously implemented recommendations in the repository.
+
+This dedicated wiki page will also serve as a foundation for future AI model improvements, allowing it to learn from historically implemented suggestions and generate more targeted, contextually relevant recommendations.
+Read more about this novel feature [here](https://qodo-merge-docs.qodo.ai/tools/improve/#suggestion-tracking).
+
+<kbd><img href="https://qodo.ai/images/pr_agent/pr_agent_accepted_suggestions1.png" src="https://qodo.ai/images/pr_agent/pr_agent_accepted_suggestions1.png" width="768"></kbd>
+
+
+
 ### October 21, 2024
 **Disable publishing labels by default:** 
 
@@ -69,14 +80,6 @@ Improved support for GitHub enterprise server with [GitHub Actions](https://qodo
 New ability for the `review` tool - **ticket compliance feedback**. If the PR contains a ticket number, PR-Agent will check if the PR code actually [complies](https://github.com/Codium-ai/pr-agent/pull/1279#issuecomment-2404042130) with the ticket requirements.
 
 <kbd><img src="https://github.com/user-attachments/assets/4a2a728b-5f47-40fa-80cc-16efd296938c" width="768"></kbd>
-
-
-### September 21, 2024
-Need help with PR-Agent? New feature - simply comment `/help "your question"` in a pull request, and PR-Agent will provide you with the [relevant documentation](https://github.com/Codium-ai/pr-agent/pull/1241#issuecomment-2365259334).
-
-![image](https://github.com/user-attachments/assets/7c214d9c-e7bb-4028-83b6-9515d7310d19)
-<img src="https://www.codium.ai/images/pr_agent/pr_help_chat.png" width="768"></kbd>
-
 
 
 ## Overview
