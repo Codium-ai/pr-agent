@@ -3,3 +3,4 @@
 from setuptools import setup
 
 setup()
+print("aaa")
