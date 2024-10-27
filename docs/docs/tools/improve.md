@@ -70,7 +70,7 @@ In post-process, Qodo Merge counts the number of suggestions that were implement
 ## Suggestion tracking 💎
 `Platforms supported: GitHub, GitLab`
 
-Qodo Merge employs an innovative detection system to automatically [identify](https://qodo-merge-docs.qodo.ai/core-abilities/impact_evaluation/) code suggestions that PR authors have accepted and implemented.
+Qodo Merge employs an novel detection system to automatically [identify](https://qodo-merge-docs.qodo.ai/core-abilities/impact_evaluation/) AI code suggestions that PR authors have accepted and implemented.
 
 Accepted suggestions are also automatically documented in a dedicated wiki page called `.pr_agent_accepted_suggestions`, allowing users to track historical changes, assess the tool's effectiveness, and learn from previously implemented recommendations in the repository.
 An example [result](https://github.com/Codium-ai/pr-agent/wiki/.pr_agent_accepted_suggestions):
@@ -90,8 +90,10 @@ This feature is controlled by a boolean configuration parameter: `pr_code_sugges
 
     Once a wiki repo is created, the tool will automatically use this wiki for tracking suggestions.
 
+!!! note "Why a wiki page?"
+    Your code belongs to you, and we respect your privacy. Hence, we won't store any code suggestions in an external database. 
 
-
+    Instead, we leverage a dedicated private page, within your repository wiki, to track suggestions. This approach offers convenient secure suggestion tracking while avoiding pull requests or any noise to the main repository.
 
 ## Usage Tips
 
