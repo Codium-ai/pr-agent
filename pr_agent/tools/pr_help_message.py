@@ -138,7 +138,7 @@ class PRHelpMessage:
                     for section in relevant_sections:
                         file = section.get('file_name').strip().removesuffix('.md')
                         if str(section['relevant_section_header_string']).strip():
-                            markdown_header = section['relevant_section_header_string'].strip().strip('#').strip().lower().replace(' ', '-')
+                            markdown_header = section['relevant_section_header_string'].strip().strip('#').strip().lower().replace(' ', '-').replace("'", '').replace('(', '').replace(')', '').replace(',', '').replace('.', '').replace('?', '').replace('!', '')
                             answer_str += f"> - {base_path}{file}#{markdown_header}\n"
                         else:
                             answer_str += f"> - {base_path}{file}\n"
