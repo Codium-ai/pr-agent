@@ -12,7 +12,7 @@ from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAIHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models, get_pr_diff_multiple_patchs, \
     OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import set_custom_labels
+from pr_agent.algo.utils import set_custom_labels, PRDescriptionHeader
 from pr_agent.algo.utils import load_yaml, get_user_labels, ModelType, show_relevant_configurations, get_max_tokens, \
     clip_tokens
 from pr_agent.config_loader import get_settings
@@ -501,7 +501,7 @@ extra_file_yaml =
                     pr_body += "</details>\n"
             elif 'pr_files' in key.lower() and get_settings().pr_description.enable_semantic_files_types:
                 changes_walkthrough, pr_file_changes = self.process_pr_files_prediction(changes_walkthrough, value)
-                changes_walkthrough = f"### **Changes walkthrough** 📝\n{changes_walkthrough}"
+                changes_walkthrough = f"{PRDescriptionHeader.CHANGES_WALKTHROUGH}\n{changes_walkthrough}"
             else:
                 # if the value is a list, join its items by comma
                 if isinstance(value, list):
