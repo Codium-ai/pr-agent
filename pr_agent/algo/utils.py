@@ -43,6 +43,10 @@ class PRReviewHeader(str, Enum):
     INCREMENTAL = "## Incremental PR Reviewer Guide"
 
 
+class PRDescriptionHeader(str, Enum):
+    CHANGES_WALKTHROUGH = "### **Changes walkthrough** 📝"
+
+
 def get_setting(key: str) -> Any:
     try:
         key = key.upper()
@@ -1024,8 +1028,7 @@ def process_description(description_full: str) -> Tuple[str, List]:
     if not description_full:
         return "", []
 
-    split_str = "### **Changes walkthrough** 📝"
-    description_split = description_full.split(split_str)
+    description_split = description_full.split(PRDescriptionHeader.CHANGES_WALKTHROUGH)
     base_description_str = description_split[0]
     changes_walkthrough_str = ""
     files = []
@@ -1059,6 +1062,9 @@ def process_description(description_full: str) -> Tuple[str, List]:
                     res = re.search(pattern, file_data, re.DOTALL)
                     if not res or res.lastindex != 4:
                         pattern_back = r'<details>\s*<summary><strong>(.*?)</strong><dd><code>(.*?)</code>.*?</summary>\s*<hr>\s*(.*?)\n\n\s*(.*?)</details>'
+                        res = re.search(pattern_back, file_data, re.DOTALL)
+                    if not res or res.lastindex != 4:
+                        pattern_back = r'<details>\s*<summary><strong>(.*?)</strong>\s*<dd><code>(.*?)</code>.*?</summary>\s*<hr>\s*(.*?)\s*-\s*(.*?)\s*</details>' # looking for hypen ('- ')
                         res = re.search(pattern_back, file_data, re.DOTALL)
                     if res and res.lastindex == 4:
                         short_filename = res.group(1).strip()

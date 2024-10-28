@@ -5,7 +5,7 @@ from urllib.parse import urlparse
 from ..algo.file_filter import filter_ignored
 from ..log import get_logger
 from ..algo.language_handler import is_valid_file
-from ..algo.utils import clip_tokens, find_line_number_of_relevant_line_in_file, load_large_diff
+from ..algo.utils import clip_tokens, find_line_number_of_relevant_line_in_file, load_large_diff, PRDescriptionHeader
 from ..config_loader import get_settings
 from .git_provider import GitProvider
 from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
@@ -404,7 +404,7 @@ class AzureDevopsProvider(GitProvider):
                 pr_body = pr_body[:ind]
 
             if len(pr_body) > MAX_PR_DESCRIPTION_AZURE_LENGTH:
-                changes_walkthrough_text = '## **Changes walkthrough**'
+                changes_walkthrough_text = PRDescriptionHeader.CHANGES_WALKTHROUGH
                 ind = pr_body.find(changes_walkthrough_text)
                 if ind != -1:
                     pr_body = pr_body[:ind]
