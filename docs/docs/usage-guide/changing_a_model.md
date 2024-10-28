@@ -133,9 +133,26 @@ Your [application default credentials](https://cloud.google.com/docs/authenticat
 
 If you do want to set explicit credentials, then you can use the `GOOGLE_APPLICATION_CREDENTIALS` environment variable set to a path to a json credentials file.
 
+### Google AI Studio
+
+To use [Google AI Studio](https://aistudio.google.com/) models, set the relevant models in the configuration section of the configuration file:
+
+```toml
+[config] # in configuration.toml
+model="google_ai_studio/gemini-1.5-flash"
+model_turbo="google_ai_studio/gemini-1.5-flash"
+fallback_models=["google_ai_studio/gemini-1.5-flash"]
+
+[google_ai_studio] # in .secrets.toml
+gemini_api_key = "..."
+```
+
+If you don't want to set the API key in the .secrets.toml file, you can set the `GOOGLE_AI_STUDIO.GEMINI_API_KEY` environment variable.
+
 ### Anthropic
 
 To use Anthropic models, set the relevant models in the configuration section of the configuration file:
+
 ```
 [config]
 model="anthropic/claude-3-opus-20240229"
