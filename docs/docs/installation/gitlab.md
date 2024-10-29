@@ -42,7 +42,7 @@ Note that if your base branches are not protected, don't set the variables as `p
 
 ## Run a GitLab webhook server
 
-1. From the GitLab workspace or group, create an access token with "Reporter" role and "api" scope.
+1. From the GitLab workspace or group, create an access token with "Reporter" role ("Developer" if using Pro version of the agent) and "api" scope.
 
 2. Generate a random secret for your app, and save it for later. For example, you can use:
 
@@ -62,7 +62,7 @@ git clone https://github.com/Codium-ai/pr-agent.git
 
   2. In the secrets file/variables:
     - Set your AI model key in the respective section
-    - In the [gitlab] section, set `personal_access_token` (with token from step 1) and `webhook_secret` (with secret from step 2)
+    - In the [gitlab] section, set `personal_access_token` (with token from step 1) and `shared_secret` (with secret from step 2)
 
 
 5. Build a Docker image for the app and optionally push it to a Docker repository. We'll use Dockerhub as an example:
