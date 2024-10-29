@@ -56,7 +56,7 @@ WEBHOOK_SECRET=$(python -c "import secrets; print(secrets.token_hex(10))")
 git clone https://github.com/Codium-ai/pr-agent.git
 ```
 
-4. Prepare variables and secrets. Skip this setp if you plan on settings these as environment variables when running the agent:
+4. Prepare variables and secrets. Skip this step if you plan on settings these as environment variables when running the agent:
   1. In the configuration file/variables:
     - Set `deployment_type` to "gitlab"
 
@@ -71,7 +71,7 @@ docker build . -t gitlab_pr_agent --target gitlab_webhook -f docker/Dockerfile
 docker push codiumai/pr-agent:gitlab_webhook  # Push to your Docker repository
 ```
 
-6. Create a webhook in GitLab. Set the URL to ```http[s]://<PR_AGENT_HOSTNAME>/webhook```, the secret token to the generated secret from step 2, andenable the triggers `push`, `comments` and `merge request events`.
+6. Create a webhook in GitLab. Set the URL to ```http[s]://<PR_AGENT_HOSTNAME>/webhook```, the secret token to the generated secret from step 2, and enable the triggers `push`, `comments` and `merge request events`.
 
-7. Test your installation by opening a merge request or commenting or a merge request using one of CodiumAI's commands.
+7. Test your installation by opening a merge request or commenting on a merge request using one of CodiumAI's commands.
 boxes
