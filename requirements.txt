@@ -8,6 +8,7 @@ dynaconf==3.2.4
 fastapi==0.111.0
 GitPython==3.1.41
 google-cloud-aiplatform==1.38.0
+google-generativeai==0.8.3
 google-cloud-storage==2.10.0
 Jinja2==3.1.2
 litellm==1.50.2
