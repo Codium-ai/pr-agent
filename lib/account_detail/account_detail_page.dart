@@ -46,8 +46,8 @@ class AccountDetailPage extends StatelessWidget
   Widget get _headerBar => Observer(
         builder: (context) {
           final ctrl = controller(context);
-          final cacheWalletName = walletsController
-              .walletNameCacheMap.value[ctrl.wallet.id];
+          final cacheWalletName =
+              walletsController.walletNameCacheMap.value[ctrl.wallet.id];
           final userName = walletsController.profileDataMapping
               .value?[ctrl.wallet.address.toLowerCase()]?.username;
           return HeaderView(
@@ -181,7 +181,9 @@ class AccountDetailPage extends StatelessWidget
                         const CupertinoActivityIndicator()
                             .marginOnly(right: 10.wMin),
                       Text(
-                        ctrl.isDisble.value ? 'Disable' : 'Enable',
+                        ctrl.isAccountToggleDisabled.value
+                            ? 'Disable'
+                            : 'Enable',
                         style: TextStyle(
                           fontSize: 18.spMin,
                           color: context.color.errorTextColor,
@@ -226,41 +228,43 @@ class AccountDetailPage extends StatelessWidget
             onPressed: onTap,
             style: CtaButtonStyle.flat,
             padding: EdgeInsets.zero,
-            child: ContainerWrapper(
-              style: ContainerWrapperStyle.flat,
-              borderRadius: BorderRadius.circular(10.rMin),
-              padding: EdgeInsets.only(
-                left: 16.rMin,
-                right: 12.rMin,
-                top: 16.rMin,
-                bottom: 16.rMin,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    textButton,
-                    style: TextStyle(
-                      fontSize: 16.spMin,
-                      color: context.color.textColor,
-                      fontFamily: Font.sfProText,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  Row(
-                    children: rightAction ??
-                        [
-                          Icon(
-                            Icons.chevron_right_sharp,
-                            size: 20.spMin,
-                            color: context.color.textColor.withOpacity(0.5),
-                          ),
-                        ],
-                  ),
-                ],
-              ),
-            ),
+            child: _buttonContent,
           );
         },
       ).paddingSymmetric(horizontal: 20.wMin, vertical: 4.hMin);
+
+  Widget get _buttonContent => ContainerWrapper(
+        style: ContainerWrapperStyle.flat,
+        borderRadius: BorderRadius.circular(10.rMin),
+        padding: EdgeInsets.only(
+          left: 16.rMin,
+          right: 12.rMin,
+          top: 16.rMin,
+          bottom: 16.rMin,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              textButton,
+              style: TextStyle(
+                fontSize: 16.spMin,
+                color: context.color.textColor,
+                fontFamily: Font.sfProText,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            Row(
+              children: rightAction ??
+                  [
+                    Icon(
+                      Icons.chevron_right_sharp,
+                      size: 20.spMin,
+                      color: context.color.textColor.withOpacity(0.5),
+                    ),
+                  ],
+            ),
+          ],
+        ),
+      );
 }

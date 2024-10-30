@@ -44,7 +44,7 @@ class AccountDetailController extends BaseController
         (account) => account.parent?.address == wallet.address);
   });
 
-  late final isDisble = listenableComputed(
+  late final isAccountToggleDisabled = listenableComputed(
     () =>
         wallet.isActive && !isChangingActiveState.value ||
         !wallet.isActive && isChangingActiveState.value,
@@ -75,6 +75,7 @@ class AccountDetailController extends BaseController
       nav.showSnackBar(message: "You can't disable the last account");
       return;
     }
+
     isChangingActiveState.value = true;
     try {
       await authController.toggleAccountActivation(wallet, !wallet.isActive);
@@ -83,6 +84,7 @@ class AccountDetailController extends BaseController
       nav.showSnackBar(
           message:
               "Account ${wallet.isActive ? 'enabled' : 'disabled'} successfully");
+      return;
     } catch (error) {
       ana.performAction(AccountActivationErrorEvent(
         EvAccountType.fromWallet(wallet),
