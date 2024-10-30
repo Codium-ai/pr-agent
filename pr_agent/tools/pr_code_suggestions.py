@@ -367,6 +367,18 @@ class PRCodeSuggestions:
                                                          "code_suggestions_feedback": code_suggestions_feedback[i]})
                             suggestion["score"] = 7
                             suggestion["score_why"] = ""
+
+                        # if the before and after code is the same, clear one of them
+                        try:
+                            if suggestion['existing_code'] == suggestion['improved_code']:
+                                get_logger().debug(
+                                    f"edited improved suggestion {i + 1}, because equal to existing code: {suggestion['existing_code']}")
+                                if get_settings().pr_code_suggestions.commitable_code_suggestions:
+                                    suggestion['improved_code'] = ""  # we need 'existing_code' to locate the code in the PR
+                                else:
+                                    suggestion['existing_code'] = ""
+                        except Exception as e:
+                            get_logger().error(f"Error processing suggestion {i + 1}, error: {e}")
             else:
                 # get_logger().error(f"Could not self-reflect on suggestions. using default score 7")
                 for i, suggestion in enumerate(data["code_suggestions"]):
@@ -422,13 +434,6 @@ class PRCodeSuggestions:
                     continue
 
                 if ('existing_code' in suggestion) and ('improved_code' in suggestion):
-                    if suggestion['existing_code'] == suggestion['improved_code']:
-                        get_logger().debug(
-                            f"edited improved suggestion {i + 1}, because equal to existing code: {suggestion['existing_code']}")
-                        if get_settings().pr_code_suggestions.commitable_code_suggestions:
-                            suggestion['improved_code'] = ""  # we need 'existing_code' to locate the code in the PR
-                        else:
-                            suggestion['existing_code'] = ""
                     suggestion = self._truncate_if_needed(suggestion)
                     one_sentence_summary_list.append(suggestion['one_sentence_summary'])
                     suggestion_list.append(suggestion)
