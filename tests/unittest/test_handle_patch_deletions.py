@@ -8,7 +8,7 @@ from pr_agent.config_loader import get_settings
 Code Analysis
 
 Objective:
-The objective of the function is to handle entire file or deletion patches and return the patch after omitting the 
+The objective of the function is to handle entire file or deletion patches and return the patch after omitting the
 deletion hunks.
 
 Inputs:

@@ -1,8 +1,10 @@
+from unittest.mock import MagicMock
+
+from atlassian.bitbucket import Bitbucket
+
+from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
 from pr_agent.git_providers import BitbucketServerProvider
 from pr_agent.git_providers.bitbucket_provider import BitbucketProvider
-from unittest.mock import MagicMock
-from atlassian.bitbucket import Bitbucket
-from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
 
 
 class TestBitbucketProvider:
@@ -121,7 +123,7 @@ class TestBitbucketServerProvider:
     NOT between the HEAD of main and the HEAD of branch b
 
           - o - o - o  branch b
-         /     /  
+         /     /
     o - o -- o - o     main
              ^ node c
     '''
@@ -183,7 +185,7 @@ class TestBitbucketServerProvider:
             ---- o - o branch c
            /    /
           ---- o       branch b
-         /    /  
+         /    /
         o - o - o      main
             ^ node d
     '''

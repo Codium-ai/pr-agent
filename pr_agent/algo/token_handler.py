@@ -1,8 +1,9 @@
-from jinja2 import Environment, StrictUndefined
-from tiktoken import encoding_for_model, get_encoding
-from pr_agent.config_loader import get_settings
 from threading import Lock
 
+from jinja2 import Environment, StrictUndefined
+from tiktoken import encoding_for_model, get_encoding
+
+from pr_agent.config_loader import get_settings
 from pr_agent.log import get_logger
 
 

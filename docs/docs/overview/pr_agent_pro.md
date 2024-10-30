@@ -19,7 +19,7 @@ Here are some of the additional features and capabilities that Qodo Merge Pro of
 
 | Feature                                                                                                              | Description                                                                                                                                                      |
 |----------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [**Model selection**](https://qodo-merge-docs.qodo.ai/usage-guide/PR_agent_pro_models/)          | Choose the model that best fits your needs, among top models like `GPT4` and `Claude-Sonnet-3.5`                                                                 
+| [**Model selection**](https://qodo-merge-docs.qodo.ai/usage-guide/PR_agent_pro_models/)          | Choose the model that best fits your needs, among top models like `GPT4` and `Claude-Sonnet-3.5`
 | [**Global and wiki configuration**](https://qodo-merge-docs.qodo.ai/usage-guide/configuration_options/)              | Control configurations for many repositories from a single location; <br>Edit configuration of a single repo without committing code                              |
 | [**Apply suggestions**](https://qodo-merge-docs.qodo.ai/tools/improve/#overview)                                     | Generate committable code from the relevant suggestions interactively by clicking on a checkbox                                                                   |
 | [**Suggestions impact**](https://qodo-merge-docs.qodo.ai/tools/improve/#assessing-impact)                         | Automatically mark suggestions that were implemented by the user (either directly in GitHub, or indirectly in the IDE) to enable tracking of the impact of the suggestions |
@@ -45,7 +45,7 @@ Here are additional tools that are available only for Qodo Merge Pro users:
 
 ### Supported languages
 
-Qodo Merge Pro leverages the world's leading code models - Claude 3.5 Sonnet and GPT-4. 
+Qodo Merge Pro leverages the world's leading code models - Claude 3.5 Sonnet and GPT-4.
 As a result, its primary tools such as `describe`, `review`, and `improve`, as well as the PR-chat feature, support virtually all programming languages.
 
 For specialized commands that require static code analysis, Qodo Merge Pro offers support for specific languages. For more details about features that require static code analysis, please refer to the [documentation](https://qodo-merge-docs.qodo.ai/tools/analyze/#overview).

@@ -17,7 +17,7 @@ It can be invoked manually by commenting on any PR:
 Note that to perform retrieval, the `similar_issue` tool indexes all the repo previous issues (once).
 
 
-**Select VectorDBs** by changing `pr_similar_issue` parameter in `configuration.toml` file 
+**Select VectorDBs** by changing `pr_similar_issue` parameter in `configuration.toml` file
 
 2 VectorDBs are available to switch in
 1. LanceDB

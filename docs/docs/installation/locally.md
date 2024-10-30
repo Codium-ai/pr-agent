@@ -45,7 +45,7 @@ To invoke a tool (for example `review`), you can run directly from the Docker im
     ```
     docker run --rm -it -e OPENAI.KEY=<your key> -e GITHUB.USER_TOKEN=<your token> codiumai/pr-agent:latest --pr_url <pr_url> review
     ```
-    If you are using GitHub enterprise server, you need to specify the custom url as variable.    
+    If you are using GitHub enterprise server, you need to specify the custom url as variable.
     For example, if your GitHub server is at `https://github.mycompany.com`, add the following to the command:
     ```
     -e GITHUB.BASE_URL=https://github.mycompany.com/api/v3
@@ -58,7 +58,7 @@ To invoke a tool (for example `review`), you can run directly from the Docker im
 
     If you have a dedicated GitLab instance, you need to specify the custom url as variable:
     ```
-    -e GITLAB.URL=<your gitlab instance url> 
+    -e GITLAB.URL=<your gitlab instance url>
     ```
 
 - For BitBucket:

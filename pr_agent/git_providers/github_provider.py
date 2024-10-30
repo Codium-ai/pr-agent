@@ -1,10 +1,11 @@
+import hashlib
 import itertools
 import time
-import hashlib
 import traceback
 from datetime import datetime
 from typing import Optional, Tuple
 from urllib.parse import urlparse
+
 from github import AppAuthentication, Auth, Github
 from retry import retry
 from starlette_context import context
@@ -12,11 +13,14 @@ from starlette_context import context
 from ..algo.file_filter import filter_ignored
 from ..algo.language_handler import is_valid_file
 from ..algo.types import EDIT_TYPE
-from ..algo.utils import PRReviewHeader, load_large_diff, clip_tokens, find_line_number_of_relevant_line_in_file, Range
+from ..algo.utils import (PRReviewHeader, Range, clip_tokens,
+                          find_line_number_of_relevant_line_in_file,
+                          load_large_diff)
 from ..config_loader import get_settings
 from ..log import get_logger
 from ..servers.utils import RateLimitExceeded
-from .git_provider import FilePatchInfo, GitProvider, IncrementalPR, MAX_FILES_ALLOWED_FULL
+from .git_provider import (MAX_FILES_ALLOWED_FULL, FilePatchInfo, GitProvider,
+                           IncrementalPR)
 
 
 class GithubProvider(GitProvider):

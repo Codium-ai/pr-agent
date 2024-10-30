@@ -40,7 +40,7 @@ stages:
 
         export azure_devops__org="$ORG_URL"
         export config__git_provider="azure"
-        
+
         pr-agent --pr_url="$PR_URL" describe
         pr-agent --pr_url="$PR_URL" review
         pr-agent --pr_url="$PR_URL" improve
@@ -65,11 +65,11 @@ git_provider="azure"
 ```
 
 Azure DevOps provider supports [PAT token](https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate?view=azure-devops&tabs=Windows) or [DefaultAzureCredential](https://learn.microsoft.com/en-us/azure/developer/python/sdk/authentication-overview#authentication-in-server-environments) authentication.
-PAT is faster to create, but has build in expiration date, and will use the user identity for API calls. 
+PAT is faster to create, but has build in expiration date, and will use the user identity for API calls.
 Using DefaultAzureCredential you can use managed identity or Service principle, which are more secure and will create separate ADO user identity (via AAD) to the agent.
 
-If PAT was chosen, you can assign the value in .secrets.toml. 
-If DefaultAzureCredential was chosen, you can assigned the additional env vars like AZURE_CLIENT_SECRET directly, 
+If PAT was chosen, you can assign the value in .secrets.toml.
+If DefaultAzureCredential was chosen, you can assigned the additional env vars like AZURE_CLIENT_SECRET directly,
 or use managed identity/az cli (for local development) without any additional configuration.
 in any case, 'org' value must be assigned in .secrets.toml:
 ```
@@ -80,7 +80,7 @@ org = "https://dev.azure.com/YOUR_ORGANIZATION/"
 
 ### Azure DevOps Webhook
 
-To trigger from an Azure webhook, you need to manually [add a webhook](https://learn.microsoft.com/en-us/azure/devops/service-hooks/services/webhooks?view=azure-devops). 
+To trigger from an Azure webhook, you need to manually [add a webhook](https://learn.microsoft.com/en-us/azure/devops/service-hooks/services/webhooks?view=azure-devops).
 Use the "Pull request created" type to trigger a review, or "Pull request commented on" to trigger any supported comment with /<command> <args> comment on the relevant PR. Note that for the "Pull request commented on" trigger, only API v2.0 is supported.
 
 

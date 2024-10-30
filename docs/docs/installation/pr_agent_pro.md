@@ -4,12 +4,12 @@
 Qodo Merge Pro is a versatile application compatible with GitHub, GitLab, and BitBucket, hosted by CodiumAI.
 See [here](https://qodo-merge-docs.qodo.ai/overview/pr_agent_pro/) for more details about the benefits of using Qodo Merge Pro.
 
-Interested parties can subscribe to Qodo Merge Pro through the following [link](https://www.codium.ai/pricing/). 
+Interested parties can subscribe to Qodo Merge Pro through the following [link](https://www.codium.ai/pricing/).
 After subscribing, you are granted the ability to easily install the application across any of your repositories.
 
 ![Qodo Merge Pro](https://codium.ai/images/pr_agent/pr_agent_pro_install.png){width=468}
 
-Each user who wants to use Qodo Merge pro needs to buy a seat. 
+Each user who wants to use Qodo Merge pro needs to buy a seat.
 Initially, CodiumAI offers a two-week trial period at no cost, after which continued access requires each user to secure a personal seat.
 Once a user acquires a seat, they gain the flexibility to use Qodo Merge Pro across any repository where it was enabled.
 

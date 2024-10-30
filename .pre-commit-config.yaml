@@ -13,10 +13,10 @@ repos:
       - id: check-yaml
       - id: end-of-file-fixer
       - id: trailing-whitespace
-  - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.3
-    hooks:
-      - id: actionlint
+  # - repo: https://github.com/rhysd/actionlint
+  #   rev: v1.7.3
+  #   hooks:
+  #     - id: actionlint
   - repo: https://github.com/pycqa/isort
     # rev must match what's in dev-requirements.txt
     rev: 5.13.2

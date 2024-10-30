@@ -9,7 +9,7 @@ model_turbo = "..."
 fallback_models = ["..."]
 ```
 
-For models and environments not from OpenAI, you might need to provide additional keys and other parameters. 
+For models and environments not from OpenAI, you might need to provide additional keys and other parameters.
 You can give parameters via a configuration file (see below for instructions), or from environment variables. See [litellm documentation](https://litellm.vercel.app/docs/proxy/quick_start#supported-llms) for the environment variables relevant per model.
 
 ### Azure
@@ -108,7 +108,7 @@ To use Llama3 model with Groq, for example, set:
 [config] # in configuration.toml
 model = "llama3-70b-8192"
 model_turbo = "llama3-70b-8192"
-fallback_models = ["groq/llama3-70b-8192"] 
+fallback_models = ["groq/llama3-70b-8192"]
 [groq] # in .secrets.toml
 key = ... # your Groq api key
 ```
@@ -118,7 +118,7 @@ key = ... # your Groq api key
 
 To use Google's Vertex AI platform and its associated models (chat-bison/codechat-bison) set:
 
-``` 
+```
 [config] # in configuration.toml
 model = "vertex_ai/codechat-bison"
 model_turbo = "vertex_ai/codechat-bison"
@@ -170,7 +170,7 @@ KEY = "..."
 
 To use Amazon Bedrock and its foundational models, add the below configuration:
 
-``` 
+```
 [config] # in configuration.toml
 model="bedrock/anthropic.claude-3-sonnet-20240229-v1:0"
 model_turbo="bedrock/anthropic.claude-3-sonnet-20240229-v1:0"

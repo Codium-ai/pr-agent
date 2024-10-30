@@ -1,6 +1,8 @@
 import pytest
+
 from pr_agent.algo.file_filter import filter_ignored
 from pr_agent.config_loader import global_settings
+
 
 class TestIgnoreFilter:
     def test_no_ignores(self):

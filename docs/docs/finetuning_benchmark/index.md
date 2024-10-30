@@ -84,10 +84,10 @@ command: improve
 model1_score: 9,
 model2_score: 6,
 why: |
-  Response 1 is better because it provides more actionable and specific suggestions that directly 
-  enhance the code's maintainability, performance, and best practices. For example, it suggests 
-  using a variable for reusable widget instances and using named routes for navigation, which 
-  are practical improvements. In contrast, Response 2 focuses more on general advice and less 
-  actionable suggestions, such as changing variable names and adding comments, which are less 
+  Response 1 is better because it provides more actionable and specific suggestions that directly
+  enhance the code's maintainability, performance, and best practices. For example, it suggests
+  using a variable for reusable widget instances and using named routes for navigation, which
+  are practical improvements. In contrast, Response 2 focuses more on general advice and less
+  actionable suggestions, such as changing variable names and adding comments, which are less
   critical for immediate code improvement."
 ```

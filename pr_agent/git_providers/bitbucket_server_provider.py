@@ -1,16 +1,17 @@
 from distutils.version import LooseVersion
-from requests.exceptions import HTTPError
 from typing import Optional, Tuple
 from urllib.parse import quote_plus, urlparse
 
 from atlassian.bitbucket import Bitbucket
+from requests.exceptions import HTTPError
 
-from .git_provider import GitProvider
-from ..algo.types import EDIT_TYPE, FilePatchInfo
 from ..algo.language_handler import is_valid_file
-from ..algo.utils import load_large_diff, find_line_number_of_relevant_line_in_file
+from ..algo.types import EDIT_TYPE, FilePatchInfo
+from ..algo.utils import (find_line_number_of_relevant_line_in_file,
+                          load_large_diff)
 from ..config_loader import get_settings
 from ..log import get_logger
+from .git_provider import GitProvider
 
 
 class BitbucketServerProvider(GitProvider):

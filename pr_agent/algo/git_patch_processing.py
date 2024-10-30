@@ -3,8 +3,8 @@ from __future__ import annotations
 import re
 import traceback
 
-from pr_agent.config_loader import get_settings
 from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
+from pr_agent.config_loader import get_settings
 from pr_agent.log import get_logger
 
 

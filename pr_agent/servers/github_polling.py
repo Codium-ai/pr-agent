@@ -1,11 +1,12 @@
 import asyncio
 import multiprocessing
-from collections import deque
-import traceback
-from datetime import datetime, timezone
 import time
-import requests
+import traceback
+from collections import deque
+from datetime import datetime, timezone
+
 import aiohttp
+import requests
 
 from pr_agent.agent.pr_agent import PRAgent
 from pr_agent.config_loader import get_settings

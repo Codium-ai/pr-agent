@@ -5,16 +5,16 @@ import time
 from datetime import datetime
 
 import jwt
-from atlassian.bitbucket import Cloud
-
 import requests
+from atlassian.bitbucket import Cloud
 from requests.auth import HTTPBasicAuth
 
 from pr_agent.config_loader import get_settings
-from pr_agent.log import setup_logger, get_logger
-from tests.e2e_tests.e2e_utils import NEW_FILE_CONTENT, FILE_PATH, PR_HEADER_START_WITH, REVIEW_START_WITH, \
-    IMPROVE_START_WITH_REGEX_PATTERN, NUM_MINUTES
-
+from pr_agent.log import get_logger, setup_logger
+from tests.e2e_tests.e2e_utils import (FILE_PATH,
+                                       IMPROVE_START_WITH_REGEX_PATTERN,
+                                       NEW_FILE_CONTENT, NUM_MINUTES,
+                                       PR_HEADER_START_WITH, REVIEW_START_WITH)
 
 log_level = os.environ.get("LOG_LEVEL", "INFO")
 setup_logger(log_level)

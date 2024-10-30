@@ -6,8 +6,8 @@ from pr_agent.algo.utils import parse_code_suggestion
 Code Analysis
 
 Objective:
-The objective of the function is to convert a dictionary into a markdown format. The function takes in a dictionary as 
-input and recursively converts it into a markdown format. The function is specifically designed to handle dictionaries 
+The objective of the function is to convert a dictionary into a markdown format. The function takes in a dictionary as
+input and recursively converts it into a markdown format. The function is specifically designed to handle dictionaries
 that contain code suggestions.
 
 Inputs:
