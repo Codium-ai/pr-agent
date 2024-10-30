@@ -1028,7 +1028,7 @@ def process_description(description_full: str) -> Tuple[str, List]:
     if not description_full:
         return "", []
 
-    description_split = description_full.split(PRDescriptionHeader.CHANGES_WALKTHROUGH)
+    description_split = description_full.split(PRDescriptionHeader.CHANGES_WALKTHROUGH.value)
     base_description_str = description_split[0]
     changes_walkthrough_str = ""
     files = []

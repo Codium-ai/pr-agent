@@ -501,7 +501,7 @@ extra_file_yaml =
                     pr_body += "</details>\n"
             elif 'pr_files' in key.lower() and get_settings().pr_description.enable_semantic_files_types:
                 changes_walkthrough, pr_file_changes = self.process_pr_files_prediction(changes_walkthrough, value)
-                changes_walkthrough = f"{PRDescriptionHeader.CHANGES_WALKTHROUGH}\n{changes_walkthrough}"
+                changes_walkthrough = f"{PRDescriptionHeader.CHANGES_WALKTHROUGH.value}\n{changes_walkthrough}"
             else:
                 # if the value is a list, join its items by comma
                 if isinstance(value, list):
