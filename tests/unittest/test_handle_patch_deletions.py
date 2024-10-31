@@ -3,6 +3,7 @@ import logging
 
 from pr_agent.algo.git_patch_processing import handle_patch_deletions
 from pr_agent.config_loader import get_settings
+from pr_agent.algo.git_patch_processing import decode_if_bytes
 
 """
 Code Analysis
@@ -70,3 +71,21 @@ class TestHandlePatchDeletions:
         expected_patch = '--- a/file.py\n+++ b/file.py\n@@ -1,2 +1,2 @@\n-foo\n-bar'
         assert handle_patch_deletions(patch, original_file_content_str, new_file_content_str,
                                       file_name) == expected_patch
+
+    def test_decode_if_bytes_handles_encodings(self):
+        # Test with UTF-8 encoded bytes
+        test_str = "Hello World"
+        utf8_bytes = test_str.encode('utf-8')
+        assert decode_if_bytes(utf8_bytes) == test_str
+        
+        # Test with ISO-8859-1 encoded bytes
+        special_str = "Café"
+        iso_bytes = special_str.encode('iso-8859-1')
+        assert decode_if_bytes(iso_bytes) == special_str
+        
+        # Test with invalid UTF-8 but valid latin-1
+        invalid_utf8 = b'\xff\xfe\x00\xe9'
+        result = decode_if_bytes(invalid_utf8)
+        assert isinstance(result, str)
+        assert len(result) > 0
+

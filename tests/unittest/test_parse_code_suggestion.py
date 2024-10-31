@@ -76,3 +76,13 @@ class TestParseCodeSuggestion:
         }
         expected_output = '   **suggestion:** Suggestion 2     \n   **description:** Description 2     \n  - **code example:**\n    - **before:**\n        ```\n        Before 2\n        ```\n    - **after:**\n        ```\n        After 2\n        ```\n\n'  # noqa: E501
         assert parse_code_suggestion(code_suggestions) == expected_output
+
+    def test_parse_code_suggestion_invalid_link(self):
+        code_suggestion = {
+            'relevant_file': 'test.py',
+            'relevant_line': 'line 10',  # No link format
+            'suggestion': 'Add error handling'
+        }
+        expected_output = '<table><tr><td>relevant file</td><td>test.py</td></tr><tr><td>relevant line</td><td>line 10</td></tr><tr><td>suggestion &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td>\n\n<strong>\n\nAdd error handling\n\n</strong>\n</td></tr></table><hr>'
+        assert parse_code_suggestion(code_suggestion, gfm_supported=True) == expected_output
+

@@ -6,6 +6,10 @@ import yaml
 from yaml.scanner import ScannerError
 
 from pr_agent.algo.utils import load_yaml
+from pr_agent.algo.utils import string_to_uniform_number
+from pr_agent.algo.utils import is_value_no
+from pr_agent.algo.utils import unique_strings
+from pr_agent.algo.utils import emphasize_header
 
 
 class TestLoadYaml:
@@ -47,6 +51,56 @@ PR Feedback:
 
         expected_output = [{'relevant file': 'src/app.py:\n', 'suggestion content': 'The print statement is outside inside the if __name__ ==:'}]
         assert load_yaml(yaml_str) == expected_output
+
+    def test_string_to_uniform_number(self):
+        # Test basic string conversion
+        result = string_to_uniform_number("test")
+        assert 0 <= result <= 1
+        
+        # Test different strings give different numbers
+        num1 = string_to_uniform_number("string1")
+        num2 = string_to_uniform_number("string2")
+        assert num1 != num2
+        
+        # Test same string gives same number
+        assert string_to_uniform_number("test") == string_to_uniform_number("test")
+        
+        # Test empty string
+        result = string_to_uniform_number("")
+        assert 0 <= result <= 1
+
+
+    def test_is_value_no_variations(self):
+        assert is_value_no(None) is True
+        assert is_value_no("") is True
+        assert is_value_no("no") is True
+        assert is_value_no("none") is True
+        assert is_value_no("false") is True
+        assert is_value_no("NO") is True
+        assert is_value_no("yes") is False
+        assert is_value_no("true") is False
+
+
+    def test_unique_strings_with_duplicates(self):
+        input_list = ["apple", "banana", "apple", "cherry", "banana"]
+        result = unique_strings(input_list)
+        expected = ["apple", "banana", "cherry"]
+        assert result == expected
+        
+        # Test with empty list
+        assert unique_strings([]) == []
+        
+        # Test with non-list input
+        assert unique_strings("not a list") == "not a list"
+
+
+    def test_emphasize_header_with_reference(self):
+        text = "Title: This is a test"
+        reference_link = "https://example.com"
+        result = emphasize_header(text, only_markdown=True, reference_link=reference_link)
+        expected = "[**Title:**](https://example.com)\n This is a test"
+        assert result == expected
+
 
 
 

@@ -17,3 +17,25 @@ class TestClipTokens:
         result = clip_tokens(text, max_tokens)
         expected_results = 'line1\nline2\nline3\n\n...(truncated)'
         assert result == expected_results
+
+    def test_clip_delete_last_line(self):
+        text = "line1\nline2\nline3"
+        max_tokens = 5
+        result = clip_tokens(text, max_tokens, delete_last_line=True)
+        expected = "line1\n...(truncated)"
+        assert result == expected
+
+
+    def test_clip_negative_tokens(self):
+        text = "some text"
+        max_tokens = -1
+        result = clip_tokens(text, max_tokens)
+        assert result == ""
+
+
+    def test_clip_empty_text(self):
+        text = ""
+        max_tokens = 10
+        result = clip_tokens(text, max_tokens)
+        assert result == ""
+

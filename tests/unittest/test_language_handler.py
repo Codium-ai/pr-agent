@@ -121,3 +121,55 @@ class TestSortFilesByMainLanguages:
             {'language': 'Other', 'files': []}
         ]
         assert sort_files_by_main_languages(languages, files) == expected_output
+
+    def test_sort_files_other_extensions(self):
+        languages = {'Python': 10}
+        files = [
+            type('', (object,), {'filename': 'file1.py'})(),
+            type('', (object,), {'filename': 'file2.txt'})(),
+            type('', (object,), {'filename': 'file3.md'})()
+        ]
+        result = sort_files_by_main_languages(languages, files)
+        expected_output = [
+            {'language': 'Python', 'files': [files[0]]},
+            {'language': 'Other', 'files': [files[1], files[2]]}
+        ]
+        assert result == expected_output
+
+
+    def test_is_valid_file_with_extra_extensions(self):
+        from pr_agent.algo.language_handler import is_valid_file
+        from pr_agent.config_loader import get_settings
+        
+        # Enable extra bad extensions
+        get_settings().config.use_extra_bad_extensions = True
+        
+        # Test with a file extension that's in the extra bad extensions list
+        assert is_valid_file('test.lock') == False
+
+
+    def test_is_valid_file_none_filename(self):
+        from pr_agent.algo.language_handler import is_valid_file
+        assert is_valid_file(None) == False
+
+
+    def test_filter_bad_extensions_with_extra_extensions(self):
+        # Create test files with both default and extra bad extensions
+        files = [
+            type('', (object,), {'filename': 'file1.py'})(),
+            type('', (object,), {'filename': 'file2.pdf'})(),  # default bad extension
+            type('', (object,), {'filename': 'file3.lock'})()  # extra bad extension
+        ]
+        languages = {'Python': 10}
+        
+        # Enable extra bad extensions
+        from pr_agent.config_loader import get_settings
+        get_settings().config.use_extra_bad_extensions = True
+        
+        result = sort_files_by_main_languages(languages, files)
+        expected_output = [
+            {'language': 'Python', 'files': [files[0]]},
+            {'language': 'Other', 'files': []}
+        ]
+        assert result == expected_output
+

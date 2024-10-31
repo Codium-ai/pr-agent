@@ -187,3 +187,27 @@ class TestCodeCommitProvider:
         input = "## PR Feedback\n<details><summary>Code feedback:</summary>\nfile foo\n</summary>\n"
         expect = "## PR Feedback\nCode feedback:\nfile foo\n\n"
         assert CodeCommitProvider._remove_markdown_html(input) == expect
+
+    def test_get_languages(self):
+        with patch.object(CodeCommitProvider, "__init__", lambda x, y: None):
+            provider = CodeCommitProvider(None)
+            
+            # Mock get_files() to return test files
+            test_files = [
+                CodeCommitFile("old.py", "blob1", "new.py", "blob2", EDIT_TYPE.MODIFIED),
+                CodeCommitFile("test.js", "blob3", "test.js", "blob4", EDIT_TYPE.MODIFIED),
+                CodeCommitFile("style.css", "blob5", "style.css", "blob6", EDIT_TYPE.MODIFIED)
+            ]
+            provider.get_files = lambda: test_files
+            
+            # Test language detection
+            languages = provider.get_languages()
+            
+            assert isinstance(languages, dict)
+            assert "python" in languages
+            assert "javascript" in languages
+            assert "css" in languages
+            assert languages["python"] == 33
+            assert languages["javascript"] == 33
+            assert languages["css"] == 33
+

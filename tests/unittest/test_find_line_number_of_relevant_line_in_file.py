@@ -65,3 +65,27 @@ class TestFindLineNumberOfRelevantLineInFile:
         relevant_line_in_file = 'relevant_line'
         expected = (-1, -1)
         assert find_line_number_of_relevant_line_in_file(diff_files, relevant_file, relevant_line_in_file) == expected
+
+    def test_strip_plus_and_whitespace(self):
+        diff_files = [
+            FilePatchInfo(base_file='file1', head_file='file1', 
+                patch='@@ -1,1 +1,2 @@\n line1\n+  relevant_line  \n', 
+                filename='file1')
+        ]
+        relevant_file = 'file1'
+        relevant_line_in_file = '+relevant_line'  # Model added + but line exists with different whitespace
+        expected = (2, 2)  # Position 2 in patch, absolute position 2 in new file
+        assert find_line_number_of_relevant_line_in_file(diff_files, relevant_file, relevant_line_in_file) == expected
+
+
+    def test_absolute_position_matching(self):
+        diff_files = [
+            FilePatchInfo(base_file='file1', head_file='file1', 
+                patch='@@ -1,3 +1,4 @@\n line1\n+new_line\n line2\n line3\n', 
+                filename='file1')
+        ]
+        relevant_file = 'file1'
+        relevant_line_in_file = 'line2'
+        absolute_position = 3  # line2 is at absolute position 3 in the new file
+        expected = (3, 3)  # (position in patch, absolute position)
+        assert find_line_number_of_relevant_line_in_file(diff_files, relevant_file, relevant_line_in_file, absolute_position) == expected

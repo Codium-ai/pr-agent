@@ -1,5 +1,8 @@
 from unittest.mock import MagicMock
 from pr_agent.git_providers.codecommit_client import CodeCommitClient
+import botocore.exceptions
+from unittest.mock import patch
+import pytest
 
 
 class TestCodeCommitProvider:
@@ -134,3 +137,112 @@ class TestCodeCommitProvider:
         assert pr.targets[0].source_branch == "branch1"
         assert pr.targets[0].destination_commit == "commit2"
         assert pr.targets[0].destination_branch == "branch2"
+
+    def test_publish_comment_repo_not_exist(self):
+        api = CodeCommitClient()
+        api.boto_client = MagicMock()
+        
+        error_response = {'Error': {'Code': 'RepositoryDoesNotExistException'}}
+        api.boto_client.post_comment_for_pull_request.side_effect = botocore.exceptions.ClientError(error_response, 'operation')
+        
+        with pytest.raises(ValueError, match="Repository does not exist: test_repo"):
+            api.publish_comment(
+                "test_repo",
+                123,
+                "dest_commit",
+                "source_commit",
+                "Test comment"
+            )
+
+
+    def test_publish_comment_with_annotation(self):
+        api = CodeCommitClient()
+        api.boto_client = MagicMock()
+        
+        api.publish_comment(
+            "test_repo",
+            123,
+            "dest_commit",
+            "source_commit",
+            "Test comment",
+            "test.py",
+            10
+        )
+        
+        api.boto_client.post_comment_for_pull_request.assert_called_once_with(
+            pullRequestId="123",
+            repositoryName="test_repo",
+            beforeCommitId="dest_commit",
+            afterCommitId="source_commit",
+            content="Test comment",
+            location={
+                "filePath": "test.py",
+                "filePosition": 10,
+                "relativeFileVersion": "AFTER",
+            },
+        )
+
+
+    def test_get_differences_repo_not_exist(self):
+        api = CodeCommitClient()
+        api.boto_client = MagicMock()
+        
+        error_response = {'Error': {'Code': 'RepositoryDoesNotExistException'}}
+        api.boto_client.get_paginator.return_value.paginate.side_effect = botocore.exceptions.ClientError(error_response, 'operation')
+        
+        with pytest.raises(ValueError, match="CodeCommit cannot retrieve differences: Repository does not exist: test_repo"):
+            api.get_differences("test_repo", "commit1", "commit2")
+
+
+    def test_get_file_errors(self):
+        api = CodeCommitClient()
+        api.boto_client = MagicMock()
+        
+        # Test repository does not exist
+        error_response = {'Error': {'Code': 'RepositoryDoesNotExistException'}}
+        api.boto_client.get_file.side_effect = botocore.exceptions.ClientError(error_response, 'operation')
+        with pytest.raises(ValueError, match="CodeCommit cannot retrieve PR: Repository does not exist: test_repo"):
+            api.get_file("test_repo", "test.py", "hash123")
+        
+        # Test file does not exist but is optional
+        error_response = {'Error': {'Code': 'FileDoesNotExistException'}}
+        api.boto_client.get_file.side_effect = botocore.exceptions.ClientError(error_response, 'operation')
+        result = api.get_file("test_repo", "test.py", "hash123", optional=True)
+        assert result == ""
+
+
+    def test_publish_description_errors(self):
+        api = CodeCommitClient()
+        api.boto_client = MagicMock()
+        
+        # Test PR does not exist
+        error_response = {'Error': {'Code': 'PullRequestDoesNotExistException'}}
+        api.boto_client.update_pull_request_title.side_effect = botocore.exceptions.ClientError(error_response, 'operation')
+        with pytest.raises(ValueError, match="PR number does not exist: 123"):
+            api.publish_description(123, "title", "body")
+        
+        # Test invalid title
+        error_response = {'Error': {'Code': 'InvalidTitleException'}}
+        api.boto_client.update_pull_request_title.side_effect = botocore.exceptions.ClientError(error_response, 'operation')
+        with pytest.raises(ValueError, match="Invalid title for PR number: 123"):
+            api.publish_description(123, "title", "body")
+        
+        # Test PR already closed
+        error_response = {'Error': {'Code': 'PullRequestAlreadyClosedException'}}
+        api.boto_client.update_pull_request_title.side_effect = botocore.exceptions.ClientError(error_response, 'operation')
+        with pytest.raises(ValueError, match="PR is already closed: PR number: 123"):
+            api.publish_description(123, "title", "body")
+
+
+    def test_connect_boto_client_failure(self):
+        api = CodeCommitClient()
+        with patch('boto3.client', side_effect=Exception("Connection failed")):
+            with pytest.raises(ValueError, match="Failed to connect to AWS CodeCommit: Connection failed"):
+                api._connect_boto_client()
+
+
+    def test_is_supported(self):
+        api = CodeCommitClient()
+        assert api.is_supported("gfm_markdown") is False
+        assert api.is_supported("other_capability") is True
+

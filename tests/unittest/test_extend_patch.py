@@ -155,3 +155,28 @@ class TestExtendedPatchMoreLines:
 
         p0_extended = patches_extended_with_extra_lines[0].strip()
         assert p0_extended == '## file1\n\n@@ -3,8 +3,8 @@ \n line0\n line1\n-original content\n+modified content\n line2\n line3\n line4\n line5\n line6'
+
+
+    def test_skip_patch_by_extension(self):
+        # Set up extension types to skip
+        get_settings().config.patch_extension_skip_types = ['.exe', '.bin']
+        
+        original_file_str = 'line1\nline2\nline3'
+        patch_str = '@@ -1,2 +1,2 @@\n-line1\n+new_line1\n line2'
+        
+        # Test with file that should be skipped
+        result = extend_patch(original_file_str, patch_str, 
+                            patch_extra_lines_before=1,
+                            patch_extra_lines_after=1,
+                            filename="test.exe")
+        assert result == patch_str  # Should return original patch without changes
+        
+        # Test with file that should not be skipped
+        result = extend_patch(original_file_str, patch_str,
+                            patch_extra_lines_before=1,
+                            patch_extra_lines_after=1, 
+                            filename="test.txt")
+        assert result != patch_str  # Should return modified patch
+        
+        # Reset settings
+        get_settings().config.patch_extension_skip_types = []
