@@ -3,6 +3,8 @@
 from pr_agent.algo.utils import try_fix_json
 
 
+from pr_agent.algo.utils import unique_strings
+from pr_agent.algo.utils import emphasize_header
 class TestTryFixJson:
     # Tests that JSON with complete 'Code suggestions' section returns expected output
     def test_incomplete_code_suggestions(self):
@@ -80,3 +82,21 @@ class TestTryFixJson:
             }
         }
         assert try_fix_json(review) == expected_output
+
+    def test_unique_strings_empty_list(self):
+        input_list = []
+        expected_output = []
+        assert unique_strings(input_list) == expected_output
+
+
+    def test_unique_strings_all_unique(self):
+        input_list = ["apple", "banana", "cherry"]
+        expected_output = ["apple", "banana", "cherry"]
+        assert unique_strings(input_list) == expected_output
+
+
+    def test_emphasize_header_no_colon(self):
+        text = "Header without colon"
+        result = emphasize_header(text)
+        assert result == text
+

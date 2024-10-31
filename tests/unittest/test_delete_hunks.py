@@ -82,3 +82,25 @@ class TestOmitDeletionHunks:
         patch_lines = ['@@ -1,1 +1,0 @@\n', '-deleted line\n']
         expected_output = ''
         assert omit_deletion_hunks(patch_lines) == expected_output
+
+    def test_extend_patch_exception_handling(self):
+        from pr_agent.algo.git_patch_processing import extend_patch
+        original_file_str = "original content"
+        patch_str = "@@ -1,0 +1,1 @@\n+added line\n"
+        
+        # Mocking process_patch_lines to raise an exception
+        def mock_process_patch_lines(*args, **kwargs):
+            raise Exception("Mocked exception")
+        
+        # Replace the real process_patch_lines with the mock
+        import pr_agent.algo.git_patch_processing as gpp
+        original_process_patch_lines = gpp.process_patch_lines
+        gpp.process_patch_lines = mock_process_patch_lines
+        
+        try:
+            result = extend_patch(original_file_str, patch_str, 1, 1)
+            assert result == patch_str
+        finally:
+            # Restore the original function
+            gpp.process_patch_lines = original_process_patch_lines
+

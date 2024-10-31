@@ -121,3 +121,18 @@ class TestSortFilesByMainLanguages:
             {'language': 'Other', 'files': []}
         ]
         assert sort_files_by_main_languages(languages, files) == expected_output
+
+    def test_files_with_unlisted_extensions(self):
+        languages = {'Python': 10, 'Java': 5}
+        files = [
+            type('', (object,), {'filename': 'file1.py'})(),
+            type('', (object,), {'filename': 'file2.java'})(),
+            type('', (object,), {'filename': 'file3.unknown'})()  # .unknown is not listed in any language
+        ]
+        expected_output = [
+            {'language': 'Python', 'files': [files[0]]},
+            {'language': 'Java', 'files': [files[1]]},
+            {'language': 'Other', 'files': [files[2]]}
+        ]
+        assert sort_files_by_main_languages(languages, files) == expected_output
+

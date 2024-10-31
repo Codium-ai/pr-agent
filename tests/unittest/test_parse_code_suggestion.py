@@ -76,3 +76,18 @@ class TestParseCodeSuggestion:
         }
         expected_output = '   **suggestion:** Suggestion 2     \n   **description:** Description 2     \n  - **code example:**\n    - **before:**\n        ```\n        Before 2\n        ```\n    - **after:**\n        ```\n        After 2\n        ```\n\n'  # noqa: E501
         assert parse_code_suggestion(code_suggestions) == expected_output
+
+    def test_emphasize_header_exception(self):
+        from pr_agent.algo.utils import emphasize_header
+        text = None  # This will cause an exception in the function
+        expected_output = None
+        assert emphasize_header(text) == expected_output
+
+
+    def test_get_setting_global(self):
+        from pr_agent.algo.utils import get_setting
+        from pr_agent.config_loader import global_settings
+        key = "non_existing_key"
+        expected_output = global_settings.get(key.upper(), None)
+        assert get_setting(key) == expected_output
+

@@ -65,3 +65,13 @@ class TestFindLineNumberOfRelevantLineInFile:
         relevant_line_in_file = 'relevant_line'
         expected = (-1, -1)
         assert find_line_number_of_relevant_line_in_file(diff_files, relevant_file, relevant_line_in_file) == expected
+
+    def test_relevant_line_found_with_absolute_position(self):
+        diff_files = [
+            FilePatchInfo(base_file='file1', head_file='file1', patch='@@ -1,1 +1,2 @@\n-line1\n+line2\n+relevant_line\n', filename='file1')
+        ]
+        relevant_file = 'file1'
+        relevant_line_in_file = 'relevant_line'
+        absolute_position = 2
+        expected = (3, 2) # (position in patch, absolute_position in new file)
+        assert find_line_number_of_relevant_line_in_file(diff_files, relevant_file, relevant_line_in_file, absolute_position) == expected

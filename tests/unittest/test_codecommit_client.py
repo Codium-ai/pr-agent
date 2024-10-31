@@ -1,5 +1,6 @@
 from unittest.mock import MagicMock
 from pr_agent.git_providers.codecommit_client import CodeCommitClient
+import botocore
 
 
 class TestCodeCommitProvider:
@@ -134,3 +135,53 @@ class TestCodeCommitProvider:
         assert pr.targets[0].source_branch == "branch1"
         assert pr.targets[0].destination_commit == "commit2"
         assert pr.targets[0].destination_branch == "branch2"
+
+
+    def test_get_pr_pull_request_does_not_exist(self):
+        api = CodeCommitClient()
+        api.boto_client = MagicMock()
+        api.boto_client.get_pull_request.side_effect = botocore.exceptions.ClientError(
+            {"Error": {"Code": "PullRequestDoesNotExistException"}}, "get_pull_request"
+        )
+        try:
+            api.get_pr("my_test_repo", 999)
+        except ValueError as e:
+            assert "CodeCommit cannot retrieve PR: PR number does not exist: 999" in str(e)
+
+
+    def test_get_file_repository_does_not_exist(self):
+        api = CodeCommitClient()
+        api.boto_client = MagicMock()
+        api.boto_client.get_file.side_effect = botocore.exceptions.ClientError(
+            {"Error": {"Code": "RepositoryDoesNotExistException"}}, "get_file"
+        )
+        try:
+            api.get_file("non_existent_repo", "file_path", "sha_hash")
+        except ValueError as e:
+            assert "CodeCommit cannot retrieve PR: Repository does not exist: non_existent_repo" in str(e)
+
+
+    def test_get_differences_generic_exception(self):
+        api = CodeCommitClient()
+        api.boto_client = MagicMock()
+        api.boto_client.get_paginator.return_value.paginate.side_effect = Exception("Generic error")
+        try:
+            api.get_differences("my_test_repo", "commit1", "commit2")
+        except ValueError as e:
+            assert "CodeCommit cannot retrieve differences for commit2..commit1" in str(e)
+
+
+    def test_is_supported_with_supported_capability(self):
+        api = CodeCommitClient()
+        assert api.is_supported("other_capability")
+
+
+    def test_get_file_empty_path(self):
+        api = CodeCommitClient()
+        content = api.get_file("repo_name", "", "sha_hash")
+        assert content == ""
+
+
+    def test_is_supported_with_unsupported_capability(self):
+        api = CodeCommitClient()
+        assert not api.is_supported("gfm_markdown")

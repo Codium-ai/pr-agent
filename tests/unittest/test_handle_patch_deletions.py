@@ -4,6 +4,8 @@ import logging
 from pr_agent.algo.git_patch_processing import handle_patch_deletions
 from pr_agent.config_loader import get_settings
 
+from pr_agent.algo.git_patch_processing import extend_patch
+from pr_agent.algo.git_patch_processing import decode_if_bytes
 """
 Code Analysis
 
@@ -70,3 +72,18 @@ class TestHandlePatchDeletions:
         expected_patch = '--- a/file.py\n+++ b/file.py\n@@ -1,2 +1,2 @@\n-foo\n-bar'
         assert handle_patch_deletions(patch, original_file_content_str, new_file_content_str,
                                       file_name) == expected_patch
+
+    def test_extend_patch_skip_filename(self):
+        original_file_str = 'line1\nline2\nline3\n'
+        patch_str = '--- a/file.skip\n+++ b/file.skip\n@@ -1,3 +1,3 @@\n-line1\n+line1_modified\n'
+        filename = 'file.skip'
+        get_settings().config.patch_extension_skip_types = ['.skip']
+        result = extend_patch(original_file_str, patch_str, 1, 1, filename)
+        assert result == patch_str
+
+
+    def test_decode_if_bytes_utf8(self):
+        byte_str = b'hello world'
+        result = decode_if_bytes(byte_str)
+        assert result == 'hello world'
+
