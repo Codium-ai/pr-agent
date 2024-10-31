@@ -3,7 +3,7 @@
 
 You can use the Bitbucket Pipeline system to run Qodo Merge on every pull request open or update.
 
-1. Add the following file in your repository bitbucket_pipelines.yml
+1. Add the following file in your repository bitbucket-pipelines.yml
 
 ```yaml
 pipelines:
