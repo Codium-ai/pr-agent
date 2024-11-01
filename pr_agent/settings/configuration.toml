@@ -7,6 +7,7 @@ fallback_models=["gpt-4o-2024-05-13"]
 git_provider="github"
 publish_output=true
 publish_output_progress=true
+publish_output_no_suggestions=true
 verbosity_level=0 # 0,1,2
 use_extra_bad_extensions=false
 # Configurations

@@ -113,12 +113,15 @@ class PRCodeSuggestions:
             if (data is None or 'code_suggestions' not in data or not data['code_suggestions']
                     and get_settings().config.publish_output):
                 get_logger().warning('No code suggestions found for the PR.')
-                pr_body = "## PR Code Suggestions ✨\n\nNo code suggestions found for the PR."
-                get_logger().debug(f"PR output", artifact=pr_body)
-                if self.progress_response:
-                    self.git_provider.edit_comment(self.progress_response, body=pr_body)
-                else:
-                    self.git_provider.publish_comment(pr_body)
+
+                if (get_settings().config.publish_output_no_suggestions):
+                    pr_body = "## PR Code Suggestions ✨\n\nNo code suggestions found for the PR."
+                    get_logger().debug(f"PR output", artifact=pr_body)
+                    if self.progress_response:
+                        self.git_provider.edit_comment(self.progress_response, body=pr_body)
+                    else:
+                        self.git_provider.publish_comment(pr_body)
+
                 return
 
             if (not self.is_extended and get_settings().pr_code_suggestions.rank_suggestions) or \
