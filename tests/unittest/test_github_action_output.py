@@ -48,3 +48,14 @@ class TestGitHubOutput:
         github_action_output(output_data, key_name)
         
         assert not os.path.exists(str(tmp_path / 'output'))
+
+    def test_clip_tokens_exceeds_max_with_dots_and_delete(self):
+        from pr_agent.algo.utils import clip_tokens
+    
+        text = "This is a sample text that will be clipped because it exceeds the maximum number of allowed tokens."
+        max_tokens = 10
+        expected_output_start = "This is a sample text that will be clipped because it exceeds the ma..."
+        # Since the exact clipping depends on the TokenEncoder, we check the presence of truncation
+        result = clip_tokens(text, max_tokens, add_three_dots=True, delete_last_line=True)
+        assert result.endswith("...(truncated)")
+        assert len(result) <= len(text)

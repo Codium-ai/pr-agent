@@ -6,6 +6,8 @@ import yaml
 from yaml.scanner import ScannerError
 
 from pr_agent.algo.utils import load_yaml
+from pr_agent.algo.utils import emphasize_header
+from pr_agent.algo.utils import get_setting, global_settings
 
 
 class TestLoadYaml:
@@ -47,6 +49,30 @@ PR Feedback:
 
         expected_output = [{'relevant file': 'src/app.py:\n', 'suggestion content': 'The print statement is outside inside the if __name__ ==:'}]
         assert load_yaml(yaml_str) == expected_output
+
+    def test_emphasize_header_no_colon(self):
+        # Arrange
+        text = "This is a header without colon"
+        expected_output = "This is a header without colon"
+    
+        # Act
+        result = emphasize_header(text)
+    
+        # Assert
+        assert result == expected_output
+
+
+    def test_get_setting_exception(self, mocker):
+        # Arrange
+        with mocker.patch('pr_agent.algo.utils.context.get', side_effect=Exception("Context error")):
+            expected = global_settings.get('NON_EXISTENT_KEY', None)
+        
+        # Act
+        result = get_setting('non_existent_key')
+        
+        # Assert
+        assert result == expected
+
 
 
 

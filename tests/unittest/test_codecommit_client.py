@@ -1,5 +1,7 @@
 from unittest.mock import MagicMock
 from pr_agent.git_providers.codecommit_client import CodeCommitClient
+from unittest.mock import MagicMock
+import botocore
 
 
 class TestCodeCommitProvider:
@@ -134,3 +136,37 @@ class TestCodeCommitProvider:
         assert pr.targets[0].source_branch == "branch1"
         assert pr.targets[0].destination_commit == "commit2"
         assert pr.targets[0].destination_branch == "branch2"
+
+
+    def test_get_file_file_not_exist_optional_false(self):
+        api = CodeCommitClient()
+        api.boto_client = MagicMock()
+        error_response = {"Error": {"Code": "FileDoesNotExistException", "Message": "File does not exist"}}
+        api.boto_client.get_file.side_effect = botocore.exceptions.ClientError(error_response, 'get_file')
+    
+        try:
+            api.get_file("repo", "nonexistent_file.py", "sha_hash", optional=False)
+            assert False, "Expected ValueError to be raised"
+        except ValueError as e:
+            assert "CodeCommit cannot retrieve file 'nonexistent_file.py' from repository 'repo'" in str(e)
+
+
+    def test_get_differences_repository_not_exist(self):
+        api = CodeCommitClient()
+        api.boto_client = MagicMock()
+        error_response = {"Error": {"Code": "RepositoryDoesNotExistException", "Message": "Repository does not exist"}}
+        paginator_mock = MagicMock()
+        paginator_mock.paginate.side_effect = botocore.exceptions.ClientError(error_response, 'get_differences')
+        api.boto_client.get_paginator.return_value = paginator_mock
+    
+        try:
+            api.get_differences("nonexistent_repo", "commit1", "commit2")
+            assert False, "Expected ValueError to be raised"
+        except ValueError as e:
+            assert "Repository does not exist: nonexistent_repo" in str(e)
+
+
+    def test_get_file_empty_path(self):
+        api = CodeCommitClient()
+        content = api.get_file("repo", "", "sha")
+        assert content == ""

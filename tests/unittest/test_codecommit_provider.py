@@ -187,3 +187,41 @@ class TestCodeCommitProvider:
         input = "## PR Feedback\n<details><summary>Code feedback:</summary>\nfile foo\n</summary>\n"
         expect = "## PR Feedback\nCode feedback:\nfile foo\n\n"
         assert CodeCommitProvider._remove_markdown_html(input) == expect
+
+    def test_set_pr_valid_url(self):
+        valid_url = "https://us-east-1.console.aws.amazon.com/codesuite/codecommit/repositories/valid_repo/pull-requests/456"
+        mock_pr = PullRequestCCMimic("Valid PR Title", [])
+        
+        with patch.object(CodeCommitProvider, "_parse_pr_url", return_value=("valid_repo", 456)):
+            with patch.object(CodeCommitProvider, "_get_pr", return_value=mock_pr):
+                provider = CodeCommitProvider()
+                provider.set_pr(valid_url)
+                
+                assert provider.repo_name == "valid_repo"
+                assert provider.pr_num == 456
+                assert provider.pr == mock_pr
+
+
+    def test_is_supported_capabilities(self):
+        provider = CodeCommitProvider()
+        
+        # Unsupported capabilities
+        unsupported_capabilities = [
+            "get_issue_comments",
+            "create_inline_comment",
+            "publish_inline_comments",
+            "get_labels",
+            "gfm_markdown"
+        ]
+        for capability in unsupported_capabilities:
+            assert not provider.is_supported(capability), f"Capability {capability} should not be supported"
+        
+        # Supported capabilities
+        supported_capabilities = [
+            "some_supported_capability_1",
+            "some_supported_capability_2",
+            "another_supported_capability"
+        ]
+        for capability in supported_capabilities:
+            assert provider.is_supported(capability), f"Capability {capability} should be supported"
+

@@ -17,3 +17,101 @@ class TestClipTokens:
         result = clip_tokens(text, max_tokens)
         expected_results = 'line1\nline2\nline3\n\n...(truncated)'
         assert result == expected_results
+
+    def test_set_pr_string(self):
+        from pr_agent.algo.utils import set_pr_string
+        
+        repo_name = "example-repo"
+        pr_number = 42
+        expected = "example-repo#42"
+        assert set_pr_string(repo_name, pr_number) == expected
+
+
+    def test_is_value_no(self):
+        from pr_agent.algo.utils import is_value_no
+        
+        # Test with None
+        assert is_value_no(None) == True
+        
+        # Test with empty string
+        assert is_value_no("") == True
+        
+        # Test with 'no'
+        assert is_value_no("no") == True
+        
+        # Test with 'No'
+        assert is_value_no("No") == True
+        
+        # Test with 'none'
+        assert is_value_no("none") == True
+        
+        # Test with 'false'
+        assert is_value_no("false") == True
+        
+        # Test with 'False'
+        assert is_value_no("False") == True
+        
+        # Test with 'yes'
+        assert is_value_no("yes") == False
+        
+        # Test with 'true'
+        assert is_value_no("true") == False
+        
+        # Test with non-string input
+        assert is_value_no(0) == True
+        assert is_value_no(1) == False
+        assert is_value_no([]) == True
+        assert is_value_no([1,2,3]) == False
+
+
+    def test_convert_str_to_datetime(self):
+        from pr_agent.algo.utils import convert_str_to_datetime
+        from datetime import datetime
+    
+        # Test with a valid date string
+        date_str = 'Mon, 01 Jan 2022 12:00:00 UTC'
+        expected_datetime = datetime(2022, 1, 1, 12, 0, 0)
+        assert convert_str_to_datetime(date_str) == expected_datetime
+    
+        # Test with another valid date string
+        date_str2 = 'Tue, 15 Mar 2022 08:30:45 UTC'
+        expected_datetime2 = datetime(2022, 3, 15, 8, 30, 45)
+        assert convert_str_to_datetime(date_str2) == expected_datetime2
+    
+        # Test with an invalid date string format
+        with pytest.raises(ValueError):
+            convert_str_to_datetime('Invalid Date String')
+    
+        # Test with empty string
+        with pytest.raises(ValueError):
+            convert_str_to_datetime('')
+
+
+    def test_unique_strings_empty_and_duplicates(self):
+        from pr_agent.algo.utils import unique_strings
+    
+        # Test with empty list
+        assert unique_strings([]) == []
+    
+        # Test with a list containing duplicates
+        input_list = ['apple', 'banana', 'apple', 'cherry', 'banana']
+        expected_output = ['apple', 'banana', 'cherry']
+        assert unique_strings(input_list) == expected_output
+    
+        # Test with None input
+        assert unique_strings(None) is None
+    
+        # Test with invalid input type
+        input_invalid = "not a list"
+        assert unique_strings(input_invalid) == input_invalid
+
+
+    def test_get_setting_with_key_in_context(self):
+        from pr_agent.algo.utils import get_setting
+        import unittest.mock
+    
+        with unittest.mock.patch('pr_agent.algo.utils.context') as mock_context:
+            mock_context.get.return_value = {'TEST_KEY': 'test_value'}
+            result = get_setting('test_key')
+            assert result == 'test_value'
+
