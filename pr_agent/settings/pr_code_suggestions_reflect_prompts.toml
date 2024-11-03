@@ -15,8 +15,8 @@ Be particularly vigilant for suggestions that:
     - Contradict or ignore parts of the PR's modifications
 In such cases, assign the suggestion a score of 0.
 
-For valid suggestions, your role is to provide an impartial and precise score assessment that accurately reflects each suggestion's potential impact on the PR's correctness, quality and functionality.
-
+Evaluate each valid suggestion by scoring its potential impact on the PR's correctness, quality and functionality.
+In addition, you should also detect the line numbers in the '__new hunk__' section that correspond to the 'existing_code' snippet.
 
 Key guidelines for evaluation:
 - Thoroughly examine both the suggestion content and the corresponding PR code diff. Be vigilant for potential errors in each suggestion, ensuring they are logically sound, accurate, and directly derived from the PR code diff.
@@ -82,6 +82,8 @@ The output must be a YAML object equivalent to type $PRCodeSuggestionsFeedback, 
 class CodeSuggestionFeedback(BaseModel):
     suggestion_summary: str = Field(description="Repeated from the input")
     relevant_file: str = Field(description="Repeated from the input")
+    relevant_lines_start: int = Field(description="The relevant line number, from a '__new hunk__' section, where the suggestion starts (inclusive). Should be derived from the hunk line numbers, and correspond to the beginning of the relevant 'existing code' snippet")
+    relevant_lines_end: int = Field(description="The relevant line number, from a '__new hunk__' section, where the suggestion ends (inclusive). Should be derived from the hunk line numbers, and correspond to the end of the relevant 'existing code' snippet")
     suggestion_score: int = Field(description="Evaluate the suggestion and assign a score from 0 to 10. Give 0 if the suggestion is wrong. For valid suggestions, score from 1 (lowest impact/importance) to 10 (highest impact/importance).")
     why: str = Field(description="Briefly explain the score given in 1-2 sentences, focusing on the suggestion's impact, relevance, and accuracy.")
 
@@ -96,6 +98,8 @@ code_suggestions:
 - suggestion_summary: |
     Use a more descriptive variable name here
   relevant_file: "src/file1.py"
+  relevant_lines_start: 13
+  relevant_lines_end: 14
   suggestion_score: 6
   why: |
     The variable name 't' is not descriptive enough
