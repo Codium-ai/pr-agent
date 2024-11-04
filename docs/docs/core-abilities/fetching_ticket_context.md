@@ -9,7 +9,7 @@ This integration enriches the review process by automatically surfacing relevant
 Ticket Recognition Requirements:
 
 1. The PR description should contain a link to the ticket.
-2. For Jira tickets, you should follow the instructions in #jira-integration in order to authenticate with Jira.
+2. For Jira tickets, you should follow the instructions in [Jira Integration](https://qodo-merge-docs.qodo.ai/core-abilities/fetching_ticket_context/#jira-integration) in order to authenticate with Jira.
 
 
 ### Describe tool
@@ -106,7 +106,7 @@ jira_api_email = "YOUR_EMAIL"
 Currently, we only support the Personal Access Token (PAT) Authentication method.
 
 1. Create a [Personal Access Token (PAT)](https://confluence.atlassian.com/enterprise/using-personal-access-tokens-1026032365.html) in your Jira account
-2. In your [configuration file](https://qodo-merge-docs.qodo.ai/usage-guide/configuration_options/) add the following lines:
+2. In your Configuration file/Environment variables/Secrets file, add the following lines:
 
 ```toml
 [jira]
