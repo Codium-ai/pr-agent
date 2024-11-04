@@ -43,6 +43,13 @@ Qode Merge PR-Agent aims to help efficiently review and handle pull requests, by
   
 ## News and Updates
 
+### November 3, 2024
+
+Meaningful improvement to the quality of code suggestions by separating the code suggestion generation from [line number detection](https://github.com/Codium-ai/pr-agent/pull/1338)
+
+<kbd>![image](https://github.com/user-attachments/assets/093c185c-31ca-47a1-a4fe-be7d9335ea66)</kbd>
+
+
 ### October 27, 2024
 
 Qodo Merge PR Agent will now automatically document accepted code suggestions in a dedicated wiki page (`.pr_agent_accepted_suggestions`), enabling users to track historical changes, assess the tool's effectiveness, and learn from previously implemented recommendations in the repository.
