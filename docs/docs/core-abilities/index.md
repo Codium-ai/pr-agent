@@ -1,6 +1,6 @@
 # Core Abilities
 Qodo Merge utilizes a variety of core abilities to provide a comprehensive and efficient code review experience. These abilities include:
-
+- [Fetching ticket context](https://qodo-merge-docs.qodo.ai/core-abilities/fetching_ticket_context/)
 - [Local and global metadata](https://qodo-merge-docs.qodo.ai/core-abilities/metadata/)
 - [Dynamic context](https://qodo-merge-docs.qodo.ai/core-abilities/dynamic_context/)
 - [Self-reflection](https://qodo-merge-docs.qodo.ai/core-abilities/self_reflection/)
