@@ -43,6 +43,11 @@ Qode Merge PR-Agent aims to help efficiently review and handle pull requests, by
   
 ## News and Updates
 
+### November 4, 2024
+
+Qodo Merge PR Agent will now leverage context from Jira or GitHub tickets to enhance the PR Feedback. Read more about this feature 
+[here](https://qodo-merge-docs.qodo.ai/core-abilities/fetching_ticket_context/)
+
 ### November 3, 2024
 
 Meaningful improvement to the quality of code suggestions by separating the code suggestion generation from [line number detection](https://github.com/Codium-ai/pr-agent/pull/1338)
