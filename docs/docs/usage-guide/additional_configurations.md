@@ -160,3 +160,13 @@ ignore_pr_target_branches = ["qa"]
 
 Where the `ignore_pr_source_branches` and `ignore_pr_target_branches` are lists of regex patterns to match the source and target branches you want to ignore.
 They are not mutually exclusive, you can use them together or separately.
+
+
+To allow only specific folders (often needed in large monorepos), set:
+
+```
+[config]
+allow_only_specific_folders=['folder1','folder2']
+```
+
+For the configuration above, automatic feedback will only be triggered when the PR changes include files from 'folder1' or 'folder2'
