@@ -19,7 +19,7 @@ By understanding the reasoning and intent behind modifications, the LLM can offe
 ### Review tool
 Similarly to the `describe` tool, the `review` tool will use the ticket content to provide additional context for the code changes.
 
-In addition, This feature will evaluate how well a Pull Request (PR) adheres to its original purpose/intent as defined by the associated ticket or issue mentioned in the PR description.
+In addition, this feature will evaluate how well a Pull Request (PR) adheres to its original purpose/intent as defined by the associated ticket or issue mentioned in the PR description.
 Each ticket will be assigned a label (Compliance/Alignment level), Indicates the degree to which the PR fulfills its original purpose, Options: Fully compliant, Partially compliant or Not compliant.
 
 
@@ -103,7 +103,7 @@ jira_api_email = "YOUR_EMAIL"
 
 #### Jira Server/Data Center 💎
 
-Currently we only Personal Access Token (PAT) Authentication method.
+Currently, we only support the Personal Access Token (PAT) Authentication method.
 
 1. Create a [Personal Access Token (PAT)](https://confluence.atlassian.com/enterprise/using-personal-access-tokens-1026032365.html) in your Jira account
 2. In your [configuration file](https://qodo-merge-docs.qodo.ai/usage-guide/configuration_options/) add the following lines:
