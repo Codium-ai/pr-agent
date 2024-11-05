@@ -72,13 +72,13 @@ The configuration parameter `pr_commands` defines the list of tools that will be
 ```
 [github_app]
 pr_commands = [
-    "/describe --pr_description.final_update_message=false",
-    "/review --pr_reviewer.num_code_suggestions=0",
-    "/improve",
+    "/describe",
+    "/review",
+    "/improve --pr_code_suggestions.suggestions_score_threshold=5",
 ]
 ```
 This means that when a new PR is opened/reopened or marked as ready for review, Qodo Merge will run the `describe`, `review` and `improve` tools.  
-For the `review` tool, for example, the `num_code_suggestions` parameter will be set to 0.
+For the `improve` tool, for example, the `suggestions_score_threshold` parameter will be set to 5 (suggestions below a score of 5 won't be presented)
 
 You can override the default tool parameters by using one the three options for a [configuration file](https://qodo-merge-docs.qodo.ai/usage-guide/configuration_options/): **wiki**, **local**, or **global**. 
 For example, if your local `.pr_agent.toml` file contains:
@@ -105,7 +105,7 @@ The configuration parameter `push_commands` defines the list of tools that will 
 handle_push_trigger = true
 push_commands = [
     "/describe",
-    "/review  --pr_reviewer.num_code_suggestions=0 --pr_reviewer.final_update_message=false",
+    "/review",
 ]
 ```
 This means that when new code is pushed to the PR, the Qodo Merge will run the `describe` and `review` tools, with the specified parameters.
@@ -148,12 +148,12 @@ After setting up a GitLab webhook, to control which commands will run automatica
 [gitlab]
 pr_commands = [
     "/describe",
-    "/review --pr_reviewer.num_code_suggestions=0",
+    "/review",
     "/improve",
 ]
 ```
 
-the GitLab webhook can also respond to new code that is pushed to an open MR.
+The GitLab webhook can also respond to new code that is pushed to an open MR.
 The configuration toggle `handle_push_trigger` can be used to enable this feature.  
 The configuration parameter `push_commands` defines the list of tools that will be **run automatically** when new code is pushed to the MR.
 ```
@@ -161,7 +161,7 @@ The configuration parameter `push_commands` defines the list of tools that will 
 handle_push_trigger = true
 push_commands = [
     "/describe",
-    "/review  --pr_reviewer.num_code_suggestions=0 --pr_reviewer.final_update_message=false",
+    "/review",
 ]
 ```
 
@@ -182,7 +182,7 @@ Each time you invoke a `/review` tool, it will use the extra instructions you se
 
 
 Note that among other limitations, BitBucket provides relatively low rate-limits for applications (up to 1000 requests per hour), and does not provide an API to track the actual rate-limit usage.
-If you experience lack of responses from Qodo Merge, you might want to set: `bitbucket_app.avoid_full_files=true` in your configuration file.
+If you experience a lack of responses from Qodo Merge, you might want to set: `bitbucket_app.avoid_full_files=true` in your configuration file.
 This will prevent Qodo Merge from acquiring the full file content, and will only use the diff content. This will reduce the number of requests made to BitBucket, at the cost of small decrease in accuracy, as dynamic context will not be applicable.
 
 
@@ -194,12 +194,22 @@ Specifically, set the following values:
 ```
 [bitbucket_app]
 pr_commands = [
-    "/review --pr_reviewer.num_code_suggestions=0",
+    "/review",
     "/improve --pr_code_suggestions.commitable_code_suggestions=true --pr_code_suggestions.suggestions_score_threshold=7",
 ]
 ```
 Note that we set specifically for bitbucket, we recommend using: `--pr_code_suggestions.suggestions_score_threshold=7` and that is the default value we set for bitbucket.
 Since this platform only supports inline code suggestions, we want to limit the number of suggestions, and only present a limited number.
+
+To enable BitBucket app to respond to each **push** to the PR, set (for example):
+```
+[bitbucket_app]
+handle_push_trigger = true
+push_commands = [
+    "/describe",
+    "/review",
+]
+```
 
 ## Azure DevOps provider
 
@@ -210,7 +220,7 @@ git_provider="azure"
 ```
 
 Azure DevOps provider supports [PAT token](https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate?view=azure-devops&tabs=Windows) or [DefaultAzureCredential](https://learn.microsoft.com/en-us/azure/developer/python/sdk/authentication-overview#authentication-in-server-environments) authentication.
-PAT is faster to create, but has build in expiration date, and will use the user identity for API calls. 
+PAT is faster to create, but has a build in expiration date, and will use the user identity for API calls. 
 Using DefaultAzureCredential you can use managed identity or Service principle, which are more secure and will create separate ADO user identity (via AAD) to the agent.
 
 If PAT was chosen, you can assign the value in .secrets.toml. 
