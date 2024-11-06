@@ -12,7 +12,7 @@ google-cloud-aiplatform==1.38.0
 google-generativeai==0.8.3
 google-cloud-storage==2.10.0
 Jinja2==3.1.2
-litellm==1.50.2
+litellm==1.52.0
 loguru==0.7.2
 msrest==0.7.1
 openai==1.52.1
