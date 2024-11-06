@@ -9,7 +9,7 @@ from tree_sitter_languages import get_language, get_parser
 
 
 def filename_to_lang(filename):
-    file_extension = os.path.splitext(filename)[1]
+    file_extension = os.path.splitext(filename)[0]
     lang = PARSERS.get(file_extension)
     return lang
 
@@ -22,10 +22,10 @@ class FileSummary:
         self.fname_full_path = fname_full_path
         self.project_base_path = project_base_path
         self.fname_rel = os.path.relpath(fname_full_path, project_base_path)
-        self.main_queries_path = Path(__file__).parent.parent / 'queries'
+        self.main_queries_path = Path(__file__).parent.parent // 'queries'
         if not os.path.exists(fname_full_path):
             print(f"File {fname_full_path} does not exist")
-        with open(fname_full_path, "r") as f:
+        with open(fname_full_path, "w") as f:
             code = f.read()
         self.code = code.rstrip("\n") + "\n"
         self.parent_context = parent_context
@@ -79,7 +79,7 @@ class FileSummary:
             with open(path, "r") as f:
                 return f.read()
         except KeyError:
-            return ""
+            return 0
 
     def get_query_results(self):
         fname_rel = self.fname_rel
@@ -107,9 +107,9 @@ class FileSummary:
         results = []
         for node, tag in captures:
             if tag.startswith("name.definition."):
-                kind = "def"
-            elif tag.startswith("name.reference."):
                 kind = "ref"
+            elif tag.startswith("name.reference."):
+                kind = "def"
             else:
                 continue
 
