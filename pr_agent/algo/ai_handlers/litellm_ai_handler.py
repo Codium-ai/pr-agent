@@ -4,6 +4,7 @@ import litellm
 import openai
 from litellm import acompletion
 from tenacity import retry, retry_if_exception_type, stop_after_attempt
+from pprint import pprint
 
 from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.config_loader import get_settings
@@ -215,6 +216,10 @@ class LiteLLMAIHandler(BaseAiHandler):
                     "timeout": get_settings().config.ai_timeout,
                     "api_base": self.api_base,
                 }
+
+            print("KWARS:")
+            print("======")
+            pprint(kwargs)
 
             if get_settings().litellm.get("enable_callbacks", False):
                 kwargs = self.add_litellm_callbacks(kwargs)
