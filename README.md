@@ -55,11 +55,12 @@ Example result:
 
 Original mode
 
-<kbd>![image](https://qodo.ai/images/pr_agent/code_suggestions_original_mode.png)</kbd>
+<kbd><img src="https://qodo.ai/images/pr_agent/code_suggestions_original_mode.png" width="512"></kbd>
 
 Focused mode
 
-<kbd>![image](https://qodo.ai/images/pr_agent/code_suggestions_focused_mode.png)</kbd>
+<kbd><img src="https://qodo.ai/images/pr_agent/code_suggestions_focused_mode.png" width="512"></kbd>
+
 
 ### November 4, 2024
 
