@@ -51,6 +51,16 @@ When enabled, this option reduces the number of code suggestions and categorizes
 
 This mode is ideal for developers who want to concentrate specifically on finding and fixing potential bugs in their pull request code.
 
+Example result:
+
+Original mode
+
+<kbd>![image](https://qodo.ai/images/pr_agent/code_suggestions_original_mode.png)</kbd>
+
+Focused mode
+
+<kbd>![image](https://qodo.ai/images/pr_agent/code_suggestions_focused_mode.png)</kbd>
+
 ### November 4, 2024
 
 Qodo Merge PR Agent will now leverage context from Jira or GitHub tickets to enhance the PR Feedback. Read more about this feature 
