@@ -76,6 +76,7 @@ class PRCodeSuggestions:
             "commit_messages_str": self.git_provider.get_commit_messages(),
             "relevant_best_practices": "",
             "is_ai_metadata": get_settings().get("config.enable_ai_metadata", False),
+            "focus_only_on_problems": get_settings().get("pr_code_suggestions.focus_only_on_problems", False),
         }
         self.pr_code_suggestions_prompt_system = get_settings().pr_code_suggestions_prompt.system
 
@@ -450,6 +451,11 @@ class PRCodeSuggestions:
                         break
                 if not is_valid_keys:
                     continue
+
+                if get_settings().get("pr_code_suggestions.focus_only_on_problems", False):
+                    CRITICAL_LABEL = 'critical'
+                    if CRITICAL_LABEL in suggestion['label'].lower(): # we want the published labels to be less declarative
+                        suggestion['label'] = 'possible issue'
 
                 if suggestion['one_sentence_summary'] in one_sentence_summary_list:
                     get_logger().debug(f"Skipping suggestion {i + 1}, because it is a duplicate: {suggestion}")
