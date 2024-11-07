@@ -51,7 +51,8 @@ When enabled, this option reduces the number of code suggestions and categorizes
 
 This mode is ideal for developers who want to concentrate specifically on finding and fixing potential bugs in their pull request code.
 
-Example result:
+
+**Example results:**
 
 Original mode
 
