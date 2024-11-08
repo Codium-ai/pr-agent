@@ -6,13 +6,14 @@ import requests
 from atlassian.bitbucket import Cloud
 from starlette_context import context
 
-from pr_agent.algo.types import FilePatchInfo, EDIT_TYPE
+from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
+
 from ..algo.file_filter import filter_ignored
 from ..algo.language_handler import is_valid_file
 from ..algo.utils import find_line_number_of_relevant_line_in_file
 from ..config_loader import get_settings
 from ..log import get_logger
-from .git_provider import GitProvider, MAX_FILES_ALLOWED_FULL
+from .git_provider import MAX_FILES_ALLOWED_FULL, GitProvider
 
 
 def _gef_filename(diff):

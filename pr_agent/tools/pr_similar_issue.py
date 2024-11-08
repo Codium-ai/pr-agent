@@ -34,9 +34,9 @@ class PRSimilarIssue:
 
         if get_settings().pr_similar_issue.vectordb == "pinecone":
             try:
+                import pandas as pd
                 import pinecone
                 from pinecone_datasets import Dataset, DatasetMetadata
-                import pandas as pd
             except:
                 raise Exception("Please install 'pinecone' and 'pinecone_datasets' to use pinecone as vectordb")
             # assuming pinecone api key and environment are set in secrets file
@@ -108,10 +108,10 @@ class PRSimilarIssue:
                     self._update_index_with_issues(issues_to_update, repo_name_for_index, upsert=True)
                 else:
                     get_logger().info('No new issues to update')
-        
+
         elif get_settings().pr_similar_issue.vectordb == "lancedb":
             try:
-                import lancedb # import lancedb only if needed
+                import lancedb  # import lancedb only if needed
             except:
                 raise Exception("Please install lancedb to use lancedb as vectordb")
             self.db = lancedb.connect(get_settings().lancedb.uri)
@@ -173,7 +173,7 @@ class PRSimilarIssue:
                     self._update_table_with_issues(issues_to_update, repo_name_for_index, ingest=True)
                 else:
                     get_logger().info('No new issues to update')
-        
+
 
     async def run(self):
         get_logger().info('Getting issue...')
@@ -190,14 +190,14 @@ class PRSimilarIssue:
         relevant_issues_number_list = []
         relevant_comment_number_list = []
         score_list = []
-        
+
         if get_settings().pr_similar_issue.vectordb == "pinecone":
             pinecone_index = pinecone.Index(index_name=self.index_name)
             res = pinecone_index.query(embeds[0],
                                     top_k=5,
                                     filter={"repo": self.repo_name_for_index},
                                     include_metadata=True).to_dict()
-        
+
             for r in res['matches']:
                 # skip example issue
                 if 'example_issue_' in r["id"]:
@@ -222,12 +222,12 @@ class PRSimilarIssue:
 
         elif get_settings().pr_similar_issue.vectordb == "lancedb":
             res = self.table.search(embeds[0]).where(f"metadata.repo='{self.repo_name_for_index}'", prefilter=True).to_list()
-            
+
             for r in res:
                 # skip example issue
                 if 'example_issue_' in r["id"]:
                     continue
-                
+
                 try:
                     issue_number = int(r["id"].split('.')[0].split('_')[-1])
                 except:
@@ -238,14 +238,14 @@ class PRSimilarIssue:
                     continue
                 if issue_number not in relevant_issues_number_list:
                     relevant_issues_number_list.append(issue_number)
-                
+
                 if 'comment' in r["id"]:
                     relevant_comment_number_list.append(int(r["id"].split('.')[1].split('_')[-1]))
                 else:
                     relevant_comment_number_list.append(-1)
                 score_list.append(str("{:.2f}".format(1-r['_distance'])))
             get_logger().info('Done')
-        
+
         get_logger().info('Publishing response...')
         similar_issues_str = "### Similar Issues\n___\n\n"
 
@@ -447,14 +447,14 @@ class PRSimilarIssue:
         if not ingest:
             get_logger().info('Creating table from scratch...')
             self.table = self.db.create_table(self.index_name, data=df, mode="overwrite")
-            time.sleep(15)  
+            time.sleep(15)
         else:
             get_logger().info('Ingesting in Table...')
             if self.index_name not in self.db.table_names():
                 self.table.add(df)
             else:
                 get_logger().info(f"Table {self.index_name} doesn't exists!")
-            time.sleep(5)  
+            time.sleep(5)
         get_logger().info('Done')
 
 

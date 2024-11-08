@@ -66,7 +66,7 @@ Any configuration value in [configuration file](https://github.com/Codium-ai/pr-
 
 ### GitHub app automatic tools when a new PR is opened
 
-The [github_app](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L108) section defines GitHub app specific configurations.  
+The [github_app](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L108) section defines GitHub app specific configurations.
 
 The configuration parameter `pr_commands` defines the list of tools that will be **run automatically** when a new PR is opened.
 ```
@@ -77,10 +77,11 @@ pr_commands = [
     "/improve --pr_code_suggestions.suggestions_score_threshold=5",
 ]
 ```
+
 This means that when a new PR is opened/reopened or marked as ready for review, Qodo Merge will run the `describe`, `review` and `improve` tools.  
 For the `improve` tool, for example, the `suggestions_score_threshold` parameter will be set to 5 (suggestions below a score of 5 won't be presented)
 
-You can override the default tool parameters by using one the three options for a [configuration file](https://qodo-merge-docs.qodo.ai/usage-guide/configuration_options/): **wiki**, **local**, or **global**. 
+You can override the default tool parameters by using one the three options for a [configuration file](https://qodo-merge-docs.qodo.ai/usage-guide/configuration_options/): **wiki**, **local**, or **global**.
 For example, if your local `.pr_agent.toml` file contains:
 ```
 [pr_description]
@@ -98,7 +99,7 @@ pr_commands = []
 
 In addition to running automatic tools when a PR is opened, the GitHub app can also respond to new code that is pushed to an open PR.
 
-The configuration toggle `handle_push_trigger` can be used to enable this feature.  
+The configuration toggle `handle_push_trigger` can be used to enable this feature.
 The configuration parameter `push_commands` defines the list of tools that will be **run automatically** when new code is pushed to the PR.
 ```
 [github_app]
@@ -112,7 +113,7 @@ This means that when new code is pushed to the PR, the Qodo Merge will run the `
 
 ## GitHub Action
 `GitHub Action` is a different way to trigger Qodo Merge tools, and uses a different configuration mechanism than `GitHub App`.<br>
-You can configure settings for `GitHub Action` by adding environment variables under the env section in `.github/workflows/pr_agent.yml` file. 
+You can configure settings for `GitHub Action` by adding environment variables under the env section in `.github/workflows/pr_agent.yml` file.
 Specifically, start by setting the following environment variables:
 ```yaml
       env:
@@ -129,7 +130,7 @@ If not set, the default configuration is for all three tools to run automaticall
 `github_action_config.pr_actions` is used to configure which `pull_requests` events will trigger the enabled auto flags
 If not set, the default configuration is `["opened", "reopened", "ready_for_review", "review_requested"]`
 
-`github_action_config.enable_output` are used to enable/disable github actions [output parameter](https://docs.github.com/en/actions/creating-actions/metadata-syntax-for-github-actions#outputs-for-docker-container-and-javascript-actions) (default is `true`). 
+`github_action_config.enable_output` are used to enable/disable github actions [output parameter](https://docs.github.com/en/actions/creating-actions/metadata-syntax-for-github-actions#outputs-for-docker-container-and-javascript-actions) (default is `true`).
 Review result is output as JSON to `steps.{step-id}.outputs.review` property.
 The JSON structure is equivalent to the yaml data structure defined in [pr_reviewer_prompts.toml](https://github.com/idubnori/pr-agent/blob/main/pr_agent/settings/pr_reviewer_prompts.toml).
 
@@ -153,8 +154,8 @@ pr_commands = [
 ]
 ```
 
-The GitLab webhook can also respond to new code that is pushed to an open MR.
-The configuration toggle `handle_push_trigger` can be used to enable this feature.  
+the GitLab webhook can also respond to new code that is pushed to an open MR.
+The configuration toggle `handle_push_trigger` can be used to enable this feature.
 The configuration parameter `push_commands` defines the list of tools that will be **run automatically** when new code is pushed to the MR.
 ```
 [gitlab]
@@ -220,11 +221,11 @@ git_provider="azure"
 ```
 
 Azure DevOps provider supports [PAT token](https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate?view=azure-devops&tabs=Windows) or [DefaultAzureCredential](https://learn.microsoft.com/en-us/azure/developer/python/sdk/authentication-overview#authentication-in-server-environments) authentication.
-PAT is faster to create, but has a build in expiration date, and will use the user identity for API calls. 
+PAT is faster to create, but has build in expiration date, and will use the user identity for API calls.
 Using DefaultAzureCredential you can use managed identity or Service principle, which are more secure and will create separate ADO user identity (via AAD) to the agent.
 
-If PAT was chosen, you can assign the value in .secrets.toml. 
-If DefaultAzureCredential was chosen, you can assigned the additional env vars like AZURE_CLIENT_SECRET directly, 
+If PAT was chosen, you can assign the value in .secrets.toml.
+If DefaultAzureCredential was chosen, you can assigned the additional env vars like AZURE_CLIENT_SECRET directly,
 or use managed identity/az cli (for local development) without any additional configuration.
 in any case, 'org' value must be assigned in .secrets.toml:
 ```

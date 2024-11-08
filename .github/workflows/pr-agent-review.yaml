@@ -1,4 +1,4 @@
-# This workflow enables developers to call PR-Agents `/[actions]` in PR's comments and upon PR creation. 
+# This workflow enables developers to call PR-Agents `/[actions]` in PR's comments and upon PR creation.
 # Learn more at https://www.codium.ai/pr-agent/
 # This is v0.2 of this workflow file
 
@@ -30,6 +30,3 @@ jobs:
           GITHUB_ACTION_CONFIG.AUTO_DESCRIBE: true
           GITHUB_ACTION_CONFIG.AUTO_REVIEW: true
           GITHUB_ACTION_CONFIG.AUTO_IMPROVE: true
-
-
-

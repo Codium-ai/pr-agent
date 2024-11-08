@@ -4,8 +4,6 @@ from typing import Dict
 from pr_agent.config_loader import get_settings
 
 
-
-
 def filter_bad_extensions(files):
     # Bad Extensions, source: https://github.com/EleutherAI/github-downloader/blob/345e7c4cbb9e0dc8a0615fd995a08bf9d73b3fe6/download_repo_text.py  # noqa: E501
     bad_extensions = get_settings().bad_extensions.default

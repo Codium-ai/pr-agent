@@ -1,4 +1,5 @@
 import pytest
+
 from pr_agent.algo.git_patch_processing import extend_patch
 from pr_agent.algo.pr_processing import pr_generate_extended_diff
 from pr_agent.algo.token_handler import TokenHandler

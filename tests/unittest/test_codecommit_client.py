@@ -1,4 +1,5 @@
 from unittest.mock import MagicMock
+
 from pr_agent.git_providers.codecommit_client import CodeCommitClient
 
 

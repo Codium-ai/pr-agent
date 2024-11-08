@@ -15,7 +15,7 @@ There are several ways to use self-hosted Qodo Merge:
 - [Azure DevOps](./azure.md)
 
 ## Qodo Merge Pro 💎
-Qodo Merge Pro, an app hosted by CodiumAI for GitHub\GitLab\BitBucket, is also available. 
+Qodo Merge Pro, an app hosted by CodiumAI for GitHub\GitLab\BitBucket, is also available.
 <br>
-With Qodo Merge Pro, installation is as simple as signing up and adding the Qodo Merge app to your relevant repo. 
+With Qodo Merge Pro, installation is as simple as signing up and adding the Qodo Merge app to your relevant repo.
 See [here](https://qodo-merge-docs.qodo.ai/installation/pr_agent_pro/) for more details.

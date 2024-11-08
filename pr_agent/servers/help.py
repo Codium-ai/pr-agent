@@ -82,7 +82,7 @@ the tool will replace every marker of the form `pr_agent:marker_name` in the PR 
   - `walkthrough`: the PR walkthrough.
 
 Note that when markers are enabled, if the original PR description does not contain any markers, the tool will not alter the description at all.
-        
+
 """
         output += "\n\n</details></td></tr>\n\n"
 
@@ -101,7 +101,7 @@ Examples for custom labels:
 
 The list above is eclectic, and aims to give an idea of different possibilities. Define custom labels that are relevant for your repo and use cases.
 Note that Labels are not mutually exclusive, so you can add multiple label categories.
-Make sure to provide proper title, and a detailed and well-phrased description for each label, so the tool will know when to suggest it.        
+Make sure to provide proper title, and a detailed and well-phrased description for each label, so the tool will know when to suggest it.
 """
         output += "\n\n</details></td></tr>\n\n"
 
@@ -126,7 +126,7 @@ Be specific, clear, and concise in the instructions. With extra instructions, yo
 
 Examples for extra instructions:
 ```
-[pr_description] 
+[pr_description]
 extra_instructions="""\
 - The PR title should be in the format: '<PR type>: <title>'
 - The title should be short and concise (up to 10 words)
@@ -159,8 +159,8 @@ It can be invoked manually by commenting on any PR:
 /ask "..."
 ```
 
-Note that the tool does not have "memory" of previous questions, and answers each question independently.   
-You can ask questions about the entire PR, about specific code lines, or about an image related to the PR code changes.     
+Note that the tool does not have "memory" of previous questions, and answers each question independently.
+You can ask questions about the entire PR, about specific code lines, or about an image related to the PR code changes.
         """
         # output += "\n\n<table>"
         #
@@ -195,7 +195,7 @@ You can ask questions about the entire PR, about specific code lines, or about a
 some_config1=...
 some_config2=...
 ```
-    
+
 """
 
         output += f"\n\nSee the improve [usage page](https://pr-agent-docs.codium.ai/tools/improve/) for a comprehensive guide on using this tool.\n\n"

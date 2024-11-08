@@ -12,9 +12,9 @@ We prioritize the languages of the repo based on the following criteria:
 
 1. Exclude binary files and non code files (e.g. images, pdfs, etc)
 2. Given the main languages used in the repo
-3. We sort the PR files by the most common languages in the repo (in descending order): 
+3. We sort the PR files by the most common languages in the repo (in descending order):
    * ```[[file.py, file2.py],[file3.js, file4.jsx],[readme.md]]```
-   
+
 
 ### Small PR
 In this case, we can fit the entire PR in a single prompt:

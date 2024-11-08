@@ -60,7 +60,7 @@ See detailed usage instructions in the [USAGE GUIDE](https://qodo-merge-docs.qod
             uses: docker://codiumai/pr-agent:0.23-github_action
     ...
     ```
-    
+
     For enhanced security, you can also specify the Docker image by its [digest](https://hub.docker.com/repository/docker/codiumai/pr-agent/tags):
     ```yaml
     ...
@@ -71,17 +71,17 @@ See detailed usage instructions in the [USAGE GUIDE](https://qodo-merge-docs.qod
     ...
     ```
 
-### Action for GitHub enterprise server 
+### Action for GitHub enterprise server
 !!! tip ""
     To use the action with a GitHub enterprise server, add an environment variable `GITHUB.BASE_URL` with the API URL of your GitHub server.
-    
+
     For example, if your GitHub server is at `https://github.mycompany.com`, add the following to your workflow file:
     ```yaml
           env:
             # ... previous environment values
             GITHUB.BASE_URL: "https://github.mycompany.com/api/v3"
     ```
-    
+
 
 ---
 
@@ -118,7 +118,7 @@ git clone https://github.com/Codium-ai/pr-agent.git
 ```
 
 5) Copy the secrets template file and fill in the following:
-    
+
 ```
 cp pr_agent/settings/.secrets_template.toml pr_agent/settings/.secrets.toml
 # Edit .secrets.toml file
@@ -147,7 +147,7 @@ cp pr_agent/settings/.secrets_template.toml pr_agent/settings/.secrets.toml
                 - mountPath: /app/pr_agent/settings_prod
                   name: settings-volume
     ```
-    
+
     > Another option is to set the secrets as environment variables in your deployment environment, for example `OPENAI.KEY` and `GITHUB.USER_TOKEN`.
 
 6) Build a Docker image for the app and optionally push it to a Docker repository. We'll use Dockerhub as an example:

@@ -14,7 +14,7 @@ Qodo Merge utilizes a variety of core abilities to provide a comprehensive and e
 
 ## Blogs
 
-Here are some additional technical blogs from Qodo, that delve deeper into the core capabilities and features of Large Language Models (LLMs) when applied to coding tasks. 
+Here are some additional technical blogs from Qodo, that delve deeper into the core capabilities and features of Large Language Models (LLMs) when applied to coding tasks.
 These resources provide more comprehensive insights into leveraging LLMs for software development.
 
 ### Code Generation and LLMs

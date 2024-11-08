@@ -2,13 +2,16 @@ import os
 from typing import Optional, Tuple
 from urllib.parse import urlparse
 
-from ..algo.file_filter import filter_ignored
-from ..log import get_logger
-from ..algo.language_handler import is_valid_file
-from ..algo.utils import clip_tokens, find_line_number_of_relevant_line_in_file, load_large_diff, PRDescriptionHeader
-from ..config_loader import get_settings
-from .git_provider import GitProvider
 from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
+
+from ..algo.file_filter import filter_ignored
+from ..algo.language_handler import is_valid_file
+from ..algo.utils import (PRDescriptionHeader, clip_tokens,
+                          find_line_number_of_relevant_line_in_file,
+                          load_large_diff)
+from ..config_loader import get_settings
+from ..log import get_logger
+from .git_provider import GitProvider
 
 AZURE_DEVOPS_AVAILABLE = True
 ADO_APP_CLIENT_DEFAULT_ID = "499b84ac-1321-427f-aa17-267ca6975798/.default"
@@ -16,19 +19,16 @@ MAX_PR_DESCRIPTION_AZURE_LENGTH = 4000-1
 
 try:
     # noinspection PyUnresolvedReferences
-    from msrest.authentication import BasicAuthentication
     # noinspection PyUnresolvedReferences
     from azure.devops.connection import Connection
     # noinspection PyUnresolvedReferences
-    from azure.identity import DefaultAzureCredential
+    from azure.devops.v7_1.git.models import (Comment, CommentThread,
+                                              GitPullRequest,
+                                              GitPullRequestIterationChanges,
+                                              GitVersionDescriptor)
     # noinspection PyUnresolvedReferences
-    from azure.devops.v7_1.git.models import (
-        Comment,
-        CommentThread,
-        GitVersionDescriptor,
-        GitPullRequest,
-        GitPullRequestIterationChanges,
-    )
+    from azure.identity import DefaultAzureCredential
+    from msrest.authentication import BasicAuthentication
 except ImportError:
     AZURE_DEVOPS_AVAILABLE = False
 
@@ -620,4 +620,3 @@ class AzureDevopsProvider(GitProvider):
 
     def publish_file_comments(self, file_comments: list) -> bool:
         pass
-

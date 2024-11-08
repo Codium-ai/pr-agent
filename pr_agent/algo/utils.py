@@ -14,7 +14,6 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, List, Tuple
 
-
 import html2text
 import requests
 import yaml
@@ -23,9 +22,10 @@ from starlette_context import context
 
 from pr_agent.algo import MAX_TOKENS
 from pr_agent.algo.token_handler import TokenEncoder
-from pr_agent.config_loader import get_settings, global_settings
 from pr_agent.algo.types import FilePatchInfo
+from pr_agent.config_loader import get_settings, global_settings
 from pr_agent.log import get_logger
+
 
 class Range(BaseModel):
     line_start: int  # should be 0-indexed

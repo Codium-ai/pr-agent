@@ -7,8 +7,8 @@ from pr_agent.algo.language_handler import sort_files_by_main_languages
 Code Analysis
 
 Objective:
-The objective of the function is to sort a list of files by their main language, putting the files that are in the main 
-language first and the rest of the files after. It takes in a dictionary of languages and their sizes, and a list of 
+The objective of the function is to sort a list of files by their main language, putting the files that are in the main
+language first and the rest of the files after. It takes in a dictionary of languages and their sizes, and a list of
 files.
 
 Inputs:

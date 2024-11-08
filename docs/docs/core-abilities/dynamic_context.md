@@ -1,7 +1,7 @@
 ## TL;DR
 
-Qodo Merge uses an **asymmetric and dynamic context strategy** to improve AI analysis of code changes in pull requests. 
-It provides more context before changes than after, and dynamically adjusts the context based on code structure (e.g., enclosing functions or classes). 
+Qodo Merge uses an **asymmetric and dynamic context strategy** to improve AI analysis of code changes in pull requests.
+It provides more context before changes than after, and dynamically adjusts the context based on code structure (e.g., enclosing functions or classes).
 This approach balances providing sufficient context for accurate analysis, while avoiding needle-in-the-haystack information overload that could degrade AI performance or exceed token limits.
 
 ## Introduction
@@ -17,12 +17,12 @@ Pull request code changes are retrieved in a unified diff format, showing three 
  code line that already existed in the file...
  code line that already existed in the file...
  code line that already existed in the file...
- 
+
 @@ -26,2 +26,4 @@ def func2():
 ...
 ```
 
-This unified diff format can be challenging for AI models to interpret accurately, as it provides limited context for understanding the full scope of code changes. 
+This unified diff format can be challenging for AI models to interpret accurately, as it provides limited context for understanding the full scope of code changes.
 The presentation of code using '+', '-', and ' ' symbols to indicate additions, deletions, and unchanged lines respectively also differs from the standard code formatting typically used to train AI models.
 
 
@@ -37,7 +37,7 @@ Pros:
 Cons:
 
 - Excessive context may overwhelm the model with extraneous information, creating a "needle in a haystack" scenario where focusing on the relevant details (the code that actually changed) becomes challenging.
-LLM quality is known to degrade when the context gets larger. 
+LLM quality is known to degrade when the context gets larger.
 Pull requests often encompass multiple changes across many files, potentially spanning hundreds of lines of modified code. This complexity presents a genuine risk of overwhelming the model with excessive context.
 
 - Increased context expands the token count, increasing processing time and cost, and may prevent the model from processing the entire pull request in a single pass.
@@ -47,18 +47,18 @@ To address these challenges, Qodo Merge employs an **asymmetric** and **dynamic*
 
 **Asymmetric:**
 
-We start by recognizing that the context preceding a code change is typically more crucial for understanding the modification than the context following it. 
+We start by recognizing that the context preceding a code change is typically more crucial for understanding the modification than the context following it.
 Consequently, Qodo Merge implements an asymmetric context policy, decoupling the context window into two distinct segments: one for the code before the change and another for the code after.
 
-By independently adjusting each context window, Qodo Merge can supply the model with a more tailored and pertinent context for individual code changes. 
+By independently adjusting each context window, Qodo Merge can supply the model with a more tailored and pertinent context for individual code changes.
 
 **Dynamic:**
 
 We also employ a "dynamic" context strategy.
-We start by recognizing that the optimal context for a code change often corresponds to its enclosing code component (e.g., function, class), rather than a fixed number of lines. 
+We start by recognizing that the optimal context for a code change often corresponds to its enclosing code component (e.g., function, class), rather than a fixed number of lines.
 Consequently, we dynamically adjust the context window based on the code's structure, ensuring the model receives the most pertinent information for each modification.
 
-To prevent overwhelming the model with excessive context, we impose a limit on the number of lines searched when identifying the enclosing component. 
+To prevent overwhelming the model with excessive context, we impose a limit on the number of lines searched when identifying the enclosing component.
 This balance allows for comprehensive understanding while maintaining efficiency and limiting context token usage.
 
 ## Appendix - relevant configuration options

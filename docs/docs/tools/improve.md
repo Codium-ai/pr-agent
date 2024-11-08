@@ -83,15 +83,15 @@ This feature is controlled by a boolean configuration parameter: `pr_code_sugges
 
 !!! note "Wiki must be enabled"
     While the aggregation process is automatic, GitHub repositories require a one-time manual wiki setup.
-    
-    To initialize the wiki: navigate to `Wiki`, select `Create the first page`, then click `Save page`. 
+
+    To initialize the wiki: navigate to `Wiki`, select `Create the first page`, then click `Save page`.
 
     ![pr_agent_accepted_suggestions_create_first_page.png](https://qodo.ai/images/pr_agent/pr_agent_accepted_suggestions_create_first_page.png){width=768}
 
     Once a wiki repo is created, the tool will automatically use this wiki for tracking suggestions.
 
 !!! note "Why a wiki page?"
-    Your code belongs to you, and we respect your privacy. Hence, we won't store any code suggestions in an external database. 
+    Your code belongs to you, and we respect your privacy. Hence, we won't store any code suggestions in an external database.
 
     Instead, we leverage a dedicated private page, within your repository wiki, to track suggestions. This approach offers convenient secure suggestion tracking while avoiding pull requests or any noise to the main repository.
 
@@ -109,10 +109,10 @@ In addition to mistakes (which may happen, but are rare), sometimes the presente
 In such cases, we recommend prioritizing the suggestion's detailed description, using the diff snippet primarily as a supporting reference.
 
 ### Dual publishing mode
-Our recommended approach for presenting code suggestions is through a [table](https://qodo-merge-docs.qodo.ai/tools/improve/#overview) (`--pr_code_suggestions.commitable_code_suggestions=false`). 
+Our recommended approach for presenting code suggestions is through a [table](https://qodo-merge-docs.qodo.ai/tools/improve/#overview) (`--pr_code_suggestions.commitable_code_suggestions=false`).
 This method significantly reduces the PR footprint and allows for quick and easy digestion of multiple suggestions.
 
-We also offer a complementary **dual publishing mode**. When enabled, suggestions exceeding a certain score threshold are not only displayed in the table, but also presented as commitable PR comments. 
+We also offer a complementary **dual publishing mode**. When enabled, suggestions exceeding a certain score threshold are not only displayed in the table, but also presented as commitable PR comments.
 This mode helps highlight suggestions deemed more critical.
 
 To activate dual publishing mode, use the following setting:
@@ -165,9 +165,9 @@ code_suggestions_self_review_text = "... (your text here) ..."
     ![self_review_2](https://codium.ai/images/pr_agent/self_review_2.png){width=512}
 
     - If you keep the number of required reviewers for a PR to 1 and enable this configuration, this effectively means that the PR author can approve the PR by actively clicking the self-review checkbox.
-    
+
         To prevent unauthorized approvals, this configuration defaults to false, and cannot be altered through online comments; enabling requires a direct update to the configuration file and a commit to the repository. This ensures that utilizing the feature demands a deliberate documented decision by the repository owner.
- 
+
 
 ### How many code suggestions are generated?
 Qodo Merge uses a dynamic strategy to generate code suggestions based on the size of the pull request (PR). Here's how it works:
@@ -199,7 +199,7 @@ Note: Chunking is primarily relevant for large PRs. For most PRs (up to 500 line
 
 You can use the `extra_instructions` configuration option to give the AI model additional instructions for the `improve` tool.
 Be specific, clear, and concise in the instructions. With extra instructions, you are the prompter. Specify relevant aspects that you want the model to focus on.
-    
+
 Examples for possible instructions:
 ```toml
 [pr_code_suggestions]
@@ -216,11 +216,11 @@ Use triple quotes to write multi-line instructions. Use bullet points or numbers
 
 >`Platforms supported: GitHub, GitLab`
 
-Another option to give additional guidance to the AI model is by creating a dedicated [**wiki page**](https://github.com/Codium-ai/pr-agent/wiki) called `best_practices.md`. 
+Another option to give additional guidance to the AI model is by creating a dedicated [**wiki page**](https://github.com/Codium-ai/pr-agent/wiki) called `best_practices.md`.
 This page can contain a list of best practices, coding standards, and guidelines that are specific to your repo/organization.
 
 The AI model will use this wiki page as a reference, and in case the PR code violates any of the guidelines, it will suggest improvements accordingly, with a dedicated label: `Organization
-best practice`. 
+best practice`.
 
 Example for a `best_practices.md` content can be found [here](https://github.com/Codium-ai/pr-agent/blob/main/docs/docs/usage-guide/EXAMPLE_BEST_PRACTICE.md) (adapted from Google's [pyguide](https://google.github.io/styleguide/pyguide.html)).
 This file is only an example. Since it is used as a prompt for an AI model, we want to emphasize the following:
@@ -230,7 +230,7 @@ This file is only an example. Since it is used as a prompt for an AI model, we w
 - Recommended to limit the text to 800 lines or fewer. Here’s why:
 
      1) Extremely long best practices documents may not be fully processed by the AI model.
-  
+
      2) A lengthy file probably represent a more "**generic**" set of guidelines, which the AI model is already familiar with. The objective is to focus on a more targeted set of guidelines tailored to the specific needs of this project.
 
 ##### Local and global best practices
@@ -261,7 +261,7 @@ Using a combination of both can help the AI model to provide relevant and tailor
 ## Configuration options
 
 ??? example "General options"
-    
+
     <table>
       <tr>
         <td><b>extra_instructions</b></td>
@@ -335,5 +335,5 @@ Using a combination of both can help the AI model to provide relevant and tailor
     - Only if the `Category` header is relevant, the user should move to the summarized suggestion description
     - Only if the summarized suggestion description is relevant, the user should click on the collapsible, to read the full suggestion description with a code preview example.
 
-- In addition, we recommend to use the [`extra_instructions`](https://qodo-merge-docs.qodo.ai/tools/improve/#extra-instructions-and-best-practices) field to guide the model to suggestions that are more relevant to the specific needs of the project. 
+- In addition, we recommend to use the [`extra_instructions`](https://qodo-merge-docs.qodo.ai/tools/improve/#extra-instructions-and-best-practices) field to guide the model to suggestions that are more relevant to the specific needs of the project.
 - The interactive [PR chat](https://qodo-merge-docs.qodo.ai/chrome-extension/) also provides an easy way to get more tailored suggestions and feedback from the AI model.

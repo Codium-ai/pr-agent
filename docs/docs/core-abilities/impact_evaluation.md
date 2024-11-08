@@ -41,4 +41,4 @@ Here are key metrics that the dashboard tracks:
 
 #### Suggestion Score Distribution
 ![Impacted_Suggestion_Score](https://codium.ai/images/pr_agent/impacted_score_dist.png){width=512}
-> Explanation: The distribution of the suggestion score for the implemented suggestions, ensuring that higher-scored suggestions truly represent more significant improvements. 
+> Explanation: The distribution of the suggestion score for the implemented suggestions, ensuring that higher-scored suggestions truly represent more significant improvements.

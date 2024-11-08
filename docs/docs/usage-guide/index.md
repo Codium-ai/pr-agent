@@ -1,6 +1,6 @@
 # Usage guide
 
-This page provides a detailed guide on how to use Qodo Merge. 
+This page provides a detailed guide on how to use Qodo Merge.
 It includes information on how to adjust Qodo Merge configurations, define which tools will run automatically, and other advanced configurations.
 
 
