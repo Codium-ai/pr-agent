@@ -140,7 +140,7 @@ num_code_suggestions = ...
   </tr>
   <tr>
     <td><b>require_ticket_analysis_review</b></td>
-    <td>If set to true, and the PR contains a GitHub ticket number, the tool will add a section that checks if the PR in fact fulfilled the ticket requirements. Default is true.</td>
+    <td>If set to true, and the PR contains a GitHub or Jira ticket link, the tool will add a section that checks if the PR in fact fulfilled the ticket requirements. Default is true.</td>
   </tr>
 </table>
 

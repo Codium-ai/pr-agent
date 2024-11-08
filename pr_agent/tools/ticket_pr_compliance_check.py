@@ -108,7 +108,7 @@ async def extract_tickets(git_provider):
 
 
 async def extract_and_cache_pr_tickets(git_provider, vars):
-    if get_settings().get('config.require_ticket_analysis_review', False):
+    if not get_settings().get('pr_reviewer.require_ticket_analysis_review', False):
         return
     related_tickets = get_settings().get('related_tickets', [])
     if not related_tickets:

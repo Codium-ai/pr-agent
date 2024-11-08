@@ -46,6 +46,5 @@ This results in a more refined and valuable set of suggestions for the user, sav
 ## Appendix - Relevant Configuration Options
 ```
 [pr_code_suggestions]
-self_reflect_on_suggestions	= true # Enable self-reflection on code suggestions
 suggestions_score_threshold	= 0 # Filter out suggestions with a score below this threshold (0-10)
 ```

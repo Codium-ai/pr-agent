@@ -276,12 +276,12 @@ Using a combination of both can help the AI model to provide relevant and tailor
         <td>Minimum score threshold for suggestions to be presented as commitable PR comments in addition to the table. Default is -1 (disabled).</td>
       </tr>
       <tr>
-        <td><b>persistent_comment</b></td>
-        <td>If set to true, the improve comment will be persistent, meaning that every new improve request will edit the previous one. Default is false.</td>
+        <td><b>focus_only_on_problems</b></td>
+        <td>If set to true, suggestions will focus primarily on identifying and fixing code problems, and less on style considerations like best practices, maintainability, or readability. Default is false.</td> 
       </tr>
       <tr>
-        <td><b>self_reflect_on_suggestions</b></td>
-        <td>If set to true, the improve tool will calculate an importance score for each suggestion [1-10], and sort the suggestion labels group based on this score. Default is true.</td>
+        <td><b>persistent_comment</b></td>
+        <td>If set to true, the improve comment will be persistent, meaning that every new improve request will edit the previous one. Default is false.</td>
       </tr>
       <tr>
         <td><b>suggestions_score_threshold</b></td>

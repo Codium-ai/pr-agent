@@ -43,6 +43,38 @@ Qode Merge PR-Agent aims to help efficiently review and handle pull requests, by
 
 ## News and Updates
 
+### November 7, 2024
+
+Added new option: `--pr_code_suggestions.focus_only_on_problems=true`
+
+When enabled, this option reduces the number of code suggestions and categorizes them into just two groups: "Possible Issues" and "General". The suggestions will focus primarily on identifying and fixing code problems, rather than style considerations like best practices, maintainability, or readability.
+
+This mode is ideal for developers who want to concentrate specifically on finding and fixing potential bugs in their pull request code.
+
+
+**Example results:**
+
+Original mode
+
+<kbd><img src="https://qodo.ai/images/pr_agent/code_suggestions_original_mode.png" width="512"></kbd>
+
+Focused mode
+
+<kbd><img src="https://qodo.ai/images/pr_agent/code_suggestions_focused_mode.png" width="512"></kbd>
+
+
+### November 4, 2024
+
+Qodo Merge PR Agent will now leverage context from Jira or GitHub tickets to enhance the PR Feedback. Read more about this feature 
+[here](https://qodo-merge-docs.qodo.ai/core-abilities/fetching_ticket_context/)
+
+### November 3, 2024
+
+Meaningful improvement to the quality of code suggestions by separating the code suggestion generation from [line number detection](https://github.com/Codium-ai/pr-agent/pull/1338)
+
+<kbd>![image](https://github.com/user-attachments/assets/093c185c-31ca-47a1-a4fe-be7d9335ea66)</kbd>
+
+
 ### October 27, 2024
 
 Qodo Merge PR Agent will now automatically document accepted code suggestions in a dedicated wiki page (`.pr_agent_accepted_suggestions`), enabling users to track historical changes, assess the tool's effectiveness, and learn from previously implemented recommendations in the repository.

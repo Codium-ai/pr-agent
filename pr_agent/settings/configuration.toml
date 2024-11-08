@@ -7,6 +7,7 @@ fallback_models=["gpt-4o-2024-05-13"]
 git_provider="github"
 publish_output=true
 publish_output_progress=true
+publish_output_no_suggestions=true
 verbosity_level=0 # 0,1,2
 use_extra_bad_extensions=false
 # Configurations
@@ -106,10 +107,11 @@ enable_help_text=false
 
 
 [pr_code_suggestions] # /improve #
-max_context_tokens=14000
+max_context_tokens=16000
 #
 commitable_code_suggestions = false
 dual_publishing_score_threshold=-1 # -1 to disable, [0-10] to set the threshold (>=) for publishing a code suggestion both in a table and as commitable
+focus_only_on_problems=false
 #
 extra_instructions = ""
 rank_suggestions = false
@@ -121,7 +123,6 @@ max_history_len=4
 # enable to apply suggestion 💎
 apply_suggestions_checkbox=true
 # suggestions scoring
-self_reflect_on_suggestions=true
 suggestions_score_threshold=0 # [0-10]| recommend not to set this value above 8, since above it may clip highly relevant suggestions
 # params for '/improve --extended' mode
 auto_extended_mode=true
