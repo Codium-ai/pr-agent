@@ -1,4 +1,4 @@
-from distutils.version import LooseVersion
+from packaging.version import parse as parse_version
 from typing import Optional, Tuple
 from urllib.parse import quote_plus, urlparse
 
@@ -36,7 +36,7 @@ class BitbucketServerProvider(GitProvider):
                                                               token=get_settings().get("BITBUCKET_SERVER.BEARER_TOKEN",
                                                                                        None))
         try:
-            self.bitbucket_api_version = LooseVersion(self.bitbucket_client.get("rest/api/1.0/application-properties").get('version'))
+            self.bitbucket_api_version = parse_version(self.bitbucket_client.get("rest/api/1.0/application-properties").get('version'))
         except Exception:
             self.bitbucket_api_version = None
 
@@ -160,7 +160,7 @@ class BitbucketServerProvider(GitProvider):
         head_sha = self.pr.fromRef['latestCommit']
 
         # if Bitbucket api version is >= 8.16 then use the merge-base api for 2-way diff calculation
-        if self.bitbucket_api_version is not None and self.bitbucket_api_version >= LooseVersion("8.16"):
+        if self.bitbucket_api_version is not None and self.bitbucket_api_version >= parse_version("8.16"):
             try:
                 base_sha = self.bitbucket_client.get(self._get_merge_base())['id']
             except Exception as e:
@@ -175,7 +175,7 @@ class BitbucketServerProvider(GitProvider):
             # if Bitbucket api version is None or < 7.0 then do a simple diff with a guaranteed common ancestor
             base_sha = source_commits_list[-1]['parents'][0]['id']
             # if Bitbucket api version is 7.0-8.15 then use 2-way diff functionality for the base_sha
-            if self.bitbucket_api_version is not None and self.bitbucket_api_version >= LooseVersion("7.0"):
+            if self.bitbucket_api_version is not None and self.bitbucket_api_version >= parse_version("7.0"):
                 try:
                     destination_commits = list(
                         self.bitbucket_client.get_commits(self.workspace_slug, self.repo_slug, base_sha,
