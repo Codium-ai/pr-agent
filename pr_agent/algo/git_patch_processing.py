@@ -31,7 +31,7 @@ def extend_patch(original_file_str, patch_str, patch_extra_lines_before=0,
 
 
 def decode_if_bytes(original_file_str):
-    if isinstance(original_file_str, bytes):
+    if isinstance(original_file_str, (bytes, bytearray)):
         try:
             return original_file_str.decode('utf-8')
         except UnicodeDecodeError:
@@ -61,23 +61,26 @@ def process_patch_lines(patch_str, original_file_str, patch_extra_lines_before, 
     patch_lines = patch_str.splitlines()
     extended_patch_lines = []
 
+    is_valid_hunk = True
     start1, size1, start2, size2 = -1, -1, -1, -1
     RE_HUNK_HEADER = re.compile(
         r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@[ ]?(.*)")
     try:
-        for line in patch_lines:
+        for i,line in enumerate(patch_lines):
             if line.startswith('@@'):
                 match = RE_HUNK_HEADER.match(line)
                 # identify hunk header
                 if match:
                     # finish processing previous hunk
-                    if start1 != -1 and patch_extra_lines_after > 0:
+                    if is_valid_hunk and (start1 != -1 and patch_extra_lines_after > 0):
                         delta_lines = [f' {line}' for line in original_lines[start1 + size1 - 1:start1 + size1 - 1 + patch_extra_lines_after]]
                         extended_patch_lines.extend(delta_lines)
 
                     section_header, size1, size2, start1, start2 = extract_hunk_headers(match)
 
-                    if patch_extra_lines_before > 0 or patch_extra_lines_after > 0:
+                    is_valid_hunk = check_if_hunk_lines_matches_to_file(i, original_lines, patch_lines, start1)
+
+                    if is_valid_hunk and (patch_extra_lines_before > 0 or patch_extra_lines_after > 0):
                         def _calc_context_limits(patch_lines_before):
                             extended_start1 = max(1, start1 - patch_lines_before)
                             extended_size1 = size1 + (start1 - extended_start1) + patch_extra_lines_after
@@ -138,7 +141,7 @@ def process_patch_lines(patch_str, original_file_str, patch_extra_lines_before, 
         return patch_str
 
     # finish processing last hunk
-    if start1 != -1 and patch_extra_lines_after > 0:
+    if start1 != -1 and patch_extra_lines_after > 0 and is_valid_hunk:
         delta_lines = original_lines[start1 + size1 - 1:start1 + size1 - 1 + patch_extra_lines_after]
         # add space at the beginning of each extra line
         delta_lines = [f' {line}' for line in delta_lines]
@@ -146,6 +149,23 @@ def process_patch_lines(patch_str, original_file_str, patch_extra_lines_before, 
 
     extended_patch_str = '\n'.join(extended_patch_lines)
     return extended_patch_str
+
+
+def check_if_hunk_lines_matches_to_file(i, original_lines, patch_lines, start1):
+    """
+    Check if the hunk lines match the original file content. We saw cases where the hunk header line doesn't match the original file content, and then
+    extending the hunk with extra lines before the hunk header can cause the hunk to be invalid.
+    """
+    is_valid_hunk = True
+    try:
+        if i + 1 < len(patch_lines) and patch_lines[i + 1][0] == ' ': # an existing line in the file
+            if patch_lines[i + 1].strip() != original_lines[start1 - 1].strip():
+                is_valid_hunk = False
+                get_logger().error(
+                    f"Invalid hunk in PR, line {start1} in hunk header doesn't match the original file content")
+    except:
+        pass
+    return is_valid_hunk
 
 
 def extract_hunk_headers(match):
