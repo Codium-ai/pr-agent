@@ -199,7 +199,24 @@ class GithubProvider(GitProvider):
                     if avoid_load:
                         original_file_content_str = ""
                     else:
-                        original_file_content_str = self._get_pr_file_content(file, self.pr.base.sha)
+                        # The base.sha will point to the current state of the base branch (including parallel merges), not the original base commit when the PR was created
+                        # We can fix this by finding the merge base commit between the PR head and base branches
+                        # Note that The pr.head.sha is actually correct as is - it points to the latest commit in your PR branch.
+                        # This SHA isn't affected by parallel merges to the base branch since it's specific to your PR's branch.
+                        repo = self.repo_obj
+                        pr = self.pr
+                        try:
+                            compare = repo.compare(pr.base.sha, pr.head.sha)
+                            merge_base_commit = compare.merge_base_commit
+                        except Exception as e:
+                            get_logger().error(f"Failed to get merge base commit: {e}")
+                            merge_base_commit = pr.base
+                        if merge_base_commit.sha != pr.base.sha:
+                            get_logger().info(
+                                f"Using merge base commit {merge_base_commit.sha} instead of base commit "
+                                f"{pr.base.sha} for {file.filename}")
+                        original_file_content_str = self._get_pr_file_content(file, merge_base_commit.sha)
+
                     if not patch:
                         patch = load_large_diff(file.filename, new_file_content_str, original_file_content_str)
 
@@ -283,8 +300,7 @@ class GithubProvider(GitProvider):
                                                                                 relevant_line_in_file,
                                                                                 absolute_position)
         if position == -1:
-            if get_settings().config.verbosity_level >= 2:
-                get_logger().info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
+            get_logger().info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
             subject_type = "FILE"
         else:
             subject_type = "LINE"
@@ -296,11 +312,9 @@ class GithubProvider(GitProvider):
             # publish all comments in a single message
             self.pr.create_review(commit=self.last_commit_id, comments=comments)
         except Exception as e:
-            if get_settings().config.verbosity_level >= 2:
-                get_logger().error(f"Failed to publish inline comments")
+            get_logger().info(f"Initially failed to publish inline comments as committable")
 
-            if (getattr(e, "status", None) == 422
-                    and get_settings().github.publish_inline_comments_fallback_with_verification and not disable_fallback):
+            if (getattr(e, "status", None) == 422 and not disable_fallback):
                 pass  # continue to try _publish_inline_comments_fallback_with_verification
             else:
                 raise e # will end up with publishing the comments one by one
@@ -308,8 +322,7 @@ class GithubProvider(GitProvider):
             try:
                 self._publish_inline_comments_fallback_with_verification(comments)
             except Exception as e:
-                if get_settings().config.verbosity_level >= 2:
-                    get_logger().error(f"Failed to publish inline code comments fallback, error: {e}")
+                get_logger().error(f"Failed to publish inline code comments fallback, error: {e}")
                 raise e
 
     def _publish_inline_comments_fallback_with_verification(self, comments: list[dict]):
@@ -334,11 +347,9 @@ class GithubProvider(GitProvider):
             for comment in fixed_comments_as_one_liner:
                 try:
                     self.publish_inline_comments([comment], disable_fallback=True)
-                    if get_settings().config.verbosity_level >= 2:
-                        get_logger().info(f"Published invalid comment as a single line comment: {comment}")
+                    get_logger().info(f"Published invalid comment as a single line comment: {comment}")
                 except:
-                    if get_settings().config.verbosity_level >= 2:
-                        get_logger().error(f"Failed to publish invalid comment as a single line comment: {comment}")
+                    get_logger().error(f"Failed to publish invalid comment as a single line comment: {comment}")
 
     def _verify_code_comment(self, comment: dict):
         is_verified = False
@@ -396,8 +407,7 @@ class GithubProvider(GitProvider):
                 if fixed_comment != comment:
                     fixed_comments.append(fixed_comment)
             except Exception as e:
-                if get_settings().config.verbosity_level >= 2:
-                    get_logger().error(f"Failed to fix inline comment, error: {e}")
+                get_logger().error(f"Failed to fix inline comment, error: {e}")
         return fixed_comments
 
     def publish_code_suggestions(self, code_suggestions: list) -> bool:
@@ -412,16 +422,14 @@ class GithubProvider(GitProvider):
             relevant_lines_end = suggestion['relevant_lines_end']
 
             if not relevant_lines_start or relevant_lines_start == -1:
-                if get_settings().config.verbosity_level >= 2:
-                    get_logger().exception(
-                        f"Failed to publish code suggestion, relevant_lines_start is {relevant_lines_start}")
+                get_logger().exception(
+                    f"Failed to publish code suggestion, relevant_lines_start is {relevant_lines_start}")
                 continue
 
             if relevant_lines_end < relevant_lines_start:
-                if get_settings().config.verbosity_level >= 2:
-                    get_logger().exception(f"Failed to publish code suggestion, "
-                                      f"relevant_lines_end is {relevant_lines_end} and "
-                                      f"relevant_lines_start is {relevant_lines_start}")
+                get_logger().exception(f"Failed to publish code suggestion, "
+                                  f"relevant_lines_end is {relevant_lines_end} and "
+                                  f"relevant_lines_start is {relevant_lines_start}")
                 continue
 
             if relevant_lines_end > relevant_lines_start:
@@ -445,8 +453,7 @@ class GithubProvider(GitProvider):
             self.publish_inline_comments(post_parameters_list)
             return True
         except Exception as e:
-            if get_settings().config.verbosity_level >= 2:
-                get_logger().error(f"Failed to publish code suggestion, error: {e}")
+            get_logger().error(f"Failed to publish code suggestion, error: {e}")
             return False
 
     def edit_comment(self, comment, body: str):
@@ -505,6 +512,7 @@ class GithubProvider(GitProvider):
                     elif self.deployment_type == 'user':
                         same_comment_creator = self.github_user_id == existing_comment['user']['login']
                     if existing_comment['subject_type'] == 'file' and comment['path'] == existing_comment['path'] and same_comment_creator:
+
                         headers, data_patch = self.pr._requester.requestJsonAndCheck(
                             "PATCH", f"{self.base_url}/repos/{self.repo}/pulls/comments/{existing_comment['id']}", input={"body":comment['body']}
                         )
@@ -516,8 +524,7 @@ class GithubProvider(GitProvider):
                     )
             return True
         except Exception as e:
-            if get_settings().config.verbosity_level >= 2:
-                get_logger().error(f"Failed to publish diffview file summary, error: {e}")
+            get_logger().error(f"Failed to publish diffview file summary, error: {e}")
             return False
 
     def remove_initial_comment(self):
@@ -805,8 +812,7 @@ class GithubProvider(GitProvider):
                 link = f"{self.base_url_html}/{self.repo}/pull/{self.pr_num}/files#diff-{sha_file}R{absolute_position}"
                 return link
         except Exception as e:
-            if get_settings().config.verbosity_level >= 2:
-                get_logger().info(f"Failed adding line link, error: {e}")
+            get_logger().info(f"Failed adding line link, error: {e}")
 
         return ""
 

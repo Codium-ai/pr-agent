@@ -337,6 +337,8 @@ class PRCodeSuggestions:
                                         model,
                                         add_line_numbers_to_hunks=True,
                                         disable_extra_lines=False)
+        self.patches_diff_list = [self.patches_diff]
+        self.patches_diff_no_line_number = self.remove_line_numbers([self.patches_diff])[0]
 
         if self.patches_diff:
             get_logger().debug(f"PR diff", artifact=self.patches_diff)
