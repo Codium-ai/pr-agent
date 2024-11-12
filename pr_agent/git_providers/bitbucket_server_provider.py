@@ -5,6 +5,7 @@ from urllib.parse import quote_plus, urlparse
 from atlassian.bitbucket import Bitbucket
 from requests.exceptions import HTTPError
 
+from ..algo.git_patch_processing import decode_if_bytes
 from ..algo.language_handler import is_valid_file
 from ..algo.types import EDIT_TYPE, FilePatchInfo
 from ..algo.utils import (find_line_number_of_relevant_line_in_file,
@@ -201,25 +202,21 @@ class BitbucketServerProvider(GitProvider):
                 case 'ADD':
                     edit_type = EDIT_TYPE.ADDED
                     new_file_content_str = self.get_file(file_path, head_sha)
-                    if isinstance(new_file_content_str, (bytes, bytearray)):
-                        new_file_content_str = new_file_content_str.decode("utf-8")
+                    new_file_content_str = decode_if_bytes(new_file_content_str)
                     original_file_content_str = ""
                 case 'DELETE':
                     edit_type = EDIT_TYPE.DELETED
                     new_file_content_str = ""
                     original_file_content_str = self.get_file(file_path, base_sha)
-                    if isinstance(original_file_content_str, (bytes, bytearray)):
-                        original_file_content_str = original_file_content_str.decode("utf-8")
+                    original_file_content_str = decode_if_bytes(original_file_content_str)
                 case 'RENAME':
                     edit_type = EDIT_TYPE.RENAMED
                 case _:
                     edit_type = EDIT_TYPE.MODIFIED
                     original_file_content_str = self.get_file(file_path, base_sha)
-                    if isinstance(original_file_content_str, (bytes, bytearray)):
-                        original_file_content_str = original_file_content_str.decode("utf-8")
+                    original_file_content_str = decode_if_bytes(original_file_content_str)
                     new_file_content_str = self.get_file(file_path, head_sha)
-                    if isinstance(new_file_content_str, (bytes, bytearray)):
-                        new_file_content_str = new_file_content_str.decode("utf-8")
+                    new_file_content_str = decode_if_bytes(new_file_content_str)
 
             patch = load_large_diff(file_path, new_file_content_str, original_file_content_str)
 
@@ -330,10 +327,10 @@ class BitbucketServerProvider(GitProvider):
         for comment in comments:
             if 'position' in comment:
                 self.publish_inline_comment(comment['body'], comment['position'], comment['path'])
-            elif 'start_line' in comment:  # multi-line comment
+            elif 'start_line' in comment: # multi-line comment
                 # note that bitbucket does not seem to support range - only a comment on a single line - https://community.developer.atlassian.com/t/api-post-endpoint-for-inline-pull-request-comments/60452
                 self.publish_inline_comment(comment['body'], comment['start_line'], comment['path'])
-            elif 'line' in comment:  # single-line comment
+            elif 'line' in comment: # single-line comment
                 self.publish_inline_comment(comment['body'], comment['line'], comment['path'])
             else:
                 get_logger().error(f"Could not publish inline comment: {comment}")
