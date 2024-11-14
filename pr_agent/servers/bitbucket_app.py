@@ -98,11 +98,14 @@ async def _perform_commands_bitbucket(commands_conf: str, agent: PRAgent, api_ur
 
 def is_bot_user(data) -> bool:
     try:
-        if data["data"]["actor"]["type"] != "user":
-            get_logger().info(f"BitBucket actor type is not 'user': {data['data']['actor']['type']}")
+        actor = data.get("data", {}).get("actor", {})
+        # allow actor type: user . if it's "AppUser" or "team" then it is a bot user
+        allowed_actor_types = {"user"}
+        if actor and actor["type"].lower() not in allowed_actor_types:
+            get_logger().info(f"BitBucket actor type is not 'user', skipping: {actor}")
             return True
     except Exception as e:
-        get_logger().error("Failed 'is_bot_user' logic: {e}")
+        get_logger().error(f"Failed 'is_bot_user' logic: {e}")
     return False
 
 
@@ -161,16 +164,18 @@ async def handle_github_webhooks(background_tasks: BackgroundTasks, request: Req
                     return "OK"
 
             # Get the username of the sender
-            try:
-                username = data["data"]["actor"]["username"]
-            except KeyError:
+            actor = data.get("data", {}).get("actor", {})
+            if actor:
                 try:
-                    username = data["data"]["actor"]["display_name"]
+                    username = actor["username"]
                 except KeyError:
-                    username = data["data"]["actor"]["nickname"]
-            log_context["sender"] = username
+                    try:
+                        username = actor["display_name"]
+                    except KeyError:
+                        username = actor["nickname"]
+                log_context["sender"] = username
 
-            sender_id = data["data"]["actor"]["account_id"]
+            sender_id = data.get("data", {}).get("actor", {}).get("account_id", "")
             log_context["sender_id"] = sender_id
             jwt_parts = input_jwt.split(".")
             claim_part = jwt_parts[1]
