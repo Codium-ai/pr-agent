@@ -98,11 +98,14 @@ async def _perform_commands_bitbucket(commands_conf: str, agent: PRAgent, api_ur
 
 def is_bot_user(data) -> bool:
     try:
-        if data["data"]["actor"]["type"] != "user":
-            get_logger().info(f"BitBucket actor type is not 'user': {data['data']['actor']['type']}")
+        actor = data.get("data", {}).get("actor", {})
+        # allow actor type: user . if it's "AppUser" or "team" then it is a bot user
+        allowed_actor_types = {"user"}
+        if actor and actor["type"].lower() not in allowed_actor_types:
+            get_logger().info(f"BitBucket actor type is not 'user', skipping: {actor}")
             return True
     except Exception as e:
-        get_logger().error("Failed 'is_bot_user' logic: {e}")
+        get_logger().error(f"Failed 'is_bot_user' logic: {e}")
     return False
 
 
