@@ -164,14 +164,16 @@ async def handle_github_webhooks(background_tasks: BackgroundTasks, request: Req
                     return "OK"
 
             # Get the username of the sender
-            try:
-                username = data["data"]["actor"]["username"]
-            except KeyError:
+            actor = data.get("data", {}).get("actor", {})
+            if actor:
                 try:
-                    username = data["data"]["actor"]["display_name"]
+                    username = actor["username"]
                 except KeyError:
-                    username = data["data"]["actor"]["nickname"]
-            log_context["sender"] = username
+                    try:
+                        username = actor["display_name"]
+                    except KeyError:
+                        username = actor["nickname"]
+                log_context["sender"] = username
 
             sender_id = data["data"]["actor"]["account_id"]
             log_context["sender_id"] = sender_id
