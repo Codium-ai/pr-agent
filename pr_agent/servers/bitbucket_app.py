@@ -175,7 +175,7 @@ async def handle_github_webhooks(background_tasks: BackgroundTasks, request: Req
                         username = actor["nickname"]
                 log_context["sender"] = username
 
-            sender_id = data["data"]["actor"]["account_id"]
+            sender_id = data.get("data", {}).get("actor", {}).get("account_id", "")
             log_context["sender_id"] = sender_id
             jwt_parts = input_jwt.split(".")
             claim_part = jwt_parts[1]
