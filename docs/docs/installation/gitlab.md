@@ -38,6 +38,7 @@ You can also modify the `script` section to run different Qodo Merge commands, o
 
 Note that if your base branches are not protected, don't set the variables as `protected`, since the pipeline will not have access to them.
 
+> **Note**: The `$CI_SERVER_FQDN` variable is available starting from GitLab version 16.10. If you're using an earlier version, this variable will not be available. However, you can combine `$CI_SERVER_HOST` and `$CI_SERVER_PORT` to achieve the same result. Please ensure you're using a compatible version or adjust your configuration.
 
 
 ## Run a GitLab webhook server
