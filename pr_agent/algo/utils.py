@@ -173,7 +173,7 @@ def convert_to_markdown_v2(output_data: dict,
                 if is_value_no(value):
                     markdown_text += f'### {emoji} No relevant tests\n\n'
                 else:
-                    markdown_text += f"### PR contains tests\n\n"
+                    markdown_text += f"### {emoji} PR contains tests\n\n"
         elif 'ticket compliance check' in key_nice.lower():
             markdown_text = ticket_markdown_logic(emoji, markdown_text, value, gfm_supported)
         elif 'security concerns' in key_nice.lower():
@@ -224,12 +224,21 @@ def convert_to_markdown_v2(output_data: dict,
                         issue_content = issue.get('issue_content', '').strip()
                         start_line = int(str(issue.get('start_line', 0)).strip())
                         end_line = int(str(issue.get('end_line', 0)).strip())
-                        reference_link = git_provider.get_line_link(relevant_file, start_line, end_line)
+                        if git_provider:
+                            reference_link = git_provider.get_line_link(relevant_file, start_line, end_line)
+                        else:
+                            reference_link = None
 
                         if gfm_supported:
-                            issue_str = f"<a href='{reference_link}'><strong>{issue_header}</strong></a><br>{issue_content}"
+                            if reference_link is not None and len(reference_link) > 0:
+                                issue_str = f"<a href='{reference_link}'><strong>{issue_header}</strong></a><br>{issue_content}"
+                            else:
+                                issue_str = f"<strong>{issue_header}</strong><br>{issue_content}"
                         else:
-                            issue_str = f"[**{issue_header}**]({reference_link})\n\n{issue_content}\n\n"
+                            if reference_link is not None and len(reference_link) > 0:
+                                issue_str = f"[**{issue_header}**]({reference_link})\n\n{issue_content}\n\n"
+                            else:
+                                issue_str = f"**{issue_header}**\n\n{issue_content}\n\n"
                         markdown_text += f"{issue_str}\n\n"
                     except Exception as e:
                         get_logger().exception(f"Failed to process 'Recommended focus areas for review': {e}")
