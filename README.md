@@ -43,14 +43,15 @@ Qode Merge PR-Agent aims to help efficiently review and handle pull requests, by
 
 ## News and Updates
 
-### November 7, 2024
+### November 18, 2024
 
-Added new option: `--pr_code_suggestions.focus_only_on_problems=true`
+A new mode was enabled by default for code suggestions - `--pr_code_suggestions.focus_only_on_problems=true`:
 
-When enabled, this option reduces the number of code suggestions and categorizes them into just two groups: "Possible Issues" and "General". The suggestions will focus primarily on identifying and fixing code problems, rather than style considerations like best practices, maintainability, or readability.
+- This option reduces the number of code suggestions received
+- The suggestions will focus more on identifying and fixing code problems, rather than style considerations like best practices, maintainability, or readability.
+- The suggestions will be categorized into just two groups: "Possible Issues" and "General".
 
-This mode is ideal for developers who want to concentrate specifically on finding and fixing potential bugs in their pull request code.
-
+Still, if you prefer the previous mode, you can set `--pr_code_suggestions.focus_only_on_problems=false` in the [configuration file](https://qodo-merge-docs.qodo.ai/usage-guide/configuration_options/).
 
 **Example results:**
 

@@ -277,7 +277,7 @@ Using a combination of both can help the AI model to provide relevant and tailor
       </tr>
       <tr>
         <td><b>focus_only_on_problems</b></td>
-        <td>If set to true, suggestions will focus primarily on identifying and fixing code problems, and less on style considerations like best practices, maintainability, or readability. Default is false.</td> 
+        <td>If set to true, suggestions will focus primarily on identifying and fixing code problems, and less on style considerations like best practices, maintainability, or readability. Default is true.</td> 
       </tr>
       <tr>
         <td><b>persistent_comment</b></td>
