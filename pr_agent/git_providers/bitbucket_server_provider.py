@@ -1,10 +1,11 @@
-from distutils.version import LooseVersion
+from packaging.version import parse as parse_version
 from typing import Optional, Tuple
 from urllib.parse import quote_plus, urlparse
 
 from atlassian.bitbucket import Bitbucket
 from requests.exceptions import HTTPError
 
+from ..algo.git_patch_processing import decode_if_bytes
 from ..algo.language_handler import is_valid_file
 from ..algo.types import EDIT_TYPE, FilePatchInfo
 from ..algo.utils import (find_line_number_of_relevant_line_in_file,
@@ -36,7 +37,7 @@ class BitbucketServerProvider(GitProvider):
                                                               token=get_settings().get("BITBUCKET_SERVER.BEARER_TOKEN",
                                                                                        None))
         try:
-            self.bitbucket_api_version = LooseVersion(self.bitbucket_client.get("rest/api/1.0/application-properties").get('version'))
+            self.bitbucket_api_version = parse_version(self.bitbucket_client.get("rest/api/1.0/application-properties").get('version'))
         except Exception:
             self.bitbucket_api_version = None
 
@@ -160,7 +161,7 @@ class BitbucketServerProvider(GitProvider):
         head_sha = self.pr.fromRef['latestCommit']
 
         # if Bitbucket api version is >= 8.16 then use the merge-base api for 2-way diff calculation
-        if self.bitbucket_api_version is not None and self.bitbucket_api_version >= LooseVersion("8.16"):
+        if self.bitbucket_api_version is not None and self.bitbucket_api_version >= parse_version("8.16"):
             try:
                 base_sha = self.bitbucket_client.get(self._get_merge_base())['id']
             except Exception as e:
@@ -175,7 +176,7 @@ class BitbucketServerProvider(GitProvider):
             # if Bitbucket api version is None or < 7.0 then do a simple diff with a guaranteed common ancestor
             base_sha = source_commits_list[-1]['parents'][0]['id']
             # if Bitbucket api version is 7.0-8.15 then use 2-way diff functionality for the base_sha
-            if self.bitbucket_api_version is not None and self.bitbucket_api_version >= LooseVersion("7.0"):
+            if self.bitbucket_api_version is not None and self.bitbucket_api_version >= parse_version("7.0"):
                 try:
                     destination_commits = list(
                         self.bitbucket_client.get_commits(self.workspace_slug, self.repo_slug, base_sha,
@@ -201,25 +202,21 @@ class BitbucketServerProvider(GitProvider):
                 case 'ADD':
                     edit_type = EDIT_TYPE.ADDED
                     new_file_content_str = self.get_file(file_path, head_sha)
-                    if isinstance(new_file_content_str, (bytes, bytearray)):
-                        new_file_content_str = new_file_content_str.decode("utf-8")
+                    new_file_content_str = decode_if_bytes(new_file_content_str)
                     original_file_content_str = ""
                 case 'DELETE':
                     edit_type = EDIT_TYPE.DELETED
                     new_file_content_str = ""
                     original_file_content_str = self.get_file(file_path, base_sha)
-                    if isinstance(original_file_content_str, (bytes, bytearray)):
-                        original_file_content_str = original_file_content_str.decode("utf-8")
+                    original_file_content_str = decode_if_bytes(original_file_content_str)
                 case 'RENAME':
                     edit_type = EDIT_TYPE.RENAMED
                 case _:
                     edit_type = EDIT_TYPE.MODIFIED
                     original_file_content_str = self.get_file(file_path, base_sha)
-                    if isinstance(original_file_content_str, (bytes, bytearray)):
-                        original_file_content_str = original_file_content_str.decode("utf-8")
+                    original_file_content_str = decode_if_bytes(original_file_content_str)
                     new_file_content_str = self.get_file(file_path, head_sha)
-                    if isinstance(new_file_content_str, (bytes, bytearray)):
-                        new_file_content_str = new_file_content_str.decode("utf-8")
+                    new_file_content_str = decode_if_bytes(new_file_content_str)
 
             patch = load_large_diff(file_path, new_file_content_str, original_file_content_str)
 
@@ -330,10 +327,10 @@ class BitbucketServerProvider(GitProvider):
         for comment in comments:
             if 'position' in comment:
                 self.publish_inline_comment(comment['body'], comment['position'], comment['path'])
-            elif 'start_line' in comment:  # multi-line comment
+            elif 'start_line' in comment: # multi-line comment
                 # note that bitbucket does not seem to support range - only a comment on a single line - https://community.developer.atlassian.com/t/api-post-endpoint-for-inline-pull-request-comments/60452
                 self.publish_inline_comment(comment['body'], comment['start_line'], comment['path'])
-            elif 'line' in comment:  # single-line comment
+            elif 'line' in comment: # single-line comment
                 self.publish_inline_comment(comment['body'], comment['line'], comment['path'])
             else:
                 get_logger().error(f"Could not publish inline comment: {comment}")
