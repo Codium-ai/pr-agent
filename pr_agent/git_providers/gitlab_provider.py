@@ -1,3 +1,4 @@
+import difflib
 import hashlib
 import re
 from typing import Optional, Tuple
@@ -278,20 +279,23 @@ class GitLabProvider(GitProvider):
                         new_code_snippet = original_suggestion['improved_code']
                         content = original_suggestion['suggestion_content']
                         label = original_suggestion['label']
-                        if 'score' in original_suggestion:
-                            score = original_suggestion['score']
-                        else:
-                            score = 7
+                        score = original_suggestion.get('score', 7)
 
                     if hasattr(self, 'main_language'):
                         language = self.main_language
                     else:
                         language = ''
                     link = self.get_line_link(relevant_file, line_start, line_end)
-                    body_fallback =f"**Suggestion:** {content} [{label}, importance: {score}]\n___\n"
-                    body_fallback +=f"\n\nReplace  lines ([{line_start}-{line_end}]({link}))\n\n```{language}\n{old_code_snippet}\n````\n\n"
-                    body_fallback +=f"with\n\n```{language}\n{new_code_snippet}\n````"
-                    body_fallback += f"\n\n___\n\n`(Cannot implement this suggestion directly, as gitlab API does not enable committing to a non -+ line in a PR)`"
+                    body_fallback =f"**Suggestion:** {content} [{label}, importance: {score}]\n\n"
+                    body_fallback +=f"\n\n<details><summary>[{target_file.filename} [{line_start}-{line_end}]]({link}):</summary>\n\n"
+                    body_fallback += f"\n\n___\n\n`(Cannot implement directly - GitLab API allows committable suggestions strictly on MR diff lines)`"
+                    body_fallback+="</details>\n\n"
+                    diff_patch = difflib.unified_diff(old_code_snippet.split('\n'),
+                                                new_code_snippet.split('\n'), n=999)
+                    patch_orig = "\n".join(diff_patch)
+                    patch = "\n".join(patch_orig.splitlines()[5:]).strip('\n')
+                    diff_code = f"\n\n```diff\n{patch.rstrip()}\n```"
+                    body_fallback += diff_code
 
                     # Create a general note on the file in the MR
                     self.mr.notes.create({
@@ -304,6 +308,7 @@ class GitLabProvider(GitProvider):
                             'file_path': f'{target_file.filename}',
                         }
                     })
+                    get_logger().debug(f"Created fallback comment in MR {self.id_mr} with position {pos_obj}")
 
                     # get_logger().debug(
                     #     f"Failed to create comment in MR {self.id_mr} with position {pos_obj} (probably not a '+' line)")
