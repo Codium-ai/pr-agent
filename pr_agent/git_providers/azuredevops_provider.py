@@ -67,16 +67,14 @@ class AzureDevopsProvider(GitProvider):
             relevant_lines_end = suggestion['relevant_lines_end']
 
             if not relevant_lines_start or relevant_lines_start == -1:
-                if get_settings().config.verbosity_level >= 2:
-                    get_logger().exception(
-                        f"Failed to publish code suggestion, relevant_lines_start is {relevant_lines_start}")
+                get_logger().warning(
+                    f"Failed to publish code suggestion, relevant_lines_start is {relevant_lines_start}")
                 continue
 
             if relevant_lines_end < relevant_lines_start:
-                if get_settings().config.verbosity_level >= 2:
-                    get_logger().exception(f"Failed to publish code suggestion, "
-                                           f"relevant_lines_end is {relevant_lines_end} and "
-                                           f"relevant_lines_start is {relevant_lines_start}")
+                get_logger().warning(f"Failed to publish code suggestion, "
+                                       f"relevant_lines_end is {relevant_lines_end} and "
+                                       f"relevant_lines_start is {relevant_lines_start}")
                 continue
 
             if relevant_lines_end > relevant_lines_start:
@@ -95,9 +93,11 @@ class AzureDevopsProvider(GitProvider):
                     "side": "RIGHT",
                 }
             post_parameters_list.append(post_parameters)
+        if not post_parameters_list:
+            return False
 
-        try:
-            for post_parameters in post_parameters_list:
+        for post_parameters in post_parameters_list:
+            try:
                 comment = Comment(content=post_parameters["body"], comment_type=1)
                 thread = CommentThread(comments=[comment],
                                        thread_context={
@@ -117,15 +117,11 @@ class AzureDevopsProvider(GitProvider):
                     repository_id=self.repo_slug,
                     pull_request_id=self.pr_num
                 )
-                if get_settings().config.verbosity_level >= 2:
-                    get_logger().info(
-                        f"Published code suggestion on {self.pr_num} at {post_parameters['path']}"
-                    )
-            return True
-        except Exception as e:
-            if get_settings().config.verbosity_level >= 2:
-                get_logger().error(f"Failed to publish code suggestion, error: {e}")
-            return False
+            except Exception as e:
+                get_logger().warning(f"Azure failed to publish code suggestion, error: {e}")
+        return True
+
+
 
     def get_pr_description_full(self) -> str:
         return self.pr.description
