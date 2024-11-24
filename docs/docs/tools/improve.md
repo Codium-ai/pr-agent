@@ -259,6 +259,18 @@ Structure your `best_practices.md` file using the following format:
 ...
 ```
 
+##### Dedicated label for best practices suggestions
+Best practice suggestions are labeled as `Organization best practice` by default. 
+To customize this label, modify it in your configuration file:
+
+```toml
+[best_practices]
+organization_name = ""
+```
+
+And the label will be: `{organization_name} best practice`.
+
+
 ##### Example results
 
 ![best_practice](https://codium.ai/images/pr_agent/org_best_practice.png){width=512}
