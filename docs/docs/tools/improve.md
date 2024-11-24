@@ -245,6 +245,20 @@ enable_global_best_practices = true
 
 Then, create a `best_practices.md` wiki file in the root of [global](https://qodo-merge-docs.qodo.ai/usage-guide/configuration_options/#global-configuration-file) configuration repository,  `pr-agent-settings`.
 
+##### Best practices for multiple languages
+For a git organization working with multiple programming languages, you can maintain a centralized global `best_practices.md` file containing language-specific guidelines. 
+When reviewing pull requests, Qodo Merge automatically identifies the programming language and applies the relevant best practices from this file.
+Structure your `best_practices.md` file using the following format:
+
+```
+# [Python]
+...
+# [Java]
+...
+# [JavaScript]
+...
+```
+
 ##### Example results
 
 ![best_practice](https://codium.ai/images/pr_agent/org_best_practice.png){width=512}
