@@ -194,6 +194,9 @@ class GitLabProvider(GitProvider):
         self.publish_persistent_comment_full(pr_comment, initial_header, update_header, name, final_update_message)
 
     def publish_comment(self, mr_comment: str, is_temporary: bool = False):
+        if is_temporary and not get_settings().config.publish_output_progress:
+            get_logger().debug(f"Skipping publish_comment for temporary comment: {mr_comment}")
+            return None
         mr_comment = self.limit_output_characters(mr_comment, self.max_comment_chars)
         comment = self.mr.notes.create({'body': mr_comment})
         if is_temporary:
