@@ -325,6 +325,9 @@ class BitbucketProvider(GitProvider):
         self.publish_comment(pr_comment)
 
     def publish_comment(self, pr_comment: str, is_temporary: bool = False):
+        if is_temporary and not get_settings().config.publish_output_progress:
+            get_logger().debug(f"Skipping publish_comment for temporary comment: {pr_comment}")
+            return None
         pr_comment = self.limit_output_characters(pr_comment, self.max_comment_length)
         comment = self.pr.comment(pr_comment)
         if is_temporary:

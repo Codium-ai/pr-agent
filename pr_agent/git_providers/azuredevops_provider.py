@@ -378,6 +378,9 @@ class AzureDevopsProvider(GitProvider):
             return []
 
     def publish_comment(self, pr_comment: str, is_temporary: bool = False, thread_context=None):
+        if is_temporary and not get_settings().config.publish_output_progress:
+            get_logger().debug(f"Skipping publish_comment for temporary comment: {pr_comment}")
+            return None
         comment = Comment(content=pr_comment)
         thread = CommentThread(comments=[comment], thread_context=thread_context, status=5)
         thread_response = self.azure_devops_client.create_thread(
