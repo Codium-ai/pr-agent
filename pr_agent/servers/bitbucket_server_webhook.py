@@ -72,6 +72,11 @@ async def handle_webhook(background_tasks: BackgroundTasks, request: Request):
     commands_to_run = []
 
     if data["eventKey"] == "pr:opened":
+        apply_repo_settings(pr_url)
+        if get_settings().config.disable_auto_feedback:  # auto commands for PR, and auto feedback is disabled
+            get_logger().info(f"Auto feedback is disabled, skipping auto commands for PR {pr_url}", **log_context)
+            return
+        get_settings().set("config.is_auto_command", True)
         commands_to_run.extend(_get_commands_list_from_settings('BITBUCKET_SERVER.PR_COMMANDS'))
     elif data["eventKey"] == "pr:comment:added":
         commands_to_run.append(data["comment"]["text"])

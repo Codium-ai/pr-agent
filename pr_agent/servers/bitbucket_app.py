@@ -77,6 +77,9 @@ async def handle_manifest(request: Request, response: Response):
 
 async def _perform_commands_bitbucket(commands_conf: str, agent: PRAgent, api_url: str, log_context: dict, data: dict):
     apply_repo_settings(api_url)
+    if commands_conf == "pr_commands" and get_settings().config.disable_auto_feedback:  # auto commands for PR, and auto feedback is disabled
+        get_logger().info(f"Auto feedback is disabled, skipping auto commands for PR {api_url=}")
+        return
     if data.get("event", "") == "pullrequest:created":
         if not should_process_pr_logic(data):
             return
