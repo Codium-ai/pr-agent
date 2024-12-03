@@ -1,20 +1,19 @@
 
 ## Getting Started with Qodo Merge Pro
 
-Qodo Merge Pro is a versatile application compatible with GitHub, GitLab, and BitBucket, hosted by CodiumAI.
+Qodo Merge Pro is a versatile application compatible with GitHub, GitLab, and BitBucket, hosted by QodoAI.
 See [here](https://qodo-merge-docs.qodo.ai/overview/pr_agent_pro/) for more details about the benefits of using Qodo Merge Pro.
 
-Interested parties can subscribe to Qodo Merge Pro through the following [link](https://www.codium.ai/pricing/).
-After subscribing, you are granted the ability to easily install the application across any of your repositories.
+## Install Qodo Merge Pro for GitHub Cloud
+
+Qodo Merge Pro for GitHub cloud is available for installation through the [GitHub Marketplace](https://github.com/apps/qodo-merge-pro).
+A complimentary two-week trial is provided to all new users. Following the trial period, user licenses (seats) are required for continued access.
+
+To purchase user licenses, please visit our [pricing page](https://www.qodo.ai/pricing/).
+Once subscribed, users can seamlessly deploy the application across any of their GitHub repositories.
 
 ![Qodo Merge Pro](https://codium.ai/images/pr_agent/pr_agent_pro_install.png){width=468}
 
-Each user who wants to use Qodo Merge pro needs to buy a seat.
-Initially, CodiumAI offers a two-week trial period at no cost, after which continued access requires each user to secure a personal seat.
-Once a user acquires a seat, they gain the flexibility to use Qodo Merge Pro across any repository where it was enabled.
-
-Users without a purchased seat who interact with a repository featuring Qodo Merge Pro are entitled to receive up to five complimentary feedbacks.
-Beyond this limit, Qodo Merge Pro will cease to respond to their inquiries unless a seat is purchased.
 
 ## Install Qodo Merge Pro for GitHub Enterprise Server
 
@@ -53,7 +52,7 @@ Install a webhook for your repository or groups, by clicking “webhooks” on t
 In the webhook definition form, fill in the following fields:
 URL: https://pro.gitlab.pr-agent.codium.ai/webhook
 
-Secret token: Your CodiumAI key
+Secret token: Your QodoAI key
 Trigger: Check the ‘comments’ and ‘merge request events’ boxes.
 Enable SSL verification: Check the box.
 
