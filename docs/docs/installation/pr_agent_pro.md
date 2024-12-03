@@ -19,7 +19,7 @@ To use Qodo Merge Pro application on your private GitHub Enterprise Server, you 
 
 ### GitHub Open Source Projects
 
-For open-source projects, Qodo Merge Pro is available for free usage. To install Qodo Merge Pro for your open-source repositories, use the following marketplace [link](
+For open-source projects, Qodo Merge Pro is available for free usage. To install Qodo Merge Pro for your open-source repositories, use the following marketplace [link](https://github.com/apps/qodo-merge-pro-for-open-source).
 
 ## Install Qodo Merge Pro for Bitbucket
 
