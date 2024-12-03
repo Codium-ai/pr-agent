@@ -45,9 +45,11 @@ Qode Merge PR-Agent aims to help efficiently review and handle pull requests, by
 
 ### December 2, 2024
 
-Open-source repositories can now freely use Qodo Merge Pro, and enjoy easy one-click installation using our dedicated [app](https://github.com/apps/qodo-merge-pro-for-open-source).
+Open-source repositories can now freely use Qodo Merge Pro, and enjoy easy one-click installation using a marketplace [app](https://github.com/apps/qodo-merge-pro-for-open-source).
 
 <kbd><img src="https://github.com/user-attachments/assets/b0838724-87b9-43b0-ab62-73739a3a855c" width="512"></kbd>
+
+See [here](https://qodo-merge-docs.qodo.ai/installation/pr_agent_pro/) for more details about installing Qodo Merge Pro for private repositories.
 
 
 ### November 18, 2024
