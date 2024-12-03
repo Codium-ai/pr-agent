@@ -1,16 +1,24 @@
 # Fetching Ticket Context for PRs
+`Supported Git Platforms : GitHub, GitLab, Bitbucket`
+
 ## Overview
 Qodo Merge PR Agent streamlines code review workflows by seamlessly connecting with multiple ticket management systems.
 This integration enriches the review process by automatically surfacing relevant ticket information and context alongside code changes.
-
 
 ## Affected Tools
 
 Ticket Recognition Requirements:
 
-1. The PR description should contain a link to the ticket.
+1. The PR description should contain a link to the ticket or if the branch name starts with the ticket id / number.
 2. For Jira tickets, you should follow the instructions in [Jira Integration](https://qodo-merge-docs.qodo.ai/core-abilities/fetching_ticket_context/#jira-integration) in order to authenticate with Jira.
 
+Ticket data fetched:
+1. Ticket Title
+2. Ticket Description
+3. Custom Fields (Acceptance criteria)
+4. Subtasks (linked tasks)
+5. Labels
+6. Attached Images/Screenshots 💎
 
 ### Describe tool
 Qodo Merge PR Agent will recognize the ticket and use the ticket content (title, description, labels) to provide additional context for the code changes.
@@ -49,12 +57,18 @@ Since Qodo Merge PR Agent is integrated with GitHub, it doesn't require any addi
 ### Jira Integration 💎
 
 We support both Jira Cloud and Jira Server/Data Center.
-To integrate with Jira, The PR Description should contain a link to the Jira ticket.
+To integrate with Jira, you can link your PR to a ticket using either of these methods:
 
-For Jira integration, include a ticket reference in your PR description using either the complete URL format `https://<JIRA_ORG>.atlassian.net/browse/ISSUE-123` or the shortened ticket ID `ISSUE-123`.
+**Method 1: Description Reference:**
+
+Include a ticket reference in your PR description using either the complete URL format https://<JIRA_ORG>.atlassian.net/browse/ISSUE-123 or the shortened ticket ID ISSUE-123.
+
+**Method 2: Branch Name Detection:**
+
+Name your branch with the ticket ID as a prefix (e.g., `ISSUE-123-feature-description` or `ISSUE-123/feature-description`).
 
 !!! note "Jira Base URL"
-    If using the shortened format, ensure your configuration file contains the Jira base URL under the [jira] section like this:
+    For shortened ticket IDs or branch detection (method 2), you must configure the Jira base URL in your configuration file under the [jira] section:
 
     ```toml
     [jira]
