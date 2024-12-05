@@ -1,6 +1,6 @@
 ### Overview
 
-[Qodo Merge Pro](https://www.codium.ai/pricing/) is a hosted version of Qodo Merge, provided by Qodo. A complimentary two-week trial is offered, followed by a monthly subscription fee.
+[Qodo Merge Pro](https://www.codium.ai/pricing/) is a hosted version of open-source [Qodo Merge (PR-Agent)](https://github.com/Codium-ai/pr-agent). A complimentary two-week trial is offered, followed by a monthly subscription fee.
 Qodo Merge Pro is designed for companies and teams that require additional features and capabilities. It provides the following benefits:
 
 1. **Fully managed** - We take care of everything for you - hosting, models, regular updates, and more. Installation is as simple as signing up and adding the Qodo Merge app to your GitHub\GitLab\BitBucket repo.
