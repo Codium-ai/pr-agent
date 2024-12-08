@@ -35,7 +35,6 @@ class Range(BaseModel):
 
 class ModelType(str, Enum):
     REGULAR = "regular"
-    TURBO = "turbo"
 
 
 class PRReviewHeader(str, Enum):
