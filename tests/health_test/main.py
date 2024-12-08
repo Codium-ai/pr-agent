@@ -18,7 +18,7 @@ setup_logger(log_level)
 
 
 async def run_async():
-    pr_url = "https://github.com/Codium-ai/pr-agent/pull/1385" # A small PR to test the agent
+    pr_url = os.getenv('TEST_PR_URL', 'https://github.com/Codium-ai/pr-agent/pull/1385')
 
     get_settings().set("config.git_provider", "github")
     get_settings().set("config.publish_output", False)
