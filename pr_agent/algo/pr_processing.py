@@ -333,7 +333,7 @@ def generate_full_patch(convert_hunks_to_line_numbers, file_dict, max_tokens_mod
     return total_tokens, patches, remaining_files_list_new, files_in_patch_list
 
 
-async def retry_with_fallback_models(f: Callable, model_type: ModelType = ModelType.REGULAR):
+async def retry_with_fallback_models(f: Callable, model_type: ModelType = ModelType.WEAK):
     all_models = _get_all_models(model_type)
     all_deployments = _get_all_deployments(all_models)
     # try each (model, deployment_id) pair until one is successful, otherwise raise exception
@@ -353,9 +353,9 @@ async def retry_with_fallback_models(f: Callable, model_type: ModelType = ModelT
                 raise Exception(f"Failed to generate prediction with any model of {all_models}")
 
 
-def _get_all_models(model_type: ModelType = ModelType.REGULAR) -> List[str]:
-    if model_type == ModelType.TURBO:
-        model = get_settings().config.model_turbo
+def _get_all_models(model_type: ModelType = ModelType.WEAK) -> List[str]:
+    if model_type == ModelType.WEAK:
+        model = get_settings().config.model_week
     else:
         model = get_settings().config.model
     fallback_models = get_settings().config.fallback_models
