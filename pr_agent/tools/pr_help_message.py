@@ -114,7 +114,7 @@ class PRHelpMessage:
                 self.vars['snippets'] = docs_prompt.strip()
 
                 # run the AI model
-                response = await retry_with_fallback_models(self._prepare_prediction, model_type=ModelType.REGULAR)
+                response = await retry_with_fallback_models(self._prepare_prediction, model_type=ModelType.WEAK)
                 response_yaml = load_yaml(response)
                 response_str = response_yaml.get('response')
                 relevant_sections = response_yaml.get('relevant_sections')
