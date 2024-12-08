@@ -171,6 +171,10 @@ class PRDescription:
                             update_comment = f"**[PR Description]({pr_url})** updated to latest commit ({latest_commit_url})"
                             self.git_provider.publish_comment(update_comment)
                 self.git_provider.remove_initial_comment()
+            else:
+                get_logger().info('PR description, but not published since publish_output is False.')
+                get_settings().data = {"artifact": pr_body}
+                return
         except Exception as e:
             get_logger().error(f"Error generating PR description {self.pr_id}: {e}")
 

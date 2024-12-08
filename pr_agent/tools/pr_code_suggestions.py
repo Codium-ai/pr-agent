@@ -204,7 +204,8 @@ class PRCodeSuggestions:
                         self.git_provider.remove_comment(self.progress_response)
             else:
                 get_logger().info('Code suggestions generated for PR, but not published since publish_output is False.')
-                get_settings().data = {"artifact": data}
+                pr_body = self.generate_summarized_suggestions(data)
+                get_settings().data = {"artifact": pr_body}
                 return
         except Exception as e:
             get_logger().error(f"Failed to generate code suggestions for PR, error: {e}",

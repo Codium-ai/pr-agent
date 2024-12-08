@@ -170,6 +170,10 @@ class PRReviewer:
                 self.git_provider.remove_initial_comment()
                 if get_settings().pr_reviewer.inline_code_comments:
                     self._publish_inline_code_comments()
+            else:
+                get_logger().info("Review output is not published")
+                get_settings().data = {"artifact": pr_review}
+                return
         except Exception as e:
             get_logger().error(f"Failed to review PR: {e}")
 
