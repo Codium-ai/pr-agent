@@ -1,4 +1,5 @@
 ## Local repo (CLI)
+
 When running from your locally cloned Qodo Merge repo (CLI), your local configuration file will be used.
 Examples of invoking the different tools via the CLI:
 
@@ -35,9 +36,28 @@ This is useful for debugging or experimenting with different tools.
 
 Default is "github".
 
+### CLI Health Check
+To verify that Qodo Merge has been configured correctly, you can run this health check command from the repository root:
 
+```bash
+python -m tests.health_test.main
+```
 
-### Online usage
+If the health check passes, you will see the following output:
+
+```
+========
+Health test passed successfully
+========
+```
+
+At the end of the run.
+
+Before running the health check, ensure you have:
+- Configured your [LLM provider](https://qodo-merge-docs.qodo.ai/usage-guide/changing_a_model/)
+- Added a valid GitHub token to your configuration file
+
+## Online usage
 
 Online usage means invoking Qodo Merge tools by [comments](https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695021901) on a PR.
 Commands for invoking the different tools via comments:
@@ -57,7 +77,11 @@ For example, if you want to edit the `review` tool configurations, you can run:
 ```
 Any configuration value in [configuration file](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml) file can be similarly edited. Comment `/config` to see the list of available configurations.
 
-## Disabling automatic feedback
+
+## Qodo Merge Automatic Feedback
+
+
+### Disabling all automatic feedback
 
 To easily disable all automatic feedback from Qodo Merge (GitHub App, GitLab Webhook, BitBucket App, Azure DevOps Webhook), set in a configuration file:
 
@@ -66,13 +90,15 @@ To easily disable all automatic feedback from Qodo Merge (GitHub App, GitLab Web
 disable_auto_feedback = true
 ```
 
-## GitHub App
+When this parameter is set to `true`, Qodo Merge will not run any automatic tools (like `describe`, `review`, `improve`) when a new PR is opened, or when new code is pushed to an open PR.
+
+### GitHub App
 
 !!! note "Configurations for Qodo Merge Pro"
     Qodo Merge Pro for GitHub is an App, hosted by CodiumAI. So all the instructions below are relevant also for Qodo Merge Pro users.
     Same goes for [GitLab webhook](#gitlab-webhook) and [BitBucket App](#bitbucket-app) sections.
 
-### GitHub app automatic tools when a new PR is opened
+#### GitHub app automatic tools when a new PR is opened
 
 The [github_app](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L108) section defines GitHub app specific configurations.
 
@@ -105,7 +131,7 @@ pr_commands = ["describe", "review"]
 
 In this case, only the `describe` and `review` tools will run automatically when a new PR is opened.
 
-### GitHub app automatic tools for push actions (commits to an open PR)
+#### GitHub app automatic tools for push actions (commits to an open PR)
 
 In addition to running automatic tools when a PR is opened, the GitHub app can also respond to new code that is pushed to an open PR.
 
@@ -121,7 +147,7 @@ push_commands = [
 ```
 This means that when new code is pushed to the PR, the Qodo Merge will run the `describe` and `review` tools, with the specified parameters.
 
-## GitHub Action
+### GitHub Action
 `GitHub Action` is a different way to trigger Qodo Merge tools, and uses a different configuration mechanism than `GitHub App`.<br>
 You can configure settings for `GitHub Action` by adding environment variables under the env section in `.github/workflows/pr_agent.yml` file.
 Specifically, start by setting the following environment variables:
@@ -155,7 +181,7 @@ publish_labels = false
 
 to prevent Qodo Merge from publishing labels when running the `describe` tool.
 
-## GitLab Webhook
+### GitLab Webhook
 After setting up a GitLab webhook, to control which commands will run automatically when a new MR is opened, you can set the `pr_commands` parameter in the configuration file, similar to the GitHub App:
 
 ```toml
@@ -181,7 +207,7 @@ push_commands = [
 
 Note that to use the 'handle_push_trigger' feature, you need to give the gitlab webhook also the "Push events" scope.
 
-## BitBucket App
+### BitBucket App
 Similar to GitHub app, when running Qodo Merge from BitBucket App, the default [configuration file](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml) from a pre-built docker will be initially loaded.
 
 By uploading a local `.pr_agent.toml` file to the root of the repo's main branch, you can edit and customize any configuration parameter. Note that you need to upload `.pr_agent.toml` prior to creating a PR, in order for the configuration to take effect.
@@ -200,7 +226,7 @@ If you experience a lack of responses from Qodo Merge, you might want to set: `b
 This will prevent Qodo Merge from acquiring the full file content, and will only use the diff content. This will reduce the number of requests made to BitBucket, at the cost of small decrease in accuracy, as dynamic context will not be applicable.
 
 
-### BitBucket Self-Hosted App automatic tools
+#### BitBucket Self-Hosted App automatic tools
 
 To control which commands will run automatically when a new PR is opened, you can set the `pr_commands` parameter in the configuration file:
 Specifically, set the following values:
@@ -225,7 +251,7 @@ push_commands = [
 ]
 ```
 
-## Azure DevOps provider
+### Azure DevOps provider
 
 To use Azure DevOps provider use the following settings in configuration.toml:
 ```toml
@@ -247,7 +273,7 @@ org = "https://dev.azure.com/YOUR_ORGANIZATION/"
 # pat = "YOUR_PAT_TOKEN" needed only if using PAT for authentication
 ```
 
-### Azure DevOps Webhook
+#### Azure DevOps Webhook
 
 To control which commands will run automatically when a new PR is opened, you can set the `pr_commands` parameter in the configuration file, similar to the GitHub App:
 ```toml
