@@ -355,7 +355,7 @@ async def retry_with_fallback_models(f: Callable, model_type: ModelType = ModelT
 
 def _get_all_models(model_type: ModelType = ModelType.WEAK) -> List[str]:
     if model_type == ModelType.WEAK:
-        model = get_settings().config.model_week
+        model = get_settings().config.model_weak
     else:
         model = get_settings().config.model
     fallback_models = get_settings().config.fallback_models
