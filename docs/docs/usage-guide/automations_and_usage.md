@@ -54,6 +54,7 @@ Health test passed successfully
 At the end of the run.
 
 Before running the health check, ensure you have:
+
 - Configured your [LLM provider](https://qodo-merge-docs.qodo.ai/usage-guide/changing_a_model/)
 - Added a valid GitHub token to your configuration file
 
