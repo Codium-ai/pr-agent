@@ -79,7 +79,7 @@ class PR_LineQuestions:
                                                                                                line_end=line_end,
                                                                                                side=side)
         if self.patch_with_lines:
-            response = await retry_with_fallback_models(self._get_prediction, model_type=ModelType.TURBO)
+            response = await retry_with_fallback_models(self._get_prediction, model_type=ModelType.WEAK)
 
             get_logger().info('Preparing answer...')
             if comment_id:

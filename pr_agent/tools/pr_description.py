@@ -99,7 +99,7 @@ class PRDescription:
             # ticket extraction if exists
             await extract_and_cache_pr_tickets(self.git_provider, self.vars)
 
-            await retry_with_fallback_models(self._prepare_prediction, ModelType.TURBO)
+            await retry_with_fallback_models(self._prepare_prediction, ModelType.WEAK)
 
             if self.prediction:
                 self._prepare_data()
