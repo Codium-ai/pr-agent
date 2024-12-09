@@ -128,7 +128,7 @@ This page can contain a list of best practices, coding standards, and guidelines
 The AI model will use this wiki page as a reference, and in case the PR code violates any of the guidelines, it will create additional suggestions, with a dedicated label: `Organization
 best practice`.
 
-Example for a python `best_practices.md` content can:
+Example for a python `best_practices.md` content:
 ```markdown
 ## Project best practices
 - Make sure that I/O operations are encapsulated in a try-except block
@@ -143,7 +143,7 @@ Tips for writing an effective `best_practices.md` file:
 
 - Write clearly and concisely
 - Include brief code examples when helpful
-- Focus on project-specific guidelines, that will result in relevant suggestions
+- Focus on project-specific guidelines, that will result in relevant suggestions you actually want to get
 - Keep the file relatively short, under 800 lines, since:
     - AI models may not process effectively very long documents
     - Long files tend to contain generic guidelines already known to AI
@@ -163,7 +163,8 @@ Then, create a `best_practices.md` wiki file in the root of [global](https://qod
 #### Best practices for multiple languages
 For a git organization working with multiple programming languages, you can maintain a centralized global `best_practices.md` file containing language-specific guidelines. 
 When reviewing pull requests, Qodo Merge automatically identifies the programming language and applies the relevant best practices from this file.
-Structure your `best_practices.md` file using the following format:
+
+To do this, structure your `best_practices.md` file using the following format:
 
 ```
 # [Python]
