@@ -353,7 +353,7 @@ async def retry_with_fallback_models(f: Callable, model_type: ModelType = ModelT
                 raise Exception(f"Failed to generate prediction with any model of {all_models}")
 
 
-def _get_all_models(model_type: ModelType = ModelType.WEAK) -> List[str]:
+def _get_all_models(model_type: ModelType = ModelType.REGULAR) -> List[str]:
     if model_type == ModelType.WEAK:
         model = get_settings().config.model_weak
     else:
