@@ -95,6 +95,111 @@ This feature is controlled by a boolean configuration parameter: `pr_code_sugges
 
     Instead, we leverage a dedicated private page, within your repository wiki, to track suggestions. This approach offers convenient secure suggestion tracking while avoiding pull requests or any noise to the main repository.
 
+## `Extra instructions` and `best practices`
+
+The `improve` tool can be further customized by providing additional instructions and best practices to the AI model.
+
+### Extra instructions
+
+>`Platforms supported: GitHub, GitLab, Bitbucket, Azure DevOps`
+
+You can use the `extra_instructions` configuration option to give the AI model additional instructions for the `improve` tool.
+Be specific, clear, and concise in the instructions. With extra instructions, you are the prompter.
+
+Examples for possible instructions:
+```toml
+[pr_code_suggestions]
+extra_instructions="""\
+(1) Answer in japanese
+(2) Don't suggest to add try-excpet block
+(3) Ignore changes in toml files
+...
+"""
+```
+Use triple quotes to write multi-line instructions. Use bullet points or numbers to make the instructions more readable.
+
+### Best practices 💎
+
+>`Platforms supported: GitHub, GitLab, Bitbucket`
+
+Another option to give additional guidance to the AI model is by creating a dedicated [**wiki page**](https://github.com/Codium-ai/pr-agent/wiki) called `best_practices.md`.
+This page can contain a list of best practices, coding standards, and guidelines that are specific to your repo/organization.
+
+The AI model will use this wiki page as a reference, and in case the PR code violates any of the guidelines, it will create additional suggestions, with a dedicated label: `Organization
+best practice`.
+
+Example for a python `best_practices.md` content can:
+```markdown
+## Project best practices
+- Make sure that I/O operation are encapsulated in a try-except block
+- Use the `logging` module for logging instead of `print` statements
+- Use `is` and `is not` to compare with `None`
+- Use `if __name__ == '__main__':` to run the code only when the script is executed
+- Use `with` statement to open files
+...
+```
+
+Tips for writing an effective `best_practices.md` file:
+
+- Write clearly and concisely
+- Include brief code examples when helpful
+- Focus on project-specific guidelines, that will result in relevant suggestions
+- Keep the file relatively short, under 800 lines, since:
+    - AI models may not process effectively very long documents
+    - Long files tend to contain generic guidelines already known to AI
+
+#### Local and global best practices
+By default, Qodo Merge will look for a local `best_practices.md` wiki file in the root of the relevant local repo.
+
+If you want to enable also a global `best_practices.md` wiki file, set first in the global configuration file:
+
+```toml
+[best_practices]
+enable_global_best_practices = true
+```
+
+Then, create a `best_practices.md` wiki file in the root of [global](https://qodo-merge-docs.qodo.ai/usage-guide/configuration_options/#global-configuration-file) configuration repository,  `pr-agent-settings`.
+
+#### Best practices for multiple languages
+For a git organization working with multiple programming languages, you can maintain a centralized global `best_practices.md` file containing language-specific guidelines. 
+When reviewing pull requests, Qodo Merge automatically identifies the programming language and applies the relevant best practices from this file.
+Structure your `best_practices.md` file using the following format:
+
+```
+# [Python]
+...
+# [Java]
+...
+# [JavaScript]
+...
+```
+
+#### Dedicated label for best practices suggestions
+Best practice suggestions are labeled as `Organization best practice` by default. 
+To customize this label, modify it in your configuration file:
+
+```toml
+[best_practices]
+organization_name = "..."
+```
+
+And the label will be: `{organization_name} best practice`.
+
+
+#### Example results
+
+![best_practice](https://codium.ai/images/pr_agent/org_best_practice.png){width=512}
+
+
+### How to combine `extra instructions` and `best practices`
+
+The `extra instructions` configuration is more related to the `improve` tool prompt. It can be used, for example, to avoid specific suggestions ("Don't suggest to add try-except block", "Ignore changes in toml files", ...) or to emphasize specific aspects or formats ("Answer in Japanese", "Give only short suggestions", ...)
+
+In contrast, the `best_practices.md` file is a general guideline for the way code should be written in the repo.
+
+Using a combination of both can help the AI model to provide relevant and tailored suggestions.
+
+
 ## Usage Tips
 
 ### Implementing the proposed code suggestions
@@ -190,99 +295,6 @@ This approach has two main benefits:
 
 Note: Chunking is primarily relevant for large PRs. For most PRs (up to 500 lines of code), Qodo Merge will be able to process the entire code in a single call.
 
-
-### 'Extra instructions' and 'best practices'
-
-#### Extra instructions
-
->`Platforms supported: GitHub, GitLab, Bitbucket`
-
-You can use the `extra_instructions` configuration option to give the AI model additional instructions for the `improve` tool.
-Be specific, clear, and concise in the instructions. With extra instructions, you are the prompter. Specify relevant aspects that you want the model to focus on.
-
-Examples for possible instructions:
-```toml
-[pr_code_suggestions]
-extra_instructions="""\
-(1) Answer in japanese
-(2) Don't suggest to add try-excpet block
-(3) Ignore changes in toml files
-...
-"""
-```
-Use triple quotes to write multi-line instructions. Use bullet points or numbers to make the instructions more readable.
-
-#### Best practices 💎
-
->`Platforms supported: GitHub, GitLab`
-
-Another option to give additional guidance to the AI model is by creating a dedicated [**wiki page**](https://github.com/Codium-ai/pr-agent/wiki) called `best_practices.md`.
-This page can contain a list of best practices, coding standards, and guidelines that are specific to your repo/organization.
-
-The AI model will use this wiki page as a reference, and in case the PR code violates any of the guidelines, it will suggest improvements accordingly, with a dedicated label: `Organization
-best practice`.
-
-Example for a `best_practices.md` content can be found [here](https://github.com/Codium-ai/pr-agent/blob/main/docs/docs/usage-guide/EXAMPLE_BEST_PRACTICE.md) (adapted from Google's [pyguide](https://google.github.io/styleguide/pyguide.html)).
-This file is only an example. Since it is used as a prompt for an AI model, we want to emphasize the following:
-
-- It should be written in a clear and concise manner
-- If needed, it should give short relevant code snippets as examples
-- Recommended to limit the text to 800 lines or fewer. Here’s why:
-
-     1) Extremely long best practices documents may not be fully processed by the AI model.
-
-     2) A lengthy file probably represent a more "**generic**" set of guidelines, which the AI model is already familiar with. The objective is to focus on a more targeted set of guidelines tailored to the specific needs of this project.
-
-##### Local and global best practices
-By default, Qodo Merge will look for a local `best_practices.md` wiki file in the root of the relevant local repo.
-
-If you want to enable also a global `best_practices.md` wiki file, set first in the global configuration file:
-
-```toml
-[best_practices]
-enable_global_best_practices = true
-```
-
-Then, create a `best_practices.md` wiki file in the root of [global](https://qodo-merge-docs.qodo.ai/usage-guide/configuration_options/#global-configuration-file) configuration repository,  `pr-agent-settings`.
-
-##### Best practices for multiple languages
-For a git organization working with multiple programming languages, you can maintain a centralized global `best_practices.md` file containing language-specific guidelines. 
-When reviewing pull requests, Qodo Merge automatically identifies the programming language and applies the relevant best practices from this file.
-Structure your `best_practices.md` file using the following format:
-
-```
-# [Python]
-...
-# [Java]
-...
-# [JavaScript]
-...
-```
-
-##### Dedicated label for best practices suggestions
-Best practice suggestions are labeled as `Organization best practice` by default. 
-To customize this label, modify it in your configuration file:
-
-```toml
-[best_practices]
-organization_name = ""
-```
-
-And the label will be: `{organization_name} best practice`.
-
-
-##### Example results
-
-![best_practice](https://codium.ai/images/pr_agent/org_best_practice.png){width=512}
-
-
-#### How to combine `extra instructions` and `best practices`
-
-The `extra instructions` configuration is more related to the `improve` tool prompt. It can be used, for example, to avoid specific suggestions ("Don't suggest to add try-except block", "Ignore changes in toml files", ...) or to emphasize specific aspects or formats ("Answer in Japanese", "Give only short suggestions", ...)
-
-In contrast, the `best_practices.md` file is a general guideline for the way code should be written in the repo.
-
-Using a combination of both can help the AI model to provide relevant and tailored suggestions.
 
 ## Configuration options
 
