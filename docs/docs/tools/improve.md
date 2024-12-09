@@ -111,7 +111,7 @@ Examples for possible instructions:
 [pr_code_suggestions]
 extra_instructions="""\
 (1) Answer in japanese
-(2) Don't suggest to add try-excpet block
+(2) Don't suggest to add try-except block
 (3) Ignore changes in toml files
 ...
 """
@@ -131,7 +131,7 @@ best practice`.
 Example for a python `best_practices.md` content can:
 ```markdown
 ## Project best practices
-- Make sure that I/O operation are encapsulated in a try-except block
+- Make sure that I/O operations are encapsulated in a try-except block
 - Use the `logging` module for logging instead of `print` statements
 - Use `is` and `is not` to compare with `None`
 - Use `if __name__ == '__main__':` to run the code only when the script is executed
