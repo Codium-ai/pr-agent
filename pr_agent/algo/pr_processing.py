@@ -11,7 +11,7 @@ from pr_agent.algo.git_patch_processing import (
 from pr_agent.algo.language_handler import sort_files_by_main_languages
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
-from pr_agent.algo.utils import ModelType, clip_tokens, get_max_tokens
+from pr_agent.algo.utils import ModelType, clip_tokens, get_max_tokens, get_weak_model
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers.git_provider import GitProvider
 from pr_agent.log import get_logger
@@ -333,7 +333,7 @@ def generate_full_patch(convert_hunks_to_line_numbers, file_dict, max_tokens_mod
     return total_tokens, patches, remaining_files_list_new, files_in_patch_list
 
 
-async def retry_with_fallback_models(f: Callable, model_type: ModelType = ModelType.WEAK):
+async def retry_with_fallback_models(f: Callable, model_type: ModelType = ModelType.REGULAR):
     all_models = _get_all_models(model_type)
     all_deployments = _get_all_deployments(all_models)
     # try each (model, deployment_id) pair until one is successful, otherwise raise exception
@@ -354,8 +354,8 @@ async def retry_with_fallback_models(f: Callable, model_type: ModelType = ModelT
 
 
 def _get_all_models(model_type: ModelType = ModelType.REGULAR) -> List[str]:
-    if get_settings().config.get('model_weak') and model_type == ModelType.WEAK:
-        model = get_settings().config.model_weak
+    if model_type == ModelType.WEAK:
+        model = get_weak_model()
     else:
         model = get_settings().config.model
     fallback_models = get_settings().config.fallback_models
