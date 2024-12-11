@@ -3,7 +3,7 @@ See [here](https://qodo-merge-docs.qodo.ai/overview/pr_agent_pro/) for more deta
 
 A complimentary two-week trial is provided to all new users. Following the trial period, user licenses (seats) are required for continued access.
 To purchase user licenses, please visit our [pricing page](https://www.qodo.ai/pricing/).
-Once subscribed, users can seamlessly deploy the application across any of their GitHub repositories.
+Once subscribed, users can seamlessly deploy the application across any of their code repositories.
 
 ## Install Qodo Merge Pro for GitHub
 
