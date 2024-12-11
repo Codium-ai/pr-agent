@@ -113,9 +113,9 @@ max_context_tokens=16000
 commitable_code_suggestions = false
 dual_publishing_score_threshold=-1 # -1 to disable, [0-10] to set the threshold (>=) for publishing a code suggestion both in a table and as commitable
 focus_only_on_problems=true
+allow_thumbs_up_down=false
 #
 extra_instructions = ""
-rank_suggestions = false
 enable_help_text=false
 enable_chat_text=false
 enable_intro_text=true
@@ -130,7 +130,7 @@ auto_extended_mode=true
 num_code_suggestions_per_chunk=4
 max_number_of_calls = 3
 parallel_calls = true
-rank_extended_suggestions = false
+
 final_clip_factor = 0.8
 # self-review checkbox
 demand_code_suggestions_self_review=false # add a checkbox for the author to self-review the code suggestions
