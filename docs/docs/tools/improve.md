@@ -342,6 +342,10 @@ Note: Chunking is primarily relevant for large PRs. For most PRs (up to 500 line
         <td><b>wiki_page_accepted_suggestions</b></td>
         <td>If set to true, the tool will automatically track accepted suggestions in a dedicated wiki page called `.pr_agent_accepted_suggestions`. Default is true.</td>
       </tr>
+      <tr>
+        <td><b>allow_thumbs_up_down</b></td>
+        <td>If set to true, all code suggestions will have thumbs up and thumbs down buttons, to encourage users to provide feedback on the suggestions. Default is false.</td>
+      </tr>
     </table>
 
 ??? example "Params for number of suggestions and AI calls"
@@ -358,10 +362,6 @@ Note: Chunking is primarily relevant for large PRs. For most PRs (up to 500 line
       <tr>
         <td><b>max_number_of_calls</b></td>
         <td>Maximum number of chunks. Default is 3.</td>
-      </tr>
-      <tr>
-        <td><b>rank_extended_suggestions</b></td>
-        <td>If set to true, the tool will rank the suggestions, based on importance. Default is true.</td>
       </tr>
     </table>
 
