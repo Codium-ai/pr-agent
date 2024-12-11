@@ -99,5 +99,5 @@ def set_claude_model():
     """
     model_claude = "bedrock/anthropic.claude-3-5-sonnet-20240620-v1:0"
     get_settings().set('config.model', model_claude)
-    get_settings().set('config.model_turbo', model_claude)
+    get_settings().set('config.model_weak', model_claude)
     get_settings().set('config.fallback_models', [model_claude])

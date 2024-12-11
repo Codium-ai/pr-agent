@@ -35,8 +35,7 @@ class Range(BaseModel):
 
 class ModelType(str, Enum):
     REGULAR = "regular"
-    TURBO = "turbo"
-
+    WEAK = "weak"
 
 class PRReviewHeader(str, Enum):
     REGULAR = "## PR Reviewer Guide"

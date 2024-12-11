@@ -114,9 +114,9 @@ class PRCodeSuggestions:
 
             # call the model to get the suggestions, and self-reflect on them
             if not self.is_extended:
-                data = await retry_with_fallback_models(self._prepare_prediction)
+                data = await retry_with_fallback_models(self._prepare_prediction, model_type=ModelType.REGULAR)
             else:
-                data = await retry_with_fallback_models(self._prepare_prediction_extended)
+                data = await retry_with_fallback_models(self._prepare_prediction_extended, model_type=ModelType.REGULAR)
             if not data:
                 data = {"code_suggestions": []}
             self.data = data
