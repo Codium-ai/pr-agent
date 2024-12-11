@@ -113,7 +113,6 @@ max_context_tokens=16000
 commitable_code_suggestions = false
 dual_publishing_score_threshold=-1 # -1 to disable, [0-10] to set the threshold (>=) for publishing a code suggestion both in a table and as commitable
 focus_only_on_problems=true
-allow_thumbs_up_down=false
 #
 extra_instructions = ""
 enable_help_text=false
@@ -140,6 +139,7 @@ fold_suggestions_on_self_review=true # Pro feature. if true, the code suggestion
 # Suggestion impact 💎
 publish_post_process_suggestion_impact=true
 wiki_page_accepted_suggestions=true
+allow_thumbs_up_down=false
 
 [pr_custom_prompt] # /custom_prompt #
 prompt = """\
