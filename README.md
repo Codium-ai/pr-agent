@@ -73,7 +73,7 @@ Focused mode
 
 ### November 4, 2024
 
-Qodo Merge PR Agent will now leverage context from Jira or GitHub tickets to enhance the PR Feedback. Read more about this feature 
+Qodo Merge PR Agent will now leverage context from Jira or GitHub tickets to enhance the PR Feedback. Read more about this feature
 [here](https://qodo-merge-docs.qodo.ai/core-abilities/fetching_ticket_context/)
 
 
@@ -85,36 +85,38 @@ Supported commands per platform:
 |       |                                                                                                         | GitHub             | Gitlab             | Bitbucket          | Azure DevOps |
 |-------|---------------------------------------------------------------------------------------------------------|:--------------------:|:--------------------:|:--------------------:|:------------:|
 | TOOLS | Review                                                                                                  | ✅ | ✅ | ✅ |      ✅       |
-|       | ⮑ Incremental                                                                                           | ✅ |                    |                    |              |
 |       | Describe                                                                                                | ✅ | ✅ | ✅ |      ✅       |
-|       | ⮑ [Inline File Summary](https://pr-agent-docs.codium.ai/tools/describe#inline-file-summary) 💎          | ✅ |                    |                    |              |
 |       | Improve                                                                                                 | ✅ | ✅ | ✅ |      ✅       |
-|       | ⮑ Extended                                                                                              | ✅ | ✅ | ✅ |      ✅       |
 |       | Ask                                                                                                     | ✅ | ✅ | ✅ |      ✅       |
 |       | ⮑ [Ask on code lines](https://pr-agent-docs.codium.ai/tools/ask#ask-lines)                              | ✅ | ✅ |                    |              |
-|       | [Custom Prompt](https://pr-agent-docs.codium.ai/tools/custom_prompt/) 💎                                | ✅ | ✅ | ✅ |              |
-|       | [Test](https://pr-agent-docs.codium.ai/tools/test/) 💎                                                  | ✅ | ✅ |                    |              |
-|       | Reflect and Review                                                                                      | ✅ | ✅ | ✅ |      ✅       |
 |       | Update CHANGELOG.md                                                                                     | ✅ | ✅ | ✅ |      ✅       |
-|       | Find Similar Issue                                                                                      | ✅ |                    |                    |              |
+|       | [Ticket Context](https://qodo-merge-docs.qodo.ai/core-abilities/fetching_ticket_context/) 💎  | ✅ | ✅ |  ✅                  |   |
+|       | [Utilizing Best Practices](https://qodo-merge-docs.qodo.ai/tools/improve/#best-practices/) 💎  | ✅ | ✅ |  ✅                  |   |
+|       | [PR Chat](https://qodo-merge-docs.qodo.ai/chrome-extension/features/#pr-chat) 💎  | ✅ |  |                    |   |
 |       | [Add PR Documentation](https://pr-agent-docs.codium.ai/tools/documentation/) 💎                         | ✅ | ✅ |                   |              |
 |       | [Custom Labels](https://pr-agent-docs.codium.ai/tools/custom_labels/) 💎                                | ✅ | ✅ |                    |              |
 |       | [Analyze](https://pr-agent-docs.codium.ai/tools/analyze/) 💎                                            | ✅ | ✅ |                    |              |
 |       | [CI Feedback](https://pr-agent-docs.codium.ai/tools/ci_feedback/) 💎                                    | ✅ |                    |                    |              |
 |       | [Similar Code](https://pr-agent-docs.codium.ai/tools/similar_code/) 💎                                  | ✅ |                    |                    |              |
+|       | [Custom Prompt](https://pr-agent-docs.codium.ai/tools/custom_prompt/) 💎                                | ✅ | ✅ | ✅ |              |
+|       | [Test](https://pr-agent-docs.codium.ai/tools/test/) 💎                                                  | ✅ | ✅ |                    |              |
 |       |                                                                                                         |                    |                    |                    |              |
 | USAGE | CLI                                                                                                     | ✅ | ✅ | ✅ |      ✅       |
 |       | App / webhook                                                                                           | ✅ | ✅ | ✅ |      ✅       |
 |       | Tagging bot                                                                                             | ✅ |                    |                    |              |
 |       | Actions                                                                                                 | ✅ |✅| ✅ |✅|
 |       |                                                                                                         |                    |                    |                    |              |
-| CORE  | PR compression                                                                                          | ✅ | ✅ | ✅ |      ✅       |
-|       | Repo language prioritization                                                                            | ✅ | ✅ | ✅ |      ✅       |
+| CORE  | [PR compression](https://qodo-merge-docs.qodo.ai/core-abilities/compression_strategy/)                                                                  | ✅ | ✅ | ✅ |      ✅       |
 |       | Adaptive and token-aware file patch fitting                                                             | ✅ | ✅ | ✅ |      ✅       |
 |       | Multiple models support                                                                                 | ✅ | ✅ | ✅ |      ✅       |
+|       | [Local and global metadata](https://qodo-merge-docs.qodo.ai/core-abilities/metadata/)          | ✅ | ✅ | ✅ | ✅             |
+|       | [Dynamic context](https://qodo-merge-docs.qodo.ai/core-abilities/dynamic_context/)          | ✅ | ✅ | ✅ | ✅             |
+|       | [Self reflection](https://qodo-merge-docs.qodo.ai/core-abilities/self_reflection/)          | ✅ | ✅ | ✅ | ✅             |
 |       | [Static code analysis](https://pr-agent-docs.codium.ai/core-abilities/#static-code-analysis) 💎         | ✅ | ✅ | ✅ |              |
 |       | [Global and wiki configurations](https://pr-agent-docs.codium.ai/usage-guide/configuration_options/) 💎 | ✅ | ✅ | ✅ |              |
 |       | [PR interactive actions](https://www.codium.ai/images/pr_agent/pr-actions.mp4) 💎                       | ✅ |        ✅           |                    |              |
+|       | [Impact Evaluation](https://qodo-merge-docs.qodo.ai/core-abilities/impact_evaluation/) 💎  | ✅ | ✅ |                    |   |
+|       | [Suggestion Tracking](https://qodo-merge-docs.qodo.ai/tools/improve/#suggestion-tracking) 💎  | ✅ | ✅ |                    |   |
 - 💎 means this feature is available only in [PR-Agent Pro](https://www.codium.ai/pricing/)
 
 [//]: # (- Support for additional git providers is described in [here]&#40;./docs/Full_environments.md&#41;)
