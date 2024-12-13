@@ -104,7 +104,7 @@ Supported commands per platform:
 |       |                                                                                                         |                    |                    |                    |              |
 | USAGE | [CLI](https://qodo-merge-docs.qodo.ai/usage-guide/automations_and_usage/#local-repo-cli)                                                                                                     | ✅ | ✅ | ✅ |      ✅       |
 |       | [App / webhook](https://qodo-merge-docs.qodo.ai/usage-guide/automations_and_usage/#github-app)                                                                                           | ✅ | ✅ | ✅ |      ✅       |
-|       | [Tagging bot](https://github.com/Codium-ai/pr-agent/edit/main/README.md#try-it-now)                                                                                             | ✅ |                    |                    |              |
+|       | [Tagging bot](https://github.com/Codium-ai/pr-agent#try-it-now)                                                                                             | ✅ |                    |                    |              |
 |       | [Actions](https://qodo-merge-docs.qodo.ai/installation/github/#run-as-a-github-action)                                                                                                 | ✅ |✅| ✅ |✅|
 |       |                                                                                                         |                    |                    |                    |              |
 | CORE  | [PR compression](https://qodo-merge-docs.qodo.ai/core-abilities/compression_strategy/)                                                                  | ✅ | ✅ | ✅ |      ✅       |
