@@ -39,7 +39,7 @@ pr_commands = [
 ]
 
 [pr_reviewer]
-num_code_suggestions = ...
+extra_instructions = "..."
 ...
 ```
 
@@ -95,7 +95,7 @@ num_code_suggestions = ...
 <table>
   <tr>
     <td><b>num_code_suggestions</b></td>
-    <td>Number of code suggestions provided by the 'review' tool. Default is 0, meaning no code suggestions will be provided by the `review` tool.</td>
+    <td>Number of code suggestions provided by the 'review' tool. Default is 0, meaning no code suggestions will be provided by the `review` tool. Note that this is a legacy feature, that will be removed in future releases. Use the `improve` tool instead for code suggestions</td>
   </tr>
   <tr>
     <td><b>inline_code_comments</b></td>
