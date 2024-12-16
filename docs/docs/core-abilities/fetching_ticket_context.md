@@ -5,20 +5,25 @@
 Qodo Merge PR Agent streamlines code review workflows by seamlessly connecting with multiple ticket management systems.
 This integration enriches the review process by automatically surfacing relevant ticket information and context alongside code changes.
 
-## Affected Tools
-
-Ticket Recognition Requirements:
-
-1. The PR description should contain a link to the ticket or if the branch name starts with the ticket id / number.
-2. For Jira tickets, you should follow the instructions in [Jira Integration](https://qodo-merge-docs.qodo.ai/core-abilities/fetching_ticket_context/#jira-integration) in order to authenticate with Jira.
+## Ticket systems supported
+- GitHub
+- Jira (💎)
 
 Ticket data fetched:
+
 1. Ticket Title
 2. Ticket Description
 3. Custom Fields (Acceptance criteria)
 4. Subtasks (linked tasks)
 5. Labels
-6. Attached Images/Screenshots 💎
+6. Attached Images/Screenshots
+
+## Affected Tools
+
+Ticket Recognition Requirements:
+
+- The PR description should contain a link to the ticket or if the branch name starts with the ticket id / number.
+- For Jira tickets, you should follow the instructions in [Jira Integration](https://qodo-merge-docs.qodo.ai/core-abilities/fetching_ticket_context/#jira-integration) in order to authenticate with Jira.
 
 ### Describe tool
 Qodo Merge PR Agent will recognize the ticket and use the ticket content (title, description, labels) to provide additional context for the code changes.
