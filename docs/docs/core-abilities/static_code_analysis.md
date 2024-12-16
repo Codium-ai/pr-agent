@@ -61,7 +61,7 @@ Or be triggered interactively by using the `analyze` tool.
 
 ### Find Similar Code
 
-The [`similar code`](https://qodo-merge-docs.qodo.ai/tools/similar_code/) tool retrieves the most similar code components from inside the organization's codebase, or from open-source code.
+The [`similar code`](https://qodo-merge-docs.qodo.ai/tools/similar_code/) tool retrieves the most similar code components from inside the organization's codebase or from open-source code, including details about the license associated with each repository.
 
 For example:
 

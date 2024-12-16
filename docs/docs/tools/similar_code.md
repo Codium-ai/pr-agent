@@ -49,9 +49,10 @@ It can be invoked automatically from the analyze table, can be accessed by:
 /analyze
 ```
 Choose the components you want to find similar code for, and click on the `similar` checkbox.
+
 ![analyze similar](https://codium.ai/images/pr_agent/analyze_similar.png){width=768}
 
-If you are looking to search for similar code in the organization's codebase, you can click on the `Organization` checkbox, and it will invoke a new search command just for the organization's codebase.
+You can search for similar code either within the organization's codebase or globally, which includes open-source repositories. Each result will include the relevant code components along with their associated license details.
 
 ![similar code global](https://codium.ai/images/pr_agent/similar_code_global.png){width=768}
 
