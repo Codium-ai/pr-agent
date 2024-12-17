@@ -7,11 +7,13 @@ import html
 import json
 import os
 import re
+import sys
 import textwrap
 import time
 import traceback
 from datetime import datetime
 from enum import Enum
+from importlib.metadata import PackageNotFoundError, version
 from typing import Any, List, Tuple
 
 import html2text
@@ -1106,3 +1108,24 @@ def process_description(description_full: str) -> Tuple[str, List]:
         get_logger().exception(f"Failed to process description: {e}")
 
     return base_description_str, files
+
+def get_version() -> str:
+    # First check pyproject.toml if running directly out of repository
+    if os.path.exists("pyproject.toml"):
+        if sys.version_info >= (3, 11):
+            import tomllib
+            with open("pyproject.toml", "rb") as f:
+                data = tomllib.load(f)
+                if "project" in data and "version" in data["project"]:
+                    return data["project"]["version"]
+                else:
+                    get_logger().warning("Version not found in pyproject.toml")
+        else:
+            get_logger().warning("Unable to determine local version from pyproject.toml")
+
+    # Otherwise get the installed pip package version
+    try:
+        return version('pr-agent')
+    except PackageNotFoundError:
+        get_logger().warning("Unable to find package named 'pr-agent'")
+        return "unknown"

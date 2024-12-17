@@ -7,9 +7,9 @@ from litellm import acompletion
 from tenacity import retry, retry_if_exception_type, stop_after_attempt
 
 from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
+from pr_agent.algo.utils import get_version
 from pr_agent.config_loader import get_settings
 from pr_agent.log import get_logger
-from pr_agent.version import get_version
 
 OPENAI_RETRIES = 5
 
