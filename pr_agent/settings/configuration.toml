@@ -219,7 +219,7 @@ override_deployment_type = true
 handle_pr_actions = ['opened', 'reopened', 'ready_for_review']
 pr_commands = [
     "/describe --pr_description.final_update_message=false",
-    "/review --pr_reviewer.num_code_suggestions=0",
+    "/review",
     "/improve",
 ]
 # settings for "pull_request" event with "synchronize" action - used to detect and handle push triggers for new commits
@@ -231,27 +231,27 @@ push_trigger_pending_tasks_backlog = true
 push_trigger_pending_tasks_ttl = 300
 push_commands = [
     "/describe",
-    "/review --pr_reviewer.num_code_suggestions=0",
+    "/review",
 ]
 
 [gitlab]
 url = "https://gitlab.com"
 pr_commands = [
     "/describe --pr_description.final_update_message=false",
-    "/review --pr_reviewer.num_code_suggestions=0",
+    "/review",
     "/improve",
 ]
 handle_push_trigger = false
 push_commands = [
     "/describe",
-    "/review --pr_reviewer.num_code_suggestions=0",
+    "/review",
 ]
 
 [bitbucket_app]
 pr_commands = [
     "/describe --pr_description.final_update_message=false",
-    "/review --pr_reviewer.num_code_suggestions=0",
-    "/improve --pr_code_suggestions.commitable_code_suggestions=true --pr_code_suggestions.suggestions_score_threshold=7",
+    "/review",
+    "/improve --pr_code_suggestions.commitable_code_suggestions=true",
 ]
 avoid_full_files = false
 
@@ -276,8 +276,8 @@ avoid_full_files = false
 url = ""
 pr_commands = [
     "/describe --pr_description.final_update_message=false",
-    "/review --pr_reviewer.num_code_suggestions=0",
-    "/improve --pr_code_suggestions.commitable_code_suggestions=true --pr_code_suggestions.suggestions_score_threshold=7",
+    "/review",
+    "/improve --pr_code_suggestions.commitable_code_suggestions=true",
 ]
 
 [litellm]
