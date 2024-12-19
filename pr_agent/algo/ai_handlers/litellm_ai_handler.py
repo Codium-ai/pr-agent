@@ -7,6 +7,7 @@ from litellm import acompletion
 from tenacity import retry, retry_if_exception_type, stop_after_attempt
 
 from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
+from pr_agent.algo.utils import get_version
 from pr_agent.config_loader import get_settings
 from pr_agent.log import get_logger
 
@@ -132,7 +133,7 @@ class LiteLLMAIHandler(BaseAiHandler):
         if "langfuse" in callbacks:
             metadata.update({
                 "trace_name": command,
-                "tags": [git_provider, command],
+                "tags": [git_provider, command, f'version:{get_version()}'],
                 "trace_metadata": {
                     "command": command,
                     "pr_url": pr_url,
@@ -141,7 +142,7 @@ class LiteLLMAIHandler(BaseAiHandler):
         if "langsmith" in callbacks:
             metadata.update({
                 "run_name": command,
-                "tags": [git_provider, command],
+                "tags": [git_provider, command, f'version:{get_version()}'],
                 "extra": {
                     "metadata": {
                         "command": command,
