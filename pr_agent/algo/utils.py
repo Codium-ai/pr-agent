@@ -104,7 +104,8 @@ def unique_strings(input_list: List[str]) -> List[str]:
 def convert_to_markdown_v2(output_data: dict,
                            gfm_supported: bool = True,
                            incremental_review=None,
-                           git_provider=None) -> str:
+                           git_provider=None,
+                           files=None) -> str:
     """
     Convert a dictionary of data into markdown format.
     Args:
@@ -180,7 +181,7 @@ def convert_to_markdown_v2(output_data: dict,
                 if is_value_no(value):
                     markdown_text += f'### {emoji} No relevant tests\n\n'
                 else:
-                    markdown_text += f"### {emoji} PR contains tests\n\n"
+                    markdown_text += f"### PR contains tests\n\n"
         elif 'ticket compliance check' in key_nice.lower():
             markdown_text = ticket_markdown_logic(emoji, markdown_text, value, gfm_supported)
         elif 'security concerns' in key_nice.lower():
@@ -231,21 +232,35 @@ def convert_to_markdown_v2(output_data: dict,
                         issue_content = issue.get('issue_content', '').strip()
                         start_line = int(str(issue.get('start_line', 0)).strip())
                         end_line = int(str(issue.get('end_line', 0)).strip())
-                        if git_provider:
-                            reference_link = git_provider.get_line_link(relevant_file, start_line, end_line)
-                        else:
-                            reference_link = None
+
+                        relevant_lines_str = extract_relevant_lines_str(end_line, files, relevant_file, start_line)
+                        reference_link = git_provider.get_line_link(relevant_file, start_line, end_line)
 
                         if gfm_supported:
-                            if reference_link is not None and len(reference_link) > 0:
+                            if get_settings().pr_reviewer.extra_issue_links:
+                                issue_content_linked = copy.deepcopy(issue_content)
+                                referenced_variables_list = issue.get('referenced_variables', [])
+                                for component in referenced_variables_list:
+                                    name = component['variable_name'].strip().strip('`')
+
+                                    ind = issue_content.find(name)
+                                    if ind != -1:
+                                        reference_link_component = git_provider.get_line_link(relevant_file, component[
+                                            'relevant_line'], component['relevant_line'])
+                                        issue_content_linked = issue_content_linked[
+                                                               :ind - 1] + f"[`{name}`]({reference_link_component})" + issue_content_linked[
+                                                                                                                       ind + len(
+                                                                                                                           name) + 1:]
+                                    else:
+                                        get_logger().info(
+                                            f"Failed to find variable in issue content: {component['variable_name'].strip()}")
+                                issue_content = issue_content_linked
+                            if relevant_lines_str:
+                                issue_str = f"<details><summary><a href='{reference_link}'><strong>{issue_header}</strong></a>\n\n{issue_content}</summary>\n\n{relevant_lines_str}\n\n</details>"
+                            else:
                                 issue_str = f"<a href='{reference_link}'><strong>{issue_header}</strong></a><br>{issue_content}"
-                            else:
-                                issue_str = f"<strong>{issue_header}</strong><br>{issue_content}"
                         else:
-                            if reference_link is not None and len(reference_link) > 0:
-                                issue_str = f"[**{issue_header}**]({reference_link})\n\n{issue_content}\n\n"
-                            else:
-                                issue_str = f"**{issue_header}**\n\n{issue_content}\n\n"
+                            issue_str = f"[**{issue_header}**]({reference_link})\n\n{issue_content}\n\n"
                         markdown_text += f"{issue_str}\n\n"
                     except Exception as e:
                         get_logger().exception(f"Failed to process 'Recommended focus areas for review': {e}")
@@ -279,6 +294,25 @@ def convert_to_markdown_v2(output_data: dict,
             markdown_text += f"</details>"
 
     return markdown_text
+
+def extract_relevant_lines_str(end_line, files, relevant_file, start_line):
+    try:
+        relevant_lines_str = ""
+        if files:
+            files = set_file_languages(files)
+            for file in files:
+                if file.filename.strip() == relevant_file:
+                    if not file.head_file:
+                        get_logger().warning(f"No content found in file: {file.filename}")
+                        return ""
+                    relevant_file_lines = file.head_file.splitlines()
+                    relevant_lines_str = "\n".join(relevant_file_lines[start_line - 1:end_line])
+                    relevant_lines_str = f"```{file.language}\n{relevant_lines_str}\n```"
+                    break
+        return relevant_lines_str
+    except Exception as e:
+        get_logger().exception(f"Failed to extract relevant lines: {e}")
+        return ""
 
 
 def ticket_markdown_logic(emoji, markdown_text, value, gfm_supported) -> str:
@@ -1134,3 +1168,27 @@ def get_version() -> str:
     except PackageNotFoundError:
         get_logger().warning("Unable to find package named 'pr-agent'")
         return "unknown"
+
+
+def set_file_languages(diff_files) -> List[FilePatchInfo]:
+    try:
+        # if the language is already set, do not change it
+        if hasattr(diff_files[0], 'language') and diff_files[0].language:
+            return diff_files
+
+        # map file extensions to programming languages
+        language_extension_map_org = get_settings().language_extension_map_org
+        extension_to_language = {}
+        for language, extensions in language_extension_map_org.items():
+            for ext in extensions:
+                extension_to_language[ext] = language
+        for file in diff_files:
+            extension_s = '.' + file.filename.rsplit('.')[-1]
+            language_name = "txt"
+            if extension_s and (extension_s in extension_to_language):
+                language_name = extension_to_language[extension_s]
+            file.language = language_name.lower()
+    except Exception as e:
+        get_logger().exception(f"Failed to set file languages: {e}")
+
+    return diff_files
