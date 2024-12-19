@@ -181,7 +181,7 @@ def convert_to_markdown_v2(output_data: dict,
                 if is_value_no(value):
                     markdown_text += f'### {emoji} No relevant tests\n\n'
                 else:
-                    markdown_text += f"### PR contains tests\n\n"
+                    markdown_text += f"### {emoji} PR contains tests\n\n"
         elif 'ticket compliance check' in key_nice.lower():
             markdown_text = ticket_markdown_logic(emoji, markdown_text, value, gfm_supported)
         elif 'security concerns' in key_nice.lower():
@@ -234,33 +234,24 @@ def convert_to_markdown_v2(output_data: dict,
                         end_line = int(str(issue.get('end_line', 0)).strip())
 
                         relevant_lines_str = extract_relevant_lines_str(end_line, files, relevant_file, start_line)
-                        reference_link = git_provider.get_line_link(relevant_file, start_line, end_line)
+                        if git_provider:
+                            reference_link = git_provider.get_line_link(relevant_file, start_line, end_line)
+                        else:
+                            reference_link = None
 
                         if gfm_supported:
-                            if get_settings().pr_reviewer.extra_issue_links:
-                                issue_content_linked = copy.deepcopy(issue_content)
-                                referenced_variables_list = issue.get('referenced_variables', [])
-                                for component in referenced_variables_list:
-                                    name = component['variable_name'].strip().strip('`')
-
-                                    ind = issue_content.find(name)
-                                    if ind != -1:
-                                        reference_link_component = git_provider.get_line_link(relevant_file, component[
-                                            'relevant_line'], component['relevant_line'])
-                                        issue_content_linked = issue_content_linked[
-                                                               :ind - 1] + f"[`{name}`]({reference_link_component})" + issue_content_linked[
-                                                                                                                       ind + len(
-                                                                                                                           name) + 1:]
-                                    else:
-                                        get_logger().info(
-                                            f"Failed to find variable in issue content: {component['variable_name'].strip()}")
-                                issue_content = issue_content_linked
-                            if relevant_lines_str:
-                                issue_str = f"<details><summary><a href='{reference_link}'><strong>{issue_header}</strong></a>\n\n{issue_content}</summary>\n\n{relevant_lines_str}\n\n</details>"
+                            if reference_link is not None and len(reference_link) > 0:
+                                if relevant_lines_str:
+                                    issue_str = f"<details><summary><a href='{reference_link}'><strong>{issue_header}</strong></a>\n\n{issue_content}</summary>\n\n{relevant_lines_str}\n\n</details>"
+                                else:
+                                    issue_str = f"<a href='{reference_link}'><strong>{issue_header}</strong></a><br>{issue_content}"
                             else:
-                                issue_str = f"<a href='{reference_link}'><strong>{issue_header}</strong></a><br>{issue_content}"
+                                issue_str = f"<strong>{issue_header}</strong><br>{issue_content}"
                         else:
-                            issue_str = f"[**{issue_header}**]({reference_link})\n\n{issue_content}\n\n"
+                            if reference_link is not None and len(reference_link) > 0:
+                                issue_str = f"[**{issue_header}**]({reference_link})\n\n{issue_content}\n\n"
+                            else:
+                                issue_str = f"**{issue_header}**\n\n{issue_content}\n\n"
                         markdown_text += f"{issue_str}\n\n"
                     except Exception as e:
                         get_logger().exception(f"Failed to process 'Recommended focus areas for review': {e}")
