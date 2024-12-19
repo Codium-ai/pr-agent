@@ -270,7 +270,9 @@ class PRReviewer:
             incremental_review_markdown_text = f"Starting from commit {last_commit_url}"
 
         markdown_text = convert_to_markdown_v2(data, self.git_provider.is_supported("gfm_markdown"),
-                                            incremental_review_markdown_text, git_provider=self.git_provider)
+                                            incremental_review_markdown_text,
+                                               git_provider=self.git_provider,
+                                               files=self.git_provider.get_diff_files())
 
         # Add help text if gfm_markdown is supported
         if self.git_provider.is_supported("gfm_markdown") and get_settings().pr_reviewer.enable_help_text:
