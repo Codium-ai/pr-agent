@@ -402,10 +402,21 @@ class BitbucketServerProvider(GitProvider):
 
         try:
             projects_index = path_parts.index("projects")
-        except ValueError as e:
+        except ValueError:
+            projects_index = -1
+
+        try:
+            users_index = path_parts.index("users")
+        except ValueError:
+            users_index = -1
+
+        if projects_index == -1 and users_index == -1:
             raise ValueError(f"The provided URL '{pr_url}' does not appear to be a Bitbucket PR URL")
 
-        path_parts = path_parts[projects_index:]
+        if projects_index != -1:
+            path_parts = path_parts[projects_index:]
+        else:
+            path_parts = path_parts[users_index:]
 
         if len(path_parts) < 6 or path_parts[2] != "repos" or path_parts[4] != "pull-requests":
             raise ValueError(
@@ -413,6 +424,8 @@ class BitbucketServerProvider(GitProvider):
             )
 
         workspace_slug = path_parts[1]
+        if users_index != -1:
+            workspace_slug = f"~{workspace_slug}"
         repo_slug = path_parts[3]
         try:
             pr_number = int(path_parts[5])
