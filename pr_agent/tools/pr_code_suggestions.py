@@ -212,7 +212,7 @@ class PRCodeSuggestions:
 
     async def publish_no_suggestions(self):
         pr_body = "## PR Code Suggestions ✨\n\nNo code suggestions found for the PR."
-        if get_settings().config.publish_output:
+        if get_settings().config.publish_output and get_settings().config.publish_output_no_suggestions:
             get_logger().warning('No code suggestions found for the PR.')
             get_logger().debug(f"PR output", artifact=pr_body)
             if self.progress_response:
