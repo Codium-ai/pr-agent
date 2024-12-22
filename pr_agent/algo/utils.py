@@ -1125,8 +1125,8 @@ def get_version() -> str:
                     return data["project"]["version"]
                 else:
                     get_logger().warning("Version not found in pyproject.toml")
-        else:
-            get_logger().warning("Unable to determine local version from pyproject.toml")
+    else:
+        get_logger().warning("Unable to determine local version from pyproject.toml")
 
     # Otherwise get the installed pip package version
     try:
