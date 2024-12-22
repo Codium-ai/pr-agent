@@ -193,8 +193,8 @@ class LiteLLMAIHandler(BaseAiHandler):
                 messages[1]["content"] = [{"type": "text", "text": messages[1]["content"]},
                                           {"type": "image_url", "image_url": {"url": img_path}}]
 
-            # Currently O1 does not support separate system and user prompts
-            O1_MODEL_PREFIX = 'o1-'
+            # Currently, model OpenAI o1 series does not support a separate system and user prompts
+            O1_MODEL_PREFIX = 'o1'
             model_type = model.split('/')[-1] if '/' in model else model
             if model_type.startswith(O1_MODEL_PREFIX):
                 user = f"{system}\n\n\n{user}"
