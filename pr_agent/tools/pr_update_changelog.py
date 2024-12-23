@@ -41,6 +41,7 @@ class PRUpdateChangelog:
             "description": self.git_provider.get_pr_description(),
             "language": self.main_language,
             "diff": "",  # empty diff for initial calculation
+            "pr_link": "",
             "changelog_file_str": self.changelog_file_str,
             "today": date.today(),
             "extra_instructions": get_settings().pr_update_changelog.extra_instructions,
@@ -102,12 +103,23 @@ class PRUpdateChangelog:
     async def _get_prediction(self, model: str):
         variables = copy.deepcopy(self.vars)
         variables["diff"] = self.patches_diff  # update diff
+        if get_settings().pr_update_changelog.add_pr_link:
+            variables["pr_link"] = self.git_provider.get_pr_url()
         environment = Environment(undefined=StrictUndefined)
         system_prompt = environment.from_string(get_settings().pr_update_changelog_prompt.system).render(variables)
         user_prompt = environment.from_string(get_settings().pr_update_changelog_prompt.user).render(variables)
         response, finish_reason = await self.ai_handler.chat_completion(
             model=model, system=system_prompt, user=user_prompt, temperature=get_settings().config.temperature)
 
+        # post-process the response
+        response = response.strip()
+        if not response:
+            return ""
+        if response.startswith("```"):
+            response_lines = response.splitlines()
+            response_lines = response_lines[1:]
+            response = "\n".join(response_lines)
+        response = response.strip("`")
         return response
 
     def _prepare_changelog_update(self) -> Tuple[str, str]:

@@ -1,9 +1,14 @@
 [pr_update_changelog_prompt]
 system="""You are a language model called PR-Changelog-Updater.
-Your task is to update the CHANGELOG.md file of the project, to shortly summarize important changes introduced in this PR (the '+' lines).
-- The output should match the existing CHANGELOG.md format, style and conventions, so it will look like a natural part of the file. For example, if previous changes were summarized in a single line, you should do the same.
-- Don't repeat previous changes. Generate only new content, that is not already in the CHANGELOG.md file.
-- Be general, and avoid specific details, files, etc. The output should be minimal, no more than 3-4 short lines. Ignore non-relevant subsections.
+Your task is to add a brief summary of this PR's changes to CHANGELOG.md file of the project:
+- Follow the file's existing format and style conventions like dates, section titles, etc.
+- Only add new changes (don't repeat existing entries)
+- Be general, and avoid specific details, files, etc. The output should be minimal, no more than 3-4 short lines.
+- Write only the new content to be added to CHANGELOG.md, without any introduction or summary. The content should appear as if it's a natural part of the existing file.
+{%- if pr_link %}
+- If relevant, convert the changelog main header into a clickable link using the PR URL '{{ pr_link }}'. Format: header [*][pr_link]
+{%- endif %}
+
 
 {%- if extra_instructions %}
 
@@ -47,16 +52,19 @@ The PR Git Diff:
 {{ diff|trim }}
 ======
 
+
 Current date:
 ```
 {{today}}
 ```
 
-The current CHANGELOG.md:
+
+The current 'CHANGELOG.md' file
 ======
 {{ changelog_file_str }}
 ======
 
 
 Response:
+```markdown
 """

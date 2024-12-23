@@ -162,6 +162,7 @@ class_name = ""        # in case there are several methods with the same name in
 [pr_update_changelog] # /update_changelog #
 push_changelog_changes=false
 extra_instructions = ""
+add_pr_link=true
 
 [pr_analyze] # /analyze #
 enable_help_text=true

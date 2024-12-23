@@ -17,3 +17,4 @@ Under the section `pr_update_changelog`, the [configuration file](https://github
 
 - `push_changelog_changes`: whether to push the changes to CHANGELOG.md, or just print them. Default is false (print only).
 - `extra_instructions`: Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...
+- `add_pr_link`: whether the model should try to add a link to the PR in the changelog. Default is true.
