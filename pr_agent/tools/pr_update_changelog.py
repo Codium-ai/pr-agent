@@ -108,6 +108,13 @@ class PRUpdateChangelog:
         response, finish_reason = await self.ai_handler.chat_completion(
             model=model, system=system_prompt, user=user_prompt, temperature=get_settings().config.temperature)
 
+        # post-process the response
+        response = response.strip()
+        if response.startswith("```"):
+            response_lines = response.splitlines()
+            response_lines = response_lines[1:]
+            response = "\n".join(response_lines)
+        response = response.strip("`")
         return response
 
     def _prepare_changelog_update(self) -> Tuple[str, str]:
