@@ -41,6 +41,7 @@ class PRUpdateChangelog:
             "description": self.git_provider.get_pr_description(),
             "language": self.main_language,
             "diff": "",  # empty diff for initial calculation
+            "pr_link": "",
             "changelog_file_str": self.changelog_file_str,
             "today": date.today(),
             "extra_instructions": get_settings().pr_update_changelog.extra_instructions,
@@ -102,6 +103,8 @@ class PRUpdateChangelog:
     async def _get_prediction(self, model: str):
         variables = copy.deepcopy(self.vars)
         variables["diff"] = self.patches_diff  # update diff
+        if get_settings().pr_update_changelog.add_pr_link:
+            variables["pr_link"] = self.git_provider.get_pr_url()
         environment = Environment(undefined=StrictUndefined)
         system_prompt = environment.from_string(get_settings().pr_update_changelog_prompt.system).render(variables)
         user_prompt = environment.from_string(get_settings().pr_update_changelog_prompt.user).render(variables)
