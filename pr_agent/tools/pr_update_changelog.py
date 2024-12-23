@@ -113,6 +113,8 @@ class PRUpdateChangelog:
 
         # post-process the response
         response = response.strip()
+        if not response:
+            return ""
         if response.startswith("```"):
             response_lines = response.splitlines()
             response_lines = response_lines[1:]
