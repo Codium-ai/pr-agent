@@ -18,7 +18,7 @@ from pr_agent.config_loader import get_settings, global_settings
 from pr_agent.git_providers import (get_git_provider,
                                     get_git_provider_with_context)
 from pr_agent.git_providers.git_provider import IncrementalPR
-from pr_agent.git_providers.utils import apply_repo_settings
+from pr_agent.git_providers.utils import apply_repo_settings, is_user_name_a_bot, is_pr_description_indicating_bot
 from pr_agent.identity_providers import get_identity_provider
 from pr_agent.identity_providers.identity_provider import Eligibility
 from pr_agent.log import LoggingFormat, get_logger, setup_logger
@@ -238,13 +238,22 @@ def get_log_context(body, event, action, build_number):
     return log_context, sender, sender_id, sender_type
 
 
-def is_bot_user(sender, sender_type):
+def is_bot_user(sender, sender_type, user_description):
     try:
         # logic to ignore PRs opened by bot
-        if get_settings().get("GITHUB_APP.IGNORE_BOT_PR", False) and sender_type == "Bot":
-            if 'pr-agent' not in sender:
+        if get_settings().get("GITHUB_APP.IGNORE_BOT_PR", False):
+            if sender_type.lower() == "bot":
+                if 'pr-agent' not in sender:
+                    get_logger().info(f"Ignoring PR from '{sender=}' because it is a bot")
+                return True
+            if is_user_name_a_bot(sender):
                 get_logger().info(f"Ignoring PR from '{sender=}' because it is a bot")
-            return True
+                return True
+            # Ignore PRs opened by bot users based on their description
+            if isinstance(user_description, str) and is_pr_description_indicating_bot(user_description):
+                get_logger().info(f"Description indicates a bot user: {sender}",
+                                  artifact={"description": user_description})
+                return True
     except Exception as e:
         get_logger().error(f"Failed 'is_bot_user' logic: {e}")
     return False
@@ -307,7 +316,8 @@ async def handle_request(body: Dict[str, Any], event: str):
     log_context, sender, sender_id, sender_type = get_log_context(body, event, action, build_number)
 
     # logic to ignore PRs opened by bot, PRs with specific titles, labels, source branches, or target branches
-    if is_bot_user(sender, sender_type) and 'check_run' not in body:
+    pr_description = body.get("pull_request", {}).get("body", "")
+    if is_bot_user(sender, sender_type, pr_description) and 'check_run' not in body:
         return {}
     if action != 'created' and 'check_run' not in body:
         if not should_process_pr_logic(body):

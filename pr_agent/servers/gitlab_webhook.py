@@ -15,7 +15,7 @@ from starlette_context.middleware import RawContextMiddleware
 from pr_agent.agent.pr_agent import PRAgent
 from pr_agent.algo.utils import update_settings_from_args
 from pr_agent.config_loader import get_settings, global_settings
-from pr_agent.git_providers.utils import apply_repo_settings
+from pr_agent.git_providers.utils import apply_repo_settings, is_user_name_a_bot, is_pr_description_indicating_bot
 from pr_agent.log import LoggingFormat, get_logger, setup_logger
 from pr_agent.secret_providers import get_secret_provider
 
@@ -86,9 +86,13 @@ def is_bot_user(data) -> bool:
     try:
         # logic to ignore bot users (unlike Github, no direct flag for bot users in gitlab)
         sender_name = data.get("user", {}).get("name", "unknown").lower()
-        bot_indicators = ['codium', 'bot_', 'bot-', '_bot', '-bot']
-        if any(indicator in sender_name for indicator in bot_indicators):
+        if is_user_name_a_bot(sender_name):
             get_logger().info(f"Skipping GitLab bot user: {sender_name}")
+            return True
+        pr_description = data.get('object_attributes', {}).get('description', '')
+        if pr_description and is_pr_description_indicating_bot(pr_description):
+            get_logger().info(f"Description indicates a bot user: {sender_name}",
+                              artifact={"description": pr_description})
             return True
     except Exception as e:
         get_logger().error(f"Failed 'is_bot_user' logic: {e}")

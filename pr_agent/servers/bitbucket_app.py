@@ -19,7 +19,7 @@ from starlette_context.middleware import RawContextMiddleware
 from pr_agent.agent.pr_agent import PRAgent
 from pr_agent.algo.utils import update_settings_from_args
 from pr_agent.config_loader import get_settings, global_settings
-from pr_agent.git_providers.utils import apply_repo_settings
+from pr_agent.git_providers.utils import apply_repo_settings, is_user_name_a_bot, is_pr_description_indicating_bot
 from pr_agent.identity_providers import get_identity_provider
 from pr_agent.identity_providers.identity_provider import Eligibility
 from pr_agent.log import LoggingFormat, get_logger, setup_logger
@@ -102,10 +102,21 @@ async def _perform_commands_bitbucket(commands_conf: str, agent: PRAgent, api_ur
 def is_bot_user(data) -> bool:
     try:
         actor = data.get("data", {}).get("actor", {})
+        description = data.get("data", {}).get("pullrequest", {}).get("description", "")
         # allow actor type: user . if it's "AppUser" or "team" then it is a bot user
         allowed_actor_types = {"user"}
         if actor and actor["type"].lower() not in allowed_actor_types:
             get_logger().info(f"BitBucket actor type is not 'user', skipping: {actor}")
+            return True
+
+        username = actor.get("username", "")
+        if username and is_user_name_a_bot(username):
+            get_logger().info(f"BitBucket actor is a bot user, skipping: {username}")
+            return True
+
+        if description and is_pr_description_indicating_bot(description):
+            get_logger().info(f"Description indicates a bot user: {actor}",
+                              artifact={"description": description})
             return True
     except Exception as e:
         get_logger().error(f"Failed 'is_bot_user' logic: {e}")
