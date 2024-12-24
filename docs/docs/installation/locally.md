@@ -66,7 +66,30 @@ To invoke a tool (for example `review`), you can run directly from the Docker im
     docker run --rm -it -e CONFIG.GIT_PROVIDER=bitbucket -e OPENAI.KEY=$OPENAI_API_KEY -e BITBUCKET.BEARER_TOKEN=$BITBUCKET_BEARER_TOKEN codiumai/pr-agent:latest --pr_url=<pr_url> review
     ```
 
-For other git providers, update CONFIG.GIT_PROVIDER accordingly, and check the `pr_agent/settings/.secrets_template.toml` file for the environment variables expected names and values.
+For other git providers, update `CONFIG.GIT_PROVIDER` accordingly and check the `pr_agent/settings/.secrets_template.toml` file for environment variables expected names and values.
+The `pr_agent` uses [Dynaconf](https://www.dynaconf.com/) to load settings from configuration files.
+
+It is also possible to provide or override the configuration by setting the corresponding environment variables.
+You can define the corresponding environment variables by following this convention: `<TABLE>__<KEY>=<VALUE>` or `<TABLE>.<KEY>=<VALUE>`.
+The `<TABLE>` refers to a table/section in a configuration file and `<KEY>=<VALUE>` refers to the key/value pair of a setting in the configuration file.
+
+For example, suppose you want to run `pr_agent` that connects to a self-hosted GitLab instance similar to an example above.
+You can define the environment variables in a plain text file named `.env` with the following content:
+
+> Warning: Never commit the `.env` file to version control system as it might contains sensitive credentials!
+
+```
+CONFIG__GIT_PROVIDER="gitlab"
+GITLAB__URL="<your url>"
+GITLAB__PERSONAL_ACCESS_TOKEN="<your token>"
+OPENAI__KEY="<your key>"
+```
+
+Then, you can run `pr_agent` using Docker with the following command:
+
+```shell
+docker run --rm -it --env-file .env codiumai/pr-agent:latest <tool> <tool parameter>
+```
 
 ---
 
