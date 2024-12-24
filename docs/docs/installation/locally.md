@@ -76,6 +76,8 @@ The `<TABLE>` refers to a table/section in a configuration file and `<KEY>=<VALU
 For example, suppose you want to run `pr_agent` that connects to a self-hosted GitLab instance similar to an example above.
 You can define the environment variables in a plain text file named `.env` with the following content:
 
+> Warning: Never commit the `.env` file to version control system as it might contains sensitive credentials!
+
 ```
 CONFIG__GIT_PROVIDER="gitlab"
 GITLAB__URL="<your url>"
