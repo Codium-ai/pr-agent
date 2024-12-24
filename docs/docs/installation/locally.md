@@ -66,7 +66,7 @@ To invoke a tool (for example `review`), you can run directly from the Docker im
     docker run --rm -it -e CONFIG.GIT_PROVIDER=bitbucket -e OPENAI.KEY=$OPENAI_API_KEY -e BITBUCKET.BEARER_TOKEN=$BITBUCKET_BEARER_TOKEN codiumai/pr-agent:latest --pr_url=<pr_url> review
     ```
 
-For other git providers, update CONFIG.GIT_PROVIDER accordingly, and check the `pr_agent/settings/.secrets_template.toml` file for the environment variables expected names and values.
+For other git providers, update CONFIG.GIT_PROVIDER accordingly, and check the `pr_agent/settings/.secrets_template.toml` file for the environment variables expected names and values. The `pr_agent` uses [Dynaconf](https://www.dynaconf.com/) to load the settings from the configuration files. It is also possible to provide or override the configuration by setting the corresponding environment variables.
 
 ---
 
