@@ -235,7 +235,7 @@ def convert_to_markdown_v2(output_data: dict,
                         start_line = int(str(issue.get('start_line', 0)).strip())
                         end_line = int(str(issue.get('end_line', 0)).strip())
 
-                        relevant_lines_str = extract_relevant_lines_str(end_line, files, relevant_file, start_line)
+                        relevant_lines_str = extract_relevant_lines_str(end_line, files, relevant_file, start_line, dedent=True)
                         if git_provider:
                             reference_link = git_provider.get_line_link(relevant_file, start_line, end_line)
                         else:
@@ -288,7 +288,7 @@ def convert_to_markdown_v2(output_data: dict,
 
     return markdown_text
 
-def extract_relevant_lines_str(end_line, files, relevant_file, start_line):
+def extract_relevant_lines_str(end_line, files, relevant_file, start_line, dedent=False):
     try:
         relevant_lines_str = ""
         if files:
@@ -300,8 +300,12 @@ def extract_relevant_lines_str(end_line, files, relevant_file, start_line):
                         return ""
                     relevant_file_lines = file.head_file.splitlines()
                     relevant_lines_str = "\n".join(relevant_file_lines[start_line - 1:end_line])
+                    if dedent and relevant_lines_str:
+                        # Remove the longest leading string of spaces and tabs common to all lines.
+                        relevant_lines_str = textwrap.dedent(relevant_lines_str)
                     relevant_lines_str = f"```{file.language}\n{relevant_lines_str}\n```"
                     break
+
         return relevant_lines_str
     except Exception as e:
         get_logger().exception(f"Failed to extract relevant lines: {e}")
