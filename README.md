@@ -41,6 +41,10 @@ Qode Merge PR-Agent aims to help efficiently review and handle pull requests, by
 
 ## News and Updates
 
+### December 25, 2024
+
+The `review` tool previously included a legacy feature for providing code suggestions (controlled by '--pr_reviewer.num_code_suggestion'). This functionality has been deprecated. Use instead the [`improve`](https://qodo-merge-docs.qodo.ai/tools/improve/) tool, which offers higher quality and more actionable code suggestions.
+
 ### December 2, 2024
 
 Open-source repositories can now freely use Qodo Merge Pro, and enjoy easy one-click installation using a marketplace [app](https://github.com/apps/qodo-merge-pro-for-open-source).
