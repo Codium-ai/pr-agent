@@ -41,6 +41,7 @@ nav:
     - 💎 Custom Prompt: 'tools/custom_prompt.md'
     - 💎 CI Feedback: 'tools/ci_feedback.md'
     - 💎 Similar Code: 'tools/similar_code.md'
+    - 💎 Implement: 'tools/implement.md'
   - Core Abilities:
       - 'core-abilities/index.md'
       - Fetching ticket context: 'core-abilities/fetching_ticket_context.md'
