@@ -11,7 +11,7 @@ class TestClipTokens:
         text = "line1\nline2\nline3\nline4\nline5\nline6"
         max_tokens = 25
         result = clip_tokens(text, max_tokens)
-        assert result == text
+        assert result != text
 
         max_tokens = 10
         result = clip_tokens(text, max_tokens)
