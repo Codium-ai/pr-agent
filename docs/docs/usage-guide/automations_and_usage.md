@@ -285,7 +285,7 @@ To control which commands will run automatically when a new PR is opened, you ca
 [azure_devops_server]
 pr_commands = [
     "/describe",
-    "/review --pr_reviewer.num_code_suggestions=0",
+    "/review",
     "/improve",
 ]
 ```

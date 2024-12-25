@@ -13,7 +13,6 @@ from pr_agent.tools.pr_config import PRConfig
 from pr_agent.tools.pr_description import PRDescription
 from pr_agent.tools.pr_generate_labels import PRGenerateLabels
 from pr_agent.tools.pr_help_message import PRHelpMessage
-from pr_agent.tools.pr_information_from_user import PRInformationFromUser
 from pr_agent.tools.pr_line_questions import PR_LineQuestions
 from pr_agent.tools.pr_questions import PRQuestions
 from pr_agent.tools.pr_reviewer import PRReviewer
@@ -25,8 +24,6 @@ command2class = {
     "answer": PRReviewer,
     "review": PRReviewer,
     "review_pr": PRReviewer,
-    "reflect": PRInformationFromUser,
-    "reflect_and_review": PRInformationFromUser,
     "describe": PRDescription,
     "describe_pr": PRDescription,
     "improve": PRCodeSuggestions,
@@ -76,12 +73,10 @@ class PRAgent:
 
         action = action.lstrip("/").lower()
         if action not in command2class:
-            get_logger().debug(f"Unknown command: {action}")
+            get_logger().error(f"Unknown command: {action}")
             return False
         with get_logger().contextualize(command=action, pr_url=pr_url):
             get_logger().info("PR-Agent request handler started", analytics=True)
-            if action == "reflect_and_review":
-                get_settings().pr_reviewer.ask_and_reflect = True
             if action == "answer":
                 if notify:
                     notify()

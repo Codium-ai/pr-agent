@@ -179,43 +179,6 @@ ___
 </div>
 
 
-
-
-[//]: # (<h4><a href="https://github.com/Codium-ai/pr-agent/pull/78#issuecomment-1639739496">/reflect_and_review:</a></h4>)
-
-[//]: # (<div align="center">)
-
-[//]: # (<p float="center">)
-
-[//]: # (<img src="https://www.codium.ai/images/reflect_and_review.gif" width="800">)
-
-[//]: # (</p>)
-
-[//]: # (</div>)
-
-[//]: # (<h4><a href="https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695020538">/ask:</a></h4>)
-
-[//]: # (<div align="center">)
-
-[//]: # (<p float="center">)
-
-[//]: # (<img src="https://www.codium.ai/images/ask-2.gif" width="800">)
-
-[//]: # (</p>)
-
-[//]: # (</div>)
-
-[//]: # (<h4><a href="https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695024952">/improve:</a></h4>)
-
-[//]: # (<div align="center">)
-
-[//]: # (<p float="center">)
-
-[//]: # (<img src="https://www.codium.ai/images/improve-2.gif" width="800">)
-
-[//]: # (</p>)
-
-[//]: # (</div>)
 <div align="left">
 
 
