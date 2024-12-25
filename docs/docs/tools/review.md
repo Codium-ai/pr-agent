@@ -46,47 +46,6 @@ extra_instructions = "..."
 - The `pr_commands` lists commands that will be executed automatically when a PR is opened.
 - The `[pr_reviewer]` section contains the configurations for the `review` tool you want to edit (if any).
 
-[//]: # ()
-[//]: # (### Incremental Mode)
-
-[//]: # (Incremental review only considers changes since the last Qodo Merge review. This can be useful when working on the PR in an iterative manner, and you want to focus on the changes since the last review instead of reviewing the entire PR again.)
-
-[//]: # (For invoking the incremental mode, the following command can be used:)
-
-[//]: # (```)
-
-[//]: # (/review -i)
-
-[//]: # (```)
-
-[//]: # (Note that the incremental mode is only available for GitHub.)
-
-[//]: # ()
-[//]: # (![incremental review]&#40;https://codium.ai/images/pr_agent/incremental_review_2.png&#41;{width=512})
-
-[//]: # (### PR Reflection)
-
-[//]: # ()
-[//]: # (By invoking:)
-
-[//]: # (```)
-
-[//]: # (/reflect_and_review)
-
-[//]: # (```)
-
-[//]: # (The tool will first ask the author questions about the PR, and will guide the review based on their answers.)
-
-[//]: # ()
-[//]: # (![reflection questions]&#40;https://codium.ai/images/pr_agent/reflection_questions.png&#41;{width=512})
-
-[//]: # ()
-[//]: # (![reflection answers]&#40;https://codium.ai/images/pr_agent/reflection_answers.png&#41;{width=512})
-
-[//]: # ()
-[//]: # (![reflection insights]&#40;https://codium.ai/images/pr_agent/reflection_insights.png&#41;{width=512})
-
-
 
 ## Configuration options
 
