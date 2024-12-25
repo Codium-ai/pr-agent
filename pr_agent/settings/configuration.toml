@@ -55,9 +55,6 @@ require_can_be_split_review=false
 require_security_review=true
 require_ticket_analysis_review=true
 # general options
-num_code_suggestions=0 # legacy mode. use the `improve` command instead
-inline_code_comments = false
-ask_and_reflect=false
 persistent_comment=true
 extra_instructions = ""
 final_update_message = true

@@ -270,22 +270,6 @@ def convert_to_markdown_v2(output_data: dict,
     if gfm_supported:
         markdown_text += "</table>\n"
 
-    if 'code_feedback' in output_data:
-        if gfm_supported:
-            markdown_text += f"\n\n"
-            markdown_text += f"<details><summary> <strong>Code feedback:</strong></summary>\n\n"
-            markdown_text += "<hr>"
-        else:
-            markdown_text += f"\n\n### Code feedback:\n\n"
-        for i, value in enumerate(output_data['code_feedback']):
-            if value is None or value == '' or value == {} or value == []:
-                continue
-            markdown_text += parse_code_suggestion(value, i, gfm_supported)+"\n\n"
-        if markdown_text.endswith('<hr>'):
-            markdown_text= markdown_text[:-4]
-        if gfm_supported:
-            markdown_text += f"</details>"
-
     return markdown_text
 
 def extract_relevant_lines_str(end_line, files, relevant_file, start_line, dedent=False):
