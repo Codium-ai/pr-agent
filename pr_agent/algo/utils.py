@@ -23,6 +23,7 @@ from pydantic import BaseModel
 from starlette_context import context
 
 from pr_agent.algo import MAX_TOKENS
+from pr_agent.algo.git_patch_processing import extract_hunk_lines_from_patch
 from pr_agent.algo.token_handler import TokenEncoder
 from pr_agent.algo.types import FilePatchInfo
 from pr_agent.config_loader import get_settings, global_settings
@@ -272,7 +273,11 @@ def convert_to_markdown_v2(output_data: dict,
 
     return markdown_text
 
-def extract_relevant_lines_str(end_line, files, relevant_file, start_line, dedent=False):
+
+def extract_relevant_lines_str(end_line, files, relevant_file, start_line, dedent=False) -> str:
+    """
+    Finds 'relevant_file' in 'files', and extracts the lines from 'start_line' to 'end_line' string from the file content.
+    """
     try:
         relevant_lines_str = ""
         if files:
@@ -280,10 +285,23 @@ def extract_relevant_lines_str(end_line, files, relevant_file, start_line, deden
             for file in files:
                 if file.filename.strip() == relevant_file:
                     if not file.head_file:
-                        get_logger().warning(f"No content found in file: {file.filename}")
-                        return ""
-                    relevant_file_lines = file.head_file.splitlines()
-                    relevant_lines_str = "\n".join(relevant_file_lines[start_line - 1:end_line])
+                        # as a fallback, extract relevant lines directly from patch
+                        patch = file.patch
+                        get_logger().info(f"No content found in file: '{file.filename}' for 'extract_relevant_lines_str'. Using patch instead")
+                        _, selected_lines = extract_hunk_lines_from_patch(patch, file.filename, start_line, end_line,side='right')
+                        if not selected_lines:
+                            get_logger().error(f"Failed to extract relevant lines from patch: {file.filename}")
+                            return ""
+                        # filter out '-' lines
+                        relevant_lines_str = ""
+                        for line in selected_lines.splitlines():
+                            if line.startswith('-'):
+                                continue
+                            relevant_lines_str += line[1:] + '\n'
+                    else:
+                        relevant_file_lines = file.head_file.splitlines()
+                        relevant_lines_str = "\n".join(relevant_file_lines[start_line - 1:end_line])
+
                     if dedent and relevant_lines_str:
                         # Remove the longest leading string of spaces and tabs common to all lines.
                         relevant_lines_str = textwrap.dedent(relevant_lines_str)
