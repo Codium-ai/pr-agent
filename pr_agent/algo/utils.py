@@ -583,27 +583,20 @@ def load_large_diff(filename, new_file_content_str: str, original_file_content_s
     """
     Generate a patch for a modified file by comparing the original content of the file with the new content provided as
     input.
-
-    Args:
-        new_file_content_str: The new content of the file as a string.
-        original_file_content_str: The original content of the file as a string.
-
-    Returns:
-        The generated or provided patch string.
-
-    Raises:
-        None.
     """
-    patch = ""
+    if not original_file_content_str and not new_file_content_str:
+        return ""
+
     try:
         diff = difflib.unified_diff(original_file_content_str.splitlines(keepends=True),
                                     new_file_content_str.splitlines(keepends=True))
         if get_settings().config.verbosity_level >= 2 and show_warning:
-            get_logger().warning(f"File was modified, but no patch was found. Manually creating patch: {filename}.")
+            get_logger().info(f"File was modified, but no patch was found. Manually creating patch: {filename}.")
         patch = ''.join(diff)
-    except Exception:
-        pass
-    return patch
+        return patch
+    except Exception as e:
+        get_logger().exception(f"Failed to generate patch for file: {filename}")
+        return ""
 
 
 def update_settings_from_args(args: List[str]) -> List[str]:
