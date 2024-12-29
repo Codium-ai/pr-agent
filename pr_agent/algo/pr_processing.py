@@ -316,13 +316,13 @@ def generate_full_patch(convert_hunks_to_line_numbers, file_dict, max_tokens_mod
             # TODO: Option for alternative logic to remove hunks from the patch to reduce the number of tokens
             #  until we meet the requirements
             if get_settings().config.verbosity_level >= 2:
-                get_logger().warning(f"Patch too large, skipping it, {filename}")
+                get_logger().warning(f"Patch too large, skipping it: '{filename}'")
             remaining_files_list_new.append(filename)
             continue
 
         if patch:
             if not convert_hunks_to_line_numbers:
-                patch_final = f"\n\n## File: '{filename.strip()}\n\n{patch.strip()}\n'"
+                patch_final = f"\n\n## File: '{filename.strip()}'\n\n{patch.strip()}\n"
             else:
                 patch_final = "\n\n" + patch.strip()
             patches.append(patch_final)
