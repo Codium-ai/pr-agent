@@ -207,7 +207,8 @@ class PRDescription:
                 self.prediction = await self._get_prediction(model, patches_diff, prompt="pr_description_prompt")
 
                 # extend the prediction with additional files not shown
-                self.prediction = await self.extend_uncovered_files(self.prediction)
+                if get_settings().pr_description.enable_semantic_files_types:
+                    self.prediction = await self.extend_uncovered_files(self.prediction)
             else:
                 get_logger().error(f"Error getting PR diff {self.pr_id}",
                                    artifact={"traceback": traceback.format_exc()})
