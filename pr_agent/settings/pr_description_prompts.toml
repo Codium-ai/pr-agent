@@ -9,7 +9,7 @@ Your task is to provide a full description for the PR content - files walkthroug
 - Keep in mind that the 'Previous title', 'Previous description' and 'Commit messages' sections may be partial, simplistic, non-informative or out of date. Hence, compare them to the PR diff code, and use them only as a reference.
 - The generated title and description should prioritize the most significant changes.
 - If needed, each YAML output should be in block scalar indicator ('|-')
-- When quoting variables or names from the code, use backticks (`) instead of single quote (').
+- When quoting variables, names or file paths from the code, use backticks (`) instead of single quote (').
 
 {%- if extra_instructions %}
 
@@ -38,23 +38,22 @@ class PRType(str, Enum):
 {%- if enable_semantic_files_types %}
 
 class FileDescription(BaseModel):
-    filename: str = Field(description="The full file path of the relevant file.")
-    language: str = Field(description="The programming language of the relevant file.")
+    filename: str = Field(description="The full file path of the relevant file")
+    language: str = Field(description="The programming language of the relevant file")
+{%- if include_file_summary_changes %}
     changes_summary: str = Field(description="concise summary of the changes in the relevant file, in bullet points (1-4 bullet points).")
-    changes_title: str = Field(description="an informative title for the changes in the files, describing its main theme (5-10 words).")
+{%- endif %}
+    changes_title: str = Field(description="one-line summary capturing the main theme of changes in the file")
     label: str = Field(description="a single semantic label that represents a type of code changes that occurred in the File. Possible values (partial list): 'bug fix', 'tests', 'enhancement', 'documentation', 'error handling', 'configuration changes', 'dependencies', 'formatting', 'miscellaneous', ...")
 {%- endif %}
 
 class PRDescription(BaseModel):
     type: List[PRType] = Field(description="one or more types that describe the PR content. Return the label member value (e.g. 'Bug fix', not 'bug_fix')")
 {%- if enable_semantic_files_types %}
-    pr_files: List[FileDescription] = Field(max_items=15, description="a list of the files in the PR, and summary of their changes")
+    pr_files: List[FileDescription] = Field(max_items=20, description="a list of all the files that were changed in the PR, and summary of their changes. Each file must be analyzed regardless of change size.")
 {%- endif %}
     description: str = Field(description="an informative and concise description of the PR. Use bullet points. Display first the most significant changes.")
     title: str = Field(description="an informative title for the PR, describing its main theme")
-{%- if enable_custom_labels %}
-    labels: List[Label] =  Field(min_items=0, description="choose the relevant custom labels that describe the PR content, and return their keys. Use the value field of the Label object to better understand the label meaning.")
-{%- endif %}
 =====
 
 
@@ -70,25 +69,20 @@ pr_files:
     ...
   language: |
     ...
+{%- if include_file_summary_changes %}
   changes_summary: |
     ...
+{%- endif %}
   changes_title: |
     ...
   label: |
-    ...
+    label_key_1
 ...
 {%- endif %}
 description: |
   ...
 title: |
   ...
-{%- if enable_custom_labels %}
-labels:
-- |
-  ...
-- |
-  ...
-{%- endif %}
 ```
 
 Answer should be a valid YAML, and nothing else. Each YAML output MUST be after a newline, with proper indent, and block scalar indicator ('|')
