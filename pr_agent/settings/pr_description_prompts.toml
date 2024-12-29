@@ -43,7 +43,7 @@ class FileDescription(BaseModel):
 {%- if include_file_summary_changes %}
     changes_summary: str = Field(description="concise summary of the changes in the relevant file, in bullet points (1-4 bullet points).")
 {%- endif %}
-    changes_title: str = Field(description="one-line summary capturing the main theme of changes in the file")
+    changes_title: str = Field(description="one-line summary (5-10 words) capturing the main theme of changes in the file")
     label: str = Field(description="a single semantic label that represents a type of code changes that occurred in the File. Possible values (partial list): 'bug fix', 'tests', 'enhancement', 'documentation', 'error handling', 'configuration changes', 'dependencies', 'formatting', 'miscellaneous', ...")
 {%- endif %}
 
