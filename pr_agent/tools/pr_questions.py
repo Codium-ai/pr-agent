@@ -117,6 +117,10 @@ class PRQuestions:
         return response
 
     def _prepare_pr_answer(self) -> str:
+        model_answer = self.prediction.strip()
+        # sanitize the answer so that no line will start with "/"
+        model_answer_sanitized = model_answer.replace("\n/", "\n /")
+
         answer_str = f"### **Ask**❓\n{self.question_str}\n\n"
-        answer_str += f"### **Answer:**\n{self.prediction.strip()}\n\n"
+        answer_str += f"### **Answer:**\n{model_answer_sanitized}\n\n"
         return answer_str
