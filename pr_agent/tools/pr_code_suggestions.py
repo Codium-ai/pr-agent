@@ -76,7 +76,7 @@ class PRCodeSuggestions:
             "diff": "",  # empty diff for initial calculation
             "diff_no_line_numbers": "",  # empty diff for initial calculation
             "num_code_suggestions": num_code_suggestions,
-            "extra_instructions": get_settings().pr_code_suggestions.extra_instructions,
+            "extra_instructions": self._load_extra_instructions(),
             "commit_messages_str": self.git_provider.get_commit_messages(),
             "relevant_best_practices": "",
             "is_ai_metadata": get_settings().get("config.enable_ai_metadata", False),
@@ -92,6 +92,21 @@ class PRCodeSuggestions:
         self.progress = f"## Generating PR code suggestions\n\n"
         self.progress += f"""\nWork in progress ...<br>\n<img src="https://codium.ai/images/pr_agent/dual_ball_loading-crop.gif" width=48>"""
         self.progress_response = None
+
+    def _load_extra_instructions(self):
+        extra_instructions = get_settings().pr_code_suggestions.extra_instructions
+        if extra_instructions:
+            return extra_instructions
+
+        file_paths = ['.github/copilot-instructions.md', '.cursorrules']
+        for file_path in file_paths:
+            try:
+                with open(file_path, 'r', encoding='utf-8') as file:
+                    return file.read()
+            except FileNotFoundError:
+                continue
+
+        return ""
 
     async def run(self):
         try:
