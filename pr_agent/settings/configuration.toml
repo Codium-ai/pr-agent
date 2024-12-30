@@ -1,7 +1,9 @@
 [config]
 # models
-model="gpt-4o-2024-11-20"
-fallback_models=["gpt-4o-2024-08-06"]
+#model="gpt-4o-2024-11-20"
+#fallback_models=["gpt-4o-2024-08-06"]
+model="llama-3.3-70b-versatile"
+fallback_models=["llama-3.3-70b-versatile"]
 #model_weak="gpt-4o-mini-2024-07-18" # optional, a weaker model to use for some easier tasks
 # CLI
 git_provider="github"
