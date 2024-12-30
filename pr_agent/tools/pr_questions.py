@@ -120,6 +120,12 @@ class PRQuestions:
         model_answer = self.prediction.strip()
         # sanitize the answer so that no line will start with "/"
         model_answer_sanitized = model_answer.replace("\n/", "\n /")
+        if model_answer_sanitized.startswith("/"):
+            model_answer_sanitized = " " + model_answer_sanitized
+        if model_answer_sanitized != model_answer:
+            get_logger().debug(f"Sanitized model answer",
+                               artifact={"model_answer": model_answer, "sanitized_answer": model_answer_sanitized})
+
 
         answer_str = f"### **Ask**❓\n{self.question_str}\n\n"
         answer_str += f"### **Answer:**\n{model_answer_sanitized}\n\n"
