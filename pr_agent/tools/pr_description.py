@@ -556,6 +556,11 @@ class PRDescription:
             elif 'pr_files' in key.lower() and get_settings().pr_description.enable_semantic_files_types:
                 changes_walkthrough, pr_file_changes = self.process_pr_files_prediction(changes_walkthrough, value)
                 changes_walkthrough = f"{PRDescriptionHeader.CHANGES_WALKTHROUGH.value}\n{changes_walkthrough}"
+            elif key.lower().strip() == 'description':
+                if isinstance(value, list):
+                    value = ', '.join(v.rstrip() for v in value)
+                value = value.replace('\n-', '\n\n-').strip() # makes the bullet points more readable by adding double space
+                pr_body += f"{value}\n"
             else:
                 # if the value is a list, join its items by comma
                 if isinstance(value, list):

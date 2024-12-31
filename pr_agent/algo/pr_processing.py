@@ -205,10 +205,11 @@ def pr_generate_extended_diff(pr_languages: list,
             if not extended_patch:
                 get_logger().warning(f"Failed to extend patch for file: {file.filename}")
                 continue
-            full_extended_patch = f"\n\n## {file.filename}\n{extended_patch.rstrip()}\n"
 
             if add_line_numbers_to_hunks:
                 full_extended_patch = convert_to_hunks_with_lines_numbers(extended_patch, file)
+            else:
+                full_extended_patch = f"\n\n## File: '{file.filename.strip()}'\n{extended_patch.rstrip()}\n"
 
             # add AI-summary metadata to the patch
             if file.ai_file_summary and  get_settings().get("config.enable_ai_metadata", False):
