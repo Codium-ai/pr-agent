@@ -52,7 +52,7 @@ class PRDescription(BaseModel):
 {%- if enable_semantic_files_types %}
     pr_files: List[FileDescription] = Field(max_items=20, description="a list of all the files that were changed in the PR, and summary of their changes. Each file must be analyzed regardless of change size.")
 {%- endif %}
-    description: str = Field(description="a clear and concise description of the PR using bullet points (with sub-bullets if needed). Prioritize the most significant changes first")
+    description: str = Field(description="a clear and concise description of the PR using short bullet points (with sub-bullets if needed). Prioritize the most significant changes first")
     title: str = Field(description="a concise and descriptive title that captures the PR's main theme")
 =====
 
