@@ -64,13 +64,19 @@ class PRAgent:
                               'git_provider', 'skip_keys', 'key', 'ANALYTICS_FOLDER', 'uri', 'app_id', 'webhook_secret',
                               'bearer_token', 'PERSONAL_ACCESS_TOKEN', 'override_deployment_type', 'private_key', 'api_base', 'api_type', 'api_version']
         if args:
-            for forbidden_arg in forbidden_cli_args:
-                for arg in args:
-                    if forbidden_arg.lower() in arg.lower():
-                        get_logger().error(
-                            f"CLI argument for param '{forbidden_arg}' is forbidden. Use instead a configuration file."
-                        )
-                        return False
+            for arg in args:
+                if arg.startswith('--'):
+                    arg_word = arg.lower()
+                    arg_word = arg_word.replace('__', '.')  # replace double underscore with dot, e.g. --openai__key -> --openai.key
+                    for forbidden_arg in forbidden_cli_args:
+                        forbidden_arg_word = forbidden_arg.lower()
+                        if '.' not in forbidden_arg_word:
+                            forbidden_arg_word = '.' + forbidden_arg_word
+                        if forbidden_arg_word in arg_word:
+                            get_logger().error(
+                                f"CLI argument for param '{forbidden_arg}' is forbidden. Use instead a configuration file."
+                            )
+                            return False
         args = update_settings_from_args(args)
 
         action = action.lstrip("/").lower()
