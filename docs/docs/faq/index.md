@@ -47,7 +47,7 @@ ___
 
 ___
 
-??? note "Q: Will you store my code ? Are you using my code to train models?"
+??? note "Q: Will you store my code? Are you using my code to train models?"
     #### Answer:<span style="display:none;">4</span>
 
     No. Qodo Merge strict privacy policy ensures that your code is not stored or used for training purposes.
