@@ -102,7 +102,9 @@ class PRCodeSuggestions:
         for file_path in file_paths:
             try:
                 with open(file_path, 'r', encoding='utf-8') as file:
-                    return file.read()
+                    content = file.read().strip()
+                    if content:
+                        return content
             except FileNotFoundError:
                 continue
 
