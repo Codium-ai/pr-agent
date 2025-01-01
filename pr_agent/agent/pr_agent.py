@@ -67,10 +67,12 @@ class PRAgent:
             for arg in args:
                 if arg.startswith('--'):
                     for forbidden_arg in forbidden_cli_args:
+                        arg_word = arg.lower()
+                        arg_word = arg_word.replace('__', '.') # replace double underscore with dot, e.g. --openai__key -> --openai.key
                         forbidden_arg_word = forbidden_arg.lower()
                         if '.' not in forbidden_arg_word:
                             forbidden_arg_word = '.' + forbidden_arg_word
-                        if forbidden_arg_word in arg.lower():
+                        if forbidden_arg_word in arg_word:
                             get_logger().error(
                                 f"CLI argument for param '{forbidden_arg}' is forbidden. Use instead a configuration file."
                             )
