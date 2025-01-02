@@ -34,6 +34,7 @@ ai_disclaimer_title=""  # Pro feature, title for a collapsible disclaimer to AI 
 ai_disclaimer=""  # Pro feature, full text for the AI disclaimer
 output_relevant_configurations=false
 large_patch_policy = "clip" # "clip", "skip"
+duplicate_prompt_examples = false
 # seed
 seed=-1 # set positive value to fix the seed (and ensure temperature=0)
 temperature=0.2
