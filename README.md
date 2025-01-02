@@ -43,7 +43,7 @@ Qode Merge PR-Agent aims to help efficiently review and handle pull requests, by
 
 ### Jan 2, 2025
 
-New tool: [/Implement 💎](https://qodo-merge-docs.qodo.ai/tools/implement/), which converts human code review discussions and feedback into ready-to-commit code changes.
+New tool  [/Implement](https://qodo-merge-docs.qodo.ai/tools/implement/) (💎), which converts human code review discussions and feedback into ready-to-commit code changes.
 
 <kbd><img src="https://codium.ai/images/pr_agent/implement1.png" width="512"></kbd>
 
