@@ -122,6 +122,25 @@ Below are {{ num_code_suggestions }} AI-generated code suggestions for enhancing
 ======
 
 
+{%- if duplicate_prompt_examples %}
+
+
+Example output:
+```yaml
+code_suggestions:
+- suggestion_summary: |
+    ...
+  relevant_file: "..."
+  relevant_lines_start: ...
+  relevant_lines_end: ...
+  suggestion_score: ...
+  why: |
+    ...
+- ...
+```
+(replace '...' with actual content)
+{%- endif %}
+
 Response (should be a valid YAML, and nothing else):
 ```yaml
 """

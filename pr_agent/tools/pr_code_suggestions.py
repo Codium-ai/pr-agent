@@ -81,6 +81,7 @@ class PRCodeSuggestions:
             "relevant_best_practices": "",
             "is_ai_metadata": get_settings().get("config.enable_ai_metadata", False),
             "focus_only_on_problems": get_settings().get("pr_code_suggestions.focus_only_on_problems", False),
+            'duplicate_prompt_examples': get_settings().config.get('duplicate_prompt_examples', False),
         }
         self.pr_code_suggestions_prompt_system = get_settings().pr_code_suggestions_prompt.system
 
@@ -830,7 +831,8 @@ class PRCodeSuggestions:
                          "diff": patches_diff,
                          'num_code_suggestions': len(suggestion_list),
                          'prev_suggestions_str': prev_suggestions_str,
-                         "is_ai_metadata": get_settings().get("config.enable_ai_metadata", False)}
+                         "is_ai_metadata": get_settings().get("config.enable_ai_metadata", False),
+                         'duplicate_prompt_examples': get_settings().config.get('duplicate_prompt_examples', False)}
             environment = Environment(undefined=StrictUndefined)
 
             if dedicated_prompt:

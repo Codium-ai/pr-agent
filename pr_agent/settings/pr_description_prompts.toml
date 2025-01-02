@@ -130,6 +130,37 @@ The PR Git Diff:
 
 Note that lines in the diff body are prefixed with a symbol that represents the type of change: '-' for deletions, '+' for additions, and ' ' (a space) for unchanged lines.
 
+{%- if duplicate_prompt_examples %}
+
+
+Example output:
+```yaml
+type:
+- Bug fix
+- Refactoring
+- ...
+description: |
+  ...
+title: |
+  ...
+{%- if enable_semantic_files_types %}
+pr_files:
+- filename: |
+    ...
+{%- if include_file_summary_changes %}
+  changes_summary: |
+    ...
+{%- endif %}
+  changes_title: |
+    ...
+  label: |
+    label_key_1
+...
+{%- endif %}
+```
+(replace '...' with the actual values)
+{%- endif %}
+
 
 Response (should be a valid YAML, and nothing else):
 ```yaml

@@ -30,50 +30,36 @@ model="" # the OpenAI model you've deployed on Azure (e.g. gpt-4o)
 fallback_models=["..."]
 ```
 
-### Hugging Face
+### Ollama
 
-**Local**
-You can run Hugging Face models locally through either [VLLM](https://docs.litellm.ai/docs/providers/vllm) or [Ollama](https://docs.litellm.ai/docs/providers/ollama)
+You can run models locally through either [VLLM](https://docs.litellm.ai/docs/providers/vllm) or [Ollama](https://docs.litellm.ai/docs/providers/ollama)
 
-E.g. to use a new Hugging Face model locally via Ollama, set:
+E.g. to use a new model locally via Ollama, set in `.secrets.toml` or in a configuration file:
 ```
-[__init__.py]
-MAX_TOKENS = {
-    "model-name-on-ollama": <max_tokens>
-}
-e.g.
-MAX_TOKENS={
-    ...,
-    "ollama/llama2": 4096
-}
+[config]
+model = "ollama/qwen2.5-coder:32b"
+fallback_models=["ollama/qwen2.5-coder:32b"]
+custom_model_max_tokens=128000 # set the maximal input tokens for the model
+duplicate_examples=true # will duplicate the examples in the prompt, to help the model to output structured output
 
-
-[config] # in configuration.toml
-model = "ollama/llama2"
-fallback_models=["ollama/llama2"]
-
-[ollama] # in .secrets.toml
-api_base = ... # the base url for your Hugging Face inference endpoint
-# e.g. if running Ollama locally, you may use:
-api_base = "http://localhost:11434/"
+[ollama]
+api_base = "http://localhost:11434" # or whatever port you're running Ollama on
 ```
 
-### Inference Endpoints
+!!! note "Local models vs commercial models"
+    Qodo Merge is compatible with almost any AI model, but analyzing complex code repositories and pull requests requires a model specifically optimized for code analysis.
+    Commercial models such as GPT-4, Claude Sonnet, and Gemini have demonstrated robust capabilities in generating structured output for code analysis tasks with large input. In contrast, most open-source models currently available (as of January 2025) face challenges with these complex tasks.
+    Based on our testing, local open-source models are suitable for experimentation and learning purposes, but they are not suitable for production-level code analysis tasks.
+    Hence, for production workflows and real-world usage, we recommend using commercial models.
+
+### Hugging Face Inference Endpoints
 
 To use a new model with Hugging Face Inference Endpoints, for example, set:
 ```
-[__init__.py]
-MAX_TOKENS = {
-    "model-name-on-huggingface": <max_tokens>
-}
-e.g.
-MAX_TOKENS={
-    ...,
-    "meta-llama/Llama-2-7b-chat-hf": 4096
-}
 [config] # in configuration.toml
 model = "huggingface/meta-llama/Llama-2-7b-chat-hf"
 fallback_models=["huggingface/meta-llama/Llama-2-7b-chat-hf"]
+custom_model_max_tokens=... # set the maximal input tokens for the model
 
 [huggingface] # in .secrets.toml
 key = ... # your Hugging Face api key
