@@ -41,6 +41,8 @@ Qodo Merge offers extensive pull request functionalities across various git prov
 |       | [Add PR Documentation](./tools/documentation.md){:target="_blank"} 💎                                                 |   ✅    |   ✅    |          |      ✅      |
 |       | [Generate Custom Labels](./tools/describe.md#handle-custom-labels-from-the-repos-labels-page-💎){:target="_blank"} 💎 |   ✅    |   ✅    |            |      ✅      |
 |       | [Analyze PR Components](./tools/analyze.md){:target="_blank"} 💎                                                      |   ✅    |   ✅    |       |      ✅      |
+|       | [Test](https://pr-agent-docs.codium.ai/tools/test/) 💎                                                                | ✅ |   ✅    |                    |              |
+|       | [Implement](https://pr-agent-docs.codium.ai/tools/implement/) 💎                                                      | ✅ |        |                    |              |
 |       |                                                                                                                       |        |        |            |      ️       |
 | USAGE | CLI                                                                                                                   |   ✅    |   ✅    |   ✅       |      ✅      |
 |       | App / webhook                                                                                                         |   ✅    |   ✅    |    ✅        |      ✅      |
@@ -51,8 +53,8 @@ Qodo Merge offers extensive pull request functionalities across various git prov
 |       | Adaptive and token-aware file patch fitting                                                                           |   ✅    |   ✅    |   ✅     |   ✅        |
 |       | Multiple models support                                                                                               |   ✅    |   ✅    |   ✅       |   ✅        |
 |       | Incremental PR review                                                                                                 |   ✅    |        |            |           |
-|       | [Static code analysis](./tools/analyze.md/){:target="_blank"} 💎                                                      |   ✅    |   ✅     |    ✅    |   ✅        |
-|       | [Multiple configuration options](./usage-guide/configuration_options.md){:target="_blank"} 💎                         |   ✅    |   ✅     |    ✅    |   ✅        |
+|       | [Static code analysis](./tools/analyze.md/){:target="_blank"} 💎                                                      |   ✅    |   ✅    |    ✅    |   ✅        |
+|       | [Multiple configuration options](./usage-guide/configuration_options.md){:target="_blank"} 💎                         |   ✅    |   ✅    |    ✅    |   ✅        |
 
 💎 marks a feature available only in [Qodo Merge Pro](https://www.codium.ai/pricing/){:target="_blank"}
 
