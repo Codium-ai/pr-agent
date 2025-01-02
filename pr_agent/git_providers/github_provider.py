@@ -36,7 +36,7 @@ class GithubProvider(GitProvider):
             self.installation_id = None
         self.max_comment_chars = 65000
         self.base_url = get_settings().get("GITHUB.BASE_URL", "https://api.github.com").rstrip("/") # "https://api.github.com"
-        self.base_url_html = self.base_url.split("api/")[0].rstrip("/") if "api/" in self.base_url else "https://github.com"
+        self.base_url_html = self.base_url.split("api/")[0].rstrip("/") if "api/" in self.base_url else self.base_url
         self.github_client = self._get_github_client()
         self.repo = None
         self.pr_num = None
@@ -638,6 +638,13 @@ class GithubProvider(GitProvider):
 
     def _parse_pr_url(self, pr_url: str) -> Tuple[str, int]:
         parsed_url = urlparse(pr_url)
+        if 'github.com' not in pr_url:
+            repo_name = '/'.join(path_parts[3:5])
+            try:
+                pr_number = int(path_parts[6])
+            except ValueError as e:
+                raise ValueError("Unable to convert PR number to integer") from e
+            return repo_name, pr_number          
 
         if parsed_url.path.startswith('/api/v3'):
             parsed_url = urlparse(pr_url.replace("/api/v3", ""))
