@@ -15,7 +15,7 @@ Reviewers can request code changes by: <br>
 /implement <code-change-description>
 ```
 
-![implement1](https://codium.ai/images/pr_agent/implement1.png){width=600}
+![implement1](https://codium.ai/images/pr_agent/implement1.png){width=512}
 
 
 ### 2. For PR Authors
@@ -30,7 +30,7 @@ PR authors can implement suggested changes by replying to a review comment using
 /implement
 ```
 
-![implement2](https://codium.ai/images/pr_agent/implement2.png){width=600}
+![implement2](https://codium.ai/images/pr_agent/implement2.png){width=512}
 
 ### 3. For Referencing Comments
 
@@ -39,7 +39,7 @@ You can reference and implement changes from any comment by:
 /implement <link-to-review-comment>
 ```
 
-![implement3](https://codium.ai/images/pr_agent/implement3.png){width=600}
+![implement3](https://codium.ai/images/pr_agent/implement3.png){width=512}
 
 Note that the implementation will occur within the review discussion thread.
 
