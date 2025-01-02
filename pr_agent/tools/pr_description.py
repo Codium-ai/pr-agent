@@ -1,6 +1,7 @@
 import asyncio
 import copy
 import re
+import traceback
 from functools import partial
 from typing import List, Tuple
 
@@ -57,6 +58,7 @@ class PRDescription:
         self.ai_handler.main_pr_language = self.main_pr_language
 
         # Initialize the variables dictionary
+        self.COLLAPSIBLE_FILE_LIST_THRESHOLD = get_settings().pr_description.get("collapsible_file_list_threshold", 8)
         self.vars = {
             "title": self.git_provider.pr.title,
             "branch": self.git_provider.get_pr_branch(),
@@ -69,6 +71,7 @@ class PRDescription:
             "custom_labels_class": "",  # will be filled if necessary in 'set_custom_labels' function
             "enable_semantic_files_types": get_settings().pr_description.enable_semantic_files_types,
             "related_tickets": "",
+            "include_file_summary_changes": len(self.git_provider.get_diff_files()) <= self.COLLAPSIBLE_FILE_LIST_THRESHOLD
         }
 
         self.user_description = self.git_provider.get_user_description()
@@ -85,7 +88,6 @@ class PRDescription:
         self.patches_diff = None
         self.prediction = None
         self.file_label_dict = None
-        self.COLLAPSIBLE_FILE_LIST_THRESHOLD = 8
 
     async def run(self):
         try:
@@ -114,6 +116,8 @@ class PRDescription:
             pr_labels, pr_file_changes = [], []
             if get_settings().pr_description.publish_labels:
                 pr_labels = self._prepare_labels()
+            else:
+                get_logger().debug(f"Publishing labels disabled")
 
             if get_settings().pr_description.use_description_markers:
                 pr_title, pr_body, changes_walkthrough, pr_file_changes = self._prepare_pr_answer_with_markers()
@@ -137,6 +141,7 @@ class PRDescription:
                 pr_body += show_relevant_configurations(relevant_section='pr_description')
 
             if get_settings().config.publish_output:
+
                 # publish labels
                 if get_settings().pr_description.publish_labels and pr_labels and self.git_provider.is_supported("get_labels"):
                     original_labels = self.git_provider.get_pr_labels(update=True)
@@ -164,7 +169,7 @@ class PRDescription:
                     self.git_provider.publish_description(pr_title, pr_body)
 
                     # publish final update message
-                    if (get_settings().pr_description.final_update_message):
+                    if (get_settings().pr_description.final_update_message and not get_settings().config.get('is_auto_command', False)):
                         latest_commit_url = self.git_provider.get_latest_commit_url()
                         if latest_commit_url:
                             pr_url = self.git_provider.get_pr_url()
@@ -176,35 +181,37 @@ class PRDescription:
                 get_settings().data = {"artifact": pr_body}
                 return
         except Exception as e:
-            get_logger().error(f"Error generating PR description {self.pr_id}: {e}")
+            get_logger().error(f"Error generating PR description {self.pr_id}: {e}",
+                               artifact={"traceback": traceback.format_exc()})
 
         return ""
 
     async def _prepare_prediction(self, model: str) -> None:
         if get_settings().pr_description.use_description_markers and 'pr_agent:' not in self.user_description:
-            get_logger().info(
-                "Markers were enabled, but user description does not contain markers. skipping AI prediction")
+            get_logger().info("Markers were enabled, but user description does not contain markers. skipping AI prediction")
             return None
 
         large_pr_handling = get_settings().pr_description.enable_large_pr_handling and "pr_description_only_files_prompts" in get_settings()
-        output = get_pr_diff(self.git_provider, self.token_handler, model, large_pr_handling=large_pr_handling,
-                             return_remaining_files=True)
+        output = get_pr_diff(self.git_provider, self.token_handler, model, large_pr_handling=large_pr_handling, return_remaining_files=True)
         if isinstance(output, tuple):
             patches_diff, remaining_files_list = output
         else:
             patches_diff = output
             remaining_files_list = []
+
         if not large_pr_handling or patches_diff:
             self.patches_diff = patches_diff
             if patches_diff:
+                # generate the prediction
                 get_logger().debug(f"PR diff", artifact=self.patches_diff)
                 self.prediction = await self._get_prediction(model, patches_diff, prompt="pr_description_prompt")
-                if (remaining_files_list and 'pr_files' in self.prediction and 'label:' in self.prediction and
-                        get_settings().pr_description.mention_extra_files):
-                    get_logger().debug(f"Extending additional files, {len(remaining_files_list)} files")
-                    self.prediction = await self.extend_additional_files(remaining_files_list)
+
+                # extend the prediction with additional files not shown
+                if get_settings().pr_description.enable_semantic_files_types:
+                    self.prediction = await self.extend_uncovered_files(self.prediction)
             else:
-                get_logger().error(f"Error getting PR diff {self.pr_id}")
+                get_logger().error(f"Error getting PR diff {self.pr_id}",
+                                   artifact={"traceback": traceback.format_exc()})
                 self.prediction = None
         else:
             # get the diff in multiple patches, with the token handler only for the files prompt
@@ -289,42 +296,80 @@ class PRDescription:
                                                             prompt="pr_description_only_description_prompts")
             prediction_headers = prediction_headers.strip().removeprefix('```yaml').strip('`').strip()
 
-            # manually add extra files to final prediction
-            MAX_EXTRA_FILES_TO_OUTPUT = 100
-            if get_settings().pr_description.mention_extra_files:
-                for i, file in enumerate(remaining_files_list):
-                    extra_file_yaml = f"""\
-- filename: |
-    {file}
-  changes_summary: |
-    ...
-  changes_title: |
-    ...
-  label: |
-    additional files (token-limit)
-"""
-                    files_walkthrough = files_walkthrough.strip() + "\n" + extra_file_yaml.strip()
-                    if i >= MAX_EXTRA_FILES_TO_OUTPUT:
-                        files_walkthrough += f"""\
-extra_file_yaml =
-- filename: |
-    Additional {len(remaining_files_list) - MAX_EXTRA_FILES_TO_OUTPUT} files not shown
-  changes_summary: |
-    ...
-  changes_title: |
-    ...
-  label: |
-    additional files (token-limit)
-"""
-                        break
+            # extend the tables with the files not shown
+            files_walkthrough_extended = await self.extend_uncovered_files(files_walkthrough)
 
             # final processing
-            self.prediction = prediction_headers + "\n" + "pr_files:\n" + files_walkthrough
+            self.prediction = prediction_headers + "\n" + "pr_files:\n" + files_walkthrough_extended
             if not load_yaml(self.prediction, keys_fix_yaml=self.keys_fix):
                 get_logger().error(f"Error getting valid YAML in large PR handling for describe {self.pr_id}")
                 if load_yaml(prediction_headers, keys_fix_yaml=self.keys_fix):
                     get_logger().debug(f"Using only headers for describe {self.pr_id}")
                     self.prediction = prediction_headers
+
+    async def extend_uncovered_files(self, original_prediction: str) -> str:
+        try:
+            prediction = original_prediction
+
+            # get the original prediction filenames
+            original_prediction_loaded = load_yaml(original_prediction, keys_fix_yaml=self.keys_fix)
+            if isinstance(original_prediction_loaded, list):
+                original_prediction_dict = {"pr_files": original_prediction_loaded}
+            else:
+                original_prediction_dict = original_prediction_loaded
+            filenames_predicted = [file['filename'].strip() for file in original_prediction_dict.get('pr_files', [])]
+
+            # extend the prediction with additional files not included in the original prediction
+            pr_files = self.git_provider.get_diff_files()
+            prediction_extra = "pr_files:"
+            MAX_EXTRA_FILES_TO_OUTPUT = 100
+            counter_extra_files = 0
+            for file in pr_files:
+                if file.filename in filenames_predicted:
+                    continue
+
+                # add up to MAX_EXTRA_FILES_TO_OUTPUT files
+                counter_extra_files += 1
+                if counter_extra_files > MAX_EXTRA_FILES_TO_OUTPUT:
+                    extra_file_yaml = f"""\
+- filename: |
+    Additional files not shown
+  changes_title: |
+    ...
+  label: |
+    additional files
+"""
+                    prediction_extra = prediction_extra + "\n" + extra_file_yaml.strip()
+                    get_logger().debug(f"Too many remaining files, clipping to {MAX_EXTRA_FILES_TO_OUTPUT}")
+                    break
+
+                extra_file_yaml = f"""\
+- filename: |
+    {file.filename}
+  changes_title: |
+    ...
+  label: |
+    additional files
+"""
+                prediction_extra = prediction_extra + "\n" + extra_file_yaml.strip()
+
+            # merge the two dictionaries
+            if counter_extra_files > 0:
+                get_logger().info(f"Adding {counter_extra_files} unprocessed extra files to table prediction")
+                prediction_extra_dict = load_yaml(prediction_extra, keys_fix_yaml=self.keys_fix)
+                if isinstance(original_prediction_dict, dict) and isinstance(prediction_extra_dict, dict):
+                    original_prediction_dict["pr_files"].extend(prediction_extra_dict["pr_files"])
+                    new_yaml = yaml.dump(original_prediction_dict)
+                    if load_yaml(new_yaml, keys_fix_yaml=self.keys_fix):
+                        prediction = new_yaml
+                if isinstance(original_prediction, list):
+                    prediction = yaml.dump(original_prediction_dict["pr_files"])
+
+            return prediction
+        except Exception as e:
+            get_logger().error(f"Error extending uncovered files {self.pr_id}: {e}")
+            return original_prediction
+
 
     async def extend_additional_files(self, remaining_files_list) -> str:
         prediction = self.prediction
@@ -397,31 +442,31 @@ extra_file_yaml =
             self.data['pr_files'] = self.data.pop('pr_files')
 
     def _prepare_labels(self) -> List[str]:
-        pr_types = []
+        pr_labels = []
 
         # If the 'PR Type' key is present in the dictionary, split its value by comma and assign it to 'pr_types'
-        if 'labels' in self.data:
+        if 'labels' in self.data and self.data['labels']:
             if type(self.data['labels']) == list:
-                pr_types = self.data['labels']
+                pr_labels = self.data['labels']
             elif type(self.data['labels']) == str:
-                pr_types = self.data['labels'].split(',')
-        elif 'type' in self.data:
+                pr_labels = self.data['labels'].split(',')
+        elif 'type' in self.data and self.data['type'] and get_settings().pr_description.publish_labels:
             if type(self.data['type']) == list:
-                pr_types = self.data['type']
+                pr_labels = self.data['type']
             elif type(self.data['type']) == str:
-                pr_types = self.data['type'].split(',')
-        pr_types = [label.strip() for label in pr_types]
+                pr_labels = self.data['type'].split(',')
+        pr_labels = [label.strip() for label in pr_labels]
 
         # convert lowercase labels to original case
         try:
             if "labels_minimal_to_labels_dict" in self.variables:
                 d: dict = self.variables["labels_minimal_to_labels_dict"]
-                for i, label_i in enumerate(pr_types):
+                for i, label_i in enumerate(pr_labels):
                     if label_i in d:
-                        pr_types[i] = d[label_i]
+                        pr_labels[i] = d[label_i]
         except Exception as e:
             get_logger().error(f"Error converting labels to original case {self.pr_id}: {e}")
-        return pr_types
+        return pr_labels
 
     def _prepare_pr_answer_with_markers(self) -> Tuple[str, str, str, List[dict]]:
         get_logger().info(f"Using description marker replacements {self.pr_id}")
@@ -511,6 +556,11 @@ extra_file_yaml =
             elif 'pr_files' in key.lower() and get_settings().pr_description.enable_semantic_files_types:
                 changes_walkthrough, pr_file_changes = self.process_pr_files_prediction(changes_walkthrough, value)
                 changes_walkthrough = f"{PRDescriptionHeader.CHANGES_WALKTHROUGH.value}\n{changes_walkthrough}"
+            elif key.lower().strip() == 'description':
+                if isinstance(value, list):
+                    value = ', '.join(v.rstrip() for v in value)
+                value = value.replace('\n-', '\n\n-').strip() # makes the bullet points more readable by adding double space
+                pr_body += f"{value}\n"
             else:
                 # if the value is a list, join its items by comma
                 if isinstance(value, list):
@@ -528,14 +578,18 @@ extra_file_yaml =
             return file_label_dict
         for file in self.data['pr_files']:
             try:
-                required_fields = ['changes_summary', 'changes_title', 'filename', 'label']
+                required_fields = ['changes_title', 'filename', 'label']
                 if not all(field in file for field in required_fields):
                     # can happen for example if a YAML generation was interrupted in the middle (no more tokens)
                     get_logger().warning(f"Missing required fields in file label dict {self.pr_id}, skipping file",
                                          artifact={"file": file})
                     continue
+                if not file.get('changes_title'):
+                    get_logger().warning(f"Empty changes title or summary in file label dict {self.pr_id}, skipping file",
+                                         artifact={"file": file})
+                    continue
                 filename = file['filename'].replace("'", "`").replace('"', '`')
-                changes_summary = file['changes_summary']
+                changes_summary = file.get('changes_summary', "").strip()
                 changes_title = file['changes_title'].strip()
                 label = file.get('label').strip().lower()
                 if label not in file_label_dict:
@@ -578,12 +632,14 @@ extra_file_yaml =
                 for filename, file_changes_title, file_change_description in list_tuples:
                     filename = filename.replace("'", "`").rstrip()
                     filename_publish = filename.split("/")[-1]
-
-                    file_changes_title_code = f"<code>{file_changes_title}</code>"
-                    file_changes_title_code_br = insert_br_after_x_chars(file_changes_title_code, x=(delta - 5)).strip()
-                    if len(file_changes_title_code_br) < (delta - 5):
-                        file_changes_title_code_br += "&nbsp; " * ((delta - 5) - len(file_changes_title_code_br))
-                    filename_publish = f"<strong>{filename_publish}</strong><dd>{file_changes_title_code_br}</dd>"
+                    if file_changes_title and file_changes_title.strip() != "...":
+                        file_changes_title_code = f"<code>{file_changes_title}</code>"
+                        file_changes_title_code_br = insert_br_after_x_chars(file_changes_title_code, x=(delta - 5)).strip()
+                        if len(file_changes_title_code_br) < (delta - 5):
+                            file_changes_title_code_br += "&nbsp; " * ((delta - 5) - len(file_changes_title_code_br))
+                        filename_publish = f"<strong>{filename_publish}</strong><dd>{file_changes_title_code_br}</dd>"
+                    else:
+                        filename_publish = f"<strong>{filename_publish}</strong>"
                     diff_plus_minus = ""
                     delta_nbsp = ""
                     diff_files = self.git_provider.get_diff_files()
@@ -592,6 +648,8 @@ extra_file_yaml =
                             num_plus_lines = f.num_plus_lines
                             num_minus_lines = f.num_minus_lines
                             diff_plus_minus += f"+{num_plus_lines}/-{num_minus_lines}"
+                            if len(diff_plus_minus) > 12 or diff_plus_minus == "+0/-0":
+                                diff_plus_minus = "[link]"
                             delta_nbsp = "&nbsp; " * max(0, (8 - len(diff_plus_minus)))
                             break
 
@@ -600,9 +658,40 @@ extra_file_yaml =
                     if hasattr(self.git_provider, 'get_line_link'):
                         filename = filename.strip()
                         link = self.git_provider.get_line_link(filename, relevant_line_start=-1)
+                    if (not link or not diff_plus_minus) and ('additional files' not in filename.lower()):
+                        get_logger().warning(f"Error getting line link for '{filename}'")
+                        continue
 
+                    # Add file data to the PR body
                     file_change_description_br = insert_br_after_x_chars(file_change_description, x=(delta - 5))
-                    pr_body += f"""
+                    pr_body = self.add_file_data(delta_nbsp, diff_plus_minus, file_change_description_br, filename,
+                                                 filename_publish, link, pr_body)
+
+                # Close the collapsible file list
+                if use_collapsible_file_list:
+                    pr_body += """</table></details></td></tr>"""
+                else:
+                    pr_body += """</table></td></tr>"""
+            pr_body += """</tr></tbody></table>"""
+
+        except Exception as e:
+            get_logger().error(f"Error processing pr files to markdown {self.pr_id}: {str(e)}")
+            pass
+        return pr_body, pr_comments
+
+    def add_file_data(self, delta_nbsp, diff_plus_minus, file_change_description_br, filename, filename_publish, link,
+                      pr_body) -> str:
+
+        if not file_change_description_br:
+            pr_body += f"""
+<tr>
+  <td>{filename_publish}</td>
+  <td><a href="{link}">{diff_plus_minus}</a>{delta_nbsp}</td>
+
+</tr>
+"""
+        else:
+            pr_body += f"""
 <tr>
   <td>
     <details>
@@ -622,17 +711,7 @@ extra_file_yaml =
 
 </tr>
 """
-                if use_collapsible_file_list:
-                    pr_body += """</table></details></td></tr>"""
-                else:
-                    pr_body += """</table></td></tr>"""
-            pr_body += """</tr></tbody></table>"""
-
-        except Exception as e:
-            get_logger().error(f"Error processing pr files to markdown {self.pr_id}: {e}")
-            pass
-        return pr_body, pr_comments
-
+        return pr_body
 
 def count_chars_without_html(string):
     if '<' not in string:
@@ -641,11 +720,14 @@ def count_chars_without_html(string):
     return len(no_html_string)
 
 
-def insert_br_after_x_chars(text, x=70):
+def insert_br_after_x_chars(text: str, x=70):
     """
     Insert <br> into a string after a word that increases its length above x characters.
     Use proper HTML tags for code and new lines.
     """
+
+    if not text:
+        return ""
     if count_chars_without_html(text) < x:
         return text
 

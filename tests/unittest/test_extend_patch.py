@@ -145,8 +145,8 @@ class TestExtendedPatchMoreLines:
         # Check that with no extra lines, the patches are the same as the original patches
         p0 = patches_extended_no_extra_lines[0].strip()
         p1 = patches_extended_no_extra_lines[1].strip()
-        assert p0 == '## file1\n' + pr_languages[0]['files'][0].patch.strip()
-        assert p1 == '## file2\n' + pr_languages[0]['files'][1].patch.strip()
+        assert p0 == "## File: 'file1'\n" + pr_languages[0]['files'][0].patch.strip()
+        assert p1 == "## File: 'file2'\n" + pr_languages[0]['files'][1].patch.strip()
 
         patches_extended_with_extra_lines, total_tokens, patches_extended_tokens = pr_generate_extended_diff(
             pr_languages, token_handler, add_line_numbers_to_hunks=False,
@@ -154,5 +154,6 @@ class TestExtendedPatchMoreLines:
             patch_extra_lines_after=1
         )
 
+
         p0_extended = patches_extended_with_extra_lines[0].strip()
-        assert p0_extended == '## file1\n\n@@ -3,8 +3,8 @@ \n line0\n line1\n-original content\n+modified content\n line2\n line3\n line4\n line5\n line6'
+        assert p0_extended == "## File: 'file1'\n\n@@ -3,8 +3,8 @@ \n line0\n line1\n-original content\n+modified content\n line2\n line3\n line4\n line5\n line6"
