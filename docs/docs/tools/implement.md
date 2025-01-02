@@ -1,8 +1,7 @@
 ## Overview
 
 The `implement` tool automatically generates implementation code based on PR review suggestions.
-It combines LLM capabilities with static code analysis to help developers implement code changes quickly and with confidence.
-
+It combines LLM capabilities with PR review suggestions to help developers implement code changes quickly and with confidence.
 
 ## Usage Scenarios
 
@@ -16,7 +15,7 @@ Reviewers can request code changes by: <br>
 /implement <code-change-description>
 ```
 
-![implement1](https://codium.ai/images/pr_agent/implement1.png){width=768}
+![implement1](https://codium.ai/images/pr_agent/implement1.png){width=512}
 
 
 ### 2. For PR Authors
@@ -31,8 +30,7 @@ PR authors can implement suggested changes by replying to a review comment using
 /implement
 ```
 
-![implement2](https://codium.ai/images/pr_agent/implement2.png){width=768}
-
+![implement2](https://codium.ai/images/pr_agent/implement2.png){width=512}
 
 ### 3. For Referencing Comments
 
@@ -41,16 +39,12 @@ You can reference and implement changes from any comment by:
 /implement <link-to-review-comment>
 ```
 
-![implement3](https://codium.ai/images/pr_agent/implement3.png){width=768}
+![implement3](https://codium.ai/images/pr_agent/implement3.png){width=512}
 
 Note that the implementation will occur within the review discussion thread.
-Invoke the tool manually by commenting `/implement` on any PR review discussion.
 
 
 **Configuration options** <br>
 - Use `/implement` to implement code change within and based on the review discussion. <br>
 - Use `/implement <code-change-description>` inside a review discussion to implement specific instructions. <br>
 - Use `/implement <link-to-review-comment>` to indirectly call the tool from any comment. <br>
-
-**Notes** <br>
-- The following languages are currently supported: Python, Java, C++, JavaScript, TypeScript, C#.
