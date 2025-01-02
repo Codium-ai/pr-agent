@@ -2,6 +2,7 @@
 # models
 model="gpt-4o-2024-11-20"
 fallback_models=["gpt-4o-2024-08-06"]
+custom_model_max_tokens=-1 # for models not in the default list
 #model_weak="gpt-4o-mini-2024-07-18" # optional, a weaker model to use for some easier tasks
 # CLI
 git_provider="github"
@@ -21,7 +22,6 @@ skip_keys = []
 max_description_tokens = 500
 max_commits_tokens = 500
 max_model_tokens = 32000 # Limits the maximum number of tokens that can be used by any model, regardless of the model's default capabilities.
-custom_model_max_tokens=-1 # for models not in the default list
 # patch extension logic
 patch_extension_skip_types =[".md",".txt"]
 allow_dynamic_context=true

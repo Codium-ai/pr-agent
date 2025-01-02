@@ -30,50 +30,30 @@ model="" # the OpenAI model you've deployed on Azure (e.g. gpt-4o)
 fallback_models=["..."]
 ```
 
-### Hugging Face
+### Ollama
 
 **Local**
 You can run Hugging Face models locally through either [VLLM](https://docs.litellm.ai/docs/providers/vllm) or [Ollama](https://docs.litellm.ai/docs/providers/ollama)
 
 E.g. to use a new Hugging Face model locally via Ollama, set:
 ```
-[__init__.py]
-MAX_TOKENS = {
-    "model-name-on-ollama": <max_tokens>
-}
-e.g.
-MAX_TOKENS={
-    ...,
-    "ollama/llama2": 4096
-}
-
-
 [config] # in configuration.toml
 model = "ollama/llama2"
 fallback_models=["ollama/llama2"]
+custom_model_max_tokens=... # set the maximal input tokens for the model
 
 [ollama] # in .secrets.toml
-api_base = ... # the base url for your Hugging Face inference endpoint
-# e.g. if running Ollama locally, you may use:
-api_base = "http://localhost:11434/"
+api_base = "http://localhost:11434" # or whatever port you're running Ollama on
 ```
 
-### Inference Endpoints
+### Hugging Face Inference Endpoints
 
 To use a new model with Hugging Face Inference Endpoints, for example, set:
 ```
-[__init__.py]
-MAX_TOKENS = {
-    "model-name-on-huggingface": <max_tokens>
-}
-e.g.
-MAX_TOKENS={
-    ...,
-    "meta-llama/Llama-2-7b-chat-hf": 4096
-}
 [config] # in configuration.toml
 model = "huggingface/meta-llama/Llama-2-7b-chat-hf"
 fallback_models=["huggingface/meta-llama/Llama-2-7b-chat-hf"]
+custom_model_max_tokens=... # set the maximal input tokens for the model
 
 [huggingface] # in .secrets.toml
 key = ... # your Hugging Face api key
