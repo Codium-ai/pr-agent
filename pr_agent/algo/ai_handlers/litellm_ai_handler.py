@@ -238,6 +238,8 @@ class LiteLLMAIHandler(BaseAiHandler):
                 get_logger().info(f"\nUser prompt:\n{user}")
 
             response = await acompletion(**kwargs)
+            usage = {'token_usage':dict(response['usage']),'model_details':kwargs}
+            get_logger().info(f"Token Usage", artifact=usage)
         except (openai.APIError, openai.APITimeoutError) as e:
             get_logger().warning(f"Error during LLM inference: {e}")
             raise

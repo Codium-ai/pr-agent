@@ -3,6 +3,8 @@
 model="gpt-4o-2024-11-20"
 fallback_models=["gpt-4o-2024-08-06"]
 #model_weak="gpt-4o-mini-2024-07-18" # optional, a weaker model to use for some easier tasks
+enable_custom_labels=true
+
 # CLI
 git_provider="github"
 publish_output=true
@@ -59,8 +61,8 @@ persistent_comment=true
 extra_instructions = ""
 final_update_message = true
 # review labels
-enable_review_labels_security=true
-enable_review_labels_effort=true
+enable_review_labels_security=false
+enable_review_labels_effort=false
 # specific configurations for incremental review (/review -i)
 require_all_thresholds_for_incremental_review=false
 minimal_commits_for_incremental_review=0
@@ -89,7 +91,7 @@ publish_description_as_comment_persistent=true
 enable_semantic_files_types=true
 collapsible_file_list='adaptive' # true, false, 'adaptive'
 collapsible_file_list_threshold=8
-inline_file_summary=false # false, true, 'table'
+inline_file_summary=true
 # markers
 use_description_markers=false
 include_generated_by_header=true
@@ -204,7 +206,7 @@ ignore_bot_pr = true
 
 [github_action_config]
 # auto_review = true    # set as env var in .github/workflows/pr-agent.yaml
-# auto_describe = true  # set as env var in .github/workflows/pr-agent.yaml
+auto_describe = true  # set as env var in .github/workflows/pr-agent.yaml
 # auto_improve = true   # set as env var in .github/workflows/pr-agent.yaml
 # pr_actions = ['opened', 'reopened', 'ready_for_review', 'review_requested']
 

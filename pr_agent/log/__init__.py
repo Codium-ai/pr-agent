@@ -25,6 +25,8 @@ def analytics_filter(record: dict) -> bool:
 def inv_analytics_filter(record: dict) -> bool:
     return not record.get("extra", {}).get("analytics", False)
 
+def token_usage_filter(record: dict) -> bool:  
+    return "Token Usage" in record["message"]  
 
 def setup_logger(level: str = "INFO", fmt: LoggingFormat = LoggingFormat.CONSOLE):
     level: int = logging.getLevelName(level.upper())
@@ -57,6 +59,18 @@ def setup_logger(level: str = "INFO", fmt: LoggingFormat = LoggingFormat.CONSOLE
             colorize=False,
             serialize=True,
         )
+    token_log_folder = get_settings().get("CONFIG.ERROR_LOG_FOLDER", "./")  
+    if token_log_folder:  
+        pid = os.getpid()
+        error_log_file = os.path.join(token_log_folder, f"pr-agent.errors.{pid}.log")  
+        logger.add(  
+            error_log_file,  
+            level=level,  
+            filter=token_usage_filter,  
+            format="{time} {level} {message}",  
+            colorize=True,  
+            serialize=True,  
+        )  
 
     return logger
 
