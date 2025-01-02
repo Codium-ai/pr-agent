@@ -125,6 +125,30 @@ The PR Diff:
 {{ diff_no_line_numbers|trim }}
 ======
 
+{%- if duplicate_prompt_examples %}
+
+
+Example output:
+```yaml
+code_suggestions:
+- relevant_file: |
+    src/file1.py
+  language: |
+    python
+  suggestion_content: |
+    ...
+  existing_code: |
+    ...
+  improved_code: |
+    ...
+  one_sentence_summary: |
+    ...
+  label: |
+    ...
+```
+(replace '...' with actual content)
+{%- endif %}
+
 
 Response (should be a valid YAML, and nothing else):
 ```yaml
