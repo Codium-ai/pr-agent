@@ -40,7 +40,7 @@ E.g. to use a new model locally via Ollama, set in `.secrets.toml` or in a confi
 model = "ollama/qwen2.5-coder:32b"
 fallback_models=["ollama/qwen2.5-coder:32b"]
 custom_model_max_tokens=128000 # set the maximal input tokens for the model
-duplicate_examples=true # will duplicate the examples in the prompt, to help the model to output structured output
+duplicate_examples=true # will duplicate the examples in the prompt, to help the model to generate structured output
 
 [ollama]
 api_base = "http://localhost:11434" # or whatever port you're running Ollama on
@@ -48,11 +48,14 @@ api_base = "http://localhost:11434" # or whatever port you're running Ollama on
 
 !!! note "Local models vs commercial models"
     Qodo Merge is compatible with almost any AI model, but analyzing complex code repositories and pull requests requires a model specifically optimized for code analysis.
+    
     Commercial models such as GPT-4, Claude Sonnet, and Gemini have demonstrated robust capabilities in generating structured output for code analysis tasks with large input. In contrast, most open-source models currently available (as of January 2025) face challenges with these complex tasks.
+
     Based on our testing, local open-source models are suitable for experimentation and learning purposes, but they are not suitable for production-level code analysis tasks.
+    
     Hence, for production workflows and real-world usage, we recommend using commercial models.
 
-### Hugging Face Inference Endpoints
+### Hugging Face
 
 To use a new model with Hugging Face Inference Endpoints, for example, set:
 ```

@@ -41,6 +41,17 @@ Qode Merge PR-Agent aims to help efficiently review and handle pull requests, by
 
 ## News and Updates
 
+### Jan 2, 2025
+
+New tool: [/Implement 💎](https://qodo-merge-docs.qodo.ai/tools/implement/), which converts human code review discussions and feedback into ready-to-commit code changes.
+
+<kbd><img src="https://codium.ai/images/pr_agent/implement1.png" width="512"></kbd>
+
+
+### Jan 1, 2025
+
+Update logic and [documentation](https://qodo-merge-docs.qodo.ai/usage-guide/changing_a_model/#ollama) for running local models via Ollama.
+
 ### December 30, 2024
 
 Following [feedback](https://research.kudelskisecurity.com/2024/08/29/careful-where-you-code-multiple-vulnerabilities-in-ai-powered-pr-agent/) from the community, we have addressed two vulnerabilities identified in the open-source PR-Agent project. The fixes are now included in the newly released version (v0.26), available as of today.
@@ -77,12 +88,6 @@ Original mode
 Focused mode
 
 <kbd><img src="https://qodo.ai/images/pr_agent/code_suggestions_focused_mode.png" width="512"></kbd>
-
-
-### November 4, 2024
-
-Qodo Merge PR Agent will now leverage context from Jira or GitHub tickets to enhance the PR Feedback. Read more about this feature
-[here](https://qodo-merge-docs.qodo.ai/core-abilities/fetching_ticket_context/)
 
 
 ## Overview
@@ -158,7 +163,7 @@ ___
 \
 ‣ **Similar Code 💎 ([`/find_similar_component`](https://pr-agent-docs.codium.ai/tools/similar_code/))**: Retrieves the most similar code components from inside the organization's codebase, or from open-source code.
 \
-‣ **Implement 💎 ([`/implement`](https://pr-agent-docs.codium.ai/tools/implement/))**: Generates implementation code from review suggestions.
+‣ **Implement 💎 ([`/implement`](https://qodo-merge-docs.qodo.ai/tools/implement/))**: Generates implementation code from review suggestions.
 ___
 
 ## Example results
