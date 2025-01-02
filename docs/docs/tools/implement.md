@@ -53,4 +53,4 @@ Invoke the tool manually by commenting `/implement` on any PR review discussion.
 - Use `/implement <link-to-review-comment>` to indirectly call the tool from any comment. <br>
 
 **Notes** <br>
-- Languages that are currently supported by the tool: Python, Java, C++, JavaScript, TypeScript, C#.
+- The following languages are currently supported: Python, Java, C++, JavaScript, TypeScript, C#.
