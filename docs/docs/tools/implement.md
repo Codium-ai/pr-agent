@@ -4,19 +4,53 @@ The `implement` tool automatically generates implementation code based on PR rev
 It combines LLM capabilities with static code analysis to help developers implement code changes quickly and with confidence.
 
 
-To use the tool, manually invoke it by commenting in any PR discussion that contains code suggestions:
-```
-/implement
-```
+## Usage Scenarios
 
-## Example usage
 
-Invoke the tool manually by commenting `/implement` on any PR review discussion.
-The tool will generate code implementation for the selected discussion:
+### 1. For Reviewers
+
+Reviewers can request code changes by: <br>
+1. Selecting the code block to be modified. <br>
+2. Adding a comment with the syntax: 
+```
+/implement <code-change-description>
+```
 
 ![implement1](https://codium.ai/images/pr_agent/implement1.png){width=768}
 
 
+### 2. For PR Authors
+
+PR authors can implement suggested changes by replying to a review comment using either: <br>
+1. Add specific implementation details as described above
+```
+/implement <code-change-description>
+```
+2. Use the original review comment as instructions
+```
+/implement
+```
+
+![implement2](https://codium.ai/images/pr_agent/implement2.png){width=768}
+
+
+### 3. For Referencing Comments
+
+You can reference and implement changes from any comment by:
+```
+/implement <link-to-review-comment>
+```
+
+![implement3](https://codium.ai/images/pr_agent/implement3.png){width=768}
+
+Note that the implementation will occur within the review discussion thread.
+Invoke the tool manually by commenting `/implement` on any PR review discussion.
+
+
+**Configuration options** <br>
+- Use `/implement` to implement code change within and based on the review discussion. <br>
+- Use `/implement <code-change-description>` inside a review discussion to implement specific instructions. <br>
+- Use `/implement <link-to-review-comment>` to indirectly call the tool from any comment. <br>
+
 **Notes** <br>
-- Languages that are currently supported by the tool: Python, Java, C++, JavaScript, TypeScript, C#. <br>
-- Use `/implement <discuttion comment URL>` to indirectly call the tool.
+- Languages that are currently supported by the tool: Python, Java, C++, JavaScript, TypeScript, C#.
