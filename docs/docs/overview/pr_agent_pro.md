@@ -33,14 +33,15 @@ Here are some of the additional features and capabilities that Qodo Merge Pro of
 
 Here are additional tools that are available only for Qodo Merge Pro users:
 
-| Feature | Description |
-|---------|-------------|
+| Feature                                                                               | Description |
+|---------------------------------------------------------------------------------------|-------------|
 | [**Custom Prompt Suggestions**](https://qodo-merge-docs.qodo.ai/tools/custom_prompt/) | Generate code suggestions based on custom prompts from the user |
-| [**Analyze PR components**](https://qodo-merge-docs.qodo.ai/tools/analyze/) | Identify the components that changed in the PR, and enable to interactively apply different tools to them |
-| [**Tests**](https://qodo-merge-docs.qodo.ai/tools/test/) | Generate tests for code components that changed in the PR |
-| [**PR documentation**](https://qodo-merge-docs.qodo.ai/tools/documentation/) | Generate docstring for code components that changed in the PR |
-| [**Improve Component**](https://qodo-merge-docs.qodo.ai/tools/improve_component/) | Generate code suggestions for code components that changed in the PR |
-| [**Similar code search**](https://qodo-merge-docs.qodo.ai/tools/similar_code/) | Search for similar code in the repository, organization, or entire GitHub |
+| [**Analyze PR components**](https://qodo-merge-docs.qodo.ai/tools/analyze/)           | Identify the components that changed in the PR, and enable to interactively apply different tools to them |
+| [**Tests**](https://qodo-merge-docs.qodo.ai/tools/test/)                              | Generate tests for code components that changed in the PR |
+| [**PR documentation**](https://qodo-merge-docs.qodo.ai/tools/documentation/)          | Generate docstring for code components that changed in the PR |
+| [**Improve Component**](https://qodo-merge-docs.qodo.ai/tools/improve_component/)     | Generate code suggestions for code components that changed in the PR |
+| [**Similar code search**](https://qodo-merge-docs.qodo.ai/tools/similar_code/)        | Search for similar code in the repository, organization, or entire GitHub |
+| [**Code implementation**](https://qodo-merge-docs.qodo.ai/tools/implement/)        | Generates implementation code from review suggestions |
 
 
 ### Supported languages
