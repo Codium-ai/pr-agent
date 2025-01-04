@@ -183,3 +183,9 @@ class TestLoadLargeDiff:
 +                                another line
 """
         assert patch == patch_expected
+
+    def test_empty_inputs(self):
+        assert load_large_diff("test.py", "", "") == ""
+        assert load_large_diff("test.py", None, None) == ""
+        assert (load_large_diff("test.py", "content\n", "") ==
+                '--- \n+++ \n@@ -1 +1 @@\n-\n+content\n')
