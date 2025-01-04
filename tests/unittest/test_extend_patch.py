@@ -3,6 +3,7 @@ import pytest
 from pr_agent.algo.git_patch_processing import extend_patch
 from pr_agent.algo.pr_processing import pr_generate_extended_diff
 from pr_agent.algo.token_handler import TokenHandler
+from pr_agent.algo.utils import load_large_diff
 from pr_agent.config_loader import get_settings
 
 
@@ -157,3 +158,28 @@ class TestExtendedPatchMoreLines:
 
         p0_extended = patches_extended_with_extra_lines[0].strip()
         assert p0_extended == "## File: 'file1'\n\n@@ -3,8 +3,8 @@ \n line0\n line1\n-original content\n+modified content\n line2\n line3\n line4\n line5\n line6"
+
+
+class TestLoadLargeDiff:
+    def test_no_newline(self):
+        patch = load_large_diff("test.py",
+                                """\
+                                old content 1
+                                some new content
+                                another line
+                                """,
+                                """
+                                old content 1
+                                old content 2""")
+
+        patch_expected="""\
+--- 
++++ 
+@@ -1,3 +1,3 @@
+-
+                                 old content 1
+-                                old content 2
++                                some new content
++                                another line
+"""
+        assert patch == patch_expected

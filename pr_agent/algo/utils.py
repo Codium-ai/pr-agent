@@ -588,6 +588,8 @@ def load_large_diff(filename, new_file_content_str: str, original_file_content_s
         return ""
 
     try:
+        original_file_content_str = original_file_content_str.rstrip() + "\n"
+        new_file_content_str = new_file_content_str.rstrip() + "\n"
         diff = difflib.unified_diff(original_file_content_str.splitlines(keepends=True),
                                     new_file_content_str.splitlines(keepends=True))
         if get_settings().config.verbosity_level >= 2 and show_warning:
