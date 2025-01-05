@@ -42,7 +42,7 @@ Qodo Merge offers extensive pull request functionalities across various git prov
 |       | [Generate Custom Labels](./tools/describe.md#handle-custom-labels-from-the-repos-labels-page-💎){:target="_blank"} 💎 |   ✅    |   ✅    |            |      ✅      |
 |       | [Analyze PR Components](./tools/analyze.md){:target="_blank"} 💎                                                      |   ✅    |   ✅    |       |      ✅      |
 |       | [Test](https://pr-agent-docs.codium.ai/tools/test/) 💎                                                                | ✅ |   ✅    |                    |              |
-|       | [Implement](https://pr-agent-docs.codium.ai/tools/implement/) 💎                                                      | ✅ |        |                    |              |
+|       | [Implement](https://pr-agent-docs.codium.ai/tools/implement/) 💎                                                      | ✅ |   ✅    |                    |              |
 |       |                                                                                                                       |        |        |            |      ️       |
 | USAGE | CLI                                                                                                                   |   ✅    |   ✅    |   ✅       |      ✅      |
 |       | App / webhook                                                                                                         |   ✅    |   ✅    |    ✅        |      ✅      |
