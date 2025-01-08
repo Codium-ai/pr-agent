@@ -4,6 +4,7 @@ import difflib
 import re
 import textwrap
 import traceback
+from datetime import datetime
 from functools import partial
 from typing import Dict, List
 
@@ -81,6 +82,7 @@ class PRCodeSuggestions:
             "relevant_best_practices": "",
             "is_ai_metadata": get_settings().get("config.enable_ai_metadata", False),
             "focus_only_on_problems": get_settings().get("pr_code_suggestions.focus_only_on_problems", False),
+            "date": datetime.now().strftime('%Y-%m-%d'),
             'duplicate_prompt_examples': get_settings().config.get('duplicate_prompt_examples', False),
         }
         self.pr_code_suggestions_prompt_system = get_settings().pr_code_suggestions_prompt.system
