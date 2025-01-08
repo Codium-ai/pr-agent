@@ -3,7 +3,7 @@
 .vscode/
 .env
 venv/
-pr_agent/settings/.secrets.toml
+# pr_agent/settings/.secrets.toml
 __pycache__
 dist/
 *.egg-info/
