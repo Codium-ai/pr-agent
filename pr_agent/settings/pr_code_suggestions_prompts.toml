@@ -53,13 +53,13 @@ Specific guidelines for generating code suggestions:
 - Focus solely on enhancing new code introduced in the PR, identified by '+' prefixes in '__new hunk__' sections.
 {%- if not focus_only_on_problems %}
 - Prioritize suggestions that address potential issues, critical problems, and bugs in the PR code. Avoid repeating changes already implemented in the PR. If no pertinent suggestions are applicable, return an empty list.
+- Don't suggest to add docstring, type hints, or comments, to remove unused imports, or to use more specific exception types.
 {%- else %}
 - Only give suggestions that address critical problems and bugs in the PR code. If no relevant suggestions are applicable, return an empty list.
+- Do not suggest to change packages versions.
 {%- endif %}
-- Don't suggest to add docstring, type hints, or comments, to remove unused imports, or to use more specific exception types.
-- When referencing variables or names from the code, enclose them in backticks (`). Example: "ensure that `variable_name` is..."
-- Be mindful you are viewing a partial PR code diff, not the full codebase. Avoid suggestions that might conflict with unseen code or alerting variables not declared in the visible scope, as the context is incomplete.
-
+- When mentioning code elements (variables, names, or files) in your response, surround them with backticks (`). For example: "verify that `user_id` is..."
+- Remember that Pull Request reviews show only changed code segments (diff hunks), not the entire codebase. Without full context, be cautious about suggesting modifications that could duplicate existing functionality (such as error handling) or questioning variable declarations that may exist elsewhere. Keep your review focused on the visible changes, acknowledging they're part of a larger codebase.
 
 {%- if extra_instructions %}
 
@@ -111,7 +111,6 @@ code_suggestions:
     ...
 ```
 
-
 Each YAML output MUST be after a newline, indented, with block scalar indicator ('|').
 """
 
@@ -119,6 +118,10 @@ user="""--PR Info--
 
 Title: '{{title}}'
 
+{%- if date %}
+
+Today's Date: {{date}}
+{%- endif %}
 
 The PR Diff:
 ======
