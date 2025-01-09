@@ -60,9 +60,11 @@ class PRAgent:
         else:
             action, *args = request
 
-        forbidden_cli_args = ['enable_auto_approval', 'base_url', 'url', 'app_name', 'secret_provider',
-                              'git_provider', 'skip_keys', 'key', 'ANALYTICS_FOLDER', 'uri', 'app_id', 'webhook_secret',
-                              'bearer_token', 'PERSONAL_ACCESS_TOKEN', 'override_deployment_type', 'private_key', 'api_base', 'api_type', 'api_version']
+        forbidden_cli_args = ['enable_auto_approval', 'approve_pr_on_self_review', 'base_url', 'url', 'app_name', 'secret_provider',
+                              'git_provider', 'skip_keys', 'openai.key', 'ANALYTICS_FOLDER', 'uri', 'app_id', 'webhook_secret',
+                              'bearer_token', 'PERSONAL_ACCESS_TOKEN', 'override_deployment_type', 'private_key',
+                              'local_cache_path', 'enable_local_cache', 'jira_base_url', 'api_base', 'api_type', 'api_version',
+                              'skip_keys']
         if args:
             for arg in args:
                 if arg.startswith('--'):

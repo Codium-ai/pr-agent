@@ -38,12 +38,15 @@ class PRConfig:
             if (header.lower().startswith("pr_") or header.lower().startswith("config")) and header.lower() in configuration_headers
         }
 
-        skip_keys = ['ai_disclaimer', 'ai_disclaimer_title', 'ANALYTICS_FOLDER', 'secret_provider', "skip_keys",
-                          'trial_prefix_message', 'no_eligible_message', 'identity_provider', 'ALLOWED_REPOS',
-                          'APP_NAME']
+        skip_keys = ['ai_disclaimer', 'ai_disclaimer_title', 'ANALYTICS_FOLDER', 'secret_provider', "skip_keys", "app_id", "redirect",
+                     'trial_prefix_message', 'no_eligible_message', 'identity_provider', 'ALLOWED_REPOS',
+                     'APP_NAME', 'PERSONAL_ACCESS_TOKEN', 'shared_secret', 'key', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'user_token',
+                     'private_key', 'private_key_id', 'client_id', 'client_secret', 'token', 'bearer_token']
         extra_skip_keys = get_settings().config.get('config.skip_keys', [])
         if extra_skip_keys:
             skip_keys.extend(extra_skip_keys)
+        skip_keys_lower = [key.lower() for key in skip_keys]
+
 
         markdown_text = "<details> <summary><strong>🛠️ PR-Agent Configurations:</strong></summary> \n\n"
         markdown_text += f"\n\n```yaml\n\n"
@@ -52,7 +55,7 @@ class PRConfig:
                 markdown_text += "\n\n"
                 markdown_text += f"==================== {header} ===================="
             for key, value in configs.items():
-                if key in skip_keys:
+                if key.lower() in skip_keys_lower:
                     continue
                 markdown_text += f"\n{header.lower()}.{key.lower()} = {repr(value) if isinstance(value, str) else value}"
                 markdown_text += "  "
