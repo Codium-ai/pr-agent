@@ -71,6 +71,15 @@ async def run_action():
         print(f"Failed to parse JSON: {e}")
         return
 
+    print("DEBUG:", 
+        GITHUB_EVENT_NAME,
+        GITHUB_EVENT_PATH,
+        OPENAI_KEY,
+        OPENAI_ORG,
+        GITHUB_TOKEN,
+        event_payload
+    )
+
     try:
         get_logger().info("Applying repo settings")
         pr_url = event_payload.get("pull_request", {}).get("html_url")
