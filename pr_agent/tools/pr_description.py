@@ -188,6 +188,8 @@ class PRDescription:
         return ""
 
     async def _prepare_prediction(self, model: str) -> None:
+        print("REACHED HERE!")
+
         if get_settings().pr_description.use_description_markers and 'pr_agent:' not in self.user_description:
             get_logger().info("Markers were enabled, but user description does not contain markers. skipping AI prediction")
             return None
