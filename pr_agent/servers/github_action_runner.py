@@ -71,14 +71,7 @@ async def run_action():
         print(f"Failed to parse JSON: {e}")
         return
 
-    print("DEBUG:", 
-        GITHUB_EVENT_NAME,
-        GITHUB_EVENT_PATH,
-        OPENAI_KEY,
-        OPENAI_ORG,
-        GITHUB_TOKEN,
-        event_payload
-    )
+    print("GITHUB_EVENT_NAME: ", GITHUB_EVENT_NAME, "EVENT_PAYLOAD:", event_payload)
 
     try:
         get_logger().info("Applying repo settings")
@@ -90,7 +83,7 @@ async def run_action():
         get_logger().info(f"github action: failed to apply repo settings: {e}")
 
     # Handle pull request opened event
-    if GITHUB_EVENT_NAME == "pull_request":
+    if GITHUB_EVENT_NAME == "pull_request" or GITHUB_EVENT_NAME == "workflow_dispatch":
         action = event_payload.get("action")
 
         # Retrieve the list of actions from the configuration
