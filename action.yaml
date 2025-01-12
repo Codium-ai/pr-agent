@@ -5,4 +5,4 @@ branding:
   color: 'green'
 runs:
   using: 'docker'
-  image: 'pr-agent:local'
+  image: './Dockerfile.github_action'
