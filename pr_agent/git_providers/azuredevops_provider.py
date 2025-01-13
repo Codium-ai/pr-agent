@@ -326,13 +326,13 @@ class AzureDevopsProvider(GitProvider):
                     edit_type = EDIT_TYPE.ADDED
                 elif diff_types[file] == "delete":
                     edit_type = EDIT_TYPE.DELETED
-                elif diff_types[file] == "rename":
+                elif "rename" in diff_types[file]: # diff_type can be `rename` | `edit, rename`
                     edit_type = EDIT_TYPE.RENAMED
 
                 version = GitVersionDescriptor(
                     version=base_sha.commit_id, version_type="commit"
                 )
-                if edit_type == EDIT_TYPE.ADDED:
+                if edit_type == EDIT_TYPE.ADDED or edit_type == EDIT_TYPE.RENAMED:
                     original_file_content_str = ""
                 else:
                     try:
