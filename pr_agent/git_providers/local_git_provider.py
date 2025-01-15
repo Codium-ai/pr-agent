@@ -141,6 +141,18 @@ class LocalGitProvider(GitProvider):
     def remove_comment(self, comment):
         pass  # Not applicable to the local git provider, but required by the interface
 
+    def add_eyes_reaction(self, comment):
+        pass  # Not applicable to the local git provider, but required by the interface
+
+    def get_commit_messages(self):
+        pass  # Not applicable to the local git provider, but required by the interface
+
+    def get_repo_settings(self):
+        pass  # Not applicable to the local git provider, but required by the interface
+
+    def remove_reaction(self, comment):
+        pass  # Not applicable to the local git provider, but required by the interface
+
     def get_languages(self):
         """
         Calculate percentage of languages in repository. Used for hunk prioritisation.
