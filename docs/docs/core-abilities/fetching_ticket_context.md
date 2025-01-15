@@ -126,6 +126,7 @@ jira_api_email = "YOUR_EMAIL"
 
 ##### 1. Step 1: Set up an application link in Jira Data Center/Server
 * Go to Jira Administration > Applications > Application Links > Click on `Create link`
+
 ![application links](https://www.qodo.ai/images/pr_agent/jira_app_links.png){width=384}
 * Choose `External application` and set the direction to `Incoming` and then click `Continue`
 
