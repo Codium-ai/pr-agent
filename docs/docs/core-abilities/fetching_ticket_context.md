@@ -132,12 +132,12 @@ jira_api_email = "YOUR_EMAIL"
 ![external application](https://www.qodo.ai/images/pr_agent/jira_create_link.png){width=256}
 * In the following screen, enter the following details:
     * Name: `Qodo Merge`
-    * Redirect URL: Enter you Qodo Merge URL followed  `https://{QODO_MERGE_ENDPOINT}/register_ticket_provider`
+    * Redirect URL: Enter your Qodo Merge URL followed  `https://{QODO_MERGE_ENDPOINT}/register_ticket_provider`
     * Permission: Select `Read`
     * Click `Save`
 
 ![external application details](https://www.qodo.ai/images/pr_agent/jira_fill_app_link.png){width=384}
-* Copy the `Client ID` and `Client secret` and set them in you `.secrets` file:
+* Copy the `Client ID` and `Client secret` and set them in your `.secrets` file:
 
 ![client id and secret](https://www.qodo.ai/images/pr_agent/jira_app_credentionals.png){width=256}
 ```toml
