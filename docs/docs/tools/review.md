@@ -57,6 +57,10 @@ extra_instructions = "..."
     <td>If set to true, the review comment will be persistent, meaning that every new review request will edit the previous one. Default is true.</td>
   </tr>
   <tr>
+  <td><b>final_update_message</b></td>
+  <td>When set to true, updating a persistent review comment during online commenting will automatically add a short comment with a link to the updated review in the pull request .Default is true.</td>
+  </tr>
+  <tr>
     <td><b>extra_instructions</b></td>
     <td>Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".</td>
   </tr>
