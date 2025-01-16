@@ -100,6 +100,14 @@ def should_process_pr_logic(data) -> bool:
         if not data.get('object_attributes', {}):
             return False
         title = data['object_attributes'].get('title')
+        sender = data.get("user", {}).get("username", "")
+
+        # logic to ignore PRs from specific users
+        ignore_pr_users = get_settings().get("CONFIG.IGNORE_PR_AUTHORS", [])
+        if ignore_pr_users and sender:
+            if sender in ignore_pr_users:
+                get_logger().info(f"Ignoring PR from user '{sender}' due to 'config.ignore_pr_authors' settings")
+                return False
 
         # logic to ignore MRs for titles, labels and source, target branches.
         ignore_mr_title = get_settings().get("CONFIG.IGNORE_PR_TITLE", [])
