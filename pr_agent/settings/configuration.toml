@@ -1,6 +1,6 @@
 [config]
 # models
-model="chatgpt-4o-latest"
+model="chatgpt-4o-1111-01-01"
 fallback_models=["gpt-4o-2024-08-06"]
 #model_weak="gpt-4o-mini-2024-07-18" # optional, a weaker model to use for some easier tasks
 # CLI
