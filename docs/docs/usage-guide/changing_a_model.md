@@ -166,6 +166,25 @@ drop_params = true
 
 AWS session is automatically authenticated from your environment, but you can also explicitly set `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_REGION_NAME` environment variables. Please refer to [this document](https://litellm.vercel.app/docs/providers/bedrock) for more details.
 
+### DeepSeek
+
+To use deepseek-chat model with DeepSeek, for example, set:
+
+```toml
+[config] # in configuration.toml
+model = "deepseek/deepseek-chat"
+fallback_models=["deepseek/deepseek-chat"]
+```
+
+and fill up your key
+
+```toml
+[deepseek] # in .secrets.toml
+key = ...
+```
+
+(you can obtain a deepseek-chat key from [here](https://platform.deepseek.com))
+
 ### Custom models
 
 If the relevant model doesn't appear [here](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/algo/__init__.py), you can still use it as a custom model:
