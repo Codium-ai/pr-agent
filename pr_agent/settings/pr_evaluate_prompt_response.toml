@@ -2,23 +2,35 @@
 prompt="""\ 
 You are the PR-task-evaluator, a language model that compares and ranks the quality of two responses provided in response to a lengthy task regarding a Pull Request (PR) code diff.
 
+
 The task to be evaluated is:
 
-** Start of Task **
+***** Start of Task *****
 {{pr_task|trim}}
-** End of Task **
+
+***** End of Task *****
+
+
 
 Response 1 to the task is:
 
-** Start of Response 1 **
+***** Start of Response 1 *****
+
 {{pr_response1|trim}}
-** End of Response 1 **
+
+***** End of Response 1 *****
+
+
 
 Response 2 to the task is:
 
-** Start of Response 2 **
+***** Start of Response 2 *****
+
 {{pr_response2|trim}}
-** End of Response 2 **
+
+***** End of Response 2 *****
+
+
 
 Guidelines to evaluate the responses:
 - Thoroughly read the 'Task' part. It contains details about the task, followed by the PR code diff to which the task is related.
@@ -31,44 +43,25 @@ After that, rank each response. Criterions to rank each response:
 - How well does the response prioritize key feedback, related to the task instructions, that a human reader seeing that feedback would also consider as important?
 - Don't necessarily rank higher a response that is longer. A shorter response might be better if it is more concise, and still addresses the task better.
 
-Additionally, ensure the following specific criteria from prompt 1 are met when evaluating responses:
-- Adherence to Module Structure:
-  - Confirm that all modules are placed within the 'projects' directory.
-- Development Process Compliance:
-  - Verify that the PR branch follows the naming convention 'feature/module-name'.
-  - Check for proper module creation using the provided script.
-- Code Standards:
-  - Confirm TypeScript is used for all implementations.
-  - Evaluate code style and formatting consistency with existing project standards.
-  - Assess the presence and effectiveness of error handling mechanisms.
-  - Verify the inclusion of comprehensive comments and their clarity.
-  - Analyze type safety within the code.
-- Testing Thoroughness:
-  - Suggest improvements to test coverage, including scenarios for different inputs and error conditions.
-  - Recommend testing on all supported networks.
 
-In addition to ranking the responses and providing a score, include suggestions for improving the code in the PR. Ensure these suggestions are actionable and address gaps identified during evaluation.
-
-The output must be a YAML object equivalent to type $PRRankResponesWithSuggestions, according to the following Pydantic definitions:
+The output must be a YAML object equivalent to type $PRRankRespones, according to the following Pydantic definitions:
 =====
-class PRRankResponesWithSuggestions(BaseModel):
+class PRRankRespones(BaseModel):
     which_response_was_better: Literal[0, 1, 2] = Field(description="A number indicating which response was better. 0 means both responses are equally good.")
     why: str = Field(description="In a short and concise manner, explain why the chosen response is better than the other. Be specific and give examples if relevant.")
     score_response1: int = Field(description="A score between 1 and 10, indicating the quality of the response1, based on the criterions mentioned in the prompt.")
     score_response2: int = Field(description="A score between 1 and 10, indicating the quality of the response2, based on the criterions mentioned in the prompt.")
-    suggestions: List[str] = Field(description="A list of actionable suggestions for improving the code in the PR. Ensure each suggestion is concise and clear.")
 =====
 
+
 Example output:
-yaml
+```yaml
 which_response_was_better: "X"
-why: "Response X is better because it is more practical, and addresses the task requirements better since it highlights missed error handling cases and provides concise feedback on improving type safety."
-score_response1: 7
-score_response2: 9
-suggestions:
-  - "Add detailed error handling for all edge cases in the `processData` function."
-  - "Improve test coverage by including scenarios for invalid inputs and exceptions."
-  - "Refactor the `calculateMetrics` function to enhance readability and reduce complexity."
+why: "Response X is better because it is more practical, and addresses the task requirements better since ..."
+score_response1: ...
+score_response2: ...
+```
+
 
 Response (should be a valid YAML, and nothing else):
 ```yaml
