@@ -90,6 +90,10 @@ class LiteLLMAIHandler(BaseAiHandler):
         if get_settings().get("GOOGLE_AI_STUDIO.GEMINI_API_KEY", None):
           os.environ["GEMINI_API_KEY"] = get_settings().google_ai_studio.gemini_api_key
 
+        # Support deepseek models
+        if get_settings().get("DEEPSEEK.KEY", None):
+            os.environ['DEEPSEEK_API_KEY'] = get_settings().get("DEEPSEEK.KEY")
+
     def prepare_logs(self, response, system, user, resp, finish_reason):
         response_log = response.dict().copy()
         response_log['system'] = system
