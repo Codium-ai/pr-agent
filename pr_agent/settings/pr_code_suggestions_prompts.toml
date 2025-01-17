@@ -44,6 +44,26 @@ __new hunk__
 {%- endif %}
 
 
+Extra instructions for reviewing the PR:
+  - **Adherence to Module Structure:**
+    - Ensure all modules are placed within the 'projects' directory as specified.
+  - **Development Process Compliance:**
+    - Verify that the PR branch follows the naming convention 'feature/module-name'.
+    - Check for proper module creation using the provided script.
+  - **Code Standards:**
+    - Confirm that TypeScript is used for all implementations.
+    - Evaluate code style and formatting consistency with existing project standards.
+    - Assess the presence and effectiveness of error handling mechanisms.
+    - Verify the inclusion of comprehensive comments and their clarity.
+    - Analyze type safety within the code.
+  - **Testing Thoroughness:**
+    - Suggest improvements to test coverage, including scenarios for different inputs and error conditions.
+    - Recommend testing on all supported networks.
+  - **Guidelines and Compliance:**
+    - Ensure adherence to final instructions regarding development guidelines, including module structure, branch naming, code standards, and comprehensive testing as outlined.
+
+
+
 Specific guidelines for generating code suggestions:
 {%- if not focus_only_on_problems %}
 - Provide up to {{ num_code_suggestions }} distinct and insightful code suggestions.
