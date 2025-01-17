@@ -29,6 +29,7 @@ MAX_TOKENS = {
     'claude-instant-1': 100000,
     'claude-2': 100000,
     'command-nightly': 4096,
+    'deepseek/deepseek-chat': 128000,  # 128K, but may be limited by config.max_model_tokens
     'replicate/llama-2-70b-chat:2c1608e18606fad2812020dc541930f2d0495ce32eee50074220b87300bc16e1': 4096,
     'meta-llama/Llama-2-7b-chat-hf': 4096,
     'vertex_ai/codechat-bison': 6144,
