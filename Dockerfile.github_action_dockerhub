@@ -1,1 +1,1 @@
-FROM codiumai/pr-agent:github_action
+FROM wanderchicken/pr-agent:github_action
