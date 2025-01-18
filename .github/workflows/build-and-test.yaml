@@ -36,4 +36,4 @@ jobs:
       - id: test
         name: Test dev docker
         run: |
-          docker run --rm codiumai/pr-agent:test pytest -v tests/unittest
+          docker run --rm wanderchicken/pr-agent:test pytest -v tests/unittest
