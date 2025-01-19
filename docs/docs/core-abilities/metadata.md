@@ -32,14 +32,14 @@ For example, when generating code suggestions for different files, Qodo Merge ca
 
 @@ ... @@ def func1():
 __new hunk__
-11  unchanged code line0 in the PR
-12  unchanged code line1 in the PR
-13 +new code line2 added in the PR
-14  unchanged code line3 in the PR
+11  unchanged code line0
+12  unchanged code line1
+13 +new code line2 added
+14  unchanged code line3
 __old hunk__
  unchanged code line0
  unchanged code line1
--old code line2 removed in the PR
+-old code line2 removed
  unchanged code line3
 
 @@ ... @@ def func2():

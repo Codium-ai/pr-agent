@@ -17,30 +17,36 @@ The PR code diff will be in the following structured format:
 
 @@ ... @@ def func1():
 __new hunk__
- unchanged code line0 in the PR
- unchanged code line1 in the PR
-+new code line2 added in the PR
- unchanged code line3 in the PR
+ unchanged code line0
+ unchanged code line1
++new code line2 added
+ unchanged code line3
 __old hunk__
  unchanged code line0
  unchanged code line1
--old code line2 removed in the PR
+-old code line2 removed
  unchanged code line3
 
 @@ ... @@ def func2():
 __new hunk__
  unchanged code line4
-+new code line5 removed in the PR
++new code line5 removed
  unchanged code line6
 
 ## File: 'src/file2.py'
 ...
 ======
 
-- In the format above, the diff is organized into separate '__new hunk__' and '__old hunk__' sections for each code chunk. '__new hunk__' contains the updated code, while '__old hunk__' shows the removed code. If no code was removed in a specific chunk, the __old hunk__ section will be omitted.
-- Code lines are prefixed with symbols: '+' for new code added in the PR, '-' for code removed, and ' ' for unchanged code.
+Important notes about the structred diff format above:
+1. Each PR code chunk is decoupled into separate '__new hunk__' and '__old hunk__' sections:
+  - The '__new hunk__' section shows the code chunk AFTER the PR changes.
+  - The '__old hunk__' section shows the code chunk BEFORE the PR changes. If no code was removed from the chunk, the '__old hunk__' section will be omitted.
+2. The diff uses line prefixes to show changes:
+  '+' → new line code added (will appear only in '__new hunk__')
+  '-' → line code removed (will appear only in '__old hunk__')
+  ' ' → unchanged context lines (will appear in both sections)
 {%- if is_ai_metadata %}
-- When available, an AI-generated summary will precede each file's diff, with a high-level overview of the changes. Note that this summary may not be fully accurate or complete.
+3. When available, an AI-generated summary will precede each file's diff, with a high-level overview of the changes. Note that this summary may not be fully accurate or complete.
 {%- endif %}
 
 
@@ -50,7 +56,8 @@ Specific guidelines for generating code suggestions:
 {%- else %}
 - Provide up to {{ num_code_suggestions }} distinct and insightful code suggestions. Return less suggestions if no pertinent ones are applicable.
 {%- endif %}
-- Focus solely on enhancing new code introduced in the PR, identified by '+' prefixes in '__new hunk__' sections.
+- DO NOT suggest implementing changes that are already present in the '+' lines compared to the '-' lines.
+- Focus your suggestions ONLY on new code introduced in the PR ('+' lines in '__new hunk__' sections).
 {%- if not focus_only_on_problems %}
 - Prioritize suggestions that address potential issues, critical problems, and bugs in the PR code. Avoid repeating changes already implemented in the PR. If no pertinent suggestions are applicable, return an empty list.
 - Don't suggest to add docstring, type hints, or comments, to remove unused imports, or to use more specific exception types.
@@ -59,7 +66,7 @@ Specific guidelines for generating code suggestions:
 - Do not suggest to change packages versions.
 {%- endif %}
 - When mentioning code elements (variables, names, or files) in your response, surround them with backticks (`). For example: "verify that `user_id` is..."
-- Remember that Pull Request reviews show only changed code segments (diff hunks), not the entire codebase. Without full context, be cautious about suggesting modifications that could duplicate existing functionality (such as error handling) or questioning variable declarations that may exist elsewhere. Keep your review focused on the visible changes, acknowledging they're part of a larger codebase.
+- Remember: PR diffs show only changed code segments, not the full codebase. Focus your review on visible changes and be cautious about suggesting changes that may duplicate existing unseen functionality in the codebase.
 
 {%- if extra_instructions %}
 
