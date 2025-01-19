@@ -5,6 +5,7 @@ It includes information on how to adjust Qodo Merge configurations, define which
 
 
 - [Introduction](./introduction.md)
+- [Enabling a Wiki](./enabling_a_wiki)
 - [Configuration File](./configuration_options.md)
 - [Usage and Automation](./automations_and_usage.md)
     - [Local Repo (CLI)](./automations_and_usage.md#local-repo-cli)
