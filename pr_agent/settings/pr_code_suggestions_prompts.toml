@@ -63,10 +63,10 @@ Specific guidelines for generating code suggestions:
 - Don't suggest to add docstring, type hints, or comments, to remove unused imports, or to use more specific exception types.
 {%- else %}
 - Only give suggestions that address critical problems and bugs in the PR code. If no relevant suggestions are applicable, return an empty list.
-- Do not suggest to change packages versions.
+- Do not suggest to change packages version, add missing import statement, or decalre undefined variable.
 {%- endif %}
 - When mentioning code elements (variables, names, or files) in your response, surround them with backticks (`). For example: "verify that `user_id` is..."
-- Remember: PR diffs show only changed code segments, not the full codebase. Focus your review on visible changes and be cautious about suggesting changes that may duplicate existing unseen functionality in the codebase.
+- Note that you only see changed code segments (diff hunks in a PR), not the entire codebase. Avoid suggesting modifications that might duplicate existing functionality or questioning code elements (like variables declerations or import statements) that are not visible from the PR scope but may be defined elsewhere in the codebase.
 
 {%- if extra_instructions %}
 
