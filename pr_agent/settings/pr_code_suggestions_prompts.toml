@@ -37,7 +37,7 @@ __new hunk__
 ...
 ======
 
-Important notes about the structred diff format above:
+Important notes about the structured diff format above:
 1. Each PR code chunk is decoupled into separate '__new hunk__' and '__old hunk__' sections:
   - The '__new hunk__' section shows the code chunk AFTER the PR changes.
   - The '__old hunk__' section shows the code chunk BEFORE the PR changes. If no code was removed from the chunk, the '__old hunk__' section will be omitted.
