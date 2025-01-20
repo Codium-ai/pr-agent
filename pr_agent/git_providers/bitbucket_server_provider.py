@@ -234,7 +234,7 @@ class BitbucketServerProvider(GitProvider):
                     new_file_content_str = self.get_file(file_path, head_sha)
                     new_file_content_str = decode_if_bytes(new_file_content_str)
 
-            patch = load_large_diff(file_path, new_file_content_str, original_file_content_str)
+            patch = load_large_diff(file_path, new_file_content_str, original_file_content_str, show_warning=False)
 
             diff_files.append(
                 FilePatchInfo(
