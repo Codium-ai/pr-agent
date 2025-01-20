@@ -1,5 +1,5 @@
 # Fetching Ticket Context for PRs
-`Supported Git Platforms : GitHub, GitLab, Bitbucket`
+`Supported Git Platforms: GitHub, GitLab, Bitbucket`
 
 ## Overview
 Qodo Merge PR Agent streamlines code review workflows by seamlessly connecting with multiple ticket management systems.

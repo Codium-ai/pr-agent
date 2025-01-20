@@ -1,3 +1,4 @@
+`Supported Git Platforms: GitHub, GitLab, Bitbucket`
 
 
 For optimal functionality of Qodo Merge, we recommend enabling a wiki for each repository where Qodo Merge is installed. The wiki serves several important purposes:
@@ -10,7 +11,7 @@ For optimal functionality of Qodo Merge, we recommend enabling a wiki for each r
 - Facilitates learning over time by creating an [auto_best_practices.md]() file
 
 
-**Setup Instructions:**
+**Setup Instructions (GitHub):**
 
 To enable a wiki for your repository:
 
