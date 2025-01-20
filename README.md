@@ -10,7 +10,7 @@
 
 </picture>
 <br/>
-Qode Merge PR-Agent aims to help efficiently review and handle pull requests, by providing AI feedback and suggestions
+Qode Merge 1 1223 PR-Agent aims to help efficiently review and handle pull requests, by providing AI feedback and suggestions
 </div>
 
 [![Static Badge](https://img.shields.io/badge/Chrome-Extension-violet)](https://chromewebstore.google.com/detail/pr-agent-chrome-extension/ephlnjeghhogofkifjloamocljapahnl)
