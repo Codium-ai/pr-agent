@@ -2,7 +2,7 @@
 After [installation](https://qodo-merge-docs.qodo.ai/installation/), there are three basic ways to invoke Qodo Merge:
 
 1. Locally running a CLI command
-2. Online usage - by [commenting](https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695021901) on a PR
+2. Online usage - by [commenting](https://github.com/Codium-ai/pr-agent/pull/229#issuecomment-1695021901){:target="_blank"} on a PR
 3. Enabling Qodo Merge tools to run automatically when a new PR is opened
 
 
