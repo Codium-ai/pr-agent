@@ -1,5 +1,5 @@
 ## Show possible configurations
-The possible configurations of Qodo Merge are stored in [here](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml).
+The possible configurations of Qodo Merge are stored in [here](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml){:target="_blank"}.
 In the [tools](https://qodo-merge-docs.qodo.ai/tools/) page you can find explanations on how to use these configurations for each tool.
 
 To print all the available configurations as a comment on your PR, you can use the following command:
