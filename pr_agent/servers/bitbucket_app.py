@@ -24,10 +24,6 @@ from pr_agent.identity_providers import get_identity_provider
 from pr_agent.identity_providers.identity_provider import Eligibility
 from pr_agent.log import LoggingFormat, get_logger, setup_logger
 from pr_agent.secret_providers import get_secret_provider
-from pr_agent.servers.github_action_runner import get_setting_or_env, is_true
-from pr_agent.tools.pr_code_suggestions import PRCodeSuggestions
-from pr_agent.tools.pr_description import PRDescription
-from pr_agent.tools.pr_reviewer import PRReviewer
 
 setup_logger(fmt=LoggingFormat.JSON, level="DEBUG")
 router = APIRouter()
@@ -75,6 +71,18 @@ async def handle_manifest(request: Request, response: Response):
     return JSONResponse(manifest_obj)
 
 
+def _get_username(data):
+    actor = data.get("data", {}).get("actor", {})
+    if actor:
+        if "username" in actor:
+            return actor["username"]
+        elif "display_name" in actor:
+            return actor["display_name"]
+        elif "nickname" in actor:
+            return actor["nickname"]
+    return ""
+
+
 async def _perform_commands_bitbucket(commands_conf: str, agent: PRAgent, api_url: str, log_context: dict, data: dict):
     apply_repo_settings(api_url)
     if commands_conf == "pr_commands" and get_settings().config.disable_auto_feedback:  # auto commands for PR, and auto feedback is disabled
@@ -118,6 +126,14 @@ def should_process_pr_logic(data) -> bool:
         title = pr_data.get("title", "")
         source_branch = pr_data.get("source", {}).get("branch", {}).get("name", "")
         target_branch = pr_data.get("destination", {}).get("branch", {}).get("name", "")
+        sender = _get_username(data)
+
+        # logic to ignore PRs from specific users
+        ignore_pr_users = get_settings().get("CONFIG.IGNORE_PR_AUTHORS", [])
+        if ignore_pr_users and sender:
+            if sender in ignore_pr_users:
+                get_logger().info(f"Ignoring PR from user '{sender}' due to 'config.ignore_pr_authors' setting")
+                return False
 
         # logic to ignore PRs with specific titles
         if title:
@@ -167,16 +183,7 @@ async def handle_github_webhooks(background_tasks: BackgroundTasks, request: Req
                     return "OK"
 
             # Get the username of the sender
-            actor = data.get("data", {}).get("actor", {})
-            if actor:
-                try:
-                    username = actor["username"]
-                except KeyError:
-                    try:
-                        username = actor["display_name"]
-                    except KeyError:
-                        username = actor["nickname"]
-                log_context["sender"] = username
+            log_context["sender"] = _get_username(data)
 
             sender_id = data.get("data", {}).get("actor", {}).get("account_id", "")
             log_context["sender_id"] = sender_id

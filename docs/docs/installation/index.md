@@ -3,8 +3,8 @@
 ## Self-hosted Qodo Merge
 If you choose to host your own Qodo Merge, you first need to acquire two tokens:
 
-1. An OpenAI key from [here](https://platform.openai.com/api-keys), with access to GPT-4 (or a key for other [language models](https://qodo-merge-docs.qodo.ai/usage-guide/changing_a_model/), if you prefer).
-2. A GitHub\GitLab\BitBucket personal access token (classic), with the repo scope. [GitHub from [here](https://github.com/settings/tokens)]
+1. An OpenAI key from [here](https://platform.openai.com/api-keys){:target="_blank"}, with access to GPT-4 (or a key for other [language models](https://qodo-merge-docs.qodo.ai/usage-guide/changing_a_model/), if you prefer).
+2. A GitHub\GitLab\BitBucket personal access token (classic), with the repo scope. [GitHub from [here](https://github.com/settings/tokens){:target="_blank"}]
 
 There are several ways to use self-hosted Qodo Merge:
 

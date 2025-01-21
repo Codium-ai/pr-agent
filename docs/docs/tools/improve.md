@@ -122,7 +122,7 @@ Use triple quotes to write multi-line instructions. Use bullet points or numbers
 
 >`Platforms supported: GitHub, GitLab, Bitbucket`
 
-Another option to give additional guidance to the AI model is by creating a dedicated [**wiki page**](https://github.com/Codium-ai/pr-agent/wiki) called `best_practices.md`.
+Another option to give additional guidance to the AI model is by creating a `best_practices.md` file, either in your repository's root directory or as a [**wiki page**](https://github.com/Codium-ai/pr-agent/wiki) (we recommend the wiki page, as editing and maintaining it over time is easier).
 This page can contain a list of best practices, coding standards, and guidelines that are specific to your repo/organization.
 
 The AI model will use this wiki page as a reference, and in case the PR code violates any of the guidelines, it will create additional suggestions, with a dedicated label: `Organization
