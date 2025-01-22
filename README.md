@@ -10,7 +10,7 @@
 
 </picture>
 <br/>
-Qodo-Merge PR-Agent aims to help efficiently review and handle pull requests, by providing AI feedback and suggestions
+Qodo-Merge's open-source PR-Agent aims to help efficiently review and handle pull requests, by providing AI feedback and suggestions
 </div>
 
 [![Static Badge](https://img.shields.io/badge/Chrome-Extension-violet)](https://chromewebstore.google.com/detail/qodo-merge-ai-powered-cod/ephlnjeghhogofkifjloamocljapahnl)
