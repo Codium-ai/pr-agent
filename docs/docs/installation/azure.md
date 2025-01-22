@@ -1,5 +1,5 @@
 ## Azure DevOps Pipeline
-You can use a pre-built Action Docker image to run Qodo Merge as an Azure devops pipeline.
+You can use a pre-built Action Docker image to run PR-Agent as an Azure devops pipeline.
 add the following file to your repository under `azure-pipelines.yml`:
 ```yaml
 # Opt out of CI triggers

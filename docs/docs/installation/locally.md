@@ -2,7 +2,7 @@
 
 A list of the relevant tools can be found in the [tools guide](../tools/ask.md).
 
-To invoke a tool (for example `review`), you can run directly from the Docker image. Here's how:
+To invoke a tool (for example `review`), you can run PR-Agent directly from the Docker image. Here's how:
 
 - For GitHub:
     ```
