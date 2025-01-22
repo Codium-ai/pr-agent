@@ -1,17 +1,17 @@
 ### Overview
 
-[Qodo Merge Pro](https://www.codium.ai/pricing/){:target="_blank"} is a hosted version of open-source [Qodo Merge (PR-Agent)](https://github.com/Codium-ai/pr-agent){:target="_blank"}. A complimentary two-week trial is offered, followed by a monthly subscription fee.
-Qodo Merge Pro is designed for companies and teams that require additional features and capabilities. It provides the following benefits:
+[Qodo Merge](https://www.codium.ai/pricing/){:target="_blank"} is a hosted version of open-source [PR-Agent](https://github.com/Codium-ai/pr-agent){:target="_blank"}. A complimentary two-week trial is offered, followed by a monthly subscription fee.
+Qodo Merge is designed for companies and teams that require additional features and capabilities. It provides the following benefits:
 
 1. **Fully managed** - We take care of everything for you - hosting, models, regular updates, and more. Installation is as simple as signing up and adding the Qodo Merge app to your GitHub\GitLab\BitBucket repo.
 
 2. **Improved privacy** - No data will be stored or used to train models. Qodo Merge Pro will employ zero data retention, and will use an OpenAI and Claude accounts with zero data retention.
 
-3. **Improved support** - Qodo Merge Pro users will receive priority support, and will be able to request new features and capabilities.
+3. **Improved support** - Qodo Merge users will receive priority support, and will be able to request new features and capabilities.
 
-4. **Supporting self-hosted git servers** - Qodo Merge Pro can be installed on GitHub Enterprise Server, GitLab, and BitBucket. For more information, see the [installation guide](https://qodo-merge-docs.qodo.ai/installation/pr_agent_pro/).
+4. **Supporting self-hosted git servers** - Qodo Merge can be installed on GitHub Enterprise Server, GitLab, and BitBucket. For more information, see the [installation guide](https://qodo-merge-docs.qodo.ai/installation/pr_agent_pro/).
 
-5. **PR Chat** - Qodo Merge Pro allows you to engage in [private chat](https://qodo-merge-docs.qodo.ai/chrome-extension/features/#pr-chat) about your pull requests on private repositories.
+5. **PR Chat** - Qodo Merge allows you to engage in [private chat](https://qodo-merge-docs.qodo.ai/chrome-extension/features/#pr-chat) about your pull requests on private repositories.
 
 ### Additional features
 

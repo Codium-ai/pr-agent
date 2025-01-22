@@ -9,7 +9,7 @@ The tool can be triggered automatically every time a new PR is [opened](../usage
 
 ![code_suggestions_as_comment_open.png](https://codium.ai/images/pr_agent/code_suggestions_as_comment_open.png){width=512}
 
-Note that the `Apply this suggestion` checkbox, which interactively converts a suggestion into a commitable code comment, is available only for Qodo Merge Pro 💎 users.
+Note that the `Apply this suggestion` checkbox, which interactively converts a suggestion into a commitable code comment, is available only for Qodo Merge💎 users.
 
 
 ## Example usage
@@ -54,7 +54,7 @@ num_code_suggestions_per_chunk = ...
 
 ### Assessing Impact 💎
 
-Note that Qodo Merge pro tracks two types of implementations:
+Note that Qodo Merge tracks two types of implementations:
 
 - Direct implementation - when the user directly applies the suggestion by clicking the `Apply` checkbox.
 - Indirect implementation - when the user implements the suggestion in their IDE environment. In this case, Qodo Merge will utilize, after each commit, a dedicated logic to identify if a suggestion was implemented, and will mark it as implemented.
