@@ -124,7 +124,7 @@ Supported commands per platform:
 | CORE  | [PR compression](https://qodo-merge-docs.qodo.ai/core-abilities/compression_strategy/)                                                                  | ✅ | ✅ | ✅ |      ✅       |
 |       | Adaptive and token-aware file patch fitting                                                             | ✅ | ✅ | ✅ |      ✅       |
 |       | [Multiple models support](https://qodo-merge-docs.qodo.ai/usage-guide/changing_a_model/)                                                                                 | ✅ | ✅ | ✅ |      ✅       |
-| 3     | [Local and global metadata](https://qodo-merge-docs.qodo.ai/core-abilities/metadata/)          | ✅ | ✅ | ✅ | ✅             |
+|       | [Local and global metadata](https://qodo-merge-docs.qodo.ai/core-abilities/metadata/)          | ✅ | ✅ | ✅ | ✅             |
 |       | [Dynamic context](https://qodo-merge-docs.qodo.ai/core-abilities/dynamic_context/)          | ✅ | ✅ | ✅ | ✅             |
 |       | [Self reflection](https://qodo-merge-docs.qodo.ai/core-abilities/self_reflection/)          | ✅ | ✅ | ✅ | ✅             |
 |       | [Static code analysis](https://qodo-merge-docs.qodo.ai/core-abilities/static_code_analysis/) 💎         | ✅ | ✅ | ✅ |              |
