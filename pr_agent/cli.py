@@ -77,6 +77,8 @@ def run(inargs=None, args=None):
     async def inner():
         if args.issue_url:
             result = await asyncio.create_task(PRAgent().handle_request(args.issue_url, [command] + args.rest))
+        elif args.repo_url:
+            result = await asyncio.create_task(PRAgent().handle_request(args.repo_url, [command] + args.rest))
         else:
             result = await asyncio.create_task(PRAgent().handle_request(args.pr_url, [command] + args.rest))
 
