@@ -37,7 +37,7 @@ Qodo-Merge's open-source PR-Agent aims to help efficiently review and handle pul
 - [Try it now](#try-it-now)
 - [Qodo-Merge 💎](https://qodo-merge-docs.qodo.ai/overview/pr_agent_pro/)
 - [How it works](#how-it-works)
-- [Why use PR-Agent?](#why-use-pr-agent)
+- [Why use Qodo-Merge?](#why-use-qodo-merge)
 
 ## News and Updates
 
@@ -238,15 +238,15 @@ See [here](https://qodo-merge-docs.qodo.ai/overview/pr_agent_pro/) for a list of
 
 ## How it works
 
-The following diagram illustrates PR-Agent tools and their flow:
+The following diagram illustrates Qodo-Merge tools and their flow:
 
 ![PR-Agent Tools](https://www.qodo.ai/images/pr_agent/diagram-v0.9.png)
 
 Check out the [PR Compression strategy](https://qodo-merge-docs.qodo.ai/core-abilities/#pr-compression-strategy) page for more details on how we convert a code diff to a manageable LLM prompt
 
-## Why use PR-Agent?
+## Why use Qodo-Merge?
 
-A reasonable question that can be asked is: `"Why use PR-Agent? What makes it stand out from existing tools?"`
+A reasonable question that can be asked is: `"Why use Qodo-Merge? What makes it stand out from existing tools?"`
 
 Here are some advantages of PR-Agent:
 
