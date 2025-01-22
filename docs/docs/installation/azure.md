@@ -52,7 +52,7 @@ stages:
 This script will run Qodo Merge on every new merge request, with the `improve`, `review`, and `describe` commands.
 Note that you need to export the `azure_devops__pat` and `OPENAI_KEY` variables in the Azure DevOps pipeline settings (Pipelines -> Library -> + Variable group):
 
-![Qodo Merge Pro](https://codium.ai/images/pr_agent/azure_devops_pipeline_secrets.png){width=468}
+![Qodo Merge](https://codium.ai/images/pr_agent/azure_devops_pipeline_secrets.png){width=468}
 
 Make sure to give pipeline permissions to the `pr_agent` variable group.
 

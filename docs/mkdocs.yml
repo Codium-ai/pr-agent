@@ -5,7 +5,7 @@ repo_name: Codium-ai/pr-agent
 nav:
   - Overview:
     - 'index.md'
-    - 💎 Qodo Merge Pro: 'overview/pr_agent_pro.md'
+    - 💎 Qodo Merge: 'overview/pr_agent_pro.md'
     - Data Privacy: 'overview/data_privacy.md'
   - Installation:
     - 'installation/index.md'
@@ -14,7 +14,7 @@ nav:
     - GitLab: 'installation/gitlab.md'
     - BitBucket: 'installation/bitbucket.md'
     - Azure DevOps: 'installation/azure.md'
-    - 💎 Qodo Merge Pro: 'installation/pr_agent_pro.md'
+    - 💎 Qodo Merge: 'installation/pr_agent_pro.md'
   - Usage Guide:
     - 'usage-guide/index.md'
     - Introduction: 'usage-guide/introduction.md'
@@ -24,7 +24,7 @@ nav:
     - Managing Mail Notifications: 'usage-guide/mail_notifications.md'
     - Changing a Model: 'usage-guide/changing_a_model.md'
     - Additional Configurations: 'usage-guide/additional_configurations.md'
-    - 💎 Qodo Merge Pro Models: 'usage-guide/PR_agent_pro_models'
+    - 💎 Qodo Merge Models: 'usage-guide/PR_agent_pro_models'
   - Tools:
     - 'tools/index.md'
     - Describe: 'tools/describe.md'

@@ -1,42 +1,42 @@
-Qodo Merge Pro is a versatile application compatible with GitHub, GitLab, and BitBucket, hosted by QodoAI.
-See [here](https://qodo-merge-docs.qodo.ai/overview/pr_agent_pro/) for more details about the benefits of using Qodo Merge Pro.
+Qodo Merge is a versatile application compatible with GitHub, GitLab, and BitBucket, hosted by QodoAI.
+See [here](https://qodo-merge-docs.qodo.ai/overview/pr_agent_pro/) for more details about the benefits of using Qodo Merge.
 
 A complimentary two-week trial is provided to all new users. Following the trial period, user licenses (seats) are required for continued access.
 To purchase user licenses, please visit our [pricing page](https://www.qodo.ai/pricing/).
 Once subscribed, users can seamlessly deploy the application across any of their code repositories.
 
-## Install Qodo Merge Pro for GitHub
+## Install Qodo Merge for GitHub
 
 ### GitHub Cloud
 
-Qodo Merge Pro for GitHub cloud is available for installation through the [GitHub Marketplace](https://github.com/apps/qodo-merge-pro).
+Qodo Merge for GitHub cloud is available for installation through the [GitHub Marketplace](https://github.com/apps/qodo-merge-pro).
 
-![Qodo Merge Pro](https://codium.ai/images/pr_agent/pr_agent_pro_install.png){width=468}
+![Qodo Merge](https://codium.ai/images/pr_agent/pr_agent_pro_install.png){width=468}
 
 ### GitHub Enterprise Server
 
-To use Qodo Merge Pro application on your private GitHub Enterprise Server, you will need to contact us for starting an [Enterprise](https://www.codium.ai/pricing/) trial.
+To use Qodo Merge application on your private GitHub Enterprise Server, you will need to contact us for starting an [Enterprise](https://www.codium.ai/pricing/) trial.
 
 ### GitHub Open Source Projects
 
-For open-source projects, Qodo Merge Pro is available for free usage. To install Qodo Merge Pro for your open-source repositories, use the following marketplace [link](https://github.com/apps/qodo-merge-pro-for-open-source).
+For open-source projects, Qodo Merge is available for free usage. To install Qodo Merge for your open-source repositories, use the following marketplace [link](https://github.com/apps/qodo-merge-pro-for-open-source).
 
-## Install Qodo Merge Pro for Bitbucket
+## Install Qodo Merge for Bitbucket
 
 ###  Bitbucket Cloud
 
-Qodo Merge Pro for Bitbucket Cloud is available for installation through the following [link](https://bitbucket.org/site/addons/authorize?addon_key=d6df813252c37258)
+Qodo Merge for Bitbucket Cloud is available for installation through the following [link](https://bitbucket.org/site/addons/authorize?addon_key=d6df813252c37258)
 
-![Qodo Merge Pro](https://qodo.ai/images/pr_agent/pr_agent_pro_bitbucket_install.png){width=468}
+![Qodo Merge](https://qodo.ai/images/pr_agent/pr_agent_pro_bitbucket_install.png){width=468}
 
 ### Bitbucket Server
 
-To use Qodo Merge Pro application on your private Bitbucket Server, you will need to contact us for starting an [Enterprise](https://www.codium.ai/pricing/) trial.
+To use Qodo Merge application on your private Bitbucket Server, you will need to contact us for starting an [Enterprise](https://www.codium.ai/pricing/) trial.
 
 
-## Install Qodo Merge Pro for GitLab (Teams & Enterprise)
+## Install Qodo Merge for GitLab (Teams & Enterprise)
 
-Since GitLab platform does not support apps, installing Qodo Merge Pro for GitLab is a bit more involved, and requires the following steps:
+Since GitLab platform does not support apps, installing Qodo Merge for GitLab is a bit more involved, and requires the following steps:
 
 #### Step 1
 

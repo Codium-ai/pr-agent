@@ -1,6 +1,6 @@
 # Overview
 
-PR-Agent is an open-source tool to help efficiently review and handle pull requests. 
+[PR-Agent](https://github.com/Codium-ai/pr-agent) is an open-source tool to help efficiently review and handle pull requests. 
 Qodo Merge is a hosted version of PR-Agent, designed for companies and teams that require additional features and capabilities
 
 - See the [Installation Guide](./installation/index.md) for instructions on installing and running the tool on different git platforms.
@@ -19,7 +19,7 @@ To search the documentation site using natural language:
    - A pull request where Qodo Merge is installed
    - A [PR Chat](https://qodo-merge-docs.qodo.ai/chrome-extension/features/#pr-chat)
 
-2) Qodo Merge will respond with an [answer](https://github.com/Codium-ai/pr-agent/pull/1241#issuecomment-2365259334) that includes relevant documentation links.
+2) The bot will respond with an [answer](https://github.com/Codium-ai/pr-agent/pull/1241#issuecomment-2365259334) that includes relevant documentation links.
 
 
 ## Qodo Merge Features
