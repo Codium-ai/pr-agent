@@ -123,10 +123,6 @@ If enabled, the `review` tool can approve a PR when a specific comment, `/review
     <td><b>enable_auto_approval</b></td>
     <td>If set to true, the tool will approve the PR when invoked with the 'auto_approve' command. Default is false. This flag can be changed only from a configuration file.</td>
   </tr>
-  <tr>
-    <td><b>maximal_review_effort</b></td>
-    <td>Maximal effort level for auto-approval. If the PR's estimated review effort is above this threshold, the auto-approval will not run. Default is 5.</td>
-  </tr>
 </table>
 
 ## Usage Tips
@@ -197,12 +193,6 @@ If enabled, the `review` tool can approve a PR when a specific comment, `/review
     ```
     Qodo Merge will automatically approve the PR, and add a comment with the approval.
 
-
-    You can also enable auto-approval only if the PR meets certain requirements, such as that the `estimated_review_effort` label is equal or below a certain threshold, by adjusting the flag:
-    ```
-    [pr_reviewer]
-    maximal_review_effort = 5
-    ```
 
 !!! tip  "Code suggestions"
 
