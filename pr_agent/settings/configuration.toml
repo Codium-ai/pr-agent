@@ -1,8 +1,8 @@
 [config]
 # models
-model="anthropic/claude-3-5-sonnet-20240620"
-model_turbo="anthropic/claude-3-5-sonnet-20240620"
-fallback_models=["anthropic/claude-3-5-sonnet-20240620"]
+model="anthropic/claude-3-5-sonnet-20241022"
+model_turbo="anthropic/claude-3-5-sonnet-20241022"
+fallback_models=["anthropic/claude-3-5-sonnet-20241022"]
 # CLI
 git_provider="github"
 publish_output=true
