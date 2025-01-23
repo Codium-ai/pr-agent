@@ -8,7 +8,7 @@ body:
       label: System Info
       description: Please share your system info with us.
       render: shell
-      placeholder: platform, python version, model used, etc...
+      placeholder: platform, model used, etc...
     validations:
       required: true
 
