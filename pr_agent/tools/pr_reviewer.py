@@ -384,7 +384,7 @@ class PRReviewer:
                 get_logger().debug(f"Current labels:\n{current_labels}")
                 if current_labels:
                     current_labels_filtered = [label for label in current_labels if
-                                               not label.lower().startswith('review effort:') and not label.lower().startswith(
+                                               not label.lower().startswith('review effort') and not label.lower().startswith(
                                                    'possible security concern')]
                 else:
                     current_labels_filtered = []
