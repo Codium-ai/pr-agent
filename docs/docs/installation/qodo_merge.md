@@ -31,7 +31,7 @@ Qodo Merge for Bitbucket Cloud is available for installation through the followi
 
 ### Bitbucket Server
 
-To use Qodo Merge application on your private Bitbucket Server, you will need to contact us for starting an [Enterprise](https://www.codium.ai/pricing/) trial.
+To use Qodo Merge application on your private Bitbucket Server, you will need to contact us for starting an [Enterprise](https://www.qodo.ai/pricing/) trial.
 
 
 ## Install Qodo Merge for GitLab (Teams & Enterprise)
