@@ -21,6 +21,7 @@ body:
         - "Github"
         - "Gitlab"
         - "Bitbucket"
+        - "Azure"
         - "Other"
 
   - type: dropdown
