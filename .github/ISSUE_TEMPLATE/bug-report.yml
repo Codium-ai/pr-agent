@@ -13,9 +13,9 @@ body:
       required: true
 
   - type: dropdown
-    id: information-scripts-examples
+    id: information-git-provider
     attributes:
-      label: Information
+      label: Git provider
       description: 'The problem arises when using:'
       options:
         - "Github"
@@ -24,12 +24,12 @@ body:
         - "Other"
 
   - type: dropdown
-    id: information-tasks
+    id: information-bug-type
     attributes:
-      label: Tasks
-      description: "The tasks I am working on are:"
+      label: Bug type
+      description: "The bugs I am experiencing are originated from:"
       options:
-        - "Qodo Merge commands"
+        - "PR-Agent commands"
         - "Installation issues"
         - "Other"
 
