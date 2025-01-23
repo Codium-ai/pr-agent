@@ -24,7 +24,7 @@ To search the documentation site using natural language:
 
 ## Qodo Merge Features
 
-Qodo Merge offers extensive pull request functionalities across various git providers.
+Qodo Merge offers extensive pull request functionalities across various git providers:
 
 |       |                                                                                                                       | GitHub | Gitlab | Bitbucket | Azure DevOps |
 |-------|-----------------------------------------------------------------------------------------------------------------------|:------:|:------:|:---------:|:------------:|
