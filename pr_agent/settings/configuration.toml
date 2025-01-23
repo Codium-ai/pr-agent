@@ -71,7 +71,6 @@ enable_intro_text=true
 enable_help_text=false # Determines whether to include help text in the PR review. Enabled by default.
 # auto approval
 enable_auto_approval=false
-maximal_review_effort=5
 
 
 [pr_description] # /describe #
