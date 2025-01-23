@@ -36,4 +36,4 @@ def create_toml_file(file_path, secret_content):
 secret_dict = json.loads(get_aws_secrets(secret_name,region_name))
 secret_toml=secret_dict.get('secret_file')
 create_toml_file("pr_agent/settings/.secrets.toml",secret_toml)
-subprocess.run(['python', 'pr_agent/servers/github_app.py'])
+subprocess.run(["python", "-m", "gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-c", "pr_agent/servers/gunicorn_config.py", "--forwarded-allow-ips", "*", "pr_agent.servers.github_app:app"])
