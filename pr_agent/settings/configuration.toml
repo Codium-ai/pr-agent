@@ -1,8 +1,8 @@
 [config]
 # models
-model="gpt-4-turbo-2024-04-09"
-model_turbo="gpt-4o"
-fallback_models=["gpt-4-0125-preview"]
+model="anthropic/claude-3-5-sonnet-20240620"
+model_turbo="anthropic/claude-3-5-sonnet-20240620"
+fallback_models=["anthropic/claude-3-5-sonnet-20240620"]
 # CLI
 git_provider="github"
 publish_output=true
