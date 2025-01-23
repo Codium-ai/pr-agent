@@ -6,8 +6,8 @@ from pr_agent.tools.pr_description import insert_br_after_x_chars
 Code Analysis
 
 Objective:
-The objective of the 'convert_to_markdown' function is to convert a dictionary of data into a markdown-formatted text. 
-The function takes in a dictionary as input and recursively iterates through its keys and values to generate the 
+The objective of the 'convert_to_markdown' function is to convert a dictionary of data into a markdown-formatted text.
+The function takes in a dictionary as input and recursively iterates through its keys and values to generate the
 markdown text.
 
 Inputs:
@@ -18,17 +18,17 @@ Flow:
 - Create a dictionary 'emojis' containing emojis for each key in the input dictionary.
 - Iterate through the input dictionary:
   - If the value is empty, continue to the next iteration.
-  - If the value is a dictionary, recursively call the 'convert_to_markdown' function with the value as input and 
+  - If the value is a dictionary, recursively call the 'convert_to_markdown' function with the value as input and
   append the returned markdown text to 'markdown_text'.
   - If the value is a list:
     - If the key is 'code suggestions', add an additional line break to 'markdown_text'.
     - Get the corresponding emoji for the key from the 'emojis' dictionary. If no emoji is found, use a dash.
     - Append the emoji and key to 'markdown_text'.
     - Iterate through the items in the list:
-      - If the item is a dictionary and the key is 'code suggestions', call the 'parse_code_suggestion' function with 
+      - If the item is a dictionary and the key is 'code suggestions', call the 'parse_code_suggestion' function with
       the item as input and append the returned markdown text to 'markdown_text'.
       - If the item is not empty, append it to 'markdown_text'.
-  - If the value is not 'n/a', get the corresponding emoji for the key from the 'emojis' dictionary. If no emoji is 
+  - If the value is not 'n/a', get the corresponding emoji for the key from the 'emojis' dictionary. If no emoji is
   found, use a dash. Append the emoji, key, and value to 'markdown_text'.
 - Return 'markdown_text'.
 
@@ -47,13 +47,10 @@ class TestConvertToMarkdown:
     def test_simple_dictionary_input(self):
         input_data = {'review': {
             'estimated_effort_to_review_[1-5]': '1, because the changes are minimal and straightforward, focusing on a single functionality addition.\n',
-            'relevant_tests': 'No\n', 'possible_issues': 'No\n', 'security_concerns': 'No\n'}, 'code_feedback': [
-            {'relevant_file': '``pr_agent/git_providers/git_provider.py\n``', 'language': 'python\n',
-             'suggestion': "Consider raising an exception or logging a warning when 'pr_url' attribute is not found. This can help in debugging issues related to the absence of 'pr_url' in instances where it's expected. [important]\n",
-             'relevant_line': '[return ""](https://github.com/Codium-ai/pr-agent-pro/pull/102/files#diff-52d45f12b836f77ed1aef86e972e65404634ea4e2a6083fb71a9b0f9bb9e062fR199)'}]}
+            'relevant_tests': 'No\n', 'possible_issues': 'No\n', 'security_concerns': 'No\n'}}
 
 
-        expected_output = f'{PRReviewHeader.REGULAR} 🔍\n\n<table>\n<tr><td>⏱️&nbsp;<strong>Estimated effort to review</strong>: 1 🔵⚪⚪⚪⚪</td></tr>\n<tr><td>🧪&nbsp;<strong>No relevant tests</strong></td></tr>\n<tr><td>⚡&nbsp;<strong>Possible issues</strong>: No\n</td></tr>\n<tr><td>🔒&nbsp;<strong>No security concerns identified</strong></td></tr>\n</table>\n\n\n<details><summary> <strong>Code feedback:</strong></summary>\n\n<hr><table><tr><td>relevant file</td><td>pr_agent/git_providers/git_provider.py\n</td></tr><tr><td>suggestion &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td>\n\n<strong>\n\nConsider raising an exception or logging a warning when \'pr_url\' attribute is not found. This can help in debugging issues related to the absence of \'pr_url\' in instances where it\'s expected. [important]\n\n</strong>\n</td></tr><tr><td>relevant line</td><td><a href=\'https://github.com/Codium-ai/pr-agent-pro/pull/102/files#diff-52d45f12b836f77ed1aef86e972e65404634ea4e2a6083fb71a9b0f9bb9e062fR199\'>return ""</a></td></tr></table><hr>\n\n</details>'
+        expected_output = f'{PRReviewHeader.REGULAR.value} 🔍\n\nHere are some key observations to aid the review process:\n\n<table>\n<tr><td>⏱️&nbsp;<strong>Estimated effort to review</strong>: 1 🔵⚪⚪⚪⚪</td></tr>\n<tr><td>🧪&nbsp;<strong>No relevant tests</strong></td></tr>\n<tr><td>&nbsp;<strong>Possible issues</strong>: No\n</td></tr>\n<tr><td>🔒&nbsp;<strong>No security concerns identified</strong></td></tr>\n</table>'
 
         assert convert_to_markdown_v2(input_data).strip() == expected_output.strip()
 
@@ -67,7 +64,7 @@ class TestConvertToMarkdown:
         assert convert_to_markdown_v2(input_data).strip() == expected_output.strip()
 
     def test_dictionary_with_empty_dictionaries(self):
-        input_data = {'review': {}, 'code_feedback': [{}]}
+        input_data = {'review': {}}
 
         expected_output = ''
 

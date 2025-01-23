@@ -1,6 +1,7 @@
 .idea/
 .lsp/
 .vscode/
+.env
 venv/
 lib/
 bin/
@@ -11,3 +12,4 @@ dist/
 build/
 .DS_Store
 docs/.cache/
+.qodo

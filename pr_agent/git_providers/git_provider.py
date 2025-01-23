@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
-
 # enum EDIT_TYPE (ADDED, DELETED, MODIFIED, RENAMED)
 from typing import Optional
 
-from pr_agent.algo.utils import Range
-from pr_agent.config_loader import get_settings
 from pr_agent.algo.types import FilePatchInfo
+from pr_agent.algo.utils import Range, process_description
+from pr_agent.config_loader import get_settings
 from pr_agent.log import get_logger
+
 MAX_FILES_ALLOWED_FULL = 50
 
 class GitProvider(ABC):
@@ -61,14 +61,20 @@ class GitProvider(ABC):
     def reply_to_comment_from_comment_id(self, comment_id: int, body: str):
         pass
 
-    def get_pr_description(self, *, full: bool = True) -> str:
-        from pr_agent.config_loader import get_settings
+    def get_pr_description(self, full: bool = True, split_changes_walkthrough=False) -> str or tuple:
         from pr_agent.algo.utils import clip_tokens
+        from pr_agent.config_loader import get_settings
         max_tokens_description = get_settings().get("CONFIG.MAX_DESCRIPTION_TOKENS", None)
         description = self.get_pr_description_full() if full else self.get_user_description()
-        if max_tokens_description:
-            return clip_tokens(description, max_tokens_description)
-        return description
+        if split_changes_walkthrough:
+            description, files = process_description(description)
+            if max_tokens_description:
+                description = clip_tokens(description, max_tokens_description)
+            return description, files
+        else:
+            if max_tokens_description:
+                description = clip_tokens(description, max_tokens_description)
+            return description
 
     def get_user_description(self) -> str:
         if hasattr(self, 'user_description') and not (self.user_description is None):
@@ -182,7 +188,7 @@ class GitProvider(ABC):
 
 
     @abstractmethod
-    def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
+    def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str, original_suggestion=None):
         pass
 
     def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str,
@@ -207,9 +213,6 @@ class GitProvider(ABC):
 
     def get_comment_url(self, comment) -> str:
         return ""
-
-    def delete_comment(self, comment):
-        comment.delete()
 
     #### labels operations ####
     @abstractmethod
@@ -255,6 +258,9 @@ class GitProvider(ABC):
             return len(self.get_diff_files())
         except Exception as e:
             return -1
+
+    def limit_output_characters(self, output: str, max_chars: int):
+        return output[:max_chars] + '...' if len(output) > max_chars else output
 
 
 def get_main_pr_language(languages, files) -> str:
@@ -324,6 +330,8 @@ def get_main_pr_language(languages, files) -> str:
         pass
 
     return main_language_str
+
+
 
 
 class IncrementalPR:

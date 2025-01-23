@@ -9,7 +9,7 @@ from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAIHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
-from pr_agent.algo.utils import load_yaml, set_custom_labels, get_user_labels
+from pr_agent.algo.utils import get_user_labels, load_yaml, set_custom_labels
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
@@ -57,7 +57,7 @@ class PRGenerateLabels:
             get_settings().pr_custom_labels_prompt.system,
             get_settings().pr_custom_labels_prompt.user,
         )
-    
+
         # Initialize patches_diff and prediction attributes
         self.patches_diff = None
         self.prediction = None
@@ -98,7 +98,7 @@ class PRGenerateLabels:
                 self.git_provider.remove_initial_comment()
         except Exception as e:
             get_logger().error(f"Error generating PR labels {self.pr_id}: {e}")
-        
+
         return ""
 
     async def _prepare_prediction(self, model: str) -> None:
@@ -137,8 +137,9 @@ class PRGenerateLabels:
         environment = Environment(undefined=StrictUndefined)
         set_custom_labels(variables, self.git_provider)
         self.variables = variables
-        system_prompt = environment.from_string(get_settings().pr_custom_labels_prompt.system).render(variables)
-        user_prompt = environment.from_string(get_settings().pr_custom_labels_prompt.user).render(variables)
+
+        system_prompt = environment.from_string(get_settings().pr_custom_labels_prompt.system).render(self.variables)
+        user_prompt = environment.from_string(get_settings().pr_custom_labels_prompt.user).render(self.variables)
 
         response, finish_reason = await self.ai_handler.chat_completion(
             model=model,

@@ -1,7 +1,7 @@
-The different tools and sub-tools used by CodiumAI PR-Agent are adjustable via the **[configuration file](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml)**.
+The different tools and sub-tools used by Qodo Merge are adjustable via the **[configuration file](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml)**.
 
 In addition to general configuration options, each tool has its own configurations. For example, the `review` tool will use parameters from the [pr_reviewer](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/settings/configuration.toml#L16) section in the configuration file.
-See the [Tools Guide](https://codium-ai.github.io/Docs-PR-Agent/tools/) for a detailed description of the different tools and their configurations.
+See the [Tools Guide](https://qodo-merge-docs.qodo.ai/tools/) for a detailed description of the different tools and their configurations.
 
 There are three ways to set persistent configurations:
 
@@ -18,9 +18,9 @@ In terms of precedence, wiki configurations will override local configurations, 
 
 ## Wiki configuration file 💎
 
-`Platforms supported: GitHub, GitLab`
+`Platforms supported: GitHub, GitLab, Bitbucket`
 
-With PR-Agent-Pro, you can set configurations by creating a page called `.pr_agent.toml` in the [wiki](https://github.com/Codium-ai/pr-agent/wiki/pr_agent.toml) of the repo. 
+With Qodo Merge, you can set configurations by creating a page called `.pr_agent.toml` in the [wiki](https://github.com/Codium-ai/pr-agent/wiki/pr_agent.toml) of the repo.
 The advantage of this method is that it allows to set configurations without needing to commit new content to the repo - just edit the wiki page and **save**.
 
 
@@ -34,7 +34,7 @@ An example content:
 generate_ai_title=true
 ```
 
-PR-Agent will know to remove the surrounding quotes when reading the configuration content.
+Qodo Merge will know to remove the surrounding quotes when reading the configuration content.
 
 ## Local configuration file
 

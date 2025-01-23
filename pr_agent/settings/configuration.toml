@@ -1,36 +1,52 @@
 [config]
 # models
-model="gpt-4-turbo-2024-04-09"
-model_turbo="gpt-4o"
-fallback_models=["gpt-4-0125-preview"]
+model="gpt-4o-2024-11-20"
+fallback_models=["gpt-4o-2024-08-06"]
+#model_weak="gpt-4o-mini-2024-07-18" # optional, a weaker model to use for some easier tasks
 # CLI
 git_provider="github"
 publish_output=true
 publish_output_progress=true
+publish_output_no_suggestions=true
 verbosity_level=0 # 0,1,2
 use_extra_bad_extensions=false
 # Configurations
 use_wiki_settings_file=true
 use_repo_settings_file=true
 use_global_settings_file=true
+disable_auto_feedback = false
 ai_timeout=120 # 2minutes
+skip_keys = []
 # token limits
 max_description_tokens = 500
 max_commits_tokens = 500
 max_model_tokens = 32000 # Limits the maximum number of tokens that can be used by any model, regardless of the model's default capabilities.
 custom_model_max_tokens=-1 # for models not in the default list
-#
-patch_extra_lines = 1
+# patch extension logic
+patch_extension_skip_types =[".md",".txt"]
+allow_dynamic_context=true
+max_extra_lines_before_dynamic_context = 8 # will try to include up to 10 extra lines before the hunk in the patch, until we reach an enclosing function or class
+patch_extra_lines_before = 3 # Number of extra lines (+3 default ones) to include before each hunk in the patch
+patch_extra_lines_after = 1 # Number of extra lines (+3 default ones) to include after each hunk in the patch
 secret_provider=""
 cli_mode=false
 ai_disclaimer_title=""  # Pro feature, title for a collapsible disclaimer to AI outputs
 ai_disclaimer=""  # Pro feature, full text for the AI disclaimer
 output_relevant_configurations=false
 large_patch_policy = "clip" # "clip", "skip"
-is_auto_command=false
+duplicate_prompt_examples = false
 # seed
 seed=-1 # set positive value to fix the seed (and ensure temperature=0)
 temperature=0.2
+# ignore logic
+ignore_pr_title = ["^\\[Auto\\]", "^Auto"] # a list of regular expressions to match against the PR title to ignore the PR agent
+ignore_pr_target_branches = [] # a list of regular expressions of target branches to ignore from PR agent when an PR is created
+ignore_pr_source_branches = [] # a list of regular expressions of source branches to ignore from PR agent when an PR is created
+ignore_pr_labels = [] # labels to ignore from PR agent when an PR is created
+ignore_pr_authors = [] # authors to ignore from PR agent when an PR is created
+#
+is_auto_command = false # will be auto-set to true if the command is triggered by an automation
+enable_ai_metadata = false # will enable adding ai metadata
 
 [pr_reviewer] # /review #
 # enable/disable features
@@ -39,15 +55,8 @@ require_tests_review=true
 require_estimate_effort_to_review=true
 require_can_be_split_review=false
 require_security_review=true
-extra_issue_links=false
-# soc2
-require_soc2_ticket=false
-soc2_ticket_prompt="Does the PR description include a link to ticket in a project management system (e.g., Jira, Asana, Trello, etc.) ?"
+require_ticket_analysis_review=true
 # general options
-num_code_suggestions=0
-inline_code_comments = false
-ask_and_reflect=false
-#automatic_review=true
 persistent_comment=true
 extra_instructions = ""
 final_update_message = true
@@ -58,6 +67,7 @@ enable_review_labels_effort=true
 require_all_thresholds_for_incremental_review=false
 minimal_commits_for_incremental_review=0
 minimal_minutes_for_incremental_review=0
+enable_intro_text=true
 enable_help_text=false # Determines whether to include help text in the PR review. Enabled by default.
 # auto approval
 enable_auto_approval=false
@@ -65,7 +75,7 @@ maximal_review_effort=5
 
 
 [pr_description] # /describe #
-publish_labels=true
+publish_labels=false
 add_original_user_description=true
 generate_ai_title=false
 use_bullet_points=true
@@ -80,6 +90,7 @@ publish_description_as_comment_persistent=true
 ## changes walkthrough section
 enable_semantic_files_types=true
 collapsible_file_list='adaptive' # true, false, 'adaptive'
+collapsible_file_list_threshold=8
 inline_file_summary=false # false, true, 'table'
 # markers
 use_description_markers=false
@@ -88,7 +99,6 @@ include_generated_by_header=true
 enable_large_pr_handling=true
 max_ai_calls=4
 async_ai_calls=true
-mention_extra_files=true
 #custom_labels = ['Bug fix', 'Tests', 'Bug fix with tests', 'Enhancement', 'Documentation', 'Other']
 
 [pr_questions] # /ask #
@@ -96,32 +106,38 @@ enable_help_text=false
 
 
 [pr_code_suggestions] # /improve #
-max_context_tokens=10000
-num_code_suggestions=4
+max_context_tokens=16000
+#
 commitable_code_suggestions = false
+dual_publishing_score_threshold=-1 # -1 to disable, [0-10] to set the threshold (>=) for publishing a code suggestion both in a table and as commitable
+focus_only_on_problems=true
+#
 extra_instructions = ""
-rank_suggestions = false
 enable_help_text=false
+enable_chat_text=false
+enable_intro_text=true
 persistent_comment=true
 max_history_len=4
 # enable to apply suggestion 💎
 apply_suggestions_checkbox=true
 # suggestions scoring
-self_reflect_on_suggestions=true
-suggestions_score_threshold=0 # [0-10]. highly recommend not to set this value above 8, since above it may clip highly relevant suggestions
+suggestions_score_threshold=0 # [0-10]| recommend not to set this value above 8, since above it may clip highly relevant suggestions
 # params for '/improve --extended' mode
 auto_extended_mode=true
 num_code_suggestions_per_chunk=4
 max_number_of_calls = 3
 parallel_calls = true
-rank_extended_suggestions = false
+
 final_clip_factor = 0.8
 # self-review checkbox
 demand_code_suggestions_self_review=false # add a checkbox for the author to self-review the code suggestions
 code_suggestions_self_review_text= "**Author self-review**: I have reviewed the PR code suggestions, and addressed the relevant ones."
 approve_pr_on_self_review=false # Pro feature. if true, the PR will be auto-approved after the author clicks on the self-review checkbox
-# Suggestion impact
+fold_suggestions_on_self_review=true # Pro feature. if true, the code suggestions will be folded after the author clicks on the self-review checkbox
+# Suggestion impact 💎
 publish_post_process_suggestion_impact=true
+wiki_page_accepted_suggestions=true
+allow_thumbs_up_down=false
 
 [pr_custom_prompt] # /custom_prompt #
 prompt = """\
@@ -145,6 +161,7 @@ class_name = ""        # in case there are several methods with the same name in
 [pr_update_changelog] # /update_changelog #
 push_changelog_changes=false
 extra_instructions = ""
+add_pr_link=true
 
 [pr_analyze] # /analyze #
 enable_help_text=true
@@ -172,6 +189,8 @@ enable_help_text=true
 final_update_message = false
 
 [pr_help] # /help #
+force_local_db=false
+num_retrieved_snippets=5
 
 [pr_config] # /config #
 
@@ -183,11 +202,13 @@ base_url = "https://api.github.com"
 publish_inline_comments_fallback_with_verification = true
 try_fix_invalid_inline_comments = true
 app_name = "pr-agent"
+ignore_bot_pr = true
 
 [github_action_config]
 # auto_review = true    # set as env var in .github/workflows/pr-agent.yaml
 # auto_describe = true  # set as env var in .github/workflows/pr-agent.yaml
 # auto_improve = true   # set as env var in .github/workflows/pr-agent.yaml
+# pr_actions = ['opened', 'reopened', 'ready_for_review', 'review_requested']
 
 [github_app]
 # these toggles allows running the github app from custom deployments
@@ -197,7 +218,7 @@ override_deployment_type = true
 handle_pr_actions = ['opened', 'reopened', 'ready_for_review']
 pr_commands = [
     "/describe --pr_description.final_update_message=false",
-    "/review --pr_reviewer.num_code_suggestions=0",
+    "/review",
     "/improve",
 ]
 # settings for "pull_request" event with "synchronize" action - used to detect and handle push triggers for new commits
@@ -209,30 +230,29 @@ push_trigger_pending_tasks_backlog = true
 push_trigger_pending_tasks_ttl = 300
 push_commands = [
     "/describe",
-    "/review --pr_reviewer.num_code_suggestions=0",
+    "/review",
 ]
-ignore_pr_title = []
-ignore_bot_pr = true
 
 [gitlab]
 url = "https://gitlab.com"
 pr_commands = [
-    "/describe",
-    "/review --pr_reviewer.num_code_suggestions=0",
+    "/describe --pr_description.final_update_message=false",
+    "/review",
     "/improve",
 ]
 handle_push_trigger = false
 push_commands = [
     "/describe",
-    "/review --pr_reviewer.num_code_suggestions=0",
+    "/review",
 ]
 
 [bitbucket_app]
 pr_commands = [
-    "/review --pr_reviewer.num_code_suggestions=0",
-    "/improve --pr_code_suggestions.commitable_code_suggestions=true --pr_code_suggestions.suggestions_score_threshold=7",
+    "/describe --pr_description.final_update_message=false",
+    "/review",
+    "/improve --pr_code_suggestions.commitable_code_suggestions=true",
 ]
-
+avoid_full_files = false
 
 [local]
 # LocalGitProvider settings - uncomment to use paths other than default
@@ -253,10 +273,19 @@ pr_commands = [
 # URL to the BitBucket Server instance
 # url = "https://git.bitbucket.com"
 url = ""
+pr_commands = [
+    "/describe --pr_description.final_update_message=false",
+    "/review",
+    "/improve --pr_code_suggestions.commitable_code_suggestions=true",
+]
 
 [litellm]
 # use_client = false
 # drop_params = false
+enable_callbacks = false
+success_callback = []
+failure_callback = []
+service_callback = []
 
 [pr_similar_issue]
 skip_comments = false
@@ -279,7 +308,7 @@ number_of_results = 5
 
 [lancedb]
 uri = "./lancedb"
-
 [best_practices]
 content = ""
 max_lines_allowed = 800
+enable_global_best_practices = false

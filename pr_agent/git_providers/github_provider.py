@@ -1,22 +1,30 @@
-import itertools
-import time
+import copy
+import difflib
 import hashlib
+import itertools
+import re
+import time
+import traceback
 from datetime import datetime
 from typing import Optional, Tuple
 from urllib.parse import urlparse
 
-from github import AppAuthentication, Auth, Github, GithubException
+from github import AppAuthentication, Auth, Github
 from retry import retry
 from starlette_context import context
 
 from ..algo.file_filter import filter_ignored
+from ..algo.git_patch_processing import extract_hunk_headers
 from ..algo.language_handler import is_valid_file
-from ..algo.utils import PRReviewHeader, load_large_diff, clip_tokens, find_line_number_of_relevant_line_in_file, Range
+from ..algo.types import EDIT_TYPE
+from ..algo.utils import (PRReviewHeader, Range, clip_tokens,
+                          find_line_number_of_relevant_line_in_file,
+                          load_large_diff, set_file_languages)
 from ..config_loader import get_settings
 from ..log import get_logger
 from ..servers.utils import RateLimitExceeded
-from .git_provider import GitProvider, IncrementalPR, MAX_FILES_ALLOWED_FULL
-from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
+from .git_provider import (MAX_FILES_ALLOWED_FULL, FilePatchInfo, GitProvider,
+                           IncrementalPR)
 
 
 class GithubProvider(GitProvider):
@@ -26,7 +34,8 @@ class GithubProvider(GitProvider):
             self.installation_id = context.get("installation_id", None)
         except Exception:
             self.installation_id = None
-        self.base_url = get_settings().get("GITHUB.BASE_URL", "https://api.github.com").rstrip("/")
+        self.max_comment_chars = 65000
+        self.base_url = get_settings().get("GITHUB.BASE_URL", "https://api.github.com").rstrip("/") # "https://api.github.com"
         self.base_url_html = self.base_url.split("api/")[0].rstrip("/") if "api/" in self.base_url else "https://github.com"
         self.github_client = self._get_github_client()
         self.repo = None
@@ -165,6 +174,24 @@ class GithubProvider(GitProvider):
 
             diff_files = []
             invalid_files_names = []
+            is_close_to_rate_limit = False
+
+            # The base.sha will point to the current state of the base branch (including parallel merges), not the original base commit when the PR was created
+            # We can fix this by finding the merge base commit between the PR head and base branches
+            # Note that The pr.head.sha is actually correct as is - it points to the latest commit in your PR branch.
+            # This SHA isn't affected by parallel merges to the base branch since it's specific to your PR's branch.
+            repo = self.repo_obj
+            pr = self.pr
+            try:
+                compare = repo.compare(pr.base.sha, pr.head.sha) # communication with GitHub
+                merge_base_commit = compare.merge_base_commit
+            except Exception as e:
+                get_logger().error(f"Failed to get merge base commit: {e}")
+                merge_base_commit = pr.base
+            if merge_base_commit.sha != pr.base.sha:
+                get_logger().info(
+                    f"Using merge base commit {merge_base_commit.sha} instead of base commit ")
+
             counter_valid = 0
             for file in files:
                 if not is_valid_file(file.filename):
@@ -172,31 +199,36 @@ class GithubProvider(GitProvider):
                     continue
 
                 patch = file.patch
-
-                # allow only a limited number of files to be fully loaded. We can manage the rest with diffs only
-                counter_valid += 1
-                avoid_load = False
-                if counter_valid >= MAX_FILES_ALLOWED_FULL and patch and not self.incremental.is_incremental:
-                    avoid_load = True
-                    if counter_valid == MAX_FILES_ALLOWED_FULL:
-                        get_logger().info(f"Too many files in PR, will avoid loading full content for rest of files")
-
-                if avoid_load:
+                if is_close_to_rate_limit:
                     new_file_content_str = ""
+                    original_file_content_str = ""
                 else:
-                    new_file_content_str = self._get_pr_file_content(file, self.pr.head.sha)  # communication with GitHub
+                    # allow only a limited number of files to be fully loaded. We can manage the rest with diffs only
+                    counter_valid += 1
+                    avoid_load = False
+                    if counter_valid >= MAX_FILES_ALLOWED_FULL and patch and not self.incremental.is_incremental:
+                        avoid_load = True
+                        if counter_valid == MAX_FILES_ALLOWED_FULL:
+                            get_logger().info(f"Too many files in PR, will avoid loading full content for rest of files")
 
-                if self.incremental.is_incremental and self.unreviewed_files_set:
-                    original_file_content_str = self._get_pr_file_content(file, self.incremental.last_seen_commit_sha)
-                    patch = load_large_diff(file.filename, new_file_content_str, original_file_content_str)
-                    self.unreviewed_files_set[file.filename] = patch
-                else:
                     if avoid_load:
-                        original_file_content_str = ""
+                        new_file_content_str = ""
                     else:
-                        original_file_content_str = self._get_pr_file_content(file, self.pr.base.sha)
-                    if not patch:
+                        new_file_content_str = self._get_pr_file_content(file, self.pr.head.sha)  # communication with GitHub
+
+                    if self.incremental.is_incremental and self.unreviewed_files_set:
+                        original_file_content_str = self._get_pr_file_content(file, self.incremental.last_seen_commit_sha)
                         patch = load_large_diff(file.filename, new_file_content_str, original_file_content_str)
+                        self.unreviewed_files_set[file.filename] = patch
+                    else:
+                        if avoid_load:
+                            original_file_content_str = ""
+                        else:
+                            original_file_content_str = self._get_pr_file_content(file, merge_base_commit.sha)
+                            # original_file_content_str = self._get_pr_file_content(file, self.pr.base.sha)
+                        if not patch:
+                            patch = load_large_diff(file.filename, new_file_content_str, original_file_content_str)
+
 
                 if file.status == 'added':
                     edit_type = EDIT_TYPE.ADDED
@@ -211,9 +243,14 @@ class GithubProvider(GitProvider):
                     edit_type = EDIT_TYPE.UNKNOWN
 
                 # count number of lines added and removed
-                patch_lines = patch.splitlines(keepends=True)
-                num_plus_lines = len([line for line in patch_lines if line.startswith('+')])
-                num_minus_lines = len([line for line in patch_lines if line.startswith('-')])
+                if hasattr(file, 'additions') and hasattr(file, 'deletions'):
+                    num_plus_lines = file.additions
+                    num_minus_lines = file.deletions
+                else:
+                    patch_lines = patch.splitlines(keepends=True)
+                    num_plus_lines = len([line for line in patch_lines if line.startswith('+')])
+                    num_minus_lines = len([line for line in patch_lines if line.startswith('-')])
+
                 file_patch_canonical_structure = FilePatchInfo(original_file_content_str, new_file_content_str, patch,
                                                                file.filename, edit_type=edit_type,
                                                                num_plus_lines=num_plus_lines,
@@ -230,8 +267,9 @@ class GithubProvider(GitProvider):
 
             return diff_files
 
-        except GithubException.RateLimitExceededException as e:
-            get_logger().error(f"Rate limit exceeded for GitHub API. Original message: {e}")
+        except Exception as e:
+            get_logger().error(f"Failing to get diff files: {e}",
+                               artifact={"traceback": traceback.format_exc()})
             raise RateLimitExceeded("Rate limit exceeded for GitHub API.") from e
 
     def publish_description(self, pr_title: str, pr_body: str):
@@ -253,8 +291,8 @@ class GithubProvider(GitProvider):
     def publish_comment(self, pr_comment: str, is_temporary: bool = False):
         if is_temporary and not get_settings().config.publish_output_progress:
             get_logger().debug(f"Skipping publish_comment for temporary comment: {pr_comment}")
-            return
-
+            return None
+        pr_comment = self.limit_output_characters(pr_comment, self.max_comment_chars)
         response = self.pr.create_issue_comment(pr_comment)
         if hasattr(response, "user") and hasattr(response.user, "login"):
             self.github_user_id = response.user.login
@@ -264,19 +302,20 @@ class GithubProvider(GitProvider):
         self.pr.comments_list.append(response)
         return response
 
-    def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
+    def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str, original_suggestion=None):
+        body = self.limit_output_characters(body, self.max_comment_chars)
         self.publish_inline_comments([self.create_inline_comment(body, relevant_file, relevant_line_in_file)])
 
 
     def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str,
                               absolute_position: int = None):
+        body = self.limit_output_characters(body, self.max_comment_chars)
         position, absolute_position = find_line_number_of_relevant_line_in_file(self.diff_files,
                                                                                 relevant_file.strip('`'),
                                                                                 relevant_line_in_file,
                                                                                 absolute_position)
         if position == -1:
-            if get_settings().config.verbosity_level >= 2:
-                get_logger().info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
+            get_logger().info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
             subject_type = "FILE"
         else:
             subject_type = "LINE"
@@ -288,11 +327,9 @@ class GithubProvider(GitProvider):
             # publish all comments in a single message
             self.pr.create_review(commit=self.last_commit_id, comments=comments)
         except Exception as e:
-            if get_settings().config.verbosity_level >= 2:
-                get_logger().error(f"Failed to publish inline comments")
+            get_logger().info(f"Initially failed to publish inline comments as committable")
 
-            if (getattr(e, "status", None) == 422
-                    and get_settings().github.publish_inline_comments_fallback_with_verification and not disable_fallback):
+            if (getattr(e, "status", None) == 422 and not disable_fallback):
                 pass  # continue to try _publish_inline_comments_fallback_with_verification
             else:
                 raise e # will end up with publishing the comments one by one
@@ -300,8 +337,7 @@ class GithubProvider(GitProvider):
             try:
                 self._publish_inline_comments_fallback_with_verification(comments)
             except Exception as e:
-                if get_settings().config.verbosity_level >= 2:
-                    get_logger().error(f"Failed to publish inline code comments fallback, error: {e}")
+                get_logger().error(f"Failed to publish inline code comments fallback, error: {e}")
                 raise e
 
     def _publish_inline_comments_fallback_with_verification(self, comments: list[dict]):
@@ -326,11 +362,9 @@ class GithubProvider(GitProvider):
             for comment in fixed_comments_as_one_liner:
                 try:
                     self.publish_inline_comments([comment], disable_fallback=True)
-                    if get_settings().config.verbosity_level >= 2:
-                        get_logger().info(f"Published invalid comment as a single line comment: {comment}")
+                    get_logger().info(f"Published invalid comment as a single line comment: {comment}")
                 except:
-                    if get_settings().config.verbosity_level >= 2:
-                        get_logger().error(f"Failed to publish invalid comment as a single line comment: {comment}")
+                    get_logger().error(f"Failed to publish invalid comment as a single line comment: {comment}")
 
     def _verify_code_comment(self, comment: dict):
         is_verified = False
@@ -388,8 +422,7 @@ class GithubProvider(GitProvider):
                 if fixed_comment != comment:
                     fixed_comments.append(fixed_comment)
             except Exception as e:
-                if get_settings().config.verbosity_level >= 2:
-                    get_logger().error(f"Failed to fix inline comment, error: {e}")
+                get_logger().error(f"Failed to fix inline comment, error: {e}")
         return fixed_comments
 
     def publish_code_suggestions(self, code_suggestions: list) -> bool:
@@ -397,23 +430,24 @@ class GithubProvider(GitProvider):
         Publishes code suggestions as comments on the PR.
         """
         post_parameters_list = []
-        for suggestion in code_suggestions:
+
+        code_suggestions_validated = self.validate_comments_inside_hunks(code_suggestions)
+
+        for suggestion in code_suggestions_validated:
             body = suggestion['body']
             relevant_file = suggestion['relevant_file']
             relevant_lines_start = suggestion['relevant_lines_start']
             relevant_lines_end = suggestion['relevant_lines_end']
 
             if not relevant_lines_start or relevant_lines_start == -1:
-                if get_settings().config.verbosity_level >= 2:
-                    get_logger().exception(
-                        f"Failed to publish code suggestion, relevant_lines_start is {relevant_lines_start}")
+                get_logger().exception(
+                    f"Failed to publish code suggestion, relevant_lines_start is {relevant_lines_start}")
                 continue
 
             if relevant_lines_end < relevant_lines_start:
-                if get_settings().config.verbosity_level >= 2:
-                    get_logger().exception(f"Failed to publish code suggestion, "
-                                      f"relevant_lines_end is {relevant_lines_end} and "
-                                      f"relevant_lines_start is {relevant_lines_start}")
+                get_logger().exception(f"Failed to publish code suggestion, "
+                                  f"relevant_lines_end is {relevant_lines_end} and "
+                                  f"relevant_lines_start is {relevant_lines_start}")
                 continue
 
             if relevant_lines_end > relevant_lines_start:
@@ -437,16 +471,17 @@ class GithubProvider(GitProvider):
             self.publish_inline_comments(post_parameters_list)
             return True
         except Exception as e:
-            if get_settings().config.verbosity_level >= 2:
-                get_logger().error(f"Failed to publish code suggestion, error: {e}")
+            get_logger().error(f"Failed to publish code suggestion, error: {e}")
             return False
 
     def edit_comment(self, comment, body: str):
+        body = self.limit_output_characters(body, self.max_comment_chars)
         comment.edit(body=body)
 
     def edit_comment_from_comment_id(self, comment_id: int, body: str):
         try:
             # self.pr.get_issue_comment(comment_id).edit(body)
+            body = self.limit_output_characters(body, self.max_comment_chars)
             headers, data_patch = self.pr._requester.requestJsonAndCheck(
                 "PATCH", f"{self.base_url}/repos/{self.repo}/issues/comments/{comment_id}",
                 input={"body": body}
@@ -457,6 +492,7 @@ class GithubProvider(GitProvider):
     def reply_to_comment_from_comment_id(self, comment_id: int, body: str):
         try:
             # self.pr.get_issue_comment(comment_id).edit(body)
+            body = self.limit_output_characters(body, self.max_comment_chars)
             headers, data_patch = self.pr._requester.requestJsonAndCheck(
                 "POST", f"{self.base_url}/repos/{self.repo}/pulls/{self.pr_num}/comments/{comment_id}/replies",
                 input={"body": body}
@@ -482,6 +518,7 @@ class GithubProvider(GitProvider):
             )
             for comment in file_comments:
                 comment['commit_id'] = self.last_commit_id.sha
+                comment['body'] = self.limit_output_characters(comment['body'], self.max_comment_chars)
 
                 found = False
                 for existing_comment in existing_comments:
@@ -493,6 +530,7 @@ class GithubProvider(GitProvider):
                     elif self.deployment_type == 'user':
                         same_comment_creator = self.github_user_id == existing_comment['user']['login']
                     if existing_comment['subject_type'] == 'file' and comment['path'] == existing_comment['path'] and same_comment_creator:
+
                         headers, data_patch = self.pr._requester.requestJsonAndCheck(
                             "PATCH", f"{self.base_url}/repos/{self.repo}/pulls/comments/{existing_comment['id']}", input={"body":comment['body']}
                         )
@@ -504,8 +542,7 @@ class GithubProvider(GitProvider):
                     )
             return True
         except Exception as e:
-            if get_settings().config.verbosity_level >= 2:
-                get_logger().error(f"Failed to publish diffview file summary, error: {e}")
+            get_logger().error(f"Failed to publish diffview file summary, error: {e}")
             return False
 
     def remove_initial_comment(self):
@@ -584,7 +621,7 @@ class GithubProvider(GitProvider):
             )
             return data_patch.get("id", None)
         except Exception as e:
-            get_logger().exception(f"Failed to add eyes reaction, error: {e}")
+            get_logger().warning(f"Failed to add eyes reaction, error: {e}")
             return None
 
     def remove_reaction(self, issue_comment_id: int, reaction_id: str) -> bool:
@@ -599,12 +636,14 @@ class GithubProvider(GitProvider):
             get_logger().exception(f"Failed to remove eyes reaction, error: {e}")
             return False
 
-    @staticmethod
-    def _parse_pr_url(pr_url: str) -> Tuple[str, int]:
+    def _parse_pr_url(self, pr_url: str) -> Tuple[str, int]:
         parsed_url = urlparse(pr_url)
 
+        if parsed_url.path.startswith('/api/v3'):
+            parsed_url = urlparse(pr_url.replace("/api/v3", ""))
+
         path_parts = parsed_url.path.strip('/').split('/')
-        if 'api.github.com' in parsed_url.netloc:
+        if 'api.github.com' in parsed_url.netloc or '/api/v3' in pr_url:
             if len(path_parts) < 5 or path_parts[3] != 'pulls':
                 raise ValueError("The provided URL does not appear to be a GitHub PR URL")
             repo_name = '/'.join(path_parts[1:3])
@@ -625,9 +664,12 @@ class GithubProvider(GitProvider):
 
         return repo_name, pr_number
 
-    @staticmethod
-    def _parse_issue_url(issue_url: str) -> Tuple[str, int]:
+    def _parse_issue_url(self, issue_url: str) -> Tuple[str, int]:
         parsed_url = urlparse(issue_url)
+
+        if 'github.com' not in parsed_url.netloc:
+            raise ValueError("The provided URL is not a valid GitHub URL")
+
         path_parts = parsed_url.path.strip('/').split('/')
         if 'api.github.com' in parsed_url.netloc:
             if len(path_parts) < 5 or path_parts[3] != 'issues':
@@ -730,7 +772,7 @@ class GithubProvider(GitProvider):
                 "PUT", f"{self.pr.issue_url}/labels", input=post_parameters
             )
         except Exception as e:
-            get_logger().exception(f"Failed to publish labels, error: {e}")
+            get_logger().warning(f"Failed to publish labels, error: {e}")
 
     def get_pr_labels(self, update=False):
         try:
@@ -788,8 +830,7 @@ class GithubProvider(GitProvider):
                 link = f"{self.base_url_html}/{self.repo}/pull/{self.pr_num}/files#diff-{sha_file}R{absolute_position}"
                 return link
         except Exception as e:
-            if get_settings().config.verbosity_level >= 2:
-                get_logger().info(f"Failed adding line link, error: {e}")
+            get_logger().info(f"Failed adding line link, error: {e}")
 
         return ""
 
@@ -823,8 +864,11 @@ class GithubProvider(GitProvider):
         """
         line_start = component_range.line_start + 1
         line_end = component_range.line_end + 1
-        link = (f"https://github.com/{self.repo}/blob/{self.last_commit_id.sha}/{filepath}/"
+        # link = (f"https://github.com/{self.repo}/blob/{self.last_commit_id.sha}/{filepath}/"
+        #         f"#L{line_start}-L{line_end}")
+        link = (f"{self.base_url_html}/{self.repo}/blob/{self.last_commit_id.sha}/{filepath}/"
                 f"#L{line_start}-L{line_end}")
+
         return link
 
     def get_pr_id(self):
@@ -846,3 +890,89 @@ class GithubProvider(GitProvider):
 
     def calc_pr_statistics(self, pull_request_data: dict):
             return {}
+
+    def validate_comments_inside_hunks(self, code_suggestions):
+        """
+        validate that all committable comments are inside PR hunks - this is a must for committable comments in GitHub
+        """
+        code_suggestions_copy = copy.deepcopy(code_suggestions)
+        diff_files = self.get_diff_files()
+        RE_HUNK_HEADER = re.compile(
+            r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@[ ]?(.*)")
+
+        diff_files = set_file_languages(diff_files)
+
+        for suggestion in code_suggestions_copy:
+            try:
+                relevant_file_path = suggestion['relevant_file']
+                for file in diff_files:
+                    if file.filename == relevant_file_path:
+
+                        # generate on-demand the patches range for the relevant file
+                        patch_str = file.patch
+                        if not hasattr(file, 'patches_range'):
+                            file.patches_range = []
+                            patch_lines = patch_str.splitlines()
+                            for i, line in enumerate(patch_lines):
+                                if line.startswith('@@'):
+                                    match = RE_HUNK_HEADER.match(line)
+                                    # identify hunk header
+                                    if match:
+                                        section_header, size1, size2, start1, start2 = extract_hunk_headers(match)
+                                        file.patches_range.append({'start': start2, 'end': start2 + size2 - 1})
+
+                        patches_range = file.patches_range
+                        comment_start_line = suggestion.get('relevant_lines_start', None)
+                        comment_end_line = suggestion.get('relevant_lines_end', None)
+                        original_suggestion = suggestion.get('original_suggestion', None) # needed for diff code
+                        if not comment_start_line or not comment_end_line or not original_suggestion:
+                            continue
+
+                        # check if the comment is inside a valid hunk
+                        is_valid_hunk = False
+                        min_distance = float('inf')
+                        patch_range_min = None
+                        # find the hunk that contains the comment, or the closest one
+                        for i, patch_range in enumerate(patches_range):
+                            d1 = comment_start_line - patch_range['start']
+                            d2 = patch_range['end'] - comment_end_line
+                            if d1 >= 0 and d2 >= 0:  # found a valid hunk
+                                is_valid_hunk = True
+                                min_distance = 0
+                                patch_range_min = patch_range
+                                break
+                            elif d1 * d2 <= 0:  # comment is possibly inside the hunk
+                                d1_clip = abs(min(0, d1))
+                                d2_clip = abs(min(0, d2))
+                                d = max(d1_clip, d2_clip)
+                                if d < min_distance:
+                                    patch_range_min = patch_range
+                                    min_distance = min(min_distance, d)
+                        if not is_valid_hunk:
+                            if min_distance < 10:  # 10 lines - a reasonable distance to consider the comment inside the hunk
+                                # make the suggestion non-committable, yet multi line
+                                suggestion['relevant_lines_start'] = max(suggestion['relevant_lines_start'], patch_range_min['start'])
+                                suggestion['relevant_lines_end'] = min(suggestion['relevant_lines_end'], patch_range_min['end'])
+                                body = suggestion['body'].strip()
+
+                                # present new diff code in collapsible
+                                existing_code = original_suggestion['existing_code'].rstrip() + "\n"
+                                improved_code = original_suggestion['improved_code'].rstrip() + "\n"
+                                diff = difflib.unified_diff(existing_code.split('\n'),
+                                                            improved_code.split('\n'), n=999)
+                                patch_orig = "\n".join(diff)
+                                patch = "\n".join(patch_orig.splitlines()[5:]).strip('\n')
+                                diff_code = f"\n\n<details><summary>New proposed code:</summary>\n\n```diff\n{patch.rstrip()}\n```"
+                                # replace ```suggestion ... ``` with diff_code, using regex:
+                                body = re.sub(r'```suggestion.*?```', diff_code, body, flags=re.DOTALL)
+                                body += "\n\n</details>"
+                                suggestion['body'] = body
+                                get_logger().info(f"Comment was moved to a valid hunk, "
+                                                  f"start_line={suggestion['relevant_lines_start']}, end_line={suggestion['relevant_lines_end']}, file={file.filename}")
+                            else:
+                                get_logger().error(f"Comment is not inside a valid hunk, "
+                                                   f"start_line={suggestion['relevant_lines_start']}, end_line={suggestion['relevant_lines_end']}, file={file.filename}")
+            except Exception as e:
+                get_logger().error(f"Failed to process patch for committable comment, error: {e}")
+        return code_suggestions_copy
+

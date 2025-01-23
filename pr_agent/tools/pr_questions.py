@@ -63,7 +63,7 @@ class PRQuestions:
         if img_path:
             get_logger().debug(f"Image path identified", artifact=img_path)
 
-        await retry_with_fallback_models(self._prepare_prediction, model_type=ModelType.TURBO)
+        await retry_with_fallback_models(self._prepare_prediction, model_type=ModelType.WEAK)
 
         pr_comment = self._prepare_pr_answer()
         get_logger().debug(f"PR output", artifact=pr_comment)
@@ -117,6 +117,16 @@ class PRQuestions:
         return response
 
     def _prepare_pr_answer(self) -> str:
+        model_answer = self.prediction.strip()
+        # sanitize the answer so that no line will start with "/"
+        model_answer_sanitized = model_answer.replace("\n/", "\n /")
+        if model_answer_sanitized.startswith("/"):
+            model_answer_sanitized = " " + model_answer_sanitized
+        if model_answer_sanitized != model_answer:
+            get_logger().debug(f"Sanitized model answer",
+                               artifact={"model_answer": model_answer, "sanitized_answer": model_answer_sanitized})
+
+
         answer_str = f"### **Ask**❓\n{self.question_str}\n\n"
-        answer_str += f"### **Answer:**\n{self.prediction.strip()}\n\n"
+        answer_str += f"### **Answer:**\n{model_answer_sanitized}\n\n"
         return answer_str

@@ -1,7 +1,10 @@
+from threading import Lock
+
 from jinja2 import Environment, StrictUndefined
 from tiktoken import encoding_for_model, get_encoding
+
 from pr_agent.config_loader import get_settings
-from threading import Lock
+from pr_agent.log import get_logger
 
 
 class TokenEncoder:
@@ -62,12 +65,16 @@ class TokenHandler:
         Returns:
         The sum of the number of tokens in the system and user strings.
         """
-        environment = Environment(undefined=StrictUndefined)
-        system_prompt = environment.from_string(system).render(vars)
-        user_prompt = environment.from_string(user).render(vars)
-        system_prompt_tokens = len(encoder.encode(system_prompt))
-        user_prompt_tokens = len(encoder.encode(user_prompt))
-        return system_prompt_tokens + user_prompt_tokens
+        try:
+            environment = Environment(undefined=StrictUndefined)
+            system_prompt = environment.from_string(system).render(vars)
+            user_prompt = environment.from_string(user).render(vars)
+            system_prompt_tokens = len(encoder.encode(system_prompt))
+            user_prompt_tokens = len(encoder.encode(user_prompt))
+            return system_prompt_tokens + user_prompt_tokens
+        except Exception as e:
+            get_logger().error(f"Error in _get_system_user_tokens: {e}")
+            return 0
 
     def count_tokens(self, patch: str) -> int:
         """

@@ -41,7 +41,7 @@ The code suggestions should focus only on the following:
 - make sure every variable has a meaningful name
 - make sure the code is efficient
 """
-```     
+```
 
 (The instructions above are just an example. We want to emphasize that the prompt should be specific and clear, and be tailored to the needs of your project)
 

@@ -5,7 +5,6 @@ from starlette_context.middleware import RawContextMiddleware
 
 from pr_agent.servers.github_app import router
 
-
 middleware = [Middleware(RawContextMiddleware)]
 app = FastAPI(middleware=middleware)
 app.include_router(router)

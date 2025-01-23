@@ -34,7 +34,7 @@ PR Feedback:
         with pytest.raises(ScannerError):
             yaml.safe_load(yaml_str)
 
-        expected_output = {'PR Analysis': {'Main theme': 'Enhancing the `/describe` command prompt by adding title and description', 'Type of PR': 'Enhancement', 'Relevant tests': False, 'Focused PR': 'Yes, the PR is focused on enhancing the `/describe` command prompt.'}, 'PR Feedback': {'General suggestions': 'The PR seems to be well-structured and focused on a specific enhancement. However, it would be beneficial to add tests to ensure the new feature works as expected.', 'Code feedback': [{'relevant file': 'pr_agent/settings/pr_description_prompts.toml', 'suggestion': "Consider using a more descriptive variable name than 'user' for the command prompt. A more descriptive name would make the code more readable and maintainable. [medium]", 'relevant line': 'user="""PR Info: aaa'}], 'Security concerns': False}}
+        expected_output = {'PR Analysis': {'Main theme': 'Enhancing the `/describe` command prompt by adding title and description', 'Type of PR': 'Enhancement', 'Relevant tests': False, 'Focused PR': 'Yes, the PR is focused on enhancing the `/describe` command prompt.'}, 'PR Feedback': {'General suggestions': 'The PR seems to be well-structured and focused on a specific enhancement. However, it would be beneficial to add tests to ensure the new feature works as expected.', 'Code feedback': [{'relevant file': 'pr_agent/settings/pr_description_prompts.toml\n', 'suggestion': "Consider using a more descriptive variable name than 'user' for the command prompt. A more descriptive name would make the code more readable and maintainable. [medium]", 'relevant line': 'user="""PR Info: aaa\n'}], 'Security concerns': False}}
         assert load_yaml(yaml_str) == expected_output
 
     def test_load_invalid_yaml2(self):
@@ -45,9 +45,5 @@ PR Feedback:
         with pytest.raises(ScannerError):
             yaml.safe_load(yaml_str)
 
-        expected_output = [{'relevant file': 'src/app.py:', 'suggestion content': 'The print statement is outside inside the if __name__ ==: '}]
+        expected_output = [{'relevant file': 'src/app.py:\n', 'suggestion content': 'The print statement is outside inside the if __name__ ==:'}]
         assert load_yaml(yaml_str) == expected_output
-
-
-
-

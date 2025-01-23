@@ -8,9 +8,9 @@ For example:
 ![similar code global](https://codium.ai/images/pr_agent/similar_code_global2.png){width=768}
 
 
-PR-Agent will examine the code component and will extract the most relevant keywords to search for similar code:
+Qodo Merge will examine the code component and will extract the most relevant keywords to search for similar code:
 
-- `extracted keywords`: the keywords that were extracted from the code by PR-Agent. the link will open a search page with the extracted keywords, to allow the user to modify the search if needed.
+- `extracted keywords`: the keywords that were extracted from the code by Qodo Merge. the link will open a search page with the extracted keywords, to allow the user to modify the search if needed.
 - `search context`: the context in which the search will be performed, organization's codebase or open-source code (Global).
 - `similar code`: the most similar code components found. the link will open the code component in the relevant file.
 - `relevant repositories`: the open-source repositories in which that are relevant to the searched code component and it's keywords.
@@ -49,9 +49,10 @@ It can be invoked automatically from the analyze table, can be accessed by:
 /analyze
 ```
 Choose the components you want to find similar code for, and click on the `similar` checkbox.
+
 ![analyze similar](https://codium.ai/images/pr_agent/analyze_similar.png){width=768}
 
-If you are looking to search for similar code in the organization's codebase, you can click on the `Organization` checkbox, and it will invoke a new search command just for the organization's codebase. 
+You can search for similar code either within the organization's codebase or globally, which includes open-source repositories. Each result will include the relevant code components along with their associated license details.
 
 ![similar code global](https://codium.ai/images/pr_agent/similar_code_global.png){width=768}
 

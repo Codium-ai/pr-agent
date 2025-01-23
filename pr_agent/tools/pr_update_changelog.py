@@ -3,14 +3,16 @@ from datetime import date
 from functools import partial
 from time import sleep
 from typing import Tuple
+
 from jinja2 import Environment, StrictUndefined
+
 from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAIHandler
 from pr_agent.algo.pr_processing import get_pr_diff, retry_with_fallback_models
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.algo.utils import ModelType, show_relevant_configurations
 from pr_agent.config_loader import get_settings
-from pr_agent.git_providers import get_git_provider, GithubProvider
+from pr_agent.git_providers import GithubProvider, get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
 from pr_agent.log import get_logger
 
@@ -39,6 +41,7 @@ class PRUpdateChangelog:
             "description": self.git_provider.get_pr_description(),
             "language": self.main_language,
             "diff": "",  # empty diff for initial calculation
+            "pr_link": "",
             "changelog_file_str": self.changelog_file_str,
             "today": date.today(),
             "extra_instructions": get_settings().pr_update_changelog.extra_instructions,
@@ -71,7 +74,7 @@ class PRUpdateChangelog:
         if get_settings().config.publish_output:
             self.git_provider.publish_comment("Preparing changelog updates...", is_temporary=True)
 
-        await retry_with_fallback_models(self._prepare_prediction, model_type=ModelType.TURBO)
+        await retry_with_fallback_models(self._prepare_prediction, model_type=ModelType.WEAK)
 
         new_file_content, answer = self._prepare_changelog_update()
 
@@ -100,12 +103,23 @@ class PRUpdateChangelog:
     async def _get_prediction(self, model: str):
         variables = copy.deepcopy(self.vars)
         variables["diff"] = self.patches_diff  # update diff
+        if get_settings().pr_update_changelog.add_pr_link:
+            variables["pr_link"] = self.git_provider.get_pr_url()
         environment = Environment(undefined=StrictUndefined)
         system_prompt = environment.from_string(get_settings().pr_update_changelog_prompt.system).render(variables)
         user_prompt = environment.from_string(get_settings().pr_update_changelog_prompt.user).render(variables)
         response, finish_reason = await self.ai_handler.chat_completion(
             model=model, system=system_prompt, user=user_prompt, temperature=get_settings().config.temperature)
 
+        # post-process the response
+        response = response.strip()
+        if not response:
+            return ""
+        if response.startswith("```"):
+            response_lines = response.splitlines()
+            response_lines = response_lines[1:]
+            response = "\n".join(response_lines)
+        response = response.strip("`")
         return response
 
     def _prepare_changelog_update(self) -> Tuple[str, str]:
@@ -130,7 +144,7 @@ class PRUpdateChangelog:
             file_path="CHANGELOG.md",
             branch=self.git_provider.get_pr_branch(),
             contents=new_file_content,
-            message="Update CHANGELOG.md",
+            message="[skip ci] Update CHANGELOG.md",
         )
 
         sleep(5)  # wait for the file to be updated

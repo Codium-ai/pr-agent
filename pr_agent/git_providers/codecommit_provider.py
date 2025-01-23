@@ -4,13 +4,15 @@ from collections import Counter
 from typing import List, Optional, Tuple
 from urllib.parse import urlparse
 
-from pr_agent.git_providers.codecommit_client import CodeCommitClient
+from pr_agent.algo.language_handler import is_valid_file
 from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
+from pr_agent.git_providers.codecommit_client import CodeCommitClient
+
 from ..algo.utils import load_large_diff
-from .git_provider import GitProvider
 from ..config_loader import get_settings
 from ..log import get_logger
-from pr_agent.algo.language_handler import is_valid_file
+from .git_provider import GitProvider
+
 
 class PullRequestCCMimic:
     """
@@ -162,7 +164,7 @@ class CodeCommitProvider(GitProvider):
                 pr_body=CodeCommitProvider._add_additional_newlines(pr_body),
             )
         except Exception as e:
-            raise ValueError(f"CodeCommit Cannot publish description for PR: {self.pr_num}") from e    
+            raise ValueError(f"CodeCommit Cannot publish description for PR: {self.pr_num}") from e
 
     def publish_comment(self, pr_comment: str, is_temporary: bool = False):
         if is_temporary:
@@ -190,7 +192,7 @@ class CodeCommitProvider(GitProvider):
             if not all(key in suggestion for key in ["body", "relevant_file", "relevant_lines_start"]):
                 get_logger().warning(f"Skipping code suggestion #{counter}: Each suggestion must have 'body', 'relevant_file', 'relevant_lines_start' keys")
                 continue
-       
+
             # Publish the code suggestion to CodeCommit
             try:
                 get_logger().debug(f"Code Suggestion #{counter} in file: {suggestion['relevant_file']}: {suggestion['relevant_lines_start']}")
@@ -205,12 +207,12 @@ class CodeCommitProvider(GitProvider):
                 )
             except Exception as e:
                 raise ValueError(f"CodeCommit Cannot publish code suggestions for PR: {self.pr_num}") from e
-            
+
             counter += 1
 
         # The calling function passes in a list of code suggestions, and this function publishes each suggestion one at a time.
         # If we were to return False here, the calling function will attempt to publish the same list of code suggestions again, one at a time.
-        # Since this function publishes the suggestions one at a time anyway, we always return True here to avoid the retry.        
+        # Since this function publishes the suggestions one at a time anyway, we always return True here to avoid the retry.
         return True
 
     def publish_labels(self, labels):
@@ -225,7 +227,7 @@ class CodeCommitProvider(GitProvider):
     def remove_comment(self, comment):
         return ""  # not implemented yet
 
-    def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str):
+    def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str, original_suggestion=None):
         # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/codecommit/client/post_comment_for_compared_commit.html
         raise NotImplementedError("CodeCommit provider does not support publishing inline comments yet")
 
@@ -238,7 +240,7 @@ class CodeCommitProvider(GitProvider):
     def get_pr_id(self):
         """
         Returns the PR ID in the format: "repo_name/pr_number".
-        Note: This is an internal identifier for PR-Agent, 
+        Note: This is an internal identifier for PR-Agent,
         and is not the same as the CodeCommit PR identifier.
         """
         try:
@@ -246,7 +248,7 @@ class CodeCommitProvider(GitProvider):
             return pr_id
         except:
             return ""
-        
+
     def get_languages(self):
         """
         Returns a dictionary of languages, containing the percentage of each language used in the PR.
@@ -348,7 +350,7 @@ class CodeCommitProvider(GitProvider):
         """
         Check if the provided hostname is a valid AWS CodeCommit hostname.
 
-        This is not an exhaustive check of AWS region names, 
+        This is not an exhaustive check of AWS region names,
         but instead uses a regex to check for matching AWS region patterns.
 
         Args:

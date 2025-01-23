@@ -12,9 +12,9 @@ import requests
 import urllib3.util
 from git import Repo
 
+from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers.git_provider import GitProvider
-from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
 from pr_agent.git_providers.local_git_provider import PullRequestMimic
 from pr_agent.log import get_logger
 
@@ -376,7 +376,7 @@ class GerritProvider(GitProvider):
             'provider')
 
     def publish_inline_comment(self, body: str, relevant_file: str,
-                               relevant_line_in_file: str):
+                               relevant_line_in_file: str, original_suggestion=None):
         raise NotImplementedError(
             'Publishing inline comments is not implemented for the gerrit '
             'provider')

@@ -1,15 +1,11 @@
 [pr_description_prompt]
 system="""You are PR-Reviewer, a language model designed to review a Git Pull Request (PR).
-{%- if enable_custom_labels %}
-Your task is to provide a full description for the PR content - files walkthrough, title, type, description and labels.
-{%- else %}
-Your task is to provide a full description for the PR content - files walkthrough, title, type, and description.
-{%- endif %}
-- Focus on the new PR code (lines starting with '+').
+Your task is to provide a full description for the PR content - type, description, title and files walkthrough.
+- Focus on the new PR code (lines starting with '+' in the 'PR Git Diff' section).
 - Keep in mind that the 'Previous title', 'Previous description' and 'Commit messages' sections may be partial, simplistic, non-informative or out of date. Hence, compare them to the PR diff code, and use them only as a reference.
 - The generated title and description should prioritize the most significant changes.
-- If needed, each YAML output should be in block scalar indicator ('|-')
-- When quoting variables or names from the code, use backticks (`) instead of single quote (').
+- If needed, each YAML output should be in block scalar indicator ('|')
+- When quoting variables, names or file paths from the code, use backticks (`) instead of single quote (').
 
 {%- if extra_instructions %}
 
@@ -38,22 +34,20 @@ class PRType(str, Enum):
 {%- if enable_semantic_files_types %}
 
 class FileDescription(BaseModel):
-    filename: str = Field(description="The full file path of the relevant file.")
-    language: str = Field(description="The programming language of the relevant file.")
+    filename: str = Field(description="The full file path of the relevant file")
+{%- if include_file_summary_changes %}
     changes_summary: str = Field(description="concise summary of the changes in the relevant file, in bullet points (1-4 bullet points).")
-    changes_title: str = Field(description="an informative title for the changes in the files, describing its main theme (5-10 words).")
+{%- endif %}
+    changes_title: str = Field(description="one-line summary (5-10 words) capturing the main theme of changes in the file")
     label: str = Field(description="a single semantic label that represents a type of code changes that occurred in the File. Possible values (partial list): 'bug fix', 'tests', 'enhancement', 'documentation', 'error handling', 'configuration changes', 'dependencies', 'formatting', 'miscellaneous', ...")
 {%- endif %}
 
 class PRDescription(BaseModel):
     type: List[PRType] = Field(description="one or more types that describe the PR content. Return the label member value (e.g. 'Bug fix', not 'bug_fix')")
+    description: str = Field(description="summarize the PR changes in up to four bullet points, each up to 8 words. For large PRs, add sub-bullets if needed. Order bullets by importance, with each bullet highlighting a key change group.")
+    title: str = Field(description="a concise and descriptive title that captures the PR's main theme")
 {%- if enable_semantic_files_types %}
-    pr_files: List[FileDescription] = Field(max_items=15, description="a list of the files in the PR, and their changes summary.")
-{%- endif %}
-    description: str = Field(description="an informative and concise description of the PR. Use bullet points. Display first the most significant changes.")
-    title: str = Field(description="an informative title for the PR, describing its main theme")
-{%- if enable_custom_labels %}
-    labels: List[Label] =  Field(min_items=0, description="choose the relevant custom labels that describe the PR content, and return their keys. Use the value field of the Label object to better understand the label meaning.")
+    pr_files: List[FileDescription] = Field(max_items=20, description="a list of all the files that were changed in the PR, and summary of their changes. Each file must be analyzed regardless of change size.")
 {%- endif %}
 =====
 
@@ -64,37 +58,49 @@ Example output:
 type:
 - ...
 - ...
+description: |
+  ...
+title: |
+  ...
 {%- if enable_semantic_files_types %}
 pr_files:
 - filename: |
     ...
-  language: |
-    ...
+{%- if include_file_summary_changes %}
   changes_summary: |
     ...
+{%- endif %}
   changes_title: |
     ...
   label: |
-    ...
+    label_key_1
 ...
-{%- endif %}
-description: |-
-  ...
-title: |-
-  ...
-{%- if enable_custom_labels %}
-labels:
-- |
-  ...
-- |
-  ...
 {%- endif %}
 ```
 
 Answer should be a valid YAML, and nothing else. Each YAML output MUST be after a newline, with proper indent, and block scalar indicator ('|')
 """
 
-user="""PR Info:
+user="""
+{%- if related_tickets %}
+Related Ticket Info:
+{% for ticket in related_tickets %}
+=====
+Ticket Title: '{{ ticket.title }}'
+{%- if ticket.labels %}
+Ticket Labels: {{ ticket.labels }}
+{%- endif %}
+{%- if ticket.body %}
+Ticket Description:
+#####
+{{ ticket.body }}
+#####
+{%- endif %}
+=====
+{% endfor %}
+{%- endif %}
+
+PR Info:
 
 Previous title: '{{title}}'
 
@@ -117,12 +123,43 @@ Commit messages:
 {%- endif %}
 
 
-The PR Diff:
+The PR Git Diff:
 =====
 {{ diff|trim }}
 =====
 
 Note that lines in the diff body are prefixed with a symbol that represents the type of change: '-' for deletions, '+' for additions, and ' ' (a space) for unchanged lines.
+
+{%- if duplicate_prompt_examples %}
+
+
+Example output:
+```yaml
+type:
+- Bug fix
+- Refactoring
+- ...
+description: |
+  ...
+title: |
+  ...
+{%- if enable_semantic_files_types %}
+pr_files:
+- filename: |
+    ...
+{%- if include_file_summary_changes %}
+  changes_summary: |
+    ...
+{%- endif %}
+  changes_title: |
+    ...
+  label: |
+    label_key_1
+...
+{%- endif %}
+```
+(replace '...' with the actual values)
+{%- endif %}
 
 
 Response (should be a valid YAML, and nothing else):

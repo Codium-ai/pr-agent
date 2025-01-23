@@ -4,21 +4,21 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pr-agent"
-version = "0.2.2"
+version = "0.2.5"
 
-authors = [{name= "CodiumAI", email = "tal.r@codium.ai"}]
+authors = [{ name = "CodiumAI", email = "tal.r@codium.ai" }]
 
 maintainers = [
-  {name = "Tal Ridnik", email = "tal.r@codium.ai"},
-  {name = "Ori Kotek", email = "ori.k@codium.ai"},
-  {name = "Hussam Lawen", email = "hussam.l@codium.ai"},
+  { name = "Tal Ridnik", email = "tal.r@codium.ai" },
+  { name = "Ori Kotek", email = "ori.k@codium.ai" },
+  { name = "Hussam Lawen", email = "hussam.l@codium.ai" },
 ]
 
 description = "CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by providing AI feedbacks and suggestions."
 readme = "README.md"
 requires-python = ">=3.10"
 keywords = ["AI", "Agents", "Pull Request", "Automation", "Code Review"]
-license = {name = "Apache 2.0", file = "LICENSE"}
+license = { name = "Apache 2.0", file = "LICENSE" }
 
 classifiers = [
   "Intended Audience :: Developers",
@@ -28,7 +28,7 @@ dynamic = ["dependencies"]
 
 
 [tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
+dependencies = { file = ["requirements.txt"] }
 
 [project.urls]
 "Homepage" = "https://github.com/Codium-ai/pr-agent"
@@ -40,41 +40,43 @@ license-files = ["LICENSE"]
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["pr_agent*"] # include pr_agent and any sub-packages it finds under it.
+include = [
+  "pr_agent*",
+] # include pr_agent and any sub-packages it finds under it.
 
 [project.scripts]
 pr-agent = "pr_agent.cli:run"
 
-
 [tool.ruff]
-
 line-length = 120
 
-select = [
-  "E",  # Pyflakes
-  "F",  # Pyflakes
-  "B",  # flake8-bugbear
-  "I001",  # isort basic checks
-  "I002",  # isort missing-required-import
-  ]
+lint.select = [
+  "E",    # Pyflakes
+  "F",    # Pyflakes
+  "B",    # flake8-bugbear
+  "I001", # isort basic checks
+  "I002", # isort missing-required-import
+]
 
 # First commit - only fixing isort
-fixable = [
-  "I001",  # isort basic checks
+lint.fixable = [
+  "I001", # isort basic checks
 ]
 
-unfixable = [
-  "B",  # Avoid trying to fix flake8-bugbear (`B`) violations.
-  ]
-
-exclude = [
-  "api/code_completions",
+lint.unfixable = [
+  "B", # Avoid trying to fix flake8-bugbear (`B`) violations.
 ]
 
-ignore = [
-  "E999", "B008"
-]
+lint.exclude = ["api/code_completions"]
 
-[tool.ruff.per-file-ignores]
-"__init__.py" = ["E402"]  # Ignore `E402` (import violations) in all `__init__.py` files, and in `path/to/file.py`.
-# TODO: should decide if maybe not to ignore these.
+lint.ignore = ["E999", "B008"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = [
+  "E402",
+] # Ignore `E402` (import violations) in all `__init__.py` files, and in `path/to/file.py`.
+
+[tool.bandit]
+exclude_dirs = ["tests"]
+skips = ["B101"]
+tests = []

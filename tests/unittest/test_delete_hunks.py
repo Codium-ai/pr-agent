@@ -6,7 +6,7 @@ from pr_agent.algo.git_patch_processing import omit_deletion_hunks
 Code Analysis
 
 Objective:
-The objective of the "omit_deletion_hunks" function is to remove deletion hunks from a patch file and return only the 
+The objective of the "omit_deletion_hunks" function is to remove deletion hunks from a patch file and return only the
 added lines.
 
 Inputs:
@@ -16,11 +16,11 @@ Flow:
 - Initialize empty lists "temp_hunk" and "added_patched", and boolean variables "add_hunk" and "inside_hunk".
 - Compile a regular expression pattern to match hunk headers.
 - Iterate through each line in "patch_lines".
-- If the line starts with "@@", match the line with the hunk header pattern, finish the previous hunk if necessary, 
+- If the line starts with "@@", match the line with the hunk header pattern, finish the previous hunk if necessary,
 and append the line to "temp_hunk".
-- If the line does not start with "@@", append the line to "temp_hunk", check if it is an added line, and set 
+- If the line does not start with "@@", append the line to "temp_hunk", check if it is an added line, and set
 "add_hunk" to True if it is.
-- If the function reaches the end of "patch_lines" and there is an unfinished hunk with added lines, append it to 
+- If the function reaches the end of "patch_lines" and there is an unfinished hunk with added lines, append it to
 "added_patched".
 - Join the lines in "added_patched" with newline characters and return the resulting string.
 

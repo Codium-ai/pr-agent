@@ -12,7 +12,7 @@ Additional guidelines:
 
 Example Hunk Structure:
 ======
-## file: 'src/file1.py'
+## File: 'src/file1.py'
 
 @@ -12,5 +12,5 @@ def func1():
 code line 1 that remained unchanged in the PR
