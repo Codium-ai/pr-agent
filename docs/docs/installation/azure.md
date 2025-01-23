@@ -80,7 +80,7 @@ org = "https://dev.azure.com/YOUR_ORGANIZATION/"
 # pat = "YOUR_PAT_TOKEN" needed only if using PAT for authentication
 ```
 
-### Azure DevOps Webhook
+## Azure DevOps Webhook
 
 To trigger from an Azure webhook, you need to manually [add a webhook](https://learn.microsoft.com/en-us/azure/devops/service-hooks/services/webhooks?view=azure-devops).
 Use the "Pull request created" type to trigger a review, or "Pull request commented on" to trigger any supported comment with /<command> <args> comment on the relevant PR. Note that for the "Pull request commented on" trigger, only API v2.0 is supported.

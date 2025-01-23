@@ -9,12 +9,8 @@ nav:
     - Data Privacy: 'overview/data_privacy.md'
   - Installation:
     - 'installation/index.md'
-    - Locally: 'installation/locally.md'
-    - GitHub: 'installation/github.md'
-    - GitLab: 'installation/gitlab.md'
-    - BitBucket: 'installation/bitbucket.md'
-    - Azure DevOps: 'installation/azure.md'
-    - 💎 Qodo Merge: 'installation/pr_agent_pro.md'
+    - PR-Agent: 'installation/pr_agent.md'
+    - 💎 Qodo Merge: 'installation/qodo_merge.md'
   - Usage Guide:
     - 'usage-guide/index.md'
     - Introduction: 'usage-guide/introduction.md'
