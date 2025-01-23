@@ -1,0 +1,12 @@
+blank_issues_enabled: true
+version: 0.1
+contact_links:
+  - name: Discord community
+    url: https://discord.gg/kG35uSHDBc
+    about: Join our discord community
+  - name: Qodo Merge documentation
+    url: https://qodo-merge-docs.qodo.ai/
+    about: Access comprehensive guides
+  - name: Qodo site
+    url: https://www.qodo.ai/
+    about: Visit our main website

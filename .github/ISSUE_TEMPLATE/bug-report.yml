@@ -1,0 +1,56 @@
+name: "\U0001FAB2 Bug Report"
+description: Submit a bug report to help us improve PR-Agent
+labels: [ "bug" ]
+body:
+  - type: textarea
+    id: system-info
+    attributes:
+      label: System Info
+      description: Please share your system info with us.
+      render: shell
+      placeholder: platform, python version, model used, etc...
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: information-scripts-examples
+    attributes:
+      label: Information
+      description: 'The problem arises when using:'
+      options:
+        - label: "The official example scripts"
+        - label: "My own modified scripts"
+
+  - type: checkboxes
+    id: information-tasks
+    attributes:
+      label: Tasks
+      description: "The tasks I am working on are:"
+      options:
+        - label: "An officially supported task in the `examples` folder (such as GLUE/SQuAD, ...)"
+        - label: "My own task or dataset (give details below)"
+
+  - type: textarea
+    id: reproduction
+    validations:
+      required: true
+    attributes:
+      label: Reproduction (minimal, reproducible, runnable)
+      description: |
+        Please provide a code sample that reproduces the problem you ran into. It can be a GitHub link or just a code snippet.
+        If you have code snippets, error messages, stack traces please provide them here as well.
+        Important! Use code tags to correctly format your code. See https://help.github.com/en/github/writing-on-github/creating-and-highlighting-code-blocks#syntax-highlighting
+        Do not use screenshots, as they are hard to read and (more importantly) don't allow others to copy-and-paste your code.
+        Providing a **minimal**, **reproducible** reproduction using a **publicly available model** significantly increase the chances of a fix in a timely manner.
+
+      placeholder: |
+        Providing a minimal, reproducible reproduction using a publicly available model significantly increase the chances of a fix in a timely manner.
+
+
+  - type: textarea
+    id: expected-behavior
+    validations:
+      required: true
+    attributes:
+      label: Expected behavior
+      description: "A clear and concise description of what you would expect to happen."
