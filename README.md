@@ -23,6 +23,7 @@ PR-Agent aims to help efficiently review and handle pull requests, by providing 
 </div>
 
 ### [Documentation](https://qodo-merge-docs.qodo.ai/)
+
 - See the [Installation Guide](https://qodo-merge-docs.qodo.ai/installation/) for instructions on installing PR-Agent on different platforms.
 
 - See the [Usage Guide](https://qodo-merge-docs.qodo.ai/usage-guide/) for instructions on running PR-Agent tools via different interfaces, such as CLI, PR Comments, or by automatically triggering them when a new PR is opened.
@@ -31,6 +32,7 @@ PR-Agent aims to help efficiently review and handle pull requests, by providing 
 
 
 ## Table of Contents
+
 - [News and Updates](#news-and-updates)
 - [Overview](#overview)
 - [Example results](#example-results)
@@ -40,6 +42,19 @@ PR-Agent aims to help efficiently review and handle pull requests, by providing 
 - [Why use PR-Agent?](#why-use-pr-agent)
 
 ## News and Updates
+
+### Jan 25, 2025
+
+The open-source GitHub organization was updated:
+`https://github.com/codium-ai/pr-agent` →
+`https://github.com/qodo-ai/pr-agent`
+
+The docker should be redirected automatically to the new location. 
+However, if you have any issues, please update the GitHub action docker image from
+`uses: Codium-ai/pr-agent@main`
+to
+`uses: qodo-ai/pr-agent@main`
+
 
 ### Jan 2, 2025
 
