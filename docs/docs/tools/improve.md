@@ -191,22 +191,13 @@ And the label will be: `{organization_name} best practice`.
 
 ![best_practice](https://codium.ai/images/pr_agent/org_best_practice.png){width=512}
 
-
-### Combining `extra instructions` and `best practices` 💎
-
-The `extra instructions` configuration is more related to the `improve` tool prompt. It can be used, for example, to avoid specific suggestions ("Don't suggest to add try-except block", "Ignore changes in toml files", ...) or to emphasize specific aspects or formats ("Answer in Japanese", "Give only short suggestions", ...)
-
-In contrast, the `best_practices.md` file is a general guideline for the way code should be written in the repo.
-
-Using a combination of both can help the AI model to provide relevant and tailored suggestions.
-
 ### Auto best practices 💎
 
 >`Platforms supported: GitHub`
 
 'Auto best practices' is a novel Qodo Merge capability that:
 
-1. Identifies recurring patterns from  accepted suggestions
+1. Identifies recurring patterns from accepted suggestions
 2. **Automatically** generates [best practices page](https://github.com/qodo-ai/pr-agent/wiki/.pr_agent_auto_best_practices) based on what your team consistently values
 3. Applies these learned patterns to future code reviews
 
@@ -235,6 +226,16 @@ extra_instructions = ""
 # Max number of patterns to be detected
 max_patterns = 5                   
 ```
+
+
+### Combining `extra instructions` and `best practices` 💎
+
+The `extra instructions` configuration is more related to the `improve` tool prompt. It can be used, for example, to avoid specific suggestions ("Don't suggest to add try-except block", "Ignore changes in toml files", ...) or to emphasize specific aspects or formats ("Answer in Japanese", "Give only short suggestions", ...)
+
+In contrast, the `best_practices.md` file is a general guideline for the way code should be written in the repo.
+
+Using a combination of both can help the AI model to provide relevant and tailored suggestions.
+
 
 ## Usage Tips
 
