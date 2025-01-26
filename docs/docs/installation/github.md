@@ -21,7 +21,7 @@ jobs:
     steps:
       - name: PR Agent action step
         id: pragent
-        uses: Codium-ai/pr-agent@main
+        uses: qodo-ai/pr-agent@main
         env:
           OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
