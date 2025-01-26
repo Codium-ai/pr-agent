@@ -141,7 +141,7 @@ class PRDescription:
                                 '<a href="https://qodo-merge-docs.qodo.ai/usage-guide/">documentation</a> '
                                 'for more information.</li></details>')
                 else: # gitlab
-                    pr_body += ("> <details><summary>Need help?</summary>- Type <code>/help how to ...</code> in the comments "
+                    pr_body += ("\n\n___\n\n<details><summary>Need help?</summary>- Type <code>/help how to ...</code> in the comments "
                                 "thread for any questions about PR-Agent usage.<br>- Check out the "
                                 "<a href='https://qodo-merge-docs.qodo.ai/usage-guide/'>documentation</a> for more information.</details>")
             # elif get_settings().pr_description.enable_help_comment:
