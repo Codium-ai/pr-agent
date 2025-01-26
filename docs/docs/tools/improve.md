@@ -70,7 +70,7 @@ In post-process, Qodo Merge counts the number of suggestions that were implement
 ## Suggestion tracking 💎
 `Platforms supported: GitHub, GitLab`
 
-Qodo Merge employs an novel detection system to automatically [identify](https://qodo-merge-docs.qodo.ai/core-abilities/impact_evaluation/) AI code suggestions that PR authors have accepted and implemented.
+Qodo Merge employs a novel detection system to automatically [identify](https://qodo-merge-docs.qodo.ai/core-abilities/impact_evaluation/) AI code suggestions that PR authors have accepted and implemented.
 
 Accepted suggestions are also automatically documented in a dedicated wiki page called `.pr_agent_accepted_suggestions`, allowing users to track historical changes, assess the tool's effectiveness, and learn from previously implemented recommendations in the repository.
 An example [result](https://github.com/Codium-ai/pr-agent/wiki/.pr_agent_accepted_suggestions):
@@ -191,8 +191,44 @@ And the label will be: `{organization_name} best practice`.
 
 ![best_practice](https://codium.ai/images/pr_agent/org_best_practice.png){width=512}
 
+### Auto best practices 💎
 
-### How to combine `extra instructions` and `best practices`
+>`Platforms supported: GitHub`
+
+'Auto best practices' is a novel Qodo Merge capability that:
+
+1. Identifies recurring patterns from accepted suggestions
+2. **Automatically** generates [best practices page](https://github.com/qodo-ai/pr-agent/wiki/.pr_agent_auto_best_practices) based on what your team consistently values
+3. Applies these learned patterns to future code reviews
+
+This creates an automatic feedback loop where the system continuously learns from your team's choices to provide increasingly relevant suggestions. 
+The system maintains two analysis phases:
+
+- Open exploration for new issues
+- Targeted checking against established best practices
+
+Note that when a [custom best practices](https://qodo-merge-docs.qodo.ai/tools/improve/#best-practices) exist, Qodo Merge will still generate an 'auto best practices' wiki file, though it won't use it in the `improve` tool.
+Learn more about utilizing 'auto best practices' in our [detailed guide](https://qodo-merge-docs.qodo.ai/core-abilities/auto_best_practices/).
+
+#### Relevant configurations
+
+```toml
+[auto_best_practices]
+# Disable all auto best practices usage or generation
+enable_auto_best_practices = true  
+
+# Disable usage of auto best practices file in the 'improve' tool
+utilize_auto_best_practices = true 
+
+# Extra instructions to the auto best practices generation prompt
+extra_instructions = ""            
+
+# Max number of patterns to be detected
+max_patterns = 5                   
+```
+
+
+### Combining `extra instructions` and `best practices` 💎
 
 The `extra instructions` configuration is more related to the `improve` tool prompt. It can be used, for example, to avoid specific suggestions ("Don't suggest to add try-except block", "Ignore changes in toml files", ...) or to emphasize specific aspects or formats ("Answer in Japanese", "Give only short suggestions", ...)
 
