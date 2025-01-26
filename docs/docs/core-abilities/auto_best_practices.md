@@ -5,7 +5,7 @@
 
 ### Finding Code Problems - Exploration Phase
 
-The Qodo Merge `improve` tool identifies potential issues, problems and bugs in Pull Request (PR) code changes. 
+Qodo Merge `improve` tool identifies potential issues, problems and bugs in Pull Request (PR) code changes. 
 Rather than focusing on generic concepts like code style, the tool intelligently analyzes code to detect meaningful problems. 
 
 The analysis is intentionally broad to allow discovery of diverse issues - from subtle bugs to architectural concerns. 
