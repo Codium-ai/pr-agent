@@ -42,6 +42,7 @@ nav:
   - Core Abilities:
       - 'core-abilities/index.md'
       - Fetching ticket context: 'core-abilities/fetching_ticket_context.md'
+      - Auto best practices: 'core-abilities/auto_best_practices.md'
       - Local and global metadata: 'core-abilities/metadata.md'
       - Dynamic context: 'core-abilities/dynamic_context.md'
       - Self-reflection: 'core-abilities/self_reflection.md'

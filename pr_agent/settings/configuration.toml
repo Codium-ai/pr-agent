@@ -307,7 +307,16 @@ number_of_results = 5
 
 [lancedb]
 uri = "./lancedb"
+
 [best_practices]
 content = ""
+organization_name = ""
 max_lines_allowed = 800
 enable_global_best_practices = false
+
+[auto_best_practices]
+enable_auto_best_practices = true # public - general flag to disable all auto best practices usage
+utilize_auto_best_practices = true # public - disable usage of auto best practices in the 'improve' tool
+extra_instructions = "" # public - extra instructions to the auto best practices generation prompt
+content = ""
+max_patterns = 5 # max number of patterns to be detected
