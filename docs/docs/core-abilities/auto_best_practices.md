@@ -8,13 +8,13 @@
 Qodo Merge `improve` tool identifies potential issues, problems and bugs in Pull Request (PR) code changes. 
 Rather than focusing on generic concepts like code style, the tool intelligently analyzes code to detect meaningful problems. 
 
-The analysis is intentionally broad to allow discovery of diverse issues - from subtle bugs to architectural concerns. 
-This open-ended exploration enables the tool to surface any relevant issues without being constrained to predefined categories.
+The analysis is intentionally broad to allow identifying a wide range of potential issues.
+This open-ended _exploration_ enables the tool to surface any relevant issues without being constrained to predefined categories.
 
 ### Tracking Implemented Suggestions
 
 Qodo Merge features a novel [tracking system](https://qodo-merge-docs.qodo.ai/tools/improve/#suggestion-tracking) that automatically detects when PR authors implement AI-generated code suggestions. 
-All accepted suggestions are documented in a repository-specific wiki page called [`.pr_agent_accepted_suggestions`](https://github.com/qodo-ai/pr-agent/wiki/.pr_agent_accepted_suggestions).
+All accepted suggestions are aggregated in a repository-specific wiki page called [`.pr_agent_accepted_suggestions`](https://github.com/qodo-ai/pr-agent/wiki/.pr_agent_accepted_suggestions).
 
 ### Learning and Applying Auto Best Practices
 
