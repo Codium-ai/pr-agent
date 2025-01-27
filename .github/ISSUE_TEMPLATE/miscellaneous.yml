@@ -1,5 +1,5 @@
 name: "❔ General Issues"
-description: Submit a bug report to help us improve PR-Agent
+description: Submit a general issue
 labels: ["general"]
 body:
 
