@@ -9,7 +9,7 @@ body:
     attributes:
       label: Feature request
       description: |
-        A clear and concise description of the feature proposal. Please provide a link to the paper and code in case they exist.
+        Description of the feature proposal.
 
   - type: textarea
     id: motivation
@@ -18,14 +18,4 @@ body:
     attributes:
       label: Motivation
       description: |
-        Please outline the motivation for the proposal. Is your feature request related to a problem? e.g., I'm always frustrated when [...]. If this is related to another GitHub issue, please link here too.
-        
-
-  - type: textarea
-    id: contribution
-    validations:
-      required: true
-    attributes:
-      label: Your contribution
-      description: |
-        Is there any way that you could help, e.g. by submitting a PR?
+        Outline the motivation for the proposal.
