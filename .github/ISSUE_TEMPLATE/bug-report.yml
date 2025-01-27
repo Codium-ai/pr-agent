@@ -16,8 +16,8 @@ body:
         - "Bitbucket Server"
         - "Azure"
         - "Other"
-      validations:
-        required: true
+    validations:
+      required: true
 
   - type: textarea
     id: system-info
