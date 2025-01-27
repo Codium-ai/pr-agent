@@ -1,0 +1,21 @@
+name: "\U0001F4A1 Feature request"
+description: Submit a proposal/request for a new PR-Agent feature
+labels: ["feature"]
+body:
+  - type: textarea
+    id: feature-request
+    validations:
+      required: true
+    attributes:
+      label: Feature request
+      description: |
+        Description of the feature proposal.
+
+  - type: textarea
+    id: motivation
+    validations:
+      required: true
+    attributes:
+      label: Motivation
+      description: |
+        Outline the motivation for the proposal.

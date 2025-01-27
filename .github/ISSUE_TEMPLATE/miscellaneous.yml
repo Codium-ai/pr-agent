@@ -1,0 +1,38 @@
+name: "❔ General Issues"
+description: Submit a general issue
+labels: ["general"]
+body:
+
+  - type: dropdown
+    id: information-git-provider
+    attributes:
+      label: Git provider
+      description: 'Git Provider:'
+      options:
+        - "Github Cloud"
+        - "Github Enterprise"
+        - "Gitlab"
+        - "Bitbucket Cloud"
+        - "Bitbucket Server"
+        - "Azure"
+        - "Other"
+
+  - type: textarea
+    id: system-info
+    attributes:
+      label: System Info
+      description: Please share your system info with us.
+      render: shell
+      placeholder: model used, deployment type (action/app/cli/...), etc...
+    validations:
+      required: false
+
+  - type: textarea
+    id: issues-details
+    attributes:
+      label: Issues details
+      description: Please share the issues details.
+      render: shell
+      placeholder: Describe the issue
+    validations:
+      required: true

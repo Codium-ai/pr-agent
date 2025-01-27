@@ -1,0 +1,10 @@
+blank_issues_enabled: true
+version: 0.1
+contact_links:
+  - name: Discussions
+    url: https://github.com/qodo-ai/pr-agent/discussions
+    about: GitHub Discussions
+
+  - name: Discord community
+    url: https://discord.gg/kG35uSHDBc
+    about: Join our discord community
