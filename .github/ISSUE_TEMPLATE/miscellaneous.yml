@@ -1,13 +1,13 @@
-name: "\U0001FAB2 Bug Report"
+name: "❔ General Issues"
 description: Submit a bug report to help us improve PR-Agent
-labels: ["bug"]
+labels: ["general"]
 body:
 
   - type: dropdown
     id: information-git-provider
     attributes:
       label: Git provider
-      description: 'The problem arises when using:'
+      description: 'Git Provider:'
       options:
         - "Github Cloud"
         - "Github Enterprise"
@@ -16,8 +16,6 @@ body:
         - "Bitbucket Server"
         - "Azure"
         - "Other"
-      validations:
-        required: true
 
   - type: textarea
     id: system-info
@@ -27,14 +25,14 @@ body:
       render: shell
       placeholder: model used, deployment type (action/app/cli/...), etc...
     validations:
-      required: true
+      required: false
 
   - type: textarea
-    id: bug-details
+    id: issues-details
     attributes:
-      label: Bug details
-      description: Please describe the problem.
+      label: Issues details
+      description: Please share the issues details.
       render: shell
-      placeholder: Describe the problem
+      placeholder: Describe the issue
     validations:
       required: true
