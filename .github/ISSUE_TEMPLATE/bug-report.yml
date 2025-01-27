@@ -1,5 +1,5 @@
 name: "\U0001FAB2 Bug Report"
-description: Submit a bug report to help us improve PR-Agent
+description: Submit a bug report
 labels: ["bug"]
 body:
 
