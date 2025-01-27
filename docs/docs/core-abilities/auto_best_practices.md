@@ -5,6 +5,7 @@
 
 ![Auto best practice suggestion graph](https://www.qodo.ai/images/pr_agent/auto_best_practices_graph.png){width=684}
 
+> Note - enabling a [Wiki](https://qodo-merge-docs.qodo.ai/usage-guide/enabling_a_wiki/) is required for this feature.
 
 ### Finding Code Problems - Exploration Phase
 
@@ -17,7 +18,7 @@ The analysis intentionally takes a flexible, _exploratory_ approach to identify 
 
 Qodo Merge features a novel [tracking system](https://qodo-merge-docs.qodo.ai/tools/improve/#suggestion-tracking) that automatically detects when PR authors implement AI-generated code suggestions. 
 All accepted suggestions are aggregated in a repository-specific wiki page called [`.pr_agent_accepted_suggestions`](https://github.com/qodo-ai/pr-agent/wiki/.pr_agent_accepted_suggestions)
-(Why Wiki - see [here](https://qodo-merge-docs.qodo.ai/usage-guide/enabling_a_wiki/#why-wiki)).
+
 
 ### Learning and Applying Auto Best Practices
 
