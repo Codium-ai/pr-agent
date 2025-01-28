@@ -69,7 +69,7 @@ Update logic and [documentation](https://qodo-merge-docs.qodo.ai/usage-guide/cha
 
 ### December 30, 2024
 
-Following [feedback](https://research.kudelskisecurity.com/2024/08/29/careful-where-you-code-multiple-vulnerabilities-in-ai-powered-pr-agent/) from the community, we have addressed two vulnerabilities identified in the open-source PR-Agent project. The fixes are now included in the newly released version (v0.26), available as of today.
+Following feedback from the community, we have addressed two vulnerabilities identified in the open-source PR-Agent project. The fixes are now included in the newly released version (v0.26), available as of today.
 
 ### December 25, 2024
 
