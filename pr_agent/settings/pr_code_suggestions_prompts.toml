@@ -90,7 +90,7 @@ class CodeSuggestion(BaseModel):
 {%- if not focus_only_on_problems %}
     label: str = Field(description="A single, descriptive label that best characterizes the suggestion type. Possible labels include 'security', 'possible bug', 'possible issue', 'performance', 'enhancement', 'best practice', 'maintainability', 'typo'. Other relevant labels are also acceptable.")
 {%- else %}
-    label: str = Field(description="A single, descriptive label that best characterizes the suggestion type. Possible labels include 'security', 'critical bug', 'general'. The 'general' section should be used for suggestions that address a major issue, but are necessarily on a critical level.")
+    label: str = Field(description="A single, descriptive label that best characterizes the suggestion type. Possible labels include 'security', 'critical bug', 'general'. The 'general' section should be used for suggestions that address a major issue, but are not necessarily on a critical level.")
 {%- endif %}
 
 
