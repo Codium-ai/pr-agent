@@ -6,7 +6,7 @@ body:
   - type: dropdown
     id: information-git-provider
     attributes:
-      label: Git provider
+      label: Git provider (optional)
       description: 'Git Provider:'
       options:
         - "Github Cloud"
@@ -20,7 +20,7 @@ body:
   - type: textarea
     id: system-info
     attributes:
-      label: System Info
+      label: System Info (optional)
       description: Please share your system info with us.
       placeholder: model used, deployment type (action/app/cli/...), etc...
     validations:
