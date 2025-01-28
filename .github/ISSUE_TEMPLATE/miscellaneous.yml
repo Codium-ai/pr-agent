@@ -22,7 +22,6 @@ body:
     attributes:
       label: System Info
       description: Please share your system info with us.
-      render: shell
       placeholder: model used, deployment type (action/app/cli/...), etc...
     validations:
       required: false
@@ -32,7 +31,6 @@ body:
     attributes:
       label: Issues details
       description: Please share the issues details.
-      render: shell
       placeholder: Describe the issue
     validations:
       required: true
