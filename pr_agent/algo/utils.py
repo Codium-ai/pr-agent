@@ -735,7 +735,7 @@ def try_fix_yaml(response_text: str,
         get_logger().info(f"Successfully parsed AI prediction after adding |-\n")
         return data
     except:
-        get_logger().info(f"Failed to parse AI prediction after adding |-\n")
+        pass
 
     # second fallback - try to extract only range from first ```yaml to ````
     snippet_pattern = r'```(yaml)?[\s\S]*?```'
@@ -779,9 +779,18 @@ def try_fix_yaml(response_text: str,
         except:
             pass
 
+    # fifth fallback - try to remove leading '+' (sometimes added by AI for 'existing code' and 'improved code')
+    response_text_lines_copy = response_text_lines.copy()
+    for i in range(0, len(response_text_lines_copy)):
+        response_text_lines_copy[i] = ' ' + response_text_lines_copy[i][1:]
+    try:
+        data = yaml.safe_load('\n'.join(response_text_lines_copy))
+        get_logger().info(f"Successfully parsed AI prediction after removing leading '+'")
+        return data
+    except:
+        pass
 
-    # fifth fallback - try to remove last lines
-    data = {}
+    # sixth fallback - try to remove last lines
     for i in range(1, len(response_text_lines)):
         response_text_lines_tmp = '\n'.join(response_text_lines[:-i])
         try:
