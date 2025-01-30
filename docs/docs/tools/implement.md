@@ -1,3 +1,5 @@
+`Platforms supported: GitHub, GitLab, Bitbucket`
+
 ## Overview
 
 The `implement` tool converts human code review discussions and feedback into ready-to-commit code changes.
