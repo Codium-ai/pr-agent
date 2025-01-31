@@ -197,10 +197,9 @@ class LiteLLMAIHandler(BaseAiHandler):
                 messages[1]["content"] = [{"type": "text", "text": messages[1]["content"]},
                                           {"type": "image_url", "image_url": {"url": img_path}}]
 
-            # Currently, model OpenAI o1 series does not support a separate system and user prompts
-            O1_MODEL_PREFIX = 'o1'
-            model_type = model.split('/')[-1] if '/' in model else model
-            if (model_type.startswith(O1_MODEL_PREFIX)) or ("deepseek-reasoner" in model):
+            # Currently, some models do not support a separate system and user prompts
+            user_message_only_models = get_settings().config.user_message_only_models
+            if user_message_only_models and any(entry in model for entry in user_message_only_models):
                 user = f"{system}\n\n\n{user}"
                 system = ""
                 get_logger().info(f"Using model {model}, combining system and user prompts")
