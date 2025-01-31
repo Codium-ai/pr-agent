@@ -198,8 +198,8 @@ class LiteLLMAIHandler(BaseAiHandler):
                                           {"type": "image_url", "image_url": {"url": img_path}}]
 
             # Currently, some models do not support a separate system and user prompts
-            user_message_only_models = get_settings().config.user_message_only_models
-            if user_message_only_models and any(entry in model for entry in user_message_only_models):
+            user_message_only_models = get_settings().config.user_message_only_models or []
+            if user_message_only_models and any(entry.lower() in model.lower() for entry in user_message_only_models):
                 user = f"{system}\n\n\n{user}"
                 system = ""
                 get_logger().info(f"Using model {model}, combining system and user prompts")
