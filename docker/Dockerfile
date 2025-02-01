@@ -4,7 +4,7 @@ WORKDIR /app
 ADD pyproject.toml .
 ADD requirements.txt .
 ADD docs docs
-RUN pip install . && rm pyproject.toml requirements.txt
+RUN pip install --no-cache-dir . && rm pyproject.toml requirements.txt
 ENV PYTHONPATH=/app
 
 FROM base AS github_app
@@ -33,7 +33,7 @@ CMD ["python", "pr_agent/servers/azuredevops_server_webhook.py"]
 
 FROM base AS test
 ADD requirements-dev.txt .
-RUN pip install -r requirements-dev.txt && rm requirements-dev.txt
+RUN pip install --no-cache-dir -r requirements-dev.txt && rm requirements-dev.txt
 ADD pr_agent pr_agent
 ADD tests tests
 
