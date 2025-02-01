@@ -130,12 +130,14 @@ async def is_valid_notification(notification, headers, handled_ids, session, use
                                                       artifact={"comment": comment_body})
                                     return True, handled_ids, comment, comment_body, pr_url, user_tag
 
-                            get_logger().error(f"Failed to fetch comments for PR: {pr_url}")
+                            get_logger().warning(f"Failed to fetch comments for PR: {pr_url}",
+                                                    artifact={"comments": comments})
                             return False, handled_ids
 
         return False, handled_ids
     except Exception as e:
-        get_logger().error(f"Error processing notification: {e}", artifact={"traceback": traceback.format_exc()})
+        get_logger().exception(f"Error processing polling notification",
+                               artifact={"notification": notification, "error": e})
         return False, handled_ids
 
 
