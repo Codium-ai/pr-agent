@@ -6,6 +6,7 @@ import requests
 from litellm import acompletion
 from tenacity import retry, retry_if_exception_type, stop_after_attempt
 
+from pr_agent.algo import USER_MESSAGE_ONLY_MODELS
 from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.utils import get_version
 from pr_agent.config_loader import get_settings
@@ -93,6 +94,9 @@ class LiteLLMAIHandler(BaseAiHandler):
         # Support deepseek models
         if get_settings().get("DEEPSEEK.KEY", None):
             os.environ['DEEPSEEK_API_KEY'] = get_settings().get("DEEPSEEK.KEY")
+
+        # Models that only use user meessage
+        self.user_message_only_models = USER_MESSAGE_ONLY_MODELS
 
     def prepare_logs(self, response, system, user, resp, finish_reason):
         response_log = response.dict().copy()
@@ -198,8 +202,7 @@ class LiteLLMAIHandler(BaseAiHandler):
                                           {"type": "image_url", "image_url": {"url": img_path}}]
 
             # Currently, some models do not support a separate system and user prompts
-            user_message_only_models = get_settings().config.user_message_only_models or []
-            if user_message_only_models and any(entry.lower() in model.lower() for entry in user_message_only_models):
+            if self.user_message_only_models and any(entry.lower() in model.lower() for entry in self.user_message_only_models):
                 user = f"{system}\n\n\n{user}"
                 system = ""
                 get_logger().info(f"Using model {model}, combining system and user prompts")
