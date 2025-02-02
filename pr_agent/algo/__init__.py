@@ -81,3 +81,11 @@ MAX_TOKENS = {
     "watsonx/ibm/granite-34b-code-instruct": 8191,
     "watsonx/mistralai/mistral-large": 32768,
 }
+
+USER_MESSAGE_ONLY_MODELS = [
+    "deepseek/deepseek-reasoner",
+    "o1-mini",
+    "o1-mini-2024-09-12",
+    "o1",
+    "o1-2024-12-17"
+]
