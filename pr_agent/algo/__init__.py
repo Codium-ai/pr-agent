@@ -26,6 +26,8 @@ MAX_TOKENS = {
     'o1-preview-2024-09-12': 128000,  # 128K, but may be limited by config.max_model_tokens
     'o1-2024-12-17': 204800,  # 200K, but may be limited by config.max_model_tokens
     'o1': 204800,  # 200K, but may be limited by config.max_model_tokens
+    'o3-mini': 204800,  # 200K, but may be limited by config.max_model_tokens
+    'o3-mini-2025-01-31': 204800,  # 200K, but may be limited by config.max_model_tokens
     'claude-instant-1': 100000,
     'claude-2': 100000,
     'command-nightly': 4096,
