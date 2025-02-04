@@ -1,5 +1,5 @@
 ## Azure DevOps Pipeline
-You can use a pre-built Action Docker image to run Qodo Merge as an Azure devops pipeline.
+You can use a pre-built Action Docker image to run PR-Agent as an Azure devops pipeline.
 add the following file to your repository under `azure-pipelines.yml`:
 ```yaml
 # Opt out of CI triggers
@@ -52,7 +52,7 @@ stages:
 This script will run Qodo Merge on every new merge request, with the `improve`, `review`, and `describe` commands.
 Note that you need to export the `azure_devops__pat` and `OPENAI_KEY` variables in the Azure DevOps pipeline settings (Pipelines -> Library -> + Variable group):
 
-![Qodo Merge Pro](https://codium.ai/images/pr_agent/azure_devops_pipeline_secrets.png){width=468}
+![Qodo Merge](https://codium.ai/images/pr_agent/azure_devops_pipeline_secrets.png){width=468}
 
 Make sure to give pipeline permissions to the `pr_agent` variable group.
 
@@ -80,7 +80,7 @@ org = "https://dev.azure.com/YOUR_ORGANIZATION/"
 # pat = "YOUR_PAT_TOKEN" needed only if using PAT for authentication
 ```
 
-### Azure DevOps Webhook
+## Azure DevOps Webhook
 
 To trigger from an Azure webhook, you need to manually [add a webhook](https://learn.microsoft.com/en-us/azure/devops/service-hooks/services/webhooks?view=azure-devops).
 Use the "Pull request created" type to trigger a review, or "Pull request commented on" to trigger any supported comment with /<command> <args> comment on the relevant PR. Note that for the "Pull request commented on" trigger, only API v2.0 is supported.

@@ -1,0 +1,38 @@
+name: "\U0001FAB2 Bug Report"
+description: Submit a bug report
+labels: ["bug"]
+body:
+
+  - type: dropdown
+    id: information-git-provider
+    attributes:
+      label: Git provider
+      description: 'The problem arises when using:'
+      options:
+        - "Github Cloud"
+        - "Github Enterprise"
+        - "Gitlab"
+        - "Bitbucket Cloud"
+        - "Bitbucket Server"
+        - "Azure"
+        - "Other"
+    validations:
+      required: true
+
+  - type: textarea
+    id: system-info
+    attributes:
+      label: System Info
+      description: Please share your system info with us.
+      placeholder: model used, deployment type (action/app/cli/...), etc...
+    validations:
+      required: true
+
+  - type: textarea
+    id: bug-details
+    attributes:
+      label: Bug details
+      description: Please describe the problem.
+      placeholder: Describe the problem
+    validations:
+      required: true

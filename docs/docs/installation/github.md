@@ -1,6 +1,6 @@
 ## Run as a GitHub Action
 
-You can use our pre-built Github Action Docker image to run Qodo Merge as a Github Action.
+You can use our pre-built Github Action Docker image to run PR-Agent as a Github Action.
 
 1) Add the following file to your repository under `.github/workflows/pr_agent.yml`:
 
@@ -21,7 +21,7 @@ jobs:
     steps:
       - name: PR Agent action step
         id: pragent
-        uses: Codium-ai/pr-agent@main
+        uses: qodo-ai/pr-agent@main
         env:
           OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

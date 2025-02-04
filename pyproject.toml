@@ -31,7 +31,7 @@ dynamic = ["dependencies"]
 dependencies = { file = ["requirements.txt"] }
 
 [project.urls]
-"Homepage" = "https://github.com/Codium-ai/pr-agent"
+"Homepage" = "https://github.com/qodo-ai/pr-agent"
 "Documentation" = "https://pr-agent-docs.codium.ai/"
 
 [tool.setuptools]

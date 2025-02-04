@@ -26,10 +26,13 @@ MAX_TOKENS = {
     'o1-preview-2024-09-12': 128000,  # 128K, but may be limited by config.max_model_tokens
     'o1-2024-12-17': 204800,  # 200K, but may be limited by config.max_model_tokens
     'o1': 204800,  # 200K, but may be limited by config.max_model_tokens
+    'o3-mini': 204800,  # 200K, but may be limited by config.max_model_tokens
+    'o3-mini-2025-01-31': 204800,  # 200K, but may be limited by config.max_model_tokens
     'claude-instant-1': 100000,
     'claude-2': 100000,
     'command-nightly': 4096,
     'deepseek/deepseek-chat': 128000,  # 128K, but may be limited by config.max_model_tokens
+    'deepseek/deepseek-reasoner': 64000,  # 64K, but may be limited by config.max_model_tokens
     'replicate/llama-2-70b-chat:2c1608e18606fad2812020dc541930f2d0495ce32eee50074220b87300bc16e1': 4096,
     'meta-llama/Llama-2-7b-chat-hf': 4096,
     'vertex_ai/codechat-bison': 6144,
@@ -80,3 +83,13 @@ MAX_TOKENS = {
     "watsonx/ibm/granite-34b-code-instruct": 8191,
     "watsonx/mistralai/mistral-large": 32768,
 }
+
+USER_MESSAGE_ONLY_MODELS = [
+    "deepseek/deepseek-reasoner",
+    "o1-mini",
+    "o1-mini-2024-09-12",
+    "o1",
+    "o1-2024-12-17",
+    "o3-mini",
+    "o3-mini-2025-01-31"
+]

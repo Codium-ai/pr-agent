@@ -9,7 +9,7 @@ from datetime import datetime
 from typing import Optional, Tuple
 from urllib.parse import urlparse
 
-from github import AppAuthentication, Auth, Github
+from github import AppAuthentication, Auth, Github, GithubException
 from retry import retry
 from starlette_context import context
 
@@ -475,8 +475,17 @@ class GithubProvider(GitProvider):
             return False
 
     def edit_comment(self, comment, body: str):
-        body = self.limit_output_characters(body, self.max_comment_chars)
-        comment.edit(body=body)
+        try:
+            body = self.limit_output_characters(body, self.max_comment_chars)
+            comment.edit(body=body)
+        except GithubException as e:
+            if hasattr(e, "status") and e.status == 403:
+                # Log as warning for permission-related issues (usually due to polling)
+                get_logger().warning(
+                    "Failed to edit github comment due to permission restrictions",
+                    artifact={"error": e})
+            else:
+                get_logger().exception(f"Failed to edit github comment", artifact={"error": e})
 
     def edit_comment_from_comment_id(self, comment_id: int, body: str):
         try:

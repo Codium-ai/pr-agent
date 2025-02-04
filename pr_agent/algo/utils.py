@@ -316,47 +316,98 @@ def extract_relevant_lines_str(end_line, files, relevant_file, start_line, deden
 
 def ticket_markdown_logic(emoji, markdown_text, value, gfm_supported) -> str:
     ticket_compliance_str = ""
-    final_compliance_level = -1
+    compliance_emoji = ''
+    # Track compliance levels across all tickets
+    all_compliance_levels = []
+
     if isinstance(value, list):
-        for v in value:
-            ticket_url = v.get('ticket_url', '').strip()
-            compliance_level = v.get('overall_compliance_level', '').strip()
-            # add emojis, if 'Fully compliant' ✅, 'Partially compliant' 🔶, or 'Not compliant' ❌
-            if compliance_level.lower() == 'fully compliant':
-                # compliance_level = '✅ Fully compliant'
-                final_compliance_level = 2 if final_compliance_level == -1 else 1
-            elif compliance_level.lower() == 'partially compliant':
-                # compliance_level = '🔶 Partially compliant'
-                final_compliance_level = 1
-            elif compliance_level.lower() == 'not compliant':
-                # compliance_level = '❌ Not compliant'
-                final_compliance_level = 0 if final_compliance_level < 1 else 1
+        for ticket_analysis in value:
+            try:
+                ticket_url = ticket_analysis.get('ticket_url', '').strip()
+                explanation = ''
+                ticket_compliance_level = ''  # Individual ticket compliance
+                fully_compliant_str = ticket_analysis.get('fully_compliant_requirements', '').strip()
+                not_compliant_str = ticket_analysis.get('not_compliant_requirements', '').strip()
+                requires_further_human_verification = ticket_analysis.get('requires_further_human_verification',
+                                                                          '').strip()
 
-            # explanation = v.get('compliance_analysis', '').strip()
-            explanation = ''
-            fully_compliant_str = v.get('fully_compliant_requirements', '').strip()
-            not_compliant_str = v.get('not_compliant_requirements', '').strip()
-            if fully_compliant_str:
-                explanation += f"Fully compliant requirements:\n{fully_compliant_str}\n\n"
-            if not_compliant_str:
-                explanation += f"Not compliant requirements:\n{not_compliant_str}\n\n"
+                if not fully_compliant_str and not not_compliant_str:
+                    get_logger().debug(f"Ticket compliance has no requirements",
+                                       artifact={'ticket_url': ticket_url})
+                    continue
 
-            ticket_compliance_str += f"\n\n**[{ticket_url.split('/')[-1]}]({ticket_url}) - {compliance_level}**\n\n{explanation}\n\n"
-        if final_compliance_level == 2:
-            compliance_level = '✅'
-        elif final_compliance_level == 1:
-            compliance_level = '🔶'
-        else:
-            compliance_level = '❌'
+                # Calculate individual ticket compliance level
+                if fully_compliant_str:
+                    if not_compliant_str:
+                        ticket_compliance_level = 'Partially compliant'
+                    else:
+                        if not requires_further_human_verification:
+                            ticket_compliance_level = 'Fully compliant'
+                        else:
+                            ticket_compliance_level = 'PR Code Verified'
+                elif not_compliant_str:
+                    ticket_compliance_level = 'Not compliant'
 
+                # Store the compliance level for aggregation
+                if ticket_compliance_level:
+                    all_compliance_levels.append(ticket_compliance_level)
+
+                # build compliance string
+                if fully_compliant_str:
+                    explanation += f"Compliant requirements:\n\n{fully_compliant_str}\n\n"
+                if not_compliant_str:
+                    explanation += f"Non-compliant requirements:\n\n{not_compliant_str}\n\n"
+                if requires_further_human_verification:
+                    explanation += f"Requires further human verification:\n\n{requires_further_human_verification}\n\n"
+                ticket_compliance_str += f"\n\n**[{ticket_url.split('/')[-1]}]({ticket_url}) - {ticket_compliance_level}**\n\n{explanation}\n\n"
+
+                # for debugging
+                if requires_further_human_verification:
+                    get_logger().debug(f"Ticket compliance requires further human verification",
+                                       artifact={'ticket_url': ticket_url,
+                                                 'requires_further_human_verification': requires_further_human_verification,
+                                                 'compliance_level': ticket_compliance_level})
+
+            except Exception as e:
+                get_logger().exception(f"Failed to process ticket compliance: {e}")
+                continue
+
+        # Calculate overall compliance level and emoji
+        if all_compliance_levels:
+            if all(level == 'Fully compliant' for level in all_compliance_levels):
+                compliance_level = 'Fully compliant'
+                compliance_emoji = '✅'
+            elif all(level == 'PR Code Verified' for level in all_compliance_levels):
+                compliance_level = 'PR Code Verified'
+                compliance_emoji = '✅'
+            elif any(level == 'Not compliant' for level in all_compliance_levels):
+                # If there's a mix of compliant and non-compliant tickets
+                if any(level in ['Fully compliant', 'PR Code Verified'] for level in all_compliance_levels):
+                    compliance_level = 'Partially compliant'
+                    compliance_emoji = '🔶'
+                else:
+                    compliance_level = 'Not compliant'
+                    compliance_emoji = '❌'
+            elif any(level == 'Partially compliant' for level in all_compliance_levels):
+                compliance_level = 'Partially compliant'
+                compliance_emoji = '🔶'
+            else:
+                compliance_level = 'PR Code Verified'
+                compliance_emoji = '✅'
+
+            # Set extra statistics outside the ticket loop
+            get_settings().set('config.extra_statistics', {'compliance_level': compliance_level})
+
+        # editing table row for ticket compliance analysis
         if gfm_supported:
             markdown_text += f"<tr><td>\n\n"
-            markdown_text += f"**{emoji} Ticket compliance analysis {compliance_level}**\n\n"
+            markdown_text += f"**{emoji} Ticket compliance analysis {compliance_emoji}**\n\n"
             markdown_text += ticket_compliance_str
             markdown_text += f"</td></tr>\n"
         else:
-            markdown_text += f"### {emoji} Ticket compliance analysis {compliance_level}\n\n"
-            markdown_text += ticket_compliance_str+"\n\n"
+            markdown_text += f"### {emoji} Ticket compliance analysis {compliance_emoji}\n\n"
+            markdown_text += ticket_compliance_str + "\n\n"
+
     return markdown_text
 
 
@@ -684,7 +735,7 @@ def try_fix_yaml(response_text: str,
         get_logger().info(f"Successfully parsed AI prediction after adding |-\n")
         return data
     except:
-        get_logger().info(f"Failed to parse AI prediction after adding |-\n")
+        pass
 
     # second fallback - try to extract only range from first ```yaml to ````
     snippet_pattern = r'```(yaml)?[\s\S]*?```'
@@ -728,9 +779,18 @@ def try_fix_yaml(response_text: str,
         except:
             pass
 
+    # fifth fallback - try to remove leading '+' (sometimes added by AI for 'existing code' and 'improved code')
+    response_text_lines_copy = response_text_lines.copy()
+    for i in range(0, len(response_text_lines_copy)):
+        response_text_lines_copy[i] = ' ' + response_text_lines_copy[i][1:]
+    try:
+        data = yaml.safe_load('\n'.join(response_text_lines_copy))
+        get_logger().info(f"Successfully parsed AI prediction after removing leading '+'")
+        return data
+    except:
+        pass
 
-    # fifth fallback - try to remove last lines
-    data = {}
+    # sixth fallback - try to remove last lines
     for i in range(1, len(response_text_lines)):
         response_text_lines_tmp = '\n'.join(response_text_lines[:-i])
         try:

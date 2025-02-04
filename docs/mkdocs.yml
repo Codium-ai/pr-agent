@@ -1,20 +1,16 @@
-site_name: Qodo Merge (formerly known as PR-Agent)
+site_name: Qodo Merge (and open-source PR-Agent)
 repo_url: https://github.com/Codium-ai/pr-agent
 repo_name: Codium-ai/pr-agent
 
 nav:
   - Overview:
     - 'index.md'
-    - 💎 Qodo Merge Pro: 'overview/pr_agent_pro.md'
+    - 💎 Qodo Merge: 'overview/pr_agent_pro.md'
     - Data Privacy: 'overview/data_privacy.md'
   - Installation:
     - 'installation/index.md'
-    - Locally: 'installation/locally.md'
-    - GitHub: 'installation/github.md'
-    - GitLab: 'installation/gitlab.md'
-    - BitBucket: 'installation/bitbucket.md'
-    - Azure DevOps: 'installation/azure.md'
-    - 💎 Qodo Merge Pro: 'installation/pr_agent_pro.md'
+    - PR-Agent: 'installation/pr_agent.md'
+    - 💎 Qodo Merge: 'installation/qodo_merge.md'
   - Usage Guide:
     - 'usage-guide/index.md'
     - Introduction: 'usage-guide/introduction.md'
@@ -24,7 +20,7 @@ nav:
     - Managing Mail Notifications: 'usage-guide/mail_notifications.md'
     - Changing a Model: 'usage-guide/changing_a_model.md'
     - Additional Configurations: 'usage-guide/additional_configurations.md'
-    - 💎 Qodo Merge Pro Models: 'usage-guide/PR_agent_pro_models'
+    - 💎 Qodo Merge Models: 'usage-guide/PR_agent_pro_models'
   - Tools:
     - 'tools/index.md'
     - Describe: 'tools/describe.md'
@@ -46,6 +42,7 @@ nav:
   - Core Abilities:
       - 'core-abilities/index.md'
       - Fetching ticket context: 'core-abilities/fetching_ticket_context.md'
+      - Auto best practices: 'core-abilities/auto_best_practices.md'
       - Local and global metadata: 'core-abilities/metadata.md'
       - Dynamic context: 'core-abilities/dynamic_context.md'
       - Self-reflection: 'core-abilities/self_reflection.md'

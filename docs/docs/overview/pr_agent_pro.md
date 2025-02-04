@@ -1,21 +1,21 @@
 ### Overview
 
-[Qodo Merge Pro](https://www.codium.ai/pricing/){:target="_blank"} is a hosted version of open-source [Qodo Merge (PR-Agent)](https://github.com/Codium-ai/pr-agent){:target="_blank"}. A complimentary two-week trial is offered, followed by a monthly subscription fee.
-Qodo Merge Pro is designed for companies and teams that require additional features and capabilities. It provides the following benefits:
+[Qodo Merge](https://www.codium.ai/pricing/){:target="_blank"} is a hosted version of open-source [PR-Agent](https://github.com/Codium-ai/pr-agent){:target="_blank"}. A complimentary two-week trial is offered, followed by a monthly subscription fee.
+Qodo Merge is designed for companies and teams that require additional features and capabilities. It provides the following benefits:
 
 1. **Fully managed** - We take care of everything for you - hosting, models, regular updates, and more. Installation is as simple as signing up and adding the Qodo Merge app to your GitHub\GitLab\BitBucket repo.
 
-2. **Improved privacy** - No data will be stored or used to train models. Qodo Merge Pro will employ zero data retention, and will use an OpenAI and Claude accounts with zero data retention.
+2. **Improved privacy** - No data will be stored or used to train models. Qodo Merge will employ zero data retention, and will use an OpenAI and Claude accounts with zero data retention.
 
-3. **Improved support** - Qodo Merge Pro users will receive priority support, and will be able to request new features and capabilities.
+3. **Improved support** - Qodo Merge users will receive priority support, and will be able to request new features and capabilities.
 
-4. **Supporting self-hosted git servers** - Qodo Merge Pro can be installed on GitHub Enterprise Server, GitLab, and BitBucket. For more information, see the [installation guide](https://qodo-merge-docs.qodo.ai/installation/pr_agent_pro/).
+4. **Supporting self-hosted git servers** - Qodo Merge can be installed on GitHub Enterprise Server, GitLab, and BitBucket. For more information, see the [installation guide](https://qodo-merge-docs.qodo.ai/installation/pr_agent_pro/).
 
-5. **PR Chat** - Qodo Merge Pro allows you to engage in [private chat](https://qodo-merge-docs.qodo.ai/chrome-extension/features/#pr-chat) about your pull requests on private repositories.
+5. **PR Chat** - Qodo Merge allows you to engage in [private chat](https://qodo-merge-docs.qodo.ai/chrome-extension/features/#pr-chat) about your pull requests on private repositories.
 
 ### Additional features
 
-Here are some of the additional features and capabilities that Qodo Merge Pro offers:
+Here are some of the additional features and capabilities that Qodo Merge offers:
 
 | Feature                                                                                                              | Description                                                                                                                                                      |
 |----------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -24,14 +24,14 @@ Here are some of the additional features and capabilities that Qodo Merge Pro of
 | [**Apply suggestions**](https://qodo-merge-docs.qodo.ai/tools/improve/#overview)                                     | Generate committable code from the relevant suggestions interactively by clicking on a checkbox                                                                   |
 | [**Suggestions impact**](https://qodo-merge-docs.qodo.ai/tools/improve/#assessing-impact)                         | Automatically mark suggestions that were implemented by the user (either directly in GitHub, or indirectly in the IDE) to enable tracking of the impact of the suggestions |
 | [**CI feedback**](https://qodo-merge-docs.qodo.ai/tools/ci_feedback/) | Automatically analyze failed CI checks on GitHub and provide actionable feedback in the PR conversation, helping to resolve issues quickly |
-| [**Advanced usage statistics**](https://www.codium.ai/contact/#/)                                                    | Qodo Merge Pro offers detailed statistics at user, repository, and company levels, including metrics about Qodo Merge usage, and also general statistics and insights |
+| [**Advanced usage statistics**](https://www.codium.ai/contact/#/)                                                    | Qodo Merge offers detailed statistics at user, repository, and company levels, including metrics about Qodo Merge usage, and also general statistics and insights |
 | [**Incorporating companies' best practices**](https://qodo-merge-docs.qodo.ai/tools/improve/#best-practices)         | Use the companies' best practices as reference to increase the effectiveness and the relevance of the code suggestions                                           |
 | [**Interactive triggering**](https://qodo-merge-docs.qodo.ai/tools/analyze/#example-usage)                           | Interactively apply different tools via the `analyze` command                                                                                                    |
-| [**Custom labels**](https://qodo-merge-docs.qodo.ai/tools/describe/#handle-custom-labels-from-the-repos-labels-page) | Define custom labels for Qodo Merge to assign to the PR                                                                                                            |
+| [**Custom labels**](https://qodo-merge-docs.qodo.ai/tools/describe/#handle-custom-labels-from-the-repos-labels-page) | Define custom labels for Qodo Merge to assign to the PR                                                                                                           |
 
 ### Additional tools
 
-Here are additional tools that are available only for Qodo Merge Pro users:
+Here are additional tools that are available only for Qodo Merge users:
 
 | Feature                                                                               | Description |
 |---------------------------------------------------------------------------------------|-------------|
@@ -46,7 +46,7 @@ Here are additional tools that are available only for Qodo Merge Pro users:
 
 ### Supported languages
 
-Qodo Merge Pro leverages the world's leading code models - Claude 3.5 Sonnet and GPT-4.
+Qodo Merge leverages the world's leading code models - Claude 3.5 Sonnet and GPT-4.
 As a result, its primary tools such as `describe`, `review`, and `improve`, as well as the PR-chat feature, support virtually all programming languages.
 
-For specialized commands that require static code analysis, Qodo Merge Pro offers support for specific languages. For more details about features that require static code analysis, please refer to the [documentation](https://qodo-merge-docs.qodo.ai/tools/analyze/#overview).
+For specialized commands that require static code analysis, Qodo Merge offers support for specific languages. For more details about features that require static code analysis, please refer to the [documentation](https://qodo-merge-docs.qodo.ai/tools/analyze/#overview).

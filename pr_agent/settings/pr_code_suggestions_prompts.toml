@@ -30,7 +30,7 @@ __old hunk__
 @@ ... @@ def func2():
 __new hunk__
  unchanged code line4
-+new code line5 removed
++new code line5 added
  unchanged code line6
 
 ## File: 'src/file2.py'
@@ -66,7 +66,7 @@ Specific guidelines for generating code suggestions:
 - Do not suggest to change packages version, add missing import statement, or declare undefined variable.
 {%- endif %}
 - When mentioning code elements (variables, names, or files) in your response, surround them with backticks (`). For example: "verify that `user_id` is..."
-- Note that you only see changed code segments (diff hunks in a PR), not the entire codebase. Avoid suggestions that might duplicate existing functionality or questioning code elements (like variables declerations or import statements) that may be defined elsewhere in the codebase.
+- Note that you only see changed code segments (diff hunks in a PR), not the entire codebase. Avoid suggestions that might duplicate existing functionality or questioning code elements (like variables declarations or import statements) that may be defined elsewhere in the codebase.
 
 {%- if extra_instructions %}
 
@@ -84,13 +84,13 @@ class CodeSuggestion(BaseModel):
     relevant_file: str = Field(description="Full path of the relevant file")
     language: str = Field(description="Programming language used by the relevant file")
     suggestion_content: str = Field(description="An actionable suggestion to enhance, improve or fix the new code introduced in the PR. Don't present here actual code snippets, just the suggestion. Be short and concise")
-    existing_code: str = Field(description="A short code snippet from a '__new hunk__' section that the suggestion aims to enhance or fix. Include only complete code lines. Use ellipsis (...) for brevity if needed. This snippet should represent the specific PR code targeted for improvement.")
+    existing_code: str = Field(description="A short code snippet, from a '__new hunk__' section after the PR changes, that the suggestion aims to enhance or fix. Include only complete code lines. Use ellipsis (...) for brevity if needed. This snippet should represent the specific PR code targeted for improvement.")
     improved_code: str = Field(description="A refined code snippet that replaces the 'existing_code' snippet after implementing the suggestion.")
     one_sentence_summary: str = Field(description="A concise, single-sentence overview (up to 6 words) of the suggested improvement. Focus on the 'what'. Be general, and avoid method or variable names.")
 {%- if not focus_only_on_problems %}
     label: str = Field(description="A single, descriptive label that best characterizes the suggestion type. Possible labels include 'security', 'possible bug', 'possible issue', 'performance', 'enhancement', 'best practice', 'maintainability', 'typo'. Other relevant labels are also acceptable.")
 {%- else %}
-    label: str = Field(description="A single, descriptive label that best characterizes the suggestion type. Possible labels include 'security', 'critical bug', 'general'. The 'general' section should be used for suggestions that address a major issue, but are necessarily on a critical level.")
+    label: str = Field(description="A single, descriptive label that best characterizes the suggestion type. Possible labels include 'security', 'critical bug', 'general'. The 'general' section should be used for suggestions that address a major issue, but are not necessarily on a critical level.")
 {%- endif %}
 
 

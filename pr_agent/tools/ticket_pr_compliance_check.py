@@ -51,6 +51,11 @@ def extract_ticket_links_from_pr_description(pr_description, repo_path, base_url
                 issue_number = match[5][1:]  # remove #
                 if issue_number.isdigit() and len(issue_number) < 5 and repo_path:
                     github_tickets.add(f'{base_url_html.strip("/")}/{repo_path}/issues/{issue_number}')
+
+        if len(github_tickets) > 3:
+            get_logger().info(f"Too many tickets found in PR description: {len(github_tickets)}")
+            # Limit the number of tickets to 3
+            github_tickets = set(list(github_tickets)[:3])
     except Exception as e:
         get_logger().error(f"Error extracting tickets error= {e}",
                            artifact={"traceback": traceback.format_exc()})

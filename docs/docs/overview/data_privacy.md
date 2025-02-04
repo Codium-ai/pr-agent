@@ -1,12 +1,12 @@
-## Self-hosted Qodo Merge
+## Self-hosted PR-Agent
 
-- If you self-host Qodo Merge with your OpenAI (or other LLM provider) API key, it is between you and the provider. We don't send your code data to Qodo Merge servers.
+- If you self-host PR-Agent with your OpenAI (or other LLM provider) API key, it is between you and the provider. We don't send your code data to Qodo servers.
 
-## Qodo Merge Pro 💎
+## Qodo Merge 💎
 
-- When using Qodo Merge Pro 💎, hosted by CodiumAI, we will not store any of your data, nor will we use it for training. You will also benefit from an OpenAI account with zero data retention.
+- When using Qodo Merge💎, hosted by Qodo, we will not store any of your data, nor will we use it for training. You will also benefit from an OpenAI account with zero data retention.
 
-- For certain clients, CodiumAI-hosted Qodo Merge Pro will use CodiumAI’s proprietary models. If this is the case, you will be notified.
+- For certain clients, Qodo Merge will use Qodo’s proprietary models. If this is the case, you will be notified.
 
 - No passive collection of Code and Pull Requests’ data — Qodo Merge will be active only when you invoke it, and it will then extract and analyze only data relevant to the executed command and queried pull request.
 

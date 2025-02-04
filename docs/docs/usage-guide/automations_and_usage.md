@@ -95,8 +95,8 @@ When this parameter is set to `true`, Qodo Merge will not run any automatic tool
 
 ### GitHub App
 
-!!! note "Configurations for Qodo Merge Pro"
-    Qodo Merge Pro for GitHub is an App, hosted by CodiumAI. So all the instructions below are relevant also for Qodo Merge Pro users.
+!!! note "Configurations for Qodo Merge"
+    Qodo Merge for GitHub is an App, hosted by Qodo. So all the instructions below are relevant also for Qodo Merge users.
     Same goes for [GitLab webhook](#gitlab-webhook) and [BitBucket App](#bitbucket-app) sections.
 
 #### GitHub app automatic tools when a new PR is opened

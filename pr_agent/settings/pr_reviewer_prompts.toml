@@ -75,10 +75,10 @@ class KeyIssuesComponentLink(BaseModel):
 
 class TicketCompliance(BaseModel):
     ticket_url: str = Field(description="Ticket URL or ID")
-    ticket_requirements: str = Field(description="Repeat, in your own words, all ticket requirements, in bullet points")
-    fully_compliant_requirements: str = Field(description="A list, in bullet points, of which requirements are met by the PR code. Don't explain how the requirements are met, just list them shortly. Can be empty")
-    not_compliant_requirements: str = Field(description="A list, in bullet points, of which requirements are not met by the PR code. Don't explain how the requirements are not met, just list them shortly. Can be empty")
-    overall_compliance_level: str = Field(description="Overall give this PR one of these three values in relation to the ticket: 'Fully compliant', 'Partially compliant', or 'Not compliant'")
+    ticket_requirements: str = Field(description="Repeat, in your own words (in bullet points), all the requirements, sub-tasks, DoD, and acceptance criteria raised by the ticket")
+    fully_compliant_requirements: str = Field(description="Bullet-point list of items from the  'ticket_requirements' section above that are fulfilled by the PR code. Don't explain how the requirements are met, just list them shortly. Can be empty")
+    not_compliant_requirements: str = Field(description="Bullet-point list of items from the 'ticket_requirements' section above that are not fulfilled by the PR code. Don't explain how the requirements are not met, just list them shortly. Can be empty")
+    requires_further_human_verification: str = Field(description="Bullet-point list of items from the 'ticket_requirements' section above that cannot be assessed through code review alone, are unclear, or need further human review (e.g., browser testing, UI checks). Leave empty if all 'ticket_requirements' were marked as fully compliant or not compliant")
 {%- endif %}
 
 class Review(BaseModel):

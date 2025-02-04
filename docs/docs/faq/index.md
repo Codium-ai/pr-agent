@@ -61,11 +61,11 @@ ___
 
     When you self-host the [open-source](https://github.com/Codium-ai/pr-agent) version, you use your own keys.
 
-    Qodo Merge Pro with SaaS deployment is a hosted version of Qodo Merge, where Qodo manages the infrastructure and the keys.
+    Qodo Merge with SaaS deployment is a hosted version of Qodo Merge, where Qodo manages the infrastructure and the keys.
     For enterprise customers, on-prem deployment is also available. [Contact us](https://www.codium.ai/contact/#pricing) for more information.
 ___
 
-??? note "Q: Can Qodo Merge  review draft/offline PRs?"
+??? note "Q: Can Qodo Merge review draft/offline PRs?"
     #### Answer:<span style="display:none;">5</span>
 
     Yes. While Qodo Merge won't automatically review draft PRs, you can still get feedback by manually requesting it through [online commenting](https://qodo-merge-docs.qodo.ai/usage-guide/automations_and_usage/#online-usage).

@@ -8,7 +8,7 @@ To enable private chat, simply install the Qodo Merge Chrome extension. After in
 This chat session is **private**, and won't be visible to other users.
 
 All open-source repositories are supported.
-For private repositories, you will also need to install Qodo Merge Pro, After installation, make sure to open at least one new PR to fully register your organization. Once done, you can chat with both new and existing PRs across all installed repositories.
+For private repositories, you will also need to install Qodo Merge. After installation, make sure to open at least one new PR to fully register your organization. Once done, you can chat with both new and existing PRs across all installed repositories.
 
 #### Context-aware PR chat
 

@@ -1,5 +1,5 @@
 ## Run as a GitLab Pipeline
-You can use a pre-built Action Docker image to run Qodo Merge as a GitLab pipeline. This is a simple way to get started with Qodo Merge without setting up your own server.
+You can use a pre-built Action Docker image to run PR-Agent as a GitLab pipeline. This is a simple way to get started with Qodo Merge without setting up your own server.
 
 (1) Add the following file to your repository under `.gitlab-ci.yml`:
 ```yaml
