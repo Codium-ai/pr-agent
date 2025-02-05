@@ -794,14 +794,15 @@ class PRCodeSuggestions:
 
 {example_code.rstrip()}
 """
-                    pr_body += f"<details><summary>Suggestion importance[1-10]: {suggestion['score']}</summary>\n\n"
-                    pr_body += f"__\n\nWhy: {suggestion['score_why']}\n\n"
-                    pr_body += f"</details>"
+                    if suggestion.get('score_why'):
+                        pr_body += f"<details><summary>Suggestion importance[1-10]: {suggestion['score']}</summary>\n\n"
+                        pr_body += f"__\n\nWhy: {suggestion['score_why']}\n\n"
+                        pr_body += f"</details>"
 
                     pr_body += f"</details>"
 
                     # # add another column for 'score'
-                    score_int = int(suggestion['score'])
+                    score_int = int(suggestion.get('score', 0))
                     score_str = f"{score_int}"
                     if get_settings().pr_code_suggestions.new_score_mechanism:
                         score_str = self.get_score_str(score_int)
@@ -819,9 +820,11 @@ class PRCodeSuggestions:
             return ""
 
     def get_score_str(self, score: int) -> str:
-        if score >= 9:
+        th_high = get_settings().pr_code_suggestions.get('new_score_mechanism_th_high', 9)
+        th_medium = get_settings().pr_code_suggestions.get('new_score_mechanism_th_medium', 7)
+        if score >= th_high:
             return "High"
-        elif score >= 7:
+        elif score >= th_medium:
             return "Medium"
         else:  # score < 7
             return "Low"
