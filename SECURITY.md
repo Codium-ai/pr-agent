@@ -1,16 +1,62 @@
 # Security Policy
 
-## Qodo Merge 💎 (SaaS)
-* When using Qodo Merge💎, hosted by Qodo, we will not store any of your data, nor will we use it for training. You will also benefit from an OpenAI account with zero data retention.
+PR-Agent is an open-source tool to help efficiently review and handle pull requests. Qodo Merge is a paid version of PR-Agent, designed for companies and teams that require additional features and capabilities. 
 
-* For certain clients, Qodo Merge will use Qodo’s proprietary models. If this is the case, you will be notified.
+This document describes the security policy of PR-Agent. For Qodo Merge's secutiry policy, see [here](https://qodo-merge-docs.qodo.ai/overview/data_privacy/#qodo-merge).
 
-* No passive collection of Code and Pull Requests’ data — Qodo Merge will be active only when you invoke it, and it will then extract and analyze only data relevant to the executed command and queried pull request.
+## PR-Agent Self-Hosted Solutions
 
-## Qodo Merge 💎 (Self-hosted)
-* If you self-host PR-Agent with your OpenAI (or other LLM provider) API key, it is between you and the provider. We don't send your code data to Qodo servers.
+When using PR-Agent with your OpenAI (or other LLM provider) API key, the security relationship is directly between you and the provider. We do not send your code to Qodo servers.
 
-## Qodo Merge Chrome extension
+Types of [self-hosted solutions](https://qodo-merge-docs.qodo.ai/installation):
+- Locally
+- GitHub integration
+- GitLab integration
+- BitBucket integration
+- Azure DevOps integration
 
-* The Chrome extension will not send your code to any external servers.
-* For private repositories, we will first validate the user's identity and permissions. After authentication, we generate responses using the existing Qodo Merge integration.
+
+## PR-Agent Supported Versions
+
+This section outlines which versions of PR-Agent are currently supported with security updates.
+
+### Docker Deployment Options
+
+#### Latest Version
+
+For the most recent updates, use our latest Docker image which is automatically built nightly:
+```yaml
+uses: qodo-ai/pr-agent@main
+```
+
+#### Specific Release Version
+
+For a fixed version, you can pin your action to a specific release version. Browse available releases at:
+[PR-Agent Releases](https://github.com/qodo-ai/pr-agent/releases)
+
+For example, to github action:
+
+```yaml
+steps:
+  - name: PR Agent action step
+    id: pragent
+    uses: docker://codiumai/pr-agent:0.26-github_action
+```
+
+#### Enhanced Security with Docker Digest
+
+For maximum security, you can specify the Docker image using its digest:
+```yaml
+steps:
+  - name: PR Agent action step
+    id: pragent
+    uses: docker://codiumai/pr-agent@sha256:14165e525678ace7d9b51cda8652c2d74abb4e1d76b57c4a6ccaeba84663cc64
+```
+
+## Reporting a Vulnerability
+
+We take the security of PR-Agent seriously. If you discover a security vulnerability, please report it immediately to:
+
+Email: tal.r@qodo.ai
+
+Please include a description of the vulnerability, steps to reproduce, and the affected PR-Agent version.
