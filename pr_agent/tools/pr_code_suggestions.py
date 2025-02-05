@@ -720,7 +720,7 @@ class PRCodeSuggestions:
             header = f"Suggestion"
             delta = 66
             header += "&nbsp; " * delta
-            pr_body += f"""<thead><tr><td>Category</td><td align=left>{header}</td><td align=center>Score</td></tr>"""
+            pr_body += f"""<thead><tr><td><strong>Category</strong></td><td align=left><strong>{header}</strong></td><td align=center><strong>Impact</strong></td></tr>"""
             pr_body += """<tbody>"""
             suggestions_labels = dict()
             # add all suggestions related to each label
@@ -740,7 +740,7 @@ class PRCodeSuggestions:
             counter_suggestions = 0
             for label, suggestions in suggestions_labels.items():
                 num_suggestions = len(suggestions)
-                pr_body += f"""<tr><td rowspan={num_suggestions}><strong>{label.capitalize()}</strong></td>\n"""
+                pr_body += f"""<tr><td rowspan={num_suggestions}>{label.capitalize()}</td>\n"""
                 for i, suggestion in enumerate(suggestions):
 
                     relevant_file = suggestion['relevant_file'].strip()
@@ -795,13 +795,17 @@ class PRCodeSuggestions:
 {example_code.rstrip()}
 """
                     pr_body += f"<details><summary>Suggestion importance[1-10]: {suggestion['score']}</summary>\n\n"
-                    pr_body += f"Why: {suggestion['score_why']}\n\n"
+                    pr_body += f"__\n\nWhy: {suggestion['score_why']}\n\n"
                     pr_body += f"</details>"
 
                     pr_body += f"</details>"
 
                     # # add another column for 'score'
-                    pr_body += f"</td><td align=center>{suggestion['score']}\n\n"
+                    score_int = int(suggestion['score'])
+                    score_str = f"{score_int}"
+                    if get_settings().pr_code_suggestions.new_score_mechanism:
+                        score_str = self.get_score_str(score_int)
+                    pr_body += f"</td><td align=center>{score_str}\n\n"
 
                     pr_body += f"</td></tr>"
                     counter_suggestions += 1
@@ -813,6 +817,14 @@ class PRCodeSuggestions:
         except Exception as e:
             get_logger().info(f"Failed to publish summarized code suggestions, error: {e}")
             return ""
+
+    def get_score_str(self, score: int) -> str:
+        if score >= 9:
+            return "High"
+        elif score >= 7:
+            return "Medium"
+        else:  # score < 7
+            return "Low"
 
     async def self_reflect_on_suggestions(self,
                                           suggestion_list: List,
