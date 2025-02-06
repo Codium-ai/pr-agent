@@ -55,7 +55,7 @@ PR-Agent aims to help efficiently review and handle pull requests, by providing 
 ### Feb 6, 2025
 New design for the `/improve` tool new:
 
-<kbd><img src="https://private-user-images.githubusercontent.com/21198860/410533969-26506430-550e-469a-adaa-af0a09b70c6d.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3Mzg4NTc0MDMsIm5iZiI6MTczODg1NzEwMywicGF0aCI6Ii8yMTE5ODg2MC80MTA1MzM5NjktMjY1MDY0MzAtNTUwZS00NjlhLWFkYWEtYWYwYTA5YjcwYzZkLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTAyMDYlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwMjA2VDE1NTE0M1omWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWU3ZWI1N2ZlNWU0MDNkOTgzZmMzODYxMzk4MWY3YWVlYmFiYjU5YmY2OWUzMjFmMzAyNDgzYmFmMmU1MjgwYjYmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.e6TlDBED42DUZQ-WmH7tqA6sfSLEu8g06_hDk3IWViw" width="512"></kbd>
+<kbd><img src="https://github.com/user-attachments/assets/26506430-550e-469a-adaa-af0a09b70c6d" width="512"></kbd>
 
 ### Jan 25, 2025
 
