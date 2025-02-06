@@ -53,7 +53,7 @@ PR-Agent aims to help efficiently review and handle pull requests, by providing 
 ## News and Updates
 
 ### Feb 6, 2025
-New design for the `/improve` tool new:
+New design for the `/improve` tool:
 
 <kbd><img src="https://github.com/user-attachments/assets/26506430-550e-469a-adaa-af0a09b70c6d" width="512"></kbd>
 
