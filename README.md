@@ -10,6 +10,12 @@
 
 </picture>
 <br/>
+
+ [Installation Guide](https://qodo-merge-docs.qodo.ai/installation/) | 
+[Usage Guide](https://qodo-merge-docs.qodo.ai/usage-guide/) | 
+[Tools Guide](https://qodo-merge-docs.qodo.ai/tools/) | 
+[Qodo Merge](https://qodo-merge-docs.qodo.ai/overview/pr_agent_pro/) 💎
+
 PR-Agent aims to help efficiently review and handle pull requests, by providing AI feedback and suggestions
 </div>
 
@@ -22,13 +28,16 @@ PR-Agent aims to help efficiently review and handle pull requests, by providing 
 </a>
 </div>
 
-### [Documentation](https://qodo-merge-docs.qodo.ai/)
+[//]: # (### [Documentation]&#40;https://qodo-merge-docs.qodo.ai/&#41;)
 
-- See the [Installation Guide](https://qodo-merge-docs.qodo.ai/installation/) for instructions on installing PR-Agent on different platforms.
+[//]: # ()
+[//]: # (- See the [Installation Guide]&#40;https://qodo-merge-docs.qodo.ai/installation/&#41; for instructions on installing PR-Agent on different platforms.)
 
-- See the [Usage Guide](https://qodo-merge-docs.qodo.ai/usage-guide/) for instructions on running PR-Agent tools via different interfaces, such as CLI, PR Comments, or by automatically triggering them when a new PR is opened.
+[//]: # ()
+[//]: # (- See the [Usage Guide]&#40;https://qodo-merge-docs.qodo.ai/usage-guide/&#41; for instructions on running PR-Agent tools via different interfaces, such as CLI, PR Comments, or by automatically triggering them when a new PR is opened.)
 
-- See the [Tools Guide](https://qodo-merge-docs.qodo.ai/tools/) for a detailed description of the different tools, and the available configurations for each tool.
+[//]: # ()
+[//]: # (- See the [Tools Guide]&#40;https://qodo-merge-docs.qodo.ai/tools/&#41; for a detailed description of the different tools, and the available configurations for each tool.)
 
 
 ## Table of Contents
@@ -37,11 +46,16 @@ PR-Agent aims to help efficiently review and handle pull requests, by providing 
 - [Overview](#overview)
 - [Example results](#example-results)
 - [Try it now](#try-it-now)
-- [Qodo Merge 💎](https://qodo-merge-docs.qodo.ai/overview/pr_agent_pro/)
+- [Qodo Merge](https://qodo-merge-docs.qodo.ai/overview/pr_agent_pro/)
 - [How it works](#how-it-works)
 - [Why use PR-Agent?](#why-use-pr-agent)
 
 ## News and Updates
+
+### Feb 6, 2025
+New design for the `/improve` tool new:
+
+<kbd><img src="https://github.com/user-attachments/assets/26506430-550e-469a-adaa-af0a09b70c6d" width="512"></kbd>
 
 ### Jan 25, 2025
 
@@ -70,39 +84,6 @@ Update logic and [documentation](https://qodo-merge-docs.qodo.ai/usage-guide/cha
 ### December 30, 2024
 
 Following feedback from the community, we have addressed two vulnerabilities identified in the open-source PR-Agent project. The fixes are now included in the newly released version (v0.26), available as of today.
-
-### December 25, 2024
-
-The `review` tool previously included a legacy feature for providing code suggestions (controlled by '--pr_reviewer.num_code_suggestion'). This functionality has been deprecated. Use instead the [`improve`](https://qodo-merge-docs.qodo.ai/tools/improve/) tool, which offers higher quality and more actionable code suggestions.
-
-### December 2, 2024
-
-Open-source repositories can now freely use Qodo Merge, and enjoy easy one-click installation using a marketplace [app](https://github.com/apps/qodo-merge-pro-for-open-source).
-
-<kbd><img src="https://github.com/user-attachments/assets/b0838724-87b9-43b0-ab62-73739a3a855c" width="512"></kbd>
-
-See [here](https://qodo-merge-docs.qodo.ai/installation/pr_agent_pro/) for more details about installing Qodo Merge for private repositories.
-
-
-### November 18, 2024
-
-A new mode was enabled by default for code suggestions - `--pr_code_suggestions.focus_only_on_problems=true`:
-
-- This option reduces the number of code suggestions received
-- The suggestions will focus more on identifying and fixing code problems, rather than style considerations like best practices, maintainability, or readability.
-- The suggestions will be categorized into just two groups: "Possible Issues" and "General".
-
-Still, if you prefer the previous mode, you can set `--pr_code_suggestions.focus_only_on_problems=false` in the [configuration file](https://qodo-merge-docs.qodo.ai/usage-guide/configuration_options/).
-
-**Example results:**
-
-Original mode
-
-<kbd><img src="https://qodo.ai/images/pr_agent/code_suggestions_original_mode.png" width="512"></kbd>
-
-Focused mode
-
-<kbd><img src="https://qodo.ai/images/pr_agent/code_suggestions_focused_mode.png" width="512"></kbd>
 
 
 ## Overview
