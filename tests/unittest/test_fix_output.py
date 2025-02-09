@@ -16,7 +16,7 @@ class TestTryFixJson:
                 'General PR suggestions': '..., `xxx`...',
                 'Code suggestions': [
                     {
-                        'relevant file': 'yyy.py',
+                        'relevant file': 'zzz.py',
                         'suggestion content': 'xxx [important]'
                     }
                 ]
