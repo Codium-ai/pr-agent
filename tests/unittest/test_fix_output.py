@@ -2,7 +2,6 @@
 
 from pr_agent.algo.utils import try_fix_json
 
-
 class TestTryFixJson:
     # Tests that JSON with complete 'Code suggestions' section returns expected output
     def test_incomplete_code_suggestions(self):
@@ -16,7 +15,7 @@ class TestTryFixJson:
                 'General PR suggestions': '..., `xxx`...',
                 'Code suggestions': [
                     {
-                        'relevant file': 'zzz.py',
+                        'relevant file': 'aaa.py',
                         'suggestion content': 'xxx [important]'
                     }
                 ]
