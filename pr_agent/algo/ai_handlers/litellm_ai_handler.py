@@ -243,6 +243,11 @@ class LiteLLMAIHandler(BaseAiHandler):
                 get_logger().info(f"\nSystem prompt:\n{system}")
                 get_logger().info(f"\nUser prompt:\n{user}")
 
+            if "ollama/deepseek-r1" in model:
+                # ollama/deepseek-r1 uses a standard context size of 2048 tokens, which is too few
+                # set the context size to config.max_model_tokens
+                kwargs["num_ctx"] = get_settings().config.max_model_tokens
+
             response = await acompletion(**kwargs)
         except (openai.APIError, openai.APITimeoutError) as e:
             get_logger().warning(f"Error during LLM inference: {e}")
@@ -263,6 +268,14 @@ class LiteLLMAIHandler(BaseAiHandler):
             # log the full response for debugging
             response_log = self.prepare_logs(response, system, user, resp, finish_reason)
             get_logger().debug("Full_response", artifact=response_log)
+
+            if ("<think>" in resp):
+                # remove think content between tags
+                get_logger().debug("Removing think content...")
+                get_logger().debug(f"Think content: {resp[resp.index('<think>'):resp.index('</think>')]}")
+                startIndex = resp.index("<think>")
+                stopIndex = resp.index("</think>")
+                resp = resp[:startIndex] + resp[stopIndex+len("</think>"):]
 
             # for CLI debugging
             if get_settings().config.verbosity_level >= 2:
