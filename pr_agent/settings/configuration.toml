@@ -121,6 +121,9 @@ max_history_len=4
 apply_suggestions_checkbox=true
 # suggestions scoring
 suggestions_score_threshold=0 # [0-10]| recommend not to set this value above 8, since above it may clip highly relevant suggestions
+new_score_mechanism=true
+new_score_mechanism_th_high=9
+new_score_mechanism_th_medium=7
 # params for '/improve --extended' mode
 auto_extended_mode=true
 num_code_suggestions_per_chunk=4

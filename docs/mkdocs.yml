@@ -20,7 +20,7 @@ nav:
     - Managing Mail Notifications: 'usage-guide/mail_notifications.md'
     - Changing a Model: 'usage-guide/changing_a_model.md'
     - Additional Configurations: 'usage-guide/additional_configurations.md'
-    - 💎 Qodo Merge Models: 'usage-guide/PR_agent_pro_models'
+    - 💎 Qodo Merge Models: 'usage-guide/qodo_merge_models.md'
   - Tools:
     - 'tools/index.md'
     - Describe: 'tools/describe.md'

@@ -1,4 +1,3 @@
-## Qodo Merge Models
 
 The default models used by Qodo Merge are a combination of Claude-3.5-sonnet and  OpenAI's GPT-4 models.
 

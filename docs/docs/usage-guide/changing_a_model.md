@@ -51,7 +51,7 @@ api_base = "http://localhost:11434" # or whatever port you're running Ollama on
     
     Commercial models such as GPT-4, Claude Sonnet, and Gemini have demonstrated robust capabilities in generating structured output for code analysis tasks with large input. In contrast, most open-source models currently available (as of January 2025) face challenges with these complex tasks.
 
-    Based on our testing, local open-source models are suitable for experimentation and learning purposes, but they are not suitable for production-level code analysis tasks.
+    Based on our testing, local open-source models are suitable for experimentation and learning purposes (mainly for the `ask` command), but they are not suitable for production-level code analysis tasks.
     
     Hence, for production workflows and real-world usage, we recommend using commercial models.
 
