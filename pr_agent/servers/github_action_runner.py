@@ -81,7 +81,7 @@ async def run_action():
         get_logger().info(f"github action: failed to apply repo settings: {e}")
 
     # Handle pull request opened event
-    if GITHUB_EVENT_NAME == "pull_request":
+    if GITHUB_EVENT_NAME == "pull_request" or GITHUB_EVENT_NAME == "pull_request_target":
         action = event_payload.get("action")
 
         # Retrieve the list of actions from the configuration
