@@ -1,6 +1,7 @@
 import copy
 import json
 import re
+import time
 from datetime import datetime
 
 import uvicorn
@@ -24,7 +25,6 @@ router = APIRouter()
 
 secret_provider = get_secret_provider() if get_settings().get("CONFIG.SECRET_PROVIDER") else None
 
-
 async def get_mr_url_from_commit_sha(commit_sha, gitlab_token, project_id):
     try:
         import requests
@@ -33,17 +33,26 @@ async def get_mr_url_from_commit_sha(commit_sha, gitlab_token, project_id):
         }
         # API endpoint to find MRs containing the commit
         gitlab_url = get_settings().get("GITLAB.URL", 'https://gitlab.com')
-        response = requests.get(
-            f'{gitlab_url}/api/v4/projects/{project_id}/repository/commits/{commit_sha}/merge_requests',
-            headers=headers
-        )
-        merge_requests = response.json()
-        if merge_requests and response.status_code == 200:
-            pr_url = merge_requests[0]['web_url']
-            return pr_url
-        else:
-            get_logger().info(f"No merge requests found for commit: {commit_sha}")
-            return None
+        max_retries = 3
+        retry_count = 0
+        
+        while retry_count < max_retries:
+            response = requests.get(
+                f'{gitlab_url}/api/v4/projects/{project_id}/repository/commits/{commit_sha}/merge_requests',
+                headers=headers
+            )
+            merge_requests = response.json()
+            if merge_requests and response.status_code == 200:
+                pr_url = merge_requests[0]['web_url']
+                return pr_url
+            else:
+                retry_count += 1
+                if retry_count < max_retries:
+                    get_logger().info(f"Attempt {retry_count}: No merge requests found or invalid response for commit: {commit_sha}. Retrying in 1s...")
+                    time.sleep(1)
+                else:
+                    get_logger().info(f"Final attempt: No merge requests found for commit: {commit_sha}")
+                    return None
     except Exception as e:
         get_logger().error(f"Failed to get MR url from commit sha: {e}")
         return None
@@ -64,7 +73,8 @@ async def _perform_commands_gitlab(commands_conf: str, agent: PRAgent, api_url: 
     if commands_conf == "pr_commands" and get_settings().config.disable_auto_feedback:  # auto commands for PR, and auto feedback is disabled
         get_logger().info(f"Auto feedback is disabled, skipping auto commands for PR {api_url=}", **log_context)
         return
-    if not should_process_pr_logic(data): # Here we already updated the configurations
+    if commands_conf != "push_commands" and not should_process_pr_logic(data):
+        get_logger().info(f"Skipping auto commands for PR {api_url=}", **log_context)
         return
     commands = get_settings().get(f"gitlab.{commands_conf}", {})
     get_settings().set("config.is_auto_command", True)
@@ -98,6 +108,7 @@ def is_bot_user(data) -> bool:
 def should_process_pr_logic(data) -> bool:
     try:
         if not data.get('object_attributes', {}):
+            get_logger().info("No object attributes found in the data")
             return False
         title = data['object_attributes'].get('title')
         sender = data.get("user", {}).get("username", "")
@@ -190,8 +201,9 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
         # ignore bot users
         if is_bot_user(data):
             return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
-        if data.get('event_type') != 'note': # not a comment
+        if data.get('event_type') != 'note' and data.get('object_kind') != 'push': # not a comment
             # ignore MRs based on title, labels, source and target branches
+            get_logger().info(f"Processing {data.get('object_kind')} event")
             if not should_process_pr_logic(data):
                 return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
 
@@ -245,7 +257,6 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
     end_time = datetime.now()
     get_logger().info(f"Processing time: {end_time - start_time}", request=request_json)
     return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
-
 
 def handle_ask_line(body, data):
     try:

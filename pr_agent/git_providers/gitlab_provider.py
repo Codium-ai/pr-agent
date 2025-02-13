@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 
 import gitlab
 import requests
+import time
 from gitlab import GitlabGetError
 
 from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
@@ -65,11 +66,19 @@ class GitLabProvider(GitProvider):
     def _set_merge_request(self, merge_request_url: str):
         self.id_project, self.id_mr = self._parse_merge_request_url(merge_request_url)
         self.mr = self._get_merge_request()
-        try:
-            self.last_diff = self.mr.diffs.list(get_all=True)[-1]
-        except IndexError as e:
-            get_logger().error(f"Could not get diff for merge request {self.id_mr}")
-            raise DiffNotFoundError(f"Could not get diff for merge request {self.id_mr}") from e
+
+       # Try up to 3 times to get the diff with 1s delay between retries
+        retries = 3
+        for attempt in range(retries):
+            try:
+                self.last_diff = self.mr.diffs.list(get_all=True)[-1]
+                break
+            except IndexError as e:
+                if attempt < retries - 1:  # Don't sleep on last attempt
+                    time.sleep(1)  # 1 second delay
+                    continue
+                get_logger().error(f"Could not get diff for merge request {self.id_mr} after {retries} attempts")
+                raise DiffNotFoundError(f"Could not get diff for merge request {self.id_mr}") from e
 
 
     def get_pr_file_content(self, file_path: str, branch: str) -> str:
