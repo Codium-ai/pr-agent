@@ -13,7 +13,7 @@ The output must be a YAML object equivalent to type $DocHelper, according to the
 =====
 class relevant_section(BaseModel):
     file_name: str = Field(description="The name of the relevant file")
-    relevant_section_header_string: str = Field(description="From the relevant file, exact text of the relevant section heading. If no markdown heading is relevant, return empty string")
+    relevant_section_header_string: str = Field(description="The exact text of the relevant markdown section heading from the relevant file  (starting with '#', '##', etc.). Return empty string if the entire file is the relevant section, or if the relevant section has no heading")
 
 class DocHelper(BaseModel):
     user_question: str = Field(description="The user's question")
