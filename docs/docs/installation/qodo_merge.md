@@ -15,7 +15,7 @@ Qodo Merge for GitHub cloud is available for installation through the [GitHub Ma
 
 ### GitHub Enterprise Server
 
-To use Qodo Merge application on your private GitHub Enterprise Server, you will need to contact us for starting an [Enterprise](https://www.codium.ai/pricing/) trial.
+To use Qodo Merge application on your private GitHub Enterprise Server, you will need to [contact](https://www.qodo.ai/contact/#pricing) Qodo for starting an Enterprise trial.
 
 ### GitHub Open Source Projects
 
@@ -34,7 +34,9 @@ Qodo Merge for Bitbucket Cloud is available for installation through the followi
 To use Qodo Merge application on your private Bitbucket Server, you will need to contact us for starting an [Enterprise](https://www.qodo.ai/pricing/) trial.
 
 
-## Install Qodo Merge for GitLab (Teams & Enterprise)
+## Install Qodo Merge for GitLab 
+
+### GitLab Cloud
 
 Since GitLab platform does not support apps, installing Qodo Merge for GitLab is a bit more involved, and requires the following steps:
 
@@ -79,3 +81,7 @@ Enable SSL verification: Check the box.
 You’re all set!
 
 Open a new merge request or add a MR comment with one of Qodo Merge’s commands such as /review, /describe or /improve.
+
+### GitLab Server
+
+For a trial period of two weeks on your private GitLab Server, the same installation steps as for [GitLab Cloud](#gitlab-cloud) apply. After the trial period, you will need to [contact]((https://www.qodo.ai/contact/#pricing)) Qodo for moving to an Enterprise account.
