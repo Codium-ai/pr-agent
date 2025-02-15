@@ -3,7 +3,7 @@ FROM python:3.12 as base
 WORKDIR /app
 ADD pyproject.toml .
 ADD requirements.txt .
-RUN pip install . && rm pyproject.toml requirements.txt
+RUN pip install --no-cache-dir . && rm pyproject.toml requirements.txt
 ENV PYTHONPATH=/app
 ADD docs docs
 ADD pr_agent pr_agent
