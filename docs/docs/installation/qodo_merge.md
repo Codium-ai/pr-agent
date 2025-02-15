@@ -84,4 +84,4 @@ Open a new merge request or add a MR comment with one of Qodo Merge’s commands
 
 ### GitLab Server
 
-For a trial period of two weeks on your private GitLab Server, the same installation steps as for [GitLab Cloud](#gitlab-cloud) apply. After the trial period, you will need to [contact]((https://www.qodo.ai/contact/#pricing)) Qodo for moving to an Enterprise account.
+For a trial period of two weeks on your private GitLab Server, the same [installation steps](#gitlab-cloud) as for GitLab Cloud apply. After the trial period, you will need to [contact](https://www.qodo.ai/contact/#pricing) Qodo for moving to an Enterprise account.
