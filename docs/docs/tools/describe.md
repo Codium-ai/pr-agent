@@ -95,6 +95,10 @@ publish_labels = true
     <td><b>enable_help_text</b></td>
     <td>If set to true, the tool will display a help text in the comment. Default is false.</td>
   </tr>
+  <tr>
+    <td><b>enable_override_title_with_parent_tag</b></td>
+    <td>If set to true, the tool will set the PR title to the next patch version from the latest tag in the target branch, with an RC suffix (e.g., v1.0.1-rc.1). Default is false.</td>
+  </tr>
 </table>
 
 
