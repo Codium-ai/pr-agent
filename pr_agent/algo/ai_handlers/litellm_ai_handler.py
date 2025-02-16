@@ -6,7 +6,7 @@ import requests
 from litellm import acompletion
 from tenacity import retry, retry_if_exception_type, stop_after_attempt
 
-from pr_agent.algo import USER_MESSAGE_ONLY_MODELS
+from pr_agent.algo import NO_SUPPORT_TEMPERATURE_MODELS, USER_MESSAGE_ONLY_MODELS
 from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.utils import get_version
 from pr_agent.config_loader import get_settings
@@ -97,6 +97,9 @@ class LiteLLMAIHandler(BaseAiHandler):
 
         # Models that only use user meessage
         self.user_message_only_models = USER_MESSAGE_ONLY_MODELS
+
+        # Model that doesn't support temperature argument
+        self.no_support_temperature_models = NO_SUPPORT_TEMPERATURE_MODELS
 
     def prepare_logs(self, response, system, user, resp, finish_reason):
         response_log = response.dict().copy()
@@ -202,7 +205,7 @@ class LiteLLMAIHandler(BaseAiHandler):
                                           {"type": "image_url", "image_url": {"url": img_path}}]
 
             # Currently, some models do not support a separate system and user prompts
-            if self.user_message_only_models and any(entry.lower() in model.lower() for entry in self.user_message_only_models):
+            if model in self.user_message_only_models:
                 user = f"{system}\n\n\n{user}"
                 system = ""
                 get_logger().info(f"Using model {model}, combining system and user prompts")
@@ -219,10 +222,13 @@ class LiteLLMAIHandler(BaseAiHandler):
                     "model": model,
                     "deployment_id": deployment_id,
                     "messages": messages,
-                    "temperature": temperature,
                     "timeout": get_settings().config.ai_timeout,
                     "api_base": self.api_base,
                 }
+
+            # Add temperature only if model supports it
+            if model not in self.no_support_temperature_models:
+                kwargs["temperature"] = temperature
 
             if get_settings().litellm.get("enable_callbacks", False):
                 kwargs = self.add_litellm_callbacks(kwargs)
