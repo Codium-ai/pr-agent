@@ -85,7 +85,19 @@ publish_labels = true
   </tr>
   <tr>
     <td><b>collapsible_file_list</b></td>
-    <td>If set to true, the file list in the "Changes walkthrough" section will be collapsible. If set to "adaptive", the file list will be collapsible only if there are more than 8 files. Default is "adaptive".</td>
+    <td>If set to true, the file list in the "Changes walkthrough" section will be collapsible. If set to "adaptive", the file list will be collapsible only if the number of files exceeds the threshold defined by `collapsible_file_list_threshold`. Default is "adaptive".</td>
+  </tr>
+  <tr>
+    <td><b>collapsible_file_list_threshold</b></td>
+    <td>The number of files threshold for when to make the file list collapsible when using 'adaptive' mode. Default is 8.</td>
+  </tr>
+  <tr>
+    <td><b>inline_file_summary</b></td>
+    <td>Controls where and how file summaries are displayed:
+    <br>- 'table': Displays file changes walkthrough table on both "Files changed" and "Conversation" tabs
+    <br>- true: Adds a collapsible file comment with changes title and summary for each file
+    <br>- false: Shows file changes walkthrough only in the "Conversation" tab
+    <br>Default is false.</td>
   </tr>
   <tr>
     <td><b>enable_large_pr_handling</b></td>
@@ -94,6 +106,10 @@ publish_labels = true
   <tr>
     <td><b>enable_help_text</b></td>
     <td>If set to true, the tool will display a help text in the comment. Default is false.</td>
+  </tr>
+  <tr>
+    <td><b>enable_help_comment</b></td>
+    <td>If set to true, the help guidance text is displayed in the comment. Default is true.</td>
   </tr>
   <tr>
     <td><b>enable_override_title_with_parent_tag</b></td>
