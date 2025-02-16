@@ -87,7 +87,5 @@ MAX_TOKENS = {
 USER_MESSAGE_ONLY_MODELS = [
     "deepseek/deepseek-reasoner",
     "o1-mini",
-    "o1-mini-2024-09-12",
-    "o3-mini",
-    "o3-mini-2025-01-31"
+    "o1-mini-2024-09-12"
 ]
