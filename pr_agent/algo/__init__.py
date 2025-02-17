@@ -45,11 +45,11 @@ MAX_TOKENS = {
     'vertex_ai/claude-3-5-sonnet-v2@20241022': 100000,
     'vertex_ai/gemini-1.5-pro': 1048576,
     'vertex_ai/gemini-1.5-flash': 1048576,
-    'vertex_ai/gemini-2.0-flash-exp': 1048576,
+    'vertex_ai/gemini-2.0-flash': 1048576,
     'vertex_ai/gemma2': 8200,
     'gemini/gemini-1.5-pro': 1048576,
     'gemini/gemini-1.5-flash': 1048576,
-    'gemini/gemini-2.0-flash-exp': 1048576,
+    'gemini/gemini-2.0-flash': 1048576,
     'codechat-bison': 6144,
     'codechat-bison-32k': 32000,
     'anthropic.claude-instant-v1': 100000,
@@ -88,8 +88,16 @@ USER_MESSAGE_ONLY_MODELS = [
     "deepseek/deepseek-reasoner",
     "o1-mini",
     "o1-mini-2024-09-12",
+    "o1-preview"
+]
+
+NO_SUPPORT_TEMPERATURE_MODELS = [
+    "deepseek/deepseek-reasoner",
+    "o1-mini",
+    "o1-mini-2024-09-12",
     "o1",
     "o1-2024-12-17",
     "o3-mini",
-    "o3-mini-2025-01-31"
+    "o3-mini-2025-01-31",
+    "o1-preview"
 ]

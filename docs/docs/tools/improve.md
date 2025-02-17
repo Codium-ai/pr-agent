@@ -9,8 +9,9 @@ The tool can be triggered automatically every time a new PR is [opened](../usage
 
 ![code_suggestions_as_comment_open.png](https://codium.ai/images/pr_agent/code_suggestions_as_comment_open.png){width=512}
 
-Note that the `Apply this suggestion` checkbox, which interactively converts a suggestion into a commitable code comment, is available only for Qodo Merge💎 users.
-
+Note that the following features are available only for Qodo Merge💎 users:
+- The `Apply this suggestion` checkbox, which interactively converts a suggestion into a committable code comment
+- The `More` checkbox to generate additional suggestions
 
 ## Example usage
 
@@ -365,6 +366,10 @@ Note: Chunking is primarily relevant for large PRs. For most PRs (up to 500 line
       <tr>
         <td><b>apply_suggestions_checkbox</b></td>
         <td> Enable the checkbox to create a committable suggestion. Default is true.</td>
+      </tr>
+      <tr>
+        <td><b>enable_more_suggestions_checkbox</b></td>
+        <td> Enable the checkbox to generate more suggestions. Default is true.</td>
       </tr>
       <tr>
         <td><b>enable_help_text</b></td>
