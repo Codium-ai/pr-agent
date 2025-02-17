@@ -4,8 +4,8 @@
 
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://www.qodo.ai/wp-content/uploads/2025/02/PR-Agent-Light.png" width="330">
-  <source media="(prefers-color-scheme: light)" srcset="https://www.qodo.ai/wp-content/uploads/2025/02/PR-Agent-Dark.png" width="330">
+  <source media="(prefers-color-scheme: dark)" srcset="https://codium.ai/images/pr_agent/logo-dark.png" width="330">
+  <source media="(prefers-color-scheme: light)" srcset="https://codium.ai/images/pr_agent/logo-light.png" width="330">
   <img src="https://codium.ai/images/pr_agent/logo-light.png" alt="logo" width="330">
 
 </picture>
@@ -213,7 +213,7 @@ Note that this is a promotional bot, suitable only for initial experimentation.
 It does not have 'edit' access to your repo, for example, so it cannot update the PR description or add labels (`@CodiumAI-Agent /describe` will publish PR description as a comment). In addition, the bot cannot be used on private repositories, as it does not have access to the files there.
 
 
-![Review generation process](https://www.qodo.ai/wp-content/uploads/2025/02/codium-review-command.png)
+![Review generation process](https://www.codium.ai/images/demo-2.gif)
 
 
 To set up your own PR-Agent, see the [Installation](https://qodo-merge-docs.qodo.ai/installation/) section below.
@@ -272,6 +272,8 @@ https://openai.com/enterprise-privacy
 - The [Qodo Merge Chrome extension](https://chromewebstore.google.com/detail/qodo-merge-ai-powered-cod/ephlnjeghhogofkifjloamocljapahnl) serves solely to modify the visual appearance of a GitHub PR screen. It does not transmit any user's repo or pull request code. Code is only sent for processing when a user submits a GitHub comment that activates a PR-Agent tool, in accordance with the standard privacy policy of Qodo-Merge.
 
 ## Links
+
+[![Join our Discord community](https://raw.githubusercontent.com/Codium-ai/codiumai-vscode-release/main/media/docs/Joincommunity.png)](https://discord.gg/kG35uSHDBc)
 
 - Discord community: https://discord.gg/kG35uSHDBc
 - Qodo site: https://www.qodo.ai/
