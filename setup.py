@@ -39,3 +39,9 @@ print("Hello")
 def another_function():
     print("Yes, ok. Fine.")
 print(another_function())
+
+
+if retries > 3:
+    logger.warning("Maximum retries (3) exceeded")
+
+
