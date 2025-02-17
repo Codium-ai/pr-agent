@@ -45,3 +45,9 @@ if retries > 3:
     logger.warning("Maximum retries (3) exceeded")
 
 
+items = []
+for x in data:
+    if x not in items:
+        items.append(x)
+
+
