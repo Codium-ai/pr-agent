@@ -49,5 +49,3 @@ items = []
 for x in data:
     if x not in items:
         items.append(x)
-
-
