@@ -369,7 +369,7 @@ Note: Chunking is primarily relevant for large PRs. For most PRs (up to 500 line
       </tr>
       <tr>
         <td><b>enable_more_suggestions_checkbox</b></td>
-        <td> Enable the checkbox to Generate more suggestions. Default is true.</td>
+        <td> Enable the checkbox to generate more suggestions. Default is true.</td>
       </tr>
       <tr>
         <td><b>enable_help_text</b></td>
