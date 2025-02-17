@@ -4,8 +4,8 @@
 
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://www.qodo.ai/wp-content/uploads/2025/02/PR-Agent-Light.png" width="330">
-  <source media="(prefers-color-scheme: light)" srcset="https://www.qodo.ai/wp-content/uploads/2025/02/PR-Agent-Dark.png" width="330">
+  <source media="(prefers-color-scheme: dark)" srcset="https://www.qodo.ai/wp-content/uploads/2025/02/PR-Agent-Light-1.png" width="330">
+  <source media="(prefers-color-scheme: light)" srcset="https://www.qodo.ai/wp-content/uploads/2025/02/PR-Agent-Dark-1.png" width="330">
   <img src="https://codium.ai/images/pr_agent/logo-light.png" alt="logo" width="330">
 
 </picture>
