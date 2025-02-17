@@ -142,13 +142,11 @@ Qodo Merge allows you to automatically ignore certain PRs based on various crite
 
 - PRs with specific titles (using regex matching)
 - PRs between specific branches (using regex matching)
-- PRs that don't include changes from specific folders (using regex matching)
+- PRs not from specific folders
 - PRs containing specific labels
 - PRs opened by specific users
 
-### Example usage
-
-#### Ignoring PRs with specific titles
+### Ignoring PRs with specific titles
 
 To ignore PRs with a specific title such as "[Bump]: ...", you can add the following to your `configuration.toml` file:
 
@@ -159,7 +157,7 @@ ignore_pr_title = ["\\[Bump\\]"]
 
 Where the `ignore_pr_title` is a list of regex patterns to match the PR title you want to ignore. Default is `ignore_pr_title = ["^\\[Auto\\]", "^Auto"]`.
 
-#### Ignoring PRs between specific branches
+### Ignoring PRs between specific branches
 
 To ignore PRs from specific source or target branches, you can add the following to your `configuration.toml` file:
 
@@ -172,7 +170,7 @@ ignore_pr_target_branches = ["qa"]
 Where the `ignore_pr_source_branches` and `ignore_pr_target_branches` are lists of regex patterns to match the source and target branches you want to ignore.
 They are not mutually exclusive, you can use them together or separately.
 
-#### Ignoring PRs that don't include changes from specific folders
+### Ignoring PRs not from specific folders
 
 To allow only specific folders (often needed in large monorepos), set:
 
@@ -181,9 +179,9 @@ To allow only specific folders (often needed in large monorepos), set:
 allow_only_specific_folders=['folder1','folder2']
 ```
 
-For the configuration above, automatic feedback will only be triggered when the PR changes include files from 'folder1' or 'folder2'
+For the configuration above, automatic feedback will only be triggered when the PR changes include files where 'folder1' or 'folder2' is in the file path
 
-#### Ignoring PRs containg specific labels
+### Ignoring PRs containing specific labels
 
 To ignore PRs containg specific labels, you can add the following to your `configuration.toml` file:
 
@@ -194,7 +192,7 @@ ignore_pr_labels = ["do-not-merge"]
 
 Where the `ignore_pr_labels` is a list of labels that when present in the PR, the PR will be ignored.
 
-#### Ignoring PRs from specific users
+### Ignoring PRs from specific users
 
 Qodo Merge automatically identifies and ignores pull requests created by bots using:
 
