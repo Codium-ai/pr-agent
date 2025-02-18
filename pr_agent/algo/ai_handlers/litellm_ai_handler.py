@@ -205,7 +205,7 @@ class LiteLLMAIHandler(BaseAiHandler):
                                           {"type": "image_url", "image_url": {"url": img_path}}]
 
             # Currently, some models do not support a separate system and user prompts
-            if model in self.user_message_only_models:
+            if model in self.user_message_only_models or get_settings().config.custom_reasoning_model:
                 user = f"{system}\n\n\n{user}"
                 system = ""
                 get_logger().info(f"Using model {model}, combining system and user prompts")
@@ -227,7 +227,7 @@ class LiteLLMAIHandler(BaseAiHandler):
                 }
 
             # Add temperature only if model supports it
-            if model not in self.no_support_temperature_models:
+            if model not in self.no_support_temperature_models or get_settings().config.custom_reasoning_model:
                 kwargs["temperature"] = temperature
 
             if get_settings().litellm.get("enable_callbacks", False):

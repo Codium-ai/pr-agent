@@ -201,3 +201,6 @@ fallback_models=["custom_model_name"]
 custom_model_max_tokens= ...
 ```
 (3) Go to [litellm documentation](https://litellm.vercel.app/docs/proxy/quick_start#supported-llms), find the model you want to use, and set the relevant environment variables.
+
+(4) Most reasoning models do not support chat-style inputs (`system` and `user` messages) or temperature settings. 
+To bypass chat templates and temperature controls, set `config.custom_reasoning_model = true` in your configuration file.
