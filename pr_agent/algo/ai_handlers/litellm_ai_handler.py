@@ -227,7 +227,7 @@ class LiteLLMAIHandler(BaseAiHandler):
                 }
 
             # Add temperature only if model supports it
-            if model not in self.no_support_temperature_models or get_settings().config.custom_reasoning_model:
+            if model not in self.no_support_temperature_models and not get_settings().config.custom_reasoning_model:
                 kwargs["temperature"] = temperature
 
             if get_settings().litellm.get("enable_callbacks", False):
