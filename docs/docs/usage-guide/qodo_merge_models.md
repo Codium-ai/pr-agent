@@ -8,7 +8,6 @@ The models supported by Qodo Merge are:
 
 - `claude-3-5-sonnet`
 - `gpt-4o`
-- `deepseek-r1`
 - `o3-mini`
 
 To restrict Qodo Merge to using only `Claude-3.5-sonnet`, add this setting:
