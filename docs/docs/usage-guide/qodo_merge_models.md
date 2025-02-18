@@ -24,11 +24,11 @@ To restrict Qodo Merge to using only `GPT-4o`, add this setting:
 model="gpt-4o"
 ```
 
-To restrict Qodo Merge to using only `deepseek-r1`, add this setting:
-```
-[config]
-model="deepseek/r1"
-```
+[//]: # (To restrict Qodo Merge to using only `deepseek-r1` us-hosted, add this setting:)
+[//]: # (```)
+[//]: # ([config])
+[//]: # (model="deepseek/r1")
+[//]: # (```)
 
 To restrict Qodo Merge to using only `o3-mini`, add this setting:
 ```
