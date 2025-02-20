@@ -919,7 +919,6 @@ class GithubProvider(GitProvider):
                 get_logger().error(f"Unexpected response format: {response_tuple}")
                 return sub_issues
 
-            print("Raw Issue ID Response:", response_json)
 
             issue_id = response_json.get("data", {}).get("repository", {}).get("issue", {}).get("id")
 
