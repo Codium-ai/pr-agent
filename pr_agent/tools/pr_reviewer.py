@@ -95,6 +95,7 @@ class PRReviewer:
             "is_ai_metadata":  get_settings().get("config.enable_ai_metadata", False),
             "related_tickets": get_settings().get('related_tickets', []),
             'duplicate_prompt_examples': get_settings().config.get('duplicate_prompt_examples', False),
+            "date": datetime.datetime.now().strftime('%Y-%m-%d'),
         }
 
         self.token_handler = TokenHandler(
