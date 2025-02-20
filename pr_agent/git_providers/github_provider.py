@@ -916,7 +916,7 @@ class GithubProvider(GitProvider):
             if isinstance(response_tuple, tuple) and len(response_tuple) == 3:
                 response_json = json.loads(response_tuple[2])
             else:
-                print("Unexpected response format:", response_tuple)
+                get_logger().error(f"Unexpected response format: {response_tuple}")
                 return sub_issues
 
             print("Raw Issue ID Response:", response_json)
