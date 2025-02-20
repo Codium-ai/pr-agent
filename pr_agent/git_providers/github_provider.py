@@ -947,7 +947,7 @@ class GithubProvider(GitProvider):
             if isinstance(sub_issues_response_tuple, tuple) and len(sub_issues_response_tuple) == 3:
                 sub_issues_response_json = json.loads(sub_issues_response_tuple[2])
             else:
-                print("Unexpected sub-issues response format:", sub_issues_response_tuple)
+                get_logger().error("Unexpected sub-issues response format", artifact={"response": sub_issues_response_tuple})
                 return sub_issues
 
             if not sub_issues_response_json.get("data", {}).get("node", {}).get("subIssues"):
