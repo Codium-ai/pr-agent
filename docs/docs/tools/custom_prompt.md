@@ -53,6 +53,6 @@ Results obtained with the prompt above:
 
 `prompt`: the prompt for the tool. It should be a multi-line string.
 
-`num_code_suggestions`: number of code suggestions provided by the 'custom_prompt' tool. Default is 4.
+`num_code_suggestions_per_chunk`: number of code suggestions provided by the 'custom_prompt' tool, per chunk. Default is 4.
 
 `enable_help_text`: if set to true, the tool will display a help text in the comment. Default is true.
