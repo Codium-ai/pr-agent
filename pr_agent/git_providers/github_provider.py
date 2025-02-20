@@ -923,7 +923,7 @@ class GithubProvider(GitProvider):
             issue_id = response_json.get("data", {}).get("repository", {}).get("issue", {}).get("id")
 
             if not issue_id:
-                print(f"Warning: Issue ID not found for {issue_url}")
+                get_logger().warning(f"Issue ID not found for {issue_url}")
                 return sub_issues
 
             # Fetch Sub-Issues
