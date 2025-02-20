@@ -90,7 +90,7 @@ async def extract_tickets(git_provider):
                     # Extract sub-issues
                     sub_issues_content = []
                     try:
-                        sub_issues = provider.fetch_sub_issues(ticket)
+                        sub_issues = git_provider.fetch_sub_issues(ticket)
                         for sub_issue_url in sub_issues:
                             try:
                                 sub_repo, sub_issue_number = git_provider._parse_issue_url(sub_issue_url)
