@@ -72,7 +72,6 @@ async def extract_tickets(git_provider):
             tickets_content = []
 
             if tickets:
-                provider = GithubProvider()
 
                 for ticket in tickets:
                     repo_name, original_issue_number = git_provider._parse_issue_url(ticket)
