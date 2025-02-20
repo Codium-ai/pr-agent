@@ -931,7 +931,7 @@ class GithubProvider(GitProvider):
             query {{
                 node(id: "{issue_id}") {{
                     ... on Issue {{
-                        subIssues(first: 100) {{
+                        subIssues(first: 10) {{
                             nodes {{
                                 url
                             }}
