@@ -187,6 +187,10 @@ Ticket Description:
 
 
 --PR Info--
+{%- if date %}
+
+Today's Date: {{date}}
+{%- endif %}
 
 Title: '{{title}}'
 
