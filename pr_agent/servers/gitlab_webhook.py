@@ -24,7 +24,6 @@ router = APIRouter()
 
 secret_provider = get_secret_provider() if get_settings().get("CONFIG.SECRET_PROVIDER") else None
 
-
 async def get_mr_url_from_commit_sha(commit_sha, gitlab_token, project_id):
     try:
         import requests
@@ -64,7 +63,8 @@ async def _perform_commands_gitlab(commands_conf: str, agent: PRAgent, api_url: 
     if commands_conf == "pr_commands" and get_settings().config.disable_auto_feedback:  # auto commands for PR, and auto feedback is disabled
         get_logger().info(f"Auto feedback is disabled, skipping auto commands for PR {api_url=}", **log_context)
         return
-    if not should_process_pr_logic(data): # Here we already updated the configurations
+    if commands_conf != "push_commands" and not should_process_pr_logic(data):
+        get_logger().info(f"Skipping auto commands for PR {api_url=}", **log_context)
         return
     commands = get_settings().get(f"gitlab.{commands_conf}", {})
     get_settings().set("config.is_auto_command", True)
@@ -98,6 +98,7 @@ def is_bot_user(data) -> bool:
 def should_process_pr_logic(data) -> bool:
     try:
         if not data.get('object_attributes', {}):
+            get_logger().info("No object attributes found in the data")
             return False
         title = data['object_attributes'].get('title')
         sender = data.get("user", {}).get("username", "")
@@ -190,8 +191,9 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
         # ignore bot users
         if is_bot_user(data):
             return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
-        if data.get('event_type') != 'note': # not a comment
+        if data.get('event_type') != 'note' and data.get('object_kind') != 'push': # not a comment
             # ignore MRs based on title, labels, source and target branches
+            get_logger().info(f"Processing {data.get('object_kind')} event")
             if not should_process_pr_logic(data):
                 return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
 
@@ -245,7 +247,6 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
     end_time = datetime.now()
     get_logger().info(f"Processing time: {end_time - start_time}", request=request_json)
     return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
-
 
 def handle_ask_line(body, data):
     try:
