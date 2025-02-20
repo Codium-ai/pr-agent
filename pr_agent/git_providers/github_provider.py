@@ -950,9 +950,12 @@ class GithubProvider(GitProvider):
                 print("Unexpected sub-issues response format:", sub_issues_response_tuple)
                 return sub_issues
 
-            print("Raw Sub-Issues Response:", sub_issues_response_json)
-
+            if not sub_issues_response_json.get("data", {}).get("node", {}).get("subIssues"):
+                get_logger().error("Invalid sub-issues response structure")
+                return sub_issues
+    
             nodes = sub_issues_response_json.get("data", {}).get("node", {}).get("subIssues", {}).get("nodes", [])
+            get_logger().info(f"Github Sub-issues fetched: {len(nodes)}", artifact={"nodes": nodes})
 
             for sub_issue in nodes:
                 if "url" in sub_issue:
