@@ -960,7 +960,7 @@ class GithubProvider(GitProvider):
                     sub_issues.add(sub_issue["url"])
 
         except Exception as e:
-            print(f"Failed to fetch sub-issues. Error: {e}")
+            get_logger().exception(f"Failed to fetch sub-issues. Error: {e}")
 
         return sub_issues
 
