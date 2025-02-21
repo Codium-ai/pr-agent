@@ -25,29 +25,6 @@ router = APIRouter()
 secret_provider = get_secret_provider() if get_settings().get("CONFIG.SECRET_PROVIDER") else None
 
 
-#async def get_mr_url_from_commit_sha(commit_sha, gitlab_token, project_id):
-#    try:
-#        import requests
-#        headers = {
-#            'Private-Token': f'{gitlab_token}'
-#        }
-#        # API endpoint to find MRs containing the commit
-#        gitlab_url = get_settings().get("GITLAB.URL", 'https://gitlab.com')
-#        response = requests.get(
-#            f'{gitlab_url}/api/v4/projects/{project_id}/repository/commits/{commit_sha}/merge_requests',
-#            headers=headers
-#        )
-#        merge_requests = response.json()
-#        if merge_requests and response.status_code == 200:
-#            pr_url = merge_requests[0]['web_url']
-#            return pr_url
-#        else:
-#            get_logger().info(f"No merge requests found for commit: {commit_sha}")
-#            return None
-#    except Exception as e:
-#        get_logger().error(f"Failed to get MR url from commit sha: {e}")
-#        return None
-
 async def handle_request(api_url: str, body: str, log_context: dict, sender_id: str):
     log_context["action"] = body
     log_context["event"] = "pull_request" if body == "/review" else "comment"
@@ -216,8 +193,6 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
                     get_logger().info(f"Skipping draft MR: {url}")
                     return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
 
-                # we need first to apply_repo_settings
-                # apply_repo_settings(url)
                 commands_on_push = get_settings().get(f"gitlab.push_commands", {})
                 handle_push_trigger = get_settings().get(f"gitlab.handle_push_trigger", False)
                 if not commands_on_push or not handle_push_trigger:
@@ -239,29 +214,6 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
                     body = handle_ask_line(body, data)
 
                 await handle_request(url, body, log_context, sender_id)
- #       elif data.get('object_kind') == 'push' and data.get('event_name') == 'push':
- #           try:
- #               project_id = data['project_id']
- #               commit_sha = data['checkout_sha']
- #               url = await get_mr_url_from_commit_sha(commit_sha, gitlab_token, project_id)
- #               if not url:
- #                   get_logger().info(f"No MR found for commit: {commit_sha}")
- #                   return JSONResponse(status_code=status.HTTP_200_OK,
- #                                       content=jsonable_encoder({"message": "success"}))
-
- #               # we need first to apply_repo_settings
- #               apply_repo_settings(url)
- #               commands_on_push = get_settings().get(f"gitlab.push_commands", {})
- #               handle_push_trigger = get_settings().get(f"gitlab.handle_push_trigger", False)
- #               if not commands_on_push or not handle_push_trigger:
- #                   get_logger().info("Push event, but no push commands found or push trigger is disabled")
- #                   return JSONResponse(status_code=status.HTTP_200_OK,
- #                                       content=jsonable_encoder({"message": "success"}))
-
- #               get_logger().debug(f'A push event has been received: {url}')
- #               await _perform_commands_gitlab("push_commands", PRAgent(), url, log_context, data)
- #           except Exception as e:
- #               get_logger().error(f"Failed to handle push event: {e}")
 
     background_tasks.add_task(inner, request_json)
     end_time = datetime.now()
