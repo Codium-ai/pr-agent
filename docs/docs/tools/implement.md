@@ -49,6 +49,6 @@ Note that the implementation will occur within the review discussion thread.
 
 **Configuration options**
 
-- Use `/implement` to implement code change within and based on the review discussion. <br>
-- Use `/implement <code-change-description>` inside a review discussion to implement specific instructions. <br>
-- Use `/implement <link-to-review-comment>` to indirectly call the tool from any comment. <br>
+- Use `/implement` to implement code change within and based on the review discussion.
+- Use `/implement <code-change-description>` inside a review discussion to implement specific instructions.
+- Use `/implement <link-to-review-comment>` to indirectly call the tool from any comment.
