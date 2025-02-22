@@ -231,13 +231,14 @@ class LiteLLMAIHandler(BaseAiHandler):
 
             # Add temperature only if model supports it
             if model not in self.no_support_temperature_models and not get_settings().config.custom_reasoning_model:
+                get_logger().info(f"Adding temperature with value {temperature} to model {model}.")
                 kwargs["temperature"] = temperature
 
             # Add reasoning_effort if model supports it
             if (model in self.support_reasoning_models):
                 supported_reasoning_efforts = [ReasoningEffort.HIGH.value, ReasoningEffort.MEDIUM.value, ReasoningEffort.LOW.value]
                 reasoning_effort = get_settings().config.reasoning_effort if (get_settings().config.reasoning_effort in supported_reasoning_efforts) else ReasoningEffort.MEDIUM.value
-                get_logger().info(f"Add reasoning_effort with value {reasoning_effort} to model {model}.")
+                get_logger().info(f"Adding reasoning_effort with value {reasoning_effort} to model {model}.")
                 kwargs["reasoning_effort"] = reasoning_effort
 
             if get_settings().litellm.get("enable_callbacks", False):
