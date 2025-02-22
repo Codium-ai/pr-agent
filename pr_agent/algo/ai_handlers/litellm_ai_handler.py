@@ -251,10 +251,11 @@ class LiteLLMAIHandler(BaseAiHandler):
                 get_logger().info(f"\nUser prompt:\n{user}")
 
             #Added support for extra_headers while using litellm to call underlying model, via a api management gateway, would allow for passing custom headers for security and authorization
-            litellm_extra_headers = json.loads(get_settings().litellm.extra_headers)
-            if not isinstance(litellm_extra_headers, dict):
-                raise ValueError("LITELLM.EXTRA_HEADERS must be a JSON object")
-            kwargs["extra_headers"] = litellm_extra_headers
+            if get_settings().get("LITELLM.EXTRA_HEADERS", None):
+                litellm_extra_headers = json.loads(get_settings().litellm.extra_headers)
+                if not isinstance(litellm_extra_headers, dict):
+                    raise ValueError("LITELLM.EXTRA_HEADERS must be a JSON object")
+                kwargs["extra_headers"] = litellm_extra_headers
                 
             response = await acompletion(**kwargs)
         except (openai.APIError, openai.APITimeoutError) as e:
