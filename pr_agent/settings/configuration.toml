@@ -48,6 +48,11 @@ ignore_pr_authors = [] # authors to ignore from PR agent when an PR is created
 #
 is_auto_command = false # will be auto-set to true if the command is triggered by an automation
 enable_ai_metadata = false # will enable adding ai metadata
+# auto approval 💎
+enable_auto_approval=false # Set to true to enable auto-approval of PRs under certain conditions
+auto_approve_for_low_review_effort=-1 # -1 to disable, [1-5] to set the threshold for auto-approval
+auto_approve_for_no_suggestions=false # If true, the PR will be auto-approved if there are no suggestions
+
 
 [pr_reviewer] # /review #
 # enable/disable features
@@ -70,9 +75,6 @@ minimal_commits_for_incremental_review=0
 minimal_minutes_for_incremental_review=0
 enable_intro_text=true
 enable_help_text=false # Determines whether to include help text in the PR review. Enabled by default.
-# auto approval
-enable_auto_approval=false
-
 
 [pr_description] # /describe #
 publish_labels=false

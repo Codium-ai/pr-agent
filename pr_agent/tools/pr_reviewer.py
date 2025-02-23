@@ -123,10 +123,10 @@ class PRReviewer:
             if self.incremental.is_incremental and not self._can_run_incremental_review():
                 return None
 
-            if isinstance(self.args, list) and self.args and self.args[0] == 'auto_approve':
-                get_logger().info(f'Auto approve flow PR: {self.pr_url} ...')
-                self.auto_approve_logic()
-                return None
+            # if isinstance(self.args, list) and self.args and self.args[0] == 'auto_approve':
+            #     get_logger().info(f'Auto approve flow PR: {self.pr_url} ...')
+            #     self.auto_approve_logic()
+            #     return None
 
             get_logger().info(f'Reviewing PR: {self.pr_url} ...')
             relevant_configs = {'pr_reviewer': dict(get_settings().pr_reviewer),
@@ -402,7 +402,7 @@ class PRReviewer:
         """
         Auto-approve a pull request if it meets the conditions for auto-approval.
         """
-        if get_settings().pr_reviewer.enable_auto_approval:
+        if get_settings().config.enable_auto_approval:
             is_auto_approved = self.git_provider.auto_approve()
             if is_auto_approved:
                 get_logger().info("Auto-approved PR")

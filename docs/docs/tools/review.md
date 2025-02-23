@@ -114,16 +114,6 @@ You can enable\disable the `review` tool to add specific labels to the PR:
   </tr>
 </table>
 
-!!! example "Auto-approval"
-
-If enabled, the `review` tool can approve a PR when a specific comment, `/review auto_approve`, is invoked.
-
-<table>
-  <tr>
-    <td><b>enable_auto_approval</b></td>
-    <td>If set to true, the tool will approve the PR when invoked with the 'auto_approve' command. Default is false. This flag can be changed only from a configuration file.</td>
-  </tr>
-</table>
 
 ## Usage Tips
 
@@ -175,23 +165,6 @@ If enabled, the `review` tool can approve a PR when a specific comment, `/review
     Use triple quotes to write multi-line instructions. Use bullet points to make the instructions more readable.
 
 
-!!! tip "Auto-approval"
-
-    Qodo Merge can approve a PR when a specific comment is invoked.
-
-    To ensure safety, the auto-approval feature is disabled by default. To enable auto-approval, you need to actively set in a pre-defined configuration file the following:
-    ```
-    [pr_reviewer]
-    enable_auto_approval = true
-    ```
-    (this specific flag cannot be set with a command line argument, only in the configuration file, committed to the repository)
-
-
-    After enabling, by commenting on a PR:
-    ```
-    /review auto_approve
-    ```
-    Qodo Merge will automatically approve the PR, and add a comment with the approval.
 
 
 !!! tip  "Code suggestions"
