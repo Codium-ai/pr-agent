@@ -20,9 +20,8 @@
 
 <style>
 Untitled
-
 .search-section {
-    max-width: 1200px;
+    max-width: 800px;
     margin: 0 auto;
     padding: 0 1rem 2rem;
 }
@@ -46,15 +45,17 @@ h1 {
     display: flex;
     gap: 1rem;
     max-width: 800px;
+    margin: 0;  /* Changed from auto to 0 to align left */
 }
 
 .search-input {
     flex: 1;
-    padding: 0.75rem 1rem;
+    padding: 0 0.875rem;
     border: 1px solid #ddd;
     border-radius: 4px;
-    font-size: 1rem;
+    font-size: 0.9375rem;
     outline: none;
+    height: 40px;  /* Explicit height */
 }
 
 .search-input:focus {
@@ -62,14 +63,18 @@ h1 {
 }
 
 .search-button {
-    padding: 0.75rem 2rem;
+    padding: 0 1.25rem;
     background-color: #2196F3;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: 0.875rem;
     transition: background-color 0.2s;
+    height: 40px;  /* Match the height of search input */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .search-button:hover {
@@ -128,9 +133,9 @@ h1 {
 
 .markdown-content {
     line-height: 1.6;
-    color: #2c3e50;
-    background: #ffffff;
-    border: 1px solid #e1e4e8;
+    color: var(--md-typeset-color);
+    background: var(--md-default-bg-color);
+    border: 1px solid var(--md-default-fg-color--lightest);
     border-radius: 12px;
     padding: 1.5rem;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
@@ -145,9 +150,9 @@ h1 {
     left: 24px;
     width: 16px;
     height: 16px;
-    background: #ffffff;
-    border-left: 1px solid #e1e4e8;
-    border-top: 1px solid #e1e4e8;
+    background: var(--md-default-bg-color);
+    border-left: 1px solid var(--md-default-fg-color--lightest);
+    border-top: 1px solid var(--md-default-fg-color--lightest);
     transform: rotate(45deg);
 }
 
@@ -165,7 +170,8 @@ h1 {
 }
 
 .markdown-content code {
-    background: #f6f8fa;
+    background: var(--md-code-bg-color);
+    color: var(--md-code-fg-color);
     padding: 0.2em 0.4em;
     border-radius: 3px;
     font-size: 0.9em;
@@ -173,7 +179,7 @@ h1 {
 }
 
 .markdown-content pre {
-    background: #f6f8fa;
+    background: var(--md-code-bg-color);
     padding: 1rem;
     border-radius: 6px;
     overflow-x: auto;
@@ -185,6 +191,11 @@ h1 {
     padding: 0;
     font-size: 0.9em;
 }
+
+[data-md-color-scheme="slate"] .markdown-content {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
