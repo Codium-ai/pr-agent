@@ -74,8 +74,8 @@ theme:
     - navigation.top
     - navigation.tracking
     - navigation.indexes
-#    - search.suggest
-#    - search.highlight
+    - search.suggest
+    - search.highlight
     - content.tabs.link
     - content.code.annotation
     - content.code.copy
