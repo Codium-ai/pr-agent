@@ -189,18 +189,18 @@ key = ...
 
 If the relevant model doesn't appear [here](https://github.com/Codium-ai/pr-agent/blob/main/pr_agent/algo/__init__.py), you can still use it as a custom model:
 
-(1) Set the model name in the configuration file:
+1. Set the model name in the configuration file:
 ```
 [config]
 model="custom_model_name"
 fallback_models=["custom_model_name"]
 ```
-(2) Set the maximal tokens for the model:
+2. Set the maximal tokens for the model:
 ```
 [config]
 custom_model_max_tokens= ...
 ```
-(3) Go to [litellm documentation](https://litellm.vercel.app/docs/proxy/quick_start#supported-llms), find the model you want to use, and set the relevant environment variables.
+3. Go to [litellm documentation](https://litellm.vercel.app/docs/proxy/quick_start#supported-llms), find the model you want to use, and set the relevant environment variables.
 
-(4) Most reasoning models do not support chat-style inputs (`system` and `user` messages) or temperature settings. 
+4. Most reasoning models do not support chat-style inputs (`system` and `user` messages) or temperature settings. 
 To bypass chat templates and temperature controls, set `config.custom_reasoning_model = true` in your configuration file.

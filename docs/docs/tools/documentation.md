@@ -27,7 +27,6 @@ You can state a name of a specific component in the PR to get documentation only
  - `docs_style`: The exact style of the documentation (for python docstring). you can choose between: `google`, `numpy`, `sphinx`, `restructuredtext`, `plain`. Default is `sphinx`.
  - `extra_instructions`: Optional extra instructions to the tool. For example: "focus on the changes in the file X. Ignore change in ...".
 
-**Notes**
-
-- Language that are currently fully supported: Python, Java, C++, JavaScript, TypeScript, C#.
-- This tool can also be triggered interactively by using the [`analyze`](./analyze.md) tool.
+!!! note "Notes"
+    - The following languages are currently supported: Python, Java, C++, JavaScript, TypeScript, C#.
+    - This tool can also be triggered interactively by using the [`analyze`](./analyze.md) tool.

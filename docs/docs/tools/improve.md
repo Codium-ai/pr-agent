@@ -9,9 +9,9 @@ The tool can be triggered automatically every time a new PR is [opened](../usage
 
 ![code_suggestions_as_comment_open.png](https://codium.ai/images/pr_agent/code_suggestions_as_comment_open.png){width=512}
 
-Note that the following features are available only for Qodo Merge💎 users:
-- The `Apply this suggestion` checkbox, which interactively converts a suggestion into a committable code comment
-- The `More` checkbox to generate additional suggestions
+!!! note "The following features are available only for Qodo Merge 💎 users:"
+    - The `Apply this suggestion` checkbox, which interactively converts a suggestion into a committable code comment
+    - The `More` checkbox to generate additional suggestions
 
 ## Example usage
 
@@ -196,7 +196,7 @@ And the label will be: `{organization_name} best practice`.
 
 >`Platforms supported: GitHub`
 
-'Auto best practices' is a novel Qodo Merge capability that:
+`Auto best practices` is a novel Qodo Merge capability that:
 
 1. Identifies recurring patterns from accepted suggestions
 2. **Automatically** generates [best practices page](https://github.com/qodo-ai/pr-agent/wiki/.pr_agent_auto_best_practices) based on what your team consistently values
@@ -315,16 +315,12 @@ code_suggestions_self_review_text = "... (your text here) ..."
 ### How many code suggestions are generated?
 Qodo Merge uses a dynamic strategy to generate code suggestions based on the size of the pull request (PR). Here's how it works:
 
-1) Chunking large PRs:
-
+#### 1. Chunking large PRs
 - Qodo Merge divides large PRs into 'chunks'.
 - Each chunk contains up to `pr_code_suggestions.max_context_tokens` tokens (default: 14,000).
 
-
-2) Generating suggestions:
-
+#### 2. Generating suggestions
 - For each chunk, Qodo Merge generates up to `pr_code_suggestions.num_code_suggestions_per_chunk` suggestions (default: 4).
-
 
 This approach has two main benefits:
 
