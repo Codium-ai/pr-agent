@@ -58,6 +58,7 @@ nav:
       - Data Privacy: 'chrome-extension/data_privacy.md'
   - FAQ:
       - FAQ: 'faq/index.md'
+  - AI Docs Search: 'ai_search/index.md'
 #  - Code Fine-tuning Benchmark: 'finetuning_benchmark/index.md'
 
 theme:
@@ -153,4 +154,4 @@ markdown_extensions:
 
 
 copyright: |
-  &copy; 2024 <a href="https://www.codium.ai/"  target="_blank" rel="noopener">CodiumAI</a>
+  &copy; 2025 <a href="https://www.codium.ai/"  target="_blank" rel="noopener">QodoAI</a>
