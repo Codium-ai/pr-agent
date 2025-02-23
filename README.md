@@ -74,7 +74,7 @@ to
 
 New tool  [/Implement](https://qodo-merge-docs.qodo.ai/tools/implement/) (💎), which converts human code review discussions and feedback into ready-to-commit code changes.
 
-<kbd><img src="https://www.qodo.ai/images/pr_agent/implement1.png" width="512"></kbd>
+<kbd><img src="https://www.qodo.ai/images/pr_agent/implement1.png?v=2" width="512"></kbd>
 
 
 ### Jan 1, 2025

@@ -1,5 +1,5 @@
 ## Local and global metadata injection with multi-stage analysis
-(1)
+1\.
 Qodo Merge initially retrieves for each PR the following data:
 
 - PR title and branch name
@@ -11,7 +11,7 @@ Qodo Merge initially retrieves for each PR the following data:
 !!! tip "Tip: Organization-level metadata"
     In addition to the inputs above, Qodo Merge can incorporate supplementary preferences provided by the user, like [`extra_instructions` and `organization best practices`](https://qodo-merge-docs.qodo.ai/tools/improve/#extra-instructions-and-best-practices). This information can be used to enhance the PR analysis.
 
-(2)
+2\.
 By default, the first command that Qodo Merge executes is [`describe`](https://qodo-merge-docs.qodo.ai/tools/describe/), which generates three types of outputs:
 
 - PR Type (e.g. bug fix, feature, refactor, etc)
@@ -49,8 +49,8 @@ __old hunk__
 ...
 ```
 
-(3) The entire PR files that were retrieved are also used to expand and enhance the PR context (see [Dynamic Context](https://qodo-merge-docs.qodo.ai/core-abilities/dynamic_context/)).
+3\. The entire PR files that were retrieved are also used to expand and enhance the PR context (see [Dynamic Context](https://qodo-merge-docs.qodo.ai/core-abilities/dynamic_context/)).
 
 
-(4) All the metadata described above represents several level of cumulative analysis - ranging from hunk level, to file level, to PR level, to organization level.
+4\. All the metadata described above represents several level of cumulative analysis - ranging from hunk level, to file level, to PR level, to organization level.
 This comprehensive approach enables Qodo Merge AI models to generate more precise and contextually relevant suggestions and feedback.

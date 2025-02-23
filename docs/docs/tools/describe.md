@@ -143,7 +143,7 @@ The marker `pr_agent:type` will be replaced with the PR type, `pr_agent:summary`
 
 ![Describe markers before](https://codium.ai/images/pr_agent/describe_markers_before.png){width=512}
 
-&rarr;
+becomes
 
 ![Describe markers after](https://codium.ai/images/pr_agent/describe_markers_after.png){width=512}
 

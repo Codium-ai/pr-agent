@@ -18,9 +18,9 @@ The tool will generate code suggestions for the selected component (if no compon
 
 ![improve_component2](https://codium.ai/images/pr_agent/improve_component2.png){width=768}
 
-**Notes**
-- Language that are currently supported by the tool: Python, Java, C++, JavaScript, TypeScript, C#.
-- This tool can also be triggered interactively by using the [`analyze`](./analyze.md) tool.
+!!! note "Notes"
+    - Language that are currently supported by the tool: Python, Java, C++, JavaScript, TypeScript, C#.
+    - This tool can also be triggered interactively by using the [`analyze`](./analyze.md) tool.
 
 ## Configuration options
 - `num_code_suggestions`: number of code suggestions to provide. Default is 4

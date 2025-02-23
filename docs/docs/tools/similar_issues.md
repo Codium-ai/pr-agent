@@ -16,14 +16,17 @@ It can be invoked manually by commenting on any PR:
 
 Note that to perform retrieval, the `similar_issue` tool indexes all the repo previous issues (once).
 
+### Selecting a Vector Database
+Configure your preferred database by changing the `pr_similar_issue` parameter in `configuration.toml` file.
 
-**Select VectorDBs** by changing `pr_similar_issue` parameter in `configuration.toml` file
+#### Available Options
+Choose from the following Vector Databases:
 
-2 VectorDBs are available to switch in
 1. LanceDB
 2. Pinecone
 
-To enable usage of the '**similar issue**' tool for Pinecone, you need to set the following keys in `.secrets.toml` (or in the relevant environment variables):
+#### Pinecone Configuration
+To use Pinecone with the `similar issue` tool, add these credentials to `.secrets.toml` (or set as environment variables):
 
 ```
 [pinecone]
