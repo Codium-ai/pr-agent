@@ -311,6 +311,44 @@ code_suggestions_self_review_text = "... (your text here) ..."
 
         To prevent unauthorized approvals, this configuration defaults to false, and cannot be altered through online comments; enabling requires a direct update to the configuration file and a commit to the repository. This ensures that utilizing the feature demands a deliberate documented decision by the repository owner.
 
+### Auto-approval
+
+Under specific conditions, Qodo Merge can auto-approve a PR when a specific comment is invoked, or when the PR meets certain criteria.
+
+To ensure safety, the auto-approval feature is disabled by default. To enable auto-approval, you need to actively set, in a pre-defined _configuration file_, the following:
+```toml
+[config]
+enable_auto_approval = true
+```
+Note that this specific flag cannot be set with a command line argument, only in the configuration file, committed to the repository.
+This ensures that enabling auto-approval is a deliberate decision by the repository owner.
+
+**(1) Auto-approval by commenting**
+
+After enabling, by commenting on a PR:
+```
+/review auto_approve
+```
+Qodo Merge will automatically approve the PR, and add a comment with the approval.
+
+**(2) Auto-approval when the PR meets certain criteria**
+
+There are two criteria that can be set for auto-approval:
+
+- **Review effort score**
+```toml
+[config]
+auto_approve_for_low_review_effort = X # X is a number between 1 to 5
+```
+When the [review effort score](https://www.qodo.ai/images/pr_agent/review3.png) is lower or equal to X, the PR will be auto-approved.
+
+___
+- **No code suggestions**
+```toml
+[config]
+auto_approve_for_no_suggestions = true
+```
+When no [code suggestion](https://www.qodo.ai/images/pr_agent/code_suggestions_as_comment_closed.png) were found for the PR, the PR will be auto-approved.
 
 ### How many code suggestions are generated?
 Qodo Merge uses a dynamic strategy to generate code suggestions based on the size of the pull request (PR). Here's how it works:
