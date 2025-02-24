@@ -34,7 +34,7 @@ global_settings = Dynaconf(
 )
 
 
-def get_settings():
+def get_settings(use_context=False):
     """
     Retrieves the current settings.
 
