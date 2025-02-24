@@ -5,12 +5,11 @@ from pr_agent.algo.pr_processing import pr_generate_extended_diff
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.algo.utils import load_large_diff
 from pr_agent.config_loader import get_settings
+get_settings().set("CONFIG.CLI_MODE", True)
+get_settings().config.allow_dynamic_context = False
 
 
 class TestExtendPatch:
-    def setUp(self):
-        get_settings().config.allow_dynamic_context = False
-
     # Tests that the function works correctly with valid input
     def test_happy_path(self):
         original_file_str = 'line1\nline2\nline3\nline4\nline5'
@@ -75,41 +74,46 @@ class TestExtendPatch:
         actual_output = extend_patch(original_file_str, patch_str,
                                      patch_extra_lines_before=num_lines, patch_extra_lines_after=num_lines)
         assert actual_output == expected_output
-        get_settings().config.allow_dynamic_context = original_allow_dynamic_context
+        get_settings(use_context=False).config.allow_dynamic_context = original_allow_dynamic_context
 
 
     def test_dynamic_context(self):
-        get_settings().config.max_extra_lines_before_dynamic_context = 10
+        get_settings(use_context=False).config.max_extra_lines_before_dynamic_context = 10
         original_file_str = "def foo():"
         for i in range(9):
             original_file_str += f"\n    line({i})"
-        patch_str ="@@ -11,1 +11,1 @@ def foo():\n-    line(9)\n+    new_line(9)"
+        patch_str ="@@ -10,1 +10,1 @@ def foo():\n-    line(8)\n+    new_line(8)"
+        new_file_str = "\n".join(original_file_str.splitlines()[:-1] + ["    new_line(8)"])
         num_lines=1
 
-        get_settings().config.allow_dynamic_context = True
+        get_settings(use_context=False).config.allow_dynamic_context = True
         actual_output = extend_patch(original_file_str, patch_str,
-                                     patch_extra_lines_before=num_lines, patch_extra_lines_after=num_lines)
-        expected_output='\n@@ -1,10 +1,10 @@ \n def foo():\n     line(0)\n     line(1)\n     line(2)\n     line(3)\n     line(4)\n     line(5)\n     line(6)\n     line(7)\n     line(8)\n-    line(9)\n+    new_line(9)'
+                                     patch_extra_lines_before=num_lines, patch_extra_lines_after=num_lines, new_file_str=new_file_str)
+        expected_output='\n@@ -1,10 +1,10 @@ \n def foo():\n     line(0)\n     line(1)\n     line(2)\n     line(3)\n     line(4)\n     line(5)\n     line(6)\n     line(7)\n-    line(8)\n+    new_line(8)'
         assert actual_output == expected_output
 
-        get_settings().config.allow_dynamic_context = False
+        get_settings(use_context=False).config.allow_dynamic_context = False
         actual_output2 = extend_patch(original_file_str, patch_str,
-                                     patch_extra_lines_before=num_lines, patch_extra_lines_after=num_lines)
-        expected_output_no_dynamic_context = '\n@@ -10,1 +10,1 @@ def foo():\n     line(8)\n-    line(9)\n+    new_line(9)'
+                                     patch_extra_lines_before=1, patch_extra_lines_after=1)
+        expected_output_no_dynamic_context = '\n@@ -9,2 +9,2 @@ def foo():\n     line(7)\n-    line(8)\n+    new_line(8)'
         assert actual_output2 == expected_output_no_dynamic_context
+
+        get_settings(use_context=False).config.allow_dynamic_context = False
+        actual_output3 = extend_patch(original_file_str, patch_str,
+                                     patch_extra_lines_before=3, patch_extra_lines_after=3)
+        expected_output_no_dynamic_context = '\n@@ -7,4 +7,4 @@ def foo():\n     line(5)\n     line(6)\n     line(7)\n-    line(8)\n+    new_line(8)'
+        assert actual_output3 == expected_output_no_dynamic_context
 
 
 
 
 
 class TestExtendedPatchMoreLines:
-    def setUp(self):
-        get_settings().config.allow_dynamic_context = False
-
     class File:
-        def __init__(self, base_file, patch, filename, ai_file_summary=None):
+        def __init__(self, base_file, patch, head_file, filename, ai_file_summary=None):
             self.base_file = base_file
             self.patch = patch
+            self.head_file = head_file
             self.filename = filename
             self.ai_file_summary = ai_file_summary
 
@@ -128,9 +132,11 @@ class TestExtendedPatchMoreLines:
                 'files': [
                     self.File(base_file="line000\nline00\nline0\nline1\noriginal content\nline2\nline3\nline4\nline5\nline6\nline7\nline8\nline9\nline10",
                               patch="@@ -5,5 +5,5 @@\n-original content\n+modified content\n line2\n line3\n line4\n line5",
+                              head_file="line000\nline00\nline0\nline1\nmodified content\nline2\nline3\nline4\nline5\nline6\nline7\nline8\nline9\nline10",
                               filename="file1"),
                     self.File(base_file="original content\nline2\nline3\nline4\nline5\nline6\nline7\nline8\nline9\nline10",
                               patch="@@ -6,5 +6,5 @@\nline6\nline7\nline8\n-line9\n+modified line9\nline10",
+                              head_file="original content\nline2\nline3\nline4\nline5\nline6\nline7\nline8\nmodified line9\nline10",
                               filename="file2")
                 ]
             }
@@ -155,10 +161,8 @@ class TestExtendedPatchMoreLines:
             patch_extra_lines_after=1
         )
 
-
         p0_extended = patches_extended_with_extra_lines[0].strip()
         assert p0_extended == "## File: 'file1'\n\n@@ -3,8 +3,8 @@ \n line0\n line1\n-original content\n+modified content\n line2\n line3\n line4\n line5\n line6"
-
 
 class TestLoadLargeDiff:
     def test_no_newline(self):
