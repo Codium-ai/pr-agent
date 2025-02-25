@@ -782,7 +782,8 @@ def try_fix_yaml(response_text: str,
     # fifth fallback - try to remove leading '+' (sometimes added by AI for 'existing code' and 'improved code')
     response_text_lines_copy = response_text_lines.copy()
     for i in range(0, len(response_text_lines_copy)):
-        response_text_lines_copy[i] = ' ' + response_text_lines_copy[i][1:]
+        if response_text_lines_copy[i].startswith('+'):
+            response_text_lines_copy[i] = ' ' + response_text_lines_copy[i][1:]
     try:
         data = yaml.safe_load('\n'.join(response_text_lines_copy))
         get_logger().info(f"Successfully parsed AI prediction after removing leading '+'")
