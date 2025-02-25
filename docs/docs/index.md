@@ -35,6 +35,7 @@ Qodo Merge offers extensive pull request functionalities across various git prov
 |       | ⮑ [Inline file summary](https://qodo-merge-docs.qodo.ai/tools/describe/#inline-file-summary){:target="_blank"} 💎     |   ✅    |   ✅    |           |      ✅      |
 |       | Improve                                                                                                               |   ✅    |   ✅    |   ✅        |      ✅      |
 |       | ⮑ Extended                                                                                                            |   ✅    |   ✅    |   ✅        |      ✅      |
+|       | Auto-Approve                                                                                                           |   ✅    |   ✅    |   ✅        |            |
 |       | [Custom Prompt](./tools/custom_prompt.md){:target="_blank"} 💎                                                        |   ✅    |   ✅    |   ✅        |      ✅      |
 |       | Reflect and Review                                                                                                    |   ✅    |   ✅    |   ✅        |      ✅      |
 |       | Update CHANGELOG.md                                                                                                   |   ✅    |   ✅    |   ✅        |      ️       |

@@ -314,7 +314,7 @@ code_suggestions_self_review_text = "... (your text here) ..."
         To prevent unauthorized approvals, this configuration defaults to false, and cannot be altered through online comments; enabling requires a direct update to the configuration file and a commit to the repository. This ensures that utilizing the feature demands a deliberate documented decision by the repository owner.
 
 ### Auto-approval
-> `💎 feature`
+> `💎 feature` Platforms supported: GitHub, GitLab, Bitbucket
 
 Under specific conditions, Qodo Merge can auto-approve a PR when a specific comment is invoked, or when the PR meets certain criteria.
 
