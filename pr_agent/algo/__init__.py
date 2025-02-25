@@ -43,7 +43,7 @@ MAX_TOKENS = {
     'vertex_ai/claude-3-opus@20240229': 100000,
     'vertex_ai/claude-3-5-sonnet@20240620': 100000,
     'vertex_ai/claude-3-5-sonnet-v2@20241022': 100000,
-    'vertex_ai/claude-3-7-sonnet@20250219': 100000,
+    'vertex_ai/claude-3-7-sonnet@20250219': 200000,
     'vertex_ai/gemini-1.5-pro': 1048576,
     'vertex_ai/gemini-1.5-flash': 1048576,
     'vertex_ai/gemini-2.0-flash': 1048576,
