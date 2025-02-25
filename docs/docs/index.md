@@ -35,6 +35,7 @@ Qodo Merge offers extensive pull request functionalities across various git prov
 |       | ⮑ [Inline file summary](https://qodo-merge-docs.qodo.ai/tools/describe/#inline-file-summary){:target="_blank"} 💎     |   ✅    |   ✅    |           |      ✅       |
 |       | Improve                                                                                                               |   ✅    |   ✅    |     ✅     |      ✅       |
 |       | ⮑ Extended                                                                                                            |   ✅    |   ✅    |     ✅     |      ✅       |
+|       | [Auto-Approve](https://qodo-merge-docs.qodo.ai/tools/improve/#auto-approval) 💎                                       |   ✅    |   ✅    |   ✅        |            |
 |       | [Custom Prompt](./tools/custom_prompt.md){:target="_blank"} 💎                                                        |   ✅    |   ✅    |     ✅     |      ✅       |
 |       | Reflect and Review                                                                                                    |   ✅    |   ✅    |     ✅     |      ✅       |
 |       | Update CHANGELOG.md                                                                                                   |   ✅    |   ✅    |     ✅     |      ️       |
@@ -53,7 +54,7 @@ Qodo Merge offers extensive pull request functionalities across various git prov
 |       | Repo language prioritization                                                                                          |   ✅    |   ✅    |     ✅     |      ✅       |
 |       | Adaptive and token-aware file patch fitting                                                                           |   ✅    |   ✅    |     ✅     |      ✅       |
 |       | Multiple models support                                                                                               |   ✅    |   ✅    |     ✅     |      ✅       |
-|       | [Static code analysis](./core-abilities/static_code_analysis/){:target="_blank"} 💎                                                      |   ✅    |   ✅    |           |              |
+|       | [Static code analysis](./core-abilities/static_code_analysis/){:target="_blank"} 💎                                   |   ✅    |   ✅    |           |              |
 |       | [Multiple configuration options](./usage-guide/configuration_options.md){:target="_blank"} 💎                         |   ✅    |   ✅    |     ✅     |      ✅       |
 
 💎 marks a feature available only in [Qodo Merge](https://www.codium.ai/pricing/){:target="_blank"}, and not in the open-source version.
