@@ -30,6 +30,14 @@ model="" # the OpenAI model you've deployed on Azure (e.g. gpt-4o)
 fallback_models=["..."]
 ```
 
+Passing custom headers to the underlying LLM Model API can be done by setting extra_headers parameter to litellm. 
+```
+[litellm]
+extra_headers='{"projectId": "<authorized projectId >", ...}') #The value of this setting should be a JSON string representing the desired headers, a ValueError is thrown otherwise.
+```
+This enables users to pass authorization tokens or API keys, when routing requests through an API management gateway.
+
+
 ### Ollama
 
 You can run models locally through either [VLLM](https://docs.litellm.ai/docs/providers/vllm) or [Ollama](https://docs.litellm.ai/docs/providers/ollama)
