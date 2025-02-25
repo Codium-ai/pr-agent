@@ -244,12 +244,6 @@ class LiteLLMAIHandler(BaseAiHandler):
             if self.repetition_penalty:
                 kwargs["repetition_penalty"] = self.repetition_penalty
 
-            get_logger().debug("Prompts", artifact={"system": system, "user": user})
-
-            if get_settings().config.verbosity_level >= 2:
-                get_logger().info(f"\nSystem prompt:\n{system}")
-                get_logger().info(f"\nUser prompt:\n{user}")
-
             #Added support for extra_headers while using litellm to call underlying model, via a api management gateway, would allow for passing custom headers for security and authorization
             if get_settings().get("LITELLM.EXTRA_HEADERS", None):
                 try:
@@ -259,6 +253,12 @@ class LiteLLMAIHandler(BaseAiHandler):
                 except json.JSONDecodeError as e:
                     raise ValueError(f"LITELLM.EXTRA_HEADERS contains invalid JSON: {str(e)}")
                 kwargs["extra_headers"] = litellm_extra_headers
+            
+            get_logger().debug("Prompts", artifact={"system": system, "user": user})
+            
+            if get_settings().config.verbosity_level >= 2:
+                get_logger().info(f"\nSystem prompt:\n{system}")
+                get_logger().info(f"\nUser prompt:\n{user}")
                 
             response = await acompletion(**kwargs)
         except (openai.APIError, openai.APITimeoutError) as e:
