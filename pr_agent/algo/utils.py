@@ -250,7 +250,7 @@ def convert_to_markdown_v2(output_data: dict,
                         if gfm_supported:
                             if reference_link is not None and len(reference_link) > 0:
                                 if relevant_lines_str:
-                                    issue_str = f"<details><summary><a href='{reference_link}'><strong>{issue_header}</strong></a>\n\n{issue_content}</summary>\n\n{relevant_lines_str}\n\n</details>"
+                                    issue_str = f"<details><summary><a href='{reference_link}'><strong>{issue_header}</strong></a>\n\n{issue_content}\n</summary>\n\n{relevant_lines_str}\n\n</details>"
                                 else:
                                     issue_str = f"<a href='{reference_link}'><strong>{issue_header}</strong></a><br>{issue_content}"
                             else:

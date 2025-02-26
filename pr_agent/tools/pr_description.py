@@ -683,8 +683,9 @@ class PRDescription:
                         filename = filename.strip()
                         link = self.git_provider.get_line_link(filename, relevant_line_start=-1)
                     if (not link or not diff_plus_minus) and ('additional files' not in filename.lower()):
-                        get_logger().warning(f"Error getting line link for '{filename}'")
-                        continue
+                        # get_logger().warning(f"Error getting line link for '{filename}'")
+                        link = ""
+                        # continue
 
                     # Add file data to the PR body
                     file_change_description_br = insert_br_after_x_chars(file_change_description, x=(delta - 5))
