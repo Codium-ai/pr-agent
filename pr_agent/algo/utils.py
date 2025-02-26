@@ -50,6 +50,11 @@ class PRReviewHeader(str, Enum):
     REGULAR = "## PR Reviewer Guide"
     INCREMENTAL = "## Incremental PR Reviewer Guide"
 
+class ReasoningEffort(str, Enum):
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
+
 
 class PRDescriptionHeader(str, Enum):
     CHANGES_WALKTHROUGH = "### **Changes walkthrough** 📝"

@@ -204,3 +204,12 @@ custom_model_max_tokens= ...
 
 4. Most reasoning models do not support chat-style inputs (`system` and `user` messages) or temperature settings. 
 To bypass chat templates and temperature controls, set `config.custom_reasoning_model = true` in your configuration file.
+
+## Dedicated parameters
+
+### OpenAI models
+
+[config]
+reasoning_efffort= = "medium" # "low", "medium", "high"
+
+With the OpenAI models that support reasoning effort (eg: o3-mini), you can specify its reasoning effort via `config` section. The default value is `medium`. You can change it to `high` or `low` based on your usage.

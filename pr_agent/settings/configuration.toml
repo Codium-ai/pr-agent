@@ -48,6 +48,7 @@ ignore_pr_authors = [] # authors to ignore from PR agent when an PR is created
 #
 is_auto_command = false # will be auto-set to true if the command is triggered by an automation
 enable_ai_metadata = false # will enable adding ai metadata
+reasoning_effort = "medium" # "low", "medium", "high"
 # auto approval 💎
 enable_auto_approval=false # Set to true to enable auto-approval of PRs under certain conditions
 auto_approve_for_low_review_effort=-1 # -1 to disable, [1-5] to set the threshold for auto-approval
