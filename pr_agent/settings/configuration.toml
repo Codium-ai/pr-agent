@@ -65,7 +65,7 @@ require_security_review=true
 require_ticket_analysis_review=true
 # general options
 persistent_comment=true
-extra_instructions = "Blah blah do some custom shit please"
+extra_instructions = ""
 final_update_message = true
 # review labels
 enable_review_labels_security=true
