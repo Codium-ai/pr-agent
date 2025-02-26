@@ -11,6 +11,7 @@ from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.utils import ReasoningEffort, get_version
 from pr_agent.config_loader import get_settings
 from pr_agent.log import get_logger
+import json
 
 OPENAI_RETRIES = 5
 
@@ -254,12 +255,22 @@ class LiteLLMAIHandler(BaseAiHandler):
             if self.repetition_penalty:
                 kwargs["repetition_penalty"] = self.repetition_penalty
 
+            #Added support for extra_headers while using litellm to call underlying model, via a api management gateway, would allow for passing custom headers for security and authorization
+            if get_settings().get("LITELLM.EXTRA_HEADERS", None):
+                try:
+                    litellm_extra_headers = json.loads(get_settings().litellm.extra_headers)
+                    if not isinstance(litellm_extra_headers, dict):
+                        raise ValueError("LITELLM.EXTRA_HEADERS must be a JSON object")
+                except json.JSONDecodeError as e:
+                    raise ValueError(f"LITELLM.EXTRA_HEADERS contains invalid JSON: {str(e)}")
+                kwargs["extra_headers"] = litellm_extra_headers
+            
             get_logger().debug("Prompts", artifact={"system": system, "user": user})
-
+            
             if get_settings().config.verbosity_level >= 2:
                 get_logger().info(f"\nSystem prompt:\n{system}")
                 get_logger().info(f"\nUser prompt:\n{user}")
-
+                
             response = await acompletion(**kwargs)
         except (openai.APIError, openai.APITimeoutError) as e:
             get_logger().warning(f"Error during LLM inference: {e}")
