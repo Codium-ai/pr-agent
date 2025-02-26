@@ -326,3 +326,11 @@ utilize_auto_best_practices = true # public - disable usage of auto best practic
 extra_instructions = "" # public - extra instructions to the auto best practices generation prompt
 content = ""
 max_patterns = 5 # max number of patterns to be detected
+
+
+[azure_devops_server]
+pr_commands = [
+    "/describe",
+    "/review",
+    "/improve",
+]
