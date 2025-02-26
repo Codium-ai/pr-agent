@@ -181,7 +181,13 @@ class GitLabProvider(GitProvider):
             get_logger().exception(f"Could not update merge request {self.id_mr} description: {e}")
 
     def get_latest_commit_url(self):
-        return self.mr.commits().next().web_url
+        try:
+            return self.mr.commits().next().web_url
+        except StopIteration: # no commits
+            return ""
+        except Exception as e:
+            get_logger().exception(f"Could not get latest commit URL: {e}")
+            return ""
 
     def get_comment_url(self, comment):
         return f"{self.mr.web_url}#note_{comment.id}"
