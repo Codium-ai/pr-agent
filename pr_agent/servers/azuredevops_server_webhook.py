@@ -33,7 +33,7 @@ azure_devops_server = get_settings().get("azure_devops_server")
 WEBHOOK_USERNAME = azure_devops_server.get("webhook_username")
 WEBHOOK_PASSWORD = azure_devops_server.get("webhook_password")
 
-def handle_request_comment( url: str, body: str, log_context: dict
+async def handle_request_comment( url: str, body: str, log_context: dict
 ):
     log_context["action"] = body
     log_context["api_url"] = url
@@ -121,7 +121,7 @@ async def handle_request_azure(data, log_context):
 
     for action in actions:
         try:
-            handle_request_comment(pr_url, action, log_context)
+            await handle_request_comment(pr_url, action, log_context)
         except Exception as e:
             get_logger().error("Azure DevOps Trigger failed. Error:" + str(e))
             return JSONResponse(
