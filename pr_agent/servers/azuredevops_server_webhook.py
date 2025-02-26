@@ -136,7 +136,7 @@ async def handle_request_azure(data, log_context):
 async def handle_webhook(background_tasks: BackgroundTasks, request: Request):
     log_context = {"server_type": "azure_devops_server"}
     data = await request.json()
-    get_logger().info(json.dumps(data))
+    # get_logger().info(json.dumps(data))
 
     background_tasks.add_task(handle_request_azure, data, log_context)
 
