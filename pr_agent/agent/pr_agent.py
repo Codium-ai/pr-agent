@@ -44,19 +44,6 @@ command2class = {
 commands = list(command2class.keys())
 
 
-commands2instructions = {
-    # "auto_best_practices":"auto_best_practices",
-    "improve_component":"pr_improve_component",
-    "test":"pr_test",
-    "update_changelog":"pr_update_changelog",
-    "add_docs":"pr_add_docs",
-    "improve":"pr_code_suggestions",
-    "describe":"pr_description",
-    "review":"pr_reviewer"
-}
-
-commands_with_extra_instructions = list(commands2instructions.keys())
-
 
 class PRAgent:
     def __init__(self, ai_handler: partial[BaseAiHandler,] = LiteLLMAIHandler):
