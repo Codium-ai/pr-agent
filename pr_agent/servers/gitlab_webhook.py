@@ -198,9 +198,9 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
             # ignore MRs based on title, labels, source and target branches
             if not should_process_pr_logic(data):
                 return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
-
-            if data['object_attributes'].get('action') in ['open', 'reopen']:
-                url = data['object_attributes'].get('url')
+            object_attributes = data.get('object_attributes', {})
+            if object_attributes.get('action') in ['open', 'reopen']:
+                url = object_attributes.get('url')
                 get_logger().info(f"New merge request: {url}")
                 if is_draft(data):
                     get_logger().info(f"Skipping draft MR: {url}")
@@ -209,8 +209,8 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
                 await _perform_commands_gitlab("pr_commands", PRAgent(), url, log_context, data)
 
             # for push event triggered merge requests
-            elif data['object_attributes'].get('action') == 'update' and data['object_attributes'].get('oldrev'):
-                url = data['object_attributes'].get('url')
+            elif object_attributes.get('action') == 'update' and object_attributes.get('oldrev'):
+                url = object_attributes.get('url')
                 get_logger().info(f"New merge request: {url}")
                 if is_draft(data):
                     get_logger().info(f"Skipping draft MR: {url}")
@@ -227,8 +227,8 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
                 await _perform_commands_gitlab("push_commands", PRAgent(), url, log_context, data)
                 
             # for draft to ready triggered merge requests
-            elif data['object_attributes'].get('action') == 'update' and is_draft_ready(data):
-                url = data['object_attributes'].get('url')
+            elif object_attributes.get('action') == 'update' and is_draft_ready(data):
+                url = object_attributes.get('url')
                 get_logger().info(f"Draft MR is ready: {url}")
 
                 # same as open MR
