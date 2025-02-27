@@ -44,6 +44,7 @@ command2class = {
 commands = list(command2class.keys())
 
 
+
 class PRAgent:
     def __init__(self, ai_handler: partial[BaseAiHandler,] = LiteLLMAIHandler):
         self.ai_handler = ai_handler  # will be initialized in run_action
@@ -71,6 +72,16 @@ class PRAgent:
 
         # Update settings from args
         args = update_settings_from_args(args)
+
+        # Append the response language in the extra instructions
+        response_language = get_settings().config.response_language
+        if response_language != 'en-us':
+            for key in get_settings():
+                setting = get_settings().get(key)
+                if str(type(setting)) == "<class 'dynaconf.utils.boxing.DynaBox'>":
+                    if hasattr(setting, 'extra_instructions'):
+                        extra_instructions = get_settings()[key.lower()].extra_instructions
+                        get_settings()[key.lower()].extra_instructions = f"{extra_instructions} \n======\n\nLanguage preference from the user\n======\n In your reply only use the lanaguage with locale code: {response_language}"
 
         action = action.lstrip("/").lower()
         if action not in command2class:

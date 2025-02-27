@@ -3,6 +3,7 @@
 model="gpt-4o-2024-11-20"
 fallback_models=["gpt-4o-2024-08-06"]
 #model_weak="gpt-4o-mini-2024-07-18" # optional, a weaker model to use for some easier tasks
+response_language="en-US" # Language locales code for PR responses in ISO 3166 and ISO 639 format (e.g., "en-US", "es-ES", "he-IL", "ar-IL", "zh-CN")
 # CLI
 git_provider="github"
 publish_output=true
