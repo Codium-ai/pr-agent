@@ -74,14 +74,18 @@ class PRAgent:
         args = update_settings_from_args(args)
 
         # Append the response language in the extra instructions
-        response_language = get_settings().config.response_language
-        if response_language != 'en-us':
+        response_language = get_settings().config.get('response_language', 'en-us')
+        if response_language.lower() != 'en-us':
+            get_logger().info(f'User has set the response language to: {response_language}')
             for key in get_settings():
                 setting = get_settings().get(key)
                 if str(type(setting)) == "<class 'dynaconf.utils.boxing.DynaBox'>":
                     if hasattr(setting, 'extra_instructions'):
-                        extra_instructions = get_settings()[key.lower()].extra_instructions
-                        get_settings()[key.lower()].extra_instructions = f"{extra_instructions} \n======\n\nLanguage preference from the user\n======\n In your reply only use the lanaguage with locale code: {response_language}"
+                        current_extra_instructions = setting.extra_instructions
+                        if current_extra_instructions:
+                            setting.extra_instructions = current_extra_instructions+ f"\n======\n\nIn addition, Your response MUST be written in the language corresponding to local code: {response_language}. This is crucial."
+                        else:
+                            setting.extra_instructions = f"Your response MUST be written in the language corresponding to locale code: '{response_language}'. This is crucial."
 
         action = action.lstrip("/").lower()
         if action not in command2class:

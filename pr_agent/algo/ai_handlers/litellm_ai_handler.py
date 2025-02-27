@@ -232,7 +232,7 @@ class LiteLLMAIHandler(BaseAiHandler):
 
             # Add temperature only if model supports it
             if model not in self.no_support_temperature_models and not get_settings().config.custom_reasoning_model:
-                get_logger().info(f"Adding temperature with value {temperature} to model {model}.")
+                # get_logger().info(f"Adding temperature with value {temperature} to model {model}.")
                 kwargs["temperature"] = temperature
 
             # Add reasoning_effort if model supports it

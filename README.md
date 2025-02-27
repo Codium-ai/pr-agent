@@ -53,8 +53,9 @@ PR-Agent aims to help efficiently review and handle pull requests, by providing 
 ## News and Updates
 
 ### Feb 27, 2025
-
-Important updates and bug fixes for Azure DevOps, see [here](https://github.com/qodo-ai/pr-agent/pull/1583)
+- Updated the default model to `o3-mini` for all tools. You can still use the `gpt-4o` as the default model by setting the `model` parameter in the configuration file.
+- Important updates and bug fixes for Azure DevOps, see [here](https://github.com/qodo-ai/pr-agent/pull/1583)
+- Added support for adjusting the [response language](https://qodo-merge-docs.qodo.ai/usage-guide/additional_configurations/#language-settings) of the PR-Agent tools.
 
 ### Feb 6, 2025
 New design for the `/improve` tool:
