@@ -52,6 +52,10 @@ PR-Agent aims to help efficiently review and handle pull requests, by providing 
 
 ## News and Updates
 
+### Feb 27, 2025
+
+Important updates and bug fixes for Azure DevOps, see [here](https://github.com/qodo-ai/pr-agent/pull/1583)
+
 ### Feb 6, 2025
 New design for the `/improve` tool:
 
