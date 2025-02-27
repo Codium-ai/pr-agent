@@ -71,6 +71,31 @@ def is_bot_user(data) -> bool:
         get_logger().error(f"Failed 'is_bot_user' logic: {e}")
     return False
 
+def is_draft(data) -> bool:
+    try:
+        if 'draft' in data.get('object_attributes', {}):
+            return data['object_attributes']['draft']
+
+        # for gitlab server version before 16
+        elif 'Draft:' in data.get('object_attributes', {}).get('title'):
+            return True
+    except Exception as e:
+        get_logger().error(f"Failed 'is_draft' logic: {e}")
+    return False
+
+def is_draft_ready(data) -> bool:
+    try:
+        if 'draft' in data.get('changes', {}):
+            if data['changes']['draft']['previous'] == 'true' and data['changes']['draft']['current'] == 'false':
+                return True
+            
+        # for gitlab server version before 16
+        elif 'title' in data.get('changes', {}):
+            if 'Draft:' in data['changes']['title']['previous'] and 'Draft:' not in data['changes']['title']['current']:
+                return True
+    except Exception as e:
+        get_logger().error(f"Failed 'is_draft_ready' logic: {e}")
+    return False
 
 def should_process_pr_logic(data) -> bool:
     try:
@@ -176,9 +201,8 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
 
             if data['object_attributes'].get('action') in ['open', 'reopen']:
                 url = data['object_attributes'].get('url')
-                draft = data['object_attributes'].get('draft')
                 get_logger().info(f"New merge request: {url}")
-                if draft:
+                if is_draft(data):
                     get_logger().info(f"Skipping draft MR: {url}")
                     return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
 
@@ -187,9 +211,8 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
             # for push event triggered merge requests
             elif data['object_attributes'].get('action') == 'update' and data['object_attributes'].get('oldrev'):
                 url = data['object_attributes'].get('url')
-                draft = data['object_attributes'].get('draft')
                 get_logger().info(f"New merge request: {url}")
-                if draft:
+                if is_draft(data):
                     get_logger().info(f"Skipping draft MR: {url}")
                     return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder({"message": "success"}))
 
@@ -202,6 +225,14 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
 
                 get_logger().debug(f'A push event has been received: {url}')
                 await _perform_commands_gitlab("push_commands", PRAgent(), url, log_context, data)
+                
+            # for draft to ready triggered merge requests
+            elif data['object_attributes'].get('action') == 'update' and is_draft_ready(data):
+                url = data['object_attributes'].get('url')
+                get_logger().info(f"Draft MR is ready: {url}")
+
+                # same as open MR
+                await _perform_commands_gitlab("pr_commands", PRAgent(), url, log_context, data)
 
         elif data.get('object_kind') == 'note' and data.get('event_type') == 'note': # comment on MR
             if 'merge_request' in data:
