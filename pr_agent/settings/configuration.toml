@@ -10,10 +10,10 @@ fallback_models=["gpt-4o-2024-08-06"]
 response_language="en-US" # Language locales code for PR responses in ISO 3166 and ISO 639 format (e.g., "en-US", "it-IT", "zh-CN", ...)
 # CLI
 git_provider="github"
-publish_output=false
+publish_output=true
 publish_output_progress=true
 publish_output_no_suggestions=true
-verbosity_level=2 # 0,1,2
+verbosity_level=0 # 0,1,2
 use_extra_bad_extensions=false
 # Configurations
 use_wiki_settings_file=true
