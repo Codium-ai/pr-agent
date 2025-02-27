@@ -83,9 +83,9 @@ class PRAgent:
                     if hasattr(setting, 'extra_instructions'):
                         current_extra_instructions = setting.extra_instructions
                         if current_extra_instructions:
-                            setting.extra_instructions = current_extra_instructions+ f"\n======\n\nIn addition, in your reply the generated answers MUST be in a language equivalent to locale code: {response_language}. This is crucial."
+                            setting.extra_instructions = current_extra_instructions+ f"\n======\n\nIn addition, Your response MUST be written in the language corresponding to local code: {response_language}. This is crucial."
                         else:
-                            setting.extra_instructions = f"The generated answers in your reply MUST be in a language equivalent to locale code: '{response_language}'. This is crucial."
+                            setting.extra_instructions = f"Your response MUST be written in the language corresponding to locale code: '{response_language}'. This is crucial."
 
         action = action.lstrip("/").lower()
         if action not in command2class:
