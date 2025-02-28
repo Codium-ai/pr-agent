@@ -52,6 +52,9 @@ PR-Agent aims to help efficiently review and handle pull requests, by providing 
 
 ## News and Updates
 
+### Feb 28, 2025
+A new version, v0.27, was released. See release notes [here](https://github.com/qodo-ai/pr-agent/releases/tag/v0.27).
+
 ### Feb 27, 2025
 - Updated the default model to `o3-mini` for all tools. You can still use the `gpt-4o` as the default model by setting the `model` parameter in the configuration file.
 - Important updates and bug fixes for Azure DevOps, see [here](https://github.com/qodo-ai/pr-agent/pull/1583)
@@ -81,10 +84,6 @@ New tool  [/Implement](https://qodo-merge-docs.qodo.ai/tools/implement/) (💎),
 
 <kbd><img src="https://www.qodo.ai/images/pr_agent/implement1.png?v=2" width="512"></kbd>
 
-
-### Jan 1, 2025
-
-Update logic and [documentation](https://qodo-merge-docs.qodo.ai/usage-guide/changing_a_model/#ollama) for running local models via Ollama.
 
 ### December 30, 2024
 
