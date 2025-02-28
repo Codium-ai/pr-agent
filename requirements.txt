@@ -38,3 +38,8 @@ html2text==2024.2.26
 # langchain==0.2.0
 # langchain-core==0.2.28
 # langchain-openai==0.1.20
+
+
+# BEEKEEPER section
+markdown==3.5.1
+html2text==2024.2.26
