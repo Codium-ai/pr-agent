@@ -37,7 +37,8 @@ class GithubProvider(GitProvider):
             self.installation_id = None
         self.max_comment_chars = 65000
         self.base_url = get_settings().get("GITHUB.BASE_URL", "https://api.github.com").rstrip("/") # "https://api.github.com"
-        self.base_url_html = self.base_url.split("api/")[0].rstrip("/") if "api/" in self.base_url else "https://github.com"
+        base_url = urlparse(self.base_url)
+        self.base_url_html = f"{base_url.scheme}://{base_url.netloc[4:] if base_url.netloc.startswith('api.') else 'https://github.com'}"
         self.github_client = self._get_github_client()
         self.repo = None
         self.pr_num = None
