@@ -15,7 +15,7 @@ Jinja2==3.1.2
 litellm==1.61.20
 loguru==0.7.2
 msrest==0.7.1
-openai==1.55.3
+openai>=1.55.3
 pytest==7.4.0
 PyGithub==1.59.*
 PyYAML==6.0.1
