@@ -6,7 +6,7 @@ import requests
 from litellm import acompletion
 from tenacity import retry, retry_if_exception_type, stop_after_attempt
 
-from pr_agent.algo import NO_SUPPORT_TEMPERATURE_MODELS, SUPPORT_REASONING_EFFORT_MODELS, USER_MESSAGE_ONLY_MODELS
+from pr_agent.algo import CLAUDE_EXTENDED_THINKING_MODELS, NO_SUPPORT_TEMPERATURE_MODELS, SUPPORT_REASONING_EFFORT_MODELS, USER_MESSAGE_ONLY_MODELS
 from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.utils import ReasoningEffort, get_version
 from pr_agent.config_loader import get_settings
@@ -104,6 +104,9 @@ class LiteLLMAIHandler(BaseAiHandler):
 
         # Models that support reasoning effort
         self.support_reasoning_models = SUPPORT_REASONING_EFFORT_MODELS
+
+        # Models that support extended thinking
+        self.claude_extended_thinking_models = CLAUDE_EXTENDED_THINKING_MODELS
 
     def prepare_logs(self, response, system, user, resp, finish_reason):
         response_log = response.dict().copy()
@@ -264,13 +267,13 @@ class LiteLLMAIHandler(BaseAiHandler):
                 except json.JSONDecodeError as e:
                     raise ValueError(f"LITELLM.EXTRA_HEADERS contains invalid JSON: {str(e)}")
                 kwargs["extra_headers"] = litellm_extra_headers
-            
+
             get_logger().debug("Prompts", artifact={"system": system, "user": user})
-            
+
             if get_settings().config.verbosity_level >= 2:
                 get_logger().info(f"\nSystem prompt:\n{system}")
                 get_logger().info(f"\nUser prompt:\n{user}")
-                
+
             response = await acompletion(**kwargs)
         except (openai.APIError, openai.APITimeoutError) as e:
             get_logger().warning(f"Error during LLM inference: {e}")
