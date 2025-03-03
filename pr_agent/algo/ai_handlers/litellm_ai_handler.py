@@ -249,6 +249,15 @@ class LiteLLMAIHandler(BaseAiHandler):
             if (model in self.claude_extended_thinking_models) and get_settings().config.get("enable_claude_extended_thinking", False):
                 extended_thinking_budget_tokens = get_settings().config.get("extended_thinking_budget_tokens", 32000)
                 extended_thinking_max_output_tokens = get_settings().config.get("extended_thinking_max_output_tokens", 64000)
+
+                # Validate extended thinking parameters
+                if not isinstance(extended_thinking_budget_tokens, int) or extended_thinking_budget_tokens <= 0:
+                    raise ValueError(f"extended_thinking_budget_tokens must be a positive integer, got {extended_thinking_budget_tokens}")
+                if not isinstance(extended_thinking_max_output_tokens, int) or extended_thinking_max_output_tokens <= 0:
+                    raise ValueError(f"extended_thinking_max_output_tokens must be a positive integer, got {extended_thinking_max_output_tokens}")
+                if extended_thinking_max_output_tokens < extended_thinking_budget_tokens:
+                    raise ValueError(f"extended_thinking_max_output_tokens ({extended_thinking_max_output_tokens}) must be greater than or equal to extended_thinking_budget_tokens ({extended_thinking_budget_tokens})")
+
                 kwargs["thinking"] = {
                     "type": "enabled",
                     "budget_tokens": extended_thinking_budget_tokens
