@@ -58,6 +58,10 @@ reasoning_effort = "medium" # "low", "medium", "high"
 enable_auto_approval=false # Set to true to enable auto-approval of PRs under certain conditions
 auto_approve_for_low_review_effort=-1 # -1 to disable, [1-5] to set the threshold for auto-approval
 auto_approve_for_no_suggestions=false # If true, the PR will be auto-approved if there are no suggestions
+# extended thinking
+enable_claude_extended_thinking = false # Set to true to enable extended thinking feature
+extended_thinking_budget_tokens = 32000
+extended_thinking_max_output_tokens = 64000
 
 
 [pr_reviewer] # /review #
