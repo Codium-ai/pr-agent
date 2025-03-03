@@ -245,6 +245,17 @@ class LiteLLMAIHandler(BaseAiHandler):
                 get_logger().info(f"Adding reasoning_effort with value {reasoning_effort} to model {model}.")
                 kwargs["reasoning_effort"] = reasoning_effort
 
+            # https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking
+            if (model in self.claude_extended_thinking_models) and get_settings().config.get("enable_claude_extended_thinking", False):
+                extended_thinking_budget_tokens = get_settings().config.get("extended_thinking_budget_tokens", 32000)
+                extended_thinking_max_output_tokens = get_settings().config.get("extended_thinking_max_output_tokens", 64000)
+                kwargs["thinking"] = {
+                    "type": "enabled",
+                    "budget_tokens": extended_thinking_budget_tokens
+                }
+                get_logger().info(f"Adding max output tokens {extended_thinking_max_output_tokens} to model {model}, extended thinking budget tokens: {extended_thinking_budget_tokens}")
+                kwargs["max_tokens"] = extended_thinking_max_output_tokens
+
             if get_settings().litellm.get("enable_callbacks", False):
                 kwargs = self.add_litellm_callbacks(kwargs)
 
