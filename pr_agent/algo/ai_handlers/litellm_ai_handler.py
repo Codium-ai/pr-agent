@@ -6,7 +6,7 @@ import requests
 from litellm import acompletion
 from tenacity import retry, retry_if_exception_type, stop_after_attempt
 
-from pr_agent.algo import NO_SUPPORT_TEMPERATURE_MODELS, SUPPORT_REASONING_EFFORT_MODELS, USER_MESSAGE_ONLY_MODELS
+from pr_agent.algo import CLAUDE_EXTENDED_THINKING_MODELS, NO_SUPPORT_TEMPERATURE_MODELS, SUPPORT_REASONING_EFFORT_MODELS, USER_MESSAGE_ONLY_MODELS
 from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.utils import ReasoningEffort, get_version
 from pr_agent.config_loader import get_settings
@@ -104,6 +104,9 @@ class LiteLLMAIHandler(BaseAiHandler):
 
         # Models that support reasoning effort
         self.support_reasoning_models = SUPPORT_REASONING_EFFORT_MODELS
+
+        # Models that support extended thinking
+        self.claude_extended_thinking_models = CLAUDE_EXTENDED_THINKING_MODELS
 
     def prepare_logs(self, response, system, user, resp, finish_reason):
         response_log = response.dict().copy()
@@ -242,6 +245,31 @@ class LiteLLMAIHandler(BaseAiHandler):
                 get_logger().info(f"Adding reasoning_effort with value {reasoning_effort} to model {model}.")
                 kwargs["reasoning_effort"] = reasoning_effort
 
+            # https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking
+            if (model in self.claude_extended_thinking_models) and get_settings().config.get("enable_claude_extended_thinking", False):
+                extended_thinking_budget_tokens = get_settings().config.get("extended_thinking_budget_tokens", 32000)
+                extended_thinking_max_output_tokens = get_settings().config.get("extended_thinking_max_output_tokens", 64000)
+
+                # Validate extended thinking parameters
+                if not isinstance(extended_thinking_budget_tokens, int) or extended_thinking_budget_tokens <= 0:
+                    raise ValueError(f"extended_thinking_budget_tokens must be a positive integer, got {extended_thinking_budget_tokens}")
+                if not isinstance(extended_thinking_max_output_tokens, int) or extended_thinking_max_output_tokens <= 0:
+                    raise ValueError(f"extended_thinking_max_output_tokens must be a positive integer, got {extended_thinking_max_output_tokens}")
+                if extended_thinking_max_output_tokens < extended_thinking_budget_tokens:
+                    raise ValueError(f"extended_thinking_max_output_tokens ({extended_thinking_max_output_tokens}) must be greater than or equal to extended_thinking_budget_tokens ({extended_thinking_budget_tokens})")
+
+                kwargs["thinking"] = {
+                    "type": "enabled",
+                    "budget_tokens": extended_thinking_budget_tokens
+                }
+                get_logger().info(f"Adding max output tokens {extended_thinking_max_output_tokens} to model {model}, extended thinking budget tokens: {extended_thinking_budget_tokens}")
+                kwargs["max_tokens"] = extended_thinking_max_output_tokens
+
+                # temperature may only be set to 1 when thinking is enabled
+                if get_settings().config.verbosity_level >= 2:
+                    get_logger().info("Temperature may only be set to 1 when thinking is enabled with claude models.")
+                kwargs["temperature"] = 1
+
             if get_settings().litellm.get("enable_callbacks", False):
                 kwargs = self.add_litellm_callbacks(kwargs)
 
@@ -264,13 +292,13 @@ class LiteLLMAIHandler(BaseAiHandler):
                 except json.JSONDecodeError as e:
                     raise ValueError(f"LITELLM.EXTRA_HEADERS contains invalid JSON: {str(e)}")
                 kwargs["extra_headers"] = litellm_extra_headers
-            
+
             get_logger().debug("Prompts", artifact={"system": system, "user": user})
-            
+
             if get_settings().config.verbosity_level >= 2:
                 get_logger().info(f"\nSystem prompt:\n{system}")
                 get_logger().info(f"\nUser prompt:\n{user}")
-                
+
             response = await acompletion(**kwargs)
         except (openai.APIError, openai.APITimeoutError) as e:
             get_logger().warning(f"Error during LLM inference: {e}")

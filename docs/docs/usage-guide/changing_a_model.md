@@ -221,3 +221,10 @@ To bypass chat templates and temperature controls, set `config.custom_reasoning_
 reasoning_efffort= = "medium" # "low", "medium", "high"
 
 With the OpenAI models that support reasoning effort (eg: o3-mini), you can specify its reasoning effort via `config` section. The default value is `medium`. You can change it to `high` or `low` based on your usage.
+
+### Anthropic models
+
+[config]
+enable_claude_extended_thinking = false # Set to true to enable extended thinking feature
+extended_thinking_budget_tokens = 32000
+extended_thinking_max_output_tokens = 64000
