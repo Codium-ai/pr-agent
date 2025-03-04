@@ -4,19 +4,17 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pr-agent"
-version = "0.2.5"
+version = "0.2.7"
 
-authors = [{ name = "CodiumAI", email = "tal.r@codium.ai" }]
+authors = [{ name = "QodoAI", email = "tal.r@qodo.ai" }]
 
 maintainers = [
-  { name = "Tal Ridnik", email = "tal.r@codium.ai" },
-  { name = "Ori Kotek", email = "ori.k@codium.ai" },
-  { name = "Hussam Lawen", email = "hussam.l@codium.ai" },
+  { name = "Tal Ridnik", email = "tal.r@qodo.ai" },
 ]
 
-description = "CodiumAI PR-Agent aims to help efficiently review and handle pull requests, by providing AI feedbacks and suggestions."
+description = "QodoAI PR-Agent aims to help efficiently review and handle pull requests, by providing AI feedbacks and suggestions."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 keywords = ["AI", "Agents", "Pull Request", "Automation", "Code Review"]
 license = { name = "Apache 2.0", file = "LICENSE" }
 
@@ -32,7 +30,7 @@ dependencies = { file = ["requirements.txt"] }
 
 [project.urls]
 "Homepage" = "https://github.com/qodo-ai/pr-agent"
-"Documentation" = "https://pr-agent-docs.codium.ai/"
+"Documentation" = "https://qodo-merge-docs.qodo.ai/"
 
 [tool.setuptools]
 include-package-data = true
