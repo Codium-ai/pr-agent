@@ -49,23 +49,6 @@ OPENAI__API_BASE=https://api.openai.com/v1
 OPENAI__KEY=sk-...
 ```
 
-### RelaxAI
-
-RelaxAI provides an OpenAI-compatible API. Add your API key in `.secrets.toml`:
-
-```toml
-[relaxai]
-key = "your-relaxai-api-key"
-api_base = "https://api.relax.ai/v1/"
-
-[config]
-model = "relaxai/DeepSeek-V4-Pro"
-```
-
-You can also set `RELAXAI__KEY` and `RELAXAI__API_BASE` as environment variables.
-See the [RelaxAI API documentation](https://relax.ai/docs/getting-started/introduction)
-for current model IDs and integration details.
-
 ### OpenAI Flex Processing
 
 To reduce costs for non-urgent/background tasks, enable Flex Processing:
@@ -873,6 +856,34 @@ OPENAI__KEY=...
 (API keys are issued in the [Heabsy console](https://platform.heabsy.com); accounts are opened on request at [heabsy.com/contacts](https://heabsy.com/contacts).)
 
 Keep the `openai/` prefix on the model name: a prefixed name is not in the `MAX_TOKENS` table, so you also have to set `custom_model_max_tokens`. Take the value from Heabsy's [model catalog](https://heabsy.com/models).
+
+### RelaxAI
+
+[RelaxAI](https://relax.ai) offers an OpenAI-compatible API. It needs no provider-specific
+code in PR-Agent: use the `openai/` model prefix and configure RelaxAI's endpoint and key
+through the existing `[openai]` settings.
+
+```toml
+[config] # in configuration.toml
+model = "openai/DeepSeek-V4-Pro"
+custom_model_max_tokens = 1049000 # use the context window published for the selected model
+
+[openai] # in .secrets.toml
+api_base = "https://api.relax.ai/v1/"
+key = "..." # your RelaxAI API key
+```
+
+or use environment variables (make sure to use double underscores `__`):
+
+```bash
+OPENAI__API_BASE=https://api.relax.ai/v1/
+OPENAI__KEY=...
+```
+
+Keep the `openai/` prefix on the model name to route through LiteLLM's OpenAI-compatible
+path. The model IDs and context windows can change; see the
+[RelaxAI API documentation](https://relax.ai/docs/getting-started/introduction) for current
+integration details and available models.
 
 ### Custom models
 

@@ -55,7 +55,6 @@ REPO_HOST_ONLY_KEYS_BY_SECTION = {
     "ollama": frozenset({"api_base"}),
     "openai": frozenset({"api_base", "api_type", "api_version"}),
     "openrouter": frozenset({"api_base"}),
-    "relaxai": frozenset({"api_base"}),
     "pr_reviewer": frozenset({"publish_error_details"}),
     # List the sibling repositories whose files and GitHub tickets a consuming repo
     # (or a comment command) may select into model context. A repo's .pr_agent.toml alone must

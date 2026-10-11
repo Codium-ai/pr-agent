@@ -407,7 +407,6 @@ def test_restore_settings_sections_removes_section_created_after_snapshot():
         ("moonshot", "api_base"),
         ("databricks", "api_base"),
         ("openrouter", "api_base"),
-        ("relaxai", "api_base"),
     ],
 )
 def test_repo_settings_cannot_override_provider_endpoint_keys(monkeypatch, settings_snapshot, section, key):
