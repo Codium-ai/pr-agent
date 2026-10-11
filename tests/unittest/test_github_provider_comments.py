@@ -471,6 +471,41 @@ def test_publish_code_suggestions_single_line_payload_shape():
     assert "start_line" not in payload and "start_side" not in payload
 
 
+@pytest.mark.parametrize(
+    ("body", "expected"),
+    [
+        pytest.param("**Suggestion:** fix\n```suggestion\n" + "A" * 100 + "\n```", "**Suggestion:** fix\n",
+                     id="drops-suggestion-block"),
+        pytest.param("A" * 100, "A" * 22 + "...", id="clamps-body-without-block"),
+    ],
+)
+def test_publish_code_suggestions_limits_body_length(body, expected):
+    """An oversized body drops its suggestion block before the clamp, so no truncated suggestion reaches GitHub."""
+    provider = _make_provider(max_chars=25)
+
+    payload = provider._build_code_suggestion_payload({
+        "body": body,
+        "relevant_file": "src/foo.py",
+        "relevant_lines_start": 7,
+        "relevant_lines_end": 7,
+    })
+
+    assert payload["body"] == expected
+
+
+def test_publish_code_suggestions_does_not_trim_short_body():
+    provider = _make_provider(max_chars=25)
+
+    payload = provider._build_code_suggestion_payload({
+        "body": "```suggestion\nfix\n```",
+        "relevant_file": "src/foo.py",
+        "relevant_lines_start": 7,
+        "relevant_lines_end": 7,
+    })
+
+    assert payload["body"] == "```suggestion\nfix\n```"
+
+
 def test_publish_code_suggestions_skips_invalid_ranges():
     """Suggestions with missing/negative start, or end<start, must be skipped silently."""
     provider = _make_provider()
