@@ -15,7 +15,7 @@ from pr_agent.agent.request_policy import policy_metadata, policy_value
 from ..algo.file_filter import filter_ignored
 from ..algo.language_handler import is_valid_file
 from ..algo.types import EDIT_TYPE, FilePatchInfo
-from ..algo.utils import find_line_number_of_relevant_line_in_file
+from ..algo.utils import find_line_number_of_relevant_line_in_file, replace_suggestion_blocks
 from ..config_loader import get_settings, get_verbosity_level
 from ..log import get_logger
 from .diff_parsing import to_hunk_only_patch
@@ -103,7 +103,7 @@ class BitbucketProvider(GitProvider):
             elif self.auth_type == "bearer":
                 try:
                     self.bearer_token = context.get("bitbucket_bearer_token", None)
-                except:
+                except Exception:
                     self.bearer_token = None
 
                 if not self.bearer_token:
@@ -240,7 +240,7 @@ class BitbucketProvider(GitProvider):
                 patch_orig = "\n".join(diff)
                 patch = "\n".join(patch_orig.splitlines()[5:]).strip('\n')
                 diff_code = f"\n\n```diff\n{patch.rstrip()}\n```"
-                body = re.sub(r'```suggestion.*?```', lambda _: diff_code, body, flags=re.DOTALL)
+                body = replace_suggestion_blocks(body, diff_code)
             except Exception as e:
                 get_logger().exception(f"Bitbucket failed to get diff code for publishing, error: {e}")
                 return None
@@ -607,9 +607,14 @@ class BitbucketProvider(GitProvider):
         try:
             url_repo = f"https://api.bitbucket.org/2.0/repositories/{self.workspace_slug}/{self.repo_slug}/"
             response_repo = requests.request(
-                "GET", url_repo, headers=self.headers, timeout=get_http_request_timeout()).json()
-            return response_repo['mainbranch']['name']
-        except:
+                "GET", url_repo, headers=self.headers, timeout=get_http_request_timeout())
+            response_repo.raise_for_status()
+            return response_repo.json()['mainbranch']['name']
+        except (requests.RequestException, KeyError, TypeError) as error:
+            if isinstance(error, requests.RequestException):
+                get_logger().warning(
+                    f"Failed to read the default branch of {self.workspace_slug}/{self.repo_slug} "
+                    f"({type(error).__name__}); using the pull request's destination branch instead")
             return self.pr.destination_branch
 
     def get_owning_namespace(self) -> str | None:
@@ -735,8 +740,7 @@ class BitbucketProvider(GitProvider):
                 return ""
             # Distinguish an unavailable file from a failed request to prevent an error response
             # body from being treated as repository instructions or changelog content.
-            if propagate_errors:
-                response.raise_for_status()
+            response.raise_for_status()
             contents = response.text
             return contents
         except Exception:
@@ -788,9 +792,13 @@ class BitbucketProvider(GitProvider):
             response = requests.request("GET", remote_link, headers=self.headers, timeout=get_http_request_timeout())
             if response.status_code == 404:  # not found
                 return ""
+            response.raise_for_status()
             contents = response.text
             return contents
-        except Exception:
+        except Exception as error:
+            if isinstance(error, requests.RequestException):
+                get_logger().warning(
+                    f"Failed to read {remote_link!r} ({type(error).__name__}); treating it as an empty file")
             return ""
 
     def get_commit_messages(self) -> str:

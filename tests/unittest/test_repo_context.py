@@ -1698,6 +1698,7 @@ def test_github_provider_reads_from_default_branch_when_requested():
                 "require_estimate_effort_to_review": True,
                 "require_risk_assessment": False,
                 "require_merge_recommendation": False,
+                "require_failure_modes": False,
                 "require_priority_files": False,
                 "num_max_findings": 3,
                 "num_pr_files": 1,
@@ -1745,7 +1746,9 @@ def test_github_provider_reads_from_default_branch_when_requested():
         ),
     ],
 )
-def test_prompt_templates_render_configured_repo_context(prompt_name, variables):
+@pytest.mark.parametrize("artifact_context", [None, {"instructions": "Consider CI failures."}])
+def test_prompt_templates_render_configured_repo_context(prompt_name, variables, artifact_context):
+    variables = {**variables, "artifact_context": artifact_context}
     template = getattr(get_settings(), prompt_name).system
 
     if prompt_name == "pr_review_prompt":
@@ -1766,6 +1769,8 @@ def test_prompt_templates_render_configured_repo_context(prompt_name, variables)
 
     assert "Repository context:" in rendered
     assert '<file path="AGENTS.md" scope="repo-root">' in rendered
+    if artifact_context:
+        assert "Consider CI failures." in rendered
 
 
 class RefishProvider(FakeProvider):

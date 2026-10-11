@@ -45,6 +45,7 @@ from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.algo.utils import (
     ModelType,
     get_model,
+    get_suggestion_fence,
     load_yaml,
     replace_code_tags,
 )
@@ -607,7 +608,8 @@ class PRCodeSuggestions:
     def _get_suggestions_coverage_footer(self, suggestions_present: bool = True) -> str:
         failed_chunk_count = getattr(self, "failed_chunk_count", 0)
         remaining_files = getattr(self, "remaining_files_list", [])
-        if ((not failed_chunk_count and not remaining_files) or
+        partial_files = getattr(self, "partial_files_list", [])
+        if ((not failed_chunk_count and not remaining_files and not partial_files) or
                 not get_settings().pr_code_suggestions.get("enable_suggestions_coverage_footer", True)):
             return ""
         details = []
@@ -626,6 +628,14 @@ class PRCodeSuggestions:
                 file_list += f", and {extra_count} more"
             details.append(f"{len(remaining_files)} file(s) were not analyzed because of the token budget or "
                            f"maximum chunk calls: {file_list}.")
+        if partial_files:
+            displayed_files = partial_files[:50]
+            file_list = ", ".join(_markdown_code_span(name) for name in displayed_files)
+            extra_count = len(partial_files) - len(displayed_files)
+            if extra_count:
+                file_list += f", and {extra_count} more"
+            details.append(f"Partial input coverage: {len(partial_files)} file(s) had patches clipped before "
+                           f"analysis to fit the token budget: {file_list}.")
         return "\n\n⚠️ **Suggestion coverage:** " + " ".join(details)
 
     async def publish_no_suggestions(self):
@@ -1455,13 +1465,14 @@ class PRCodeSuggestions:
             score = d.get("score")
             header = f"**Suggestion:** {content} [{label}, importance: {score}]" if score \
                 else f"**Suggestion:** {content} [{label}]"
+            fence = get_suggestion_fence(new_code_snippet or "")
             if new_code_snippet and is_applicable:
-                body = f"{header}\n```suggestion\n" + new_code_snippet + "\n```"
+                body = f"{header}\n{fence}suggestion\n" + new_code_snippet + f"\n{fence}"
             else:
                 body = header
                 if new_code_snippet:
                     body += (f"\n\nProposed code (not offered as a committable change because {fallback_reason}):\n"
-                             f"```\n{new_code_snippet}\n```")
+                             f"{fence}\n{new_code_snippet}\n{fence}")
                 elif requires_pr_fallback:
                     body += f"\n\nNot offered as a committable change because {fallback_reason}."
 
@@ -2077,6 +2088,7 @@ class PRCodeSuggestions:
         self.total_chunk_count = 0
         self.parse_failure_count = 0
         self.remaining_files_list = []
+        self.partial_files_list = []
         # Each attempt owns a fresh reporter, so restore the placeholder before the next model
         # prepares its chunks; otherwise the previous attempt's "N of N" line stays on screen
         # until the new one settles its first chunk and rewinds it to 1.
@@ -2105,22 +2117,24 @@ class PRCodeSuggestions:
         # get PR diff
         deleted_files = []
         if get_settings().pr_code_suggestions.decouple_hunks:
-            self.patches_diff_list, self.remaining_files_list = get_pr_multi_diffs(
+            packed_diffs = get_pr_multi_diffs(
                 self.git_provider, attempt_token_handler, model,
                 max_calls=get_settings().pr_code_suggestions.max_number_of_calls,
-                add_line_numbers=True, return_remaining_files=True,
+                add_line_numbers=True, return_coverage=True,
                 output_token_reserve=output_token_reserve,
                 include_filtered_file_names=False, deleted_files=deleted_files)  # decouple hunk with line numbers
+            self.patches_diff_list = packed_diffs.chunks
             self.patches_diff_list_no_line_numbers = self.remove_line_numbers(self.patches_diff_list)  # decouple hunk
 
         else:
             # non-decoupled hunks
-            self.patches_diff_list_no_line_numbers, self.remaining_files_list = get_pr_multi_diffs(
+            packed_diffs = get_pr_multi_diffs(
                 self.git_provider, attempt_token_handler, model,
                 max_calls=get_settings().pr_code_suggestions.max_number_of_calls,
-                add_line_numbers=False, return_remaining_files=True,
+                add_line_numbers=False, return_coverage=True,
                 output_token_reserve=output_token_reserve,
                 include_filtered_file_names=False, deleted_files=deleted_files)
+            self.patches_diff_list_no_line_numbers = packed_diffs.chunks
             self.patches_diff_list = await self.convert_to_decoupled_with_line_numbers(
                 self.patches_diff_list_no_line_numbers,
                 model,
@@ -2129,13 +2143,17 @@ class PRCodeSuggestions:
             if not self.patches_diff_list:
                 # fallback to decoupled hunks
                 deleted_files.clear()
-                self.patches_diff_list, self.remaining_files_list = get_pr_multi_diffs(
+                packed_diffs = get_pr_multi_diffs(
                     self.git_provider, attempt_token_handler, model,
                     max_calls=get_settings().pr_code_suggestions.max_number_of_calls,
-                    add_line_numbers=True, return_remaining_files=True,
+                    add_line_numbers=True, return_coverage=True,
                     output_token_reserve=output_token_reserve,
                     include_filtered_file_names=False, deleted_files=deleted_files)  # decouple hunk with line numbers
+                self.patches_diff_list = packed_diffs.chunks
                 self.patches_diff_list_no_line_numbers = self.remove_line_numbers(self.patches_diff_list)
+
+        self.remaining_files_list = packed_diffs.remaining_files_list
+        self.partial_files_list = packed_diffs.partial_files_list
 
         filtered_files = getattr(self.git_provider, "get_filtered_diff_file_names", lambda: [])()
         if self.patches_diff_list and isinstance(filtered_files, (list, tuple)) and filtered_files:
@@ -2159,8 +2177,8 @@ class PRCodeSuggestions:
                 diffs[0] = _append_metadata_section(
                     diffs[0], attempt_token_handler.prompt_tokens + attempt_token_handler.count_tokens(diffs[0]),
                     section, max_tokens, attempt_token_handler, whole_lines=True)[0]
-        elif deleted_files and not self.remaining_files_list:
-            return {"code_suggestions": []}  # only deletions: nothing a suggestion could anchor on
+        elif not self.patches_diff_list and not self.remaining_files_list and not self.partial_files_list:
+            return {"code_suggestions": []}
 
         if self.patches_diff_list:
             get_logger().info(f"Number of PR chunk calls: {len(self.patches_diff_list)}")
@@ -2327,7 +2345,7 @@ class PRCodeSuggestions:
                     try:
                         code_snippet_link = self.git_provider.get_line_link(relevant_file, relevant_lines_start,
                                                                             relevant_lines_end)
-                    except:
+                    except (AttributeError, KeyError, ValueError):
                         code_snippet_link = ""
                     # add html table for each suggestion
 
@@ -2432,6 +2450,7 @@ class PRCodeSuggestions:
                          'num_code_suggestions': len(suggestion_list),
                          'prev_suggestions_str': prev_suggestions_str,
                          'extra_instructions': getattr(self, 'vars', {}).get('extra_instructions') or '',
+                         'artifact_context': (getattr(self, 'vars', {}) or {}).get('artifact_context') or None,
                          "is_ai_metadata": is_ai_metadata,
                          "diff_hunk_format": render_diff_hunk_format(
                              include_line_numbers=True,

@@ -365,6 +365,17 @@ class TestAzureDevopsProviderFiles:
         assert provider._get_pr_iteration_changes() == entries
         assert provider.azure_devops_client.get_pull_request_iteration_changes.call_count == 4
 
+    def test_diff_files_propagates_iteration_collection_failure(self):
+        provider = self._provider([
+            SimpleNamespace(change_entries=[self._change("/src/first.py")], next_skip=1, next_top=1),
+            RuntimeError("later page failed"),
+        ])
+
+        with pytest.raises(RuntimeError, match="later page failed"):
+            provider.get_diff_files()
+
+        assert provider.diff_files is None
+
     def test_get_files_uses_current_iteration_and_skips_non_file_entries(self):
         provider = self._provider([
             SimpleNamespace(

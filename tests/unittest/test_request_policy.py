@@ -393,7 +393,7 @@ async def test_gitlab_comment_skip_has_no_followup_reaction(environment, monkeyp
     settings, provider = environment
     settings.set("config.ignore_pr_labels", ["skip"])
     monkeypatch.setattr(gitlab_webhook, "global_settings", settings)
-    monkeypatch.setattr(gitlab_webhook, "authenticate_gitlab_webhook", lambda *_: None)
+    monkeypatch.setattr(gitlab_webhook, "authenticate_gitlab_webhook", AsyncMock(return_value=None))
     monkeypatch.setattr(gitlab_webhook, "get_git_provider_with_context", lambda **_: provider)
     body = {"object_kind": "note", "event_type": "note", "user": {"username": "human", "name": "Human", "id": 1},
             "merge_request": {"url": URL}, "object_attributes": {"id": 42, "note": "/review"}}

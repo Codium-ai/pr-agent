@@ -137,7 +137,20 @@ class ConcurrentFileUpdateError(RuntimeError):
 
 
 _URL_USERINFO_RE = re.compile(r"(?P<scheme>[a-zA-Z][a-zA-Z0-9+.\-]{0,30}://)[^/@\s]+@")
-_AUTH_HEADER_RE = re.compile(r"(?i)(authorization\s*:\s*(?:bearer|basic|token)\s+)\S+")
+_AUTH_HEADER_RE = re.compile(
+    r"(?i)(authorization[ \t]*:[ \t]*[A-Za-z][A-Za-z0-9_-]*[ \t]++)"
+    r"(?!<redacted>[ \t]*(?:[\r\n]|$))[^\r\n]+"
+)
+_CREDENTIAL_ASSIGNMENT_RE = re.compile(
+    r"(?i)((?<![a-z0-9])(?:aws_secret_access_key|aws_session_token|aws_access_key_id|"
+    r"secretaccesskey|sessiontoken|accesskeyid|github_token|gitlab_token|ci_job_token|openai_key|openai_api_key|"
+    r"user_token|personal_access_token|bearer_token|basic_token|api_token|api_key|pat|client_secret|"
+    r"webhook_secret|shared_secret|webhook_password)\b[\"']?[ \t]*[:=][ \t]*)"
+    r"(\"(?:\\[^\r\n]|[^\"\\\r\n])*(?:\"|\\?(?=[\r\n]|\Z))|"
+    r"'(?:\\[^\r\n]|[^'\\\r\n])*(?:'|\\?(?=[\r\n]|\Z))|[^\s\"']+)"
+)
+_GITLAB_TOKEN_RE = re.compile(r"\bglpat-[A-Za-z0-9_-]+")
+_AWS_ACCESS_KEY_RE = re.compile(r"\b(?:A3T[A-Z0-9]|AKIA|ASIA)[A-Z0-9]{16}\b")
 
 
 # The reaction PR-Agent has always added when it picks a comment command up. Used as the
@@ -156,11 +169,40 @@ def get_reaction_setting(name: str, default: str = "") -> str:
     return value.strip() if isinstance(value, str) else ""
 
 
-def redact_credentials(text) -> str:
+def _redact_credential_assignment(match: re.Match) -> str:
+    value = match.group(2)
+    quote = value[0] if value[0] in "\"'" else ""
+    closed = bool(quote and len(value) > 1 and value.endswith(quote))
+    credential = value[1:-1] if closed else value[1:] if quote else value
+    if not credential.strip() or credential.strip().lower() == "<redacted>":
+        return match.group(0)
+    return match.group(1) + quote + "<redacted>" + (quote if closed else "")
+
+
+def redact_credentials(text, *, redaction_counts: dict[str, int] | None = None) -> str:
     if not text:
         return ""
-    redacted = _URL_USERINFO_RE.sub(lambda m: m.group("scheme"), str(text))
-    return _AUTH_HEADER_RE.sub(lambda m: m.group(1) + "<redacted>", redacted)
+    redacted = str(text)
+    for kind, pattern, replacement in (
+        ("url_userinfo", _URL_USERINFO_RE, lambda m: m.group("scheme")),
+        ("authorization_header", _AUTH_HEADER_RE, lambda m: m.group(1) + "<redacted>"),
+        ("credential_assignment", _CREDENTIAL_ASSIGNMENT_RE, _redact_credential_assignment),
+        ("gitlab_token", _GITLAB_TOKEN_RE, "<redacted>"),
+        ("aws_access_key", _AWS_ACCESS_KEY_RE, "<redacted>"),
+    ):
+        count = 0
+
+        def counted_replacement(match, replacement=replacement):
+            nonlocal count
+            result = replacement(match) if callable(replacement) else replacement
+            if result != match.group(0):
+                count += 1
+            return result
+
+        redacted = pattern.sub(counted_replacement, redacted)
+        if count and redaction_counts is not None:
+            redaction_counts[kind] = redaction_counts.get(kind, 0) + count
+    return redacted
 
 
 def _clone_authorization_header(repo_url: str) -> str | None:
@@ -377,6 +419,14 @@ class GitProvider(ABC):
         /review reads them to learn which findings a human resolved."""
         return iter(())
 
+    def _iter_review_threads(self) -> Iterator[CodeSuggestionThread]:
+        """Yield review threads with eligible dismissals reported as `resolved`.
+
+        Default to the existing iterator so GitLab and unsupported providers keep their behavior.
+        Providers may override this without expanding the /improve discussion context.
+        """
+        return self._iter_code_suggestion_threads()
+
     def supports_threaded_pr_questions(self) -> bool:
         return False
 
@@ -496,11 +546,11 @@ class GitProvider(ABC):
             )
             ssl_env = os.environ.copy()
 
-        # Keep the credential out of every git argv: clone the redacted URL and resend the
+        # Keep the credential out of every git argv: remove URL userinfo and resend the
         # token as an http.extraHeader through the GIT_CONFIG_* environment. Git applies
         # that config to the subprocesses it spawns (including git-remote-http) without
         # putting the credential on any command line.
-        clean_repo_url = redact_credentials(repo_url)
+        clean_repo_url = _URL_USERINFO_RE.sub(lambda match: match.group("scheme"), repo_url)
         authorization_header = _clone_authorization_header(repo_url)
         if clean_repo_url != repo_url and authorization_header is not None:
             inherited_count = int(ssl_env.get("GIT_CONFIG_COUNT", "0"))

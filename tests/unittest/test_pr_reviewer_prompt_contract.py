@@ -126,6 +126,33 @@ def test_user_prompt_contributes_variables_of_its_own(monkeypatch):
     assert user_referenced - (set(reviewer.vars) - {dropped}) == {dropped}
 
 
+@pytest.mark.parametrize("enabled", [False, True])
+def test_failure_modes_prompt_follows_captured_setting(monkeypatch, enabled):
+    settings = get_settings()
+    original = settings.pr_reviewer.require_failure_modes
+    try:
+        settings.pr_reviewer.require_failure_modes = enabled
+        reviewer = _build_reviewer(monkeypatch)
+    finally:
+        settings.pr_reviewer.require_failure_modes = original
+    assert reviewer.vars["require_failure_modes"] is enabled
+    reviewer.vars["duplicate_prompt_examples"] = True
+    environment = Environment(
+        autoescape=select_autoescape(default_for_string=False),
+        undefined=StrictUndefined,
+    )
+    system = environment.from_string(settings.pr_review_prompt.system).render(reviewer.vars)
+    user = environment.from_string(settings.pr_review_prompt.user).render(reviewer.vars)
+    assert ("class FailureMode(BaseModel):" in system) is enabled
+    assert ("failure_modes: List[FailureMode]" in system) is enabled
+    for prompt in (system, user):
+        assert ("\n  failure_modes:" in prompt) is enabled
+        assert ("covered_in_this_pr: false" in prompt) is enabled
+    if enabled:
+        assert "max_items=3" in system
+        assert "Return an empty list when no concrete scenario is supported" in system
+
+
 def test_artifact_context_is_untrusted_user_input(monkeypatch):
     reviewer = _build_reviewer(monkeypatch)
     reviewer.vars["extra_instructions"] = "Only focus on correctness."
@@ -155,6 +182,33 @@ def test_artifact_context_is_untrusted_user_input(monkeypatch):
     assert user.count(artifact_content) == 1
     assert user.index(start_marker) < user.index(artifact_content) < user.index(end_marker)
     assert user.index("CI artifact label and content") < user.index("--PR Info--")
+
+
+@pytest.mark.parametrize("with_artifact", [False, True])
+def test_merge_recommendation_accounts_for_ci_artifact(monkeypatch, with_artifact):
+    reviewer = _build_reviewer(monkeypatch)
+    reviewer.vars["require_merge_recommendation"] = True
+    reviewer.vars["artifact_context"] = (
+        {
+            "label": "ci.log",
+            "content": "allowed-to-fail job failed",
+            "instructions": "Consider CI results.",
+            "start_marker": "<<<CI_ARTIFACT_BEGIN>>>",
+            "end_marker": "<<<CI_ARTIFACT_END>>>",
+        }
+        if with_artifact else None
+    )
+
+    environment = Environment(autoescape=select_autoescape(default_for_string=False), undefined=StrictUndefined)
+    system = environment.from_string(get_settings().pr_review_prompt.system).render(reviewer.vars)
+    recommendation = next(line for line in system.splitlines() if "merge_recommendation: Literal" in line)
+
+    for value in ("no_concerns_found", "needs_review", "changes_required"):
+        assert value in recommendation
+    assert ("If it reports any concern, choose needs_review at best" in recommendation) is with_artifact
+    for concern in ("failed jobs (including allowed-to-fail jobs)", "planned destroys", "new vulnerabilities"):
+        assert (concern in recommendation) is with_artifact
+    assert ("both the diff and the CI artifact report no concerns" in recommendation) is with_artifact
 
 
 @pytest.mark.parametrize(

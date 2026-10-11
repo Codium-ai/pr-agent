@@ -329,8 +329,8 @@ To use Amazon Bedrock models with static IAM credentials:
 ```yaml
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        config.model: "bedrock/anthropic.claude-3-5-sonnet-20240620-v1:0"
-        config.fallback_models: '["bedrock/anthropic.claude-3-5-sonnet-20240620-v1:0"]'
+        config.model: "bedrock/us.anthropic.claude-sonnet-4-6"
+        config.fallback_models: '["bedrock/us.anthropic.claude-sonnet-4-6"]'
         aws.AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws.AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws.AWS_REGION_NAME: "us-east-1"
@@ -343,13 +343,13 @@ When the GitHub Actions runner is on AWS infrastructure (EC2, ECS, EKS), use the
 ```yaml
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        config.model: "bedrock/anthropic.claude-3-5-sonnet-20240620-v1:0"
-        config.fallback_models: '["bedrock/anthropic.claude-3-5-sonnet-20240620-v1:0"]'
+        config.model: "bedrock/us.anthropic.claude-sonnet-4-6"
+        config.fallback_models: '["bedrock/us.anthropic.claude-sonnet-4-6"]'
         AWS_USE_IMDS: "true"
-        # AWS_REGION_NAME: us-east-1  # optional if instance metadata provides the region
+        AWS_REGION_NAME: us-east-1  # source region for the US inference profile
 ```
 
-The IAM role must have `bedrock:InvokeModel` on the target model ARN. See [Bedrock model configuration](../usage-guide/changing_a_model.md#amazon-bedrock) for the full IAM policy example and supported models.
+The IAM role must have `bedrock:InvokeModel` on the inference profile and its destination foundation models. See [Bedrock model configuration](../usage-guide/changing_a_model.md#amazon-bedrock) for the full IAM policy example and supported models.
 
 To route calls through a VPC interface endpoint, add `AWS_BEDROCK_RUNTIME_ENDPOINT` alongside the credentials above:
 
@@ -449,6 +449,8 @@ artifact_label = ""                                         # empty = the file's
 target_tools = ["pr_reviewer", "pr_description", "pr_code_suggestions"]
 max_artifact_size = 50000                                   # characters; longer files are truncated with a marker
 ```
+
+CI artifacts are checked for recognizable URL credentials, authorization headers, standard GitLab tokens, AWS access keys, and common credential assignments before model submission, with redaction matches logged only by type and count; this pattern-based check does not recognize every secret format, so use sanitized CI logs as input.
 
 :::note
 A path that resolves outside `GITHUB_WORKSPACE` is rejected, and a missing or unreadable file is skipped with a warning — in both cases the tools still run, just without the artifact context.

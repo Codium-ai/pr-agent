@@ -250,6 +250,7 @@ class GerritProvider(GitProvider):
         self.repo = Repo(self.repo_path)
         assert self.repo
         self.pr_url = base_url
+        self._commit_diffs = None
         self.pr = PullRequestMimic(self.get_pr_title(), self.get_diff_files())
 
     def get_pr_title(self):
@@ -324,15 +325,28 @@ class GerritProvider(GitProvider):
         except (IndexError, KeyError, OSError, UnicodeDecodeError, ValueError):
             return b""
 
-    def get_diff_files(self) -> list[FilePatchInfo]:
-        diffs = list(
-            self.repo.head.commit.diff(
-                self.repo.head.commit.parents[0],  # previous commit
-                create_patch=True,
-                R=True
+    def _get_commit_diffs(self) -> list:
+        """Return the cached, unfiltered commit diff, including rename detection and patches.
+
+        Keep filtering in callers so repository settings loaded after construction
+        take effect on every read.
+        """
+        diffs = getattr(self, '_commit_diffs', None)
+        if diffs is None:
+            diffs = list(
+                self.repo.head.commit.diff(
+                    self.repo.head.commit.parents[0],  # previous commit
+                    create_patch=True,
+                    R=True
+                )
             )
-        )
-        diffs = filter_ignored(diffs, "gerrit")
+            self._commit_diffs = diffs
+        return diffs
+
+    def get_diff_files(self) -> list[FilePatchInfo]:
+        # Apply ignore rules at call time: __init__ reads the diff before repository
+        # settings are loaded.
+        diffs = filter_ignored(self._get_commit_diffs(), 'gerrit')
 
         diff_files = []
         for diff_item in diffs:
@@ -373,13 +387,13 @@ class GerritProvider(GitProvider):
         return diff_files
 
     def get_files(self):
-        diff_index = self.repo.head.commit.diff(
-            self.repo.head.commit.parents[0],  # previous commit
-            R=True
-        )
-        # Get the list of changed files
-        diff_files = [item.a_path for item in diff_index]
-        return diff_files
+        # Read names from the filtered raw diff to avoid another walk or blob decoding.
+        # Use the destination path for renames and the original path for deletions.
+        return [
+            path
+            for path in (diff.b_path or diff.a_path for diff in filter_ignored(self._get_commit_diffs(), 'gerrit'))
+            if path
+        ]
 
     @cache_languages
     def get_languages(self):
@@ -421,17 +435,20 @@ class GerritProvider(GitProvider):
         return True
 
     def split_suggestion(self, msg) -> tuple[str, str]:
-        is_code_context = False
+        # The fence that opened the suggestion block; it can be longer than three
+        # backticks when the suggested code itself contains a ``` line.
+        fence = None
         description = []
         context = []
         for line in msg.splitlines():
-            if line.startswith('```suggestion'):
-                is_code_context = True
+            opener = re.match(r'(`{3,})suggestion', line)
+            if opener and not fence:
+                fence = opener.group(1)
                 continue
-            if line.startswith('```'):
-                is_code_context = False
+            if line.startswith(fence or '```'):
+                fence = None
                 continue
-            if is_code_context:
+            if fence:
                 context.append(line)
             else:
                 description.append(
@@ -453,10 +470,15 @@ class GerritProvider(GitProvider):
             if not isinstance(suggestion, dict) or not isinstance(suggestion.get("relevant_file"), str):
                 get_logger().warning("Skipping malformed suggestion: missing or invalid 'relevant_file'")
                 continue
-            # Sanitize file path to prevent directory traversal
+            # Sanitize file path to prevent directory traversal.
+            # resolve() follows symlinks, so a tracked symlink into .git/
+            # would pass relative_to() and then be written by add_suggestion.
             try:
-                target_path = (repo_root / suggestion["relevant_file"]).resolve()
-                target_path.relative_to(repo_root)
+                unresolved = repo_root / suggestion["relevant_file"]
+                target_path = unresolved.resolve()
+                inside = [part.casefold() for part in target_path.relative_to(repo_root).parts]
+                if unresolved.is_symlink() or ".git" in inside:
+                    raise ValueError("refuses to write through a symlink or into git metadata")
             except ValueError:
                 get_logger().warning(f"Skipping suggestion with path traversal: {suggestion['relevant_file']}")
                 continue
@@ -472,8 +494,20 @@ class GerritProvider(GitProvider):
             patch = diff(cwd=self.repo_path)
             patch_id = uuid.uuid4().hex[0:4]
             path = "/".join(["codium-ai", self.refspec, patch_id])
-            full_path = upload_patch(patch, path)
-            reset_local_changes(self.repo_path)
+            uploaded = False
+            try:
+                full_path = upload_patch(patch, path)
+                uploaded = True
+            finally:
+                try:
+                    reset_local_changes(self.repo_path)
+                except Exception as cleanup_error:
+                    if uploaded:
+                        raise
+                    get_logger().warning(
+                        "Failed to reset Gerrit edits after upload failed in {}: {}; stderr: {!r}",
+                        self.repo_path, cleanup_error, getattr(cleanup_error, "stderr", None),
+                    )
             msg.append(f'* {description}\n{full_path}')
 
         if msg:

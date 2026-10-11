@@ -2,6 +2,7 @@ import hashlib
 import hmac
 import json
 from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
 import pytest
 from fastapi import HTTPException
@@ -79,7 +80,7 @@ async def test_gitlab_rejects_bad_token_before_parsing(monkeypatch):
 async def test_gitlab_does_not_log_the_payload(monkeypatch):
     logger = _Logger()
     monkeypatch.setattr(gitlab_webhook, "get_logger", lambda: logger)
-    monkeypatch.setattr(gitlab_webhook, "authenticate_gitlab_webhook", lambda *args: None)
+    monkeypatch.setattr(gitlab_webhook, "authenticate_gitlab_webhook", AsyncMock(return_value=None))
     request = _Request(json.dumps({"object_kind": "push", "title": SENTINEL}).encode())
     tasks = BackgroundTasks()
 

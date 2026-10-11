@@ -1,10 +1,13 @@
 import os
+import re
 import secrets
 from contextvars import ContextVar
 from pathlib import Path
 from typing import Optional, TypedDict
+from urllib.parse import urlsplit
 
 from pr_agent.config_loader import get_settings
+from pr_agent.git_providers.git_provider import redact_credentials
 from pr_agent.log import get_logger
 
 DEFAULT_ARTIFACT_INSTRUCTIONS = (
@@ -67,6 +70,9 @@ def resolve_artifact_path(path: str) -> Optional[Path]:
 
 
 _TRUNCATION_MARKER = "\n\n[... content truncated due to size limit ...]"
+_TRUNCATION_MARKER_START = "[... content truncated due to size limit ...]\n\n"
+_REDACTION_LOOKAHEAD = 512
+_INCOMPLETE_USERINFO_RE = re.compile(r"\b[a-zA-Z][a-zA-Z0-9+.\-]{0,30}://[^/@\s:]+:[^/@\s]+(?=\s*\Z)")
 
 
 def _artifact_boundary_markers() -> tuple[str, str]:
@@ -83,17 +89,60 @@ def _single_line_artifact_label(label: str) -> str:
     return " ".join(str(label).split())
 
 
-def _read_and_truncate(path: Path, max_size: int) -> str:
+def _read_and_truncate(path: Path, max_size: int, truncate_from: str = "start") -> str:
+    """Read an artifact, keeping at most ``max_size`` characters from one end of it.
+
+    ``truncate_from = "start"`` (the default) keeps the beginning of the file, as this
+    has always done. ``"end"`` keeps the tail, where build logs carry their verdict:
+    the failure, plan summary or test result sits at the end of the trace, so dropping
+    from the start keeps the part the review actually needs.
+    """
+    keep_end = str(truncate_from).strip().lower() == "end"
+    read_size = max_size + _REDACTION_LOOKAHEAD
     try:
-        with open(path, "r", encoding="utf-8", errors="replace") as f:
-            content = f.read(max_size + 1)
+        if keep_end:
+            # Seek to a bounded tail window so a huge artifact is never read whole.
+            with open(path, "rb") as f:
+                f.seek(0, os.SEEK_END)
+                file_size = f.tell()
+                f.seek(max(0, file_size - 4 * read_size))
+                raw = f.read(4 * read_size)
+            # Match the text-mode branch, which normalizes CRLF and CR newlines.
+            content = raw.decode("utf-8", errors="replace").replace("\r\n", "\n").replace("\r", "\n")
+            # Keep extra leading context until credentials have been redacted.
+            if len(content) > read_size:
+                content = content[-read_size:]
+        else:
+            with open(path, "r", encoding="utf-8", errors="replace") as f:
+                # Read bounded lookahead before redacting the kept beginning.
+                content = f.read(read_size)
     except (OSError, IOError) as e:
         get_logger().warning(f"Failed to read artifact file {path}: {e}")
         return ""
 
-    if len(content) > max_size:
-        available = max_size - len(_TRUNCATION_MARKER)
-        content = content[:available] + _TRUNCATION_MARKER if available > 0 else content[:max_size]
+    truncated = len(content) > max_size
+    redaction_counts = {}
+    # Preserve valid ports and IPv6 literals before masking incomplete userinfo at EOF.
+    incomplete_url = _INCOMPLETE_USERINFO_RE.search(content)
+    if incomplete_url:
+        try:
+            parsed = urlsplit(incomplete_url.group())
+            valid_authority = parsed.port is not None or parsed.netloc.startswith("[")
+        except ValueError:
+            valid_authority = False
+        if not valid_authority:
+            content = content[:incomplete_url.start()] + "<redacted>" + content[incomplete_url.end():]
+            redaction_counts["incomplete_url_userinfo"] = 1
+    content = redact_credentials(content, redaction_counts=redaction_counts)
+    if redaction_counts:
+        get_logger().warning(f"Redacted CI artifact credentials by type: {redaction_counts}")
+    if truncated:
+        marker = _TRUNCATION_MARKER_START if keep_end else _TRUNCATION_MARKER
+        available = max_size - len(marker)
+        if available > 0:
+            content = (marker + content[-available:]) if keep_end else (content[:available] + marker)
+        else:
+            content = content[-max_size:] if keep_end else content[:max_size]
     return content
 
 
@@ -130,7 +179,8 @@ def load_artifact_context() -> Optional[ArtifactPromptContext]:
         max_size = 50000
     if max_size <= 0:
         max_size = 50000
-    content = _read_and_truncate(artifact_path, max_size)
+    truncate_from = artifacts_settings.get("truncate_from", "start")
+    content = _read_and_truncate(artifact_path, max_size, truncate_from)
     if not content:
         return None
 

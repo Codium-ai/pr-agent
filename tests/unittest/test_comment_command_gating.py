@@ -103,7 +103,7 @@ async def _run_gitlab_note_webhook(monkeypatch, note_body, note_type=None):
         "object_attributes": object_attributes,
     }
 
-    monkeypatch.setattr(gitlab_webhook, "authenticate_gitlab_webhook", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(gitlab_webhook, "authenticate_gitlab_webhook", mock.AsyncMock(return_value=None))
     monkeypatch.setattr(gitlab_webhook, "get_git_provider_with_context", lambda **_kwargs: mock.MagicMock())
     monkeypatch.setattr(gitlab_webhook, "handle_request", record_request)
 

@@ -137,14 +137,18 @@ from pr_agent.algo.ai_handlers.litellm_helpers import (
     _response_field,
     get_repetition_penalty,
 )
+from pr_agent.algo.prompt_fragments import render_skills_prefix
 from pr_agent.algo.run_details import _as_decimal_cost, record_ai_call
 from pr_agent.algo.run_output import get_version
+from pr_agent.algo.skills_loader import get_skills_context
 from pr_agent.algo.url_safety import with_safe_redirects
 from pr_agent.algo.utils import ReasoningEffort
 from pr_agent.config_loader import get_settings, get_verbosity_level, global_settings
 from pr_agent.log import get_logger
 
 MODEL_RETRIES = 2
+# Lowest config.max_output_tokens honored; Bedrock Claude with thinking needs this much to answer.
+MIN_MAX_OUTPUT_TOKENS = 4096
 _IMAGE_HEAD_TIMEOUT_SECONDS = 5
 _IMAGE_NOT_ALIVE_MESSAGE = (
     "The image link is not [alive](img_path).\n"
@@ -163,6 +167,9 @@ _ANTHROPIC_CACHE_REQUEST_PROVIDERS = ("anthropic", "bedrock", "bedrock_mantle", 
 # effect, keyed by (model, reason) so the same warning is logged once per process. See
 # _warn_prompt_cache_conditions.
 _ANTHROPIC_CACHE_WARNING_LOG: set[tuple[str, str]] = set()
+
+_OPENROUTER_APP_URL = "https://github.com/the-pr-agent/pr-agent"
+_OPENROUTER_APP_TITLE = "PR-Agent"
 
 PROVIDER_SETTING_PATHS = {
     "anthropic": {"api_key": "ANTHROPIC.KEY"},
@@ -497,12 +504,13 @@ class LiteLLMAIHandler(BaseAiHandler):
         if global_settings.get("LITELLM.DISABLE_AIOHTTP", False):
             litellm.disable_aiohttp_transport = True
         self._initialize_aws_request_credentials(settings)
-        if settings.get("LITELLM.SUCCESS_CALLBACK", None):
-            litellm.success_callback = settings.litellm.success_callback
-        if settings.get("LITELLM.FAILURE_CALLBACK", None):
-            litellm.failure_callback = settings.litellm.failure_callback
-        if settings.get("LITELLM.SERVICE_CALLBACK", None):
-            litellm.service_callback = settings.litellm.service_callback
+        # LiteLLM callbacks are process globals, so only deployment settings may set them.
+        if global_settings.get("LITELLM.SUCCESS_CALLBACK", None):
+            litellm.success_callback = global_settings.litellm.success_callback
+        if global_settings.get("LITELLM.FAILURE_CALLBACK", None):
+            litellm.failure_callback = global_settings.litellm.failure_callback
+        if global_settings.get("LITELLM.SERVICE_CALLBACK", None):
+            litellm.service_callback = global_settings.litellm.service_callback
         # litellm callbacks attach full prompt and response content unless message logging is disabled.
         if settings.get("LITELLM.TURN_OFF_MESSAGE_LOGGING", False):
             litellm.turn_off_message_logging = True
@@ -1713,6 +1721,33 @@ class LiteLLMAIHandler(BaseAiHandler):
             params["headers"] = request_headers
         return self._finalize_provider_request_params(provider, params)
 
+    @staticmethod
+    def _with_openrouter_attribution(headers: dict) -> dict:
+        """Attribute OpenRouter requests without overriding explicit headers."""
+        normalized = {name.lower(): value for name, value in headers.items()}
+        if "http-referer" in normalized:
+            site_url = normalized["http-referer"]
+        else:
+            site_url = litellm.get_secret("OR_SITE_URL") or _OPENROUTER_APP_URL
+
+        if "x-openrouter-title" in normalized:
+            title = normalized["x-openrouter-title"]
+        elif "x-title" in normalized:
+            title = normalized["x-title"]
+        else:
+            title = litellm.get_secret("OR_APP_NAME") or _OPENROUTER_APP_TITLE
+
+        other_headers = {
+            name: value for name, value in headers.items()
+            if name.lower() not in ("http-referer", "x-openrouter-title", "x-title")
+        }
+        return {
+            **other_headers,
+            "HTTP-Referer": site_url,
+            "X-OpenRouter-Title": title,
+            "X-Title": title,  # Keep LiteLLM's legacy title consistent.
+        }
+
     def _finalize_provider_request_params(self, provider: str | None, params: dict) -> dict:
         """Merge request-local headers and reject LiteLLM's process-wide header fallback."""
         params = _guard_request_routing_globals(provider, params)
@@ -1742,6 +1777,8 @@ class LiteLLMAIHandler(BaseAiHandler):
             params["headers"] = request_headers
         elif getattr(litellm, "headers", None):
             raise ValueError(f"Refusing process-wide LiteLLM headers fallback for provider {provider or 'unknown'}")
+        if provider == "openrouter":
+            params["headers"] = self._with_openrouter_attribution(request_headers)
         return params
 
     def _requires_streaming(self, model: str) -> bool:
@@ -2263,11 +2300,33 @@ class LiteLLMAIHandler(BaseAiHandler):
             )
         return extended_thinking_budget_tokens, extended_thinking_max_output_tokens
 
+    @classmethod
+    def _configured_max_output_tokens(cls) -> int:
+        """Return config.max_output_tokens, warning about values that would unset or undercut the cap."""
+        value = get_settings().config.get("max_output_tokens", 0)
+        output_tokens = cls._coerce_token_value(value)
+        if value is None or value is False or value == 0 or str(value).strip() in ("", "0"):
+            return 0
+        if output_tokens == 0:
+            get_logger().warning(f"Ignoring invalid config.max_output_tokens: {value!r}")
+            return 0
+        if output_tokens < 0:
+            get_logger().warning(f"Ignoring negative config.max_output_tokens: {output_tokens}")
+            return 0
+        if output_tokens < MIN_MAX_OUTPUT_TOKENS:
+            get_logger().warning(
+                f"Raising config.max_output_tokens from {output_tokens} to {MIN_MAX_OUTPUT_TOKENS}: "
+                f"smaller caps can leave no room for the answer when reasoning is enabled"
+            )
+            return MIN_MAX_OUTPUT_TOKENS
+        return output_tokens
+
     def _resolve_output_token_limit(self, model: str, openrouter_model: str | None) -> int:
         """Return the final positive output cap selected by PR-Agent request controls."""
-        output_tokens = self._coerce_token_value(get_settings().config.get("max_output_tokens", 0))
         if self._claude_thinking_mode(model) == "extended":
             _, output_tokens = self._get_claude_extended_thinking_limits()
+        else:
+            output_tokens = self._configured_max_output_tokens()
 
         if openrouter_model:
             openrouter_output_tokens = self._coerce_token_value(self._openrouter_controls.get("max_tokens", 0))
@@ -2585,6 +2644,42 @@ class LiteLLMAIHandler(BaseAiHandler):
             raise ValueError("LITELLM.CACHE_CONTROL_INJECTION_POINTS must be a JSON/TOML array")
         return cache_control_injection_points
 
+    def _split_system_prompt_for_skills_cache(self, messages: list[dict], model: str, injection_points) -> None:
+        """Move the cache breakpoint to the end of the shared skills prefix (#4007).
+
+        The review tools open their system prompts with an identical skills block, so marking
+        that block lets Anthropic read one cache entry across /review, /describe and /improve
+        instead of writing one per tool. Only applies to Anthropic Claude models when a
+        configured injection point targets the system message and the rendered prefix matches;
+        every other request keeps the plain system string. Splitting at the prefix is safe
+        because the two text blocks concatenate back to the original content.
+        """
+        if not injection_points or not self._is_claude_model(model):
+            return
+        system_point = next(
+            (point for point in injection_points if isinstance(point, dict) and point.get("role") == "system"),
+            None,
+        )
+        if system_point is None:
+            return
+        system_index = next(
+            (index for index, message in enumerate(messages) if message.get("role") == "system"),
+            None,
+        )
+        if system_index is None:
+            return
+        content = messages[system_index].get("content")
+        if not isinstance(content, str):
+            return
+        prefix = render_skills_prefix(skills_context=get_skills_context())
+        if not prefix or not content.startswith(prefix):
+            return
+        control = system_point.get("control") or {"type": "ephemeral"}
+        messages[system_index]["content"] = [
+            {"type": "text", "text": prefix, "cache_control": control},
+            {"type": "text", "text": content[len(prefix):], "cache_control": control},
+        ]
+
     @staticmethod
     def _warn_prompt_cache_conditions(
         model: str, system: str, user: str, injection_points, request_provider: str | None = None
@@ -2768,6 +2863,7 @@ class LiteLLMAIHandler(BaseAiHandler):
                     user,
                     image_path=img_path,
                 )
+                self._split_system_prompt_for_skills_cache(messages, model, cache_control_injection_points)
 
                 thinking_kwargs_gpt5 = None
                 openrouter_reasoning_effort = None

@@ -157,22 +157,32 @@ to-do list.
 | `require_todo_scan` | false |  |
 | `require_ticket_analysis_review` | true |  |
 | `require_risk_assessment` | false | ask the model for an overall risk level (low/medium/high) |
-| `require_merge_recommendation` | false | ask the model for a merge recommendation (safe_to_merge/merge_with_caution/changes_required) |
+| `require_merge_recommendation` | false | ask the model for a merge recommendation: no_concerns_found (no important blockers or risks identified), needs_review (seems acceptable but deserves focused reviewer attention) or changes_required (clear issues to fix before merge) |
+| `require_failure_modes` | false | ask for up to three concrete failure scenarios and their detection/coverage |
 | `require_priority_files` | false | ask the model which files a human should inspect first |
 **general options**
 
 | Key | Default | Description |
 | --- | --- | --- |
 | `publish_output_no_suggestions` | true | Set to "false" if you only need the reviewer's remarks (not labels, not "security audit", etc.) and want to avoid noisy "No major issues detected" comments. |
+| `publish_review_failure_comment` | true | Set to false to suppress review failure comments without changing the command's failure status. |
 | `publish_error_details` | false | Publish a deterministic, sanitized failure reason in manual review comments. No AI call is used. |
 | `persistent_comment` | true |  |
 | `review_heading` | "PR Reviewer Guide" | Visible base heading for full and incremental review comments. Identity is tracked separately. |
 | `persistent_finding_state` | true | Persist review finding state across complete review runs. |
-| `max_previous_findings_chars` | 8000 | Character budget for the findings stored by earlier reviews, given to /review as context so it keeps their wording instead of re-raising them reworded, and skips findings whose GitLab inline thread a human resolved (needs persistent_finding_state); 0 disables it. |
+| `max_previous_findings_chars` | 8000 | Character budget for the findings stored by earlier reviews, given to /review as context so it keeps their wording instead of re-raising them reworded, and skips findings whose GitHub or GitLab inline thread someone other than PR-Agent resolved (needs persistent_finding_state); 0 disables it. |
 | `inline_key_issues` | false | Publish each review finding as an inline comment where the provider can verify inline-comment publication (GitHub, Bitbucket Cloud, Azure DevOps, GitLab). |
 | `extra_instructions` | "" |  |
 | `num_max_findings` | 3 |  |
 | `final_update_message` | true |  |
+
+Azure DevOps also supplies verified PR-Agent inline key issues as dismissed when their status is `wontFix`
+or `byDesign` and differs from `azure_devops.default_comment_status`. Matching defaults, `fixed`, `closed`,
+active, and pending threads do not count as dismissals. This requires a stable
+`azure_devops_server.agent_identity` and infers a human decision from the current configuration; it cannot
+verify the status-changing actor or historical defaults. Dismissed findings share the existing
+`max_previous_findings_chars` budget and may be reported again if the code makes them worse.
+
 **review labels**
 
 | Key | Default | Description |
@@ -433,7 +443,7 @@ _This section only documents commented-out examples; see the [TOML source](https
 | Key | Default | Description |
 | --- | --- | --- |
 | `jira_requirements_field` | "" | Custom field id holding acceptance criteria / requirements, mapped to the ticket "requirements" section. Instance-specific (e.g. "customfield_10127"); empty disables it. |
-| `project_keys` | [] | Optional allowlist of Jira project keys, e.g. ["PROJ", "OPS"]. When non-empty, key-shaped text with another prefix ("SHA-256", "UTF-8", "ISO-8601") is dropped before any lookup, so it no longer costs an authenticated 404 each. Entries must be plain upper-case keys; a supplied list with no valid entry disables the lookup rather than widening it. Empty (default) looks up every key found. |
+| `project_keys` | [] | Optional allowlist of Jira project keys, e.g. ["PROJ", "OPS"]. When non-empty, key-shaped text with another prefix ("SHA-256", "UTF-8", "ISO-8601") is dropped before any lookup, so it no longer costs an authenticated 404 each. Entries must be plain upper-case keys; a supplied list with no valid entry disables the lookup rather than widening it. Empty (default) looks up every key found. Host-only, like jira_site and jira_api_email: repository settings and comment arguments cannot change them. |
 
 
 ## `[litellm]` {#litellm}
@@ -536,6 +546,7 @@ _This section only documents commented-out examples; see the [TOML source](https
 | `artifact_label` | "" | Label shown to the AI — defaults to the filename when empty. |
 | `target_tools` | ["pr_reviewer", "pr_description", "pr_code_suggestions"] | Which supported tools receive artifact context; unsupported names are skipped with a warning. |
 | `max_artifact_size` | 50000 | Max artifact size in characters (content is truncated if exceeded) |
+| `truncate_from` | "start" | Which end of the file to keep when truncating: "start" (default, keeps the beginning) or "end" (keeps the tail, where build logs carry their verdict - failure, plan summary or test result). |
 
 
 ## `[mosaico]` {#mosaico}

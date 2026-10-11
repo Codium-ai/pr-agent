@@ -1,5 +1,6 @@
 """Raise a real openai.APIError when a streaming response arrives empty."""
 import asyncio
+import gc
 from contextvars import ContextVar
 from types import SimpleNamespace
 
@@ -300,7 +301,8 @@ def test_litellm_stream_exposes_consumer_correlation_restore_hook():
     assert callable(getattr(CustomStreamWrapper, "_restore_consumer_correlation_context", None))
 
 
-async def test_stream_close_waits_until_completion_and_observes_late_failure(monkeypatch):
+@pytest.mark.parametrize("failure_type", [ValueError, asyncio.CancelledError, BaseException])
+async def test_stream_close_waits_until_completion_and_observes_late_failure(monkeypatch, failure_type):
     started, release, finished = (asyncio.Event() for _ in range(3))
     warnings = []
     previous_tasks = set(litellm_helpers._stream_close_tasks)
@@ -312,7 +314,7 @@ async def test_stream_close_waits_until_completion_and_observes_late_failure(mon
         async def aclose(self):
             started.set()
             await release.wait()
-            raise ValueError("private-late-provider-error")
+            raise failure_type("private-late-provider-error")
 
         def _restore_consumer_correlation_context(self):
             restored_in.append(asyncio.current_task())
@@ -341,10 +343,15 @@ async def test_stream_close_waits_until_completion_and_observes_late_failure(mon
         closer.add_done_callback(lambda _: finished.set())
         release.set()
         await asyncio.wait_for(finished.wait(), timeout=5)
-        assert closer.result() is None
+        if failure_type is asyncio.CancelledError:
+            assert closer.cancelled()
+        elif failure_type is BaseException:
+            assert type(closer.exception()) is failure_type
+        else:
+            assert closer.result() is None
         assert closer not in litellm_helpers._stream_close_tasks
         assert len(warnings) == 1
-        assert "ValueError" in warnings[0]
+        assert failure_type.__name__ in warnings[0]
         assert "private-late-provider-error" not in warnings[0]
     finally:
         release.set()
@@ -353,6 +360,49 @@ async def test_stream_close_waits_until_completion_and_observes_late_failure(mon
             consuming_task, *(litellm_helpers._stream_close_tasks - previous_tasks), *close_tasks,
             return_exceptions=True,
         )
+
+
+async def test_detached_cleanup_observes_errors_without_asyncio_fallback(monkeypatch):
+    finished = asyncio.Event()
+    warnings, fallback_events = [], []
+    loop = asyncio.get_running_loop()
+    previous_handler = loop.get_exception_handler()
+    previous_tasks = set(litellm_helpers._stream_close_tasks)
+
+    class ProviderAbort(BaseException):
+        pass
+
+    class CancelledStream:
+        def __aiter__(self):
+            async def generate():
+                raise asyncio.CancelledError
+                yield
+            return generate()
+
+        async def aclose(self):
+            finished.set()
+            raise ProviderAbort("private-late-provider-error")
+
+    monkeypatch.setattr(litellm_helpers, "get_logger", lambda: SimpleNamespace(warning=warnings.append))
+    loop.set_exception_handler(lambda _, context: fallback_events.append(context["message"]))
+    try:
+        try:
+            await _handle_streaming_response(CancelledStream())
+        except asyncio.CancelledError:
+            pass
+        else:
+            pytest.fail("Consumer cancellation must propagate")
+        await asyncio.wait_for(finished.wait(), timeout=5)
+        for _ in range(3):
+            await asyncio.sleep(0)
+        gc.collect()
+        await asyncio.sleep(0)
+        assert litellm_helpers._stream_close_tasks == previous_tasks
+        assert warnings == ["Failed to close streaming response: ProviderAbort"]
+        assert fallback_events == []
+    finally:
+        loop.set_exception_handler(previous_handler)
+        await asyncio.gather(*(litellm_helpers._stream_close_tasks - previous_tasks), return_exceptions=True)
 
 
 async def test_repeated_cancellation_during_close_propagates_without_cancelling_cleanup():

@@ -22,7 +22,7 @@ from pr_agent.algo.run_details import command_failed, init_run_details
 from pr_agent.config_loader import get_settings, global_settings
 from pr_agent.git_providers import get_git_provider_with_context
 from pr_agent.git_providers.request_timeout import get_http_request_timeout, refresh_session_request_timeout
-from pr_agent.git_providers.utils import apply_repo_settings
+from pr_agent.git_providers.utils import apply_host_settings, apply_repo_settings
 from pr_agent.log import LoggingFormat, get_logger, setup_logger
 from pr_agent.secret_providers import get_secret_provider, validate_secret_provider_setting
 from pr_agent.servers.request_body_limit import create_server_app
@@ -77,6 +77,7 @@ async def handle_request(
     # against the commenter (the command actor) instead of the MR author. Fail closed when no
     # trustworthy account can be recorded (e.g. the "unknown" fallback for missing sender data).
     if isinstance(sender_id, int) and sender_id:
+        await asyncio.to_thread(apply_host_settings)
         provider = get_git_provider_with_context(pr_url=api_url)
         if hasattr(provider, "set_command_actor"):
             provider.set_command_actor(sender_id)
@@ -287,7 +288,7 @@ async def get_new_mr_provider(url: str):
             await asyncio.sleep(delay)
 
 
-def authenticate_gitlab_webhook(request: Request, log_context: dict):
+async def authenticate_gitlab_webhook(request: Request, log_context: dict):
     request_token = request.headers.get("X-Gitlab-Token", "")
     shared_secret = get_settings().get("GITLAB.SHARED_SECRET")
     # Check the shared credential first to avoid cloud lookups, even during provider outages.
@@ -321,12 +322,15 @@ def authenticate_gitlab_webhook(request: Request, log_context: dict):
                     or not hmac.compare_digest(webhook_token.encode(), stored_token.encode())):
                 raise ValueError("Invalid webhook secret")
             context["settings"].set("GITLAB.PERSONAL_ACCESS_TOKEN", gitlab_token)
+            context["authenticated_provider_settings"] = {"gitlab.personal_access_token": gitlab_token}
             log_context["token_id"] = secret_dict.get("token_name", secret_dict.get("id", "unknown"))
         except Exception as e:
             get_logger().error(
                 f"Failed to validate the secret for the provided webhook token: {type(e).__name__}")
             return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED,
                                 content=jsonable_encoder({"message": "unauthorized"}))
+    if not get_settings().get("GITLAB.PERSONAL_ACCESS_TOKEN", None):
+        await asyncio.to_thread(apply_host_settings)
     gitlab_token = get_settings().get("GITLAB.PERSONAL_ACCESS_TOKEN", None)
     if not gitlab_token:
         get_logger().error("No gitlab token found")
@@ -342,7 +346,7 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
 
     log_context = {"server_type": "gitlab_app"}
     get_logger().debug("Received a GitLab webhook")
-    unauthorized_response = authenticate_gitlab_webhook(request, log_context)
+    unauthorized_response = await authenticate_gitlab_webhook(request, log_context)
     if unauthorized_response is not None:
         return unauthorized_response
     request_json = await request.json()
@@ -452,8 +456,6 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
                 mr = data['merge_request']
                 url = mr.get('url')
                 comment_id = data.get('object_attributes', {}).get('id')
-                provider = get_git_provider_with_context(pr_url=url)
-
                 get_logger().info(f"A comment has been added to a merge request: {url}")
                 body = data.get('object_attributes', {}).get('note')
                 if not is_command_comment(body):
@@ -461,6 +463,8 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
                     # dispatch a tool: the dispatcher strips an optional leading slash.
                     get_logger().info("Ignoring comment not starting with /")
                     return
+                await asyncio.to_thread(apply_host_settings)
+                provider = get_git_provider_with_context(pr_url=url)
                 discussion_id = data.get('object_attributes', {}).get('discussion_id')
                 command = body.split(maxsplit=1)[0].lower() if isinstance(body, str) and body.strip() else ""
                 if (discussion_id and not data.get('object_attributes', {}).get('type')

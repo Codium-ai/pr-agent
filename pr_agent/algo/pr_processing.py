@@ -79,12 +79,27 @@ def _append_metadata_section(
     if whole_lines:
         lines = section.splitlines()
         # A heading without a filename conveys no useful filtered-file information.
-        for count in range(len(lines), 2, -1):
-            clipped_section = "\n".join(lines[:count])
-            candidate = final_diff + separator + clipped_section
-            candidate_tokens = token_handler.prompt_tokens + _count_raw_and_stripped_tokens(token_handler, candidate)
-            if candidate_tokens <= max_tokens:
-                return candidate, candidate_tokens, clipped_section
+        if len(lines) > 2:
+            heading, filenames = lines[:2], lines[2:]
+            result = (final_diff, curr_token, "")
+
+            def fits(prefix: list[str]) -> bool:
+                nonlocal result
+                clipped_section = "\n".join(heading + prefix)
+                candidate = final_diff + separator + clipped_section
+                candidate_tokens = token_handler.prompt_tokens + _count_raw_and_stripped_tokens(
+                    token_handler, candidate
+                )
+                if candidate_tokens <= max_tokens:
+                    result = (candidate, candidate_tokens, clipped_section)
+                    return True
+                return False
+
+            # Check the full section first to avoid extra probes in the common case.
+            if not fits(filenames):
+                # Accept only verified prefixes when token counts are non-monotone.
+                _find_verified_fitting_prefix_length(filenames, len(filenames) - 1, fits)
+            return result
     else:
         section_tokens = token_handler.count_tokens(section)
         clipped_section = clip_tokens(section, section_budget, num_input_tokens=section_tokens)
@@ -146,6 +161,15 @@ def _find_verified_fitting_prefix_length(items, max_length: int, fits: Callable[
     if low == 0 and max_length > 0 and fits(items[:1]):
         return 1
     return low
+
+
+@dataclass
+class PackedPRDiffs:
+    """The emitted multi-diff chunks and their incomplete file coverage."""
+
+    chunks: list[str]
+    remaining_files_list: list[str]
+    partial_files_list: list[str]
 
 
 @dataclass
@@ -293,10 +317,11 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler,
     unprocessed_files = []
     # generate the added, modified, and deleted files lists
     if (max_tokens - curr_token) > delta_tokens:
+        included_files = set(files_in_patch)
         if deleted_files_list:
             deleted_list_str = DELETED_FILES_ + "\n" + "\n".join(deleted_files_list)
         for filename, file_values in file_dict.items():
-            if filename in files_in_patch:
+            if filename in included_files:
                 continue
             if file_values['edit_type'] == EDIT_TYPE.ADDED:
                 unprocessed_files.append(filename)
@@ -399,16 +424,21 @@ def _pack_pr_multi_diffs(file_dict: dict,
                          token_handler: TokenHandler,
                          max_calls: int,
                          return_remaining_files: bool,
-                         token_budget: int):
+                         token_budget: int,
+                         *, return_coverage: bool = False):
     """Pack diffs additively, then verify each rendered group against the input budget."""
     final_diff_list = []
     files_in_patches = set()
+    clipped_files = set()
 
     def count_chunk(candidate_patches):
         rendered = "\n".join(candidate_patches)
         return _count_raw_and_stripped_tokens(token_handler, rendered)
 
     def clip_single_patch(filename, patch):
+        if file_dict[filename].get("content_fetch_failed", False):
+            get_logger().warning(f"Unreadable-file notice too large, skipping: {filename}")
+            return None
         if get_settings().config.get("large_patch_policy", "skip") != "clip":
             get_logger().warning(f"Patch too large, skipping: {filename}")
             return None
@@ -423,7 +453,9 @@ def _pack_pr_multi_diffs(file_dict: dict,
         if clipped_tokens > token_budget:
             get_logger().warning(f"Patch too large, skipping: {filename}")
             return None
-        get_logger().info(f"Clipped large patch for file: {filename}")
+        if patch_clipped != patch:
+            clipped_files.add(filename)
+            get_logger().info(f"Clipped large patch for file: {filename}")
         return filename, patch_clipped, clipped_tokens
 
     packable = []
@@ -504,13 +536,19 @@ def _pack_pr_multi_diffs(file_dict: dict,
     if len(files_in_patches) < len(packable) and get_verbosity_level() >= 2:
         get_logger().info(f"Reached max calls ({max_calls})")
 
-    if not return_remaining_files:
+    if not return_remaining_files and not return_coverage:
         return final_diff_list
 
     remaining_files_list = [
         filename for filename in file_dict
         if filename not in files_in_patches
     ]
+    if return_coverage:
+        partial_files_list = [
+            filename for filename in file_dict
+            if filename in clipped_files and filename in files_in_patches
+        ]
+        return PackedPRDiffs(final_diff_list, remaining_files_list, partial_files_list)
     return final_diff_list, remaining_files_list
 
 
@@ -518,7 +556,8 @@ def _get_pr_multi_diffs_from_prepared(prepared_diff: PreparedPRDiff,
                                       token_handler: TokenHandler,
                                       max_calls: int,
                                       return_remaining_files: bool,
-                                      token_budget: int):
+                                      token_budget: int,
+                                      *, return_coverage: bool = False):
     """Pack already transformed file patches without repeating preparation work.
 
     ``get_pr_diff`` and the review chunking path use the same model-specific token handler and
@@ -542,6 +581,7 @@ def _get_pr_multi_diffs_from_prepared(prepared_diff: PreparedPRDiff,
         max_calls,
         return_remaining_files,
         token_budget,
+        return_coverage=return_coverage,
     )
 
 
@@ -655,6 +695,7 @@ def pr_generate_compressed_diff(top_langs: list, token_handler: TokenHandler,
                 'patch': note,
                 'tokens': token_handler.count_tokens(note),
                 'edit_type': file.edit_type,
+                'content_fetch_failed': True,
             }
             continue
 
@@ -872,7 +913,8 @@ def get_pr_multi_diffs(git_provider: GitProvider,
                        prepared_diff: PreparedPRDiff | None = None,
                        output_token_reserve: Callable[[str, int], int] | None = None,
                        include_filtered_file_names: bool = True,
-                       deleted_files: list | None = None):
+                       deleted_files: list | None = None,
+                       *, return_coverage: bool = False):
     """
     Retrieves the diff files from a Git provider, sorts them by main language, and generates patches for each file.
     The patches are split into multiple groups based on the maximum number of tokens allowed for the given model.
@@ -886,6 +928,8 @@ def get_pr_multi_diffs(git_provider: GitProvider,
         return_remaining_files (bool, optional): Also return the files the token budget left out, in the
             same shape as `get_pr_diff`. Files without a patch, and delete-only files, are not reported:
             nothing was omitted for them. Defaults to False.
+        return_coverage (bool, optional): Return typed chunks, omitted files, and files whose emitted
+            patch was clipped. Takes precedence over `return_remaining_files`. Defaults to False.
         prepared_diff (PreparedPRDiff, optional): Reuse compressed file data prepared by a preceding
             `get_pr_diff` call for the same model attempt. Defaults to None.
 
@@ -893,6 +937,7 @@ def get_pr_multi_diffs(git_provider: GitProvider,
         List[str]: A list of final diff strings, split into multiple groups based on the maximum number
         of tokens allowed for the given model.
         With `return_remaining_files`, a tuple of that list and the list of omitted file names.
+        With `return_coverage`, a `PackedPRDiffs` result including partially included file names.
 
     """
     can_reuse_prepared = (
@@ -925,7 +970,9 @@ def get_pr_multi_diffs(git_provider: GitProvider,
         filtered_files = getattr(git_provider, "get_filtered_diff_file_names", lambda: [])()
         if not isinstance(filtered_files, (list, tuple)) or not filtered_files:
             return result
-        if return_remaining_files:
+        if return_coverage:
+            chunks, remaining = result.chunks, result.remaining_files_list
+        elif return_remaining_files:
             chunks, remaining = result
         else:
             chunks, remaining = result, None
@@ -935,6 +982,8 @@ def get_pr_multi_diffs(git_provider: GitProvider,
         max_tokens = token_handler.prompt_tokens + hard_token_budget
         chunks = [append_filtered_file_names(chunk, git_provider, token_handler, max_tokens)
                   for chunk in chunks]
+        if return_coverage:
+            return replace(result, chunks=chunks)
         return (chunks, remaining) if return_remaining_files else chunks
 
     if can_reuse_prepared:
@@ -944,6 +993,7 @@ def get_pr_multi_diffs(git_provider: GitProvider,
             max_calls,
             return_remaining_files,
             soft_token_budget,
+            return_coverage=return_coverage,
         ))
 
     diff_files = git_provider.get_diff_files()
@@ -968,7 +1018,10 @@ def get_pr_multi_diffs(git_provider: GitProvider,
     # if we are under the limit, return the full diff
     if total_tokens - token_handler.prompt_tokens < soft_token_budget:
         full_diff_list = ["\n".join(patches_extended)] if patches_extended else []
-        result = (full_diff_list, []) if return_remaining_files else full_diff_list
+        if return_coverage:
+            result = PackedPRDiffs(full_diff_list, [], [])
+        else:
+            result = (full_diff_list, []) if return_remaining_files else full_diff_list
         return include_filtered_files(result)
 
     # Sort files within each language group by tokens in descending order
@@ -985,6 +1038,15 @@ def get_pr_multi_diffs(git_provider: GitProvider,
         new_file_content_str = file.head_file
         patch = file.patch
         if not patch:
+            if not getattr(file, "content_fetch_failed", False):
+                continue
+            notice = _unreadable_file_notice(file)
+            file_dict[file.filename] = {
+                'patch': notice,
+                'tokens': token_handler.count_tokens(notice),
+                'edit_type': file.edit_type,
+                'content_fetch_failed': True,
+            }
             continue
 
         # Remove delete-only hunks
@@ -1016,6 +1078,7 @@ def get_pr_multi_diffs(git_provider: GitProvider,
         max_calls,
         return_remaining_files,
         soft_token_budget,
+        return_coverage=return_coverage,
     ))
 
 

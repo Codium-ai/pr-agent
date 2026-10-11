@@ -1,5 +1,4 @@
 import difflib
-import re
 import subprocess
 from collections import Counter
 from types import SimpleNamespace
@@ -16,7 +15,7 @@ from ..algo.file_filter import filter_ignored
 from ..algo.git_patch_processing import decode_if_bytes
 from ..algo.language_handler import build_language_file_matcher, is_valid_file
 from ..algo.types import EDIT_TYPE, FilePatchInfo
-from ..algo.utils import find_line_number_of_relevant_line_in_file, load_large_diff
+from ..algo.utils import find_line_number_of_relevant_line_in_file, load_large_diff, replace_suggestion_blocks
 from ..config_loader import get_settings, get_verbosity_level
 from ..log import get_logger
 from .git_provider import GitProvider, cache_languages, get_git_ssl_env
@@ -179,7 +178,7 @@ class BitbucketServerProvider(GitProvider):
                 patch_orig = "\n".join(diff)
                 patch = "\n".join(patch_orig.splitlines()[5:]).strip('\n')
                 diff_code = f"\n\n```diff\n{patch.rstrip()}\n```"
-                body = re.sub(r'```suggestion.*?```', lambda _: diff_code, body, flags=re.DOTALL)
+                body = replace_suggestion_blocks(body, diff_code)
             except Exception as e:
                 get_logger().exception(f"Bitbucket failed to get diff code for publishing, error: {e}")
                 return None
@@ -501,10 +500,12 @@ class BitbucketServerProvider(GitProvider):
         return True
 
     def get_line_link(self, relevant_file: str, relevant_line_start: int, relevant_line_end: int = None) -> str:
+        # Build on the canonical PR URL: a pasted browser URL usually ends in /overview.
+        pr_web_url = self._get_pr_web_url()
         if relevant_line_start == -1:
-            link = f"{self.pr_url}/diff#{quote_plus(relevant_file)}"
+            link = f"{pr_web_url}/diff#{quote_plus(relevant_file)}"
         else:
-            link = f"{self.pr_url}/diff#{quote_plus(relevant_file)}?t={relevant_line_start}"
+            link = f"{pr_web_url}/diff#{quote_plus(relevant_file)}?t={relevant_line_start}"
         return link
 
     def publish_inline_comments(self, comments: list[dict]) -> bool:

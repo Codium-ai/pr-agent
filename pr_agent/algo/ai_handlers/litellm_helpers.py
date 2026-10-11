@@ -98,7 +98,17 @@ async def _close_stream(response):
         task = asyncio.ensure_future(_aclose_quietly(response))
         # Keep a strong reference when a cancelled consumer leaves cleanup running.
         _stream_close_tasks.add(task)
-        task.add_done_callback(_stream_close_tasks.discard)
+
+        def release_cleanup(completed):
+            _stream_close_tasks.discard(completed)
+            if completed.cancelled():
+                _warn_stream_cleanup("Failed to close streaming response: CancelledError")
+            else:
+                error = completed.exception()
+                if error is not None:
+                    _warn_stream_cleanup(f"Failed to close streaming response: {type(error).__name__}")
+
+        task.add_done_callback(release_cleanup)
         # Skip waiting while cancellation unwinds, even without a task.cancel() request.
         if not asyncio.current_task().cancelling() and not isinstance(sys.exception(), asyncio.CancelledError):
             try:
@@ -106,7 +116,6 @@ async def _close_stream(response):
             except asyncio.CancelledError:
                 if asyncio.current_task().cancelling():
                     raise
-                _warn_stream_cleanup("Failed to close streaming response: CancelledError")
     finally:
         # LiteLLM's close task cannot restore the consuming task's correlation IDs.
         restore = getattr(type(response), "_restore_consumer_correlation_context", None)

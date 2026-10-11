@@ -177,17 +177,20 @@ require_todo_scan=false
 require_ticket_analysis_review=true
 # Opt-in structured assessment fields. Each adds one field to the review output and to the model's output schema.
 require_risk_assessment=false # ask the model for an overall risk level (low/medium/high)
-require_merge_recommendation=false # ask the model for a merge recommendation (safe_to_merge/merge_with_caution/changes_required)
+require_merge_recommendation=false # ask the model for a merge recommendation (no_concerns_found/needs_review/changes_required)
+require_failure_modes=false # ask for up to three concrete failure scenarios and their detection/coverage
 require_priority_files=false # ask the model which files a human should inspect first
 # general options
 publish_output_no_suggestions=true # Set to "false" if you only need the reviewer's remarks (not labels, not "security audit", etc.) and want to avoid noisy "No major issues detected" comments.
+publish_review_failure_comment=true # Set to false to suppress review failure comments without changing the command's failure status.
 publish_error_details=false # Publish a deterministic, sanitized failure reason in manual review comments. No AI call is used.
 persistent_comment=true
 # Visible base heading for full and incremental review comments. Identity is tracked separately.
 review_heading = "PR Reviewer Guide"
 persistent_finding_state=true # Persist review finding state across complete review runs.
 # Character budget for the findings stored by earlier reviews, given to /review as context so it keeps their wording
-# instead of re-raising them reworded (needs persistent_finding_state); 0 disables it.
+# instead of re-raising them reworded, and skips findings whose GitLab inline thread a human resolved
+# (needs persistent_finding_state); 0 disables it.
 max_previous_findings_chars = 8000
 
 inline_key_issues=false # Publish each review finding as an inline comment where the provider can verify inline-comment publication (GitHub, Bitbucket Cloud, Azure DevOps, GitLab).
@@ -460,7 +463,8 @@ jira_requirements_field = ""
 # text with another prefix ("SHA-256", "UTF-8", "ISO-8601") is dropped before any lookup,
 # so it no longer costs an authenticated 404 each. Entries must be plain upper-case keys;
 # a supplied list with no valid entry disables the lookup rather than widening it.
-# Empty (default) looks up every key found.
+# Empty (default) looks up every key found. Host-only, like jira_site and jira_api_email:
+# repository settings and comment arguments cannot change them.
 project_keys = []
 
 [litellm]
@@ -490,7 +494,7 @@ callback_timeout_seconds = 30 # max seconds to wait for pending litellm callback
 base_models = {}
 # Optional: set a profile per model (fallbacks included), keyed by the exact model name.
 # An entry here takes priority over model_id for that model.
-# model_ids = {"bedrock/anthropic.claude-3-5-sonnet-20240620-v1:0" = "arn:aws:bedrock:...", "bedrock/qwen.qwen3-235b-a22b-2507-v1:0" = "arn:aws:bedrock:..."}
+# model_ids = {"bedrock/us.anthropic.claude-sonnet-4-6" = "arn:aws:bedrock:...", "bedrock/qwen.qwen3-235b-a22b-2507-v1:0" = "arn:aws:bedrock:..."}
 # Optional: enable Anthropic prompt caching via LiteLLM, e.g. [{location = "message", role = "system"}]
 # (https://docs.litellm.ai/docs/tutorials/prompt_caching). PR-Agent forwards these points only for models
 # whose name contains "claude" or that are listed in a Claude thinking override; LiteLLM adds the
@@ -599,6 +603,10 @@ artifact_label = ""
 target_tools = ["pr_reviewer", "pr_description", "pr_code_suggestions"]
 # Max artifact size in characters (content is truncated if exceeded)
 max_artifact_size = 50000
+# Which end of the file to keep when truncating: "start" (default, keeps the beginning) or
+# "end" (keeps the tail, where build logs carry their verdict - failure, plan summary or
+# test result).
+truncate_from = "start"
 
 [mosaico]
 bearer_tokens = {} # principal names to distinct bearer secrets; empty permits anonymous trusted-network use
