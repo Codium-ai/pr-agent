@@ -1912,19 +1912,75 @@ class TestGitLabGlobalSettings:
             assert provider._get_global_repo_settings() == ""
         provider.gl.projects.get.assert_not_called()
 
-    def test_result_is_cached(self):
+    @pytest.mark.parametrize("contents", [b"[pr_reviewer]\nx = 1\n", b""])
+    def test_result_is_cached(self, contents):
         provider = self._provider()
         proj = MagicMock()
         proj.default_branch = "main"
-        proj.files.get.return_value.decode.return_value = b"[pr_reviewer]\nx = 1\n"
+        proj.files.get.return_value.decode.return_value = contents
         provider.gl.projects.get.return_value = proj
         with patch("pr_agent.git_providers.git_provider.get_settings") as ms:
             ms.return_value.config.use_global_settings_file = True
             ms.return_value.config.global_settings_repo = "pr-agent-settings"
-            provider._get_global_repo_settings()
-            provider._get_global_repo_settings()
-        # Only one lookup for the settings project despite two calls (cached).
-        assert provider.gl.projects.get.call_count == 1
+            assert provider._get_global_repo_settings() == contents
+            assert provider._get_global_repo_settings() == contents
+        provider.gl.projects.get.assert_called_once_with("mygroup/pr-agent-settings")
+        proj.files.get.assert_called_once_with(file_path=".pr_agent.toml", ref="main")
+
+    @pytest.mark.parametrize("failure_at", ["project", "file"])
+    @pytest.mark.parametrize("response_code", [403, 404])
+    def test_missing_or_inaccessible_settings_are_cached(self, failure_at, response_code):
+        provider = self._provider()
+        proj = MagicMock(default_branch="main")
+        provider.gl.projects.get.return_value = proj
+        fetch = provider.gl.projects.get if failure_at == "project" else proj.files.get
+        fetch.side_effect = GitlabGetError("Unavailable", response_code=response_code)
+
+        with patch("pr_agent.git_providers.git_provider.get_settings") as ms:
+            ms.return_value.config.use_global_settings_file = True
+            ms.return_value.config.global_settings_repo = "pr-agent-settings"
+            assert provider._get_global_repo_settings() == ""
+            assert provider._get_global_repo_settings() == ""
+
+        provider.gl.projects.get.assert_called_once_with("mygroup/pr-agent-settings")
+        if failure_at == "project":
+            proj.files.get.assert_not_called()
+        else:
+            proj.files.get.assert_called_once_with(file_path=".pr_agent.toml", ref="main")
+
+    @pytest.mark.parametrize("failure_at", ["project", "file"])
+    @pytest.mark.parametrize("error", [
+        pytest.param(GitlabGetError("Unauthorized", response_code=401), id="401"),
+        pytest.param(GitlabGetError("Rate limited", response_code=429), id="429"),
+        pytest.param(GitlabGetError("Server error", response_code=500), id="500"),
+        pytest.param(GitlabGetError("Bad gateway", response_code=502), id="502"),
+        pytest.param(GitlabGetError("Unavailable", response_code=503), id="503"),
+        pytest.param(GitlabGetError("Unknown status"), id="unknown-status"),
+        pytest.param(RequestException("Connection failed"), id="connection"),
+        pytest.param(RuntimeError("Unexpected error"), id="unexpected"),
+    ])
+    def test_failed_settings_fetch_is_retried_then_success_is_cached(self, failure_at, error):
+        provider = self._provider()
+        proj = MagicMock(default_branch="main")
+        contents = b"[pr_reviewer]\nx = 1\n"
+        settings_file = MagicMock()
+        settings_file.decode.return_value = contents
+        provider.gl.projects.get.return_value = proj
+        proj.files.get.return_value = settings_file
+        if failure_at == "project":
+            provider.gl.projects.get.side_effect = [error, proj]
+        else:
+            proj.files.get.side_effect = [error, settings_file]
+
+        with patch("pr_agent.git_providers.git_provider.get_settings") as ms:
+            ms.return_value.config.use_global_settings_file = True
+            ms.return_value.config.global_settings_repo = "pr-agent-settings"
+            assert provider._get_global_repo_settings() == ""
+            assert provider._get_global_repo_settings() == contents
+            assert provider._get_global_repo_settings() == contents
+
+        assert provider.gl.projects.get.call_count == 2
+        assert proj.files.get.call_count == (1 if failure_at == "project" else 2)
 
 class TestGitLabIncrementalHelpers:
     """Pure-function tests for the incremental-review helpers."""
