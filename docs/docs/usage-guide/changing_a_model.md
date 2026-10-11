@@ -49,6 +49,23 @@ OPENAI__API_BASE=https://api.openai.com/v1
 OPENAI__KEY=sk-...
 ```
 
+### RelaxAI
+
+RelaxAI provides an OpenAI-compatible API. Add your API key in `.secrets.toml`:
+
+```toml
+[relaxai]
+key = "your-relaxai-api-key"
+api_base = "https://api.relax.ai/v1/"
+
+[config]
+model = "relaxai/DeepSeek-V4-Pro"
+```
+
+You can also set `RELAXAI__KEY` and `RELAXAI__API_BASE` as environment variables.
+See the [RelaxAI API documentation](https://relax.ai/docs/getting-started/introduction)
+for current model IDs and integration details.
+
 ### OpenAI Flex Processing
 
 To reduce costs for non-urgent/background tasks, enable Flex Processing:

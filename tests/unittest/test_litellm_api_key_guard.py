@@ -2762,6 +2762,24 @@ async def test_native_openai_like_key_is_not_shadowed_by_placeholder(monkeypatch
 
 
 @pytest.mark.asyncio
+async def test_relaxai_model_uses_openai_compatible_transport_and_credentials(monkeypatch):
+    overrides = {
+        "RELAXAI.KEY": "relaxai-api-key",
+        "RELAXAI.API_BASE": "https://api.relax.ai/v1/",
+    }
+    monkeypatch.setattr(litellm_handler, "get_settings", lambda: _make_settings(overrides))
+    handler = LiteLLMAIHandler()
+
+    routed_model = handler._route_model_for_request("relaxai/DeepSeek-V4-Pro", "", None)
+    kwargs = await _call(handler, routed_model)
+
+    assert routed_model == "openai_like/DeepSeek-V4-Pro"
+    assert kwargs["model"] == routed_model
+    assert kwargs["api_key"] == "relaxai-api-key"
+    assert kwargs["api_base"] == "https://api.relax.ai/v1/"
+
+
+@pytest.mark.asyncio
 async def test_native_openai_key_does_not_override_openai_like_key(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "native-openai-key")
     monkeypatch.setenv("OPENAI_LIKE_API_KEY", "native-openai-like-key")

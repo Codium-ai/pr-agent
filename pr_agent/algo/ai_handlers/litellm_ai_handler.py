@@ -186,6 +186,7 @@ PROVIDER_SETTING_PATHS = {
     "mistral": {"api_key": "MISTRAL.KEY"},
     "moonshot": {"api_key": "MOONSHOT.KEY", "api_base": "MOONSHOT.API_BASE"},
     "ollama": {"api_key": "OLLAMA.API_KEY", "api_base": "OLLAMA.API_BASE"},
+    "openai_like": {"api_key": "RELAXAI.KEY", "api_base": "RELAXAI.API_BASE"},
     "openrouter": {"api_key": "OPENROUTER.KEY", "api_base": "OPENROUTER.API_BASE"},
     "replicate": {"api_key": "REPLICATE.KEY"},
     "sambanova": {"api_key": "SAMBANOVA.KEY"},
@@ -1312,6 +1313,8 @@ class LiteLLMAIHandler(BaseAiHandler):
 
     def _route_model(self, model: str, deployment_id: str | None) -> str:
         """Apply provider routing shared by regular calls and health probes."""
+        if model.startswith("relaxai/"):
+            return f"openai_like/{model.removeprefix('relaxai/')}"
         if model.startswith("azure_text/") and deployment_id:
             return f"azure_text/{deployment_id}"
         if self.azure:
@@ -1462,7 +1465,10 @@ class LiteLLMAIHandler(BaseAiHandler):
                 for key in ("api_key", "api_base")
                 if openai_params.get(key)
             }
-            native_api_key = provider_environment_api_keys.get(provider)
+            native_api_key = (
+                provider_environment_api_keys.get(provider)
+                or provider_params.get(provider, {}).get("api_key")
+            )
             if provider == "openai_like" and provider_params.get(provider, {}).get("api_base"):
                 params["api_base"] = provider_params[provider]["api_base"]
                 if params["api_base"] != openai_params.get("api_base"):
