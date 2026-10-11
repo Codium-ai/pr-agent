@@ -1159,7 +1159,7 @@ class AzureDevopsProvider(GitProvider):
             return diff_files
         except Exception as e:
             get_logger().exception(f"Failed to get diff files, error: {e}")
-            return []
+            raise
 
     def publish_comment(self, pr_comment: str, is_temporary: bool = False, thread_context=None) -> Comment:
         if is_temporary and not get_settings().config.publish_output_progress:
