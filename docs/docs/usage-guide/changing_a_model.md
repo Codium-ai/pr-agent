@@ -797,6 +797,34 @@ Authentication uses the [GitHub Copilot provider](https://docs.litellm.ai/docs/p
 
 Whether Copilot's terms permit this programmatic use is a question for GitHub rather than a guarantee this project can make, so confirm before relying on the route.
 
+### RelaxAI
+
+[RelaxAI](https://relax.ai) offers an OpenAI-compatible API. It needs no provider-specific
+code in PR-Agent: use the `openai/` model prefix and configure RelaxAI's endpoint and key
+through the existing `[openai]` settings.
+
+```toml
+[config] # in configuration.toml
+model = "openai/DeepSeek-V4-Pro"
+custom_model_max_tokens = 1049000 # use the context window published for the selected model
+
+[openai] # in .secrets.toml
+api_base = "https://api.relax.ai/v1/"
+key = "..." # your RelaxAI API key
+```
+
+or use environment variables (make sure to use double underscores `__`):
+
+```bash
+OPENAI__API_BASE=https://api.relax.ai/v1/
+OPENAI__KEY=...
+```
+
+Keep the `openai/` prefix on the model name to route through LiteLLM's OpenAI-compatible
+path. The model IDs and context windows can change; see the
+[RelaxAI API documentation](https://relax.ai/docs/getting-started/introduction) for current
+integration details and available models.
+
 ### Atlas Cloud
 
 [Atlas Cloud](https://www.atlascloud.ai) is an OpenAI-compatible inference platform. It needs no provider-specific code in PR-Agent: the `openai/` prefix routes the request to Atlas's base URL through litellm's OpenAI-compatible path, the same way [OrcaRouter](#orcarouter) and the [Neon AI Gateway](#neon-ai-gateway) are handled.
