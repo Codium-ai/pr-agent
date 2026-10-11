@@ -43,7 +43,7 @@ repo_context_files = ["AGENTS.md"] # Repository-relative files (e.g. AGENTS.md, 
 # cached content within the TTL. Providers without commit resolution key on a branch name or None.
 repo_context_from_default_branch = true # Read repo context files from the repository default branch (trusts only default-branch content). Set to false to read from the PR target branch instead.
 repo_context_max_lines = 500 # Maximum total rendered lines for repo context, including wrapper tags
-repo_context_sibling_repos = [] # Host-only list of approved sibling repository identifiers (GitHub owner/repo, GitLab group/project or numeric ID strings) that repo_context_files sibling entries and GitHub ticket lookups may select. Empty disables sibling reads. Approve only repositories whose content may be disclosed in consuming PRs, because the actor check bounds who triggers a read, not who chose the target or where the output lands. Repository settings and comment arguments cannot change this list. Canonical identities and owning namespaces are checked after resolution
+repo_context_sibling_repos = [] # Host-only list of approved sibling repository identifiers (GitHub owner/repo, GitLab group/project or numeric ID strings) that repo_context_files sibling entries may select. On GitHub, this also approves repositories for linked-issue and sub-issue ticket context. Empty disables sibling reads. Approve only repositories whose content may be disclosed in consuming PRs, because the actor check bounds who triggers a read, not who chose the target or where the output lands. Repository settings and comment arguments cannot change this list. Canonical identities and owning namespaces are checked after resolution
 repo_context_max_sibling_files = 5 # Maximum number of sibling-repository files fetched per repo-context build. The fetch count is bounded separately from repo_context_max_lines so selected sibling files cannot trigger an unbounded number of cross-repository calls; sibling files still compete for the repo_context_max_lines budget. Host-only (cannot be raised by a repository's .pr_agent.toml or a comment command) and clamped to a hard ceiling of 20 fetches per build.
 # token limits
 max_description_tokens = 500
@@ -177,7 +177,7 @@ require_todo_scan=false
 require_ticket_analysis_review=true
 # Opt-in structured assessment fields. Each adds one field to the review output and to the model's output schema.
 require_risk_assessment=false # ask the model for an overall risk level (low/medium/high)
-require_merge_recommendation=false # ask the model for a merge recommendation (no_concerns_found/needs_review/changes_required)
+require_merge_recommendation=false # ask the model for a merge recommendation: no_concerns_found (no important blockers or risks identified), needs_review (seems acceptable but deserves focused reviewer attention) or changes_required (clear issues to fix before merge)
 require_failure_modes=false # ask for up to three concrete failure scenarios and their detection/coverage
 require_priority_files=false # ask the model which files a human should inspect first
 # general options
@@ -189,8 +189,8 @@ persistent_comment=true
 review_heading = "PR Reviewer Guide"
 persistent_finding_state=true # Persist review finding state across complete review runs.
 # Character budget for the findings stored by earlier reviews, given to /review as context so it keeps their wording
-# instead of re-raising them reworded, and skips findings whose GitLab inline thread a human resolved
-# (needs persistent_finding_state); 0 disables it.
+# instead of re-raising them reworded, and skips findings whose GitHub or GitLab inline thread someone other than PR-Agent
+# resolved (needs persistent_finding_state); 0 disables it.
 max_previous_findings_chars = 8000
 
 inline_key_issues=false # Publish each review finding as an inline comment where the provider can verify inline-comment publication (GitHub, Bitbucket Cloud, Azure DevOps, GitLab).
@@ -520,7 +520,7 @@ allow_fallbacks = true # when provider_order is set, allow routing beyond the li
 # or listed in additional_reasoning_effort_models).
 # Valid values: "none", "minimal", "low", "medium", "high", "xhigh", "max".
 # OpenRouter normalizes "max" to "xhigh" for LiteLLM/OpenRouter compatibility.
-# Model-specific support varies. For models not covered by the clamps below, do not
+# Model-specific support varies. For models not covered by PR-Agent's clamps, do not
 # assume "none" disables reasoning; check the selected model and provider's support.
 reasoning_effort = ""
 # Use a positive value to override global effort and non-none OpenRouter-specific efforts.

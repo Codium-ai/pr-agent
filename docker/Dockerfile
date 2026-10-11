@@ -87,6 +87,7 @@ COPY docker/mosaico docker/mosaico
 # and the packaging inputs that must ship every /help page suffix. Kept last so a
 # README edit only rebuilds these final layers.
 COPY scripts/check_docs_urls.py scripts/check_docs_urls.py
+COPY scripts/generate_config_reference.py scripts/generate_config_reference.py
 COPY README.md CONTRIBUTING.md SECURITY.md .dockerignore ./
 COPY MANIFEST.in setup.py ./
 
