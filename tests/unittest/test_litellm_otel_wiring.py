@@ -23,8 +23,6 @@ def _restore_litellm_globals(monkeypatch):
     monkeypatch.setattr(litellm, "failure_callback", [], raising=False)
     monkeypatch.setattr(litellm, "service_callback", [], raising=False)
     monkeypatch.setattr(litellm, "callbacks", [], raising=False)
-    monkeypatch.setattr(litellm_ai_handler, "_request_callback_baseline", None, raising=False)
-    monkeypatch.setattr(litellm_ai_handler, "_request_callback_written", {}, raising=False)
     monkeypatch.delenv(REQUEST_SPAN_ENV, raising=False)
 
 
@@ -38,11 +36,14 @@ def _settings(**values):
         "litellm": type("LiteLLM", (), {
             "get": lambda self, key, default=None: default,
             "success_callback": values.get("LITELLM.SUCCESS_CALLBACK", []),
+            "failure_callback": values.get("LITELLM.FAILURE_CALLBACK", []),
+            "service_callback": values.get("LITELLM.SERVICE_CALLBACK", []),
         })(),
     })()
 
 
 def _build(monkeypatch, **values):
+    monkeypatch.setattr("pr_agent.algo.ai_handlers.litellm_ai_handler.global_settings", _settings(**values))
     monkeypatch.setattr(
         "pr_agent.algo.ai_handlers.litellm_ai_handler.get_settings", lambda: _settings(**values)
     )
@@ -96,30 +97,22 @@ def test_explicit_request_span_override_is_preserved(monkeypatch):
     assert os.environ[REQUEST_SPAN_ENV] == "false"
 
 
-def test_unconfigured_request_after_configured_request_restores_baseline(monkeypatch):
-    """Regression: a request setting a callback must not make the next request send
-    its prompts to that callback endpoint when it has no callback config of its own."""
-    _build(monkeypatch, **{"LITELLM.SUCCESS_CALLBACK": ["otel"]})
-    assert litellm.success_callback == ["otel"]
+@pytest.mark.parametrize(
+    ("config_key", "callback_name"),
+    [
+        ("LITELLM.SUCCESS_CALLBACK", "success_callback"),
+        ("LITELLM.FAILURE_CALLBACK", "failure_callback"),
+        ("LITELLM.SERVICE_CALLBACK", "service_callback"),
+    ],
+)
+def test_repo_settings_cannot_install_litellm_callbacks(monkeypatch, config_key, callback_name):
+    """Repository settings cannot install callbacks shared with later requests."""
+    monkeypatch.setattr("pr_agent.algo.ai_handlers.litellm_ai_handler.global_settings", _settings())
+    monkeypatch.setattr(
+        "pr_agent.algo.ai_handlers.litellm_ai_handler.get_settings",
+        lambda: _settings(**{config_key: ["otel"]}),
+    )
 
-    _build(monkeypatch)
+    litellm_ai_handler.LiteLLMAIHandler()
 
-    assert litellm.success_callback == []
-    assert litellm.failure_callback == []
-    assert litellm.service_callback == []
-
-
-def test_programmatic_registration_survives_unconfigured_request(monkeypatch):
-    """Embedders that register callback globals without configuration.toml keep them:
-    the pre-handler value is the baseline an unconfigured request restores to."""
-    litellm.success_callback = ["datadog"]
-    litellm.failure_callback = ["datadog"]
-
-    _build(monkeypatch, **{"LITELLM.SUCCESS_CALLBACK": ["otel"]})
-    assert litellm.success_callback == ["otel"]
-    assert litellm.failure_callback == ["datadog"]
-
-    _build(monkeypatch)
-
-    assert litellm.success_callback == ["datadog"]
-    assert litellm.failure_callback == ["datadog"]
+    assert getattr(litellm, callback_name) == []
