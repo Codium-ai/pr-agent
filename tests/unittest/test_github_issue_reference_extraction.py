@@ -52,6 +52,30 @@ def test_several_references_keep_their_order():
                      f"{BASE}/{REPO}/issues/98765"]
 
 
+def test_equivalent_github_urls_are_deduplicated_before_the_cap():
+    first = "https://github.com/Org/Repo/issues/007"
+    assert extract_ticket_links_from_pr_description(
+        f"{first} https://github.com:443/org/repo/issues/7 #8 #9",
+        REPO,
+        BASE,
+        max_tickets=3,
+    ) == [first, f"{BASE}/{REPO}/issues/8", f"{BASE}/{REPO}/issues/9"]
+
+
+def test_long_decimal_issue_references_are_deduplicated_without_integer_conversion():
+    huge_number = "9" * 4301
+    first = f"{BASE}/{REPO}/issues/{huge_number}"
+    assert _links(f"{first} {BASE}/{REPO}/issues/0{huge_number} #8") == [
+        first, f"{BASE}/{REPO}/issues/8",
+    ]
+
+
+def test_same_issue_number_in_different_repositories_is_retained():
+    assert _links("org/repo#7 other/repo#7") == [
+        f"{BASE}/org/repo/issues/7", f"{BASE}/other/repo/issues/7",
+    ]
+
+
 def test_a_repeated_reference_is_listed_once():
     assert _links("Fixes #12345 and again #12345") == [f"{BASE}/{REPO}/issues/12345"]
 

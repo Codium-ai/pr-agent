@@ -2,6 +2,7 @@ import asyncio
 import copy
 import math
 import re
+import sys
 import traceback
 from urllib.parse import urlparse
 
@@ -698,6 +699,33 @@ def extract_gitlab_ticket_references(pr_description, repo_path, gitlab_url, max_
     return references[:max_tickets]
 
 
+def _github_issue_lookup_url(url):
+    """Avoid passing oversized zero-padded numbers to the provider's int() parser."""
+    parts = url.rsplit("/issues/", 1)
+    if len(parts) != 2:
+        return url
+    number = parts[1]
+    max_digits = sys.get_int_max_str_digits()
+    if max_digits and len(number) > max_digits:
+        normalized = number.lstrip("0") or "0"
+        if len(normalized) <= max_digits:
+            return f"{parts[0]}/issues/{normalized}"
+    return url
+
+
+def _github_issue_identity(url):
+    """Identify an issue across equivalent URL spellings without changing its original URL."""
+    try:
+        parsed = urlparse(url)
+        repo_path, number = parsed.path.rsplit("/issues/", 1)
+        port = parsed.port
+        if parsed.scheme == "https" and port in (None, 443):
+            port = 443
+        return parsed.scheme, parsed.hostname, port, repo_path.lower(), number.lstrip("0") or "0"
+    except (AttributeError, TypeError, ValueError):
+        return url
+
+
 def extract_ticket_links_from_pr_description(pr_description, repo_path, base_url_html='https://github.com',
                                              max_tickets=MAX_GITHUB_TICKETS, *, use_description_regex=True,
                                              source="description"):
@@ -710,8 +738,10 @@ def extract_ticket_links_from_pr_description(pr_description, repo_path, base_url
     github_tickets = []
 
     def _add(url):
-        if url not in seen:
-            seen.add(url)
+        url = _github_issue_lookup_url(url)
+        identity = _github_issue_identity(url)
+        if identity not in seen:
+            seen.add(identity)
             github_tickets.append(url)
 
     try:
@@ -943,8 +973,10 @@ async def extract_tickets(git_provider):
             seen = set()
             merged = []
             for link in description_tickets + branch_tickets + title_tickets:
-                if link not in seen:
-                    seen.add(link)
+                link = _github_issue_lookup_url(link)
+                identity = _github_issue_identity(link)
+                if identity not in seen:
+                    seen.add(identity)
                     merged.append(link)
 
             if len(merged) > MAX_GITHUB_TICKETS:

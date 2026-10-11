@@ -196,6 +196,28 @@ def settings_snapshot():
 # ---------------------------------------------------------------------------
 
 class TestGithubExtractionMerging:
+    def test_equivalent_references_across_sources_leave_room_for_distinct_issues(self, settings_snapshot):
+        repo_obj = _FakeRepoObj({n: _FakeIssue(n) for n in (7, 8, 9)})
+        provider = _make_github_provider(
+            user_description="https://github.com/ORG/REPO/issues/007 #8",
+            branch="feature/7-duplicate",
+            repo_obj=repo_obj,
+        )
+        provider.pr = SimpleNamespace(title="Fixes #9")
+        result = asyncio.run(extract_tickets(provider))
+        assert [ticket["ticket_id"] for ticket in result] == [7, 8, 9]
+        assert repo_obj.get_issue_calls == [7, 8, 9]
+
+    def test_oversized_zero_padded_reference_does_not_hide_valid_issue(self, settings_snapshot):
+        repo_obj = _FakeRepoObj({7: _FakeIssue(7), 8: _FakeIssue(8)})
+        long_url = f"https://github.com/org/repo/issues/{'0' * 4301}7"
+        provider = _make_github_provider(
+            user_description=f"{long_url} #7 #8", repo_obj=repo_obj,
+        )
+        result = asyncio.run(extract_tickets(provider))
+        assert [ticket["ticket_id"] for ticket in result] == [7, 8]
+        assert repo_obj.get_issue_calls == [7, 8]
+
     def test_skipped_pr_does_not_displace_later_issue(self, settings_snapshot):
         repo_obj = _FakeRepoObj({
             1: _FakeIssue(1, raw_data={"pull_request": {"url": "pr"}}),
