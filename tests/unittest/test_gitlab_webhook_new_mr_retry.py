@@ -25,15 +25,15 @@ def sleep():
 
 @pytest.fixture
 def get_provider():
-    with mock.patch("pr_agent.servers.gitlab_webhook.get_git_provider_with_context") as patched:
+    with mock.patch("pr_agent.servers.gitlab_webhook.apply_repo_settings") as patched:
         yield patched
 
 
 async def test_returns_provider_without_waiting_when_lookup_succeeds(get_provider, sleep):
-    provider = await gitlab_webhook.get_new_mr_provider(MR_URL)
+    provider = await gitlab_webhook.apply_new_mr_repo_settings(MR_URL)
 
     assert provider is get_provider.return_value
-    get_provider.assert_called_once_with(pr_url=MR_URL)
+    get_provider.assert_called_once_with(MR_URL)
     sleep.assert_not_awaited()
 
 
@@ -41,7 +41,7 @@ async def test_retries_404_until_the_merge_request_is_visible(get_provider, slee
     found = mock.Mock()
     get_provider.side_effect = [_provider_error(404), _provider_error(404), found]
 
-    provider = await gitlab_webhook.get_new_mr_provider(MR_URL)
+    provider = await gitlab_webhook.apply_new_mr_repo_settings(MR_URL)
 
     assert provider is found
     assert get_provider.call_count == 3
@@ -52,7 +52,7 @@ async def test_persistent_404_is_raised_after_the_full_backoff(get_provider, sle
     get_provider.side_effect = _provider_error(404)
 
     with pytest.raises(ValueError, match="Failed to get git provider"):
-        await gitlab_webhook.get_new_mr_provider(MR_URL)
+        await gitlab_webhook.apply_new_mr_repo_settings(MR_URL)
 
     assert get_provider.call_count == 4
     assert [call.args[0] for call in sleep.await_args_list] == [1, 2, 4]
@@ -63,7 +63,7 @@ async def test_other_gitlab_errors_are_not_retried(get_provider, sleep, response
     get_provider.side_effect = _provider_error(response_code)
 
     with pytest.raises(ValueError):
-        await gitlab_webhook.get_new_mr_provider(MR_URL)
+        await gitlab_webhook.apply_new_mr_repo_settings(MR_URL)
 
     get_provider.assert_called_once()
     sleep.assert_not_awaited()
@@ -74,7 +74,7 @@ async def test_non_gitlab_failure_is_not_retried(get_provider, sleep):
     get_provider.side_effect = error
 
     with pytest.raises(ValueError) as raised:
-        await gitlab_webhook.get_new_mr_provider(MR_URL)
+        await gitlab_webhook.apply_new_mr_repo_settings(MR_URL)
 
     assert raised.value is error
     get_provider.assert_called_once()
@@ -85,7 +85,7 @@ async def test_each_retry_is_logged(get_provider, sleep):
     get_provider.side_effect = [_provider_error(404), mock.Mock()]
 
     with mock.patch("pr_agent.servers.gitlab_webhook.get_logger") as get_logger:
-        await gitlab_webhook.get_new_mr_provider(MR_URL)
+        await gitlab_webhook.apply_new_mr_repo_settings(MR_URL)
 
     get_logger.return_value.warning.assert_called_once()
     assert "retrying in 1s" in get_logger.return_value.warning.call_args.args[0]
@@ -103,7 +103,7 @@ async def test_404_from_the_provider_constructor_survives_the_provider_factory_w
     with mock.patch("pr_agent.git_providers.get_settings", return_value=settings), \
             mock.patch.dict("pr_agent.git_providers._GIT_PROVIDERS", {"gitlab": constructor}):
         with pytest.raises(ValueError) as raised:
-            await gitlab_webhook.get_new_mr_provider(MR_URL)
+            await gitlab_webhook.apply_new_mr_repo_settings(MR_URL)
 
     assert isinstance(raised.value.__cause__, GitlabAuthenticationError)
     assert constructor.call_count == 2
