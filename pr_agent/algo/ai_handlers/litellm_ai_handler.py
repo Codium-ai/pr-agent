@@ -504,12 +504,13 @@ class LiteLLMAIHandler(BaseAiHandler):
         if global_settings.get("LITELLM.DISABLE_AIOHTTP", False):
             litellm.disable_aiohttp_transport = True
         self._initialize_aws_request_credentials(settings)
-        if settings.get("LITELLM.SUCCESS_CALLBACK", None):
-            litellm.success_callback = settings.litellm.success_callback
-        if settings.get("LITELLM.FAILURE_CALLBACK", None):
-            litellm.failure_callback = settings.litellm.failure_callback
-        if settings.get("LITELLM.SERVICE_CALLBACK", None):
-            litellm.service_callback = settings.litellm.service_callback
+        # LiteLLM callbacks are process globals, so only deployment settings may set them.
+        if global_settings.get("LITELLM.SUCCESS_CALLBACK", None):
+            litellm.success_callback = global_settings.litellm.success_callback
+        if global_settings.get("LITELLM.FAILURE_CALLBACK", None):
+            litellm.failure_callback = global_settings.litellm.failure_callback
+        if global_settings.get("LITELLM.SERVICE_CALLBACK", None):
+            litellm.service_callback = global_settings.litellm.service_callback
         # litellm callbacks attach full prompt and response content unless message logging is disabled.
         if settings.get("LITELLM.TURN_OFF_MESSAGE_LOGGING", False):
             litellm.turn_off_message_logging = True
