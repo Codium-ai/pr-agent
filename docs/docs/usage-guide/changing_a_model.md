@@ -857,6 +857,34 @@ OPENAI__KEY=...
 
 Keep the `openai/` prefix on the model name: a prefixed name is not in the `MAX_TOKENS` table, so you also have to set `custom_model_max_tokens`. Take the value from Heabsy's [model catalog](https://heabsy.com/models).
 
+### DemonRoute
+
+[DemonRoute](https://demonroute.com) is an OpenAI-compatible API for open-weight models, billed prepaid with a hard stop at a $0 balance. It needs no provider-specific code in PR-Agent: the `openai/` prefix routes the request to DemonRoute's base URL through litellm's OpenAI-compatible path, the same way [Atlas Cloud](#atlas-cloud) and [Heabsy](#heabsy) are handled.
+
+To use a model served by DemonRoute, set:
+
+```toml
+[config] # in configuration.toml
+model = "openai/<demonroute-model-id>"
+fallback_models = ["openai/<demonroute-model-id>"]
+custom_model_max_tokens = 32000 # set to the context window DemonRoute publishes for the model
+
+[openai] # in .secrets.toml
+api_base = "https://api.demonroute.com/v1"
+key = "..." # your DemonRoute api key
+```
+
+or use the environment variables (make sure to use double underscores `__`):
+
+```bash
+OPENAI__API_BASE=https://api.demonroute.com/v1
+OPENAI__KEY=...
+```
+
+(you can obtain a DemonRoute API key from [demonroute.com](https://demonroute.com))
+
+Keep the `openai/` prefix on the model name, whichever DemonRoute model ID you use: the prefix routes the request through litellm's OpenAI-compatible path. A prefixed name is not in the `MAX_TOKENS` table [here](https://github.com/the-pr-agent/pr-agent/blob/main/pr_agent/algo/__init__.py), so you also have to set `custom_model_max_tokens`.
+
 ### Custom models
 
 If the relevant model doesn't appear [here](https://github.com/the-pr-agent/pr-agent/blob/main/pr_agent/algo/__init__.py), you can still use it as a custom model:
