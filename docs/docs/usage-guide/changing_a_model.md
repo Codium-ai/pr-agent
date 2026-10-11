@@ -865,9 +865,9 @@ To use a model served by DemonRoute, set:
 
 ```toml
 [config] # in configuration.toml
-model = "openai/<demonroute-model-id>"
-fallback_models = ["openai/<demonroute-model-id>"]
-custom_model_max_tokens = 32000 # set to the context window DemonRoute publishes for the model
+model = "openai/NousResearch/Hermes-3-Llama-3.1-8B"
+fallback_models = ["openai/NousResearch/Hermes-3-Llama-3.1-8B"]
+custom_model_max_tokens = 131072 # the context window DemonRoute publishes for the model
 
 [openai] # in .secrets.toml
 api_base = "https://api.demonroute.com/v1"
