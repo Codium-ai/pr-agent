@@ -993,7 +993,9 @@ def load_yaml(response_text: str, keys_fix_yaml: List[str] | None = None, first_
     # "yml_config" is not truncated to "_config"
     unfenced = re.sub(r'^```[ \t]*(?:(?i:yaml|yml))?[ \t]*(?=\r?\n)', '', response_text)
     if unfenced == response_text:
-        unfenced = response_text.removeprefix('yaml')
+        # Strip an unfenced "yaml" label only when it is a complete line, so a key such as
+        # "yaml_config" is not truncated. A bare removeprefix('yaml') would shorten it to "_config".
+        unfenced = re.sub(r'^yaml(?:[ \t]*\r?\n|\Z)', '', response_text, count=1)
     response_text = unfenced.rstrip()
     response_text = drop_sign_off_after_wrapper_fence(response_text)
     if response_text.split('\n')[-1] == '```':
