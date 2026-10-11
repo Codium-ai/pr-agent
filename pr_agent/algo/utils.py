@@ -3,7 +3,6 @@ from __future__ import annotations
 import copy
 import difflib
 import html
-import json
 import re
 import textwrap
 from enum import Enum
@@ -728,99 +727,6 @@ def process_can_be_split(emoji, value):
         get_logger().exception(f"Failed to process can be split: {e}")
         return ""
     return markdown_text
-
-
-def try_fix_json(review, max_iter=10, code_suggestions=False):
-    """
-    Fix broken or incomplete JSON messages and return the parsed JSON data.
-
-    Args:
-    - review: A string containing the JSON message to be fixed.
-    - max_iter: An integer representing the maximum number of iterations to try and fix the JSON message.
-    - code_suggestions: A boolean indicating whether to try and fix JSON messages with code feedback.
-
-    Returns:
-    - data: A dictionary containing the parsed JSON data.
-
-    The function attempts to fix broken or incomplete JSON messages by parsing until the last valid code suggestion.
-    If the JSON message ends with a closing bracket, the function calls the fix_json_escape_char function to fix the
-    message.
-    If code_suggestions is True and the JSON message contains code feedback, the function tries to fix the JSON
-    message by parsing until the last valid code suggestion.
-    The function uses regular expressions to find the last occurrence of "}," with any number of whitespaces or
-    newlines.
-    It tries to parse the JSON message with the closing bracket and checks if it is valid.
-    If the JSON message is valid, the parsed JSON data is returned.
-    If the JSON message is not valid, the last code suggestion is removed and the process is repeated until a valid JSON
-    message is obtained or the maximum number of iterations is reached.
-    If a valid JSON message is not obtained, an error is logged and an empty dictionary is returned.
-    """
-
-    if review.endswith("}"):
-        return fix_json_escape_char(review)
-
-    data = {}
-    if code_suggestions:
-        closing_bracket = "]}"
-    else:
-        closing_bracket = "]}}"
-
-    if (review.rfind("'Code feedback': [") > 0 or review.rfind('"Code feedback": [') > 0) or \
-            (review.rfind("'Code suggestions': [") > 0 or review.rfind('"Code suggestions": [') > 0) :
-        last_code_suggestion_ind = [m.end() for m in re.finditer(r"\}\s*,", review)][-1] - 1
-        valid_json = False
-        iter_count = 0
-
-        while last_code_suggestion_ind > 0 and not valid_json and iter_count < max_iter:
-            try:
-                data = json.loads(review[:last_code_suggestion_ind] + closing_bracket)
-                valid_json = True
-                review = review[:last_code_suggestion_ind].strip() + closing_bracket
-            except json.decoder.JSONDecodeError:
-                review = review[:last_code_suggestion_ind]
-                last_code_suggestion_ind = [m.end() for m in re.finditer(r"\}\s*,", review)][-1] - 1
-                iter_count += 1
-
-        if not valid_json:
-            get_logger().error("Unable to decode JSON response from AI")
-            data = {}
-
-    return data
-
-
-def fix_json_escape_char(json_message=None, max_iterations: int = 100):
-    """
-    Fix broken or incomplete JSON messages and return the parsed JSON data.
-
-    Args:
-        json_message (str): A string containing the JSON message to be fixed.
-
-    Returns:
-        dict: A dictionary containing the parsed JSON data.
-
-    Raises:
-        None
-
-    """
-    try:
-        result = json.loads(json_message)
-    except Exception as e:
-        if max_iterations <= 0:
-            return {}
-        # Find the offending character index, and give up when that position is missing
-        # or out of range: the reported index is the parse position, not a promise.
-        position = re.search(r"\(char (\d+)\)", str(e))
-        if position is None:
-            return {}
-        idx_to_replace = int(position.group(1))
-        if idx_to_replace >= len(json_message):
-            return {}
-        # Remove the offending character:
-        json_message = list(json_message)
-        json_message[idx_to_replace] = ' '
-        new_message = ''.join(json_message)
-        return fix_json_escape_char(json_message=new_message, max_iterations=max_iterations - 1)
-    return result
 
 
 def load_large_diff(filename, new_file_content_str: str,
