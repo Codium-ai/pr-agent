@@ -2001,7 +2001,7 @@ async def test_bedrock_api_error_retries_with_static_request_credentials(monkeyp
 @pytest.mark.asyncio
 async def test_bedrock_static_fallback_preserves_request_region(monkeypatch, model, model_id):
     monkeypatch.setenv("AWS_USE_IMDS", "true")
-    monkeypatch.setenv("AWS_REGION_NAME", "eu-west-1")
+    monkeypatch.setenv("AWS_REGION_NAME", "ap-south-1")
     monkeypatch.setenv("BEDROCK_MANTLE_API_BASE", "https://bedrock-mantle.eu-west-1.api.aws/v1")
     monkeypatch.setattr(
         litellm_handler,
