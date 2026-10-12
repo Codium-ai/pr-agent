@@ -2170,10 +2170,11 @@ class GitLabProvider(GitProvider):
 
     def _get_group_repo_settings(self) -> bytes | str:
         """Load only the closest subgroup's settings, excluding the global top-level group."""
-        config = get_settings().config
-        if not config.use_global_settings_file or not getattr(config, "use_group_settings_file", False):
+        settings = get_settings()
+        if not settings.config.use_global_settings_file or not getattr(
+                settings.config, "use_group_settings_file", False):
             return ""
-        settings_repo = config.global_settings_repo
+        settings_repo = settings.config.global_settings_repo
         if not settings_repo:
             return ""
         project_path = str(self.id_project or "")
