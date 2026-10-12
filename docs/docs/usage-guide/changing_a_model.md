@@ -797,6 +797,34 @@ Authentication uses the [GitHub Copilot provider](https://docs.litellm.ai/docs/p
 
 Whether Copilot's terms permit this programmatic use is a question for GitHub rather than a guarantee this project can make, so confirm before relying on the route.
 
+### RelaxAI
+
+[RelaxAI](https://relax.ai) offers an OpenAI-compatible API. It needs no provider-specific
+code in PR-Agent: use the `openai/` model prefix and configure RelaxAI's endpoint and key
+through the existing `[openai]` settings.
+
+```toml
+[config] # in configuration.toml
+model = "openai/DeepSeek-V4-Pro"
+custom_model_max_tokens = 1049000 # use the context window published for the selected model
+
+[openai] # in .secrets.toml
+api_base = "https://api.relax.ai/v1/"
+key = "..." # your RelaxAI API key
+```
+
+or use environment variables (make sure to use double underscores `__`):
+
+```bash
+OPENAI__API_BASE=https://api.relax.ai/v1/
+OPENAI__KEY=...
+```
+
+Keep the `openai/` prefix on the model name to route through LiteLLM's OpenAI-compatible
+path. The model IDs and context windows can change; see the
+[RelaxAI API documentation](https://relax.ai/docs/getting-started/introduction) for current
+integration details and available models.
+
 ### Atlas Cloud
 
 [Atlas Cloud](https://www.atlascloud.ai) is an OpenAI-compatible inference platform. It needs no provider-specific code in PR-Agent: the `openai/` prefix routes the request to Atlas's base URL through litellm's OpenAI-compatible path, the same way [OrcaRouter](#orcarouter) and the [Neon AI Gateway](#neon-ai-gateway) are handled.
@@ -828,6 +856,62 @@ Keep the `openai/` prefix on the model name, whichever Atlas model ID you use (`
 :::note[Reasoning models need output headroom]
 Several Atlas models are reasoning models that spend completion tokens on a hidden chain of thought before writing the answer. `deepseek-ai/deepseek-v4-pro` with `max_tokens = 16` returns `finish_reason = "length"` and an **empty** `message.content` — all 16 completion tokens were reasoning tokens. If a tool comes back blank, raise the output budget rather than assuming the request failed. Non-reasoning IDs such as `deepseek-ai/DeepSeek-V3.1` are unaffected.
 :::
+
+### Heabsy
+
+[Heabsy](https://heabsy.com/platform) is an OpenAI-compatible inference API for open models, operated in the EU. Models in its EEA tier run on dedicated GPUs in EEA data centres with zero data retention. It needs no provider-specific code in PR-Agent: the `openai/` prefix routes the request to Heabsy's base URL through litellm's OpenAI-compatible path, the same way [Atlas Cloud](#atlas-cloud) and [OrcaRouter](#orcarouter) are handled.
+
+To use a model served by Heabsy, set:
+
+```toml
+[config] # in configuration.toml
+model = "openai/qwen38"
+fallback_models = ["openai/qwen38"]
+custom_model_max_tokens = 262144 # the context window Heabsy publishes for the model
+
+[openai] # in .secrets.toml
+api_base = "https://api.heabsy.com/v1"
+key = "..." # your Heabsy api key
+```
+
+or use the environment variables (make sure to use double underscores `__`):
+
+```bash
+OPENAI__API_BASE=https://api.heabsy.com/v1
+OPENAI__KEY=...
+```
+
+(API keys are issued in the [Heabsy console](https://platform.heabsy.com); accounts are opened on request at [heabsy.com/contacts](https://heabsy.com/contacts).)
+
+Keep the `openai/` prefix on the model name: a prefixed name is not in the `MAX_TOKENS` table, so you also have to set `custom_model_max_tokens`. Take the value from Heabsy's [model catalog](https://heabsy.com/models).
+
+### DemonRoute
+
+[DemonRoute](https://demonroute.com) is an OpenAI-compatible API for open-weight models, billed prepaid with a hard stop at a $0 balance. It needs no provider-specific code in PR-Agent: the `openai/` prefix routes the request to DemonRoute's base URL through litellm's OpenAI-compatible path, the same way [Atlas Cloud](#atlas-cloud) and [Heabsy](#heabsy) are handled.
+
+To use a model served by DemonRoute, set:
+
+```toml
+[config] # in configuration.toml
+model = "openai/NousResearch/Hermes-3-Llama-3.1-8B"
+fallback_models = ["openai/NousResearch/Hermes-3-Llama-3.1-8B"]
+custom_model_max_tokens = 131072 # the context window DemonRoute publishes for the model
+
+[openai] # in .secrets.toml
+api_base = "https://api.demonroute.com/v1"
+key = "..." # your DemonRoute api key
+```
+
+or use the environment variables (make sure to use double underscores `__`):
+
+```bash
+OPENAI__API_BASE=https://api.demonroute.com/v1
+OPENAI__KEY=...
+```
+
+(you can obtain a DemonRoute API key from [demonroute.com](https://demonroute.com))
+
+Keep the `openai/` prefix on the model name, whichever DemonRoute model ID you use: the prefix routes the request through litellm's OpenAI-compatible path. A prefixed name is not in the `MAX_TOKENS` table [here](https://github.com/the-pr-agent/pr-agent/blob/main/pr_agent/algo/__init__.py), so you also have to set `custom_model_max_tokens`.
 
 ### Custom models
 

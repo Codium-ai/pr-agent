@@ -443,3 +443,13 @@ class TestFenceLabelIsNotStrippedByPrefix:
 
     def test_list_key_starting_with_yml_survives(self):
         assert load_yaml("ymls:\n  - a") == {"ymls": ["a"]}
+
+    def test_key_starting_with_yaml_is_not_truncated(self):
+        assert load_yaml("yaml_config:\n  a: 1") == {"yaml_config": {"a": 1}}
+        assert load_yaml("yaml_schema:\n  a: 1") == {"yaml_schema": {"a": 1}}
+
+    def test_plain_yaml_key_survives(self):
+        assert load_yaml("yaml:\n  a: 1") == {"yaml": {"a": 1}}
+
+    def test_unfenced_yaml_label_is_still_stripped(self):
+        assert load_yaml("yaml\nname: John") == {"name": "John"}

@@ -2169,9 +2169,11 @@ class GitLabProvider(GitProvider):
         try:
             project = self.gl.projects.get(f"{group}/{settings_repo}")
             return project.files.get(file_path='.pr_agent.toml', ref=project.default_branch).decode()
-        except GitlabGetError:
-            # A missing settings project/file is an expected fallback -> return "" (cached).
-            return ""
+        except GitlabGetError as e:
+            if e.response_code in (403, 404):
+                # A missing/inaccessible settings project or file is an expected fallback.
+                return ""
+            raise
         # Transient/unexpected errors propagate so the caller does not cache the failure.
 
     def get_repo_file_content(self, file_path: str, from_default_branch: bool = False):

@@ -2645,14 +2645,17 @@ class LiteLLMAIHandler(BaseAiHandler):
         return cache_control_injection_points
 
     def _split_system_prompt_for_skills_cache(self, messages: list[dict], model: str, injection_points) -> None:
-        """Move the cache breakpoint to the end of the shared skills prefix (#4007).
+        """Add a cache breakpoint at the end of the shared skills prefix (#4007).
 
         The review tools open their system prompts with an identical skills block, so marking
         that block lets Anthropic read one cache entry across /review, /describe and /improve
-        instead of writing one per tool. Only applies to Anthropic Claude models when a
-        configured injection point targets the system message and the rendered prefix matches;
-        every other request keeps the plain system string. Splitting at the prefix is safe
-        because the two text blocks concatenate back to the original content.
+        instead of writing one per tool. The tool-specific remainder keeps its own breakpoint
+        rather than losing it, so a tool that repeats still reads its whole system prompt; the
+        price is a second breakpoint slot of the four Anthropic allows, not a smaller cache.
+        Only applies to Anthropic Claude models when a configured injection point targets the
+        system message and the rendered prefix matches; every other request keeps the plain
+        system string. Splitting at the prefix is safe because the two text blocks concatenate
+        back to the original content.
         """
         if not injection_points or not self._is_claude_model(model):
             return

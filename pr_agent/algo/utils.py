@@ -3,7 +3,6 @@ from __future__ import annotations
 import copy
 import difflib
 import html
-import json
 import re
 import textwrap
 from enum import StrEnum
@@ -730,91 +729,6 @@ def process_can_be_split(emoji, value):
     return markdown_text
 
 
-def try_fix_json(review, max_iter=10, code_suggestions=False):
-    """
-    Fix broken or incomplete JSON messages and return the parsed JSON data.
-
-    Args:
-    - review: A string containing the JSON message to be fixed.
-    - max_iter: An integer representing the maximum number of iterations to try and fix the JSON message.
-    - code_suggestions: A boolean indicating whether to try and fix JSON messages with code feedback.
-
-    Returns:
-    - data: A dictionary containing the parsed JSON data.
-
-    The function attempts to fix broken or incomplete JSON messages by parsing until the last valid code suggestion.
-    If the JSON message ends with a closing bracket, the function calls the fix_json_escape_char function to fix the
-    message.
-    If code_suggestions is True and the JSON message contains code feedback, the function tries to fix the JSON
-    message by parsing until the last valid code suggestion.
-    The function uses regular expressions to find the last occurrence of "}," with any number of whitespaces or
-    newlines.
-    It tries to parse the JSON message with the closing bracket and checks if it is valid.
-    If the JSON message is valid, the parsed JSON data is returned.
-    If the JSON message is not valid, the last code suggestion is removed and the process is repeated until a valid JSON
-    message is obtained or the maximum number of iterations is reached.
-    If a valid JSON message is not obtained, an error is logged and an empty dictionary is returned.
-    """
-
-    if review.endswith("}"):
-        return fix_json_escape_char(review)
-
-    data = {}
-    if code_suggestions:
-        closing_bracket = "]}"
-    else:
-        closing_bracket = "]}}"
-
-    if (review.rfind("'Code feedback': [") > 0 or review.rfind('"Code feedback": [') > 0) or \
-            (review.rfind("'Code suggestions': [") > 0 or review.rfind('"Code suggestions": [') > 0) :
-        last_code_suggestion_ind = [m.end() for m in re.finditer(r"\}\s*,", review)][-1] - 1
-        valid_json = False
-        iter_count = 0
-
-        while last_code_suggestion_ind > 0 and not valid_json and iter_count < max_iter:
-            try:
-                data = json.loads(review[:last_code_suggestion_ind] + closing_bracket)
-                valid_json = True
-                review = review[:last_code_suggestion_ind].strip() + closing_bracket
-            except json.decoder.JSONDecodeError:
-                review = review[:last_code_suggestion_ind]
-                last_code_suggestion_ind = [m.end() for m in re.finditer(r"\}\s*,", review)][-1] - 1
-                iter_count += 1
-
-        if not valid_json:
-            get_logger().error("Unable to decode JSON response from AI")
-            data = {}
-
-    return data
-
-
-def fix_json_escape_char(json_message=None):
-    """
-    Fix broken or incomplete JSON messages and return the parsed JSON data.
-
-    Args:
-        json_message (str): A string containing the JSON message to be fixed.
-
-    Returns:
-        dict: A dictionary containing the parsed JSON data.
-
-    Raises:
-        None
-
-    """
-    try:
-        result = json.loads(json_message)
-    except Exception as e:
-        # Find the offending character index:
-        idx_to_replace = int(str(e).split(' ')[-1].replace(')', ''))
-        # Remove the offending character:
-        json_message = list(json_message)
-        json_message[idx_to_replace] = ' '
-        new_message = ''.join(json_message)
-        return fix_json_escape_char(json_message=new_message)
-    return result
-
-
 def load_large_diff(filename, new_file_content_str: str,
                     original_file_content_str: str, show_warning: bool = True) -> str:
     """
@@ -1079,7 +993,9 @@ def load_yaml(response_text: str, keys_fix_yaml: list[str] | None = None, first_
     # "yml_config" is not truncated to "_config"
     unfenced = re.sub(r'^```[ \t]*(?:(?i:yaml|yml))?[ \t]*(?=\r?\n)', '', response_text)
     if unfenced == response_text:
-        unfenced = response_text.removeprefix('yaml')
+        # Strip an unfenced "yaml" label only when it is a complete line, so a key such as
+        # "yaml_config" is not truncated. A bare removeprefix('yaml') would shorten it to "_config".
+        unfenced = re.sub(r'^yaml(?:[ \t]*\r?\n|\Z)', '', response_text, count=1)
     response_text = unfenced.rstrip()
     response_text = drop_sign_off_after_wrapper_fence(response_text)
     if response_text.split('\n')[-1] == '```':
@@ -1119,6 +1035,18 @@ def try_fix_yaml(response_text: str,
     if keys_fix_yaml is None:
         keys_fix_yaml = []
     response_text_lines = response_text.split('\n')
+    failed_original_parse = False
+
+    def _parse_yaml(candidate):
+        nonlocal failed_original_parse
+        if candidate == response_text and failed_original_parse:
+            return None
+        try:
+            return yaml.safe_load(candidate)
+        except yaml.YAMLError:
+            if candidate == response_text:
+                failed_original_parse = True
+            raise
 
     keys_yaml = ['relevant line:', 'suggestion content:', 'relevant file:', 'existing code:',
                  'improved code:', 'label:', 'why:', 'suggestion_summary:']
@@ -1132,7 +1060,7 @@ def try_fix_yaml(response_text: str,
                 response_text_lines_copy[i] = response_text_lines_copy[i].replace(f'{key}',
                                                                                   f'{key} |\n        ')
     try:
-        data = yaml.safe_load('\n'.join(response_text_lines_copy))
+        data = _parse_yaml('\n'.join(response_text_lines_copy))
         if data is not None:
             get_logger().info("Successfully parsed AI prediction after adding |-\n")
             return data
@@ -1143,7 +1071,7 @@ def try_fix_yaml(response_text: str,
     response_text_copy = copy.deepcopy(response_text)
     response_text_copy = response_text_copy.replace('|\n', '|2\n')
     try:
-        data = yaml.safe_load(response_text_copy)
+        data = _parse_yaml(response_text_copy)
         if data is not None:
             get_logger().info("Successfully parsed AI prediction after replacing | with |2")
             return data
@@ -1177,7 +1105,7 @@ def try_fix_yaml(response_text: str,
                     continue
             response_text_lines_copy[i] = '    ' + response_text_lines_copy[i].lstrip()
     try:
-        data = yaml.safe_load('\n'.join(response_text_lines_copy))
+        data = _parse_yaml('\n'.join(response_text_lines_copy))
         if data is not None:
             get_logger().info("Successfully parsed AI prediction after replacing | with |2 and adding spaces")
             return data
@@ -1193,7 +1121,7 @@ def try_fix_yaml(response_text: str,
         # group(1) is the snippet body, without the ``` fences or the optional yaml/yml language identifier
         snippet_text = snippet.group(1)
         try:
-            data = yaml.safe_load(snippet_text)
+            data = _parse_yaml(snippet_text)
             if data is not None:
                 get_logger().info("Successfully parsed AI prediction after extracting yaml snippet")
                 return data
@@ -1204,7 +1132,7 @@ def try_fix_yaml(response_text: str,
     # third fallback - try to remove leading and trailing curly brackets
     response_text_copy = response_text.strip().rstrip().removeprefix('{').removesuffix('}').rstrip(':\n')
     try:
-        data = yaml.safe_load(response_text_copy)
+        data = _parse_yaml(response_text_copy)
         if data is not None:
             get_logger().info("Successfully parsed AI prediction after removing curly brackets")
             return data
@@ -1231,7 +1159,7 @@ def try_fix_yaml(response_text: str,
         response_text_copy = response_text_copy.strip("`").strip()
         if response_text_copy:
             try:
-                data = yaml.safe_load(response_text_copy)
+                data = _parse_yaml(response_text_copy)
                 if data is not None:
                     get_logger().info("Successfully parsed AI prediction after extracting yaml snippet")
                     return data
@@ -1244,7 +1172,7 @@ def try_fix_yaml(response_text: str,
         if response_text_lines_copy[i].startswith('+'):
             response_text_lines_copy[i] = ' ' + response_text_lines_copy[i][1:]
     try:
-        data = yaml.safe_load('\n'.join(response_text_lines_copy))
+        data = _parse_yaml('\n'.join(response_text_lines_copy))
         if data is not None:
             get_logger().info("Successfully parsed AI prediction after removing leading '+'")
             return data
@@ -1282,7 +1210,7 @@ def try_fix_yaml(response_text: str,
             modified = True
     if modified:
         try:
-            data = yaml.safe_load('\n'.join(response_text_lines_copy))
+            data = _parse_yaml('\n'.join(response_text_lines_copy))
             if data is not None:
                 get_logger().info("Successfully parsed AI prediction after normalizing diff removal markers")
                 return data
@@ -1295,7 +1223,7 @@ def try_fix_yaml(response_text: str,
         response_text_copy = copy.deepcopy(response_text)
         response_text_copy = response_text_copy.replace('\t', '    ')
         try:
-            data = yaml.safe_load(response_text_copy)
+            data = _parse_yaml(response_text_copy)
             if data is not None:
                 get_logger().info("Successfully parsed AI prediction after replacing tabs with spaces")
                 return data
@@ -1322,7 +1250,7 @@ def try_fix_yaml(response_text: str,
     response_text_copy = '\n'.join(response_text_copy_lines)
     response_text_copy = response_text_copy.replace(' |\n', ' |2\n')
     try:
-        data = yaml.safe_load(response_text_copy)
+        data = _parse_yaml(response_text_copy)
         if data is not None:
             get_logger().info("Successfully parsed AI prediction after adding indent for sections of code blocks")
             return data
@@ -1333,7 +1261,7 @@ def try_fix_yaml(response_text: str,
     response_text_copy = copy.deepcopy(response_text)
     response_text_copy = response_text_copy.lstrip('|\n')
     try:
-        data = yaml.safe_load(response_text_copy)
+        data = _parse_yaml(response_text_copy)
         if data is not None:
             get_logger().info("Successfully parsed AI prediction after removing pipe chars")
             return data
@@ -1345,7 +1273,7 @@ def try_fix_yaml(response_text: str,
     encodings_to_try = ['latin-1', 'utf-16']
     for encoding in encodings_to_try:
         try:
-            data = yaml.safe_load(response_text.encode(encoding).decode("utf-8"))
+            data = _parse_yaml(response_text.encode(encoding).decode("utf-8"))
             if data:
                 get_logger().info(f"Successfully parsed AI prediction after decoding with {encoding} encoding")
                 return data

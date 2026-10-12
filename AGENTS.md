@@ -5,7 +5,7 @@ This file is the shared source of repository guidance for coding agents. Tool-sp
 ## Dos and Don’ts
 
 - **Do** match the interpreter requirement declared in `pyproject.toml` (Python ≥ 3.12) and install dependencies with `uv sync` (runtime + dev, from `uv.lock`) before running tools.
-- **Do** run tests with `PYTHONPATH=.` set to keep imports functional (for example `PYTHONPATH=. uv run pytest tests/unittest/test_fix_json_escape_char.py -q`).
+- **Do** run tests with `PYTHONPATH=.` set to keep imports functional (for example `PYTHONPATH=. uv run pytest tests/unittest/test_output_models.py -q`).
 - **Do** adjust configuration through `.pr_agent.toml` or files under `pr_agent/settings/` instead of hard-coding values.
 - **Don’t** commit secrets or access tokens; rely on environment variables as shown in the health and e2e tests.
 - **Don’t** reformat or reorder files globally; match existing 120-character lines, import ordering, and docstring style.
@@ -63,7 +63,7 @@ Sensitive values should stay in environment variables or the gitignored `.secret
 ## Build, Test, and Development Commands
 
 - Install dependencies (runtime + dev) into a project virtualenv from the lockfile with `uv sync`; `uv run` auto-syncs before each command.
-- Run a single unit test (verified): `PYTHONPATH=. uv run pytest tests/unittest/test_fix_json_escape_char.py -q`.
+- Run a single unit test (verified): `PYTHONPATH=. uv run pytest tests/unittest/test_output_models.py -q`.
 - Run the full unit suite: `PYTHONPATH=. uv run pytest tests/unittest -v`.
 - Execute the CLI locally once dependencies and API keys are available: `uv run pr-agent --pr_url <https://host/org/repo/pull/123> review`.
 - Build the test Docker target mirror of CI when containerizing: `docker build -f docker/Dockerfile --target test .` (loads dev dependencies and copies `tests/`).
