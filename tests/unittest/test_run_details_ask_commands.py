@@ -1,5 +1,7 @@
 """Run-details coverage for /ask (/ask_question) and /ask_line."""
 
+import pytest
+
 from pr_agent.config_loader import get_settings
 from pr_agent.tools.pr_line_questions import PR_LineQuestions
 from pr_agent.tools.pr_questions import PRQuestions
@@ -11,8 +13,15 @@ from tests.unittest._run_details_command_helpers import (
     _provider,
     _published_bodies,
     _seed_stale_fallback_run,
-    run_settings,  # noqa: F401  (autouse fixture)
+    command_run_settings,
 )
+
+
+@pytest.fixture(autouse=True)
+def _run_settings():
+    with command_run_settings() as settings:
+        yield settings
+
 
 # ---------------------------------------------------------------- /ask, /ask_question
 

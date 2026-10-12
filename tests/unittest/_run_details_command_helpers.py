@@ -2,13 +2,12 @@
 
 Tests built on these helpers drive the tool's real run() through the real
 retry_with_fallback_models, stubbing only the per-model prediction call, so the recorded
-model (and fallback flag) comes from the production recording path. Test modules must import
-the autouse ``run_settings`` fixture for it to take effect.
+model (and fallback flag) comes from the production recording path. Each test module wraps
+its tests in ``command_run_settings()`` through a module-level autouse fixture.
 """
 
+from contextlib import contextmanager
 from unittest.mock import MagicMock
-
-import pytest
 
 from pr_agent.algo.run_details import init_run_details, record_model_used
 from pr_agent.config_loader import get_settings
@@ -42,8 +41,9 @@ _TRACKED_KEYS = (
 )
 
 
-@pytest.fixture(autouse=True)
-def run_settings():
+@contextmanager
+def command_run_settings():
+    """Apply a primary/fallback model chain with run details enabled, then restore settings."""
     snapshot = snapshot_settings(_TRACKED_KEYS)
     settings = get_settings()
     settings.set("config.model", PRIMARY)
