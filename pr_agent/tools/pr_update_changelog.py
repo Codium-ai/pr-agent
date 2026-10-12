@@ -14,7 +14,8 @@ from pr_agent.algo.pr_processing import (
     get_pr_diff,
     retry_with_fallback_models,
 )
-from pr_agent.algo.run_output import show_relevant_configurations
+from pr_agent.algo.run_details import init_run_details
+from pr_agent.algo.run_output import append_run_details, show_relevant_configurations
 from pr_agent.algo.token_budget import AttemptTokenBudget
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.algo.utils import ModelType
@@ -113,6 +114,8 @@ class PRUpdateChangelog:
             raise changelog_read_error  # noqa: B904
 
     async def run(self):
+        # A fresh collector so the run-details section reports only this command's model.
+        init_run_details()
         get_logger().info('Updating the changelog...')
         changelog_read_error = getattr(self, "changelog_read_error", None)
 
@@ -171,7 +174,7 @@ class PRUpdateChangelog:
                             f"\n\n> ℹ️ These changes were not pushed to the repository "
                             f"({self.push_skipped_reason})."
                         )
-                    self.git_provider.publish_comment(changelog_comment)
+                    self.git_provider.publish_comment(append_run_details(changelog_comment, self.git_provider))
         finally:
             if temporary_comment_published:
                 try:
@@ -190,6 +193,10 @@ class PRUpdateChangelog:
             "\n\n> ⚠️ These changes were not pushed because the existing "
             "CHANGELOG.md could not be read safely."
         )
+        if answer:
+            # Without an answer no model call succeeded, and this can run from __init__,
+            # before run() installs a fresh collector, so never report a model here.
+            changelog_comment = append_run_details(changelog_comment, self.git_provider)
         try:
             self.git_provider.publish_comment(changelog_comment)
         except Exception as fallback_error:
@@ -203,6 +210,7 @@ class PRUpdateChangelog:
             "\n\n> ⚠️ The repository update could not be confirmed. "
             "The generated changelog is preserved here for recovery."
         )
+        changelog_comment = append_run_details(changelog_comment, self.git_provider)
         try:
             self.git_provider.publish_comment(changelog_comment)
         except Exception as fallback_error:
@@ -318,7 +326,9 @@ class PRUpdateChangelog:
             # cancellation authoritative.
             try:
                 if self.git_provider.supports_changelog_update_review():
-                    self.git_provider.publish_comment(f"**Changelog updates: 🔄**\n\n{answer}")
+                    self.git_provider.publish_comment(
+                        append_run_details(f"**Changelog updates: 🔄**\n\n{answer}", self.git_provider)
+                    )
             except Exception as feedback_error:
                 get_logger().exception(
                     f"Failed to publish changelog fallback during cancellation: {feedback_error}"
@@ -338,7 +348,9 @@ class PRUpdateChangelog:
         except Exception:
             # we can't create a review for some reason, let's just publish a comment
             try:
-                fallback = self.git_provider.publish_comment(f"**Changelog updates: 🔄**\n\n{answer}")
+                fallback = self.git_provider.publish_comment(
+                    append_run_details(f"**Changelog updates: 🔄**\n\n{answer}", self.git_provider)
+                )
                 if self.git_provider.supports_comment_publish_confirmation() and fallback is None:
                     raise RuntimeError("The changelog fallback comment was not confirmed")
             except Exception as feedback_error:
