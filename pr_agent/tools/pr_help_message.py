@@ -13,7 +13,8 @@ from litellm import token_counter
 from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAIHandler
 from pr_agent.algo.pr_processing import FallbackEligibleError, retry_with_fallback_models
-from pr_agent.algo.run_details import record_command_failure
+from pr_agent.algo.run_details import init_run_details, record_command_failure
+from pr_agent.algo.run_output import append_run_details
 from pr_agent.algo.token_budget import get_max_input_tokens, get_max_tokens
 from pr_agent.algo.token_handler import TokenEncoder
 from pr_agent.algo.utils import ModelType, load_yaml
@@ -430,6 +431,8 @@ class PRHelpMessage:
 
 
     async def run(self):
+        # A fresh collector so the run-details section reports only this command's model.
+        init_run_details()
         if self.question_str:
             try:
                 self.vars["snippets"], self._available_docs_files = _load_help_docs_prompt()
@@ -456,7 +459,7 @@ class PRHelpMessage:
                         answer_str = f"### Question: \n{self.question_str}\n\n"
                         answer_str += "### Answer:\n\n"
                         answer_str += response_yaml
-                        self.git_provider.publish_comment(answer_str)
+                        self.git_provider.publish_comment(append_run_details(answer_str, self.git_provider))
                     return ""
                 response_str = response_yaml.get('response')
                 relevant_sections = response_yaml.get('relevant_sections')
@@ -470,7 +473,7 @@ class PRHelpMessage:
                             "Could not find relevant information to answer the question. "
                             "Please provide more details and try again."
                         )
-                        self.git_provider.publish_comment(answer_str)
+                        self.git_provider.publish_comment(append_run_details(answer_str, self.git_provider))
                     return ""
 
                 # prepare the answer
@@ -487,7 +490,7 @@ class PRHelpMessage:
 
                 # publish the answer
                 if get_settings().config.publish_output:
-                    self.git_provider.publish_comment(answer_str)
+                    self.git_provider.publish_comment(append_run_details(answer_str, self.git_provider))
                 else:
                     get_logger().info(f"Answer:\n{answer_str}")
             else:
