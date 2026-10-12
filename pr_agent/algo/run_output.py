@@ -186,10 +186,13 @@ def append_run_details(body: str, git_provider) -> str:
 
     Returns ``body`` unchanged when ``config.output_run_details`` is off, or when the
     current run recorded no model (so a message that needed no AI call stays clean).
+    A provider without capability checks gets the plain-text section.
     """
     if not get_settings().get("config.output_run_details", False):
         return body
-    return body + show_run_details(git_provider.is_supported("gfm_markdown"))
+    is_supported = getattr(git_provider, "is_supported", None)
+    gfm_supported = bool(callable(is_supported) and is_supported("gfm_markdown"))
+    return body + show_run_details(gfm_supported)
 
 
 def get_version() -> str:

@@ -270,3 +270,14 @@ def test_append_run_details_leaves_body_unchanged_without_a_recorded_model(run_d
     init_run_details()
 
     assert append_run_details("body", _GfmProvider(gfm=True)) == "body"
+
+
+def test_append_run_details_falls_back_to_plain_text_without_capability_checks(run_details_flag):
+    run_details_flag.set("config.output_run_details", True)
+    init_run_details()
+    record_model_used("openai/gpt-5.4", is_fallback=False)
+
+    output = append_run_details("body", object())
+
+    assert output.startswith("body\n___\n\n**⚙️ Agent run details**")
+    assert "Model: openai/gpt-5.4" in output
