@@ -390,6 +390,22 @@ ASANA_TASK_OPT_FIELDS = "gid,name,notes,permalink_url,tags.name"
 DEFAULT_ASANA_REQUEST_TIMEOUT = 10
 MAX_ASANA_REQUEST_TIMEOUT = 60
 MAX_ASANA_TICKETS = 3
+LINEAR_API_URL = "https://api.linear.app/graphql"
+LINEAR_ISSUE_QUERY = """
+query PrAgentLinearIssue($id: String!) {
+  issue(id: $id) {
+    id identifier url title description
+    labels(first: 20) { nodes { name } }
+  }
+}
+"""
+DEFAULT_LINEAR_REQUEST_TIMEOUT = 10
+MAX_LINEAR_REQUEST_TIMEOUT = 60
+MAX_LINEAR_TICKETS = 3
+_LINEAR_ISSUE_PATH_PATTERN = re.compile(
+    r"/([A-Za-z0-9_-]+)/issue/([A-Za-z][A-Za-z0-9]*-[0-9]+)(?:/[^/]+)?/?"
+)
+_LINEAR_URL_PATTERN = re.compile(r"(?<![\w@/])https://linear\.app/[^\s<>\[\]()`\"']+")
 MAX_GITHUB_TICKETS = 3
 MAX_GITHUB_TICKET_LOOKUPS = 30
 MAX_SUB_ISSUES_PER_TICKET = 10
@@ -629,6 +645,113 @@ async def _fetch_asana_ticket_contents(
             continue
         tickets_content.append(ticket_content)
     return tickets_content
+
+
+def _get_linear_issue_identity(ticket_url: str) -> tuple[str, str]:
+    parsed = urlparse(ticket_url)
+    match = _LINEAR_ISSUE_PATH_PATTERN.fullmatch(parsed.path)
+    if parsed.scheme != "https" or parsed.netloc != "linear.app" or not match or parsed.params:
+        raise ValueError("Invalid Linear issue URL")
+    return match.group(1).lower(), match.group(2).upper()
+
+
+def _get_linear_issue_identifier(ticket_url: str) -> str:
+    return _get_linear_issue_identity(ticket_url)[1]
+
+
+def find_linear_tickets(text: str | None) -> list:
+    """Extract canonical Linear issue links, preserving first-seen workspace/issue order."""
+    if not isinstance(text, str):
+        return []
+    tickets = []
+    seen = set()
+    for match in _LINEAR_URL_PATTERN.finditer(text):
+        ticket_url = match.group(0).rstrip(".,;:!?")
+        try:
+            identity = _get_linear_issue_identity(ticket_url)
+        except ValueError:
+            continue
+        if identity not in seen:
+            seen.add(identity)
+            tickets.append(ticket_url)
+    return tickets
+
+
+def _get_linear_request_timeout() -> float:
+    timeout = get_settings().get("linear.request_timeout", DEFAULT_LINEAR_REQUEST_TIMEOUT)
+    try:
+        timeout = float(timeout)
+    except (OverflowError, TypeError, ValueError):
+        return DEFAULT_LINEAR_REQUEST_TIMEOUT
+    if not math.isfinite(timeout) or timeout <= 0:
+        return DEFAULT_LINEAR_REQUEST_TIMEOUT
+    return min(timeout, MAX_LINEAR_REQUEST_TIMEOUT)
+
+
+async def _fetch_linear_ticket_content(session, ticket_url: str, max_body_characters: int) -> dict:
+    identity = _get_linear_issue_identity(ticket_url)
+    async with session.post(
+        LINEAR_API_URL,
+        json={"query": LINEAR_ISSUE_QUERY, "variables": {"id": identity[1]}},
+        allow_redirects=False,
+    ) as response:
+        if response.status != 200:
+            raise RuntimeError(f"Linear API returned HTTP {response.status}")
+        payload = await response.json()
+    if not isinstance(payload, dict) or payload.get("errors"):
+        raise ValueError("Linear API returned an invalid or failed GraphQL response")
+    data = payload.get("data")
+    issue = data.get("issue") if isinstance(data, dict) else None
+    if not isinstance(issue, dict) or not isinstance(issue.get("id"), str) or not issue["id"]:
+        raise ValueError("Linear API response did not contain issue data")
+    canonical_url = issue.get("url")
+    if (not isinstance(canonical_url, str) or not isinstance(issue.get("identifier"), str)
+            or issue["identifier"].upper() != identity[1]
+            or _get_linear_issue_identity(canonical_url) != identity):
+        raise ValueError("Linear API returned a different issue identity")
+    body = issue.get("description") if isinstance(issue.get("description"), str) else ""
+    if len(body) > max_body_characters:
+        body = body[:max_body_characters] + "..."
+    labels = issue.get("labels")
+    nodes = labels.get("nodes") if isinstance(labels, dict) else None
+    names = [node["name"] for node in nodes[:20]
+             if isinstance(node, dict) and isinstance(node.get("name"), str)] if isinstance(nodes, list) else []
+    title = issue.get("title")
+    return {
+        "ticket_id": identity[1],
+        "ticket_url": canonical_url,
+        "title": title if isinstance(title, str) and title else f"Linear issue {identity[1]}",
+        "body": body,
+        "labels": ", ".join(names),
+    }
+
+
+async def _fetch_linear_ticket_contents(ticket_urls: list, max_tickets: int, max_body_characters: int) -> list:
+    if not ticket_urls or max_tickets <= 0:
+        return []
+    api_token = get_settings().get("linear.api_token", "")
+    if not isinstance(api_token, str) or not api_token.strip():
+        get_logger().warning("Linear issue references found, but linear.api_token is not configured")
+        return []
+    timeout = aiohttp.ClientTimeout(total=_get_linear_request_timeout())
+    async with aiohttp.ClientSession(headers={"Authorization": api_token.strip()}, timeout=timeout) as session:
+        async def fetch_ticket(ticket_url):
+            try:
+                return await _fetch_linear_ticket_content(session, ticket_url, max_body_characters)
+            except Exception:
+                # HTTP exceptions can contain credentials or response bodies; keep warnings payload-free.
+                get_logger().warning("Failed to fetch Linear issue; skipping ticket context")
+                return None
+
+        tasks = [asyncio.create_task(fetch_ticket(url)) for url in ticket_urls[:min(max_tickets, MAX_LINEAR_TICKETS)]]
+        try:
+            results = await asyncio.gather(*tasks)
+        except BaseException:
+            for task in tasks:
+                task.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
+            raise
+    return [ticket for ticket in results if ticket is not None]
 
 
 def _get_user_description_for_asana(git_provider) -> str:
@@ -945,6 +1068,14 @@ def _provider_supports(git_provider, capability: str) -> bool:
 async def extract_tickets(git_provider):
     try:
         user_description = _get_user_description_for_asana(git_provider)
+        linear_ticket_urls = find_linear_tickets(user_description)
+        try:
+            linear_tickets_content = await _fetch_linear_ticket_contents(
+                linear_ticket_urls, MAX_LINEAR_TICKETS, MAX_TICKET_CHARACTERS,
+            )
+        except Exception:
+            get_logger().warning("Failed to initialize Linear issue fetching; skipping ticket context")
+            linear_tickets_content = []
         asana_ticket_urls = find_asana_tickets(user_description)
         try:
             asana_tickets_content = await _fetch_asana_ticket_contents(
@@ -1073,6 +1204,7 @@ async def extract_tickets(git_provider):
             tickets_content.extend(asana_tickets_content)
             # Provider-agnostic Jira lookup (see add_jira_tickets); no-op when Jira is unconfigured.
             add_jira_tickets(git_provider, tickets_content)
+            tickets_content.extend(linear_tickets_content)
             return tickets_content
 
         elif _provider_supports(git_provider, "supports_issue_reference_tickets"):
@@ -1127,6 +1259,7 @@ async def extract_tickets(git_provider):
             tickets_content.extend(asana_tickets_content)
             # Provider-agnostic Jira lookup (see add_jira_tickets); no-op when Jira is unconfigured.
             add_jira_tickets(git_provider, tickets_content)
+            tickets_content.extend(linear_tickets_content)
             return tickets_content
 
         elif _provider_supports(git_provider, "supports_linked_work_item_tickets"):
@@ -1166,6 +1299,7 @@ async def extract_tickets(git_provider):
             tickets_content.extend(asana_tickets_content)
             # Provider-agnostic Jira lookup (see add_jira_tickets); no-op when Jira is unconfigured.
             add_jira_tickets(git_provider, tickets_content)
+            tickets_content.extend(linear_tickets_content)
             return tickets_content
 
         # Providers with no ticket integration of their own still reach Jira: keys are
@@ -1174,7 +1308,8 @@ async def extract_tickets(git_provider):
         # MAX_TICKETS, as on the provider-specific paths. Returning None when nothing at
         # all was found keeps the "provider unsupported" contract intact.
         tickets_content = add_jira_tickets(git_provider, list(asana_tickets_content))
-        if asana_ticket_urls or tickets_content:
+        tickets_content.extend(linear_tickets_content)
+        if asana_ticket_urls or linear_ticket_urls or tickets_content:
             return tickets_content
 
     except Exception as e:

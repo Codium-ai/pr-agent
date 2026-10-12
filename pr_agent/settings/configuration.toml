@@ -617,6 +617,9 @@ context_history_max_tasks = 100 # maximum prior tasks considered for a context f
 [asana]
 request_timeout = 10 # seconds allowed for each Asana task API request
 
+[linear]
+request_timeout = 10 # seconds allowed for each Linear issue API request
+
 [azure_devops]
 default_comment_status = "closed"
 

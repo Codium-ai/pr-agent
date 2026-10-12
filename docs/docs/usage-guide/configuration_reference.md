@@ -566,6 +566,13 @@ _This section only documents commented-out examples; see the [TOML source](https
 | `request_timeout` | 10 | seconds allowed for each Asana task API request |
 
 
+## `[linear]` {#linear}
+
+| Key | Default | Description |
+| --- | --- | --- |
+| `request_timeout` | 10 | seconds allowed for each Linear issue API request |
+
+
 ## `[azure_devops]` {#azure_devops}
 
 | Key | Default | Description |
