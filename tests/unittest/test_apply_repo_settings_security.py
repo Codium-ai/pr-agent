@@ -494,7 +494,6 @@ def test_repo_settings_cannot_override_provider_authentication_or_tls(
         ("project_keys", ["PROJ"], '["PROJ", "HR"]'),
         ("jira_site", "host-org", '"other-org"'),
         ("jira_api_email", "bot@host.example", '"other@repo.example"'),
-        ("require_project_keys", True, "false"),
     ],
 )
 def test_repo_settings_cannot_widen_jira_lookup_scope(

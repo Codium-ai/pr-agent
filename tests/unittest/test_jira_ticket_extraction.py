@@ -28,7 +28,6 @@ _JIRA_KEYS = (
     "JIRA.JIRA_API_TOKEN",
     "JIRA.JIRA_REQUIREMENTS_FIELD",
     "JIRA.PROJECT_KEYS",
-    "JIRA.REQUIRE_PROJECT_KEYS",
 )
 
 
@@ -458,12 +457,9 @@ class TestExtractJiraTickets:
         warning_calls = [str(c) for c in get_logger.return_value.warning.call_args_list]
         assert any("project_keys" in c for c in warning_calls)
 
-    @pytest.mark.parametrize("value", [[], (), "", "   "])
-    def test_unsupplied_project_keys_keep_looking_up_every_key(self, value):
-        """The three ways of supplying nothing: the option missing (covered by the tests
-        above), the shipped empty list, and a blank top-level string, since
-        `jira__project_keys=""` is how a shell spells an unset environment variable. All
-        keep today's behaviour."""
+    @pytest.mark.parametrize("value", [["*"], ("*",), "*", " * ", ["PROJ", "*"]])
+    def test_wildcard_project_keys_look_up_every_key(self, value):
+        """The wildcard ["*"] (default) looks up every key found, preserving shipped behavior."""
         self._configure_jira()
         get_settings().set("JIRA.PROJECT_KEYS", value)
         client = self._fake_client()
@@ -472,12 +468,10 @@ class TestExtractJiraTickets:
         assert [call.args[0] for call in client.issue.call_args_list] == ["PROJ-1", "SHA-256"]
         assert len(result) == 2
 
-    @pytest.mark.parametrize("value", [[], (), "", "   ", None])
-    def test_require_project_keys_skips_when_empty_or_unsupplied(self, value):
-        """When jira.require_project_keys is enabled, empty, missing, or blank
-        jira.project_keys skips lookup instead of widening to every key found."""
+    @pytest.mark.parametrize("value", [[], ()])
+    def test_empty_project_keys_disables_lookups(self, value):
+        """An empty list or tuple explicitly disables Jira ticket lookups without logging a warning."""
         self._configure_jira()
-        get_settings().set("JIRA.REQUIRE_PROJECT_KEYS", True)
         get_settings().set("JIRA.PROJECT_KEYS", value)
         with patch("atlassian.Jira") as jira_cls, \
                 patch("pr_agent.tools.ticket_pr_compliance_check.get_logger") as get_logger:
@@ -485,19 +479,20 @@ class TestExtractJiraTickets:
         assert result == []
         jira_cls.assert_not_called()
         warning_calls = [str(c) for c in get_logger.return_value.warning.call_args_list]
-        assert any("require_project_keys" in c for c in warning_calls)
+        assert not any("no valid entry" in c for c in warning_calls)
 
-    def test_require_project_keys_permits_allowlisted_keys(self):
-        """When jira.require_project_keys is enabled and project_keys contains valid keys,
-        lookups for those projects succeed while others are filtered out."""
+    @pytest.mark.parametrize("value", [None, "", "   "])
+    def test_unsupplied_project_keys_keep_looking_up_every_key(self, value):
+        """When jira.project_keys is unconfigured (None) or set to a blank top-level string
+        (since `jira__project_keys=""` is how a shell spells an unset environment variable),
+        it defaults to the wildcard behavior and looks up every key."""
         self._configure_jira()
-        get_settings().set("JIRA.REQUIRE_PROJECT_KEYS", True)
-        get_settings().set("JIRA.PROJECT_KEYS", ["PROJ"])
+        get_settings().set("JIRA.PROJECT_KEYS", value)
         client = self._fake_client()
         with patch("atlassian.Jira", return_value=client):
-            result = extract_jira_tickets("PROJ-1 SHA-256 OTHER-2")
-        assert [call.args[0] for call in client.issue.call_args_list] == ["PROJ-1"]
-        assert [t["ticket_id"] for t in result] == ["PROJ-1"]
+            result = extract_jira_tickets("PROJ-1 SHA-256")
+        assert [call.args[0] for call in client.issue.call_args_list] == ["PROJ-1", "SHA-256"]
+        assert len(result) == 2
 
     @pytest.mark.parametrize("entries", [[""], [" "], ["", ""], ",", " , "])
     def test_supplied_blank_project_keys_fail_closed(self, entries):
