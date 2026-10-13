@@ -1,234 +1,128 @@
-
-
-<br />
-
 <div align="center">
 
+<sub>AN OPEN-SOURCE PROJECT BY <a href="https://www.quorumtech.ch"><strong>QUORUM TECHNOLOGIES</strong></a></sub>
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/The-PR-Agent/pr-agent/main/docs/static/img/logo-dark.png" width="330">
-  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/The-PR-Agent/pr-agent/main/docs/static/img/logo-light.png" width="330">
-  <img src="https://raw.githubusercontent.com/The-PR-Agent/pr-agent/main/docs/static/img/logo-light.png" alt="logo" width="330">
+# Polyglot PR Bot
 
-</picture>
-<br>
-The Original Open-Source PR Reviewer
-<br><br>
-<a href="https://github.com/the-pr-agent/pr-agent/commits/main">
-<img alt="GitHub" src="https://img.shields.io/github/last-commit/the-pr-agent/pr-agent/main?style=for-the-badge" height="20">
-</a>
+### One change. Every language.
+
+**AI-assisted pull request reviews for projects that maintain the same behaviour across multiple languages.**
+
+[![License: MIT](https://img.shields.io/badge/license-MIT-222222.svg)](LICENSE)
+[![GitHub](https://img.shields.io/badge/GitHub-Source-222222?logo=github)](https://github.com/vihanga-w/polyglot-pr-bot)
+
 </div>
 
 ---
 
- This repository contains the open-source PR Agent Project.
- It is not the Qodo offering for open-source projects.
+A bug fixed in Python should not quietly survive in Rust. A validation rule added in Go should not get forgotten in TypeScript.
 
-PR-Agent is an open-source, AI-powered code review agent and a community-maintained legacy project of Qodo. It is distinct from Qodo's primary AI code review offering, which provides a feature-rich, context-aware experience. Qodo offers a free version for open-source projects and integrates seamlessly with GitHub, GitLab, Bitbucket, and Azure DevOps for high-quality automated reviews.
+**Polyglot PR Bot** is being built to catch those gaps. It reviews pull requests, finds equivalent code in other languages, and helps contributors carry changes across implementations without having to know every language in the repository.
 
+The goal is simple: **make it easy to contribute in one language without letting the others fall behind.**
 
-## Sponsors
+> [!IMPORTANT]
+> **Project status: early development.** This repository is currently based on the open-source [PR-Agent](https://github.com/The-PR-Agent/pr-agent) review engine. Its existing review tools are available through the inherited codebase. The cross-language parity workflow described below is the project's direction, **not a claim that every feature is implemented today**.
 
-PR-Agent is a community-maintained open-source project, with its ongoing development supported by our sponsors. If you'd like to support the project, consider [becoming a sponsor](https://github.com/sponsors/naorpeled).
+## / Why this exists
 
-<p align="center">
-  <h3 align="center">🥇 Gold Sponsor</h3>
-</p>
+Maintaining a polyglot codebase is more than translating syntax. Equivalent implementations need to agree on input validation, edge cases, errors, outputs, and observable behaviour, even when their internal designs differ.
 
-<p align="center">
-  <a target="_blank" href="https://www.qodo.ai/">
-    <img alt="Qodo — Gold sponsor" src="https://www.qodo.ai/wp-content/uploads/2025/03/qodo-logo.svg" width="150">
-  </a>
-</p>
+Traditional code review checks the files that changed. **Polyglot PR Bot is designed to also check the implementations that *didn't* change.**
 
-<p align="center">
-  <a target="_blank" href="https://www.qodo.ai/solutions/open-source/">Free version of Qodo for open-source projects</a>
-</p>
+- **Contribute in your language.** Fix the implementation you know best.
+- **Find what else is affected.** Locate related code across supported languages.
+- **Compare behaviour, not formatting.** Idiomatic implementations should still meet the same contract.
+- **Get practical next steps.** Receive suggested changes, test cases, and a ready-to-use prompt for a coding agent.
+- **Earn a merge recommendation.** Shared conformance tests and parity review should agree before the bot recommends merging.
 
+## / How it will work
 
-## Table of Contents
-
-- [Getting Started](#getting-started)
-- [Why Use PR-Agent?](#why-use-pr-agent)
-- [Features](#features)
-- [See It in Action](#see-it-in-action)
-- [How It Works](#how-it-works)
-- [Data Privacy](#data-privacy)
-- [Contributing](#contributing)
-
-## Getting Started
-
-> [!NOTE]
-> **Docker Hub namespace migration.** Releases `0.34.2` and later are published under [`pragent/pr-agent`](https://hub.docker.com/r/pragent/pr-agent). Older releases (up to and including `v0.31`) remain available at the legacy [`codiumai/pr-agent`](https://hub.docker.com/r/codiumai/pr-agent) namespace as a frozen archive — no new images are pushed there. Update any pinned `image:` / `docker pull` / `uses: docker://` references when upgrading to `0.34.2+`.
-
-### 🚀 Quick Start for PR-Agent
-
-#### 1. GitHub Action (Recommended)
-
-Add automated PR reviews to your repository with a simple workflow file:
-
-```yaml
-# .github/workflows/pr-agent.yml
-name: PR Agent
-on:
-  pull_request:
-    types: [opened, synchronize]
-jobs:
-  pr_agent_job:
-    runs-on: ubuntu-latest
-    steps:
-    - name: PR Agent action step
-      uses: the-pr-agent/pr-agent@main
-      env:
-        OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```mermaid
+flowchart TD
+    A[Pull request opened] --> B[Review changes and identify affected behaviour]
+    B --> C[Find equivalent implementations]
+    C --> D[Compare semantics and shared test results]
+    D --> E{Parity demonstrated?}
+    E -->|Yes| F[Recommend merge]
+    E -->|No or uncertain| G[Explain differences and propose fixes]
+    G --> H[Contributor or coding agent updates the PR]
+    H --> D
 ```
-[Full GitHub Action setup guide](https://docs.pr-agent.ai/installation/github/#run-as-a-github-action)
 
-#### 2. CLI Usage (Local Development)
+The bot will distinguish between **aligned**, **needs changes**, **not applicable**, and **unverified** implementations. It should not mark a PR as safe simply because an AI model thinks the code looks similar. A merge recommendation requires passing checks and sufficient evidence of equivalent observable behaviour. Human maintainers retain the final decision.
 
-Run PR-Agent locally on your repository:
+When exact equivalence is not possible because of language or platform differences, the bot will aim for the closest behaviour permitted by the shared specification, clearly document the exception, and require maintainer review rather than silently accepting a mismatch.
+
+## / Capabilities
+
+| Capability | Status |
+| --- | --- |
+| General-purpose AI review, suggestions and PR questions | Available in the inherited PR-Agent codebase |
+| Configurable LLM providers and self-hosted deployment | Available in the inherited PR-Agent codebase |
+| Cross-language implementation discovery | Planned |
+| Behavioural parity analysis and discrepancy reports | Planned |
+| Shared conformance test integration | Planned |
+| Copyable coding-agent prompts for missing changes | Planned |
+| Parity-aware GitHub status checks and merge recommendations | Planned |
+
+This table will be updated as features land. **Planned does not mean shipped.**
+
+## / Getting started
+
+The existing PR-Agent command-line interface is available while Polyglot PR Bot's dedicated parity commands are developed.
+
+**Requirements:** Python 3.12+, Git, access to a supported LLM provider, and the necessary repository permissions.
 
 ```bash
-pip install "pr-agent[github]"
-export OPENAI_KEY=your_key_here
-pr-agent --pr_url https://github.com/owner/repo/pull/123 review
+git clone https://github.com/vihanga-w/polyglot-pr-bot.git
+cd polyglot-pr-bot
+
+python -m pip install -e '.[github]'
+export OPENAI_KEY='your-api-key'
+
+pr-agent --pr_url https://github.com/owner/repository/pull/123 review
 ```
-Git provider SDKs are optional extras: install the one for your provider ([list](https://docs.pr-agent.ai/installation/locally/#using-pip-package)), or `pr-agent[all]` for every integration.
-[Complete CLI setup guide](https://docs.pr-agent.ai/usage-guide/automations_and_usage/#local-repo-cli)
 
-#### 3. Other Platforms
+The `pr-agent` command name is inherited from the upstream project. It may change as the fork gains its own CLI. Replace the example PR URL with one you can access and use your preferred supported provider configuration.
 
-- [GitLab webhook setup](https://docs.pr-agent.ai/installation/gitlab/)
-- [BitBucket app installation](https://docs.pr-agent.ai/installation/bitbucket/)
-- [Azure DevOps setup](https://docs.pr-agent.ai/installation/azure/)
+For existing review commands, configuration and deployment options, see the [upstream PR-Agent documentation](https://docs.pr-agent.ai/). Some instructions there refer to upstream packages or deployments rather than this fork.
 
-## News and Updates
+## / Contributing
 
-Full notes for every release are on the [Releases page](https://github.com/the-pr-agent/pr-agent/releases).
+**You should not have to learn four languages to fix one bug.** That is the experience we want to build.
 
+Contributions are welcome across the review engine, language matching, semantic analysis, testing, documentation and developer experience. You can start with the implementation you are comfortable with. As parity automation matures, it will help identify and explain the equivalent changes needed elsewhere.
 
-## Why Use PR-Agent?
+A good cross-language change should:
 
-### 🎯 Built for Real Development Teams
+1. Describe the behaviour being added or changed.
+2. Add or update tests for that behaviour, including relevant edge cases.
+3. Keep other implementations consistent where possible, or explain why they differ.
+4. Make discrepancies visible for maintainers instead of treating AI review as proof.
 
-**Fast & Affordable**: Each tool (`/review`, `/improve`, `/ask`) uses a single LLM call (~30 seconds, low cost)
-
-**Handles Any PR Size**: Our [PR Compression strategy](https://docs.pr-agent.ai/core-abilities/compression_strategy/) effectively processes both small and large PRs
-
-**Highly Customizable**: JSON-based prompting allows easy customization of review categories and behavior via [configuration files](pr_agent/settings/configuration.toml)
-
-**Platform Agnostic**:
-- **Git Providers**: GitHub, GitLab, BitBucket, Azure DevOps, Gitea
-- **Deployment**: CLI, GitHub Actions, Docker, self-hosted, webhooks
-- **AI Models**: OpenAI GPT, Anthropic Claude, Google Gemini, DeepSeek, Mistral, and any other model reachable through LiteLLM (Azure OpenAI, AWS Bedrock, Vertex AI, Databricks, OpenRouter, Ollama, and more) — see [Changing a model](https://docs.pr-agent.ai/usage-guide/changing_a_model/)
-
-**Open Source Benefits**:
-- Full control over your data and infrastructure
-- Customize prompts and behavior for your team's needs
-- No vendor lock-in
-- Community-driven development
-
-## Features
-
-<div style="text-align:left;">
-
-See the current [feature and git provider support matrix](https://docs.pr-agent.ai/overview/supported_platforms/) in the PR-Agent documentation.
-
-⚠️ `/help_docs` is temporarily disabled since `v0.36.1` pending a fix for a credential-exposure issue ([#2445](https://github.com/the-pr-agent/pr-agent/issues/2445)).
-
-[//]: # (- Support for additional git providers is described in [here]&#40;./docs/Full_environments.md&#41;)
-___
-
-## See It in Action
-
-</div>
-<h4><a href="https://github.com/the-pr-agent/pr-agent/pull/530">/describe</a></h4>
-<div align="center">
-<p float="center">
-<img src="https://raw.githubusercontent.com/The-PR-Agent/pr-agent/main/docs/static/img/describe_new_short_main.png" width="512">
-</p>
-</div>
-<hr>
-
-<h4><a href="https://github.com/the-pr-agent/pr-agent/pull/732#issuecomment-1975099151">/review</a></h4>
-<div align="center">
-<p float="center">
-<kbd>
-<img src="https://raw.githubusercontent.com/The-PR-Agent/pr-agent/main/docs/static/img/review_new_short_main.png" width="512">
-</kbd>
-</p>
-</div>
-<hr>
-
-<h4><a href="https://github.com/the-pr-agent/pr-agent/pull/732#issuecomment-1975099159">/improve</a></h4>
-<div align="center">
-<p float="center">
-<kbd>
-<img src="https://raw.githubusercontent.com/The-PR-Agent/pr-agent/main/docs/static/img/improve_new_short_main.png" width="512">
-</kbd>
-</p>
-</div>
-
-<hr>
-
-### Usage Examples
-
-PR-Agent tools run as a comment on a PR or from the CLI. A few common ones:
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. To run the inherited unit tests locally:
 
 ```bash
-# Comment on a PR (GitHub/GitLab/Bitbucket/…):
-/describe
-/review
-/improve
-/ask "What does this PR change?" # free-text Q&A about the PR
-
-# Issue-scoped commands run on an issue instead of a PR:
-/similar_issue # find similar issues in the repository
-
-# Or locally via the CLI:
-pr-agent --pr_url <PR_URL> review
-pr-agent --issue_url <ISSUE_URL> similar_issue
+PYTHONPATH=. uv run pytest
 ```
 
-See the [Tools docs](https://docs.pr-agent.ai/tools/#usage-examples) for the full list of tools with example commands, and each tool's page for screenshots and options.
+## / Privacy and security
 
-<hr>
+Polyglot PR Bot is designed to be self-hostable. Code and PR context may be sent to the LLM provider you configure, so review that provider's data-handling terms before using it with private repositories.
 
-## How It Works
+Future automated parity testing must treat pull requests as untrusted input. Contributor code should execute in isolated environments without production credentials, and AI-generated fixes should require review. Passing an AI assessment alone will not be treated as proof of functional equivalence.
 
-The following diagram illustrates PR-Agent tools and their flow:
+## / License
 
-![PR-Agent Tools](https://raw.githubusercontent.com/The-PR-Agent/pr-agent/main/docs/static/img/diagram-v0.9.png)
+Polyglot PR Bot is distributed under the [MIT License](LICENSE). Contributions and redistributions must preserve applicable copyright and license notices.
 
-## Data Privacy
+---
 
-### Self-hosted PR-Agent
+## / Acknowledgements
 
-- If you host PR-Agent with your OpenAI API key, it is between you and OpenAI. You can read their API data privacy policy here:
-https://openai.com/enterprise-privacy
+Polyglot PR Bot is developed as an open-source project by [Quorum Technologies](https://www.quorumtech.ch).
 
-## Contributing
+**Based on [PR-Agent](https://github.com/The-PR-Agent/pr-agent)**, the community-maintained open-source AI pull request reviewer originally developed by Qodo. We thank its original authors, maintainers and contributors for the foundation this project builds on.
 
-To contribute to the project, get started by reading our [Contributing Guide](https://github.com/the-pr-agent/pr-agent/blob/main/CONTRIBUTING.md).
-
-For local verification, run `PYTHONPATH=. uv run pytest` from the repository root; it discovers the unit-test suite under `tests/unittest` by default. End-to-end tests under `tests/e2e_tests` require provider credentials and should be invoked explicitly, for example `PYTHONPATH=. uv run pytest tests/e2e_tests/test_github_app.py`.
-
-
-## Big News for PR-Agent
-
-PR-Agent has a new home!
-
-After years of building this tool alongside the community, Qodo has donated PR-Agent to the open-source community - and we couldn't be more excited about what comes next.
-
-The project now lives in the PR-Agent org on GitHub, is fully community-owned, and is open for contributions and additional maintainers.
-
-What else changed:
-- Docs moved to - [docs.pr-agent.ai](https://docs.pr-agent.ai/)
-- Qodo Merge (Qodo 1.0), the hosted URL, which was the enterprise version of PR-Agent, has been rebranded and evolved into Qodo (Qodo 2.0), a full AI code review platform.
-
-## ❤️ Community
-
-This open-source release remains here as a community contribution from Qodo — the origin of modern AI-powered code collaboration. We’re proud to share it and inspire developers worldwide.
-
-The project now has its first external maintainer, Naor ([@naorpeled](https://github.com/naorpeled)), and is currently in the process of being donated to an open-source foundation.
+The upstream project is licensed under the MIT License. Its copyright notice and license terms are retained in this repository's [LICENSE](LICENSE) file. Polyglot PR Bot is a separate project and is not affiliated with or endorsed by the PR-Agent maintainers or Qodo.
