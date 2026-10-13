@@ -151,6 +151,12 @@ def query_tool(monkeypatch, request):
         rows = state.responses.pop(0)
         if isinstance(rows, BaseException):
             raise rows
+        if rows is None:
+            if backend == "pinecone":
+                return SimpleNamespace(to_dict=lambda: {})
+            if backend == "lancedb":
+                return [{}]
+            return [SimpleNamespace(payload={}, score=0.9)]
         if backend == "pinecone":
             return SimpleNamespace(to_dict=lambda: {"matches": [{"id": rid, "score": score} for rid, score in rows]})
         if backend == "lancedb":
@@ -287,7 +293,7 @@ async def test_second_full_response_cannot_start_a_third_query(query_tool):
 async def test_retry_failure_does_not_publish_partial_first_response(query_tool, failure):
     state = query_tool
     state.responses = [[("issue_2.issue", 0.9)] * 5, failure]
-    with pytest.raises(type(failure) if failure is not None else TypeError):
+    with pytest.raises(type(failure) if failure is not None else KeyError):
         await state.tool.run()
     assert _limits(state) == [5, 10]
     assert state.published == []
@@ -305,7 +311,7 @@ async def test_unresolved_comment_url_prevents_publication(query_tool):
 
 @pytest.mark.parametrize("rid", [None, 17, "bad.issue", "issue_bad.comment_0", "issue_2.comment_bad",
                                   "issue_2.bad_comment_0", "issue_2.comment_0.extra", "issue_1.comment_bad",
-                                  "example_issue_repo"])
+                                  "example_issue_repo", "other_2.issue", "issue_2.garbage", "issue_2"])
 def test_ineligible_ids_leave_valid_hits_aligned(rid):
     hits = [(rid, 1), ("issue_2.comment_0", 0.9), ("issue_2.issue", 0.8), ("issue_3.issue", 0.7)]
     assert psi.PRSimilarIssue._select_similar_hits(hits, 1) == ([2, 3], [0, -1], ["0.90", "0.70"])

@@ -425,14 +425,19 @@ class PRSimilarIssue:
                 if "example_issue_" in rid:
                     continue
                 parts = rid.split(".")
-                issue_number = int(parts[0].split("_")[-1])
+                if not parts[0].startswith("issue_"):
+                    continue
+                issue_number = int(parts[0][len("issue_"):])
                 if issue_number == original_issue_number:
                     continue
-                comment_number = -1
-                if "comment" in rid:
-                    if len(parts) != 2 or not parts[1].startswith("comment_"):
-                        continue
+                if len(parts) != 2:
+                    continue
+                if parts[1] == "issue":
+                    comment_number = -1
+                elif parts[1].startswith("comment_"):
                     comment_number = int(parts[1][len("comment_"):])
+                else:
+                    continue
             except (ValueError, TypeError, AttributeError, IndexError):
                 get_logger().debug(f"Failed to parse similar issue ID: {rid}")
                 continue
@@ -499,7 +504,7 @@ class PRSimilarIssue:
                     ),
                     with_payload=True,
                 )
-                hits = ((r.payload.get("id", ""), r.score) for r in res)
+                hits = ((r.payload["id"], r.score) for r in res)
             else:
                 break
 
