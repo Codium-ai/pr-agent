@@ -881,6 +881,14 @@ class GitProvider(ABC):
         cached) and let transient/unexpected errors propagate. Overridden per provider."""
         return ""
 
+    def get_repo_tree_paths(self, from_default_branch: bool = False) -> list[str]:
+        """Repository-relative paths of every blob at the PR base (or the default branch).
+
+        Used by tools that need to see the whole layout, such as /parity. Providers that cannot
+        list a tree return an empty list; callers must degrade (e.g. report without candidates).
+        """
+        return []
+
     def get_repo_file_content(self, file_path: str, from_default_branch: bool = False):
         return ""
 

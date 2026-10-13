@@ -9,6 +9,7 @@ class HelpMessage:
                 f"> - **/improve [--extended]**: {COMMAND_DESCRIPTIONS['improve']} Extended mode provides more thorough feedback.   \n" \
                 "> - **/ask \\<QUESTION\\>**: Ask a question about the PR.   \n" \
                 "> - **/update_changelog**: Update the changelog based on the PR's contents.   \n" \
+                "> - **/parity**: Find language implementations the PR did not update and where the equivalent change belongs.   \n" \
                 "> - **/add_docs**: Generate docstring for new components introduced in the PR.   \n" \
                 "> - **/generate_labels**: Generate labels for the PR based on the PR's contents.   \n\n" \
                 ">See the [tools guide](https://docs.pr-agent.ai/tools/) for more details.\n" \

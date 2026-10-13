@@ -1,11 +1,11 @@
 <div align="center">
 
 <a href="https://www.quorumtech.ch">
-  <img
-    src="https://www.quorumtech.ch/images/lettermark_300_100_dark.svg"
-    alt="Quorum Technologies"
-    width="250"
-  />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/quorum-lettermark-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="assets/quorum-lettermark-light.svg">
+    <img src="assets/quorum-lettermark-light.svg" alt="Quorum Technologies" width="250">
+  </picture>
 </a>
 
 <br />
@@ -169,7 +169,7 @@ If it doesn't have enough information, it should say so.
 
 `/review` and `/improve` are inherited PR-Agent capabilities.
 
-The `/explain` and `/parity` interfaces above describe planned Polyglot PR Bot functionality and are not yet implemented.
+`/parity` is available: it reports which language implementations a PR did not update, where the equivalent change belongs in each, and performance and distribution opportunities in the changed code. See [docs/docs/tools/parity.md](docs/docs/tools/parity.md). `/parity --fix` and `/explain` are planned and not yet implemented.
 
 ## What we're building
 
@@ -178,11 +178,11 @@ The `/explain` and `/parity` interfaces above describe planned Polyglot PR Bot f
 | General AI pull request review | Inherited from PR-Agent |
 | AI code improvement suggestions | Inherited from PR-Agent |
 | Configurable AI models and self-hosting | Inherited from PR-Agent |
-| Cross-language code discovery | Planned |
+| Cross-language code discovery | Available (`/parity`) |
 | Contributions using a familiar-language reference | Planned |
 | Automatic native-language change proposals | Planned |
 | Shared behavioural and conformance testing | Planned |
-| Cross-language parity analysis | Planned |
+| Cross-language parity analysis | In progress (`/parity` marks each implementation needs change, not applicable or unverified) |
 | Independent high-assurance security review | Planned |
 | `/explain` with natural-language questions | Planned |
 | Evidence-based merge recommendations | Planned |

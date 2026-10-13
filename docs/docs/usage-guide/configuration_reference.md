@@ -317,6 +317,29 @@ verify the status-changing actor or historical defaults. Dismissed findings shar
 | `skip_ci_on_push` | true |  |
 
 
+## `[pr_parity]` — /parity {#pr_parity-parity}
+
+| Key | Default | Description |
+| --- | --- | --- |
+| `enabled` | true | Polyglot parity: finds language implementations the PR did not update and where the equivalent change belongs. Keys are flat and typed so an external dashboard can write them to .pr_agent.toml verbatim. |
+| `root` | "src" | directory that holds one sub-directory per language implementation |
+| `languages` | ["typescript", "rust", "golang", "python"] |  |
+| `auto_detect_languages` | true | also treat any other source-bearing directory under `root` as an implementation |
+| `shared_dir` | "src/shared" | code shared by every implementation; changes here are reported, not mirrored |
+| `max_candidates_per_language` | 5 | candidate target files shown per untouched language |
+| `max_candidate_content_fetches` | 3 | how many candidate files per language may be read to score identifier overlap |
+| `ignore_path_segments` | ["node_modules", "target", "dist", "build", "vendor", "__pycache__", ".venv", "venv", "testdata"] |  |
+| `use_llm` | true | false: heuristic-only report (no model call) |
+| `check_performance` | true | flag clearly faster algorithms/data structures for the changed code |
+| `check_parallelism` | true | flag sequential work that could run concurrently or in parallel |
+| `check_language_fit` | true | flag hot paths that would be much faster in another implementation in this repo |
+| `check_distribution` | true | assess splitting the work across several servers and combining results |
+| `service_dir_patterns` | ["services/*", "apps/*", "cmd/*", "src/*/services/*", "src/*/apps/*"] |  |
+| `publish_when_nothing_to_report` | false | post a short comment even when the PR is outside the layout or all languages changed |
+| `persistent_comment` | true | update one comment per PR instead of adding a new one each run |
+| `extra_instructions` | "" |  |
+
+
 ## `[pr_config]` — /config {#pr_config-config}
 
 _This section only documents commented-out examples; see the [TOML source](https://github.com/the-pr-agent/pr-agent/blob/main/pr_agent/settings/configuration.toml) for details._

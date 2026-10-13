@@ -264,6 +264,10 @@ class LocalGitProvider(GitProvider):
             return ""
         return blob.data_stream.read().decode("utf-8", errors="replace")
 
+    def get_repo_tree_paths(self, from_default_branch: bool = False) -> List[str]:
+        tree = self.repo.commit(self.target_branch_name).tree
+        return [item.path for item in tree.traverse() if item.type == "blob"]
+
     def get_repo_context_ref(self, from_default_branch: bool = False) -> Optional[str]:
         return self.repo.commit(self.target_branch_name).hexsha
 

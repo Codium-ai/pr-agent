@@ -124,6 +124,7 @@ def set_parser():
     Extended mode ('improve --extended') employs several calls, and provides a more thorough feedback
 
     - update_changelog - Update the changelog based on the PR's contents.
+    - parity - Find language implementations the PR did not update and where the equivalent change belongs.
 
     - add_docs
 

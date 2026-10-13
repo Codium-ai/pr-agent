@@ -1623,6 +1623,27 @@ class GithubProvider(GitProvider):
             # Transient/unexpected errors propagate so the caller does not cache the failure.
             raise
 
+    def get_repo_tree_paths(self, from_default_branch: bool = False) -> list[str]:
+        """Blob paths of the recursive git tree at the PR base commit (or the default branch).
+
+        One API call. A tree GitHub truncates (100k entries / 7 MB) is returned as-is with a
+        warning: a partial listing still lets /parity rank what it can see.
+        """
+        repo = getattr(self, "repo_obj", None)
+        if repo is None:
+            return []
+        ref = self.get_repo_context_ref(from_default_branch=from_default_branch)
+        if not ref:
+            return []
+        try:
+            tree = repo.get_git_tree(ref, recursive=True)
+        except GithubException as e:
+            get_logger().warning(f"Failed to list the repository tree at '{ref}': {e.status}")
+            return []
+        if getattr(tree, "truncated", False):
+            get_logger().warning(f"Git tree at '{ref}' is truncated by GitHub's recursive-tree limit")
+        return [item.path for item in getattr(tree, "tree", []) if getattr(item, "type", None) == "blob"]
+
     def get_repo_file_content(self, file_path: str, from_default_branch: bool = False):
         try:
             # Prefer the PR target (base) ref so repo-context instruction files match the branch

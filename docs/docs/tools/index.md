@@ -17,6 +17,7 @@ Each PR-Agent tool has a dedicated page that explains its behavior and usage:
 | **[Help (`/help`)](./help.md)** | Provides a list of all the available tools |
 | **[Help Docs (`/help_docs`)](./help_docs.md)** | Answer a free-text question based on a git documentation folder |
 | **[Update Changelog (`/update_changelog`)](./update_changelog.md)** | Automatically updating the CHANGELOG.md file with the PR changes |
+| **[Parity (`/parity`)](./parity.md)** | Finding the language implementations a PR did not update, where the equivalent change belongs, and performance or distribution opportunities |
 
 ## Usage examples
 
@@ -38,6 +39,7 @@ Both accept the same tool arguments and [configuration overrides](../usage-guide
 | [Similar Issues](./similar_issues.md)    | `/similar_issue`                 | `python -m pr_agent.cli --issue_url=<ISSUE_URL> similar_issue` |
 | [Help](./help.md)                        | `/help`                          | `python -m pr_agent.cli --pr_url=<PR_URL> help`                |
 | [Update Changelog](./update_changelog.md)| `/update_changelog`              | `python -m pr_agent.cli --pr_url=<PR_URL> update_changelog`    |
+| [Parity](./parity.md)| `/parity`              | `python -m pr_agent.cli --pr_url=<PR_URL> parity`    |
 
 `/help_docs` is temporarily disabled (see [#2445](https://github.com/The-PR-Agent/pr-agent/issues/2445)) and is therefore omitted from the table above.
 

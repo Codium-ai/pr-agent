@@ -98,6 +98,7 @@ const sidebars = {
         {type: 'doc', id: 'tools/add_docs', label: 'Add docs'},
         {type: 'doc', id: 'tools/generate_labels', label: 'Generate labels'},
         {type: 'doc', id: 'tools/update_changelog', label: 'Update changelog'},
+        {type: 'doc', id: 'tools/parity', label: 'Parity'},
         {type: 'doc', id: 'tools/similar_issues', label: 'Similar issues'},
       ],
     },

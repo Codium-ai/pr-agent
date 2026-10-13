@@ -2176,6 +2176,27 @@ class GitLabProvider(GitProvider):
             raise
         # Transient/unexpected errors propagate so the caller does not cache the failure.
 
+    def get_repo_tree_paths(self, from_default_branch: bool = False) -> list[str]:
+        """Blob paths of the recursive repository tree at the MR target branch, paginated."""
+        ref = self.get_repo_context_ref(from_default_branch=from_default_branch)
+        if not ref or getattr(self, "gl", None) is None or getattr(self, "id_project", None) is None:
+            return []
+        paths: list[str] = []
+        page = 1
+        try:
+            project = self.gl.projects.get(self.id_project, lazy=True)
+            while True:
+                tree = project.repository_tree(ref=ref, recursive=True, page=page, per_page=100)
+                if not tree:
+                    break
+                paths.extend(item["path"] for item in tree if item.get("type") == "blob")
+                if len(tree) < 100:
+                    break
+                page += 1
+        except Exception as e:  # noqa: BLE001 - a listing failure degrades to "no candidates"
+            get_logger().warning(f"Failed to list the repository tree at '{ref}': {e}")
+        return paths
+
     def get_repo_file_content(self, file_path: str, from_default_branch: bool = False):
         try:
             project = self.gl.projects.get(self.id_project, lazy=True)
