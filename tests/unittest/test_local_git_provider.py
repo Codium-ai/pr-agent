@@ -173,6 +173,60 @@ def test_get_diff_files_deleted_file_falls_back_to_old_path(tmp_path):
     assert all(f.filename is not None for f in diff_files)
 
 
+def _provider_for_prepare(repo, target_branch_name):
+    provider = object.__new__(LocalGitProvider)  # bypass heavy __init__
+    provider.repo = repo
+    provider.target_branch_name = target_branch_name
+    return provider
+
+
+def test_prepare_repo_allows_dirty_file_outside_the_reviewed_set(tmp_path):
+    # get_diff_files() diffs commit-to-commit, so an uncommitted file that is not part of the
+    # review cannot influence it. A repo-wide dirty check refused the whole run instead.
+    repo = _make_repo(tmp_path, ["reviewed.py", "unrelated.py"])
+    target_branch_name = repo.active_branch.name
+    repo.git.checkout("-b", "feature")
+    (tmp_path / "reviewed.py").write_text("committed change\n")
+    repo.index.add(["reviewed.py"])
+    repo.index.commit("change the reviewed file")
+    (tmp_path / "unrelated.py").write_text("uncommitted and unrelated\n")
+
+    _provider_for_prepare(repo, target_branch_name)._prepare_repo()
+
+
+def test_prepare_repo_rejects_dirty_file_inside_the_reviewed_set(tmp_path):
+    repo = _make_repo(tmp_path, ["reviewed.py"])
+    target_branch_name = repo.active_branch.name
+    repo.git.checkout("-b", "feature")
+    (tmp_path / "reviewed.py").write_text("committed change\n")
+    repo.index.add(["reviewed.py"])
+    repo.index.commit("change the reviewed file")
+    (tmp_path / "reviewed.py").write_text("uncommitted change on top\n")
+
+    with pytest.raises(ValueError, match="reviewed.py"):
+        _provider_for_prepare(repo, target_branch_name)._prepare_repo()
+
+
+def test_prepare_repo_rejects_staged_change_inside_the_reviewed_set(tmp_path):
+    repo = _make_repo(tmp_path, ["reviewed.py"])
+    target_branch_name = repo.active_branch.name
+    repo.git.checkout("-b", "feature")
+    (tmp_path / "reviewed.py").write_text("committed change\n")
+    repo.index.add(["reviewed.py"])
+    repo.index.commit("change the reviewed file")
+    (tmp_path / "reviewed.py").write_text("staged but uncommitted\n")
+    repo.index.add(["reviewed.py"])
+
+    with pytest.raises(ValueError, match="reviewed.py"):
+        _provider_for_prepare(repo, target_branch_name)._prepare_repo()
+
+
+def test_prepare_repo_rejects_a_missing_target_branch(tmp_path):
+    repo = _make_repo(tmp_path, ["reviewed.py"])
+    with pytest.raises(KeyError, match="does not exist"):
+        _provider_for_prepare(repo, "no-such-branch")._prepare_repo()
+
+
 @pytest.mark.parametrize("change_type", ["added", "modified", "deleted"])
 def test_get_diff_files_skips_non_utf8_file_and_keeps_utf8_sibling(tmp_path, monkeypatch, change_type):
     repo = git.Repo.init(tmp_path)

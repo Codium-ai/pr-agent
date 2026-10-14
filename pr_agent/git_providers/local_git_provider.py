@@ -66,10 +66,26 @@ class LocalGitProvider(GitProvider):
         Prepare the repository for PR-mimic generation.
         """
         get_logger().debug('Preparing repository for PR-mimic generation...')
-        if self.repo.is_dirty():
-            raise ValueError('The repository is not in a clean state. Please commit or stash pending changes.')
         if self.target_branch_name not in self.repo.heads:
             raise KeyError(f'Branch: {self.target_branch_name} does not exist')
+        # Only the files under review have to match HEAD. get_diff_files() diffs the head commit
+        # against the merge base and never reads working-tree content, so a dirty file outside that
+        # set cannot change the review, while a repo-wide is_dirty() check refuses the run outright.
+        dirty = set()
+        for diff_item in self.repo.index.diff(None):        # working tree vs index
+            dirty.update(p for p in (diff_item.a_path, diff_item.b_path) if p)
+        for diff_item in self.repo.index.diff('HEAD'):      # index vs HEAD (staged)
+            dirty.update(p for p in (diff_item.a_path, diff_item.b_path) if p)
+        if dirty:
+            merge_base = self.repo.merge_base(self.repo.head, self.repo.branches[self.target_branch_name])
+            reviewed = set()
+            for diff_item in self.repo.head.commit.diff(merge_base, R=True):
+                reviewed.update(p for p in (diff_item.a_path, diff_item.b_path) if p)
+            conflict = sorted(dirty & reviewed)
+            if conflict:
+                raise ValueError(
+                    'These files are under review but have uncommitted changes. '
+                    'Please commit or stash them: ' + ', '.join(conflict))
 
     def is_supported(self, capability: str) -> bool:
         if capability in ['get_issue_comments', 'create_inline_comment', 'publish_inline_comments', 'get_labels',
