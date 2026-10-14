@@ -465,6 +465,28 @@ alpha = "overwritten"
     assert get_settings().get(f"{_TEST_SECTION}.untouched") == "keep-me"
 
 
+def test_apply_settings_file_merges_keys_case_insensitively(tmp_path, settings_sandbox):
+    """A key from the extra file must replace an existing key with different
+    casing instead of sitting beside it. Dynaconf looks keys up
+    case-insensitively, so keeping both makes the effective value depend on
+    dict ordering — e.g. a file's 'extra_instructions' can be shadowed by a
+    default 'Extra_Instructions'."""
+    settings = get_settings()
+    settings.set(_TEST_SECTION, {"Extra_Instructions": "from-default"}, merge=False)
+
+    path = _write_toml(tmp_path, "extra.toml", f"""
+[{_TEST_SECTION}]
+extra_instructions = "from-file"
+""")
+    _apply_settings_from_file(path, label="extra")
+
+    assert settings.get(f"{_TEST_SECTION}.extra_instructions") == "from-file"
+    stored = settings.as_dict().get(_TEST_SECTION.upper(), {})
+    assert sum(key.lower() == "extra_instructions" for key in stored) == 1, (
+        "case-variant duplicates must be collapsed to a single key"
+    )
+
+
 def test_apply_settings_file_silently_skips_missing_path(settings_sandbox):
     # A canary value that must remain unchanged when the function is a no-op
     get_settings().set(f"{_TEST_SECTION}.canary", "untouched")
@@ -570,12 +592,12 @@ def test_precedence_repo_local_overrides_extra(tmp_path, settings_sandbox, mock_
     """Keys defined in both files: repo-local wins."""
     extra_path = _write_toml(tmp_path, "extra.toml", f"""
 [{_TEST_SECTION}]
-shared_key = "from-extra"
+shared_setting = "from-extra"
 extra_only = "extra-value"
 """)
     repo_toml = f"""
 [{_TEST_SECTION}]
-shared_key = "from-repo"
+shared_setting = "from-repo"
 repo_only = "repo-value"
 """.encode()
     mock_git_provider["provider"] = _FakeGitProvider(repo_toml)
@@ -585,7 +607,7 @@ repo_only = "repo-value"
     apply_repo_settings("https://example.com/pr/1")
 
     # repo wins on the shared key
-    assert get_settings().get(f"{_TEST_SECTION}.shared_key") == "from-repo"
+    assert get_settings().get(f"{_TEST_SECTION}.shared_setting") == "from-repo"
     # extra-only keys survive (extra was applied first, repo didn't touch this key)
     assert get_settings().get(f"{_TEST_SECTION}.extra_only") == "extra-value"
     # repo-only keys are present
@@ -611,7 +633,7 @@ def test_repo_settings_apply_when_extra_url_unset(tmp_path, settings_sandbox, mo
     """Sanity: with no --extra_config_url, only repo-local config is applied."""
     repo_toml = f"""
 [{_TEST_SECTION}]
-repo_key = "repo-only"
+repo_setting = "repo-only"
 """.encode()
     mock_git_provider["provider"] = _FakeGitProvider(repo_toml)
 
@@ -620,7 +642,7 @@ repo_key = "repo-only"
 
     apply_repo_settings("https://example.com/pr/1")
 
-    assert get_settings().get(f"{_TEST_SECTION}.repo_key") == "repo-only"
+    assert get_settings().get(f"{_TEST_SECTION}.repo_setting") == "repo-only"
 
 
 def test_unreachable_extra_url_does_not_block_repo_settings(
@@ -629,7 +651,7 @@ def test_unreachable_extra_url_does_not_block_repo_settings(
     """If the extra source fails to resolve, repo-local config still applies."""
     repo_toml = f"""
 [{_TEST_SECTION}]
-repo_key = "still-applied"
+repo_setting = "still-applied"
 """.encode()
     mock_git_provider["provider"] = _FakeGitProvider(repo_toml)
 
@@ -637,7 +659,7 @@ repo_key = "still-applied"
 
     apply_repo_settings("https://example.com/pr/1")
 
-    assert get_settings().get(f"{_TEST_SECTION}.repo_key") == "still-applied"
+    assert get_settings().get(f"{_TEST_SECTION}.repo_setting") == "still-applied"
 
 
 def test_env_var_overrides_extra_config(tmp_path, settings_sandbox, monkeypatch):

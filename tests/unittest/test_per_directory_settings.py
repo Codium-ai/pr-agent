@@ -665,6 +665,9 @@ static_questions = ["default"]
 use_conversation_history = true
 
 [pr_code_suggestions]
+committable_code_suggestions = true
+# Deprecated alias of the key above: it must be denied per directory too, otherwise a nested
+# file could flip /improve to inline publishing through the spelling the fallback still reads.
 commitable_code_suggestions = true
 num_code_suggestions_per_chunk = 2
 max_number_of_calls = 99
@@ -738,7 +741,8 @@ skip_comments = true
         assert get_settings().pr_reviewer.num_max_findings == 4
         assert get_settings().pr_description.use_ai_title is True
         assert get_settings().pr_questions.static_questions == ["default"]
-        assert get_settings().pr_code_suggestions.commitable_code_suggestions is False
+        assert get_settings().pr_code_suggestions.committable_code_suggestions is False
+        assert get_settings().pr_code_suggestions.get("commitable_code_suggestions") is None
         assert get_settings().pr_code_suggestions.num_code_suggestions_per_chunk == 2
         assert get_settings().pr_similar_issue.use_original_title is False
 
@@ -1238,7 +1242,7 @@ def test_directory_overrides_do_not_leak_between_commands(fresh_global_settings,
             tree_paths=["services/.pr_agent.toml", "services/auth/.pr_agent.toml"],
             contents={
                 "services/.pr_agent.toml": SERVICES_TOML,
-                "services/auth/.pr_agent.toml": b"[pr_reviewer]\nnum_max_findings = 3\nnew_test_key = 42\n",
+                "services/auth/.pr_agent.toml": b"[pr_reviewer]\nnum_max_findings = 3\nnew_test_setting = 42\n",
             },
             files=["services/auth/api.py"],
         ),
@@ -1248,10 +1252,10 @@ def test_directory_overrides_do_not_leak_between_commands(fresh_global_settings,
 
     git_utils.apply_repo_settings("https://github.com/org/repo/pull/1")
     assert settings.pr_reviewer.num_max_findings == 3
-    assert settings.pr_reviewer.new_test_key == 42
+    assert settings.pr_reviewer.new_test_setting == 42
     settings.pr_reviewer.extra_instructions = "later trusted change"
 
     git_utils.apply_repo_settings("https://github.com/org/repo/pull/2")
     assert settings.pr_reviewer.num_max_findings == (12 if next_root else 10)
-    assert "new_test_key" not in settings.pr_reviewer
+    assert "new_test_setting" not in settings.pr_reviewer
     assert settings.pr_reviewer.extra_instructions == "later trusted change"

@@ -1,5 +1,7 @@
 import copy
+import re
 from functools import partial
+from urllib.parse import urlparse
 
 from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAIHandler
@@ -20,6 +22,14 @@ from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.git_provider import get_main_pr_language
 from pr_agent.log import get_logger
 from pr_agent.servers.help import HelpMessage
+
+
+def _sanitize_slash_commands(text: str) -> str:
+    # make sure no line starts with "/", so the published comment cannot trigger quick actions
+    sanitized = text.replace("\n/", "\n /").replace("\r/", "\r /")
+    if sanitized.startswith("/"):
+        sanitized = " " + sanitized
+    return sanitized
 
 
 class PRQuestions:
@@ -90,6 +100,8 @@ class PRQuestions:
 
             if get_settings().config.publish_output:
                 self._publish_answer(pr_comment)
+            else:
+                get_settings().set("data.answer", (self.prediction or "").strip())
         finally:
             if temporary_comment_published:
                 try:
@@ -137,12 +149,26 @@ class PRQuestions:
             # /ask question ...  > ![image](img_path)
             img_path = self.question_str.split('![image]')[1].strip().strip('()')
             self.vars['img_path'] = img_path
-        elif 'https://' in self.question_str and ('.png' in self.question_str or 'jpg' in self.question_str):
+        elif 'https://' in self.question_str:
             # direct image link
-            # include https:// in the image path
-            img_path = 'https://' + self.question_str.split('https://')[1]
-            self.vars['img_path'] = img_path
+            # pick the first http(s) URL that actually looks like an image, so that
+            # surrounding prose and any earlier non-image links are not absorbed
+            img_path = self._find_image_url(self.question_str)
+            if img_path:
+                self.vars['img_path'] = img_path
         return img_path
+
+    @staticmethod
+    def _find_image_url(text: str) -> str:
+        """Return the first http(s) URL in ``text`` that points at an image, else an empty string."""
+        for match in re.finditer(r'https?://[^\s\'"<>)\]]+', text):
+            candidate = match.group(0)
+            # strip sentence punctuation that a user typed right after the link
+            candidate = candidate.rstrip('.,;:?!')
+            path = urlparse(candidate).path.lower()
+            if re.search(r'\.(?:png|jpe?g|gif|webp)$', path):
+                return candidate
+        return ''
 
     async def _prepare_prediction(self, model: str):
         variables = copy.deepcopy(self.vars)
@@ -234,18 +260,13 @@ class PRQuestions:
 
     def _prepare_pr_answer(self) -> str:
         model_answer = self.prediction.strip()
-        # sanitize the answer so that no line will start with "/", which would
-        # trigger quick actions on providers that support them (e.g. GitLab)
-        model_answer_sanitized = model_answer.replace("\n/", "\n /")
-        model_answer_sanitized = model_answer_sanitized.replace("\r/", "\r /")
-        if model_answer_sanitized.startswith("/"):
-            model_answer_sanitized = " " + model_answer_sanitized
+        model_answer_sanitized = _sanitize_slash_commands(model_answer)
         if model_answer_sanitized != model_answer:
             get_logger().debug("Sanitized model answer",
                                artifact={"model_answer": model_answer, "sanitized_answer": model_answer_sanitized})
         answer_header = format_pr_questions_header(
             escape_markdown=self.git_provider.is_supported("markdown_backslash_escapes")
         )
-        answer_str = f"{answer_header}\n{self.question_str}\n\n"
+        answer_str = f"{answer_header}\n{_sanitize_slash_commands(self.question_str)}\n\n"
         answer_str += f"### **Answer:**\n{model_answer_sanitized}\n\n"
         return answer_str

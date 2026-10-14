@@ -121,12 +121,6 @@ def test_key_issue_markers_use_bitbucket_hidden_form():
     assert d.marker_fingerprints(out) == {"aaaaaaaaaaaa", "bbbbbbbbbbbb"}
 
 
-def test_inline_comment_line_prefers_line():
-    assert d.inline_comment_line({"line": 5, "position": 9}) == 5
-    assert d.inline_comment_line({"position": 9}) == 9
-    assert d.inline_comment_line({}) is None
-
-
 # --------------------------------------------------------------------------- #
 # store
 # --------------------------------------------------------------------------- #
@@ -141,6 +135,7 @@ def _gh_provider(existing_bodies):
     p.pr = MagicMock()
     p.pr.get_comments.return_value = [_GHComment(b) for b in existing_bodies]
     p.last_commit_id = "deadbeef"
+    p.max_comment_chars = 65000
     return p
 
 
@@ -472,6 +467,8 @@ def _gl_review_provider():
     p = _gl_provider([])
     p.resolve_outdated_inline_threads = MagicMock(return_value=0)
     p.reconcile_code_suggestion_threads = MagicMock(return_value=None)
+    p.get_diff_files = MagicMock(return_value=[MagicMock(filename="a.py", head_file="line\n", patch="")])
+    p.send_inline_comment = MagicMock(return_value=True)
     return p
 
 
@@ -485,7 +482,9 @@ def test_gitlab_recent_inline_bodies_record_drafts_after_bulk_publish(_gl_review
     m = gs.start()
     m.return_value.get.side_effect = _gitlab_settings_get
     try:
-        assert p.publish_code_suggestions([]) is True
+        assert p.publish_code_suggestions([{
+            "body": "draft finding", "relevant_file": "a.py", "relevant_lines_start": 1, "relevant_lines_end": 1,
+        }]) is True
     finally:
         gs.stop()
 
@@ -504,7 +503,9 @@ def test_gitlab_failed_bulk_publish_does_not_record_drafts(_gl_review_provider):
     m = gs.start()
     m.return_value.get.side_effect = _gitlab_settings_get
     try:
-        assert p.publish_code_suggestions([]) is True
+        assert p.publish_code_suggestions([{
+            "body": "unpublished finding", "relevant_file": "a.py", "relevant_lines_start": 1, "relevant_lines_end": 1,
+        }]) is False
     finally:
         gs.stop()
 

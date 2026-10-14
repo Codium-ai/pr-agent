@@ -21,10 +21,9 @@ jobs:
     if: ${{ github.event.sender.type != 'Bot' }}
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       issues: write
       pull-requests: write
-      contents: write
-      checks: write
     name: Run pr agent on every pull request, respond to user comments
     steps:
       - name: PR Agent action step
@@ -61,9 +60,9 @@ See detailed usage instructions in the [USAGE GUIDE](../usage-guide/automations_
 
 #### Using with pull_request_target (fork/contribution support)
 
-By default, the `pull_request` event does not have access to repository secrets when the PR originates from a forked repository, which means PR-Agent won't be able to access your `OPENAI_KEY` and `GITHUB_TOKEN` secrets.
+By default, the `pull_request` event does not have access to repository or organization secrets when the PR originates from a forked repository, which means PR-Agent won't be able to access secrets such as `OPENAI_KEY`. The workflow still receives a `GITHUB_TOKEN`, but it has read-only permissions for fork pull requests by default. For private repositories, administrators can enable **Send secrets to workflows from pull requests** to make secrets available, but doing so exposes those secrets to workflows triggered by fork pull requests.
 
-To support PRs from external contributors (forks), use the `pull_request_target` event instead. This event runs in the context of the base repository and has access to secrets, while the PR code is checked out manually with `actions/checkout`.
+To support PRs from external contributors (forks), use the `pull_request_target` event instead. This event runs in the context of the base repository and has access to its secrets and `GITHUB_TOKEN` permissions. PR-Agent uses the GitHub API to fetch PR data and does not require a local checkout of the PR code.
 
 ```yaml
 name: PR Agent
@@ -76,9 +75,9 @@ jobs:
     if: ${{ github.event.sender.type != 'Bot' && (github.event_name == 'pull_request_target' || github.event.issue.pull_request) }}
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       issues: write
       pull-requests: write
-      contents: write
     steps:
       - name: PR Agent action step
         uses: the-pr-agent/pr-agent@main
@@ -93,7 +92,7 @@ PR-Agent uses the GitHub API to fetch PR data directly from the event payload �
 :::
 
 :::warning[Security considerations]
-Using `pull_request_target` gives the workflow access to repository secrets. Unlike the `pull_request` event, the PR code is not automatically checked out, which is a security feature. Avoid adding an `actions/checkout` step unless you have a specific need for the local files — if you do add one, review the [GitHub security guide on pull_request_target](https://docs.github.com/en/actions/reference/security/securely-using-pull_request_target).
+Using `pull_request_target` gives the workflow access to repository secrets. Neither event checks out code on its own, but under `pull_request_target` a plain `actions/checkout` fetches the default branch rather than the pull request, which is a security feature. Checking out the pull request head alone does not execute untrusted code, but do not build, test, install, or otherwise execute that content in the same job with secrets or elevated token permissions. If local files are required, review the [GitHub security guide on pull_request_target](https://docs.github.com/en/actions/reference/security/securely-using-pull_request_target) before checking out the pull request head.
 :::
 
 ### Configuration Examples
@@ -117,9 +116,9 @@ jobs:
     if: ${{ github.event.sender.type != 'Bot' }}
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       issues: write
       pull-requests: write
-      contents: write
     steps:
       - name: PR Agent action step
         uses: the-pr-agent/pr-agent@main
@@ -143,9 +142,9 @@ jobs:
     if: ${{ github.event.sender.type != 'Bot' }}
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       issues: write
       pull-requests: write
-      contents: write
     steps:
       - name: PR Agent action step
         uses: the-pr-agent/pr-agent@main
@@ -174,9 +173,9 @@ jobs:
     if: ${{ github.event.sender.type != 'Bot' }}
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       issues: write
       pull-requests: write
-      contents: write
     steps:
       - name: PR Agent action step
         uses: the-pr-agent/pr-agent@main
@@ -204,9 +203,9 @@ jobs:
     if: ${{ github.event.sender.type != 'Bot' }}
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       issues: write
       pull-requests: write
-      contents: write
     name: Run pr agent on every pull request, respond to user comments
     steps:
       - name: PR Agent action step
@@ -330,8 +329,8 @@ To use Amazon Bedrock models with static IAM credentials:
 ```yaml
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        config.model: "bedrock/anthropic.claude-3-5-sonnet-20240620-v1:0"
-        config.fallback_models: '["bedrock/anthropic.claude-3-5-sonnet-20240620-v1:0"]'
+        config.model: "bedrock/us.anthropic.claude-sonnet-4-6"
+        config.fallback_models: '["bedrock/us.anthropic.claude-sonnet-4-6"]'
         aws.AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws.AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws.AWS_REGION_NAME: "us-east-1"
@@ -344,13 +343,13 @@ When the GitHub Actions runner is on AWS infrastructure (EC2, ECS, EKS), use the
 ```yaml
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        config.model: "bedrock/anthropic.claude-3-5-sonnet-20240620-v1:0"
-        config.fallback_models: '["bedrock/anthropic.claude-3-5-sonnet-20240620-v1:0"]'
+        config.model: "bedrock/us.anthropic.claude-sonnet-4-6"
+        config.fallback_models: '["bedrock/us.anthropic.claude-sonnet-4-6"]'
         AWS_USE_IMDS: "true"
-        # AWS_REGION_NAME: us-east-1  # optional if instance metadata provides the region
+        AWS_REGION_NAME: us-east-1  # source region for the US inference profile
 ```
 
-The IAM role must have `bedrock:InvokeModel` on the target model ARN. See [Bedrock model configuration](../usage-guide/changing_a_model.md#amazon-bedrock) for the full IAM policy example and supported models.
+The IAM role must have `bedrock:InvokeModel` on the inference profile and its destination foundation models. See [Bedrock model configuration](../usage-guide/changing_a_model.md#amazon-bedrock) for the full IAM policy example and supported models.
 
 To route calls through a VPC interface endpoint, add `AWS_BEDROCK_RUNTIME_ENDPOINT` alongside the credentials above:
 
@@ -432,7 +431,12 @@ Point the action at the file with the `artifact_path` input. The path is resolve
           artifact_instructions: "These are the failing tests from this PR's CI run. Call out any suggestion that would not fix them."
 ```
 
-Setting `artifact_path` turns the feature on by itself; there is no separate enable switch to flip in the workflow. The file contents are wrapped in a labelled `CI Artifact` block and appended to the `extra_instructions` of each target tool.
+Setting `artifact_path` turns the feature on by itself; there is no separate enable switch to flip in the workflow. Supported target tools receive a dedicated artifact section in their prompt. The label and file contents are explicitly marked as untrusted data, while `artifact_instructions` appears separately as subordinate analysis guidance. The supported targets are `pr_reviewer`, `pr_description` and `pr_code_suggestions`; unsupported names are skipped with a warning.
+
+When overriding a supported tool's prompt, keep `artifact_context.instructions` in the system prompt and render
+`artifact_context.label`, `artifact_context.content`, `artifact_context.start_marker`, and `artifact_context.end_marker` in
+a clearly marked, untrusted section of the user prompt. This replaces the legacy `extra_instructions` behavior for CI
+artifacts.
 
 The remaining knobs live in the `[artifacts]` section of your configuration:
 
@@ -445,6 +449,8 @@ artifact_label = ""                                         # empty = the file's
 target_tools = ["pr_reviewer", "pr_description", "pr_code_suggestions"]
 max_artifact_size = 50000                                   # characters; longer files are truncated with a marker
 ```
+
+CI artifacts are checked for recognizable URL credentials, authorization headers, standard GitLab tokens, AWS access keys, and common credential assignments before model submission, with redaction matches logged only by type and count; this pattern-based check does not recognize every secret format, so use sanitized CI logs as input.
 
 :::note
 A path that resolves outside `GITHUB_WORKSPACE` is rejected, and a missing or unreadable file is skipped with a warning — in both cases the tools still run, just without the artifact context.
@@ -483,9 +489,9 @@ jobs:
     if: ${{ github.event.sender.type != 'Bot' }}
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       issues: write
       pull-requests: write
-      contents: write
     name: Run pr agent on every pull request, respond to user comments
     steps:
       - name: PR Agent action step
@@ -554,16 +560,16 @@ If you encounter rate limiting:
 - **Solution**: Ensure your workflow has the correct permissions set:
   ```yaml
   permissions:
-    issues: write
-    pull-requests: write
-    contents: write
-  ```
-  If you cannot grant `contents: write`, set `config.restricted_mode = true` in your configuration. In that case you only need:
-  ```yaml
-  permissions:
+    contents: read
     issues: write
     pull-requests: write
   ```
+  The default tools need no additional scopes. Add `checks: write` only when
+  `github.publish_as_check_run` is enabled. Features that push repository contents, such as
+  `pr_update_changelog.push_changelog_changes`, require `contents: write`, and so does
+  `pr_questions.resolve_threads`, because GitHub gates thread resolution on that scope. If you omit
+  `contents: write`, enable `config.restricted_mode` so operations that need it are skipped or fall
+  back safely, and keep `pr_questions.resolve_threads` off, since restricted mode does not cover it.
   See the [Restricted Mode guide](../usage-guide/additional_configurations.md#restricted-mode) for details.
 
 **Error: "PR-Agent command was not run" for incomplete GitHub files**
@@ -736,6 +742,9 @@ cp pr_agent/settings/.secrets_template.toml pr_agent/settings/.secrets.toml
                   name: settings-volume
     ```
 
+    > Service images run as UID/GID `10001`: mounted secrets must be readable, and mounted data paths writable, by that user.
+    > Home-relative mounts belong under `/home/pragent`.
+
     > Another option is to set the secrets as environment variables in your deployment environment, for example `OPENAI.KEY` and `GITHUB.USER_TOKEN`.
 
 6) Build a Docker image for the app and optionally push it to a Docker repository. We'll use Dockerhub as an example:
@@ -763,7 +772,7 @@ cp pr_agent/settings/.secrets_template.toml pr_agent/settings/.secrets.toml
 
 > **Note:** When running PR-Agent from GitHub app, the default configuration file (configuration.toml) will be loaded.
 > However, you can override the default tool parameters by uploading a local configuration file `.pr_agent.toml`
-> To use organization-level global configuration, create `<organization>/pr-agent-settings` with a `.pr_agent.toml` file and install the GitHub App on that repository too.
+> To use organization-level global configuration, set `config.global_settings_repo = "pr-agent-settings"`, create `<organization>/pr-agent-settings` with a `.pr_agent.toml` file, and install the GitHub App on that repository too.
 > The app needs read access to the settings repository as well as the pull request repositories. This applies to both GitHub.com and GitHub Enterprise Server.
 > For more information please check out the [USAGE GUIDE](../usage-guide/automations_and_usage.md#github-app)
 ---

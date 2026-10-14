@@ -2,16 +2,17 @@ import copy
 import os
 import time
 import uuid
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Tuple
 
 import uvicorn
-from fastapi import APIRouter, FastAPI, HTTPException, Request, Response
+from fastapi import APIRouter, HTTPException, Request, Response
 from starlette.background import BackgroundTasks
 from starlette.middleware import Middleware
 from starlette_context import context
 from starlette_context.middleware import RawContextMiddleware
 
 from pr_agent.agent.pr_agent import PRAgent, prepare_command
+from pr_agent.agent.request_policy import RequestOutcome
 from pr_agent.algo.run_details import command_failed, init_run_details
 from pr_agent.config_loader import get_settings, global_settings
 from pr_agent.git_providers import get_git_provider, get_git_provider_with_context
@@ -19,9 +20,17 @@ from pr_agent.git_providers.utils import apply_repo_settings
 from pr_agent.identity_providers import get_identity_provider
 from pr_agent.identity_providers.identity_provider import Eligibility
 from pr_agent.log import LoggingFormat, get_logger, setup_logger
+from pr_agent.servers.github_common import (
+    _normalise_setting_list,
+    _reformat_quote_ask_command,
+)
+from pr_agent.servers.github_common import handle_line_comments as handle_line_comments
+from pr_agent.servers.github_common import matches_review_state as matches_review_state
+from pr_agent.servers.request_body_limit import create_server_app
 from pr_agent.servers.utils import (
     DefaultDictWithTimeout,
     get_pr_commands,
+    is_ask_command_comment,
     push_trigger_slot,
     shared_should_process_pr_logic,
     verify_signature,
@@ -93,11 +102,6 @@ async def get_body(request):
     except Exception as e:
         get_logger().error("Error reading request body", artifact={"error": e})
         raise HTTPException(status_code=400, detail="Error reading request body") from e
-    try:
-        body = await request.json()
-    except Exception as e:
-        get_logger().error("Error parsing request body", artifact={"error": e})
-        raise HTTPException(status_code=400, detail="Error parsing request body") from e
     webhook_secret = getattr(get_settings().github, 'webhook_secret', None)
     if not webhook_secret:
         # Refuse unauthenticated webhooks. Silently accepting requests when
@@ -107,17 +111,12 @@ async def get_body(request):
         raise HTTPException(status_code=403, detail="Webhook secret not configured")
     signature_header = request.headers.get('x-hub-signature-256', None)
     verify_signature(body_bytes, webhook_secret, signature_header)
+    try:
+        body = await request.json()
+    except Exception as e:
+        get_logger().error("Error parsing request body", artifact={"error": e})
+        raise HTTPException(status_code=400, detail="Error parsing request body") from e
     return body
-
-
-def _reformat_quote_ask_command(comment_body: str) -> Optional[str]:
-    """Move a /ask command buried in a quoted Golf/mobile reply to the front so it
-    is dispatched, preserving the whole question text. Returns None when the
-    comment is not an image-quote reply carrying a /ask."""
-    if '/ask' not in comment_body or not comment_body.strip().startswith('> ![image]'):
-        return None
-    before, _, after = comment_body.partition('/ask')
-    return '/ask' + after + ' \n' + before.strip().lstrip('>')
 
 
 async def handle_comments_on_pr(body: Dict[str, Any],
@@ -144,7 +143,7 @@ async def handle_comments_on_pr(body: Dict[str, Any],
     elif "comment" in body and "pull_request_url" in body["comment"]:
         api_url = body["comment"]["pull_request_url"]
         try:
-            if ('/ask' in comment_body and
+            if (is_ask_command_comment(comment_body) and
                     'subject_type' in body["comment"] and body["comment"]["subject_type"] == "line"):
                 # comment on a code line in the "files changed" tab
                 comment_body = handle_line_comments(body, comment_body)
@@ -168,6 +167,8 @@ async def handle_comments_on_pr(body: Dict[str, Any],
                 propagate_tool_errors=True)
             # Optional, and disabled by default: tell the author how the command ended without
             # adding another comment to the thread.
+            if succeeded is RequestOutcome.SKIPPED:
+                return RequestOutcome.SKIPPED
             provider.react_to_outcome(comment_id, bool(succeeded))
             return succeeded
         else:
@@ -240,30 +241,6 @@ def _finish_auto_command_check_run(provider, name: str | None, command, succeede
         provider.finish_check_run(name, "success" if succeeded else "failure", summary)
     except Exception as e:
         get_logger().warning(f"Failed to complete the {name} check run: {e}")
-
-
-def _normalise_setting_list(value):
-    if value is None:
-        return []
-    if isinstance(value, str):
-        return [value]
-    if isinstance(value, (list, tuple, set)):
-        return list(value)
-    return [value]
-
-
-def matches_review_state(review_state: Any, configured_states: Any) -> bool:
-    """Return whether a review state matches one of the configured states."""
-    if not isinstance(review_state, str) or not review_state.strip():
-        return False
-    configured_states = _normalise_setting_list(configured_states)
-    if not configured_states:
-        return False
-    normalized_state = review_state.strip().lower()
-    return any(
-        isinstance(state, str) and state.strip().lower() == normalized_state
-        for state in configured_states
-    )
 
 
 async def handle_pull_request_review_submitted(body: Dict[str, Any],
@@ -479,39 +456,6 @@ async def handle_request(body: Dict[str, Any], event: str, delivery_id: str | No
     return {}
 
 
-def handle_line_comments(body: Dict, comment_body: [str, Any]):
-    if not comment_body:
-        return ""
-    start_line = body["comment"]["start_line"] or body["comment"].get("original_start_line")
-    end_line = body["comment"]["line"] or body["comment"].get("original_line")
-    start_line = end_line if not start_line else start_line
-    question = comment_body.replace('/ask', '').strip()
-    diff_hunk = body["comment"]["diff_hunk"]
-    get_settings().set("ask_diff_hunk", diff_hunk)
-    path = body["comment"]["path"]
-    side = body["comment"]["side"]
-    comment_id = body["comment"]["id"]
-    if '/ask' in comment_body:
-        # Build an argv list rather than concatenating into a shell-style
-        # command string. PRAgent._handle_request() tokenises string requests
-        # with single quotes treated literally, which neutralises any
-        # shlex.quote() output and re-introduces the CLI-argument injection
-        # vector (a quoted value containing whitespace splits into multiple
-        # argv tokens). Passing a list bypasses the shlex path entirely.
-        cmd = [
-            "/ask_line",
-            f"--line_start={start_line}",
-            f"--line_end={end_line}",
-            f"--side={side}",
-            f"--file_name={path}",
-            f"--comment_id={comment_id}",
-        ]
-        if question:
-            cmd.append(question)
-        return cmd
-    return comment_body
-
-
 def _check_pull_request_event(action: str, body: dict, log_context: dict) -> Tuple[Dict[str, Any], str]:
     invalid_result = {}, ""
     pull_request = body.get("pull_request")
@@ -565,17 +509,22 @@ async def _perform_auto_commands_github(commands_conf: str, agent: PRAgent, body
     for command in commands:
         check_run = None
         command_succeeded = True
-        # Clear only completed empty diffs at each command boundary.
-        if getattr(command_provider, "diff_files", None) == []:
-            command_provider.diff_files = None
         try:
+            reset_diff_cache = getattr(command_provider, "reset_diff_cache_for_command", None)
+            if callable(reset_diff_cache):
+                reset_diff_cache()
             new_command = prepare_command(command)
             get_logger().info(f"{commands_conf}. Performing auto command '{new_command}', for {api_url=}")
-            check_run = _start_auto_command_check_run(provider, new_command)
+            def notify_start(new_command=new_command):
+                nonlocal check_run
+                check_run = _start_auto_command_check_run(provider, new_command)
             # Install a fresh collector so `command_failed()` below cannot read a verdict left
             # behind by the previous command; the tool replaces it with its own on entry.
             init_run_details()
-            if await agent.handle_request(api_url, new_command) is False:
+            result = await agent.handle_request(api_url, new_command, notify=notify_start)
+            if result is RequestOutcome.SKIPPED:
+                return RequestOutcome.SKIPPED
+            if result is False:
                 command_succeeded = False
             elif command_failed():
                 # `propagate_tool_errors` is false by default, so a tool that failed internally
@@ -603,7 +552,7 @@ if get_settings().github_app.override_deployment_type:
 middleware = [Middleware(RawContextMiddleware)]
 if prometheus_metrics_enabled():
     attach_metrics_endpoint(router)
-app = FastAPI(middleware=middleware)
+app = create_server_app(middleware=middleware)
 app.include_router(router)
 
 

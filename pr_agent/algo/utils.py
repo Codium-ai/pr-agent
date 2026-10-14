@@ -3,10 +3,8 @@ from __future__ import annotations
 import copy
 import difflib
 import html
-import json
 import re
 import textwrap
-from datetime import datetime
 from enum import Enum
 from typing import Any, List, Tuple, TypedDict
 from urllib.parse import quote, unquote
@@ -14,6 +12,19 @@ from urllib.parse import quote, unquote
 import html2text
 import yaml
 from pydantic import BaseModel
+from yaml.tokens import (
+    BlockEndToken,
+    BlockEntryToken,
+    BlockMappingStartToken,
+    BlockSequenceStartToken,
+    FlowMappingEndToken,
+    FlowMappingStartToken,
+    FlowSequenceEndToken,
+    FlowSequenceStartToken,
+    KeyToken,
+    ScalarToken,
+    TagToken,
+)
 
 import pr_agent.algo.comment_identity as _ci
 from pr_agent.algo.git_patch_processing import (
@@ -22,11 +33,26 @@ from pr_agent.algo.git_patch_processing import (
     extract_hunk_lines_from_patch,
     to_hunk_only_patch,
 )
+from pr_agent.algo.language_handler import build_language_file_matcher
+from pr_agent.algo.output_models import PRType, parse_failure_modes
 from pr_agent.algo.types import FilePatchInfo
 from pr_agent.config_loader import get_settings, get_verbosity_level
 from pr_agent.log import get_logger
 
 _ENCODED_USER_TEXT_PREFIX = "__pr_agent_encoded_text__:"
+_YAML_C_SAFE_LOADER = getattr(yaml, "CSafeLoader", None)
+_YAML_MAX_C_NESTING = 256
+_YAML_BLOCK_PREFIX_RE = re.compile(r"(?:^|(?<=[\n\r\x85\u2028\u2029]))( *)((?:[-?] +)*)")
+_YAML_INDENTED_LINE_RE = re.compile(r"[\n\r\x85\u2028\u2029] ")
+_YAML_UNSEPARATED_BLOCK_SCALAR_COMMENT_RE = re.compile(r"[|>](?:[1-9][+-]?|[+-][1-9]?)?#")
+
+
+def _as_line(value: Any) -> int | None:
+    try:
+        line = int(str(value).strip())
+    except (TypeError, ValueError):
+        return None
+    return line if line > 0 else None
 
 
 def encode_user_text_arg(value: str) -> str:
@@ -113,6 +139,66 @@ def _get_fence(content: str) -> str:
     return "`" * backtick_len
 
 
+def get_suggestion_fence(code: str) -> str:
+    """Return the backtick fence (minimum 3) for a ``suggestion`` block around *code*.
+
+    A fence closes at the first run of its character at least as long as the
+    opener, so a ``` line inside the suggested code -- a code block in a
+    Markdown file, a doctest in a docstring -- would end the block there, and
+    committing the suggestion would apply only the lines before it. Unlike
+    ``_get_fence`` this never switches to tildes: suggestion blocks are
+    written, and matched by the providers, with backticks.
+    """
+    longest = max((len(m.group()) for m in re.finditer(r"`+", code)), default=0)
+    return "`" * max(3, longest + 1)
+
+
+_SUGGESTION_OPENER_RE = re.compile(r"(?<!`)(`{3,})suggestion")
+
+
+def iter_suggestion_blocks(body: str):
+    """Yield ``(start, end, code)`` for every closed ```suggestion block in *body*.
+
+    ``start`` and ``end`` are the end-exclusive bounds of the whole block,
+    fences included. ``code`` is the text between the opening line and the
+    closing fence, or ``None`` when the block is closed on the opener line
+    itself. The opener is matched with a regex and its closer is the first run
+    of the same fence length, located with ``str.find``; a lazy regex scan
+    would run to the end of the body for every unclosed opener instead.
+    """
+    position = 0
+    while True:
+        opener = _SUGGESTION_OPENER_RE.search(body, position)
+        if opener is None:
+            return
+        fence = opener.group(1)
+        length = len(fence)
+        close = body.find(fence, opener.end())
+        if close == -1:
+            position = opener.start() + length
+            continue
+        code_start = body.find("\n", opener.end())
+        code = body[code_start + 1:close] if code_start != -1 and code_start < close else None
+        yield opener.start(), close + length, code
+        position = close + length
+
+
+def replace_suggestion_blocks(body: str, replacement: str) -> str:
+    """Replace every closed ```suggestion block in *body* with *replacement*.
+
+    Unclosed openers are left untouched, matching the previous lazy-regex
+    substitution without its repeated scan to the end of the body.
+    """
+    parts = []
+    position = 0
+    for start, end, _ in iter_suggestion_blocks(body):
+        parts.append(body[position:start])
+        parts.append(replacement)
+        position = end
+    parts.append(body[position:])
+    return "".join(parts)
+
+
 def convert_to_markdown_v2(output_data: dict,
                            gfm_supported: bool = True,
                            incremental_review=None,
@@ -143,6 +229,7 @@ def convert_to_markdown_v2(output_data: dict,
         "Ticket compliance check": "🎫",
         "Risk level": "⚠️",
         "Merge recommendation": "✅",
+        "Failure modes": "🔎",
         "Review priority files": "📂",
     }
     markdown_text = ""
@@ -160,8 +247,9 @@ def convert_to_markdown_v2(output_data: dict,
 
     review_data = {k: v for k, v in output_data["review"].items() if k != "todo_summary"}
     for key, value in review_data.items():
-        if value is None or value == '' or value == {} or value == []:
-            if key.lower() not in ['can_be_split', 'key_issues_to_review', 'review_priority_files']:
+        if value is None or value == '' or value == {} or value == [] or (
+                key.lower() == 'insights_from_user_answers' and is_value_no(value)):
+            if key.lower() not in ['can_be_split', 'key_issues_to_review', 'review_priority_files', 'failure_modes']:
                 continue
         key_nice = key.replace('_', ' ').capitalize()
         emoji = emojis.get(key_nice, "")
@@ -258,6 +346,33 @@ def convert_to_markdown_v2(output_data: dict,
                 markdown_text += "</td></tr>\n"
             else:
                 markdown_text += f"### {emoji} Merge recommendation: {recommendation_display}\n\n"
+        elif key.lower() == 'failure_modes':
+            modes = parse_failure_modes(value)
+            heading = f"{emoji} Failure modes"
+            if gfm_supported:
+                markdown_text += f"<tr><td>{emoji}&nbsp;<strong>Failure modes</strong><br><br>\n"
+            else:
+                markdown_text += f"### {heading}\n\n"
+            if not modes:
+                markdown_text += "No failure modes identified.\n\n"
+            for mode in modes:
+                for field, label in (("what", "What"), ("where", "Where"), ("trigger", "Trigger"),
+                                     ("detected_by", "Detected by")):
+                    text = " ".join(mode[field].split())
+                    if not gfm_supported:
+                        text = re.sub(r"([\\`*_\[\]()!#|])", r"\\\1", text)
+                    text = html.escape(text)
+                    if gfm_supported:
+                        markdown_text += f"<strong>{label}:</strong> {text}<br>\n"
+                    else:
+                        markdown_text += f"- **{label}:** {text}\n"
+                coverage = "Yes" if mode["covered_in_this_pr"] else "No"
+                if gfm_supported:
+                    markdown_text += f"<strong>Covered in this PR:</strong> {coverage}<br><br>\n"
+                else:
+                    markdown_text += f"- **Covered in this PR:** {coverage}\n\n"
+            if gfm_supported:
+                markdown_text += "</td></tr>\n"
         elif 'review priority files' in key_nice.lower():
             priority_files = []
             if isinstance(value, list):
@@ -334,11 +449,8 @@ def convert_to_markdown_v2(output_data: dict,
                         if issue_header.lower() == 'possible bug':
                             issue_header = 'Possible Issue'  # Make the header less frightening
                         issue_content = issue.get('issue_content', '').strip()
-                        try:
-                            start_line = int(str(issue.get('start_line', 0)).strip())
-                            end_line = int(str(issue.get('end_line', 0)).strip())
-                        except (TypeError, ValueError):
-                            start_line, end_line = 0, 0
+                        start_line = _as_line(issue.get('start_line')) or 0
+                        end_line = _as_line(issue.get('end_line')) or start_line
                         valid_lines = start_line > 0 and end_line >= start_line
                         relevant_lines_str = extract_relevant_lines_str(
                             end_line, files, relevant_file, start_line, dedent=True) if valid_lines else ""
@@ -374,12 +486,26 @@ def convert_to_markdown_v2(output_data: dict,
                 if gfm_supported:
                     markdown_text += "</td></tr>\n"
         else:
+            key_nice = html.escape(key_nice)
+            if isinstance(value, (dict, list)):
+                value_str = yaml.safe_dump(value, default_flow_style=False, allow_unicode=True).strip()
+            elif isinstance(value, (tuple, set)):
+                value_str = yaml.safe_dump(list(value), default_flow_style=False, allow_unicode=True).strip()
+            else:
+                value_str = str(value).strip()
+            value_str = html.escape(value_str)
             if gfm_supported:
+                value_display = "<br>".join(value_str.splitlines())
                 markdown_text += "<tr><td>"
-                markdown_text += f"{emoji}&nbsp;<strong>{key_nice}</strong>: {value}"
+                markdown_text += f"{emoji}&nbsp;<strong>{key_nice}</strong>: {value_display}"
                 markdown_text += "</td></tr>\n"
             else:
-                markdown_text += f"### {emoji} {key_nice}: {value}\n\n"
+                key_nice = key_nice.replace("[", r"\[").replace("]", r"\]")
+                value_str = value_str.replace("[", r"\[").replace("]", r"\]")
+                if "\n" in value_str:
+                    markdown_text += f"### {emoji} {key_nice}\n\n{value_str}\n\n"
+                else:
+                    markdown_text += f"### {emoji} {key_nice}: {value_str}\n\n"
 
     if gfm_supported:
         markdown_text += "</table>\n"
@@ -481,8 +607,10 @@ def ticket_markdown_logic(emoji, markdown_text, value, gfm_supported) -> str:
                     explanation += f"Non-compliant requirements:\n\n{not_compliant_str}\n\n"
                 if requires_further_human_verification:
                     explanation += f"Requires further human verification:\n\n{requires_further_human_verification}\n\n"
+                ticket_title = ticket_url.split('/')[-1] if ticket_url else "Untracked ticket"
+                ticket_reference = f"[{ticket_title}]({ticket_url})" if ticket_url else ticket_title
                 ticket_compliance_str += (
-                    f"\n\n**[{ticket_url.split('/')[-1]}]({ticket_url}) - "
+                    f"\n\n**{ticket_reference} - "
                     f"{ticket_compliance_level}**\n\n{explanation}\n\n"
                 )
 
@@ -545,12 +673,13 @@ def process_can_be_split(emoji, value):
         # key_nice = "Can this PR be split?"
         key_nice = "Multiple PR themes"
         markdown_text = ""
-        if not value or isinstance(value, list) and len(value) == 1:
-            value = "No"
+        if isinstance(value, str) and value.strip().lower() in ("no", "none", "false"):
+            value = None
+        if not value or isinstance(value, dict) or isinstance(value, list) and len(value) <= 1:
             # markdown_text += f"<tr><td> {emoji}&nbsp;<strong>{key_nice}</strong></td><td>\n\n{value}\n\n</td></tr>\n"
             # markdown_text += f"### {emoji} No multiple PR themes\n\n"
             markdown_text += f"{emoji} <strong>No multiple PR themes</strong>\n\n"
-        else:
+        elif isinstance(value, list):
             markdown_text += f"{emoji} <strong>{key_nice}</strong><br><br>\n\n"
             for split in value:
                 title = split.get('title', '')
@@ -598,171 +727,6 @@ def process_can_be_split(emoji, value):
         get_logger().exception(f"Failed to process can be split: {e}")
         return ""
     return markdown_text
-
-
-def parse_code_suggestion(code_suggestion: dict, i: int = 0, gfm_supported: bool = True) -> str:
-    """
-    Convert a dictionary of data into markdown format.
-
-    Args:
-        code_suggestion (dict): A dictionary containing data to be converted to markdown format.
-
-    Returns:
-        str: A string containing the markdown formatted text generated from the input dictionary.
-    """
-    markdown_text = ""
-    if gfm_supported and 'relevant_line' in code_suggestion:
-        markdown_text += '<table>'
-        for sub_key, sub_value in code_suggestion.items():
-            try:
-                if sub_key.lower() == 'relevant_file':
-                    relevant_file = sub_value.strip('`').strip('"').strip("'")
-                    markdown_text += f"<tr><td>relevant file</td><td>{relevant_file}</td></tr>"
-                    # continue
-                elif sub_key.lower() == 'suggestion':
-                    markdown_text += (f"<tr><td>{sub_key} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>"
-                                      f"<td>\n\n<strong>\n\n{sub_value.strip()}\n\n</strong>\n</td></tr>")
-                elif sub_key.lower() == 'relevant_line':
-                    markdown_text += "<tr><td>relevant line</td>"
-                    sub_value_list = sub_value.split('](')
-                    relevant_line = sub_value_list[0].lstrip('`').lstrip('[')
-                    if len(sub_value_list) > 1:
-                        link = sub_value_list[1].rstrip(')').strip('`')
-                        markdown_text += f"<td><a href='{link}'>{relevant_line}</a></td>"
-                    else:
-                        markdown_text += f"<td>{relevant_line}</td>"
-                    markdown_text += "</tr>"
-            except Exception as e:
-                get_logger().exception(f"Failed to parse code suggestion: {e}")
-                pass
-        markdown_text += '</table>'
-        markdown_text += "<hr>"
-    else:
-        for sub_key, sub_value in code_suggestion.items():
-            if isinstance(sub_key, str):
-                sub_key = sub_key.rstrip()
-            if isinstance(sub_value,str):
-                sub_value = sub_value.rstrip()
-            if isinstance(sub_value, dict):  # "code example"
-                markdown_text += f"  - **{sub_key}:**\n"
-                for code_key, code_value in sub_value.items():  # 'before' and 'after' code
-                    code_str = f"```\n{code_value}\n```"
-                    code_str_indented = textwrap.indent(code_str, '        ')
-                    markdown_text += f"    - **{code_key}:**\n{code_str_indented}\n"
-            else:
-                if "relevant_file" in sub_key.lower():
-                    markdown_text += f"\n  - **{sub_key}:** {sub_value}  \n"
-                else:
-                    markdown_text += f"   **{sub_key}:** {sub_value}  \n"
-                if "relevant_line" not in sub_key.lower():  # nicer presentation
-                    # markdown_text = markdown_text.rstrip('\n') + "\\\n" # works for gitlab
-                    markdown_text = markdown_text.rstrip('\n') + "   \n"  # works for gitlab and bitbucker
-
-        markdown_text += "\n"
-    return markdown_text
-
-
-def try_fix_json(review, max_iter=10, code_suggestions=False):
-    """
-    Fix broken or incomplete JSON messages and return the parsed JSON data.
-
-    Args:
-    - review: A string containing the JSON message to be fixed.
-    - max_iter: An integer representing the maximum number of iterations to try and fix the JSON message.
-    - code_suggestions: A boolean indicating whether to try and fix JSON messages with code feedback.
-
-    Returns:
-    - data: A dictionary containing the parsed JSON data.
-
-    The function attempts to fix broken or incomplete JSON messages by parsing until the last valid code suggestion.
-    If the JSON message ends with a closing bracket, the function calls the fix_json_escape_char function to fix the
-    message.
-    If code_suggestions is True and the JSON message contains code feedback, the function tries to fix the JSON
-    message by parsing until the last valid code suggestion.
-    The function uses regular expressions to find the last occurrence of "}," with any number of whitespaces or
-    newlines.
-    It tries to parse the JSON message with the closing bracket and checks if it is valid.
-    If the JSON message is valid, the parsed JSON data is returned.
-    If the JSON message is not valid, the last code suggestion is removed and the process is repeated until a valid JSON
-    message is obtained or the maximum number of iterations is reached.
-    If a valid JSON message is not obtained, an error is logged and an empty dictionary is returned.
-    """
-
-    if review.endswith("}"):
-        return fix_json_escape_char(review)
-
-    data = {}
-    if code_suggestions:
-        closing_bracket = "]}"
-    else:
-        closing_bracket = "]}}"
-
-    if (review.rfind("'Code feedback': [") > 0 or review.rfind('"Code feedback": [') > 0) or \
-            (review.rfind("'Code suggestions': [") > 0 or review.rfind('"Code suggestions": [') > 0) :
-        last_code_suggestion_ind = [m.end() for m in re.finditer(r"\}\s*,", review)][-1] - 1
-        valid_json = False
-        iter_count = 0
-
-        while last_code_suggestion_ind > 0 and not valid_json and iter_count < max_iter:
-            try:
-                data = json.loads(review[:last_code_suggestion_ind] + closing_bracket)
-                valid_json = True
-                review = review[:last_code_suggestion_ind].strip() + closing_bracket
-            except json.decoder.JSONDecodeError:
-                review = review[:last_code_suggestion_ind]
-                last_code_suggestion_ind = [m.end() for m in re.finditer(r"\}\s*,", review)][-1] - 1
-                iter_count += 1
-
-        if not valid_json:
-            get_logger().error("Unable to decode JSON response from AI")
-            data = {}
-
-    return data
-
-
-def fix_json_escape_char(json_message=None):
-    """
-    Fix broken or incomplete JSON messages and return the parsed JSON data.
-
-    Args:
-        json_message (str): A string containing the JSON message to be fixed.
-
-    Returns:
-        dict: A dictionary containing the parsed JSON data.
-
-    Raises:
-        None
-
-    """
-    try:
-        result = json.loads(json_message)
-    except Exception as e:
-        # Find the offending character index:
-        idx_to_replace = int(str(e).split(' ')[-1].replace(')', ''))
-        # Remove the offending character:
-        json_message = list(json_message)
-        json_message[idx_to_replace] = ' '
-        new_message = ''.join(json_message)
-        return fix_json_escape_char(json_message=new_message)
-    return result
-
-
-def convert_str_to_datetime(date_str):
-    """
-    Convert a string representation of a date and time into a datetime object.
-
-    Args:
-        date_str (str): A string representation of a date and time in the format '%a, %d %b %Y %H:%M:%S %Z'
-
-    Returns:
-        datetime: A datetime object representing the input date and time.
-
-    Example:
-        >>> convert_str_to_datetime('Mon, 01 Jan 2022 12:00:00 UTC')
-        datetime.datetime(2022, 1, 1, 12, 0, 0)
-    """
-    datetime_format = '%a, %d %b %Y %H:%M:%S %Z'
-    return datetime.strptime(date_str, datetime_format)
 
 
 def load_large_diff(filename, new_file_content_str: str,
@@ -917,6 +881,109 @@ def drop_sign_off_after_wrapper_fence(text: str) -> str:
     return text
 
 
+def _has_yaml_c_loader_risk(response_text: str) -> bool:
+    """Detect inputs that should stay on Python SafeLoader for compatibility or stack safety."""
+    check_tag = "!" in response_text
+    flow_openers = response_text.count("[") + response_text.count("{")
+    check_flow_question = "?" in response_text and flow_openers > 0
+    check_nesting = flow_openers >= _YAML_MAX_C_NESTING
+    if not check_nesting and (
+        "- " in response_text
+        or "? " in response_text
+        or _YAML_INDENTED_LINE_RE.search(response_text)
+    ):
+        remaining_depth = _YAML_MAX_C_NESTING - flow_openers
+        for match in _YAML_BLOCK_PREFIX_RE.finditer(response_text):
+            block_prefix = match.group(2)
+            block_depth_hint = len(match.group(1)) + block_prefix.count("-") + block_prefix.count("?")
+            if block_depth_hint >= remaining_depth:
+                check_nesting = True
+                break
+    if not check_tag and not check_flow_question and not check_nesting:
+        return False
+
+    flow_depth = 0
+    nesting_depth = 0
+    block_stack = []
+    indentless_sequence_indents = []
+    loader = _YAML_C_SAFE_LOADER or yaml.SafeLoader
+    try:
+        for token in yaml.scan(response_text, Loader=loader):
+            if isinstance(token, KeyToken):
+                while indentless_sequence_indents and token.start_mark.column <= indentless_sequence_indents[-1]:
+                    indentless_sequence_indents.pop()
+
+            if isinstance(token, (BlockMappingStartToken, BlockSequenceStartToken)):
+                block_stack.append(token)
+                nesting_depth += 1
+            elif isinstance(token, BlockEntryToken):
+                entry_indent = token.start_mark.column
+                explicit_sequence = any(
+                    isinstance(block_token, BlockSequenceStartToken)
+                    and block_token.start_mark.column == entry_indent
+                    for block_token in block_stack
+                )
+                if not explicit_sequence:
+                    while indentless_sequence_indents and indentless_sequence_indents[-1] > entry_indent:
+                        indentless_sequence_indents.pop()
+                    if not indentless_sequence_indents or indentless_sequence_indents[-1] < entry_indent:
+                        indentless_sequence_indents.append(entry_indent)
+            elif isinstance(token, (FlowMappingStartToken, FlowSequenceStartToken)):
+                flow_depth += 1
+                nesting_depth += 1
+            elif isinstance(token, BlockEndToken):
+                if block_stack:
+                    block_stack.pop()
+                while (
+                    indentless_sequence_indents
+                    and token.start_mark.column <= indentless_sequence_indents[-1]
+                ):
+                    indentless_sequence_indents.pop()
+                nesting_depth = max(0, nesting_depth - 1)
+            elif isinstance(token, (FlowMappingEndToken, FlowSequenceEndToken)):
+                flow_depth = max(0, flow_depth - 1)
+                nesting_depth = max(0, nesting_depth - 1)
+
+            effective_nesting_depth = nesting_depth + len(indentless_sequence_indents)
+            if effective_nesting_depth > _YAML_MAX_C_NESTING:
+                return True
+            if check_tag and isinstance(token, TagToken):
+                return True
+            if check_flow_question and flow_depth:
+                if isinstance(token, ScalarToken) and token.plain and "?" in token.value:
+                    return True
+                if (
+                    isinstance(token, KeyToken)
+                    and response_text[token.start_mark.index:token.end_mark.index] == "?"
+                ):
+                    return True
+    except yaml.YAMLError:
+        return False
+    return False
+
+
+def _load_yaml_initial(response_text: str) -> Any:
+    """Parse initial YAML with LibYAML while preserving SafeLoader edge-case semantics."""
+    if _YAML_C_SAFE_LOADER is None:
+        return yaml.safe_load(response_text)
+    # Keep non-initial BOMs on SafeLoader because LibYAML consumes them at document boundaries.
+    if response_text.find("\ufeff", 1) != -1:
+        return yaml.safe_load(response_text)
+    # Keep known parser divergences and unsafe native nesting on the original SafeLoader path.
+    if (
+        "\t" in response_text
+        or _YAML_UNSEPARATED_BLOCK_SCALAR_COMMENT_RE.search(response_text)
+        or _has_yaml_c_loader_risk(response_text)
+    ):
+        return yaml.safe_load(response_text)
+    try:
+        return yaml.load(response_text, Loader=_YAML_C_SAFE_LOADER)
+    except yaml.YAMLError:
+        # Keep the existing Python SafeLoader behavior as a compatibility fallback
+        # before handing malformed model output to the repair pipeline.
+        return yaml.safe_load(response_text)
+
+
 def load_yaml(response_text: str, keys_fix_yaml: List[str] | None = None, first_key="", last_key="") -> dict:
     if keys_fix_yaml is None:
         keys_fix_yaml = []
@@ -926,7 +993,9 @@ def load_yaml(response_text: str, keys_fix_yaml: List[str] | None = None, first_
     # "yml_config" is not truncated to "_config"
     unfenced = re.sub(r'^```[ \t]*(?:(?i:yaml|yml))?[ \t]*(?=\r?\n)', '', response_text)
     if unfenced == response_text:
-        unfenced = response_text.removeprefix('yaml')
+        # Strip an unfenced "yaml" label only when it is a complete line, so a key such as
+        # "yaml_config" is not truncated. A bare removeprefix('yaml') would shorten it to "_config".
+        unfenced = re.sub(r'^yaml(?:[ \t]*\r?\n|\Z)', '', response_text, count=1)
     response_text = unfenced.rstrip()
     response_text = drop_sign_off_after_wrapper_fence(response_text)
     if response_text.split('\n')[-1] == '```':
@@ -941,7 +1010,7 @@ def load_yaml(response_text: str, keys_fix_yaml: List[str] | None = None, first_
         # through the same exception handling as a normal parse failure instead.
         if response_text_original.strip() and not response_text.strip():
             raise ValueError("Preprocessing/sanitization removed all content from a non-empty AI prediction")
-        data = yaml.safe_load(response_text)
+        data = _load_yaml_initial(response_text)
     except Exception as e:
         get_logger().warning(f"Initial failure to parse AI prediction: {e}")
         data = try_fix_yaml(response_text, keys_fix_yaml=keys_fix_yaml, first_key=first_key, last_key=last_key,
@@ -966,6 +1035,18 @@ def try_fix_yaml(response_text: str,
     if keys_fix_yaml is None:
         keys_fix_yaml = []
     response_text_lines = response_text.split('\n')
+    failed_original_parse = False
+
+    def _parse_yaml(candidate):
+        nonlocal failed_original_parse
+        if candidate == response_text and failed_original_parse:
+            return None
+        try:
+            return yaml.safe_load(candidate)
+        except yaml.YAMLError:
+            if candidate == response_text:
+                failed_original_parse = True
+            raise
 
     keys_yaml = ['relevant line:', 'suggestion content:', 'relevant file:', 'existing code:',
                  'improved code:', 'label:', 'why:', 'suggestion_summary:']
@@ -979,22 +1060,22 @@ def try_fix_yaml(response_text: str,
                 response_text_lines_copy[i] = response_text_lines_copy[i].replace(f'{key}',
                                                                                   f'{key} |\n        ')
     try:
-        data = yaml.safe_load('\n'.join(response_text_lines_copy))
+        data = _parse_yaml('\n'.join(response_text_lines_copy))
         if data is not None:
             get_logger().info("Successfully parsed AI prediction after adding |-\n")
             return data
-    except:
+    except Exception:
         pass
 
     # 1.5 fallback - try to convert '|' to '|2'. Will solve cases of indent decreasing during the code
     response_text_copy = copy.deepcopy(response_text)
     response_text_copy = response_text_copy.replace('|\n', '|2\n')
     try:
-        data = yaml.safe_load(response_text_copy)
+        data = _parse_yaml(response_text_copy)
         if data is not None:
             get_logger().info("Successfully parsed AI prediction after replacing | with |2")
             return data
-    except:
+    except Exception:
         pass
     # try to add spaces to lines that are not indented properly, and contain '}'.
     # Moved out of the except block so it also runs when safe_load returned None (e.g. empty input).
@@ -1024,11 +1105,11 @@ def try_fix_yaml(response_text: str,
                     continue
             response_text_lines_copy[i] = '    ' + response_text_lines_copy[i].lstrip()
     try:
-        data = yaml.safe_load('\n'.join(response_text_lines_copy))
+        data = _parse_yaml('\n'.join(response_text_lines_copy))
         if data is not None:
             get_logger().info("Successfully parsed AI prediction after replacing | with |2 and adding spaces")
             return data
-    except:
+    except Exception:
         pass
 
     # second fallback - try to extract only range from first ```yaml to the last ```
@@ -1040,7 +1121,7 @@ def try_fix_yaml(response_text: str,
         # group(1) is the snippet body, without the ``` fences or the optional yaml/yml language identifier
         snippet_text = snippet.group(1)
         try:
-            data = yaml.safe_load(snippet_text)
+            data = _parse_yaml(snippet_text)
             if data is not None:
                 get_logger().info("Successfully parsed AI prediction after extracting yaml snippet")
                 return data
@@ -1051,11 +1132,11 @@ def try_fix_yaml(response_text: str,
     # third fallback - try to remove leading and trailing curly brackets
     response_text_copy = response_text.strip().rstrip().removeprefix('{').removesuffix('}').rstrip(':\n')
     try:
-        data = yaml.safe_load(response_text_copy)
+        data = _parse_yaml(response_text_copy)
         if data is not None:
             get_logger().info("Successfully parsed AI prediction after removing curly brackets")
             return data
-    except:
+    except Exception:
         pass
 
 
@@ -1078,11 +1159,11 @@ def try_fix_yaml(response_text: str,
         response_text_copy = response_text_copy.strip("`").strip()
         if response_text_copy:
             try:
-                data = yaml.safe_load(response_text_copy)
+                data = _parse_yaml(response_text_copy)
                 if data is not None:
                     get_logger().info("Successfully parsed AI prediction after extracting yaml snippet")
                     return data
-            except:
+            except Exception:
                 pass
 
     # fifth fallback - try to remove leading '+' (sometimes added by AI for 'existing code' and 'improved code')
@@ -1091,11 +1172,11 @@ def try_fix_yaml(response_text: str,
         if response_text_lines_copy[i].startswith('+'):
             response_text_lines_copy[i] = ' ' + response_text_lines_copy[i][1:]
     try:
-        data = yaml.safe_load('\n'.join(response_text_lines_copy))
+        data = _parse_yaml('\n'.join(response_text_lines_copy))
         if data is not None:
             get_logger().info("Successfully parsed AI prediction after removing leading '+'")
             return data
-    except:
+    except Exception:
         pass
 
     # 5.5 fallback - try to normalize diff-style removal markers ('-') within list items
@@ -1129,7 +1210,7 @@ def try_fix_yaml(response_text: str,
             modified = True
     if modified:
         try:
-            data = yaml.safe_load('\n'.join(response_text_lines_copy))
+            data = _parse_yaml('\n'.join(response_text_lines_copy))
             if data is not None:
                 get_logger().info("Successfully parsed AI prediction after normalizing diff removal markers")
                 return data
@@ -1142,11 +1223,11 @@ def try_fix_yaml(response_text: str,
         response_text_copy = copy.deepcopy(response_text)
         response_text_copy = response_text_copy.replace('\t', '    ')
         try:
-            data = yaml.safe_load(response_text_copy)
+            data = _parse_yaml(response_text_copy)
             if data is not None:
                 get_logger().info("Successfully parsed AI prediction after replacing tabs with spaces")
                 return data
-        except:
+        except Exception:
             pass
 
     # seventh fallback - add indent for sections of code blocks
@@ -1169,22 +1250,22 @@ def try_fix_yaml(response_text: str,
     response_text_copy = '\n'.join(response_text_copy_lines)
     response_text_copy = response_text_copy.replace(' |\n', ' |2\n')
     try:
-        data = yaml.safe_load(response_text_copy)
+        data = _parse_yaml(response_text_copy)
         if data is not None:
             get_logger().info("Successfully parsed AI prediction after adding indent for sections of code blocks")
             return data
-    except:
+    except Exception:
         pass
 
     # eighth fallback - try to remove pipe chars at the root-level dicts
     response_text_copy = copy.deepcopy(response_text)
     response_text_copy = response_text_copy.lstrip('|\n')
     try:
-        data = yaml.safe_load(response_text_copy)
+        data = _parse_yaml(response_text_copy)
         if data is not None:
             get_logger().info("Successfully parsed AI prediction after removing pipe chars")
             return data
-    except:
+    except Exception:
         pass
 
     # ninth fallback - try to decode the response text with different encodings.
@@ -1192,11 +1273,11 @@ def try_fix_yaml(response_text: str,
     encodings_to_try = ['latin-1', 'utf-16']
     for encoding in encodings_to_try:
         try:
-            data = yaml.safe_load(response_text.encode(encoding).decode("utf-8"))
+            data = _parse_yaml(response_text.encode(encoding).decode("utf-8"))
             if data:
                 get_logger().info(f"Successfully parsed AI prediction after decoding with {encoding} encoding")
                 return data
-        except:
+        except Exception:
             pass
 
     # # sixth fallback - try to remove last lines
@@ -1211,18 +1292,23 @@ def try_fix_yaml(response_text: str,
 
 
 
+_DEFAULT_CUSTOM_LABELS = ['Bug fix', 'Tests', 'Bug fix with tests', 'Enhancement', 'Documentation', 'Other']
+# Mirrors the hardcoded enum the prompts render when custom labels are disabled.
+_BUILTIN_LABELS = ['Bug fix', 'Tests', 'Enhancement', 'Documentation', 'Other']
+
+
 def set_custom_labels(variables, git_provider=None):
     if not get_settings().config.enable_custom_labels:
         return
 
     labels = get_settings().get('custom_labels', {})
     if not labels:
-        # set default labels
-        labels = ['Bug fix', 'Tests', 'Bug fix with tests', 'Enhancement', 'Documentation', 'Other']
-        labels_list = "\n      - ".join(labels) if labels else ""
-        labels_list = f"      - {labels_list}" if labels_list else ""
-        variables["custom_labels"] = labels_list
-        return
+        # No [custom_labels] section is configured, so fall back to the default set. The
+        # templates read custom_labels_class, so the enum has to be built here; writing a
+        # bullet list to an unused key left the prompt declaring `List[Label]` with no
+        # `Label` class at all. The loop below builds the same structure from a description
+        # map, so reuse it.
+        labels = {label: label for label in _DEFAULT_CUSTOM_LABELS}
 
     # Set custom labels
     variables["custom_labels_class"] = "class Label(str, Enum):"
@@ -1237,6 +1323,29 @@ def set_custom_labels(variables, git_provider=None):
         counter += 1
     variables["labels_minimal_to_labels_dict"] = labels_minimal_to_labels_dict
 
+def filter_generated_labels(labels: List[str]) -> List[str]:
+    """Keep model-generated labels within the enabled vocabulary, not user labels."""
+    names = [label.value for label in PRType]
+    if get_settings().config.get("enable_custom_labels", False):
+        custom_labels = get_settings().get("custom_labels", {}) or _DEFAULT_CUSTOM_LABELS
+        names.extend(str(label) for label in custom_labels)
+    allowed = {name.lower() for name in names}
+    # Resolve prompt enum keys (e.g. bug_fix) to allowed display names.
+    aliases = {name.lower().replace(" ", "_"): name for name in names}
+    accepted = []
+    dropped = []
+    for label in labels:
+        if isinstance(label, str) and label.strip().lower() in allowed:
+            accepted.append(label.strip())
+        elif isinstance(label, str) and label.strip().lower() in aliases:
+            accepted.append(aliases[label.strip().lower()])
+        else:
+            dropped.append(label)
+    if dropped:
+        get_logger().warning(f"Dropping model-generated labels outside the configured set: {dropped}", artifact=dropped)
+    return accepted
+
+
 def get_user_labels(current_labels: List[str] = None):
     """
     Only keep labels that has been added by the user
@@ -1247,12 +1356,15 @@ def get_user_labels(current_labels: List[str] = None):
         if current_labels is None:
             current_labels = []
         user_labels = []
+        # /describe publishes the built-in PRType whatever the configuration, so those are
+        # always bot-owned. A configured set adds to them rather than replacing them, else a
+        # stale "Bug fix" would survive every /describe re-run.
+        bot_labels = {label.lower() for label in _BUILTIN_LABELS}
+        if enable_custom_labels:
+            bot_labels |= {str(label).lower() for label in custom_labels or _DEFAULT_CUSTOM_LABELS}
         for label in current_labels:
-            if label.lower() in ['bug fix', 'tests', 'enhancement', 'documentation', 'other']:
+            if label.lower() in bot_labels:
                 continue
-            if enable_custom_labels:
-                if label in custom_labels:
-                    continue
             user_labels.append(label)
         if user_labels:
             get_logger().debug(f"Keeping user labels: {user_labels}")
@@ -1327,15 +1439,17 @@ def find_line_number_of_relevant_line_in_file(diff_files: List[FilePatchInfo],
                                      artifact={"relevant_file": relevant_file})
                 continue
             else:
-                # try to find the line in the patch using difflib, with some margin of error
+                # Skip fuzzy normalization when the raw patch line matches exactly.
                 fuzzy_match_candidates = [line for line in patch_lines if line != NO_NEWLINE_AT_EOF_MARKER]
-                matches_difflib: list[str | Any] = difflib.get_close_matches(relevant_line_in_file,
-                                                                             fuzzy_match_candidates, n=3, cutoff=0.93)
-                if len(matches_difflib) == 1 and matches_difflib[0].startswith('+'):
-                    relevant_line_in_file = matches_difflib[0]
+                if relevant_line_in_file not in fuzzy_match_candidates:
+                    matches_difflib: list[str | Any] = difflib.get_close_matches(
+                        relevant_line_in_file, fuzzy_match_candidates, n=3, cutoff=0.93
+                    )
+                    if len(matches_difflib) == 1 and matches_difflib[0].startswith('+'):
+                        relevant_line_in_file = matches_difflib[0]
 
 
-                def scan_patch_lines(is_match):
+                def scan_patch_lines(is_match, patch_lines=patch_lines, absolute_position=absolute_position):
                     scan_delta = 0
                     scan_start2 = 0
                     skip_hunk = False
@@ -1363,10 +1477,10 @@ def find_line_number_of_relevant_line_in_file(diff_files: List[FilePatchInfo],
                     return -1, absolute_position
 
                 position, absolute_position = scan_patch_lines(
-                    lambda line: line == relevant_line_in_file or line[1:] == relevant_line_in_file)
+                    lambda line, rl=relevant_line_in_file: line == rl or line[1:] == rl)
                 if position == -1:
                     position, absolute_position = scan_patch_lines(
-                        lambda line: relevant_line_in_file in line)
+                        lambda line, rl=relevant_line_in_file: rl in line)
 
                 if position == -1 and relevant_line_in_file[0] == '+':
                     no_plus_line = relevant_line_in_file[1:].lstrip()
@@ -1518,18 +1632,13 @@ def set_file_languages(diff_files) -> List[FilePatchInfo]:
         if hasattr(diff_files[0], 'language') and diff_files[0].language:
             return diff_files
 
-        # map file extensions to programming languages
-        language_extension_map_org = get_settings().language_extension_map_org
-        extension_to_language = {}
-        for language, extensions in language_extension_map_org.items():
-            for ext in extensions:
-                extension_to_language[ext] = language
+        # Reuse the shared classifier. Matching on the last suffix alone missed every
+        # multi-part key (Config.cmake.in -> ".in"), every wildcard key (module.bsl ->
+        # ".bsl" where the map stores "*.bsl") and every uppercase suffix (handler.PY).
+        get_language = build_language_file_matcher(get_settings().language_extension_map_org)
         for file in diff_files:
-            extension_s = '.' + file.filename.rsplit('.')[-1]
-            language_name = "txt"
-            if extension_s and (extension_s in extension_to_language):
-                language_name = extension_to_language[extension_s]
-            file.language = language_name.lower()
+            language_name = get_language(file.filename)
+            file.language = (language_name or "txt").lower()
     except Exception as e:
         get_logger().exception(f"Failed to set file languages: {e}")
 
@@ -1544,12 +1653,19 @@ def format_todo_item(todo_item: TodoItem | str, git_provider, gfm_supported) -> 
     if not isinstance(todo_item, dict):
         return str(todo_item).strip() if todo_item is not None else ""
     relevant_file = str(todo_item.get('relevant_file', '') or '').strip()
-    line_number = todo_item.get('line_number', '')
+    try:
+        line_number = int(str(todo_item.get('line_number')).strip())
+    except (TypeError, ValueError):
+        line_number = 0
     content = str(todo_item.get('content', '') or '')
     if not relevant_file:
         return content.strip()
-    reference_link = git_provider.get_line_link(relevant_file, line_number, line_number)
-    file_ref = f"{relevant_file} [{line_number}]"
+    if line_number < 1:
+        reference_link = git_provider.get_line_link(relevant_file, -1)
+        file_ref = relevant_file
+    else:
+        reference_link = git_provider.get_line_link(relevant_file, line_number, line_number)
+        file_ref = f"{relevant_file} [{line_number}]"
     if reference_link:
         if gfm_supported:
             file_ref = f"<a href='{reference_link}'>{file_ref}</a>"
