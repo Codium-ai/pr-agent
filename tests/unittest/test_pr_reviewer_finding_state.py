@@ -1727,3 +1727,18 @@ def test_previous_findings_render_in_the_user_prompt_only():
 
     assert "stored finding" not in Environment(autoescape=True).from_string(prompts.system).render(variables)
     assert "stored finding" in Environment(autoescape=True).from_string(prompts.user).render(variables)
+
+
+def test_render_previous_findings_uses_exact_json_length_for_unicode_and_escapes():
+    state = {"findings": [
+        {"state": "ACTIVE", "path": "src/中文.py", "body": 'A "quoted" line\nEmoji 🙂',
+         "last_seen": "2026-02-01T00:00:00Z"},
+        {"state": "ACTIVE", "path": "older.py", "body": "Another finding",
+         "last_seen": "2026-01-01T00:00:00Z"},
+    ]}
+    full = render_previous_findings(state, 10_000)
+
+    assert render_previous_findings(state, len(full)) == full
+    shorter = json.loads(render_previous_findings(state, len(full) - 1))
+    assert [entry["relevant_file"] for entry in shorter] == ["src/中文.py"]
+    assert shorter[0]["issue_content"] == 'A "quoted" line\nEmoji 🙂'
