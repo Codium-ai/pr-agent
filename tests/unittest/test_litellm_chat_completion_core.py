@@ -540,8 +540,8 @@ async def test_chat_completion_strips_temperature_for_config_no_temperature_mode
 
 @pytest.mark.asyncio
 async def test_chat_completion_strips_temperature_for_bedrock_kimi_k3_and_glm5_by_default(monkeypatch):
-    """Verify the shipped defaults drop temperature for every Kimi K3 and GLM-5 inference-profile
-    and Converse spelling, since Bedrock rejects temperature for both."""
+    """Verify the shipped defaults drop temperature for the Bedrock Kimi K3 (bare, us., global.)
+    and GLM-5 (bare only) model IDs, on both routes, since Bedrock rejects temperature for both."""
     import tomllib
     from pathlib import Path
 
