@@ -173,6 +173,33 @@ def test_get_diff_files_deleted_file_falls_back_to_old_path(tmp_path):
     assert all(f.filename is not None for f in diff_files)
 
 
+def test_get_diff_files_respects_ignore_regex(tmp_path, monkeypatch):
+    # Unlike github/gitlab/gitea/azure providers, get_diff_files() used to skip
+    # filter_ignored() entirely, so ignore.regex/ignore.glob were dead in local
+    # mode. Verify the ignore setting is now actually applied to the assembled
+    # diff_files list (platform='github' default branch matches on f.filename,
+    # which FilePatchInfo exposes).
+    repo = _make_repo(tmp_path, ["keep.py", "vendor/dropped.py"])
+    target_branch_name = repo.active_branch.name
+    repo.git.checkout("-b", "feature")
+    (tmp_path / "keep.py").write_text("y\n")
+    (tmp_path / "vendor" / "dropped.py").write_text("y\n")
+    repo.index.add(["keep.py", "vendor/dropped.py"])
+    repo.index.commit("change both files")
+
+    snapshot = snapshot_settings(["ignore.regex"])
+    provider = object.__new__(LocalGitProvider)  # bypass heavy __init__
+    provider.repo = repo
+    provider.target_branch_name = target_branch_name
+    try:
+        get_settings().set("ignore.regex", ["^vendor/.*"])
+        diff_files = provider.get_diff_files()
+    finally:
+        restore_settings(snapshot)
+
+    assert [f.filename for f in diff_files] == ["keep.py"]
+
+
 @pytest.mark.parametrize("change_type", ["added", "modified", "deleted"])
 def test_get_diff_files_skips_non_utf8_file_and_keeps_utf8_sibling(tmp_path, monkeypatch, change_type):
     repo = git.Repo.init(tmp_path)

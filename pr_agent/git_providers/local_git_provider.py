@@ -6,6 +6,7 @@ from git import Repo
 
 from pr_agent.agent.request_policy import policy_metadata
 from pr_agent.algo.comment_identity import format_pr_code_suggestions_header
+from pr_agent.algo.file_filter import filter_ignored
 from pr_agent.algo.language_handler import build_language_file_matcher
 from pr_agent.algo.run_output import show_run_details
 from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
@@ -122,6 +123,10 @@ class LocalGitProvider(GitProvider):
                               old_filename=None if diff_item.a_path == diff_item.b_path else diff_item.a_path
                               )
             )
+        # The github/gitlab/gitea/azure providers all run the assembled diff through
+        # filter_ignored(); this one did not, so ignore.regex / ignore.glob were accepted and
+        # silently ignored in local mode.
+        diff_files = filter_ignored(diff_files)
         self.diff_files = diff_files
         return diff_files
 
