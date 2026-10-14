@@ -607,6 +607,9 @@ class GiteaProvider(GitProvider):
             patch = self.file_diffs.get(filename,"")
             head_file = ""
             base_file = ""
+            status = file.get("status", "")
+            previous_filename = file.get("previous_filename") if status == "renamed" else None
+            old_filename = previous_filename if isinstance(previous_filename, str) and previous_filename else None
 
             if counter_valid >= MAX_FILES_ALLOWED_FULL and patch and not self.incremental.is_incremental:
                 avoid_load = True
@@ -620,8 +623,6 @@ class GiteaProvider(GitProvider):
                 self.__add_file_content(filename)
                 head_file = self.file_contents.get(filename,"")
 
-            status = file.get("status","")
-
             if self.incremental.is_incremental and self.unreviewed_files_map:
                 base_file = self._get_file_content_from_latest_commit(filename)
                 self.unreviewed_files_map[filename] = patch
@@ -631,7 +632,7 @@ class GiteaProvider(GitProvider):
                 if avoid_load or status == 'added':
                     base_file = ""
                 else:
-                    base_file = self._get_file_content_from_base(filename)
+                    base_file = self._get_file_content_from_base(old_filename or filename)
 
             num_plus_lines = file.get("additions",0)
             num_minus_lines = file.get("deletions",0)
@@ -655,7 +656,8 @@ class GiteaProvider(GitProvider):
                 filename=filename,
                 num_minus_lines=num_minus_lines,
                 num_plus_lines=num_plus_lines,
-                edit_type=edit_type
+                edit_type=edit_type,
+                old_filename=old_filename,
             )
             diff_files.append(file_patch_info)
 
