@@ -88,6 +88,7 @@ from pr_agent.algo.ai_handlers.cloud_auth import (
     _databricks_request_keyless,
     _exchange_azure_oidc_token,
     _get_bedrock_model_region,
+    _google_cloud_sdk,
     _guard_request_routing_globals,
     _has_live_provider_api_key_environment,
     _has_provider_api_key_global,
@@ -404,9 +405,10 @@ class LiteLLMAIHandler(BaseAiHandler):
             identity = hashlib.sha256(json.dumps(snapshot, sort_keys=True).encode("utf-8")).hexdigest()
             snapshot["cache_key"] = json.dumps({"_pr_agent_default_adc": identity})
             self._vertex_gac_adc = snapshot
+        cloud_sdk = None
         if self._vertex_credentials is None and self._vertex_credentials_error is None:
-            from google.auth import _cloud_sdk
-
+            cloud_sdk = _google_cloud_sdk()
+        if cloud_sdk is not None:
             snapshot = {
                 "info": None, "error": None, "sdk_project": None, "sdk_project_error": None,
                 "explicit_path": None,
@@ -415,7 +417,7 @@ class LiteLLMAIHandler(BaseAiHandler):
                 "aws_environment": dict(self._vertex_aws_environment),
             }
             try:
-                path = _cloud_sdk.get_application_default_credentials_path()
+                path = cloud_sdk.get_application_default_credentials_path()
                 if os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") == path:
                     snapshot["explicit_path"] = path
                 try:
@@ -834,13 +836,11 @@ class LiteLLMAIHandler(BaseAiHandler):
         credentials_path = vertex_credentials or os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
         if not credentials_path:
             return None, None
-        if not vertex_credentials:
-            from google.auth import _cloud_sdk
-
-            # Match Google Auth's exact-path exception so the captured SDK
-            # resource project remains distinct from the billing quota project.
-            if credentials_path == _cloud_sdk.get_application_default_credentials_path():
-                return None, None
+        cloud_sdk = None if vertex_credentials else _google_cloud_sdk()
+        # Match Google Auth's exact-path exception so the captured SDK
+        # resource project remains distinct from the billing quota project.
+        if cloud_sdk is not None and credentials_path == cloud_sdk.get_application_default_credentials_path():
+            return None, None
         try:
             with open(credentials_path, encoding="utf-8") as credentials_file:
                 return credentials_file.read(), None
