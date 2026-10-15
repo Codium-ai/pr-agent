@@ -1343,6 +1343,15 @@ def _install_databricks_keyless_bridge():
     DatabricksBase.databricks_validate_environment = validate_environment
 
 
+def _google_cloud_sdk():
+    """Return Google Auth's Cloud SDK module, or None when the optional `google` extra is not installed."""
+    try:
+        from google.auth import _cloud_sdk
+    except ModuleNotFoundError:
+        return None
+    return _cloud_sdk
+
+
 def _snapshot_cloud_sdk_project(directory):
     """Capture Cloud SDK 583's project property without running a subprocess."""
     if "CLOUDSDK_CORE_PROJECT" in os.environ:
