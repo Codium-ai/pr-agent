@@ -7548,11 +7548,15 @@ async def test_native_guard_header_only_equivalence(
 
 def test_json_responses_native_config_contract():
     from litellm.llms.openai_like.dynamic_config import create_responses_config_class
+    from litellm.llms.sail.responses.transformation import SailResponsesAPIConfig
     from litellm.utils import ProviderConfigManager
 
     registry = litellm_handler.JSONProviderRegistry
     providers = {name for name in registry.list_providers() if registry.supports_responses_api(name)}
-    assert providers == {"neosantara", "tensormesh", "parasail", "empiriolabs", "meta", "pinstripes"}
+    assert providers == {
+        "neosantara", "tensormesh", "parasail", "empiriolabs", "meta", "pinstripes",
+        "cortecs", "prism", "sail",
+    }
     # Pinned native HTTP client selection rejects this registry-only provider
     # before authentication; do not claim transport coverage for that path.
     assert providers - {provider.value for provider in litellm.LlmProviders} == {"empiriolabs"}
@@ -7560,7 +7564,7 @@ def test_json_responses_native_config_contract():
         # The native manager checks Python overrides before the JSON registry.
         selected = ProviderConfigManager.get_provider_responses_api_config(provider, model="test-model")
         expected = create_responses_config_class(registry.get(provider))
-        assert type(selected) is expected
+        assert type(selected) is (SailResponsesAPIConfig if provider == "sail" else expected)
         assert type(selected).validate_environment is expected.validate_environment
 
 

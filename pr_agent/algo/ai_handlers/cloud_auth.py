@@ -983,15 +983,18 @@ def _get_bedrock_model_region(model: str, model_id=None) -> str | None:
     from litellm.llms.bedrock.common_utils import BedrockModelInfo
 
     # LiteLLM consumes model_id before Invoke resolves its region.
-    # Only Converse uses that separate ID or region/model path for routing.
-    is_converse = BedrockModelInfo.get_bedrock_route(model) == "converse"
+    # Only Converse uses that separate ID; Converse and Chat Completions use region/model paths for routing.
+    route = BedrockModelInfo.get_bedrock_route(model, {"model_id": model_id})
+    is_converse = route == "converse"
     if not is_converse:
         model_id = None
     candidate = model_id or model
     if not isinstance(candidate, str):
         return None
     if not model_id:
-        for prefix in ("bedrock/converse/", "bedrock/", "converse/"):
+        for prefix in (
+            "bedrock/chat_completions/", "bedrock/converse/", "bedrock/", "chat_completions/", "converse/",
+        ):
             if candidate.startswith(prefix):
                 candidate = candidate[len(prefix):]
                 break
@@ -1007,8 +1010,8 @@ def _get_bedrock_model_region(model: str, model_id=None) -> str | None:
     arn = re.match(r"\Aarn:aws(?:-[a-z0-9-]+)?:bedrock:([a-z0-9-]+):", arn_candidate)
     if arn:
         return arn.group(1)
-    # Native Converse only recognizes region/model paths when model_id is absent.
-    if is_converse and not model_id:
+    # Native Converse/Chat Completions only recognize region/model paths when model_id is absent.
+    if route in ("converse", "chat_completions") and not model_id:
         region, separator, _ = candidate.partition("/")
         if separator and region in litellm.AmazonBedrockGlobalConfig().get_all_regions():
             return region
