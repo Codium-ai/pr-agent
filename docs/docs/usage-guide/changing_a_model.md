@@ -799,7 +799,7 @@ Whether Copilot's terms permit this programmatic use is a question for GitHub ra
 
 ### Cheaper Inference
 
-[Cheaper Inference](https://cheaperinference.com) is an OpenAI-compatible LLM gateway. It needs no provider-specific code in PR-Agent: the `openai/` prefix routes the request to Cheaper Inference's base URL through litellm's OpenAI-compatible path, the same way [OrcaRouter](#orcarouter) and [Atlas Cloud](#atlas-cloud) are handled.
+[Cheaper Inference](https://cheaperinference.com) is an OpenAI-compatible LLM gateway. It needs no provider-specific code in PR-Agent: the `openai/` prefix routes the request to Cheaper Inference's base URL through litellm's OpenAI-compatible path.
 
 To use a model through Cheaper Inference, set:
 
