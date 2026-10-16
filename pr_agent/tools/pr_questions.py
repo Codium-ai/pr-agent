@@ -13,6 +13,8 @@ from pr_agent.algo.pr_processing import (
     get_pr_diff,
     retry_with_fallback_models,
 )
+from pr_agent.algo.run_details import init_run_details
+from pr_agent.algo.run_output import append_run_details
 from pr_agent.algo.skills_loader import get_skills_context
 from pr_agent.algo.token_budget import AttemptTokenBudget
 from pr_agent.algo.token_handler import TokenHandler
@@ -73,6 +75,8 @@ class PRQuestions:
         return decode_user_text_args(args)
 
     async def run(self):
+        # A fresh collector so the run-details section reports only this command's model.
+        init_run_details()
         get_logger().info(f'Answering a PR question about the PR {self.pr_url} ')
         relevant_configs = {'pr_questions': dict(get_settings().pr_questions),
                             'config': dict(get_settings().config)}
@@ -99,7 +103,7 @@ class PRQuestions:
                 pr_comment += "\n</details>\n"
 
             if get_settings().config.publish_output:
-                self._publish_answer(pr_comment)
+                self._publish_answer(append_run_details(pr_comment, self.git_provider))
             else:
                 get_settings().set("data.answer", (self.prediction or "").strip())
         finally:
