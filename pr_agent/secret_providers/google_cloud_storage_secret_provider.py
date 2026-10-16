@@ -1,4 +1,5 @@
 import ujson
+from google.api_core.exceptions import NotFound
 from google.cloud import storage
 
 from pr_agent.config_loader import get_settings
@@ -20,9 +21,12 @@ class GoogleCloudStorageSecretProvider(SecretProvider):
     def get_secret(self, secret_name: str) -> str:
         try:
             blob = self.bucket.blob(secret_name)
-            return blob.download_as_string()
+            return blob.download_as_text()
         except Exception as e:
-            get_logger().warning(f"Failed to get secret {secret_name} from Google Cloud Storage: {e}")
+            # Omit the secret name because the GitLab webhook passes its token here.
+            get_logger().warning(f"Failed to get secret from Google Cloud Storage: {type(e).__name__}")
+            if not isinstance(e, NotFound):
+                raise
             return ""
 
     def store_secret(self, secret_name: str, secret_value: str):

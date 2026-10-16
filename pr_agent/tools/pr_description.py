@@ -11,10 +11,13 @@ from pydantic import ValidationError
 
 from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAIHandler
+from pr_agent.algo.artifacts import get_artifact_context
 from pr_agent.algo.comment_identity import PRDescriptionHeader
 from pr_agent.algo.output_models import PRDescriptionAssembled
 from pr_agent.algo.pr_processing import (
     OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD,
+    FallbackEligibleError,
+    append_filtered_file_names,
     get_pr_diff,
     get_pr_diff_multiple_patchs,
     retry_with_fallback_models,
@@ -27,21 +30,24 @@ from pr_agent.algo.token_budget import AttemptTokenBudget
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.algo.utils import (
     ModelType,
+    filter_generated_labels,
     get_user_labels,
     load_yaml,
     set_custom_labels,
 )
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider_with_context
-from pr_agent.git_providers.git_provider import get_main_pr_language
+from pr_agent.git_providers.git_provider import IncompleteProviderPullRequestFilesError, get_main_pr_language
 from pr_agent.log import get_logger
 from pr_agent.servers.help import HelpMessage
+from pr_agent.tools.progress_comment import ChunkProgressReporter
 from pr_agent.tools.ticket_pr_compliance_check import (
     extract_and_cache_pr_tickets,
     fit_related_tickets_to_prompt_budget,
 )
 
 MAX_DESCRIPTION_COVERAGE_FILES = 50
+DESCRIBE_PROGRESS_COMMENT = "Preparing PR description..."
 
 
 def _build_unprocessed_files_block(file_list: list, label: str, max_files: int = 50) -> str:
@@ -86,7 +92,11 @@ class PRDescription:
 
         # Initialize the variables dictionary
         self.COLLAPSIBLE_FILE_LIST_THRESHOLD = get_settings().pr_description.get("collapsible_file_list_threshold", 8)
-        enable_pr_diagram = get_settings().pr_description.get("enable_pr_diagram", False) and self.git_provider.is_supported("gfm_markdown") # github and gitlab support gfm_markdown
+        # github and gitlab support gfm_markdown
+        enable_pr_diagram = (
+            get_settings().pr_description.get("enable_pr_diagram", False)
+            and self.git_provider.is_supported("gfm_markdown")
+        )
         self.vars = {
             "title": self.git_provider.pr.title,
             "branch": self.git_provider.get_pr_branch(),
@@ -94,6 +104,7 @@ class PRDescription:
             "language": self.main_pr_language,
             "diff": "",  # empty diff for initial calculation
             "extra_instructions": get_settings().pr_description.extra_instructions,
+            "artifact_context": get_artifact_context("pr_description"),
             "skills_context": get_skills_context(),
             "repo_context": build_repo_context(self.git_provider),
             "commit_messages_str": self.git_provider.get_commit_messages(),
@@ -102,7 +113,9 @@ class PRDescription:
             "enable_semantic_files_types": get_settings().pr_description.enable_semantic_files_types,
             "related_tickets": "",
             "related_tickets_omitted": 0,
-            "include_file_summary_changes": len(self.git_provider.get_diff_files()) <= self.COLLAPSIBLE_FILE_LIST_THRESHOLD,
+            "include_file_summary_changes": (
+                len(self.git_provider.get_diff_files()) <= self.COLLAPSIBLE_FILE_LIST_THRESHOLD
+            ),
             "duplicate_prompt_examples": get_settings().config.get("duplicate_prompt_examples", False),
             "enable_pr_diagram": enable_pr_diagram,
             "enable_pr_description": get_settings().pr_description.get("enable_pr_description", True),
@@ -125,15 +138,15 @@ class PRDescription:
 
     async def run(self):
         init_run_details()
-        progress_response = None
+        self.progress_response = None
         try:
             get_logger().info(f"Generating a PR description for pr_id: {self.pr_id}")
             relevant_configs = {'pr_description': dict(get_settings().pr_description),
                                 'config': dict(get_settings().config)}
             get_logger().debug("Relevant configs", artifact=relevant_configs)
             if get_settings().config.publish_output and not get_settings().config.get('is_auto_command', False):
-                progress_response = self.git_provider.publish_comment(
-                    "Preparing PR description...", is_temporary=True)
+                self.progress_response = self.git_provider.publish_comment(
+                    DESCRIBE_PROGRESS_COMMENT, is_temporary=True)
 
             # ticket extraction if exists
             await extract_and_cache_pr_tickets(self.git_provider, self.vars)
@@ -166,21 +179,34 @@ class PRDescription:
 
             # Add help text if gfm_markdown is supported
             if self.git_provider.is_supported("gfm_markdown") and get_settings().pr_description.enable_help_text:
-                pr_body += "<hr>\n\n<details> <summary><strong>✨ Describe tool usage guide:</strong></summary><hr> \n\n"
+                pr_body += (
+                    "<hr>\n\n<details> <summary><strong>✨ Describe tool usage guide:</strong>"
+                    "</summary><hr> \n\n"
+                )
                 pr_body += HelpMessage.get_describe_usage_guide()
                 pr_body += "\n</details>\n"
             elif get_settings().pr_description.enable_help_comment and self.git_provider.is_supported("gfm_markdown"):
                 if self.git_provider.supports_inline_help_footer():
-                    pr_body += ('\n\n___\n\n> <details> <summary>  Need help?</summary><li>Type <code>/help how to ...</code> '
-                                'in the comments thread for any questions about PR-Agent usage.</li><li>Check out the '
-                                '<a href="https://docs.pr-agent.ai/usage-guide/">documentation</a> '
-                                'for more information.</li></details>')
+                    pr_body += (
+                        '\n\n___\n\n> <details> <summary>  Need help?</summary>'
+                        '<li>Type <code>/help how to ...</code> in the comments thread '
+                        'for any questions about PR-Agent usage.</li>'
+                        '<li>Check out the '
+                        '<a href="https://docs.pr-agent.ai/usage-guide/">documentation</a> '
+                        'for more information.</li></details>'
+                    )
                 else:  # bullets separated by <br>, for providers whose footer cannot inline a list
-                    pr_body += ("\n\n___\n\n<details><summary>Need help?</summary>- Type <code>/help how to ...</code> in the comments "
-                                "thread for any questions about PR-Agent usage.<br>- Check out the "
-                                "<a href='https://docs.pr-agent.ai/usage-guide/'>documentation</a> for more information.</details>")
-            # elif get_settings().pr_description.enable_help_comment:
-            #     pr_body += '\n\n___\n\n> 💡 **PR-Agent usage**: Comment `/help "your question"` on any pull request to receive relevant information'
+                    pr_body += (
+                        "\n\n___\n\n<details><summary>Need help?</summary>"
+                        "- Type <code>/help how to ...</code> in the comments "
+                        "thread for any questions about PR-Agent usage.<br>"
+                        "- Check out the "
+                        "<a href='https://docs.pr-agent.ai/usage-guide/'>documentation</a> "
+                        "for more information.</details>"
+                    )
+                # elif get_settings().pr_description.enable_help_comment:
+                #     pr_body += '\n\n___\n\n> 💡 **PR-Agent usage**: '
+                #     Comment `/help "your question"` on any pull request to receive relevant information'
 
             # Output the relevant configurations if enabled
             if get_settings().get('config', {}).get('output_relevant_configurations', False):
@@ -193,20 +219,31 @@ class PRDescription:
             if get_settings().config.publish_output:
                 # Emit to the optional external sinks before touching the provider, so a sink
                 # still receives the description if publishing it to the PR fails.
-                push_outputs("describe", payload=self.data or {}, markdown=pr_body)
+                push_outputs("describe", payload=self._prepare_output_payload(), markdown=pr_body)
 
                 # publish labels
-                if get_settings().pr_description.publish_labels and pr_labels and self.git_provider.is_supported("get_labels"):
+                if (
+                    get_settings().pr_description.publish_labels
+                    and pr_labels
+                    and self.git_provider.is_supported("get_labels")
+                ):
                     original_labels = self.git_provider.get_pr_labels(update=True)
-                    get_logger().debug("original labels", artifact=original_labels)
-                    user_labels = get_user_labels(original_labels)
-                    new_labels = pr_labels + user_labels
-                    get_logger().debug("published labels", artifact=new_labels)
-                    if set(new_labels) != set(original_labels):
-                        get_logger().info(f"Setting describe labels:\n{new_labels}")
-                        self.git_provider.publish_labels(new_labels)
+                    if original_labels is None:
+                        # The read failed with no snapshot to fall back on. publish_labels
+                        # replaces the whole set, so publishing would delete human labels.
+                        get_logger().error(
+                            "Skipping label publish: existing labels could not be read, "
+                            "and publishing would remove them")
                     else:
-                        get_logger().debug("Labels are the same, not updating")
+                        get_logger().debug("original labels", artifact=original_labels)
+                        user_labels = get_user_labels(original_labels)
+                        new_labels = pr_labels + user_labels
+                        get_logger().debug("published labels", artifact=new_labels)
+                        if set(new_labels) != set(original_labels):
+                            get_logger().info(f"Setting describe labels:\n{new_labels}")
+                            self.git_provider.publish_labels(new_labels)
+                        else:
+                            get_logger().debug("Labels are the same, not updating")
 
                 # publish description
                 if get_settings().pr_description.publish_description_as_comment:
@@ -239,11 +276,17 @@ class PRDescription:
                         raise
 
                     # publish final update message
-                    if (get_settings().pr_description.final_update_message and not get_settings().config.get('is_auto_command', False)):
+                    if (
+                        get_settings().pr_description.final_update_message
+                        and not get_settings().config.get('is_auto_command', False)
+                    ):
                         latest_commit_url = self.git_provider.get_latest_commit_url()
                         if latest_commit_url:
                             pr_url = self.git_provider.get_pr_url()
-                            update_comment = f"**[PR Description]({pr_url})** updated to latest commit ({latest_commit_url})"
+                            update_comment = (
+                                f"**[PR Description]({pr_url})** "
+                                f"updated to latest commit ({latest_commit_url})"
+                            )
                             self.git_provider.publish_comment(update_comment)
             else:
                 get_logger().info('PR description, but not published since publish_output is False.')
@@ -254,19 +297,22 @@ class PRDescription:
                                artifact={"traceback": traceback.format_exc()})
             # The status of the whole run must not read as success just because the error stopped here.
             record_command_failure()
-            if get_settings().config.get("propagate_tool_errors", False):
+            if (
+                isinstance(e, IncompleteProviderPullRequestFilesError)
+                or get_settings().config.get("propagate_tool_errors", False)
+            ):
                 raise
         finally:
-            if progress_response is not None:
+            if self.progress_response is not None:
                 try:
                     self.git_provider.edit_comment(
-                        progress_response, "PR description generation finished.")
+                        self.progress_response, "PR description generation finished.")
                 except Exception as e:
                     get_logger().exception(
                         f"Failed to update PR description progress comment, "
                         f"error: {e}")
                 try:
-                    self.git_provider.remove_comment(progress_response)
+                    self.git_provider.remove_comment(self.progress_response)
                 except Exception as e:
                     get_logger().exception(
                         f"Failed to remove PR description progress comment, error: {e}")
@@ -277,8 +323,17 @@ class PRDescription:
         self.description_total_chunk_count = 0
         self.description_failed_chunk_count = 0
         self.description_failed_files = []
+        previous_progress = getattr(self, "_chunk_progress", None)
+        if previous_progress is not None:
+            # A fallback-model retry starts over, whatever path it takes next; restore the
+            # placeholder so a failing attempt's counts are not shown until new ones exist.
+            await previous_progress.reset_to_base()
+        self._chunk_progress = None
         if get_settings().pr_description.use_description_markers and 'pr_agent:' not in self.user_description:
-            get_logger().info("Markers were enabled, but user description does not contain markers. Skipping AI prediction")
+            get_logger().info(
+                "Markers were enabled, but user description does not contain "
+                "markers. Skipping AI prediction"
+            )
             return None
 
         raw_prompt_vars = getattr(self, "_raw_prompt_vars", getattr(self, "vars", None))
@@ -300,7 +355,10 @@ class PRDescription:
                 output_token_reserve=output_token_reserve,
             )
             self._description_prompt_handlers["pr_description_prompt"] = self.token_handler
-        large_pr_handling = get_settings().pr_description.get("enable_large_pr_handling", True) and "pr_description_only_files_prompts" in get_settings()
+        large_pr_handling = (
+            get_settings().pr_description.get("enable_large_pr_handling", True)
+            and "pr_description_only_files_prompts" in get_settings()
+        )
         output_token_reserve_kwargs = (
             {"output_token_reserve": output_token_reserve} if callable(output_token_reserve) else {}
         )
@@ -335,7 +393,7 @@ class PRDescription:
             else:
                 get_logger().error(f"Error getting PR diff {self.pr_id}",
                                    artifact={"traceback": traceback.format_exc()})
-                raise ValueError(
+                raise FallbackEligibleError(
                     f"No PR diff fits the /describe request for {model}"
                 )
         else:
@@ -365,6 +423,7 @@ class PRDescription:
             chunk_pairs = list(zip(patches_compressed_list, files_in_patches_list, strict=True))
             self.description_total_chunk_count = len(chunk_pairs)
             results = [None] * len(chunk_pairs)
+            progress = self._chunk_progress = self._chunk_progress_reporter(total=len(chunk_pairs))
             if not get_settings().pr_description.get("async_ai_calls", True):
                 for i, (patches, _files_in_patch) in enumerate(chunk_pairs):  # sync calls
                     if not patches:
@@ -372,10 +431,8 @@ class PRDescription:
                     patches_diff = "\n".join(patches)
                     get_logger().debug(f"PR diff number {i + 1} for describe files")
                     try:
-                        results[i] = await self._get_prediction(
-                            model,
-                            patches_diff,
-                            prompt="pr_description_only_files_prompts",
+                        results[i] = await self._describe_chunk(
+                            progress, model, patches_diff,
                         )
                     except Exception as e:
                         results[i] = e
@@ -387,10 +444,10 @@ class PRDescription:
                         patches_diff = "\n".join(patches)
                         get_logger().debug(f"PR diff number {i + 1} for describe files")
                         task = asyncio.create_task(
-                            self._get_prediction(
+                            self._describe_chunk(
+                                progress,
                                 model,
                                 patches_diff,
-                                prompt="pr_description_only_files_prompts",
                             )
                         )
                         tasks.append(task)
@@ -414,7 +471,7 @@ class PRDescription:
                 if isinstance(result, BaseException):
                     raise result
                 if not isinstance(result, str):
-                    chunk_errors.append(ValueError(f"Description chunk {i + 1} returned no prediction"))
+                    chunk_errors.append(FallbackEligibleError(f"Description chunk {i + 1} returned no prediction"))
                     failed_files.extend(files_in_patch)
                     get_logger().warning(
                         f"Description chunk {i + 1} returned no prediction; retaining successful chunks",
@@ -440,7 +497,7 @@ class PRDescription:
                     prediction_files = prediction_files.removeprefix('pr_files:').strip()
                     file_description_str_list.append(prediction_files)
                 else:
-                    chunk_errors.append(ValueError(f"Description chunk {i + 1} returned invalid YAML"))
+                    chunk_errors.append(FallbackEligibleError(f"Description chunk {i + 1} returned invalid YAML"))
                     failed_files.extend(files_in_patch)
                     get_logger().warning(
                         f"Failed to parse description chunk {i + 1}; retaining successful chunks",
@@ -449,8 +506,11 @@ class PRDescription:
 
             self.description_failed_chunk_count = len(chunk_pairs) - len(file_description_str_list)
             self.description_failed_files = list(dict.fromkeys(failed_files))
+            progress = getattr(self, "_chunk_progress", None)
+            if progress is not None and self.description_failed_chunk_count > 0:
+                await progress.set_failed(self.description_failed_chunk_count)
             if not file_description_str_list:
-                raise chunk_errors[0] if chunk_errors else ValueError("No description chunks were generated")
+                raise chunk_errors[0] if chunk_errors else FallbackEligibleError("No description chunks were generated")
 
             # generate files_walkthrough string, with proper token handling
             self.vars, token_handler_only_description_prompt = fit_related_tickets_to_prompt_budget(
@@ -476,6 +536,20 @@ class PRDescription:
                 files_walkthrough_prompt += _build_unprocessed_files_block(
                     deleted_files_list, "Additional deleted files:",
                     max_files=MAX_EXTRA_FILES_TO_PROMPT)
+            filtered_files = getattr(self.git_provider, "get_filtered_diff_file_names", lambda: [])()
+            if isinstance(filtered_files, (list, tuple)) and filtered_files:
+                header_budget = AttemptTokenBudget.for_attempt(
+                    model, token_handler_only_description_prompt,
+                    output_token_reserve=output_token_reserve,
+                )
+                files_walkthrough_prompt = append_filtered_file_names(
+                    files_walkthrough_prompt,
+                    self.git_provider,
+                    header_budget.token_handler,
+                    header_budget.token_handler.prompt_tokens + header_budget.available_tokens(
+                        OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD, preserve_minimum=True, clamp=False,
+                    ),
+                )
             # PR header inference
             get_logger().debug("PR diff only description", artifact=files_walkthrough_prompt)
             prediction_headers = await self._get_prediction(model, patches_diff=files_walkthrough_prompt,
@@ -586,6 +660,47 @@ class PRDescription:
             return original_prediction
 
 
+    def _describe_progress_body(self, line: str) -> str:
+        """Render the temporary description placeholder plus the current chunk progress line."""
+        return f"{DESCRIBE_PROGRESS_COMMENT} {line}" if line else DESCRIBE_PROGRESS_COMMENT
+
+    def _chunk_progress_reporter(self, total: int) -> ChunkProgressReporter | None:
+        """Report chunk progress by rewriting the temporary description comment in place.
+
+        A large-PR describe run makes one model call per file chunk, which can take
+        minutes, so the placeholder is kept current. Returns None when the comment
+        cannot be edited back (output-only providers) or when progress reporting is
+        turned off, which leaves the run with today's frozen placeholder.
+        """
+        comment = getattr(self, "progress_response", None)
+        settings = get_settings()
+        # A single chunk has nothing to report: one "1 of 1" edit is a provider
+        # write with no information, so skip the reporter like /improve does.
+        # A missing comment falls through: create() then serves the check-run
+        # sink alone, which is the only progress channel automatic commands have.
+        if total < 2 or not settings.config.get("publish_output_progress", True):
+            return None
+        return ChunkProgressReporter.create(
+            self.git_provider,
+            comment,
+            DESCRIBE_PROGRESS_COMMENT,
+            total=total,
+            body_builder=self._describe_progress_body,
+            label="description",
+        )
+
+    async def _describe_chunk(self, progress, model: str, patches_diff: str) -> str:
+        """Describe one file chunk, then advance the in-place progress comment it runs under."""
+        try:
+            return await self._get_prediction(
+                model,
+                patches_diff,
+                prompt="pr_description_only_files_prompts",
+            )
+        finally:
+            if progress is not None:
+                await progress.record_settled()
+
     async def _get_prediction(
         self,
         model: str,
@@ -621,7 +736,7 @@ class PRDescription:
             preserve_minimum=True,
         )
         if prompt != "pr_description_only_description_prompts" and fitted.optional_text != patches_diff:
-            raise ValueError(
+            raise FallbackEligibleError(
                 f"The complete packed description diff does not fit the token limit for {model}"
             )
         variables["diff"] = fitted.optional_text
@@ -684,6 +799,18 @@ class PRDescription:
             return False
         return True
 
+    def _prepare_output_payload(self) -> dict:
+        """Filter generated label fields for external sinks without mutating model data."""
+        payload = dict(self.data or {})
+        for field in ("labels", "type"):
+            if field not in payload:
+                continue
+            values = payload[field]
+            if isinstance(values, str):
+                values = values.split(",")
+            payload[field] = filter_generated_labels(values if isinstance(values, list) else [])
+        return payload
+
     def _prepare_labels(self) -> List[str]:
         pr_labels = []
 
@@ -709,7 +836,7 @@ class PRDescription:
                         pr_labels[i] = d[label_i]
         except Exception as e:
             get_logger().error(f"Error converting labels to original case {self.pr_id}: {e}")
-        return pr_labels
+        return filter_generated_labels(pr_labels)
 
     def _prepare_pr_answer_with_markers(self) -> Tuple[str, str]:
         get_logger().info(f"Using description marker replacements {self.pr_id}")
@@ -820,19 +947,24 @@ class PRDescription:
                     pr_body += f'- `{filename}`: {description}\n'
                 if self.git_provider.is_supported("gfm_markdown"):
                     pr_body += "</details>\n"
-            elif 'pr_files' in key.lower() and get_settings().pr_description.enable_semantic_files_types: # 'File Walkthrough' section
+            elif 'pr_files' in key.lower() and get_settings().pr_description.enable_semantic_files_types:
+                # 'File Walkthrough' section
                 changes_walkthrough_table = self.process_pr_files_prediction(changes_walkthrough, value)
                 if get_settings().pr_description.get('file_table_collapsible_open_by_default', False):
                     initial_status = " open"
                 else:
                     initial_status = ""
-                changes_walkthrough = f"<details{initial_status}> <summary><h3> {PRDescriptionHeader.FILE_WALKTHROUGH.value}</h3></summary>\n\n"
+                changes_walkthrough = (
+                    f"<details{initial_status}> <summary><h3> "
+                    f"{PRDescriptionHeader.FILE_WALKTHROUGH.value}</h3></summary>\n\n"
+                )
                 changes_walkthrough += f"{changes_walkthrough_table}\n\n"
                 changes_walkthrough += "</details>\n\n"
             elif key.lower().strip() == 'description':
                 if isinstance(value, list):
                     value = ', '.join(v.rstrip() for v in value)
-                value = value.replace('\n-', '\n\n-').strip() # makes the bullet points more readable by adding double space
+                # Makes the bullet points more readable by adding double space
+                value = value.replace('\n-', '\n\n-').strip()
                 pr_body += f"{value}\n"
             else:
                 # if the value is a list, join its items by comma
@@ -858,8 +990,10 @@ class PRDescription:
                                          artifact={"file": file})
                     continue
                 if not file.get('changes_title'):
-                    get_logger().warning(f"Empty changes title or summary in file label dict {self.pr_id}, skipping file",
-                                         artifact={"file": file})
+                    get_logger().warning(
+                        f"Empty changes title or summary in file label dict {self.pr_id}, skipping file",
+                        artifact={"file": file},
+                    )
                     continue
                 filename = file['filename'].replace("'", "`").replace('"', '`')
                 changes_summary = file.get('changes_summary', "")
@@ -911,7 +1045,9 @@ class PRDescription:
                     filename_publish = filename.split("/")[-1]
                     if file_changes_title and file_changes_title.strip() != "...":
                         file_changes_title_code = f"<code>{file_changes_title}</code>"
-                        file_changes_title_code_br = insert_br_after_x_chars(file_changes_title_code, x=(delta - 5)).strip()
+                        file_changes_title_code_br = (
+                        insert_br_after_x_chars(file_changes_title_code, x=(delta - 5)).strip()
+                    )
                         if len(file_changes_title_code_br) < (delta - 5):
                             file_changes_title_code_br += "&nbsp; " * ((delta - 5) - len(file_changes_title_code_br))
                         filename_publish = f"<strong>{filename_publish}</strong><dd>{file_changes_title_code_br}</dd>"

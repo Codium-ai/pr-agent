@@ -1,25 +1,40 @@
 import base64
+import json
 import os
 import re
 import shutil
 import subprocess
 import time
 from abc import ABC, abstractmethod
-from collections.abc import Iterable
-from typing import Optional, Tuple
+from collections.abc import Iterable, Iterator
+from dataclasses import dataclass, field
+from functools import wraps
+from typing import Any, Optional, Tuple
 from urllib.parse import urlsplit
 
 from pr_agent.algo.comment_identity import (
+    PRCommandNoticeIdentity,
     add_pr_review_identity,
     comment_carries_other_identity,
     comment_matches_identity,
     render_hidden_marker,
 )
-from pr_agent.algo.language_handler import numeric_languages
+from pr_agent.algo.inline_comment_dedup import strip_markers
+from pr_agent.algo.language_handler import build_language_file_matcher, numeric_languages
 from pr_agent.algo.types import FilePatchInfo
 from pr_agent.algo.utils import Range, process_description
 from pr_agent.config_loader import get_settings
 from pr_agent.log import get_logger
+
+
+def cache_languages(get_languages):
+    """Cache non-empty language results per provider instance."""
+    @wraps(get_languages)
+    def wrapper(self):
+        if not getattr(self, "_languages", None):
+            self._languages = get_languages(self)
+        return self._languages
+    return wrapper
 
 
 def get_config_branch() -> str:
@@ -36,13 +51,115 @@ def get_config_branch() -> str:
 
 MAX_FILES_ALLOWED_FULL = 50
 
+DEFAULT_DISCUSSION_CONTEXT_CHARS = 24000
+DISCUSSION_CONTEXT_MAX_REPLIES = 10
+DISCUSSION_CONTEXT_MAX_THREADS = 50
+DISCUSSION_CONTEXT_MAX_MESSAGE_CHARS = 750
 
-class IncompletePullRequestFilesError(RuntimeError):
-    """Represent an incomplete or inconsistent pull-request file set."""
+
+@dataclass
+class CodeSuggestionThread:
+    """One prior code-suggestion thread, as a provider reports it for the /improve discussion context.
+
+    `suggestion` is the raw opener body. `replies` holds (author, message) pairs, oldest first, with
+    provider-specific noise (system notes, progress messages) already removed. `authored_by_agent` is
+    None when the provider cannot verify who opened the thread.
+    """
+    thread_id: Any
+    status: Any
+    file: Optional[str]
+    start_line: Optional[int]
+    end_line: Optional[int]
+    suggestion: str
+    replies: list[tuple[str, str]] = field(default_factory=list)
+    authored_by_agent: Optional[bool] = None
+
+    def text_replies(self) -> list[tuple[str, str]]:
+        """Return the replies that have a non-blank text message, stripped."""
+        return [(author, message.strip()) for author, message in self.replies
+                if isinstance(message, str) and message.strip()]
+
+
+def _discussion_context_budget() -> int:
+    value = get_settings().get("pr_code_suggestions.max_discussion_context_chars", DEFAULT_DISCUSSION_CONTEXT_CHARS)
+    try:
+        return int(value)
+    except (TypeError, ValueError, OverflowError):
+        get_logger().warning(f"Invalid pr_code_suggestions.max_discussion_context_chars: {value!r}")
+        return DEFAULT_DISCUSSION_CONTEXT_CHARS
+
+
+class IncompleteProviderPullRequestFilesError(RuntimeError):
+    """Provider-neutral base for incomplete-file failures with public notices."""
+
+    notice: str
+    notice_marker: str
+
+
+class IncompletePullRequestFilesError(IncompleteProviderPullRequestFilesError):
+    """Represent an incomplete or inconsistent GitHub pull-request file set."""
+
+    notice = (
+        "## PR-Agent command was not run\n\n"
+        "GitHub returned an incomplete or inconsistent changed-file set for this pull request, so PR-Agent stopped "
+        "instead of analyzing only part of it.\n\n"
+        "GitHub limits changed-file responses to 3,000 files. If this pull request changes more than 3,000 files, "
+        "split it into smaller pull requests and run the command again. Otherwise, retry the command."
+    )
+    notice_marker = "<!-- pr-agent:github-incomplete-files -->"
+
+
+class IncompleteBitbucketPullRequestFilesError(IncompleteProviderPullRequestFilesError):
+    """Represent Bitbucket aggregate patches that cannot align with its changed-file inventory."""
+
+    notice = (
+        "## PR-Agent command was not run\n\n"
+        "Bitbucket returned an incomplete or inconsistent pull-request diff, so PR-Agent stopped "
+        "instead of treating it as an empty change.\n\n"
+        "Retry the command and check the pull request's diff in Bitbucket if the problem persists."
+    )
+    notice_marker = PRCommandNoticeIdentity.INCOMPLETE_BITBUCKET_FILES.value
+
+
+@dataclass(frozen=True)
+class FileContentSnapshot:
+    """Capture file contents and existence at one revision for a guarded write.
+
+    The revision is opaque and provider-owned; consumers must not interpret or refresh it.
+    """
+    contents: str
+    exists: bool
+    revision: str | None
+
+
+class ConcurrentFileUpdateError(RuntimeError):
+    """Signal that a file no longer matches the snapshot used to prepare its replacement."""
 
 
 _URL_USERINFO_RE = re.compile(r"(?P<scheme>[a-zA-Z][a-zA-Z0-9+.\-]{0,30}://)[^/@\s]+@")
-_AUTH_HEADER_RE = re.compile(r"(?i)(authorization\s*:\s*(?:bearer|basic|token)\s+)\S+")
+_AUTH_HEADER_RE = re.compile(
+    r"(?i)(authorization[ \t]*:[ \t]*[A-Za-z][A-Za-z0-9_-]*[ \t]++)"
+    r"(?!<redacted>[ \t]*(?:[\r\n]|$))[^\r\n]+"
+)
+_CREDENTIAL_ASSIGNMENT_RE = re.compile(
+    r"(?i)((?<![a-z0-9])(?:aws_secret_access_key|aws_session_token|aws_access_key_id|"
+    r"secretaccesskey|sessiontoken|accesskeyid|github_token|gitlab_token|ci_job_token|openai_key|openai_api_key|"
+    r"user_token|personal_access_token|bearer_token|basic_token|api_token|api_key|pat|client_secret|"
+    r"webhook_secret|shared_secret|webhook_password)\b[\"']?[ \t]*[:=][ \t]*)"
+    r"(\"(?:\\[^\r\n]|[^\"\\\r\n])*(?:\"|\\?(?=[\r\n]|\Z))|"
+    r"'(?:\\[^\r\n]|[^'\\\r\n])*(?:'|\\?(?=[\r\n]|\Z))|[^\s\"']+)"
+)
+_GITLAB_TOKEN_RE = re.compile(r"\bglpat-[A-Za-z0-9_-]+")
+_AWS_ACCESS_KEY_RE = re.compile(r"\b(?:A3T[A-Z0-9]|AKIA|ASIA)[A-Z0-9]{16}\b")
+# Bare tokens carry no context (no URL, header, or keyword assignment), so they are matched by
+# their documented provider formats. Minimum lengths keep ordinary words and short identifiers
+# from matching; the shapes follow the providers' published token formats.
+_GITHUB_TOKEN_RE = re.compile(r"\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{36,255}\b")
+_GITHUB_FINE_GRAINED_PAT_RE = re.compile(r"\bgithub_pat_[A-Za-z0-9_]{36,255}\b")
+_ANTHROPIC_KEY_RE = re.compile(r"\bsk-ant-[A-Za-z0-9_-]{32,255}\b")
+_OPENAI_KEY_RE = re.compile(r"\bsk-(?:proj|svcacct|admin)-[A-Za-z0-9_-]{32,255}\b|\bsk-[A-Za-z0-9]{40,255}\b")
+_GOOGLE_API_KEY_RE = re.compile(r"\bAIza[A-Za-z0-9_-]{32,42}(?![A-Za-z0-9_-])")
+_SLACK_TOKEN_RE = re.compile(r"\bxox[a-z]-[0-9A-Za-z-]{10,255}\b|\bxapp-[0-9A-Za-z-]{10,255}\b")
 
 
 # The reaction PR-Agent has always added when it picks a comment command up. Used as the
@@ -61,11 +178,46 @@ def get_reaction_setting(name: str, default: str = "") -> str:
     return value.strip() if isinstance(value, str) else ""
 
 
-def redact_credentials(text) -> str:
+def _redact_credential_assignment(match: re.Match) -> str:
+    value = match.group(2)
+    quote = value[0] if value[0] in "\"'" else ""
+    closed = bool(quote and len(value) > 1 and value.endswith(quote))
+    credential = value[1:-1] if closed else value[1:] if quote else value
+    if not credential.strip() or credential.strip().lower() == "<redacted>":
+        return match.group(0)
+    return match.group(1) + quote + "<redacted>" + (quote if closed else "")
+
+
+def redact_credentials(text, *, redaction_counts: dict[str, int] | None = None) -> str:
     if not text:
         return ""
-    redacted = _URL_USERINFO_RE.sub(lambda m: m.group("scheme"), str(text))
-    return _AUTH_HEADER_RE.sub(lambda m: m.group(1) + "<redacted>", redacted)
+    redacted = str(text)
+    for kind, pattern, replacement in (
+        ("url_userinfo", _URL_USERINFO_RE, lambda m: m.group("scheme")),
+        ("authorization_header", _AUTH_HEADER_RE, lambda m: m.group(1) + "<redacted>"),
+        ("credential_assignment", _CREDENTIAL_ASSIGNMENT_RE, _redact_credential_assignment),
+        ("gitlab_token", _GITLAB_TOKEN_RE, "<redacted>"),
+        ("aws_access_key", _AWS_ACCESS_KEY_RE, "<redacted>"),
+        ("github_token", _GITHUB_TOKEN_RE, "<redacted>"),
+        ("github_fine_grained_pat", _GITHUB_FINE_GRAINED_PAT_RE, "<redacted>"),
+        ("anthropic_key", _ANTHROPIC_KEY_RE, "<redacted>"),
+        ("openai_key", _OPENAI_KEY_RE, "<redacted>"),
+        ("google_api_key", _GOOGLE_API_KEY_RE, "<redacted>"),
+        ("slack_token", _SLACK_TOKEN_RE, "<redacted>"),
+    ):
+        count = 0
+
+        def counted_replacement(match, replacement=replacement):
+            nonlocal count
+            result = replacement(match) if callable(replacement) else replacement
+            if result != match.group(0):
+                count += 1
+            return result
+
+        redacted = pattern.sub(counted_replacement, redacted)
+        if count and redaction_counts is not None:
+            redaction_counts[kind] = redaction_counts.get(kind, 0) + count
+    return redacted
 
 
 def _clone_authorization_header(repo_url: str) -> str | None:
@@ -146,10 +298,12 @@ def get_git_ssl_env() -> dict[str, str]:
                                   artifact={"ssl_cert_file": ssl_cert_file, "requests_ca_bundle": requests_ca_bundle,
                                             'git_ssl_ca_info': git_ssl_ca_info})
             else:
-                get_logger().info("Using SSL certificate bundle for git operations", artifact={"ssl_cert_file": ssl_cert_file})
+                get_logger().info("Using SSL certificate bundle for git operations",
+                                  artifact={"ssl_cert_file": ssl_cert_file})
             chosen_cert_file = ssl_cert_file
         else:
-            get_logger().warning("SSL certificate bundle not found for git operations", artifact={"ssl_cert_file": ssl_cert_file})
+            get_logger().warning("SSL certificate bundle not found for git operations",
+                                 artifact={"ssl_cert_file": ssl_cert_file})
 
     # Fallback to REQUESTS_CA_BUNDLE
     elif requests_ca_bundle:
@@ -163,7 +317,8 @@ def get_git_ssl_env() -> dict[str, str]:
                                   artifact={"requests_ca_bundle": requests_ca_bundle})
             chosen_cert_file = requests_ca_bundle
         else:
-            get_logger().warning("requests CA bundle not found for git operations", artifact={"requests_ca_bundle": requests_ca_bundle})
+            get_logger().warning("requests CA bundle not found for git operations",
+                                 artifact={"requests_ca_bundle": requests_ca_bundle})
 
     #Fallback to GIT CA:
     elif git_ssl_ca_info:
@@ -172,10 +327,12 @@ def get_git_ssl_env() -> dict[str, str]:
                               artifact={"git_ssl_ca_info": git_ssl_ca_info})
             chosen_cert_file = git_ssl_ca_info
         else:
-            get_logger().warning("git SSL CA info not found for git operations", artifact={"git_ssl_ca_info": git_ssl_ca_info})
+            get_logger().warning("git SSL CA info not found for git operations",
+                                 artifact={"git_ssl_ca_info": git_ssl_ca_info})
 
     else:
-        get_logger().warning("Neither SSL_CERT_FILE nor REQUESTS_CA_BUNDLE nor GIT_SSL_CAINFO are defined, or they are defined but not found. Returning environment without SSL configuration")
+        get_logger().warning("Neither SSL_CERT_FILE nor REQUESTS_CA_BUNDLE nor GIT_SSL_CAINFO are defined, "
+                             "or they are defined but not found. Returning environment without SSL configuration")
 
     returned_env = os.environ.copy()
     if chosen_cert_file:
@@ -184,9 +341,23 @@ def get_git_ssl_env() -> dict[str, str]:
 
 
 class GitProvider(ABC):
+    def get_request_policy_metadata(self, required_fields: set[str]) -> dict:
+        """Return policy fields; None means unknown, empty values mean not applicable.
+
+        Omit unavailable fields or return None; only their rules are skipped.
+        Read expensive fields (such as labels) only when requested. Lookup errors
+        are handled by the policy layer, which allows the request to continue.
+        """
+        return {}
+
     @abstractmethod
     def is_supported(self, capability: str) -> bool:
         pass
+
+    def reset_diff_cache_for_command(self) -> None:
+        """Reset diff state that should not survive an automatic command boundary."""
+        if getattr(self, "diff_files", None) == []:
+            self.diff_files = None
 
     def supports_incremental_kind(self, kind: str) -> bool:
         """Whether `get_incremental_commits()` can scope an incremental run to `kind`
@@ -222,6 +393,54 @@ class GitProvider(ABC):
 
     def supports_code_suggestion_state(self) -> bool:
         return False
+
+    def get_code_suggestion_thread_context(self) -> str:
+        """Return prior code-suggestion threads as a JSON block for the /improve prompt.
+
+        Threads come newest first from `_iter_code_suggestion_threads()`. The block stays within
+        `pr_code_suggestions.max_discussion_context_chars` (0 disables it) and is empty when no thread fits.
+        """
+        budget = _discussion_context_budget()
+        if budget <= 0:
+            return ""
+        discussions, context = [], ""
+        for thread in self._iter_code_suggestion_threads():
+            if thread.authored_by_agent is False:
+                continue
+            replies = thread.text_replies()
+            discussion = {
+                "thread_id": thread.thread_id,
+                "status": thread.status,
+                "file": thread.file,
+                "start_line": thread.start_line,
+                "end_line": thread.end_line,
+                "suggestion": strip_markers(thread.suggestion).strip()[:DISCUSSION_CONTEXT_MAX_MESSAGE_CHARS],
+                "replies": [{"author": author or "Unknown", "message": message[:DISCUSSION_CONTEXT_MAX_MESSAGE_CHARS]}
+                            for author, message in replies[-DISCUSSION_CONTEXT_MAX_REPLIES:]],
+            }
+            candidate = json.dumps(discussions + [discussion], ensure_ascii=False, indent=2)
+            if len(candidate) > budget:
+                break
+            discussions.append(discussion)
+            context = candidate
+            if len(discussions) >= DISCUSSION_CONTEXT_MAX_THREADS:
+                break
+        return context
+
+    def _iter_code_suggestion_threads(self) -> Iterator[CodeSuggestionThread]:
+        """Yield prior code-suggestion threads, newest first. Providers with suggestion state override this.
+
+        Inline /review key-issue threads carry the same dedup marker, so a provider may yield them too;
+        /review reads them to learn which findings a human resolved."""
+        return iter(())
+
+    def _iter_review_threads(self) -> Iterator[CodeSuggestionThread]:
+        """Yield review threads with eligible dismissals reported as `resolved`.
+
+        Default to the existing iterator so GitLab and unsupported providers keep their behavior.
+        Providers may override this without expanding the /improve discussion context.
+        """
+        return self._iter_code_suggestion_threads()
 
     def supports_threaded_pr_questions(self) -> bool:
         return False
@@ -290,14 +509,19 @@ class GitProvider(ABC):
         """Tickets come from work items the platform links to the PR itself."""
         return False
 
-    #Given a url (issues or PR/MR) - get the .git repo url to which they belong. Needs to be implemented by the provider.
+    #Given a url (issues or PR/MR) - get the .git repo url to which they belong.
+    #Needs to be implemented by the provider.
     def get_git_repo_url(self, issues_or_pr_url: str) -> str:
         get_logger().warning("Not implemented! Returning empty url")
         return ""
 
-    # Given a git repo url, return prefix and suffix of the provider in order to view a given file belonging to that repo. Needs to be implemented by the provider.
-    # For example: For a git: https://git_provider.com/MY_PROJECT/MY_REPO.git and desired branch: <MY_BRANCH> then it should return ('https://git_provider.com/projects/MY_PROJECT/repos/MY_REPO/.../<MY_BRANCH>', '?=<SOME HEADER>')
-    # so that to properly view the file: docs/readme.md -> <PREFIX>/docs/readme.md<SUFFIX> -> https://git_provider.com/projects/MY_PROJECT/repos/MY_REPO/<MY_BRANCH>/docs/readme.md?=<SOME HEADER>)
+    # Given a git repo url, return prefix and suffix of the provider in order to view a given
+    # file belonging to that repo. Needs to be implemented by the provider.
+    # For example: For a git: https://git_provider.com/MY_PROJECT/MY_REPO.git and desired branch:
+    # <MY_BRANCH> then it should return
+    # ('https://git_provider.com/projects/MY_PROJECT/repos/MY_REPO/.../<MY_BRANCH>', '?=<SOME HEADER>')
+    # so that to properly view the file: docs/readme.md -> <PREFIX>/docs/readme.md<SUFFIX> ->
+    # https://git_provider.com/projects/MY_PROJECT/repos/MY_REPO/<MY_BRANCH>/docs/readme.md?=<SOME HEADER>)
     def get_canonical_url_parts(self, repo_git_url:str, desired_branch:str) -> Tuple[str, str]:
         get_logger().warning("Not implemented! Returning empty prefix and suffix")
         return ("", "")
@@ -307,7 +531,8 @@ class GitProvider(ABC):
     #An object which ensures deletion of a cloned repo, once it becomes out of scope.
     # Example usage:
     #    with TemporaryDirectory() as tmp_dir:
-    #            returned_obj: GitProvider.ScopedClonedRepo = self.git_provider.clone(self.repo_url, tmp_dir, remove_dest_folder=False)
+    #            returned_obj: GitProvider.ScopedClonedRepo = self.git_provider.clone(
+    #                self.repo_url, tmp_dir, remove_dest_folder=False)
     #            print(returned_obj.path) #Use returned_obj.path.
     #    #From this point, returned_obj.path may be deleted at any point and therefore must not be used.
     class ScopedClonedRepo(object):
@@ -318,7 +543,8 @@ class GitProvider(ABC):
             if self.path and os.path.exists(self.path):
                 shutil.rmtree(self.path, ignore_errors=True)
 
-    #Method to allow implementors to manipulate the repo url to clone (such as embedding tokens in the url string). Needs to be implemented by the provider.
+    #Method to allow implementors to manipulate the repo url to clone (such as embedding tokens
+    #in the url string). Needs to be implemented by the provider.
     def _prepare_clone_url_with_token(self, repo_url_to_clone: str) -> str | None:
         get_logger().warning("Not implemented! Returning None")
         return None
@@ -335,11 +561,11 @@ class GitProvider(ABC):
             )
             ssl_env = os.environ.copy()
 
-        # Keep the credential out of every git argv: clone the redacted URL and resend the
+        # Keep the credential out of every git argv: remove URL userinfo and resend the
         # token as an http.extraHeader through the GIT_CONFIG_* environment. Git applies
         # that config to the subprocesses it spawns (including git-remote-http) without
         # putting the credential on any command line.
-        clean_repo_url = redact_credentials(repo_url)
+        clean_repo_url = _URL_USERINFO_RE.sub(lambda match: match.group("scheme"), repo_url)
         authorization_header = _clone_authorization_header(repo_url)
         if clean_repo_url != repo_url and authorization_header is not None:
             inherited_count = int(ssl_env.get("GIT_CONFIG_COUNT", "0"))
@@ -408,8 +634,12 @@ class GitProvider(ABC):
     def get_diff_files(self) -> list[FilePatchInfo]:
         pass
 
-    def get_incremental_commits(self, is_incremental):
-        pass
+    def get_filtered_diff_file_names(self) -> list[str]:
+        """Return changed paths omitted from the diff by file-type filtering."""
+        return getattr(self, "filtered_diff_file_names", [])
+
+    def get_incremental_commits(self, is_incremental) -> None:
+        return None
 
     @abstractmethod
     def publish_description(self, pr_title: str, pr_body: str) -> None:
@@ -423,9 +653,58 @@ class GitProvider(ABC):
         # title in that case.
         pass
 
-    @abstractmethod
     def publish_code_suggestions(self, code_suggestions: list) -> bool:
-        pass
+        """Publish code suggestions through provider-specific preparation and payload hooks."""
+        post_parameters_list = []
+        for suggestion in self._prepare_code_suggestions(code_suggestions):
+            suggestion = self._prepare_code_suggestion(suggestion)
+            if not suggestion:
+                continue
+            if not self._is_valid_code_suggestion(suggestion):
+                continue
+            post_parameters = self._build_code_suggestion_payload(suggestion)
+            if not post_parameters:
+                continue
+            post_parameters_list.append(post_parameters)
+
+        try:
+            return bool(self.publish_inline_comments(post_parameters_list))
+        except self._code_suggestion_publish_exceptions as e:
+            self._log_code_suggestion_publish_error(e)
+            return False
+
+    _code_suggestion_publish_exceptions = (Exception,)
+
+    def _prepare_code_suggestions(self, code_suggestions: list) -> list:
+        return code_suggestions
+
+    def _prepare_code_suggestion(self, suggestion: dict) -> dict | None:
+        return suggestion
+
+    def _is_valid_code_suggestion(self, suggestion: dict) -> bool:
+        relevant_lines_start = suggestion["relevant_lines_start"]
+        relevant_lines_end = suggestion["relevant_lines_end"]
+        if not relevant_lines_start or relevant_lines_start == -1:
+            self._log_invalid_code_suggestion(
+                f"Failed to publish code suggestion, relevant_lines_start is {relevant_lines_start}"
+            )
+            return False
+        if relevant_lines_end < relevant_lines_start:
+            self._log_invalid_code_suggestion(
+                f"Failed to publish code suggestion, relevant_lines_end is {relevant_lines_end} and "
+                f"relevant_lines_start is {relevant_lines_start}"
+            )
+            return False
+        return True
+
+    def _build_code_suggestion_payload(self, suggestion: dict) -> dict | None:
+        raise NotImplementedError
+
+    def _log_invalid_code_suggestion(self, message: str) -> None:
+        get_logger().exception(message)
+
+    def _log_code_suggestion_publish_error(self, error: Exception) -> None:
+        get_logger().error(f"Failed to publish code suggestion, error: {error}")
 
     @abstractmethod
     def get_languages(self):
@@ -444,10 +723,10 @@ class GitProvider(ABC):
         pass
 
     def edit_comment(self, comment, body: str):
-        pass
+        return None
 
     def reply_to_comment_from_comment_id(self, comment_id: int, body: str):
-        pass
+        return None
 
     def get_pr_description(self, full: bool = True, split_changes_walkthrough=False) -> str | tuple:
         from pr_agent.algo.token_budget import clip_tokens
@@ -482,11 +761,13 @@ class GitProvider(ABC):
         # return nothing (empty string) because it means there is no user description
         user_description_header = "### **user description**"
         if user_description_header not in description_lowercase:
-            get_logger().info("Existing description was generated by the pr-agent, but it doesn't contain a user description")
+            get_logger().info("Existing description was generated by the pr-agent, "
+                              "but it doesn't contain a user description")
             return ""
 
         # otherwise, extract the original user description from the existing pr-agent description and return it
-        # user_description_start_position = description_lowercase.find(user_description_header) + len(user_description_header)
+        # user_description_start_position = description_lowercase.find(user_description_header)
+        #     + len(user_description_header)
         # return description[user_description_start_position:].split("\n", 1)[-1].strip()
 
         # the 'user description' is in the beginning. extract and return it
@@ -511,8 +792,14 @@ class GitProvider(ABC):
         return original_user_description
 
     def _possible_headers(self):
-        return ("### **user description**", "### **pr type**", "### **pr description**", "### **pr labels**", "### **type**", "### **description**",
-                "### **labels**", "### 🤖 generated by pr agent")
+        return ("### **user description**",
+                "### **pr type**",
+                "### **pr description**",
+                "### **pr labels**",
+                "### **type**",
+                "### **description**",
+                "### **labels**",
+                "### 🤖 generated by pr agent")
 
     # Headers that are unique to pr-agent output; humans never write these
     # naturally, so they can safely be matched anywhere in the body.
@@ -542,7 +829,8 @@ class GitProvider(ABC):
         # For generic headers (type, description, labels), require startswith
         # to avoid misclassifying human descriptions that happen to contain
         # one of these common markdown headings.
-        return any(description_lowercase.startswith(header) for header in possible_headers if header not in self._UNIQUE_PR_AGENT_HEADERS)
+        return any(description_lowercase.startswith(header) for header in possible_headers
+                   if header not in self._UNIQUE_PR_AGENT_HEADERS)
 
     @abstractmethod
     def get_repo_settings(self):
@@ -568,14 +856,14 @@ class GitProvider(ABC):
         the provider has no organisation-level home for global settings.
 
         This is the hook that `_get_global_repo_settings` uses to decide which
-        namespace's `pr-agent-settings` repository (or equivalent) to consult.
+        namespace's `config.global_settings_repo` repository to consult.
         Providers that support global settings override this; the default is None,
         which disables global settings for the provider.
         """
         return None
 
     def _get_global_repo_settings(self):
-        """Load the namespace-wide `pr-agent-settings` .pr_agent.toml, if enabled.
+        """Load the namespace-wide `config.global_settings_repo` .pr_agent.toml, if set.
 
         This is a concrete template: it gates on `use_global_settings_file`, resolves
         the owning namespace via `get_owning_namespace()`, and delegates the actual
@@ -586,12 +874,13 @@ class GitProvider(ABC):
         """
         if not get_settings().config.use_global_settings_file:
             return ""
+        settings_repo = get_settings().config.global_settings_repo
         namespace = self.get_owning_namespace()
-        if not namespace:
+        if not settings_repo or not namespace:
             return ""
         return get_cached_global_settings(
             self._get_global_settings_cache_key(namespace),
-            lambda: self._fetch_global_repo_settings(namespace))
+            lambda: self._fetch_global_repo_settings(namespace, settings_repo))
 
     def _get_global_settings_cache_key(self, namespace: str) -> str:
         """Cache key for a namespace's global settings.
@@ -601,14 +890,22 @@ class GitProvider(ABC):
         """
         return f"{type(self).__name__}:{namespace}"
 
-    def _fetch_global_repo_settings(self, namespace: str):
-        """Fetch the raw `.pr_agent.toml` from the namespace's `pr-agent-settings`
+    def _fetch_global_repo_settings(self, namespace: str, settings_repo: str):
+        """Fetch the raw `.pr_agent.toml` from the namespace's `settings_repo`
         repository. Return "" for an expected "not found"/no-access result (so it is
         cached) and let transient/unexpected errors propagate. Overridden per provider."""
         return ""
 
     def get_repo_file_content(self, file_path: str, from_default_branch: bool = False):
         return ""
+
+    def get_issue_content(self, repo_obj, issue_number: int):
+        """Fetch issue content within this provider's authorized repository boundary."""
+        raise NotImplementedError("This provider cannot fetch GitHub issue content")
+
+    def get_sibling_repo(self, repo_id: str):
+        """Resolve a host-approved sibling repository the requester may read."""
+        return None
 
     def get_sibling_repo_file_content(self, repo_id: str, file_path: str, from_default_branch: bool = False):
         """Fetch a single file from a sibling repository in the same namespace/owner.
@@ -689,6 +986,9 @@ class GitProvider(ABC):
     def supports_html_comment_markers(self) -> bool:
         """Return whether HTML comment identity markers render invisibly."""
         return True
+
+    def should_reply_to_trigger_comment(self) -> bool:
+        return False
 
     def supports_review_comment_identity(self) -> bool:
         return False
@@ -846,7 +1146,8 @@ class GitProvider(ABC):
         return self.publish_comment(pr_comment, **({'as_thread': True} if as_thread else {}))
 
     @abstractmethod
-    def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str, original_suggestion=None):
+    def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str,
+                               original_suggestion=None):
         pass
 
     def create_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str,
@@ -874,7 +1175,7 @@ class GitProvider(ABC):
         return ""
 
     def get_review_thread_comments(self, comment_id: int) -> list[dict]:
-        pass
+        return []
 
     #### labels operations ####
     @abstractmethod
@@ -1006,28 +1307,42 @@ def get_main_pr_language(languages, files) -> str:
             return main_language_str
         top_language = max(languages, key=languages.get).lower()
 
-        # validate that the specific commit uses the main language
-        extension_list = []
-        for file in files:
-            if not file:
-                continue
-            if isinstance(file, str):
-                file = FilePatchInfo(base_file=None, head_file=None, patch=None, filename=file)
-            extension_list.append(file.filename.rsplit('.')[-1])
-
-        # get the most common extension
-        most_common_extension = '.' + max(set(extension_list), key=extension_list.count)
+        # Validate that the specific commit uses the main language. Resolve every
+        # filename through the shared classifier instead of its last suffix: a bare
+        # rsplit('.') turned "Config.cmake.in" into ".in", "module.bsl" into ".bsl"
+        # (the map stores the wildcard "*.bsl") and "handler.PY" into ".PY", so none of
+        # them matched and the function returned an empty language.
         try:
             language_extension_map_org = get_settings().language_extension_map_org
-            language_extension_map = {k.lower(): v for k, v in language_extension_map_org.items()}
+            get_language = build_language_file_matcher(language_extension_map_org)
 
-            if top_language in language_extension_map and most_common_extension in language_extension_map[top_language]:
+            language_list = []
+            for file in files:
+                if not file:
+                    continue
+                if isinstance(file, str):
+                    file = FilePatchInfo(base_file=None, head_file=None, patch=None, filename=file)
+                language = get_language(file.filename)
+                if language:
+                    language_list.append(language.lower())
+
+            if not language_list:
+                return main_language_str
+
+            # Count languages rather than suffixes so a stray README does not outvote
+            # the code. dict.fromkeys keeps file order, so a tie resolves the same way
+            # every run.
+            languages_in_diff = dict.fromkeys(language_list)
+            most_common_language = max(
+                languages_in_diff, key=lambda language: language_list.count(language)
+            )
+
+            # Keep the provider's spelling when it agrees with what the diff contains,
+            # and otherwise trust the diff.
+            if most_common_language == top_language:
                 main_language_str = top_language
             else:
-                for language, extensions in language_extension_map.items():
-                    if most_common_extension in extensions:
-                        main_language_str = language
-                        break
+                main_language_str = most_common_language
         except Exception as e:
             get_logger().exception(f"Failed to get main language: {e}")
 

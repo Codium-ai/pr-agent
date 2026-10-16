@@ -37,7 +37,10 @@ def help_tool(tmp_path, monkeypatch):
         "openai.deployment_id": "primary-deployment",
         "openai.fallback_deployments": ["backup-deployment"],
     }
-    snapshot = snapshot_settings([*overrides, "pr_help_prompts.system", "pr_help_prompts.user"])
+    snapshot = snapshot_settings([
+        *overrides, "pr_help_prompts.system", "pr_help_prompts.user",
+        "litellm.custom_llm_provider", "config.custom_model_max_tokens",
+    ])
     for key, value in overrides.items():
         get_settings().set(key, value)
 
@@ -88,7 +91,7 @@ async def test_model_prompt_preserves_question_and_documentation_markup(help_too
 
 async def test_primary_failure_uses_backup_answer(help_tool):
     tool, details, _ = help_tool
-    tool.ai_handler.chat_completion.side_effect = [RuntimeError("primary unavailable"), (ANSWER, "stop")]
+    tool.ai_handler.chat_completion.side_effect = [TimeoutError("primary unavailable"), (ANSWER, "stop")]
 
     await tool.run()
 
@@ -126,7 +129,7 @@ async def test_each_attempt_fits_complete_prompt_for_its_model(help_tool, monkey
 
     monkeypatch.setattr(pr_help_message, "get_max_tokens", model_limit)
     monkeypatch.setattr(pr_help_message, "token_counter", model_token_count)
-    tool.ai_handler.chat_completion.side_effect = [RuntimeError("primary unavailable"), (ANSWER, "stop")]
+    tool.ai_handler.chat_completion.side_effect = [TimeoutError("primary unavailable"), (ANSWER, "stop")]
 
     await tool.run()
 
@@ -166,7 +169,7 @@ async def test_fallback_only_publishes_sources_from_complete_fitted_documents(he
     monkeypatch.setattr(tool, "_get_prompt_budget", lambda model: limits[model])
     monkeypatch.setattr(pr_help_message, "token_counter", count_message_characters)
     tool.ai_handler.chat_completion.side_effect = [
-        RuntimeError("primary unavailable"),
+        TimeoutError("primary unavailable"),
         (
             "response: Use the documented review settings.\n"
             "relevant_sections:\n"
@@ -296,6 +299,17 @@ def test_prompt_budget_uses_handler_reported_output_limit(help_tool, monkeypatch
     tool.ai_handler.get_output_token_limit.assert_called_once_with(PRIMARY)
 
 
+@pytest.mark.parametrize("model", ["gpt-6-sol", "gpt-6-luna", "gpt-6.1-sol"])
+@pytest.mark.parametrize("reserve, expected", [(4096, 922000), (128000, 922000), (200000, 850000)])
+def test_help_budget_honors_native_gpt6_input_ceiling(help_tool, monkeypatch, model, reserve, expected):
+    tool, _, _ = help_tool
+    get_settings().set("litellm.custom_llm_provider", "openai")
+    get_settings().set("config.custom_model_max_tokens", 0)
+    tool.ai_handler.get_output_token_reserve = Mock(return_value=reserve)
+
+    assert tool._get_prompt_budget(model) == expected
+
+
 def test_prompt_budget_uses_handler_reported_output_reserve(help_tool, monkeypatch):
     tool, _, _ = help_tool
     get_settings().set("config.max_output_tokens", 400)
@@ -419,7 +433,7 @@ async def test_local_estimate_overflow_still_tries_providers(help_tool, monkeypa
     monkeypatch.setattr(pr_help_message, "token_counter", Mock(side_effect=RuntimeError("counter unavailable")))
     monkeypatch.setattr(pr_help_message.TokenEncoder, "get_token_encoder", lambda _model: CharacterEncoder())
     tool._prepare_prediction = AsyncMock(wraps=tool._prepare_prediction)
-    tool.ai_handler.chat_completion.side_effect = [RuntimeError("primary unavailable"), (ANSWER, "stop")]
+    tool.ai_handler.chat_completion.side_effect = [TimeoutError("primary unavailable"), (ANSWER, "stop")]
 
     await tool.run()
 
@@ -527,7 +541,7 @@ async def test_fixed_prompt_overhead_skips_model_call_and_tries_larger_fallback(
 
 async def test_all_models_fail_without_publishing_no_information(help_tool):
     tool, details, logger = help_tool
-    tool.ai_handler.chat_completion.side_effect = RuntimeError("provider unavailable")
+    tool.ai_handler.chat_completion.side_effect = TimeoutError("provider unavailable")
 
     assert await tool.run() == ""
 
@@ -578,10 +592,10 @@ async def test_invalid_prompt_reaches_final_failure_boundary(help_tool):
 
     assert await tool.run() == ""
 
-    assert [call.args[0] for call in tool._prepare_prediction.await_args_list] == [PRIMARY, BACKUP]
+    assert [call.args[0] for call in tool._prepare_prediction.await_args_list] == [PRIMARY]
     tool.ai_handler.chat_completion.assert_not_called()
     tool.git_provider.publish_comment.assert_not_called()
     logger.exception.assert_called_once()
-    assert "Failed to generate prediction with any model" in logger.exception.call_args.args[0]
+    assert "missing_variable" in logger.exception.call_args.args[0]
     assert details.model_used is None
     assert get_settings().get("openai.deployment_id") == "primary-deployment"

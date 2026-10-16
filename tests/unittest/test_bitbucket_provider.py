@@ -14,8 +14,14 @@ from pr_agent.algo.comment_identity import (
     PRReviewIdentity,
 )
 from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
+from pr_agent.config_loader import global_settings
 from pr_agent.git_providers import BitbucketServerProvider
-from pr_agent.git_providers.bitbucket_provider import BitbucketProvider
+from pr_agent.git_providers.bitbucket_provider import (
+    BitbucketProvider,
+    _get_identity_request_timeout,
+)
+from pr_agent.git_providers.git_provider import FileContentSnapshot, IncompleteBitbucketPullRequestFilesError
+from pr_agent.git_providers.request_timeout import DEFAULT_HTTP_REQUEST_TIMEOUT
 from pr_agent.tools.pr_code_suggestions import PRCodeSuggestions
 
 
@@ -101,6 +107,73 @@ class TestBitbucketProvider:
 
         assert provider.edit_comment(comment, "updated body") is False
 
+    def test_is_comment_authored_by_pr_agent_uses_authenticated_account_id(self):
+        provider = BitbucketProvider.__new__(BitbucketProvider)
+        provider.headers = {"Authorization": "Bearer token"}
+        comment = SimpleNamespace(
+            body="notice",
+            _cloud_comment=SimpleNamespace(data={"user": {"account_id": "agent-account"}}),
+        )
+        response = MagicMock()
+        response.json.return_value = {"account_id": "agent-account"}
+        with patch("pr_agent.git_providers.bitbucket_provider.requests.request", return_value=response) as request:
+            assert provider.is_comment_authored_by_pr_agent(comment) is True
+            assert provider.is_comment_authored_by_pr_agent(comment) is True
+
+        request.assert_called_once_with(
+            "GET",
+            "https://api.bitbucket.org/2.0/user",
+            headers=provider.headers,
+            timeout=global_settings.get("bitbucket.identity_request_timeout"),
+        )
+        response.raise_for_status.assert_called_once_with()
+
+    @pytest.mark.parametrize("configured_timeout", [12, "12.5"])
+    def test_authenticated_account_lookup_uses_configured_timeout(self, configured_timeout):
+        provider = BitbucketProvider.__new__(BitbucketProvider)
+        provider.headers = {"Authorization": "Bearer token"}
+        response = MagicMock()
+        response.json.return_value = {"account_id": "agent-account"}
+        settings = MagicMock()
+        settings.get.return_value = configured_timeout
+
+        with (
+            patch("pr_agent.git_providers.bitbucket_provider.get_settings", return_value=settings),
+            patch("pr_agent.git_providers.bitbucket_provider.requests.request", return_value=response) as request,
+        ):
+            assert provider._get_authenticated_account_id() == "agent-account"
+
+        request.assert_called_once_with(
+            "GET",
+            "https://api.bitbucket.org/2.0/user",
+            headers=provider.headers,
+            timeout=float(configured_timeout),
+        )
+        settings.get.assert_called_once_with("bitbucket.identity_request_timeout")
+
+    @pytest.mark.parametrize("configured_timeout", [None, "", False, True, 0, -1, float("inf"), float("nan")])
+    def test_identity_request_timeout_rejects_invalid_values(self, configured_timeout):
+        settings = MagicMock()
+        settings.get.return_value = configured_timeout
+
+        with (
+            patch("pr_agent.git_providers.bitbucket_provider.get_settings", return_value=settings),
+            pytest.raises(ValueError, match="positive finite number"),
+        ):
+            _get_identity_request_timeout()
+        settings.get.assert_called_once_with("bitbucket.identity_request_timeout")
+
+    def test_identity_request_timeout_default_is_wired_to_configuration(self):
+        assert global_settings.get("bitbucket.identity_request_timeout") == 30
+        assert _get_identity_request_timeout() == 30
+
+    def test_is_comment_authored_by_pr_agent_rejects_foreign_or_unverifiable_comment(self):
+        provider = BitbucketProvider.__new__(BitbucketProvider)
+        provider._agent_account_id = "agent-account"
+        assert provider.is_comment_authored_by_pr_agent({"user": {"account_id": "other-account"}}) is False
+        with pytest.raises(RuntimeError, match="comment author"):
+            provider.is_comment_authored_by_pr_agent({"user": {}})
+
     def test_edit_comment_updates_the_payload_returned_by_publish_comment(self):
         # publish_comment returns the raw API payload, which carries no update method of its own,
         # so the edit has to reach Bitbucket through the pull request endpoint.
@@ -158,6 +231,46 @@ class TestBitbucketProvider:
         ):
             provider.publish_description("AI title", "Updated description")
 
+    @pytest.mark.parametrize("status_code,content", [(200, "old content"), (200, ""), (404, "not found")])
+    def test_file_snapshot_reads_immutable_source_commit(self, status_code, content):
+        provider = self._source_write_provider()
+        provider.pr = MagicMock()
+        provider.pr.source_branch = "feature"
+        provider.pr.data = {"source": {"commit": {"hash": "a1b2c3d4e5f6"}}}
+        response = self._source_write_response(status_code)
+        response._content = content.encode("utf-8")
+        with patch("pr_agent.git_providers.bitbucket_provider.requests.request", return_value=response) as request:
+            snapshot = provider.get_pr_file_content_snapshot("CHANGELOG.md", "feature")
+        assert snapshot == FileContentSnapshot(content if status_code != 404 else "", status_code != 404,
+                                               "a1b2c3d4e5f6")
+        request.assert_called_once_with(
+            "GET", "https://api.bitbucket.org/2.0/repositories/workspace/repository/src/"
+            "a1b2c3d4e5f6/CHANGELOG.md", headers=provider.headers,
+            timeout=DEFAULT_HTTP_REQUEST_TIMEOUT,
+        )
+
+    def test_file_snapshot_propagates_server_failure(self):
+        provider = self._source_write_provider()
+        provider.pr = MagicMock()
+        provider.pr.source_branch = "feature"
+        provider.pr.data = {"source": {"commit": {"hash": "captured-source-commit"}}}
+        response = self._source_write_response(500)
+        with patch("pr_agent.git_providers.bitbucket_provider.requests.request", return_value=response):
+            with pytest.raises(HTTPError) as raised:
+                provider.get_pr_file_content_snapshot("CHANGELOG.md", "feature")
+        assert raised.value.response is response
+
+    @pytest.mark.parametrize("revision", [None, ""])
+    def test_file_snapshot_rejects_missing_source_commit(self, revision):
+        provider = self._source_write_provider()
+        provider.pr = MagicMock()
+        provider.pr.source_branch = "feature"
+        provider.pr.data = {"source": {"commit": {"hash": revision}}}
+        with patch("pr_agent.git_providers.bitbucket_provider.requests.request") as request:
+            with pytest.raises(ValueError):
+                provider.get_pr_file_content_snapshot("CHANGELOG.md", "feature")
+        request.assert_not_called()
+
     @pytest.mark.parametrize("status_code", [200, 201, 204])
     def test_publish_description_accepts_success_response(self, status_code):
         provider = BitbucketProvider.__new__(BitbucketProvider)
@@ -177,7 +290,8 @@ class TestBitbucketProvider:
             "pr_agent.git_providers.bitbucket_provider.requests.request", return_value=response
         ) as request:
             result = provider.create_or_update_pr_file(
-                "CHANGELOG.md", "feature", "new content", "Update changelog"
+                "CHANGELOG.md", "feature", "new content", "Update changelog",
+                expected_snapshot=FileContentSnapshot("old", True, "a1b2c3d4e5f6"),
             )
 
         assert result is None
@@ -186,7 +300,10 @@ class TestBitbucketProvider:
             "POST",
             "https://api.bitbucket.org/2.0/repositories/workspace/repository/src/",
         )
-        assert request.call_args.kwargs["data"] == {"message": "Update changelog", "branch": "feature"}
+        # Assert the parent guard only for an existing branch; Bitbucket can recreate a deleted branch.
+        assert request.call_args.kwargs["data"] == {
+            "message": "Update changelog", "branch": "feature", "parents": "a1b2c3d4e5f6"
+        }
         assert request.call_args.kwargs["files"] == {"CHANGELOG.md": "new content"}
         assert set(request.call_args.kwargs["headers"]) == {"Authorization"}
 
@@ -201,7 +318,8 @@ class TestBitbucketProvider:
             pytest.raises(HTTPError) as raised,
         ):
             provider.create_or_update_pr_file(
-                "CHANGELOG.md", "feature", "new content", "Update changelog"
+                "CHANGELOG.md", "feature", "new content", "Update changelog",
+                expected_snapshot=FileContentSnapshot("old", True, "captured-source-commit"),
             )
 
         assert raised.value.response is response
@@ -219,7 +337,8 @@ class TestBitbucketProvider:
             pytest.raises(error_type) as raised,
         ):
             provider.create_or_update_pr_file(
-                "CHANGELOG.md", "feature", "new content", "Update changelog"
+                "CHANGELOG.md", "feature", "new content", "Update changelog",
+                expected_snapshot=FileContentSnapshot("old", True, "captured-source-commit"),
             )
 
         assert raised.value is error
@@ -487,6 +606,66 @@ index 1111111..2222222 100644
         assert diff_files[0].patch.startswith("@@ -1 +1 @@\r\n-old first")
         assert diff_files[1].patch.startswith("@@ -1 +1 @@\r\n-old second")
 
+    @staticmethod
+    def _aggregate_diff_provider(patch_paths):
+        provider = BitbucketProvider.__new__(BitbucketProvider)
+        provider.diff_files = None
+        provider.pr = MagicMock()
+        provider._get_pr_file_content = MagicMock()
+        diffstats = []
+        for filename in ["src/first.py", "src/second.py"]:
+            diffstat = MagicMock()
+            diffstat.new.path = diffstat.old.path = filename
+            diffstat.data = {"status": "modified", "lines_added": 1, "lines_removed": 1}
+            diffstats.append(diffstat)
+        provider.pr.diffstat.return_value = diffstats
+        provider.pr.diff.return_value = "".join(
+            f"diff --git a/{filename} b/{filename}\n"
+            f"--- a/{filename}\n+++ b/{filename}\n@@ -1 +1 @@\n-old\n+new\n"
+            for filename in patch_paths
+        )
+        return provider, diffstats
+
+    @pytest.mark.parametrize("patch_paths", [[], ["src/first.py"],
+                                             ["src/first.py", "src/second.py", "src/third.py"]])
+    def test_get_diff_files_rejects_inconsistent_aggregate_without_recovery_or_cache(self, patch_paths):
+        provider, diffstats = self._aggregate_diff_provider(patch_paths)
+        with patch("pr_agent.git_providers.bitbucket_provider.filter_ignored", return_value=diffstats):
+            with pytest.raises(IncompleteBitbucketPullRequestFilesError, match="changed-file inventory"):
+                provider.get_diff_files()
+
+        provider.pr.diff.assert_called_once_with()
+        provider.pr.diffstat.assert_called_once_with()
+        provider._get_pr_file_content.assert_not_called()
+        assert provider.diff_files is None
+
+    def test_get_diff_files_aligns_ignored_files_before_completeness_check(self):
+        provider, diffstats = self._aggregate_diff_provider(["src/first.py", "src/second.py"])
+        settings = MagicMock()
+        settings.get.return_value = True
+        with (
+            patch("pr_agent.git_providers.bitbucket_provider.filter_ignored", return_value=[diffstats[1]]),
+            patch("pr_agent.git_providers.bitbucket_provider.get_settings", return_value=settings),
+        ):
+            result = provider.get_diff_files()
+
+        assert len(result) == 1
+        assert result[0].filename == "src/second.py"
+        assert result[0].patch == "@@ -1 +1 @@\n-old\n+new\n"
+        assert provider.diff_files is result
+        provider.pr.diff.assert_called_once_with()
+        provider._get_pr_file_content.assert_not_called()
+
+    def test_get_diff_files_retains_filtered_lockfile_name(self):
+        provider, diffstats = self._aggregate_diff_provider(["src/first.py", "src/second.py"])
+        diffstats[0].new.path = "pnpm-lock.yaml"
+        diffstats[0].old.path = "pnpm-lock.yaml"
+        with patch("pr_agent.git_providers.bitbucket_provider.filter_ignored", return_value=diffstats):
+            files = provider.get_diff_files()
+
+        assert [file.filename for file in files] == ["src/second.py"]
+        assert provider.get_filtered_diff_file_names() == ["pnpm-lock.yaml"]
+
     def test_get_repo_file_content_reads_from_target_branch(self):
         # Repo-context files must be read from the PR destination (target) branch,
         # matching the other providers.
@@ -736,6 +915,7 @@ index 1111111..2222222 100644
             provider.bitbucket_comment_api_url,
             data='{"content": {"raw": "looks good"}, "inline": {"to": 42, "path": "src/example.py"}}',
             headers=provider.headers,
+            timeout=DEFAULT_HTTP_REQUEST_TIMEOUT,
         )
 
     def test_publish_inline_comment_resolves_line_text_to_line_number(self):
@@ -753,6 +933,7 @@ index 1111111..2222222 100644
             provider.bitbucket_comment_api_url,
             data='{"content": {"raw": "looks good"}, "inline": {"to": 2, "path": "src/example.py"}}',
             headers=provider.headers,
+            timeout=DEFAULT_HTTP_REQUEST_TIMEOUT,
         )
 
     def test_publish_inline_comment_does_not_post_when_line_text_is_not_in_the_diff(self):
@@ -893,6 +1074,7 @@ index 1111111..2222222 100644
             data='{"content": {"raw": "**Suggestion:** fix it"}, '
                  '"inline": {"start_to": 10, "to": 16, "path": "src/example.py"}}',
             headers=provider.headers,
+            timeout=DEFAULT_HTTP_REQUEST_TIMEOUT,
         )
 
     def test_publish_code_suggestions_keeps_a_single_line_suggestion_on_one_line(self):
@@ -908,6 +1090,7 @@ index 1111111..2222222 100644
             provider.bitbucket_comment_api_url,
             data='{"content": {"raw": "**Suggestion:** fix it"}, "inline": {"to": 2, "path": "src/example.py"}}',
             headers=provider.headers,
+            timeout=DEFAULT_HTTP_REQUEST_TIMEOUT,
         )
 
     @pytest.mark.parametrize("end", [{"line": 7}, {"line": 6}, {"line": None}, {}],
@@ -927,6 +1110,7 @@ index 1111111..2222222 100644
             provider.bitbucket_comment_api_url,
             data='{"content": {"raw": "watch out"}, "inline": {"to": 7, "path": "src/example.py"}}',
             headers=provider.headers,
+            timeout=DEFAULT_HTTP_REQUEST_TIMEOUT,
         )
 
     def test_publish_inline_comments_truncates_a_multi_line_body(self):
@@ -945,6 +1129,7 @@ index 1111111..2222222 100644
             data='{"content": {"raw": "xxxxxxx..."}, '
                  '"inline": {"start_to": 3, "to": 5, "path": "src/example.py"}}',
             headers=provider.headers,
+            timeout=DEFAULT_HTTP_REQUEST_TIMEOUT,
         )
 
     def test_get_issue_comments_normalizes_cloud_comments(self):
@@ -1523,6 +1708,20 @@ class TestBitbucketServerProvider:
         with pytest.raises(HTTPError, match="500 Internal Server Error"):
             provider.get_repo_file_content("AGENTS.md")
 
+    @pytest.mark.parametrize("pr_url", [
+        "https://bb.example.com/projects/AAA/repos/my-repo/pull-requests/5",
+        "https://bb.example.com/projects/AAA/repos/my-repo/pull-requests/5/",
+        "https://bb.example.com/projects/AAA/repos/my-repo/pull-requests/5/overview",
+    ])
+    def test_get_line_link_uses_the_canonical_pr_url(self, pr_url):
+        provider = BitbucketServerProvider.__new__(BitbucketServerProvider)
+        provider.pr_url = pr_url
+        provider.pr_num = 5
+        base = "https://bb.example.com/projects/AAA/repos/my-repo/pull-requests/5/diff#src%2Fa+b.py"
+
+        assert provider.get_line_link("src/a b.py", 12) == f"{base}?t=12"
+        assert provider.get_line_link("src/a b.py", -1) == base
+
     def test_get_languages_returns_language_names(self):
         # get_languages() must key on language NAMES (e.g. "Python"), not raw
         # extensions ("py"): sort_files_by_main_languages() maps names back to
@@ -1714,6 +1913,8 @@ class TestBitbucketServerProvider:
                 '@@ -5,5 +5,5 @@\n to\n emulate\n a\n-real\n+fake\n file\n',
                 'Readme.md',
                 edit_type=EDIT_TYPE.MODIFIED,
+                num_plus_lines=1,
+                num_minus_lines=1,
             )
         ]
 
@@ -1774,6 +1975,8 @@ class TestBitbucketServerProvider:
                 '@@ -5,5 +5,5 @@\n to\n emulate\n a\n-real\n-file\n+fake\n+test\n',
                 'Readme.md',
                 edit_type=EDIT_TYPE.MODIFIED,
+                num_plus_lines=2,
+                num_minus_lines=2,
             )
         ]
 
@@ -1854,6 +2057,8 @@ class TestBitbucketServerProvider:
                 ),
                 'Readme.md',
                 edit_type=EDIT_TYPE.MODIFIED,
+                num_plus_lines=4,
+                num_minus_lines=4,
             )
         ]
 
@@ -1879,6 +2084,8 @@ class TestBitbucketServerProvider:
                 ),
                 'Readme.md',
                 edit_type=EDIT_TYPE.MODIFIED,
+                num_plus_lines=3,
+                num_minus_lines=3,
             )
         ]
 
@@ -1904,6 +2111,8 @@ class TestBitbucketServerProvider:
                 ),
                 'Readme.md',
                 edit_type=EDIT_TYPE.MODIFIED,
+                num_plus_lines=3,
+                num_minus_lines=3,
             )
         ]
 
@@ -1941,6 +2150,7 @@ class TestBitbucketServerGlobalSettings:
         provider = self._make_provider(get_content)
         with patch("pr_agent.git_providers.git_provider.get_settings") as ms:
             ms.return_value.config.use_global_settings_file = True
+            ms.return_value.config.global_settings_repo = "pr-agent-settings"
             result = provider.get_repo_settings()
 
         assert result == [("global", global_content), ("local", local_content)]
@@ -1954,6 +2164,7 @@ class TestBitbucketServerGlobalSettings:
         provider = self._make_provider(get_content)
         with patch("pr_agent.git_providers.git_provider.get_settings") as ms:
             ms.return_value.config.use_global_settings_file = True
+            ms.return_value.config.global_settings_repo = "pr-agent-settings"
             result = provider.get_repo_settings()
 
         assert result == [("local", b"[pr_reviewer]\ntemperature = 0.2\n")]
@@ -1973,6 +2184,7 @@ class TestBitbucketServerGlobalSettings:
         provider = self._make_provider(lambda *a, **k: b"[pr_reviewer]\nnum_max_findings = 5\n")
         with patch("pr_agent.git_providers.git_provider.get_settings") as ms:
             ms.return_value.config.use_global_settings_file = True
+            ms.return_value.config.global_settings_repo = "pr-agent-settings"
             assert provider._get_global_repo_settings() == b"[pr_reviewer]\nnum_max_findings = 5\n"
             assert provider._get_global_repo_settings() == b"[pr_reviewer]\nnum_max_findings = 5\n"  # cached
 
@@ -1997,18 +2209,52 @@ class TestBitbucketGlobalSettings:
     def test_loads_workspace_pr_agent_settings(self):
         provider = self._provider()
         repo_resp = MagicMock(status_code=200)
-        repo_resp.json.return_value = {"mainbranch": {"name": "main"}}
+        repo_resp.json.return_value = {"mainbranch": {"name": "release/1.0"}}
+        ref_resp = MagicMock(status_code=200)
+        ref_resp.json.return_value = {"target": {"hash": "settings-sha"}}
         file_resp = MagicMock(status_code=200)
         file_resp.text = "[pr_reviewer]\nnum_max_findings = 5\n"
         with patch("pr_agent.git_providers.bitbucket_provider.requests.request",
-                   side_effect=[repo_resp, file_resp]) as rq, \
+                   side_effect=[repo_resp, ref_resp, file_resp]) as rq, \
              patch("pr_agent.git_providers.git_provider.get_settings") as ms:
             ms.return_value.config.use_global_settings_file = True
+            ms.return_value.config.global_settings_repo = "pr-agent-settings"
             result = provider._get_global_repo_settings()
         assert result == b"[pr_reviewer]\nnum_max_findings = 5\n"
-        assert rq.call_count == 2  # repo info + file
+        assert rq.call_count == 3  # repo info + default-branch ref + file
         assert "myws/pr-agent-settings" in rq.call_args_list[0].args[1]
-        assert "src/main/.pr_agent.toml" in rq.call_args_list[1].args[1]
+        assert "refs/branches/release%2F1.0" in rq.call_args_list[1].args[1]
+        assert "src/settings-sha/.pr_agent.toml" in rq.call_args_list[2].args[1]
+
+    @pytest.mark.parametrize("status_code", [403, 404])
+    def test_missing_or_inaccessible_default_branch_ref_returns_empty_and_caches(self, status_code):
+        provider = self._provider()
+        repo_resp = MagicMock(status_code=200)
+        repo_resp.json.return_value = {"mainbranch": {"name": "release/1.0"}}
+        ref_resp = MagicMock(status_code=status_code)
+        with patch("pr_agent.git_providers.bitbucket_provider.requests.request",
+                   side_effect=[repo_resp, ref_resp]) as rq, \
+             patch("pr_agent.git_providers.git_provider.get_settings") as ms:
+            ms.return_value.config.use_global_settings_file = True
+            ms.return_value.config.global_settings_repo = "pr-agent-settings"
+            assert provider._get_global_repo_settings() == ""
+            assert provider._get_global_repo_settings() == ""  # served from cache
+        assert rq.call_count == 2
+
+    def test_malformed_default_branch_ref_is_not_cached(self):
+        provider = self._provider()
+        repo_resp = MagicMock(status_code=200)
+        repo_resp.json.return_value = {"mainbranch": {"name": "main"}}
+        ref_resp = MagicMock(status_code=200)
+        ref_resp.json.return_value = {"target": {}}
+        with patch("pr_agent.git_providers.bitbucket_provider.requests.request",
+                   side_effect=[repo_resp, ref_resp, repo_resp, ref_resp]) as rq, \
+             patch("pr_agent.git_providers.git_provider.get_settings") as ms:
+            ms.return_value.config.use_global_settings_file = True
+            ms.return_value.config.global_settings_repo = "pr-agent-settings"
+            assert provider._get_global_repo_settings() == ""
+            assert provider._get_global_repo_settings() == ""
+        assert rq.call_count == 4
 
     def test_no_access_403_returns_empty_and_caches(self):
         # A 403 (no access) is a stable/expected condition like 404: return "" AND cache it.
@@ -2017,6 +2263,7 @@ class TestBitbucketGlobalSettings:
         with patch("pr_agent.git_providers.bitbucket_provider.requests.request", return_value=repo_resp) as rq, \
              patch("pr_agent.git_providers.git_provider.get_settings") as ms:
             ms.return_value.config.use_global_settings_file = True
+            ms.return_value.config.global_settings_repo = "pr-agent-settings"
             assert provider._get_global_repo_settings() == ""
             assert provider._get_global_repo_settings() == ""  # served from cache
         assert rq.call_count == 1
@@ -2028,6 +2275,7 @@ class TestBitbucketGlobalSettings:
                    return_value=repo_resp), \
              patch("pr_agent.git_providers.git_provider.get_settings") as ms:
             ms.return_value.config.use_global_settings_file = True
+            ms.return_value.config.global_settings_repo = "pr-agent-settings"
             assert provider._get_global_repo_settings() == ""
 
     def test_disabled_returns_empty(self):
@@ -2042,26 +2290,50 @@ class TestBitbucketGlobalSettings:
         provider = self._provider()
         repo_resp = MagicMock(status_code=200)
         repo_resp.json.return_value = {"mainbranch": {"name": "main"}}
+        ref_resp = MagicMock(status_code=200)
+        ref_resp.json.return_value = {"target": {"hash": "settings-sha"}}
         file_resp = MagicMock(status_code=200)
         file_resp.text = "[pr_reviewer]\nx = 1\n"
         with patch("pr_agent.git_providers.bitbucket_provider.requests.request",
-                   side_effect=[repo_resp, file_resp]) as rq, \
+                   side_effect=[repo_resp, ref_resp, file_resp]) as rq, \
              patch("pr_agent.git_providers.git_provider.get_settings") as ms:
             ms.return_value.config.use_global_settings_file = True
+            ms.return_value.config.global_settings_repo = "pr-agent-settings"
             provider._get_global_repo_settings()
             provider._get_global_repo_settings()
-        # Two HTTP calls total (first fetch), none on the cached second call.
-        assert rq.call_count == 2
+        # Three HTTP calls total (first fetch), none on the cached second call.
+        assert rq.call_count == 3
 
 
 class TestBitbucketLocalSettingsRobustness:
+    def test_get_repo_settings_reads_local_file_by_destination_commit(self):
+        provider = BitbucketProvider.__new__(BitbucketProvider)
+        provider.workspace_slug = "myws"
+        provider.repo_slug = "myrepo"
+        provider.headers = {"Authorization": "Bearer x"}
+        provider.pr = MagicMock(
+            destination_branch="release/1.0",
+            data={"destination": {"commit": {"hash": "destination-sha"}}},
+        )
+        resp = MagicMock(status_code=200)
+        resp.text = "[pr_reviewer]\nnum_max_findings = 5\n"
+        with patch("pr_agent.git_providers.bitbucket_provider.requests.request", return_value=resp) as rq, \
+             patch("pr_agent.git_providers.git_provider.get_settings") as ms:
+            ms.return_value.config.use_global_settings_file = False
+            result = provider.get_repo_settings()
+        assert result == [("local", b"[pr_reviewer]\nnum_max_findings = 5\n")]
+        assert "src/destination-sha/.pr_agent.toml" in rq.call_args.args[1]
+
     def test_get_repo_settings_ignores_error_response_for_local(self):
         # A non-200/404 response (e.g. 500 error page) must NOT be treated as local TOML content.
         provider = BitbucketProvider.__new__(BitbucketProvider)
         provider.workspace_slug = "myws"
         provider.repo_slug = "myrepo"
         provider.headers = {"Authorization": "Bearer x"}
-        provider.pr = MagicMock(destination_branch="main")
+        provider.pr = MagicMock(
+            destination_branch="main",
+            data={"destination": {"commit": {"hash": "destination-sha"}}},
+        )
         resp = MagicMock(status_code=500)
         resp.text = "<html>internal error</html>"
         with patch("pr_agent.git_providers.bitbucket_provider.requests.request", return_value=resp), \
@@ -2069,3 +2341,93 @@ class TestBitbucketLocalSettingsRobustness:
             ms.return_value.config.use_global_settings_file = False
             result = provider.get_repo_settings()
         assert result == ""
+
+
+def _capture_logs(call, level="DEBUG"):
+    import io
+
+    from pr_agent.log import get_logger
+
+    buffer = io.StringIO()
+    handler_id = get_logger().add(buffer, level=level, format="{message}", colorize=False)
+    try:
+        call()
+    finally:
+        get_logger().remove(handler_id)
+    return buffer.getvalue()
+
+
+@pytest.mark.parametrize("status_code", [401, 429, 500])
+@pytest.mark.parametrize("operation", ["default_branch", "raw_file", "propagated_file"])
+def test_http_error_responses_do_not_become_repository_content(status_code, operation):
+    provider = BitbucketProvider.__new__(BitbucketProvider)
+    provider.workspace_slug = "workspace"
+    provider.repo_slug = "repository"
+    provider.headers = {}
+    provider.pr = SimpleNamespace(source_branch="feature", destination_branch="main")
+    response = Response()
+    response.status_code = status_code
+    response.url = "https://api.bitbucket.org/2.0/repositories/workspace/repository/"
+    response._content = b'{"error": {"message": "request failed"}}'
+
+    def read():
+        with patch("pr_agent.git_providers.bitbucket_provider.requests.request", return_value=response):
+            if operation == "default_branch":
+                assert provider.get_repo_default_branch() == "main"
+            elif operation == "raw_file":
+                assert provider._get_pr_file_content(response.url) == ""
+            else:
+                with pytest.raises(HTTPError):
+                    provider.get_pr_file_content("file.py", "commit")
+
+    logs = _capture_logs(read, level="WARNING")
+    if operation == "propagated_file":
+        assert logs == ""
+    else:
+        assert "HTTPError" in logs
+        assert "request failed" not in logs
+
+
+def _bitbucket_failure(kind):
+    """Return a representative transport failure."""
+
+    if kind == "timeout":
+        return Timeout("read timed out")
+    assert kind == "connection", kind
+    return RequestsConnectionError("connection refused")
+
+
+@pytest.mark.parametrize("failure", ["timeout", "connection"])
+def test_a_failed_default_branch_read_is_reported(failure):
+    """Report transport failures before using the destination branch."""
+
+    provider = BitbucketProvider.__new__(BitbucketProvider)
+    provider.workspace_slug = "workspace"
+    provider.repo_slug = "repository"
+    provider.headers = {"Authorization": "Bearer token"}
+    provider.pr = MagicMock(destination_branch="main")
+
+    def read():
+        with patch("pr_agent.git_providers.bitbucket_provider.requests.request",
+                   side_effect=_bitbucket_failure(failure)):
+            return provider.get_repo_default_branch()
+
+    assert read() == "main", "the fallback still has to happen"
+    assert "Failed to read the default branch" in _capture_logs(read)
+
+
+@pytest.mark.parametrize("failure", ["timeout", "connection"])
+def test_a_failed_file_read_is_reported(failure):
+    """Distinguish failed requests from missing files in the warning."""
+
+    provider = BitbucketProvider.__new__(BitbucketProvider)
+    provider.headers = {"Authorization": "Bearer token"}
+    link = "https://bitbucket.org/workspace/repository/raw/file.py"
+
+    def read():
+        with patch("pr_agent.git_providers.bitbucket_provider.requests.request",
+                   side_effect=_bitbucket_failure(failure)):
+            return provider._get_pr_file_content(link)
+
+    assert read() == ""
+    assert f"Failed to read {link!r}" in _capture_logs(read)

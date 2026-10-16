@@ -1,12 +1,14 @@
-import json
 import os
+import sys
 from collections import Counter
 from typing import List, Optional
 
 from unidiff.errors import UnidiffParseError
 
+from pr_agent.agent.request_policy import policy_metadata
 from pr_agent.algo.comment_identity import format_pr_code_suggestions_header
 from pr_agent.algo.language_handler import build_language_file_matcher
+from pr_agent.algo.review_json_output import write_review_json_output
 from pr_agent.algo.run_output import show_run_details
 from pr_agent.algo.types import FilePatchInfo
 from pr_agent.config_loader import _find_repository_root, get_settings
@@ -28,6 +30,11 @@ class PlainDiffGitProvider(GitProvider):
     (plain_diff.content, plain_diff.output_path, plain_diff.json_output_path).
     Treat the pr_url arg as an ignored sentinel.
     """
+
+    def get_request_policy_metadata(self, required_fields: set[str]) -> dict:
+        # A supplied patch has no PR metadata; its display title is not a PR title.
+        return policy_metadata(title=None, sender="", repo_full_name="",
+                               source_branch="", target_branch="")
 
     def __init__(self, pr_url=None, incremental=False):
         diff_text = get_settings().get("plain_diff.content", None)
@@ -106,7 +113,18 @@ class PlainDiffGitProvider(GitProvider):
         incremental.is_incremental = False
 
     def _write_output(self, content: str):
-        print(content)
+        try:
+            print(content)
+        except UnicodeEncodeError:
+            # Emit UTF-8 bytes when a redirected stdout uses a locale encoding (cp1252 on
+            # Windows) that cannot encode the emoji in tool output, so publishing does not
+            # abort before --output is written.
+            buffer = getattr(sys.stdout, "buffer", None)
+            if buffer is None:
+                raise
+            sys.stdout.flush()
+            buffer.write((content + "\n").encode("utf-8"))
+            buffer.flush()
         if self.output_path:
             # --output is always an explicit user request, so a write failure
             # must surface (fail fast) rather than be silently swallowed.
@@ -126,15 +144,8 @@ class PlainDiffGitProvider(GitProvider):
         return False
 
     def publish_structured_review(self, review: dict):
-        if not self.json_output_path:
-            return
-        try:
-            with open(self.json_output_path, "w", encoding="utf-8") as fh:
-                json.dump(review, fh, indent=2)
-                fh.write("\n")
-        except (OSError, TypeError, ValueError) as e:
-            get_logger().error(f"Failed to write structured review to {self.json_output_path}: {e}")
-            raise
+        if self.json_output_path:
+            write_review_json_output(review, self.json_output_path)
 
     def publish_description(self, pr_title: str, pr_body: str):
         self._write_output(f"{pr_title}\n\n{pr_body}")

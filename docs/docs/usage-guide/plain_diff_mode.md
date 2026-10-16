@@ -1,4 +1,7 @@
-# Plain-diff local mode
+---
+title: "Plain-diff local mode"
+sidebar_position: 12
+---
 
 Run PR-Agent against a raw unified diff with no platform API token and no PR URL.
 Results are printed to stdout (and optionally saved to a file). This suits security-first
@@ -27,7 +30,7 @@ python -m pr_agent.cli --diff-file changes.diff --output review.md review
 | `--stdin` | Read a unified diff from stdin |
 | `--diff-file <path>` | Read a unified diff from a file |
 | `--output <path>` | Write Markdown produced by a compatible Plain Diff command to a file in addition to stdout |
-| `--json-output <path>` | Write the parsed review and token usage to a JSON file (`review` or `review_pr` only) |
+| `--json-output <path>` | Write the parsed review and token usage to a JSON file (`review` or `review_pr` only, also available with `--pr_url`) |
 
 `--stdin` and `--diff-file` are mutually exclusive. At least one must be provided to
 enter plain-diff mode; omitting both falls back to the normal `--pr_url` flow.

@@ -18,8 +18,10 @@ Coverage:
   walkthrough produced by ``process_pr_files_prediction``.
 """
 
+import re
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
+from urllib.parse import unquote, urlsplit
 
 import pytest
 import yaml
@@ -29,7 +31,9 @@ from pr_agent.algo.comment_identity import PRDescriptionHeader
 from pr_agent.algo.types import FilePatchInfo
 from pr_agent.algo.utils import process_description
 from pr_agent.config_loader import get_settings
+from pr_agent.git_providers.gitlab_provider import GitLabProvider
 from pr_agent.tools.pr_description import PRDescription, sanitize_diagram
+from tests.unittest._settings_helpers import restore_settings, snapshot_settings
 
 KEYS_FIX = ["filename:", "language:", "changes_summary:", "changes_title:", "description:", "title:"]
 
@@ -213,6 +217,14 @@ class TestPrepareData:
 # _prepare_labels
 # ---------------------------------------------------------------------------
 class TestPrepareLabels:
+    @pytest.fixture(autouse=True)
+    def configured_labels(self):
+        snapshot = snapshot_settings(("config.enable_custom_labels", "custom_labels"))
+        get_settings().set("config.enable_custom_labels", True)
+        get_settings().set("custom_labels", {label: label for label in ("bug", "perf", "docs", "Refactor")})
+        yield
+        restore_settings(snapshot)
+
     @patch("pr_agent.tools.pr_description.get_settings")
     def test_labels_list_is_returned_stripped(self, mock_get_settings):
         mock_get_settings.return_value = _settings()
@@ -576,6 +588,24 @@ class TestProcessPRFilesPrediction:
 
         assert "<details><summary>2 files</summary>" in body
 
+    def test_rendered_href_preserves_reserved_filename_from_gitlab_provider(self):
+        filename = "src/a#b?c&d space-☃.py"
+        provider = GitLabProvider.__new__(GitLabProvider)
+        provider.gl = SimpleNamespace(url="https://gitlab.example")
+        provider.id_project = "owner/repo"
+        provider.mr = SimpleNamespace(
+            web_url="https://gitlab.example/owner/repo/-/merge_requests/7",
+            source_branch="feature/test",
+        )
+        link = provider.get_line_link(filename, -1)
+        obj = _make_instance()
+
+        row = obj.add_file_data("", "+1/-0", "", filename, "<strong>a.py</strong>", link, "")
+
+        rendered_link = re.search(r'href="([^"]+)"', row).group(1)
+        assert rendered_link == link
+        assert unquote(urlsplit(rendered_link).path).endswith(f"/{filename}")
+
 
 # ---------------------------------------------------------------------------
 # Round-trip: process_description recovers structured files from rendering
@@ -673,6 +703,7 @@ class TestDescriptionPromptGating:
         "language": "python",
         "diff": "diff",
         "extra_instructions": "",
+        "artifact_context": None,
         "skills_context": "",
         "repo_context": "",
         "commit_messages_str": "",

@@ -5,17 +5,21 @@ from typing import Optional
 from dynaconf import Dynaconf
 from starlette_context import context
 
-PR_AGENT_TOML_KEY = 'pr-agent'
-
 current_dir = dirname(abspath(__file__))
 
-dynconf_kwargs = {'core_loaders': [], # DISABLE default loaders, otherwise will load toml files more than once.
-                           'loaders': ['pr_agent.custom_merge_loader', 'dynaconf.loaders.env_loader'], # Use a custom loader to merge sections, but overwrite their overlapping values. Also support ENV variables to take precedence.
-                           'root_path': join(current_dir, "settings"), #Used for Dynaconf.find_file() - So that root path points to settings folder, since we disabled all core loaders.
-                           # Multi-file section-field merging is done by pr_agent.custom_merge_loader itself (it accumulates fields
-                           # across files and calls set() with a full section). Keeping dynaconf merge disabled makes settings.set()
-                           # and SECTION__KEY env vars replace list values instead of appending to them (dynaconf >= 3.3 appends
-                           # when merge_enabled is on); a section-level set() replaces the whole section, so always pass a full one.
+dynconf_kwargs = {'core_loaders': [],  # DISABLE default loaders, otherwise will load toml files more than once.
+                           # Use a custom loader to merge sections, but overwrite their overlapping
+                           # values. Also support ENV variables to take precedence.
+                           'loaders': ['pr_agent.custom_merge_loader', 'dynaconf.loaders.env_loader'],
+                           # Used for Dynaconf.find_file() - So that root path points to settings folder,
+                           # since we disabled all core loaders.
+                           'root_path': join(current_dir, "settings"),
+                           # Multi-file section-field merging is done by pr_agent.custom_merge_loader
+                           # itself (it accumulates fields across files and calls set() with a full
+                           # section). Keeping dynaconf merge disabled makes settings.set() and
+                           # SECTION__KEY env vars replace list values instead of appending to them
+                           # (dynaconf >= 3.3 appends when merge_enabled is on); a section-level set()
+                           # replaces the whole section, so always pass a full one.
                            "merge_enabled": False
                            }
 global_settings = Dynaconf(
@@ -82,7 +86,6 @@ def get_verbosity_level() -> int:
         return 0
 
 
-# Add local configuration from pyproject.toml of the project being reviewed
 def _find_repository_root() -> Optional[Path]:
     """
     Identify project root directory by recursively searching for the .git directory in the parent directories.
@@ -95,22 +98,6 @@ def _find_repository_root() -> Optional[Path]:
             return cwd
         cwd = cwd.parent
     return None
-
-
-def _find_pyproject() -> Optional[Path]:
-    """
-    Search for file pyproject.toml in the repository root.
-    """
-    repo_root = _find_repository_root()
-    if repo_root:
-        pyproject = repo_root / "pyproject.toml"
-        return pyproject if pyproject.is_file() else None
-    return None
-
-
-pyproject_path = _find_pyproject()
-if pyproject_path is not None:
-    get_settings().load_file(pyproject_path, env=f'tool.{PR_AGENT_TOML_KEY}')
 
 
 def apply_secrets_manager_config():
@@ -139,7 +126,7 @@ def apply_secrets_manager_config():
         try:
             from pr_agent.log import get_logger
             get_logger().debug(f"Secret provider not configured: {e}")
-        except:
+        except ImportError:
             # Fail completely silently if log module is not available
             pass
 
@@ -151,7 +138,7 @@ def apply_secrets_to_config(secrets: dict):
     try:
         # Dynamic import to avoid potential circular dependency
         from pr_agent.log import get_logger
-    except:
+    except ImportError:
         def get_logger():
             class DummyLogger:
                 def debug(self, msg): pass

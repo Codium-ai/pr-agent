@@ -97,13 +97,75 @@ def publishing(monkeypatch):
     return settings
 
 
-@pytest.mark.parametrize("rate_limit_error", [RATE_LIMITED, RATE_LIMITED_429], ids=["403", "429"])
-def test_a_rate_limited_diff_fetch_is_retried(monkeypatch, no_sleep, rate_limit_error):
-    """Verify one file-list request for each outer rate-limit retry."""
-    get_settings().set("GITHUB.RATELIMIT_RETRIES", 3)
+@pytest.fixture
+def github_three_retry_attempts():
+    settings = get_settings()
+    original = settings.get("GITHUB.RATELIMIT_RETRIES", 5)
+    settings.set("GITHUB.RATELIMIT_RETRIES", 3)
+    try:
+        yield
+    finally:
+        settings.set("GITHUB.RATELIMIT_RETRIES", original)
+
+
+@pytest.mark.parametrize(
+    "failure,expected_attempts,expected_http_calls,expected_type",
+    [
+        (GithubException(401, {"message": "Bad credentials"}, None), 1, 1, GithubException),
+        (NOT_ACCESSIBLE, 1, 1, GithubException),
+        (RATE_LIMITED, 3, 3, RateLimitExceeded),
+        (GithubException(403, {"message": "You have exceeded a secondary rate limit."}, None),
+         3, 3, RateLimitExceeded),
+        (GithubException(403, {"message": "Forbidden"}, {"X-RateLimit-Remaining": "0"}),
+         3, 3, RateLimitExceeded),
+        (GithubException(403, {"message": "Abuse detection mechanism triggered"}, None),
+         3, 3, RateLimitExceeded),
+        (GithubException(403, {"message": "Forbidden"}, {"Retry-After": "30"}),
+         3, 3, RateLimitExceeded),
+        (GithubException(403, {"message": "Resource not accessible"}, {"Retry-After": ""}),
+         1, 1, GithubException),
+        (GithubException(429, {"message": "Too many requests"}, None), 3, 3, RateLimitExceeded),
+        (GithubException(503, {"message": "Unavailable"}, None), 3, 6, RateLimitExceeded),
+        (GithubException(404, {"message": "Not found"}, None), 1, 1, GithubException),
+        (GithubException(422, {"message": "Unprocessable entity"}, None), 1, 1, GithubException),
+        (GithubException(408, {"message": "Request timeout"}, None), 3, 6, RateLimitExceeded),
+        (ValueError("malformed local data"), 1, 1, ValueError),
+    ],
+)
+def test_diff_retries_only_expected_api_failures(
+    monkeypatch, no_sleep, github_three_retry_attempts, failure,
+    expected_attempts, expected_http_calls, expected_type,
+):
     monkeypatch.setattr(GithubProvider, "_get_github_client", lambda self: MagicMock())
     provider = GithubProvider(pr_url=None)
     provider.pr = MagicMock()
+    provider.pr.head.sha = "head-sha"
+    provider.pr.base.sha = "base-sha"
+    provider.pr.base.ref = "main"
+    provider.pr.changed_files = 1
+    provider.pr.get_files.side_effect = failure
+    original_collect = provider._get_diff_files
+    provider._get_diff_files = MagicMock(wraps=original_collect)
+
+    with pytest.raises(expected_type):
+        provider.get_diff_files()
+
+    assert provider._get_diff_files.call_count == expected_attempts
+    assert provider.pr.get_files.call_count == expected_http_calls
+
+
+@pytest.mark.parametrize("rate_limit_error", [RATE_LIMITED, RATE_LIMITED_429], ids=["403", "429"])
+def test_a_rate_limited_diff_fetch_is_retried(
+    monkeypatch, no_sleep, github_three_retry_attempts, rate_limit_error
+):
+    """Verify one file-list request for each outer rate-limit retry."""
+    monkeypatch.setattr(GithubProvider, "_get_github_client", lambda self: MagicMock())
+    provider = GithubProvider(pr_url=None)
+    provider.pr = MagicMock()
+    provider.pr.head.sha = "head-sha"
+    provider.pr.base.sha = "base-sha"
+    provider.pr.base.ref = "main"
+    provider.pr.changed_files = 1
     attempts = []
 
     def rate_limited():
@@ -159,6 +221,7 @@ async def test_one_unreadable_ticket_link_keeps_the_others(monkeypatch):
         return SimpleNamespace(number=number, title="Issue", body="Body", labels=[])
 
     provider.repo_obj.get_issue.side_effect = get_issue
+    provider.get_issue_content = lambda repository, number: repository.get_issue(number)
     provider.get_user_description = lambda: "Fixes #1 and closes #2"
     provider.get_pr_branch = lambda: "fix/retry"
     provider.fetch_sub_issues = lambda issue_url: []

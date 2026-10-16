@@ -1,4 +1,6 @@
 import copy
+import hashlib
+import hmac
 import json
 import tomllib
 from contextlib import asynccontextmanager
@@ -40,12 +42,12 @@ DEFAULT_PR_COMMANDS = {
     "bitbucket_app": [
         "/describe --pr_description.final_update_message=false",
         "/review",
-        "/improve --pr_code_suggestions.commitable_code_suggestions=true",
+        "/improve --pr_code_suggestions.committable_code_suggestions=true",
     ],
     "bitbucket_server": [
         "/describe --pr_description.final_update_message=false",
         "/review",
-        "/improve --pr_code_suggestions.commitable_code_suggestions=true",
+        "/improve --pr_code_suggestions.committable_code_suggestions=true",
     ],
 }
 
@@ -72,9 +74,11 @@ class _IdentityProvider:
 
 
 class _Request:
-    def __init__(self, payload):
-        self.headers = {"authorization": "JWT e30.eyJpc3MiOiJjbGllbnQifQ.signature"}
+    def __init__(self, payload, headers=None, method="POST", path="/webhook", query=""):
+        self.headers = headers if headers is not None else {"authorization": "JWT e30.eyJpc3MiOiJjbGllbnQifQ.signature"}
         self._payload = payload
+        self.method = method
+        self.url = type("URL", (), {"path": path, "query": query})()
 
     async def json(self):
         return self._payload
@@ -217,7 +221,12 @@ async def _dispatch_default_pr_commands(provider, monkeypatch, agent):
             },
         }
         background_tasks = BackgroundTasks()
-        response = await bitbucket_server_webhook.handle_webhook(background_tasks, _Request(payload))
+        get_settings().set("BITBUCKET_SERVER.WEBHOOK_SECRET", "test-webhook-secret")
+        request = _Request(payload)
+        request.headers["x-hub-signature"] = "sha256=" + hmac.new(
+            b"test-webhook-secret", await request.body(), hashlib.sha256,
+        ).hexdigest()
+        response = await bitbucket_server_webhook.handle_webhook(background_tasks, request)
         assert response.status_code == 200
         await background_tasks()
         agent.commands.extend(recorded)
@@ -283,7 +292,11 @@ async def _run_bitbucket_created_webhook(
     monkeypatch.setattr(bitbucket_app, "should_process_pr_logic", should_process_pr_logic)
     monkeypatch.setattr(bitbucket_app, "get_fork_safe_secret_provider", lambda: secret_provider)
     monkeypatch.setattr(bitbucket_app, "get_bearer_token", get_bearer_token)
-    monkeypatch.setattr(bitbucket_app.jwt, "decode", lambda *args, **kwargs: {})
+    monkeypatch.setattr(
+        bitbucket_app.jwt,
+        "decode",
+        lambda *args, **kwargs: {"qsh": bitbucket_app._compute_qsh("POST", "/webhook")},
+    )
     monkeypatch.setattr(bitbucket_app, "get_identity_provider", RecordingIdentityProvider)
     monkeypatch.setattr(bitbucket_app, "apply_repo_settings", apply_repo_settings)
     monkeypatch.setattr(bitbucket_app, "_run_commands_bitbucket", run_commands)
@@ -385,6 +398,7 @@ async def _run_bitbucket_push_webhook(
     host_commands,
     repo_trigger,
     repo_commands,
+    repo_should_process=True,
 ):
     calls = []
     pr_url = "https://example.test/pr/1"
@@ -421,17 +435,21 @@ async def _run_bitbucket_push_webhook(
     async def run_commands(commands, *_args):
         calls.append(("commands", list(commands)))
 
+    def should_process_pr_logic(_data):
+        calls.append("filter")
+        return repo_should_process
+
     monkeypatch.setattr(bitbucket_app, "is_bot_user", lambda _data: False)
     monkeypatch.setattr(bitbucket_app, "get_fork_safe_secret_provider", lambda: secret_provider)
     monkeypatch.setattr(bitbucket_app, "get_bearer_token", get_bearer_token)
-    monkeypatch.setattr(bitbucket_app.jwt, "decode", lambda *args, **kwargs: {})
+    monkeypatch.setattr(
+        bitbucket_app.jwt,
+        "decode",
+        lambda *args, **kwargs: {"qsh": bitbucket_app._compute_qsh("POST", "/webhook")},
+    )
     monkeypatch.setattr(bitbucket_app, "get_identity_provider", _IdentityProvider)
     monkeypatch.setattr(bitbucket_app, "apply_repo_settings", apply_repo_settings)
-    monkeypatch.setattr(
-        bitbucket_app,
-        "should_process_pr_logic",
-        lambda _data: pytest.fail("Bitbucket update events must not use PR creation filters"),
-    )
+    monkeypatch.setattr(bitbucket_app, "should_process_pr_logic", should_process_pr_logic)
     monkeypatch.setattr(bitbucket_app, "_validate_time_from_last_commit_to_pr_update", validate_push)
     monkeypatch.setattr(bitbucket_app, "push_trigger_slot", record_slot)
     monkeypatch.setattr(bitbucket_app, "_run_commands_bitbucket", run_commands)
@@ -466,18 +484,34 @@ async def test_bitbucket_app_push_applies_repo_settings_before_effective_gate(mo
     )
 
     assert result == "OK"
-    assert calls == ["settings", "validate", "slot", ("commands", ["/review"])]
+    assert calls == ["settings", "filter", "validate", "slot", ("commands", ["/review"])]
+
+
+async def test_bitbucket_app_push_event_applies_repo_ignore_filters(monkeypatch):
+    result, calls = await _run_bitbucket_push_webhook(
+        monkeypatch,
+        host_trigger=True,
+        host_commands=["/host-review"],
+        repo_trigger=True,
+        repo_commands=["/review"],
+        repo_should_process=False,
+    )
+
+    assert result == "OK"
+    # The ignore filters must run after repo settings load and stop the push
+    # commands before push validation and dispatch.
+    assert calls == ["settings", "filter"]
 
 
 @pytest.mark.parametrize(
-    ("repo_trigger", "repo_commands"),
+    ("repo_trigger", "repo_commands", "expected_calls"),
     [
-        (False, ["/review"]),
-        (True, []),
+        (False, ["/review"], ["settings"]),
+        (True, [], ["settings", "filter"]),
     ],
 )
 async def test_bitbucket_app_effective_push_config_skips_before_validation(
-    monkeypatch, repo_trigger, repo_commands
+    monkeypatch, repo_trigger, repo_commands, expected_calls
 ):
     result, calls = await _run_bitbucket_push_webhook(
         monkeypatch,
@@ -488,7 +522,7 @@ async def test_bitbucket_app_effective_push_config_skips_before_validation(
     )
 
     assert result == "OK"
-    assert calls == ["settings"]
+    assert calls == expected_calls
 
 
 @pytest.mark.parametrize("proceed", [True, False])
@@ -523,7 +557,11 @@ async def test_bitbucket_app_push_uses_shared_dedupe_slot(monkeypatch, proceed):
     monkeypatch.setattr(bitbucket_app, "is_bot_user", lambda _data: False)
     monkeypatch.setattr(bitbucket_app, "get_fork_safe_secret_provider", lambda: secret_provider)
     monkeypatch.setattr(bitbucket_app, "get_bearer_token", get_bearer_token)
-    monkeypatch.setattr(bitbucket_app.jwt, "decode", lambda *args, **kwargs: {})
+    monkeypatch.setattr(
+        bitbucket_app.jwt,
+        "decode",
+        lambda *args, **kwargs: {"qsh": bitbucket_app._compute_qsh("POST", "/webhook")},
+    )
     monkeypatch.setattr(bitbucket_app, "get_identity_provider", _IdentityProvider)
     monkeypatch.setattr(bitbucket_app, "_run_commands_bitbucket", run_commands)
     monkeypatch.setattr(bitbucket_app, "apply_repo_settings", lambda _url: None)

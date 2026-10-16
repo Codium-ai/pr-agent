@@ -1,4 +1,6 @@
 import copy
+import hashlib
+import hmac
 import importlib
 import json
 from contextlib import asynccontextmanager
@@ -76,7 +78,7 @@ async def test_bitbucket_server_handle_webhook_accepts_push_trigger_event_keys(e
     original_webhook_secret = settings.get("BITBUCKET_SERVER.WEBHOOK_SECRET", None)
     original_handle_push_trigger = settings.get("BITBUCKET_SERVER.HANDLE_PUSH_TRIGGER", None)
     original_url = settings.get("BITBUCKET_SERVER.URL", None)
-    settings.set("BITBUCKET_SERVER.WEBHOOK_SECRET", None)
+    settings.set("BITBUCKET_SERVER.WEBHOOK_SECRET", "test-webhook-secret")
     settings.set("BITBUCKET_SERVER.HANDLE_PUSH_TRIGGER", True)
     settings.set("BITBUCKET_SERVER.URL", "https://bitbucket.example.com")
 
@@ -104,6 +106,9 @@ async def test_bitbucket_server_handle_webhook_accepts_push_trigger_event_keys(e
     payload = _bitbucket_server_payload()
     payload["eventKey"] = event_key
     request = _StubRequest(payload)
+    request.headers["x-hub-signature"] = "sha256=" + hmac.new(
+        b"test-webhook-secret", await request.body(), hashlib.sha256,
+    ).hexdigest()
     background_tasks = BackgroundTasks()
 
     try:
@@ -121,6 +126,60 @@ async def test_bitbucket_server_handle_webhook_accepts_push_trigger_event_keys(e
     expected_url = "https://bitbucket.example.com/projects/PROJ/repos/repo/pull-requests/7"
     assert slots == [(expected_url, {"allow_backlog": True, "ttl": 300})]
     assert commands == ([(["/review"], expected_url)] if proceed else [])
+
+
+@pytest.mark.asyncio
+async def test_bitbucket_server_push_event_without_pull_request_is_ignored(monkeypatch):
+    # Regression test: "repo:refs_changed" payloads carry no "pullRequest" key, so the
+    # handler must skip them gracefully instead of raising KeyError (HTTP 500).
+    settings = get_settings()
+    original_webhook_secret = settings.get("BITBUCKET_SERVER.WEBHOOK_SECRET", None)
+    settings.set("BITBUCKET_SERVER.WEBHOOK_SECRET", "test-webhook-secret")
+
+    payload = {"eventKey": "repo:refs_changed", "actor": {"name": "alice"}, "changes": []}
+    request = _StubRequest(payload)
+    request.headers["x-hub-signature"] = "sha256=" + hmac.new(
+        b"test-webhook-secret", await request.body(), hashlib.sha256,
+    ).hexdigest()
+    background_tasks = BackgroundTasks()
+
+    try:
+        with request_cycle_context({}):
+            response = await bitbucket_server_webhook.handle_webhook(background_tasks, request)
+            await background_tasks()
+    finally:
+        settings.set("BITBUCKET_SERVER.WEBHOOK_SECRET", original_webhook_secret)
+
+    assert response.status_code == 200
+    assert json.loads(response.body)["message"] == "Ignored event without a pull request"
+    assert len(background_tasks.tasks) == 0
+
+
+@pytest.mark.asyncio
+async def test_bitbucket_server_unsupported_event_returns_json_object(monkeypatch):
+    # Regression test: the 400 response body must be a JSON object, not a JSON-encoded
+    # string literal produced by double-encoding.
+    settings = get_settings()
+    original_webhook_secret = settings.get("BITBUCKET_SERVER.WEBHOOK_SECRET", None)
+    settings.set("BITBUCKET_SERVER.WEBHOOK_SECRET", "test-webhook-secret")
+
+    payload = _bitbucket_server_payload()
+    payload["eventKey"] = "pr:modified"
+    request = _StubRequest(payload)
+    request.headers["x-hub-signature"] = "sha256=" + hmac.new(
+        b"test-webhook-secret", await request.body(), hashlib.sha256,
+    ).hexdigest()
+    background_tasks = BackgroundTasks()
+
+    try:
+        with request_cycle_context({}):
+            response = await bitbucket_server_webhook.handle_webhook(background_tasks, request)
+    finally:
+        settings.set("BITBUCKET_SERVER.WEBHOOK_SECRET", original_webhook_secret)
+
+    assert response.status_code == 400
+    assert isinstance(json.loads(response.body), dict)
+    assert json.loads(response.body)["message"] == "Unsupported event"
 
 
 def _gitlab_payload(**object_attributes):
@@ -141,8 +200,54 @@ async def _post_gitlab_webhook(app, data):
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
         return await client.post(
-            "/webhook", headers={"X-Gitlab-Token": "secret-id"}, json=data
+            "/webhook", headers={"X-Gitlab-Token": "secret-id:webhook-token"}, json=data
         )
+
+
+async def _record_gitlab_note_request(gitlab_webhook_module, monkeypatch, note, note_type):
+    calls = []
+
+    async def record_request(url, body, log_context, sender_id, notify=None):
+        calls.append((url, body))
+
+    monkeypatch.setattr(gitlab_webhook_module, "handle_request", record_request)
+    monkeypatch.setattr(
+        gitlab_webhook_module,
+        "get_git_provider_with_context",
+        lambda **_: SimpleNamespace(add_eyes_reaction=lambda *_: None),
+    )
+    monkeypatch.setattr(
+        gitlab_webhook_module,
+        "get_fork_safe_secret_provider",
+        lambda: SimpleNamespace(get_secret=lambda _: '{"gitlab_token": "token", "webhook_token": "webhook-token"}'),
+    )
+    data = _gitlab_payload(note=note, discussion_id="discussion-42", id=99, type=note_type)
+    data.update({"object_kind": "note", "event_type": "note",
+                 "merge_request": {"url": "https://gitlab.com/org/repo/-/merge_requests/1"}})
+
+    response = await _post_gitlab_webhook(gitlab_webhook_module.app, data)
+
+    assert response.status_code == 200
+    return calls
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("command", ["/review", "/Review_pr", "/improve", "/improve_code"])
+async def test_gitlab_note_command_passes_discussion_id_to_agent(gitlab_webhook_module, monkeypatch, command):
+    calls = await _record_gitlab_note_request(gitlab_webhook_module, monkeypatch, f"{command} inspect this", None)
+
+    assert calls == [(
+        "https://gitlab.com/org/repo/-/merge_requests/1",
+        f"{command} inspect this --comment_id=discussion-42",
+    )]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("note_type", ["DiscussionNote", "DiffNote"])
+async def test_gitlab_threaded_note_command_keeps_discussion_id_out(gitlab_webhook_module, monkeypatch, note_type):
+    calls = await _record_gitlab_note_request(gitlab_webhook_module, monkeypatch, "/review", note_type)
+
+    assert calls == [("https://gitlab.com/org/repo/-/merge_requests/1", "/review")]
 
 
 def test_bitbucket_server_should_process_pr_logic_ignores_author_title_and_branch():
@@ -636,7 +741,7 @@ async def _run_gitlab_pr_commands(module, monkeypatch, draft, repo_setting, even
     monkeypatch.setattr(module, "apply_repo_settings", apply_repo_settings)
     monkeypatch.setattr(module, "PRAgent", lambda: agent)
     secret_provider = SimpleNamespace(
-        get_secret=lambda _: '{"gitlab_token": "token"}'
+        get_secret=lambda _: '{"gitlab_token": "token", "webhook_token": "webhook-token"}'
     )
     monkeypatch.setattr(
         module, "get_fork_safe_secret_provider", lambda: secret_provider
@@ -942,7 +1047,7 @@ async def test_gitlab_manual_feedback_on_draft_is_unaffected(gitlab_webhook_modu
     monkeypatch.setattr(
         gitlab_webhook_module,
         "get_fork_safe_secret_provider",
-        lambda: SimpleNamespace(get_secret=lambda _: '{"gitlab_token": "token"}'),
+        lambda: SimpleNamespace(get_secret=lambda _: '{"gitlab_token": "token", "webhook_token": "webhook-token"}'),
     )
     monkeypatch.setattr(
         gitlab_webhook_module,
@@ -1184,7 +1289,7 @@ async def _run_gitlab_update(module, monkeypatch, *, oldrev, draft_ready, handle
     monkeypatch.setattr(
         module,
         "get_fork_safe_secret_provider",
-        lambda: SimpleNamespace(get_secret=lambda _: '{"gitlab_token": "token"}'),
+        lambda: SimpleNamespace(get_secret=lambda _: '{"gitlab_token": "token", "webhook_token": "webhook-token"}'),
     )
 
     object_attributes = {

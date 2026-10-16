@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 
 import pr_agent.agent.pr_agent as pr_agent_module
-from pr_agent.algo.cli_args import CliArgs
+from pr_agent.algo.cli_args import _MAPPING_TOO_COMPLEX_ARG, CliArgs
 
 FORBIDDEN_ARGS = [
     # section-qualified key forms
@@ -59,6 +59,8 @@ FORBIDDEN_ARGS = [
     '--push_outputs.channels=["webhook"]',
     "--push_outputs.webhook_url=https://evil.example/collect",
     "--push_outputs.slack_webhook_url=https://evil.example/slack",
+    "--push_outputs.telegram_bot_token=123:secret",
+    "--push_outputs.telegram_chat_id=-100123",
     "--push_outputs.file_path=/etc/cron.d/pwn",
     "--PUSH_OUTPUTS.WEBHOOK_URL=https://evil.example/collect",
     "--push_outputs__webhook_url=https://evil.example/collect",
@@ -89,6 +91,48 @@ FORBIDDEN_ARGS = [
     "--config.description_issue_regex=(?:[A-Za-z ]+)+X(d+)",
     "--config__description_issue_regex=(?:[A-Za-z ]+)+X(d+)",
     '--config={"description_issue_regex": "(?:[A-Za-z ]+)+X(d+)"}',
+    # global_settings_repo names the repository whose .pr_agent.toml is applied to a whole
+    # namespace, so a comment must not be able to choose it either.
+    "--config.global_settings_repo=evil-settings",
+    "--config__global_settings_repo=evil-settings",
+    '--config={"global_settings_repo": "evil-settings"}',
+    # Provider timeouts affect host workers and must not be set by command arguments.
+    "--config.http_request_timeout=600",
+    "--config__http_request_timeout=600",
+    '--config={"http_request_timeout": 600}',
+    # fail_on_tool_errors decides whether a recorded tool failure fails the GitHub Action, so a
+    # commenter must not be able to turn it off for their own command.
+    "--github_action_config.fail_on_tool_errors=false",
+    "--GITHUB_ACTION_CONFIG.FAIL_ON_TOOL_ERRORS=false",
+    "--github_action_config__fail_on_tool_errors=false",
+    '--github_action_config={"fail_on_tool_errors": false}',
+    # Resource, write, and regex controls stay host-controlled when commands are
+    # supplied through comments, even when root repository settings may set them.
+    "--pr_reviewer.max_number_of_calls=10",
+    "--pr_code_suggestions.parallel_calls=true",
+    '--config.fallback_models=["gpt-4.1"]',
+    "--config.num_retries=10",
+    "--pr_update_changelog.push_changelog_changes=true",
+    "--pr_questions.resolve_threads=true",
+    "--pr_similar_issue.force_update_dataset=true",
+    "--pr_similar_issue={force_update_dataset: true, vectordb: qdrant}",
+    "--pr_similar_issue={vectordb: qdrant, max_issues_to_scan: 50}",
+    "--config.branch_issue_regex=^([\\w/.-]+)*!$",
+    "--ignore.regex=^([\\w/.-]+)*!$",
+    "--config.output_relevant_configurations=true",
+    # section-level mapping values on sections that are not host-only themselves:
+    # the dotted keys below are all rejected, so their {key: value} forms must be too
+    '--qdrant={url: "https://evil.example", api_key: "x"}',
+    '--qdrant={replicas: [{base_url: "https://evil.example"}]}',
+    '--qdrant={azure: {api_base: "https://evil.example"}}',
+    '--github_app={private_key: "---BEGIN---", app_id: 123}',
+    '--gitea={web_url: "https://evil.example"}',
+    '--openai={key: "sk-leaked"}',
+    '--github={deployment_type: "app"}',
+    '--gitlab={ssl_verify: false}',
+    # an empty container still exposes its key path for validation
+    '--qdrant={url: {}}',
+    '--qdrant={server: {url: []}}',
 ]
 
 
@@ -99,6 +143,13 @@ ALLOWED_ARGS_SINGLE = [
     "--skills.max_skills_tokens=1000",
     "--config.response_language=zh-tw",
     "--pr_description.publish_labels=false",
+    # a mapping value whose nested keys are all allowed stays accepted
+    "--qdrant={timeout: 5, prefer_grpc: true}",
+    "--pr_similar_issue.max_issues_to_scan=50",
+    "--github.publish_as_check_run=true",
+    "--gitlab.handle_push_trigger=true",
+    "--bitbucket.identity_request_timeout=10",
+    "--gitea.handle_push_trigger=true",
     # non-flag arguments are not validated against the forbidden list
     "some-positional-arg",
     "yes",
@@ -112,6 +163,9 @@ HOST_ONLY_ARGS = [
     "--skills__paths=/etc",
     "--skills.unknown=value",
     "--skills={paths:[/etc]}",
+    "--skills={nested: {paths: [\" /etc\", \"/etc\"]}}",
+    "--skills={paths: {}}",
+    '--prompt_fragments={diff_hunk_format: []}',
     "--prompt_fragments.diff_hunk_format={{ cycler.__init__.__globals__ }}",
     "--prompt_fragments__diff_hunk_format=unsafe",
     '--prompt_fragments={"diff_hunk_format": "unsafe"}',
@@ -184,6 +238,7 @@ async def test_handle_request_uses_real_validator_to_block_forbidden(monkeypatch
     update_settings = Mock()
     tool_factory = Mock()
 
+    monkeypatch.setattr(pr_agent_module, "enforce_request_policy", lambda _url: None)
     monkeypatch.setattr(pr_agent_module, "apply_repo_settings", lambda pr_url: None)
     monkeypatch.setattr(pr_agent_module, "update_settings_from_args", update_settings)
     monkeypatch.setitem(pr_agent_module.command2class, "custom", tool_factory)
@@ -196,6 +251,79 @@ async def test_handle_request_uses_real_validator_to_block_forbidden(monkeypatch
 
     assert handled is False
     update_settings.assert_not_called()
+    tool_factory.assert_not_called()
+    notify.assert_not_called()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "command_request",
+    [
+        # listed section: the whole-section form is already host-only
+        "/custom --push_outputs={url:https://evil.example}",
+        ["/custom", "--push_outputs={url:https://evil.example}"],
+        # unlisted section: the nested url key must be caught inside the mapping value
+        "/custom --qdrant={url:https://evil.example}",
+        ["/custom", "--qdrant={url:https://evil.example}"],
+    ],
+)
+async def test_handle_request_rejects_forbidden_mapping_args_in_comment_and_cli(
+    monkeypatch, command_request
+):
+    """A --section={key: value} arg is rejected for both comment and CLI request forms."""
+    notify = Mock()
+    update_settings = Mock()
+    tool_factory = Mock()
+
+    monkeypatch.setattr(pr_agent_module, "enforce_request_policy", lambda _url: None)
+    monkeypatch.setattr(pr_agent_module, "apply_repo_settings", lambda pr_url: None)
+    monkeypatch.setattr(pr_agent_module, "update_settings_from_args", update_settings)
+    monkeypatch.setitem(pr_agent_module.command2class, "custom", tool_factory)
+
+    handled = await pr_agent_module.PRAgent(ai_handler="fake-ai")._handle_request(
+        "https://example/pr/1", command_request, notify
+    )
+
+    assert handled is False
+    update_settings.assert_not_called()
+    tool_factory.assert_not_called()
+    notify.assert_not_called()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "command_request",
+    [
+        # the settings loader strips the value before parsing it, so the validator must too
+        '/custom --qdrant="\t{url: https://evil.example}"',
+        ["/custom", "--qdrant=\t{url: https://evil.example}"],
+        # an empty mapping has no nested paths, so the section path itself is validated
+        "/custom --qdrant.url={}",
+        ["/custom", "--qdrant.url={}"],
+    ],
+)
+async def test_handle_request_rejects_mapping_args_as_the_settings_loader_parses_them(
+    monkeypatch, command_request
+):
+    """A mapping value is validated as update_settings_from_args would apply it, and a
+    rejected argument leaves the settings untouched."""
+    notify = Mock()
+    update_settings = Mock(wraps=pr_agent_module.update_settings_from_args)
+    tool_factory = Mock()
+    qdrant_url_before = pr_agent_module.get_settings().get("qdrant.url")
+
+    monkeypatch.setattr(pr_agent_module, "enforce_request_policy", lambda _url: None)
+    monkeypatch.setattr(pr_agent_module, "apply_repo_settings", lambda pr_url: None)
+    monkeypatch.setattr(pr_agent_module, "update_settings_from_args", update_settings)
+    monkeypatch.setitem(pr_agent_module.command2class, "custom", tool_factory)
+
+    handled = await pr_agent_module.PRAgent(ai_handler="fake-ai")._handle_request(
+        "https://example/pr/1", command_request, notify
+    )
+
+    assert handled is False
+    update_settings.assert_not_called()
+    assert pr_agent_module.get_settings().get("qdrant.url") == qdrant_url_before
     tool_factory.assert_not_called()
     notify.assert_not_called()
 
@@ -217,6 +345,7 @@ async def test_handle_request_allows_protected_key_names_in_setting_values(monke
     tool_factory = Mock(return_value=tool)
     notify = Mock()
 
+    monkeypatch.setattr(pr_agent_module, "enforce_request_policy", lambda _url: None)
     monkeypatch.setattr(pr_agent_module, "apply_repo_settings", lambda _pr_url: None)
     monkeypatch.setattr(pr_agent_module, "update_settings_from_args", update_settings)
     monkeypatch.setitem(pr_agent_module.command2class, "custom", tool_factory)
@@ -239,3 +368,32 @@ def test_validate_user_args_rejects_forbidden_arg_with_leading_whitespace(prefix
     ok, offending = CliArgs.validate_user_args([f"{prefix}--github.webhook_secret=secret"])
     assert ok is False
     assert "webhook_secret" in offending
+
+
+@pytest.mark.parametrize(
+    "cyclic",
+    [
+        "--qdrant={\"x\": &a [*a]}",
+        "--qdrant={\"a\": &x {\"b\": *x}}",
+    ],
+)
+def test_validate_user_args_rejects_cyclic_mapping_value(cyclic):
+    """A mapping value that reuses an ancestor object must be rejected instead of
+    recursing forever through YAML aliases."""
+    ok, offending = CliArgs.validate_user_args([cyclic])
+    assert ok is False
+    assert offending == _MAPPING_TOO_COMPLEX_ARG
+
+
+def test_validate_user_args_rejects_mapping_value_beyond_depth_limit():
+    nested = '{"a": ' * 40 + '"leaf"' + '}' * 40
+    ok, offending = CliArgs.validate_user_args([f"--qdrant={nested}"])
+    assert ok is False
+    assert offending == _MAPPING_TOO_COMPLEX_ARG
+
+
+def test_validate_user_args_rejects_mapping_value_beyond_visit_limit():
+    wide = "{" + ", ".join(f'"k{i}": 1' for i in range(200)) + "}"
+    ok, offending = CliArgs.validate_user_args([f"--qdrant={wide}"])
+    assert ok is False
+    assert offending == _MAPPING_TOO_COMPLEX_ARG

@@ -1,6 +1,7 @@
 """Regression tests for provider-independent /help behavior."""
 
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -112,7 +113,7 @@ def non_openai_question_settings():
     ]
     snapshot = snapshot_settings(keys)
     settings = get_settings()
-    settings.set("config.model", "anthropic/claude-3-5-sonnet-20240620")
+    settings.set("config.model", "anthropic/claude-sonnet-4-6")
     settings.set("config.fallback_models", [])
     settings.set("model_routing.enable", False)
     settings.set("openai.key", None)
@@ -136,7 +137,7 @@ async def test_question_reaches_configured_handler_without_openai_key(
 
     await tool.run()
 
-    assert [call["model"] for call in handler.calls] == ["anthropic/claude-3-5-sonnet-20240620"]
+    assert [call["model"] for call in handler.calls] == ["anthropic/claude-sonnet-4-6"]
     assert tool.question_str in handler.calls[0]["user"]
     assert "Enable automatic review in the repository settings." in handler.calls[0]["user"]
     assert "Enable automatic review in the repository settings." in tool.git_provider.published[0]
@@ -153,13 +154,13 @@ async def test_question_uses_configured_handler_error_path_without_openai_key(
     tool = build_question_tool(tmp_path, monkeypatch, handler)
 
     if propagate_tool_errors:
-        with pytest.raises(Exception, match="Failed to generate prediction with any model") as exc_info:
+        with pytest.raises(RuntimeError) as exc_info:
             await tool.run()
-        assert exc_info.value.__cause__ is handler.error
+        assert exc_info.value is handler.error
     else:
         assert await tool.run() == ""
 
-    assert [call["model"] for call in handler.calls] == ["anthropic/claude-3-5-sonnet-20240620"]
+    assert [call["model"] for call in handler.calls] == ["anthropic/claude-sonnet-4-6"]
     assert tool.git_provider.published == []
 
 
@@ -281,6 +282,32 @@ async def test_rendering_follows_capabilities(published_output, capabilities, ex
     assert unexpected not in comment
 
 
+@pytest.mark.asyncio
+@pytest.mark.parametrize("publish_output", [False, True])
+async def test_unsupported_help_notice_obeys_publish_output(monkeypatch, publish_output):
+    saved = snapshot_settings(["config.publish_output"])
+    try:
+        get_settings().set("config.publish_output", publish_output)
+        provider = StubProvider(gfm_markdown=False, markdown_tables=False)
+        tool = PRHelpMessage.__new__(PRHelpMessage)
+        tool.git_provider = provider
+        tool.question_str = ""
+        tool.return_as_string = False
+        logger = MagicMock()
+        monkeypatch.setattr(pr_help_message_module, "get_logger", lambda: logger)
+
+        await tool.run()
+
+        if publish_output:
+            assert len(provider.published) == 1
+            assert UNSUPPORTED_MARKER in provider.published[0]
+        else:
+            assert provider.published == []
+            assert any(UNSUPPORTED_MARKER in str(call.args[0]) for call in logger.info.call_args_list)
+    finally:
+        restore_settings(saved)
+
+
 async def test_checkboxes_stay_disabled_by_configuration(published_output):
     get_settings().set("config.disable_checkboxes", True)
     comment = await run_walkthrough(StubProvider(gfm_markdown=True, checkbox_commands=True))
@@ -304,6 +331,11 @@ async def test_walkthrough_uses_current_documentation_site(published_output, che
         ("/index.md", "", f"{CURRENT_DOCS_URL}/"),
         ("/tools/review.md", "Automatic review", f"{CURRENT_DOCS_URL}/tools/review/#automatic-review"),
         ("/faq/index.md", "Frequently asked questions", f"{CURRENT_DOCS_URL}/faq/#frequently-asked-questions"),
+        # Pages needing JSX are stored as '.mdx'. The suffix must not leak into the
+        # URL, and '/index.mdx' must still collapse to the site root.
+        ("/tools/improve.mdx", "Overview", f"{CURRENT_DOCS_URL}/tools/improve/#overview"),
+        ("/index.mdx", "", f"{CURRENT_DOCS_URL}/"),
+        ("/faq/index.mdx", "", f"{CURRENT_DOCS_URL}/faq/"),
     ],
 )
 def test_question_source_urls_use_canonical_documentation_paths(file_name, header, expected):

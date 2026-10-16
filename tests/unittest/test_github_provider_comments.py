@@ -30,8 +30,18 @@ class _FakePR:
 
     def __init__(self, raise_on_first=None):
         self.create_review_calls = []
+        self.create_review_comment_calls = []
         self._raise_on_first = raise_on_first
         self._calls = 0
+
+    def create_review_comment(self, body, commit, path, subject_type=None):
+        self.create_review_comment_calls.append({
+            "body": body,
+            "commit": commit,
+            "path": path,
+            "subject_type": subject_type,
+        })
+        return SimpleNamespace(id=2)
 
     def create_review(self, commit=None, event=None, comments=None):
         self._calls += 1
@@ -87,6 +97,33 @@ def test_edit_comment_returns_false_on_github_failure():
     assert provider.edit_comment(comment, "updated body") is False
 
 
+def test_thread_reply_preserves_void_success_and_truncation():
+    provider = _make_provider(max_chars=10)
+    requester = MagicMock()
+    requester.requestJsonAndCheck.return_value = ({}, {})
+    provider.pr._requester = requester
+
+    assert provider.reply_to_comment_from_comment_id(42, "x" * 20) is None
+    requester.requestJsonAndCheck.assert_called_once_with(
+        "POST", "https://api.github.com/repos/owner/repo/pulls/1/comments/42/replies",
+        input={"body": "xxxxxxx..."},
+    )
+
+
+@pytest.mark.parametrize("error", [GithubException(500, "reply failed", {}), RequestException("network error")])
+def test_thread_reply_propagates_failure_without_retry(error):
+    provider = _make_provider()
+    requester = MagicMock()
+    requester.requestJsonAndCheck.side_effect = error
+    provider.pr._requester = requester
+
+    with pytest.raises(type(error)) as caught:
+        provider.reply_to_comment_from_comment_id(42, "answer")
+
+    assert caught.value is error
+    requester.requestJsonAndCheck.assert_called_once()
+
+
 @pytest.mark.parametrize(
     ("deployment_type", "agent_login", "comment_login", "expected"),
     [
@@ -126,8 +163,8 @@ def test_create_inline_comment_returns_line_payload(monkeypatch):
     assert payload == {"body": "LGTM", "path": "src/foo.py", "position": 5}
 
 
-def test_create_inline_comment_returns_empty_when_position_unresolved(monkeypatch):
-    """If no position can be resolved (position == -1) current behavior returns {}."""
+def test_create_inline_comment_returns_file_payload_when_position_unresolved(monkeypatch):
+    """Keep unresolved findings visible as file-level review comments."""
     provider = _make_provider()
 
     monkeypatch.setattr(
@@ -137,18 +174,37 @@ def test_create_inline_comment_returns_empty_when_position_unresolved(monkeypatc
     )
 
     payload = provider.create_inline_comment("body", "src/foo.py", "x = 1")
-    assert payload == {}
+    assert payload == {
+        "body": "body",
+        "path": "src/foo.py",
+        "subject_type": "file",
+    }
 
 
-def test_create_inline_comment_lookup_strips_backticks_but_payload_preserves_them(monkeypatch):
-    """Backtick handling is asymmetric in current production code.
+def test_publish_inline_comment_uses_file_comment_endpoint_for_unresolved_position(monkeypatch):
+    """File-level fallbacks must not be sent through create_review."""
+    fake_pr = _FakePR()
+    provider = _make_provider(pr=fake_pr)
 
-    ``find_line_number_of_relevant_line_in_file`` is called with
-    ``relevant_file.strip('`')`` (so the *lookup* sees the un-backticked
-    path), but the payload ``path`` only has ``.strip()`` applied — so any
-    surrounding backticks survive into the resulting comment payload. This
-    test documents that asymmetry; it does not endorse it.
-    """
+    monkeypatch.setattr(
+        gh_module,
+        "find_line_number_of_relevant_line_in_file",
+        lambda *args, **kwargs: (-1, -1),
+    )
+
+    provider.publish_inline_comment("body", "src/foo.py", "x = 1")
+
+    assert fake_pr.create_review_calls == []
+    assert fake_pr.create_review_comment_calls == [{
+        "body": "body",
+        "commit": provider.last_commit_id,
+        "path": "src/foo.py",
+        "subject_type": "file",
+    }]
+
+
+def test_create_inline_comment_normalizes_backticked_file_path(monkeypatch):
+    """Use the repository path without Markdown wrapping for lookup and publication."""
     provider = _make_provider()
     recorded = {}
 
@@ -162,12 +218,28 @@ def test_create_inline_comment_lookup_strips_backticks_but_payload_preserves_the
         recording_resolver,
     )
 
-    payload = provider.create_inline_comment("b", "`src/foo.py`", "x = 1")
+    payload = provider.create_inline_comment("b", "  `src/foo.py`  ", "x = 1")
 
-    # Lookup arg has backticks stripped.
     assert recorded["rel_file"] == "src/foo.py"
-    # Payload path preserves backticks (only .strip() runs on it).
-    assert payload["path"] == "`src/foo.py`"
+    assert payload["path"] == "src/foo.py"
+
+
+def test_create_inline_comment_normalizes_backticked_file_level_fallback(monkeypatch):
+    """Use the normalized repository path when a backticked finding has no line anchor."""
+    provider = _make_provider()
+    monkeypatch.setattr(
+        gh_module,
+        "find_line_number_of_relevant_line_in_file",
+        lambda *a, **kw: (-1, -1),
+    )
+
+    payload = provider.create_inline_comment("body", "  `src/foo.py`  ", "x = 1")
+
+    assert payload == {
+        "body": "body",
+        "path": "src/foo.py",
+        "subject_type": "file",
+    }
 
 
 def test_create_inline_comment_payload_strips_surrounding_whitespace(monkeypatch):
@@ -397,6 +469,41 @@ def test_publish_code_suggestions_single_line_payload_shape():
         "side": "RIGHT",
     }
     assert "start_line" not in payload and "start_side" not in payload
+
+
+@pytest.mark.parametrize(
+    ("body", "expected"),
+    [
+        pytest.param("**Suggestion:** fix\n```suggestion\n" + "A" * 100 + "\n```", "**Suggestion:** fix\n",
+                     id="drops-suggestion-block"),
+        pytest.param("A" * 100, "A" * 22 + "...", id="clamps-body-without-block"),
+    ],
+)
+def test_publish_code_suggestions_limits_body_length(body, expected):
+    """An oversized body drops its suggestion block before the clamp, so no truncated suggestion reaches GitHub."""
+    provider = _make_provider(max_chars=25)
+
+    payload = provider._build_code_suggestion_payload({
+        "body": body,
+        "relevant_file": "src/foo.py",
+        "relevant_lines_start": 7,
+        "relevant_lines_end": 7,
+    })
+
+    assert payload["body"] == expected
+
+
+def test_publish_code_suggestions_does_not_trim_short_body():
+    provider = _make_provider(max_chars=25)
+
+    payload = provider._build_code_suggestion_payload({
+        "body": "```suggestion\nfix\n```",
+        "relevant_file": "src/foo.py",
+        "relevant_lines_start": 7,
+        "relevant_lines_end": 7,
+    })
+
+    assert payload["body"] == "```suggestion\nfix\n```"
 
 
 def test_publish_code_suggestions_skips_invalid_ranges():
@@ -670,11 +777,23 @@ class _FakeRequester:
 
     def requestJsonAndCheck(self, method, url, input=None):
         self.calls.append(("check", method, url, input))
-        return ({}, self._responses.pop(0))
+        response = self._responses.pop(0)
+        if isinstance(response, Exception):
+            raise response
+        return ({}, response)
 
     def requestJson(self, method, url, input=None):
         self.calls.append(("json", method, url, input))
         return self._responses.pop(0)
+
+    def graphql_query(self, query, variables):
+        response = self.requestJson("POST", "/graphql", input={"query": query, "variables": variables})
+        if isinstance(response, Exception):
+            raise response
+        data = json.loads(response[2])
+        if data.get("errors"):
+            raise GithubException(400, data, {})
+        return ({}, data)
 
 
 def _make_provider_with_graphql(rest_comment_data, graphql_responses):
@@ -702,6 +821,52 @@ def _make_threads_response(threads, has_next_page=False, end_cursor=None):
 
 
 class TestResolveCommentThread:
+    def test_resolves_reply_after_first_hundred_comments(self):
+        thread = {
+            "id": "PRRT_target", "isResolved": False,
+            "comments": {"nodes": [{"id": "PRR_root"}] + [
+                {"id": f"PRR_reply_{i}"} for i in range(1, 100)
+            ]},
+        }
+        resolved = _make_graphql_response({"resolveReviewThread": {"thread": {"isResolved": True}}})
+        provider, requester = _make_provider_with_graphql(
+            {"node_id": "PRR_reply101", "in_reply_to_id": 10},
+            [{"node_id": "PRR_root"}, _make_threads_response([thread]), resolved],
+        )
+
+        assert provider.resolve_comment_thread(123) is True
+        assert len(requester.calls) == 4
+        assert requester.calls[0][2].endswith("/pulls/comments/123")
+        assert requester.calls[1][:3] == ("check", "GET", "https://api.github.com/repos/owner/repo/pulls/comments/10")
+        assert "reviewThreads(first: 100, after: $cursor)" in requester.calls[2][3]["query"]
+        assert 'threadId: "PRRT_target"' in requester.calls[3][3]["query"]
+
+    @pytest.mark.parametrize(
+        "root_error, expected_status",
+        [(GithubException(404, {"message": "missing root response"}, None), "404"),
+         (RequestException("private transport details"), "network error")],
+        ids=["deleted-root", "network-error"],
+    )
+    def test_root_lookup_failure_falls_back_to_original_reply(self, monkeypatch, root_error, expected_status):
+        logger = MagicMock()
+        monkeypatch.setattr(gh_module, "get_logger", lambda: logger)
+        thread = {
+            "id": "PRRT_target", "isResolved": False,
+            "comments": {"nodes": [{"id": "PRR_reply"}]},
+        }
+        resolved = _make_graphql_response({"resolveReviewThread": {"thread": {"isResolved": True}}})
+        provider, requester = _make_provider_with_graphql(
+            {"node_id": "PRR_reply", "in_reply_to_id": 10},
+            [root_error, _make_threads_response([thread]), resolved],
+        )
+
+        assert provider.resolve_comment_thread(123) is True
+        assert len(requester.calls) == 4
+        assert requester.calls[1][:3] == ("check", "GET", "https://api.github.com/repos/owner/repo/pulls/comments/10")
+        assert "reviewThreads(first: 100, after: $cursor)" in requester.calls[2][3]["query"]
+        assert 'threadId: "PRRT_target"' in requester.calls[3][3]["query"]
+        logger.warning.assert_called_once_with(f"Could not fetch root of comment 123: status {expected_status}")
+
     def test_resolves_thread_successfully(self):
         rest_data = {"node_id": "PRR_comment1"}
         threads_response = _make_threads_response([
@@ -849,7 +1014,7 @@ class TestResolveCommentThread:
         result = provider.resolve_comment_thread(123)
 
         assert result is True
-        assert 'after: "cursor1"' in requester.calls[2][3]["query"]
+        assert requester.calls[2][3]["variables"]["cursor"] == "cursor1"
         assert "resolveReviewThread" in requester.calls[3][3]["query"]
 
     def test_handles_rest_api_exception(self):

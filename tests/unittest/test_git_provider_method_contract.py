@@ -80,6 +80,7 @@ def _github(monkeypatch) -> GithubProvider:
     provider = GithubProvider.__new__(GithubProvider)
     provider.base_url = "https://api.github.example"
     provider.repo = "owner/repo"
+    provider.max_comment_chars = 65000
     provider.pr = MagicMock()
     provider.pr.get_issue_comments.return_value = [SimpleNamespace(body=COMMENT_BODY)]
     provider.pr.get_commits.return_value = [SimpleNamespace(commit=SimpleNamespace(message=COMMIT_MESSAGE))]
@@ -96,7 +97,7 @@ def _gitlab(monkeypatch) -> GitLabProvider:
     provider.mr.commits.return_value._list = [{"message": COMMIT_MESSAGE}]
     note = MagicMock()
     note.awardemojis.create.return_value = SimpleNamespace(id=REACTION_ID)
-    note.awardemojis.list.return_value = [SimpleNamespace(name=REACTION_ID, delete=MagicMock())]
+    note.awardemojis.get.return_value = SimpleNamespace(delete=MagicMock())
     provider.gl = MagicMock()
     provider.gl.projects.get.return_value.mergerequests.get.return_value.notes.get.return_value = note
     return provider
@@ -108,6 +109,7 @@ def _gitea(monkeypatch) -> GiteaProvider:
     provider.owner = "owner"
     provider.repo = "repo"
     provider.pr_number = 7
+    provider.sha = "head-sha"
     provider.enabled_pr = True
     provider.enabled_issue = False
     provider.issue_number = None
@@ -116,6 +118,7 @@ def _gitea(monkeypatch) -> GiteaProvider:
     provider.repo_api.add_reaction_comment.return_value = SimpleNamespace(id=REACTION_ID)
     provider.repo_api.remove_reaction_comment.return_value = SimpleNamespace(status=200)
     provider.repo_api.get_pr_commits.return_value = [{"commit": {"message": COMMIT_MESSAGE}}]
+    provider._set_pr_commits()
     return provider
 
 
@@ -324,7 +327,7 @@ METHOD_CONTRACTS = (
         noop_value=None,
         check_supported=lambda _: None,
         tiers=_tiers(
-            supported=("github", "gitlab", "gitea", "azure-devops", "bitbucket", "bitbucket-server"),
+            supported=("github", "gitlab", "gitea", "azure-devops", "bitbucket", "bitbucket-server", "local"),
         ),
         # Signature + return-annotation contract: the providers that fetch repo-context files
         # must expose the same hook so the cache can key on the revision being read.
@@ -350,7 +353,7 @@ def _build_github_suggestion_provider(monkeypatch, tmp_path) -> GithubProvider:
 def _build_gitlab_suggestion_provider(monkeypatch, tmp_path) -> GitLabProvider:
     provider = _gitlab(monkeypatch)
     provider.resolve_outdated_inline_threads = MagicMock()
-    provider.get_diff_files = MagicMock(return_value=[SimpleNamespace(filename="app.py", head_file="orig\n")])
+    provider.get_diff_files = MagicMock(return_value=[SimpleNamespace(filename="app.py", head_file="orig\n", patch="")])
     return provider
 
 
@@ -418,9 +421,6 @@ SUGGESTION_OUTCOME_CONTRACTS = (
         ),
         make_succeed=lambda p, mp, tmp: setattr(p, "send_inline_comment", MagicMock(return_value=True)),
         payload=SUGGESTION_PAYLOAD,
-        deliberate_mismatch=DeliberateMismatch(
-            "GitLab unconditionally returns True; issue #3129 owns reporting total failures."
-        ),
     ),
     SuggestionOutcomeContract(
         provider_name="gitea",
@@ -629,11 +629,7 @@ def test_disable_eyes_short_circuits_before_any_backend_call(provider_name: str)
 
 @pytest.mark.parametrize(
     "provider_name",
-    [
-        name
-        for name, (cls, _) in PROVIDERS.items()
-        if "publish_code_suggestions" in cls.__dict__
-    ],
+    PROVIDERS,
 )
 def test_publish_code_suggestions_declares_bool_return(provider_name: str):
     provider_type, _ = PROVIDERS[provider_name]
@@ -641,15 +637,10 @@ def test_publish_code_suggestions_declares_bool_return(provider_name: str):
     assert hints.get("return") is bool
 
 
-def test_every_provider_overriding_publish_code_suggestions_has_a_contract_row():
-    overriding = {
-        name
-        for name, (cls, _) in PROVIDERS.items()
-        if "publish_code_suggestions" in cls.__dict__
-    }
+def test_every_provider_has_a_suggestion_outcome_contract():
     contracted = {contract.provider_name for contract in SUGGESTION_OUTCOME_CONTRACTS}
     assert len(contracted) == len(SUGGESTION_OUTCOME_CONTRACTS)
-    assert contracted == overriding
+    assert contracted == set(PROVIDERS)
 
 
 @pytest.mark.parametrize(

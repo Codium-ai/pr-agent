@@ -1,4 +1,7 @@
-## MOSAICO A2A server
+---
+title: "MOSAICO A2A Server"
+sidebar_position: 9
+---
 
 PR-Agent can run as an [A2A](https://a2a-protocol.org/) 1.0 *solution agent* for the
 [MOSAICO](https://mosaico-project.eu/) ecosystem: a small Starlette server that exposes the
@@ -25,12 +28,19 @@ The A2A server exposes three endpoints:
 Images with health-probe hardening return `Unhealthy: LLM probe failed` for provider
 failures; the health check's own warning records only the exception type.
 `mosaico.health_timeout_seconds` sets a finite positive deadline in seconds (default: 10)
-for cooperative asynchronous preparation and dispatch. Synchronous initialization and
-blocking SDK work can exceed this deadline. Older images may predate these protections.
+for cooperative asynchronous preparation, dispatch, stream consumption, and cleanup waiting.
+Stream cleanup can continue in the background after this deadline. Synchronous
+initialization and blocking SDK work can still exceed it.
+Older images may predate these protections.
 Set `MOSAICO__HEALTH_TIMEOUT_SECONDS` in the server's environment to override the default.
 Invalid values produce the generic unhealthy response (503), rather than using the default.
 When increasing the budget, also allow sufficient time in any external health-check client
 and container healthcheck; the bundled Compose probe uses a separate 25-second HTTP timeout.
+
+Chat and health-probe streams attempt cleanup on completion, failure, or cancellation.
+Consumer cancellation does not interrupt stream cleanup, which may continue after `/health`
+times out while the event loop remains active. Cleanup has no separate wait budget or
+configuration key and does not impose a local stream admission limit.
 
 The advertised agent card carries the skills `review`, `improve`, `describe`, and `ask`, the
 name `"PR-Agent Solution Agent"`, a `version` derived from the running build (never
@@ -38,6 +48,46 @@ hand-maintained), and the required
 `https://mosaico-project.eu/extensions/mosaico-observability` extension. Streaming is
 advertised as disabled, which is load-bearing: the reference agent selects
 `message/send` vs `message/stream` from that capability.
+
+### Request limits and caller authentication
+
+MOSAICO uses the shared `config.max_webhook_request_body_bytes` limit (5 MiB by default),
+including streamed bodies without a valid Content-Length. Oversized requests return HTTP 413
+before JSON-RPC parsing or tool execution. `mosaico.routing_scan_max_chars` (default: 65536,
+a positive integer) bounds PR URL and command detection per text segment. An incomplete token
+at the boundary is ignored; supplied diffs are still processed in full. Put the PR URL or
+command near the start of the message or its surrounding prose.
+
+Configure `mosaico.bearer_tokens` as a map of stable principal names to distinct opaque secrets
+in secret settings, or through Dynaconf's JSON environment syntax:
+
+```bash
+export MOSAICO__BEARER_TOKENS='@json {"reference-agent":"replace-with-generated-secret"}'
+```
+
+With a nonempty map, JSON-RPC and `/health` require `Authorization: Bearer <secret>`.
+Missing or invalid credentials return HTTP 401 before reading the body or running the LLM.
+The agent-card GET stays public and advertises the bearer requirement without exposing secrets.
+Use HTTPS at your ingress and configure the caller to send its credential. Tasks, artifacts,
+histories and context follow-ups are scoped to the configured principal; callers sharing a
+secret share that principal. Keep principal names stable when rotating secrets. Invalid
+credential maps, including duplicate secrets, fail app construction.
+
+The default empty map preserves anonymous access and shared task ownership for a trusted,
+single-tenant network. Configure authentication before exposing the service to other callers.
+These limits do not provide a task retention policy, rate limit or concurrency quota: the
+in-memory store still retains tasks until restart, and each authorized health probe performs
+a live completion.
+
+Observability root/super task IDs must be canonical UUIDs. Invalid IDs are omitted independently;
+valid IDs are normalized to lowercase before producing Langfuse trace context. A metadata error
+does not fail the review.
+
+For the bundled smoke test, provide the client credential as `MOSAICO_BEARER_TOKEN` in the
+script's environment when the server map is configured. For the Compose overlay, supply
+`PR_AGENT_BEARER_TOKEN` for the healthcheck and add `MOSAICO__BEARER_TOKENS` to the service's
+`environment` mapping through your secret configuration. Configure the reference caller's
+credential separately. Both probes continue to work without a token in anonymous mode.
 
 ### Run the standalone container
 
@@ -71,21 +121,22 @@ rolling tag moves to the newest build on every release.
 | `MODEL_MAX_TOKENS` | `32000` | Token budget for models whose context size pr-agent does not already know |
 | `LANGFUSE_HOST`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY` | unset | Optional Langfuse observability |
 
-!!! warning "AGENT_CARD_HOST / AGENT_CARD_PORT — the one thing to get right"
+:::warning[AGENT_CARD_HOST / AGENT_CARD_PORT — the one thing to get right]
 
-    These two variables set the URL the agent advertises in `supportedInterfaces`. Leave them
-    unset and the card advertises `http://localhost:9000/`, which is reachable only from
-    inside the container itself. The failure this causes is **silent and late**: registration
-    with MOSAICO succeeds, the repository stores the unreachable URL, and the reference agent
-    only fails to dereference it once it tries to route a task to this agent. Set them to
-    whatever host/port the *caller* will use to reach the container, and verify with:
+These two variables set the URL the agent advertises in `supportedInterfaces`. Leave them
+unset and the card advertises `http://localhost:9000/`, which is reachable only from
+inside the container itself. The failure this causes is **silent and late**: registration
+with MOSAICO succeeds, the repository stores the unreachable URL, and the reference agent
+only fails to dereference it once it tries to route a task to this agent. Set them to
+whatever host/port the *caller* will use to reach the container, and verify with:
 
-    ```bash
-    curl -s http://<host>:<port>/.well-known/agent-card.json \
-      | python3 -c "import sys,json; print(json.load(sys.stdin)['supportedInterfaces'][0]['url'])"
-    ```
+```bash
+curl -s http://<host>:<port>/.well-known/agent-card.json \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['supportedInterfaces'][0]['url'])"
+```
 
-    If that prints a `localhost` URL, the deployment is wrong.
+If that prints a `localhost` URL, the deployment is wrong.
+:::
 
 ### Deploy into the mosaico-demonstrator
 

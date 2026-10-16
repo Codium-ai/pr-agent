@@ -169,9 +169,9 @@ def test_multi_packing_preserves_negative_capacity_and_remaining_files(monkeypat
     capacities = []
     original = pr_processing._pack_pr_multi_diffs
 
-    def pack(*args):
+    def pack(*args, **kwargs):
         capacities.append(args[-1])
-        return original(*args)
+        return original(*args, **kwargs)
 
     monkeypatch.setattr(pr_processing, "_pack_pr_multi_diffs", pack)
     chunks, remaining = pr_processing.get_pr_multi_diffs(
@@ -218,7 +218,7 @@ async def test_routed_weak_and_fallback_attempts_pack_with_their_own_tokenizer(m
         pr_processing.get_pr_diff(Provider(), source, model)
         attempts.append((model, {tag for tag, text in events}))
         if model != "fallback-model":
-            raise RuntimeError("try fallback")
+            raise pr_processing.FallbackEligibleError("try fallback")
         return "ok"
 
     result = await pr_processing.retry_with_fallback_models(

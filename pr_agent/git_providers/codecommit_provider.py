@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from typing import List, Optional, Tuple
 from urllib.parse import urlparse
 
+from pr_agent.agent.request_policy import policy_metadata, policy_value
 from pr_agent.algo.file_filter import filter_ignored
 from pr_agent.algo.language_handler import build_language_file_matcher, is_valid_file
 from pr_agent.algo.review_finding_state import split_review_state_marker
@@ -19,7 +20,7 @@ from ..algo.comment_identity import (
 from ..algo.utils import load_large_diff
 from ..config_loader import get_settings
 from ..log import get_logger
-from .git_provider import GitProvider
+from .git_provider import GitProvider, cache_languages
 
 
 class PullRequestCCMimic:
@@ -79,6 +80,11 @@ class CodeCommitProvider(GitProvider):
     # cap is measured on what CodeCommit actually receives. Class-level, like
     # the other providers' max_comment_length, minus the truncation marker
     # limit_output_characters appends.
+    def get_request_policy_metadata(self, required_fields: set[str]) -> dict:
+        return policy_metadata(title=self.pr.title, sender=policy_value(self.pr, "author_arn"),
+                               repo_full_name=self.repo_name, source_branch=self.pr.source_branch,
+                               target_branch=self.pr.destination_branch)
+
     max_comment_length = 10240 - len("...")
 
     def __init__(self, pr_url: Optional[str] = None, incremental: Optional[bool] = False):
@@ -89,7 +95,7 @@ class CodeCommitProvider(GitProvider):
         self.pr = None
         self.diff_files = None
         self.git_files = None
-        self.pr_url = pr_url
+        self.pr_url = None
         if pr_url:
             self.set_pr(pr_url)
 
@@ -108,8 +114,19 @@ class CodeCommitProvider(GitProvider):
         return True
 
     def set_pr(self, pr_url: str):
-        self.repo_name, self.pr_num = self._parse_pr_url(pr_url)
-        self.pr = self._get_pr()
+        repo_name, pr_num = self._parse_pr_url(pr_url)
+        region_name = self._region_from_valid_pr_url(pr_url)
+        codecommit_client = CodeCommitClient(region_name=region_name)
+        pr = self._get_pr_from_client(codecommit_client, repo_name, pr_num, None)
+
+        self.codecommit_client = codecommit_client
+        self.pr_url = pr_url
+        self.repo_name = repo_name
+        self.pr_num = pr_num
+        self.pr = pr
+        self.diff_files = None
+        self.git_files = None
+        self._languages = None
 
     def get_files(self) -> list[CodeCommitFile]:
         # bring files from CodeCommit only once
@@ -160,9 +177,11 @@ class CodeCommitProvider(GitProvider):
         if len(self._get_target_contexts()) == 1:
             files = filter_ignored(files, platform="codecommit")
 
+        invalid_files_names = []
         for diff_item in files:
             # Skip "bad extensions" from language_extensions.toml, lockfiles and minified assets
             if not is_valid_file(diff_item.filename):
+                invalid_files_names.append(diff_item.filename)
                 continue
 
             patch_filename = ""
@@ -207,6 +226,7 @@ class CodeCommitProvider(GitProvider):
             )
             diff_files.append(info)
 
+        self.filtered_diff_file_names = invalid_files_names
         self.diff_files = diff_files
         return self.diff_files
 
@@ -315,10 +335,13 @@ class CodeCommitProvider(GitProvider):
         for suggestion in code_suggestions:
             # Verify that each suggestion has the required keys
             if not all(key in suggestion for key in ["body", "relevant_file", "relevant_lines_start"]):
-                get_logger().warning(f"Skipping code suggestion #{counter}: Each suggestion must have 'body', 'relevant_file', 'relevant_lines_start' keys")
+                get_logger().warning(
+                    f"Skipping code suggestion #{counter}: "
+                    f"Each suggestion must have 'body', 'relevant_file', 'relevant_lines_start' keys")
                 continue
 
             publishable_count += 1
+            prepared_body = self._prepare_comment_body(suggestion["body"])
             target_contexts = self._get_target_contexts_for_file(suggestion["relevant_file"])
             for target in target_contexts:
                 try:
@@ -331,13 +354,14 @@ class CodeCommitProvider(GitProvider):
                         pr_number=self.pr_num,
                         destination_commit=target["destination_commit"],
                         source_commit=target["source_commit"],
-                        comment=suggestion["body"],
+                        comment=prepared_body,
                         annotation_file=suggestion["relevant_file"],
                         annotation_line=suggestion["relevant_lines_start"],
                     )
                     published_count += 1
                 except Exception as e:
-                    raise ValueError(f"CodeCommit Cannot publish code suggestions for PR: {self.pr_num}") from e
+                    get_logger().warning(
+                        f"Could not publish code suggestion #{counter} for PR {self.pr_num}: {e}")
 
             counter += 1
 
@@ -377,7 +401,8 @@ class CodeCommitProvider(GitProvider):
             return False
         return updated_comment.get("commentId") == comment_id and updated_comment.get("content") == body
 
-    def publish_inline_comment(self, body: str, relevant_file: str, relevant_line_in_file: str, original_suggestion=None):
+    def publish_inline_comment(self, body: str, relevant_file: str,
+                               relevant_line_in_file: str, original_suggestion=None):
         # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/codecommit/client/post_comment_for_compared_commit.html
         raise NotImplementedError("CodeCommit provider does not support publishing inline comments yet")
 
@@ -396,9 +421,10 @@ class CodeCommitProvider(GitProvider):
         try:
             pr_id = f"{self.repo_name}/{self.pr_num}"
             return pr_id
-        except:
+        except AttributeError:
             return ""
 
+    @cache_languages
     def get_languages(self):
         """Return recognized language percentages for diff prioritization."""
         language_map = get_settings().get("language_extension_map_org", {}) or {}
@@ -508,15 +534,24 @@ class CodeCommitProvider(GitProvider):
         """
         return re.match(r"^[a-z]{2}-(gov-)?[a-z]+-\d\.console\.aws\.amazon\.com$", hostname) is not None
 
+    @staticmethod
+    def _region_from_valid_pr_url(pr_url: str) -> str:
+        return urlparse(pr_url).netloc.split(".", 1)[0]
+
     def _get_pr(self):
-        response = self.codecommit_client.get_pr(self.repo_name, self.pr_num)
+        return self._get_pr_from_client(self.codecommit_client, self.repo_name, self.pr_num, self.diff_files)
+
+    @staticmethod
+    def _get_pr_from_client(codecommit_client, repo_name: str, pr_num: int, diff_files):
+        response = codecommit_client.get_pr(repo_name, pr_num)
 
         if len(response.targets) == 0:
-            raise ValueError(f"No files found in CodeCommit PR: {self.pr_num}")
+            raise ValueError(f"No files found in CodeCommit PR: {pr_num}")
 
         # Return our object that mimics PullRequest class from the PyGithub library
         # (This strategy was copied from the LocalGitProvider)
-        mimic = PullRequestCCMimic(response.title, self.diff_files, targets=response.targets)
+        mimic = PullRequestCCMimic(response.title, diff_files, targets=response.targets)
+        mimic.author_arn = getattr(response, "author_arn", None)
         mimic.description = response.description
         mimic.source_commit = response.targets[0].source_commit
         mimic.source_branch = response.targets[0].source_branch
@@ -621,7 +656,7 @@ class CodeCommitProvider(GitProvider):
                 identifiers,
                 identity_marker,
                 used_comment_ids,
-                lambda candidate: matcher(candidate, target),
+                lambda candidate, matcher=matcher: matcher(candidate, target),
             )
             if comment is not None:
                 return comment
@@ -754,10 +789,12 @@ class CodeCommitProvider(GitProvider):
     @staticmethod
     def _add_additional_newlines(body: str) -> str:
         """
-        Replace single newlines in a PR body with double newlines.
+        Replace single newlines in a PR body with double newlines outside fenced code blocks.
 
         CodeCommit Markdown does not seem to render as well as GitHub Markdown,
         so we add additional newlines to the PR body to make it more readable in CodeCommit.
+        Newlines inside fenced code blocks are preserved verbatim so code suggestions and
+        snippets are not corrupted.
 
         Args:
         - body: the PR body
@@ -765,7 +802,53 @@ class CodeCommitProvider(GitProvider):
         Returns:
         - str: the PR body with the double newlines added
         """
-        return re.sub(r'(?<!\n)\n(?!\n)', '\n\n', body)
+        lines = body.splitlines(keepends=True)
+        result = []
+        in_fence = False
+        fence_char = ""
+        fence_len = 0
+        current_chunk = []
+
+        for line in lines:
+            stripped = line.lstrip(" \t")
+            if not in_fence:
+                m = re.match(r"^(`{3,}|~{3,})", stripped)
+                if m and (len(line) - len(stripped)) <= 3:
+                    if current_chunk:
+                        text = "".join(current_chunk)
+                        result.append(re.sub(r"(?<!\n)\n(?!\n)", "\n\n", text))
+                        current_chunk = []
+                    in_fence = True
+                    fence_char = m.group(1)[0]
+                    fence_len = len(m.group(1))
+                    current_chunk.append(line)
+                else:
+                    current_chunk.append(line)
+            else:
+                m = re.match(r"^(`{3,}|~{3,})[ \t]*\r?\n?$", stripped)
+                if m and (len(line) - len(stripped)) <= 3:
+                    close_char = m.group(1)[0]
+                    close_len = len(m.group(1))
+                    if close_char == fence_char and close_len >= fence_len:
+                        fence_token = line.rstrip("\r\n")
+                        trailing_nl = line[len(fence_token):]
+                        current_chunk.append(fence_token)
+                        result.append("".join(current_chunk))
+                        current_chunk = [trailing_nl] if trailing_nl else []
+                        in_fence = False
+                        fence_char = ""
+                        fence_len = 0
+                        continue
+                current_chunk.append(line)
+
+        if current_chunk:
+            text = "".join(current_chunk)
+            if in_fence:
+                result.append(text)
+            else:
+                result.append(re.sub(r"(?<!\n)\n(?!\n)", "\n\n", text))
+
+        return "".join(result)
 
     @staticmethod
     def _remove_markdown_html(comment: str) -> str:

@@ -3,6 +3,7 @@ import io
 
 import pytest
 
+from pr_agent.algo.artifacts import get_artifact_context
 from pr_agent.cli import _resolve_output_option, commands, run, set_parser
 from pr_agent.config_loader import get_settings
 
@@ -187,14 +188,37 @@ def test_missing_diff_file_fails_fast(tmp_path, monkeypatch, capsys):
     assert "Could not read --diff-file" in err
 
 
-def test_json_output_outside_diff_mode_fails_fast(capsys):
-    """Reject --json-output in hosted-provider mode via parser.error instead of
-    silently dropping the explicitly requested artifact."""
-    with pytest.raises(SystemExit) as exc_info:
-        run(inargs=["--pr_url", "https://example/pr/1", "--json-output", "out.json", "review"])
-    assert exc_info.value.code == 2
-    err = capsys.readouterr().err
-    assert "--json-output is only supported in plain-diff mode" in err
+@pytest.mark.parametrize("command", ["review", "review_pr"])
+def test_json_output_accepts_pr_review(command, monkeypatch, tmp_path):
+    from pr_agent.algo.review_json_output import review_json_output_path
+
+    captured = {}
+
+    class FakeAgent:
+        async def handle_request(self, target, request, notify=None):
+            captured.update(target=target, request=request, path=review_json_output_path.get())
+            return True
+
+    monkeypatch.setattr("pr_agent.cli.PRAgent", FakeAgent)
+    output = tmp_path / "review.json"
+    run(inargs=["--pr_url", "https://example/pr/1", "--json-output", str(output), command])
+
+    assert captured == {"target": "https://example/pr/1", "request": [command], "path": str(output)}
+    assert review_json_output_path.get() is None
+
+
+@pytest.mark.parametrize("target_args", [[], ["--issue_url", "https://example/issue/1"]])
+def test_json_output_requires_pr_or_diff(target_args, capsys):
+    with pytest.raises(SystemExit, match="2"):
+        run(inargs=[*target_args, "--json-output", "out.json", "review"])
+    assert "--json-output requires --pr_url, --stdin, or --diff-file" in capsys.readouterr().err
+
+
+def test_json_output_rejects_non_review_pr_command(monkeypatch, capsys):
+    _fail_if_agent_constructed(monkeypatch)
+    with pytest.raises(SystemExit, match="2"):
+        run(inargs=["--pr_url", "https://example/pr/1", "--json-output", "out.json", "describe"])
+    assert "--json-output is only supported for review commands" in capsys.readouterr().err
 
 
 @pytest.mark.parametrize(
@@ -366,7 +390,7 @@ def test_json_output_rejects_non_review_commands_before_read(
         run(inargs=[*input_args, "--json-output", "out.json", command])
 
     assert exc_info.value.code == 2
-    assert "--json-output is only supported for plain-diff review commands" in capsys.readouterr().err
+    assert "--json-output is only supported for review commands" in capsys.readouterr().err
 
 
 @pytest.mark.parametrize(
@@ -445,3 +469,30 @@ def test_diff_mode_sets_json_output_path(cfg, monkeypatch, tmp_path):
     run(inargs=["--stdin", "--json-output", str(output), "review"])
 
     assert captured["json_output_path"] == str(output)
+
+
+def test_plain_diff_fake_handler_sees_eager_artifact_without_new_keyword(monkeypatch, tmp_path):
+    """Keep the three-argument fake-handler contract while CLI owns the scope."""
+    artifact = tmp_path / "artifact.txt"
+    artifact.write_text("PLAIN_DIFF_ARTIFACT", encoding="utf-8")
+    captured = {}
+
+    class FakeAgent:
+        async def handle_request(self, target, request, notify=None):
+            captured["target"] = target
+            captured["request"] = request
+            captured["instructions"] = str(get_settings().pr_reviewer.extra_instructions)
+            captured["artifact_context"] = get_artifact_context("pr_reviewer")
+            return True
+
+    monkeypatch.setenv("GITHUB_WORKSPACE", str(tmp_path))
+    monkeypatch.setenv("ARTIFACT_PATH", str(artifact))
+    monkeypatch.setattr("pr_agent.cli.PRAgent", FakeAgent)
+    monkeypatch.setattr("sys.stdin", io.StringIO(_DIFF))
+
+    run(inargs=["--stdin", "review"])
+
+    assert captured["target"] == "local_diff"
+    assert captured["request"] == ["review"]
+    assert "PLAIN_DIFF_ARTIFACT" not in captured["instructions"]
+    assert captured["artifact_context"]["content"].count("PLAIN_DIFF_ARTIFACT") == 1

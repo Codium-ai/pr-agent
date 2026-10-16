@@ -1,3 +1,8 @@
+---
+title: "Generate Labels"
+sidebar_position: 7
+---
+
 ## Overview
 
 The `generate_labels` tool scans the PR code changes and generates custom labels for the PR based on the content and context of the changes.
@@ -56,6 +61,20 @@ description = "Code refactoring without functional changes"
 2. It uses AI to determine which labels best match the PR content
 3. Labels are automatically applied to the PR (if the git provider supports it)
 4. If labels cannot be applied directly, they are published as a comment
+
+Both `/generate_labels` and `/describe` filter model-generated labels before publishing.
+The allowed set contains the built-in PR types (`Bug fix`, `Tests`, `Enhancement`,
+`Documentation`, `Other`) plus the configured custom label names when custom labels
+are enabled. With custom labels enabled but no custom set configured, the default
+set also includes `Bug fix with tests`. Matching ignores case, and unknown generated
+labels are dropped with a warning. Existing human-added labels are preserved and
+are not restricted by this filter.
+
+Prompt enum keys such as `bug_fix` and `RELEASE_READY` are resolved to their
+allowed display names, ignoring case. If a nonempty model response contains only
+rejected labels, `/generate_labels` leaves the current labels unchanged. An
+explicit `labels: []` response retains the existing behavior of clearing old
+bot-owned labels while preserving human-added labels.
 
 ## Comparison with `/describe` labels
 
