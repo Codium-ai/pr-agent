@@ -171,7 +171,7 @@ to-do list.
 | `review_heading` | "PR Reviewer Guide" | Visible base heading for full and incremental review comments. Identity is tracked separately. |
 | `persistent_finding_state` | true | Persist review finding state across complete review runs. |
 | `max_previous_findings_chars` | 8000 | Character budget for the findings stored by earlier reviews, given to /review as context so it keeps their wording instead of re-raising them reworded, and skips findings whose GitHub or GitLab inline thread someone other than PR-Agent resolved (needs persistent_finding_state); 0 disables it. |
-| `inline_key_issues` | false | Publish each review finding as an inline comment where the provider can verify inline-comment publication (GitHub, Bitbucket Cloud, Azure DevOps, GitLab). |
+| `inline_key_issues` | false | Publish each review finding as an inline comment where the provider can verify inline-comment publication (GitHub, Bitbucket Cloud, Azure DevOps, GitLab, Gitea). |
 | `extra_instructions` | "" |  |
 | `num_max_findings` | 3 |  |
 | `final_update_message` | true |  |
