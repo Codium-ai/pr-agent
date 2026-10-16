@@ -27,8 +27,8 @@ to-do list.
 
 | Key | Default | Description |
 | --- | --- | --- |
-| `model` | "gpt-5.6" |  |
-| `fallback_models` | ["gpt-5.6-terra"] |  |
+| `model` | "gpt-6.1-sol" |  |
+| `fallback_models` | ["gpt-6-luna"] |  |
 **CLI**
 
 | Key | Default | Description |
@@ -480,7 +480,7 @@ _This section only documents commented-out examples; see the [TOML source](https
 | Key | Default | Description |
 | --- | --- | --- |
 | `enable` | false | Rules are checked in order; the first one whose limits the pull request fits selects the primary model for the call, and config.fallback_models still apply after it. A pull request that fits no rule uses config.model. Size is measured after the [ignore] rules by diff hunks (max_hunks) and changed files (max_files), which every git provider reports and which do not depend on any model's tokenizer. Only calls that ask for the regular model are routed (/review, /improve, /generate_labels, /add_docs); tools that use model_weak are left alone. With Azure (openai.deployment_id set) a rule also needs its own deployment_id, or it is skipped. |
-| `rules` | [] | e.g. [{ max_hunks = 3, model = "gpt-5.6-luna" }, { max_hunks = 15, max_files = 6, model = "gpt-5.6-terra" }] |
+| `rules` | [] | Enable the Luna example only on a version with the routed-fallback collision repair (public PR #4064). Example: [{ max_hunks = 3, model = "gpt-6-luna" }, { max_hunks = 15, max_files = 6, model = "gpt-6.1-sol" }] |
 
 
 ## `[otel]` {#otel}
