@@ -17,6 +17,7 @@ num_max_findings = 10
 
 [config]
 model = "root-model"
+fallback_models = ["root-fallback-one", "root-fallback-two"]
 temperature = 0.1
 """
 
@@ -908,8 +909,10 @@ fallback_models = ["m-one", "m-two", "m-three", "m-four", "m-five"]
 
         # Fallback routing stays root-/host-controlled: the retry helper turns each
         # entry into one more routed attempt per failing model, so a nested file must
-        # not be able to multiply AI calls with an arbitrarily long list.
-        assert list(get_settings().config.fallback_models) == ["gpt-5.6-terra"]
+        # not be able to multiply AI calls with an arbitrarily long list. The root fixture
+        # carries its own list so this also fails if merging silently swaps a configured
+        # root or host fallback for the shipped default.
+        assert list(get_settings().config.fallback_models) == ["root-fallback-one", "root-fallback-two"]
         # Other model-routing and output knobs still apply.
         assert get_settings().config.model == "nested-model"
         assert get_settings().config.temperature == 0.5

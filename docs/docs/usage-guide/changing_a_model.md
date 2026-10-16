@@ -1025,7 +1025,7 @@ custom_model_max_tokens= ...
 reasoning_effort = "medium" # "none", "minimal", "low", "medium", "high", "xhigh", "max"
 ```
 
-With the OpenAI models that support reasoning effort (eg: gpt-5.6-terra), you can specify its reasoning effort via `config` section. The default value is `medium`. You can change it to any supported value based on your usage. Available values depend on the model and provider. Where litellm marks minimal unsupported for a GPT-5 model, PR-Agent sends low instead.
+With the OpenAI models that support reasoning effort (eg: gpt-6-luna), you can specify its reasoning effort via `config` section. The default value is `medium`. You can change it to any supported value based on your usage. Available values depend on the model and provider. Where litellm marks minimal unsupported for a GPT-5 model, PR-Agent sends low instead. For native OpenAI GPT-6 requests, PR-Agent maps `minimal` to `low` for all supported GPT-6 models. It also maps `none` to `low` for GPT-6.1 Sol; GPT-6 Luna accepts `none`.
 
 For a model served through an OpenAI-compatible endpoint that litellm does not recognize as reasoning-capable, add its ID to `config.additional_reasoning_effort_models`. For known models support is decided by litellm's bundled reasoning metadata plus the maintained Grok registry (Grok ids resolve through their `xai/` prefix) with Claude models left out of the metadata path (their reasoning comes from the dedicated extended/adaptive thinking settings; an explicit entry in the list above still applies to them). Config IDs match exactly or through any provider prefix (e.g. `"deepseek-v4-flash-0731"` matches `"openai/deepseek-v4-flash-0731"`). When LiteLLM does not recognize the model, PR-Agent sets `allowed_openai_params = ["reasoning_effort"]` so the parameter reaches the endpoint. Note the default `"medium"` may be rejected by providers that accept a different subset (e.g. `"none"/"low"/"high"/"max"`); adding a custom model ID surfaces that provider-side error instead of silently dropping the setting.
 
@@ -1169,8 +1169,16 @@ configured output limit.
 
 ## Routing small pull requests to a cheaper model
 
-`config.model` handles every pull request, however small. With model routing enabled, a pull request under a
-configured size goes to a cheaper model instead, and `config.fallback_models` still apply after it:
+Without routing, regular-model calls use `config.model`, however small the pull request. In this example,
+the first rule selects the cheaper Luna model; the second deliberately keeps the default Sol model.
+`config.fallback_models` still apply after the selected primary:
+
+:::warning[Routing example requires the collision repair]
+Enable this example only on a version that includes the routed-fallback collision repair tracked in
+[public PR #4064](https://github.com/The-PR-Agent/pr-agent/pull/4064).
+Without it, selecting Luna with the shipped fallback list retries Luna instead of reaching Sol.
+Routing is disabled by default; regular calls without a routing rule use Sol followed by Luna.
+:::
 
 ```toml
 [model_routing]
@@ -1178,12 +1186,12 @@ enable = true
 
 [[model_routing.rules]]
 max_hunks = 3
-model = "gpt-5.6-luna"
+model = "gpt-6-luna"
 
 [[model_routing.rules]]
 max_hunks = 15
 max_files = 6
-model = "gpt-5.6-terra"
+model = "gpt-6.1-sol"
 ```
 
 Rules are checked in order, and the first one whose limits the pull request fits selects the primary model for
