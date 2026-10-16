@@ -797,6 +797,34 @@ Authentication uses the [GitHub Copilot provider](https://docs.litellm.ai/docs/p
 
 Whether Copilot's terms permit this programmatic use is a question for GitHub rather than a guarantee this project can make, so confirm before relying on the route.
 
+### Cheaper Inference
+
+[Cheaper Inference](https://cheaperinference.com) is an OpenAI-compatible LLM gateway. It needs no provider-specific code in PR-Agent: the `openai/` prefix routes the request to Cheaper Inference's base URL through litellm's OpenAI-compatible path.
+
+To use a model through Cheaper Inference, set:
+
+```toml
+[config] # in configuration.toml
+model = "openai/gpt-5.4-mini"
+fallback_models = ["openai/claude-sonnet-5"]
+custom_model_max_tokens = 400000 # the smaller context window Cheaper Inference publishes for the two models
+
+[openai] # in .secrets.toml
+api_base = "https://api.cheaperinference.com/v1"
+key = "..." # your Cheaper Inference api key
+```
+
+or use the environment variables (make sure to use double underscores `__`):
+
+```bash
+OPENAI__API_BASE=https://api.cheaperinference.com/v1
+OPENAI__KEY=...
+```
+
+(you can obtain a Cheaper Inference API key from [here](https://cheaperinference.com/signup))
+
+Keep the `openai/` prefix on the model name, whichever Cheaper Inference model ID you use (`openai/gpt-5.4-mini`, `openai/claude-sonnet-5`, `openai/gemini-3.1-pro`, `openai/deepseek-v4-flash`, ...): the prefix routes the request through litellm's OpenAI-compatible path. A prefixed name is not in the `MAX_TOKENS` table [here](https://github.com/the-pr-agent/pr-agent/blob/main/pr_agent/algo/__init__.py), so you also have to set `custom_model_max_tokens`. Take the value from Cheaper Inference's [model catalog](https://cheaperinference.com/#models).
+
 ### RelaxAI
 
 [RelaxAI](https://relax.ai) offers an OpenAI-compatible API. It needs no provider-specific
