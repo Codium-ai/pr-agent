@@ -637,6 +637,11 @@ class GitLabProvider(GitProvider):
                     f"(attempt {attempt}/{attempts}), retrying in {delay}s: {e}"
                 )
                 _diff_ready_sleep(delay)
+        # Unreachable in practice: the final loop iteration always re-raises. Keeps the
+        # explicit return contract if the delays tuple ever changes shape.
+        raise IncompleteGitLabDiffError(
+            f"GitLab merge request {self.id_mr} diff collection ended without a verdict"
+        )
 
     def _collect_merge_request_changes(self, path: str) -> dict:
         """Collect the diff pages once, failing on unstable or not-yet-ready responses."""
