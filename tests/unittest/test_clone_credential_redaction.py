@@ -94,6 +94,32 @@ def test_short_prefixed_identifiers_are_unchanged():
     assert redact_credentials(text) == text
 
 
+@pytest.mark.parametrize("kind, token", [
+    # A minimum-length body ending in "-" let the old trailing \b backtrack below the
+    # lower bound, so the whole token escaped unredacted.
+    ("anthropic_key", "sk-ant-" + "A" * 31 + "-"),
+    ("openai_key", "sk-proj-" + "A" * 31 + "-"),
+    # Longer hyphen-ending bodies used to keep their "-" suffix in the output.
+    ("anthropic_key", "sk-ant-" + "A" * 40 + "-"),
+    ("slack_token", "xoxb-123456789012-1234567890123-" + "aB12" * 6 + "-"),
+])
+def test_hyphen_ending_token_bodies_are_fully_masked(kind, token):
+    counts = {}
+    redacted = redact_credentials(f"retry with {token} now", redaction_counts=counts)
+    assert token not in redacted
+    assert redacted == "retry with <redacted> now"
+    assert counts == {kind: 1}
+
+
+def test_github_pat_followed_by_underscore_is_masked():
+    """A trailing \b cannot sit between an alnum and "_", so the PAT part of a longer
+    identifier used to escape unredacted; the lookahead masks the PAT body itself."""
+    pat = "ghp_" + "aB12" * 9
+    redacted = redact_credentials(f"id {pat}_tail")
+    assert pat not in redacted
+    assert redacted == "id <redacted>_tail"
+
+
 def test_clone_uses_clean_url_and_http_auth_header(tmp_path):
     provider = BitbucketServerProvider.__new__(BitbucketServerProvider)
     destination = tmp_path / "checkout"

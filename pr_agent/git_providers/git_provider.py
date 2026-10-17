@@ -153,13 +153,18 @@ _GITLAB_TOKEN_RE = re.compile(r"\bglpat-[A-Za-z0-9_-]+")
 _AWS_ACCESS_KEY_RE = re.compile(r"\b(?:A3T[A-Z0-9]|AKIA|ASIA)[A-Z0-9]{16}\b")
 # Bare tokens carry no context (no URL, header, or keyword assignment), so they are matched by
 # their documented provider formats. Minimum lengths keep ordinary words and short identifiers
-# from matching; the shapes follow the providers' published token formats.
-_GITHUB_TOKEN_RE = re.compile(r"\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{36,255}\b")
-_GITHUB_FINE_GRAINED_PAT_RE = re.compile(r"\bgithub_pat_[A-Za-z0-9_]{36,255}\b")
-_ANTHROPIC_KEY_RE = re.compile(r"\bsk-ant-[A-Za-z0-9_-]{32,255}\b")
-_OPENAI_KEY_RE = re.compile(r"\bsk-(?:proj|svcacct|admin)-[A-Za-z0-9_-]{32,255}\b|\bsk-[A-Za-z0-9]{40,255}\b")
+# from matching; the shapes follow the providers' published token formats. Each pattern ends with
+# a negative lookahead over its own alphabet instead of \b: a word boundary cannot sit behind a
+# trailing "-" (non-word char), which let minimum-length hyphen-ending bodies backtrack below the
+# lower bound and escape unredacted.
+_GITHUB_TOKEN_RE = re.compile(r"\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{36,255}(?![A-Za-z0-9])")
+_GITHUB_FINE_GRAINED_PAT_RE = re.compile(r"\bgithub_pat_[A-Za-z0-9_]{36,255}(?![A-Za-z0-9_])")
+_ANTHROPIC_KEY_RE = re.compile(r"\bsk-ant-[A-Za-z0-9_-]{32,255}(?![A-Za-z0-9_-])")
+_OPENAI_KEY_RE = re.compile(r"\bsk-(?:proj|svcacct|admin)-[A-Za-z0-9_-]{32,255}(?![A-Za-z0-9_-])"
+                            r"|\bsk-[A-Za-z0-9]{40,255}(?![A-Za-z0-9])")
 _GOOGLE_API_KEY_RE = re.compile(r"\bAIza[A-Za-z0-9_-]{32,42}(?![A-Za-z0-9_-])")
-_SLACK_TOKEN_RE = re.compile(r"\bxox[a-z]-[0-9A-Za-z-]{10,255}\b|\bxapp-[0-9A-Za-z-]{10,255}\b")
+_SLACK_TOKEN_RE = re.compile(r"\bxox[a-z]-[0-9A-Za-z-]{10,255}(?![0-9A-Za-z-])"
+                             r"|\bxapp-[0-9A-Za-z-]{10,255}(?![0-9A-Za-z-])")
 
 
 # The reaction PR-Agent has always added when it picks a comment command up. Used as the
