@@ -532,6 +532,57 @@ key = ...
 
 (you can obtain a deepseek-v4 key from [here](https://platform.deepseek.com/api_keys))
 
+### CompactifAI
+
+To use [CompactifAI](https://docs.compactif.ai/), select a model with LiteLLM's
+`compactifai/` prefix, for example:
+
+```toml
+[config] # in configuration.toml
+model = "compactifai/glm-5-3"
+fallback_models = ["compactifai/glm-5-2"]
+reasoning_effort = "high"
+additional_reasoning_effort_models = ["compactifai/glm-5-3", "compactifai/glm-5-2"]
+```
+
+Set `config.custom_model_max_tokens` to a positive limit for PR-Agent's
+context-window budgeting, within the verified limits of your CompactifAI
+deployment. This is required until the selected model's input limit is available
+in PR-Agent's registry or the installed LiteLLM metadata.
+CompactifAI's public model pages do not currently specify those limits.
+
+PR-Agent also caps the effective budget with `config.max_model_tokens`, which
+defaults to 32,000. To use a larger verified budget, raise both
+`config.custom_model_max_tokens` and `config.max_model_tokens`; the effective limit
+is the smaller of the two values.
+
+This budgeting limit is not the amount of space available for the changed-code diff.
+PR-Agent reserves output tokens and subtracts fixed prompt tokens before fitting
+the diff, so its usable capacity is lower. Account for these reservations when
+choosing your verified limits.
+
+Provide your API key in `.secrets.toml`:
+
+```toml
+[compactifai]
+key = "..."
+```
+
+Alternatively, set `COMPACTIFAI__KEY` or LiteLLM's native `COMPACTIFAI_API_KEY`
+environment variable. The configured key takes precedence over the native
+environment variable. LiteLLM uses `https://api.compactif.ai/v1` automatically;
+no OpenAI API key or endpoint override is required.
+
+Other [available models](https://docs.compactif.ai/models/) include
+`compactifai/quasar-438b`. When selecting it, include that model ID in
+`config.additional_reasoning_effort_models` as well. The explicit list enables
+reasoning when the installed LiteLLM metadata does not yet recognize these models.
+Use `"high"`, which is supported by GLM-5.2, GLM-5.3 and Quasar-438B; PR-Agent's
+default `"medium"` is not a supported effort for these models. See the
+[GLM-5.3](https://docs.compactif.ai/models/glm_5_3/),
+[GLM-5.2](https://docs.compactif.ai/models/glm_5_2/) and
+[Quasar-438B](https://docs.compactif.ai/models/quasar_438b/) documentation.
+
 ### GLM (Z.AI)
 
 To use GLM models with Z.AI (Zhipu), for example, set:
@@ -797,6 +848,62 @@ Authentication uses the [GitHub Copilot provider](https://docs.litellm.ai/docs/p
 
 Whether Copilot's terms permit this programmatic use is a question for GitHub rather than a guarantee this project can make, so confirm before relying on the route.
 
+### Cheaper Inference
+
+[Cheaper Inference](https://cheaperinference.com) is an OpenAI-compatible LLM gateway. It needs no provider-specific code in PR-Agent: the `openai/` prefix routes the request to Cheaper Inference's base URL through litellm's OpenAI-compatible path.
+
+To use a model through Cheaper Inference, set:
+
+```toml
+[config] # in configuration.toml
+model = "openai/gpt-5.4-mini"
+fallback_models = ["openai/claude-sonnet-5"]
+custom_model_max_tokens = 400000 # the smaller context window Cheaper Inference publishes for the two models
+
+[openai] # in .secrets.toml
+api_base = "https://api.cheaperinference.com/v1"
+key = "..." # your Cheaper Inference api key
+```
+
+or use the environment variables (make sure to use double underscores `__`):
+
+```bash
+OPENAI__API_BASE=https://api.cheaperinference.com/v1
+OPENAI__KEY=...
+```
+
+(you can obtain a Cheaper Inference API key from [here](https://cheaperinference.com/signup))
+
+Keep the `openai/` prefix on the model name, whichever Cheaper Inference model ID you use (`openai/gpt-5.4-mini`, `openai/claude-sonnet-5`, `openai/gemini-3.1-pro`, `openai/deepseek-v4-flash`, ...): the prefix routes the request through litellm's OpenAI-compatible path. A prefixed name is not in the `MAX_TOKENS` table [here](https://github.com/the-pr-agent/pr-agent/blob/main/pr_agent/algo/__init__.py), so you also have to set `custom_model_max_tokens`. Take the value from Cheaper Inference's [model catalog](https://cheaperinference.com/#models).
+
+### RelaxAI
+
+[RelaxAI](https://relax.ai) offers an OpenAI-compatible API. It needs no provider-specific
+code in PR-Agent: use the `openai/` model prefix and configure RelaxAI's endpoint and key
+through the existing `[openai]` settings.
+
+```toml
+[config] # in configuration.toml
+model = "openai/DeepSeek-V4-Pro"
+custom_model_max_tokens = 1049000 # use the context window published for the selected model
+
+[openai] # in .secrets.toml
+api_base = "https://api.relax.ai/v1/"
+key = "..." # your RelaxAI API key
+```
+
+or use environment variables (make sure to use double underscores `__`):
+
+```bash
+OPENAI__API_BASE=https://api.relax.ai/v1/
+OPENAI__KEY=...
+```
+
+Keep the `openai/` prefix on the model name to route through LiteLLM's OpenAI-compatible
+path. The model IDs and context windows can change; see the
+[RelaxAI API documentation](https://relax.ai/docs/getting-started/introduction) for current
+integration details and available models.
+
 ### Atlas Cloud
 
 [Atlas Cloud](https://www.atlascloud.ai) is an OpenAI-compatible inference platform. It needs no provider-specific code in PR-Agent: the `openai/` prefix routes the request to Atlas's base URL through litellm's OpenAI-compatible path, the same way [OrcaRouter](#orcarouter) and the [Neon AI Gateway](#neon-ai-gateway) are handled.
@@ -828,6 +935,62 @@ Keep the `openai/` prefix on the model name, whichever Atlas model ID you use (`
 :::note[Reasoning models need output headroom]
 Several Atlas models are reasoning models that spend completion tokens on a hidden chain of thought before writing the answer. `deepseek-ai/deepseek-v4-pro` with `max_tokens = 16` returns `finish_reason = "length"` and an **empty** `message.content` — all 16 completion tokens were reasoning tokens. If a tool comes back blank, raise the output budget rather than assuming the request failed. Non-reasoning IDs such as `deepseek-ai/DeepSeek-V3.1` are unaffected.
 :::
+
+### Heabsy
+
+[Heabsy](https://heabsy.com/platform) is an OpenAI-compatible inference API for open models, operated in the EU. Models in its EEA tier run on dedicated GPUs in EEA data centres with zero data retention. It needs no provider-specific code in PR-Agent: the `openai/` prefix routes the request to Heabsy's base URL through litellm's OpenAI-compatible path, the same way [Atlas Cloud](#atlas-cloud) and [OrcaRouter](#orcarouter) are handled.
+
+To use a model served by Heabsy, set:
+
+```toml
+[config] # in configuration.toml
+model = "openai/qwen38"
+fallback_models = ["openai/qwen38"]
+custom_model_max_tokens = 262144 # the context window Heabsy publishes for the model
+
+[openai] # in .secrets.toml
+api_base = "https://api.heabsy.com/v1"
+key = "..." # your Heabsy api key
+```
+
+or use the environment variables (make sure to use double underscores `__`):
+
+```bash
+OPENAI__API_BASE=https://api.heabsy.com/v1
+OPENAI__KEY=...
+```
+
+(API keys are issued in the [Heabsy console](https://platform.heabsy.com); accounts are opened on request at [heabsy.com/contacts](https://heabsy.com/contacts).)
+
+Keep the `openai/` prefix on the model name: a prefixed name is not in the `MAX_TOKENS` table, so you also have to set `custom_model_max_tokens`. Take the value from Heabsy's [model catalog](https://heabsy.com/models).
+
+### DemonRoute
+
+[DemonRoute](https://demonroute.com) is an OpenAI-compatible API for open-weight models, billed prepaid with a hard stop at a $0 balance. It needs no provider-specific code in PR-Agent: the `openai/` prefix routes the request to DemonRoute's base URL through litellm's OpenAI-compatible path, the same way [Atlas Cloud](#atlas-cloud) and [Heabsy](#heabsy) are handled.
+
+To use a model served by DemonRoute, set:
+
+```toml
+[config] # in configuration.toml
+model = "openai/NousResearch/Hermes-3-Llama-3.1-8B"
+fallback_models = ["openai/NousResearch/Hermes-3-Llama-3.1-8B"]
+custom_model_max_tokens = 131072 # the context window DemonRoute publishes for the model
+
+[openai] # in .secrets.toml
+api_base = "https://api.demonroute.com/v1"
+key = "..." # your DemonRoute api key
+```
+
+or use the environment variables (make sure to use double underscores `__`):
+
+```bash
+OPENAI__API_BASE=https://api.demonroute.com/v1
+OPENAI__KEY=...
+```
+
+(you can obtain a DemonRoute API key from [demonroute.com](https://demonroute.com))
+
+Keep the `openai/` prefix on the model name, whichever DemonRoute model ID you use: the prefix routes the request through litellm's OpenAI-compatible path. A prefixed name is not in the `MAX_TOKENS` table [here](https://github.com/the-pr-agent/pr-agent/blob/main/pr_agent/algo/__init__.py), so you also have to set `custom_model_max_tokens`.
 
 ### Custom models
 
@@ -862,7 +1025,7 @@ custom_model_max_tokens= ...
 reasoning_effort = "medium" # "none", "minimal", "low", "medium", "high", "xhigh", "max"
 ```
 
-With the OpenAI models that support reasoning effort (eg: gpt-5.6-terra), you can specify its reasoning effort via `config` section. The default value is `medium`. You can change it to any supported value based on your usage. Available values depend on the model and provider. Where litellm marks minimal unsupported for a GPT-5 model, PR-Agent sends low instead.
+With the OpenAI models that support reasoning effort (eg: gpt-6-luna), you can specify its reasoning effort via `config` section. The default value is `medium`. You can change it to any supported value based on your usage. Available values depend on the model and provider. Where litellm marks minimal unsupported for a GPT-5 model, PR-Agent sends low instead. For native OpenAI GPT-6 requests, PR-Agent maps `minimal` to `low` for all supported GPT-6 models. It also maps `none` to `low` for GPT-6.1 Sol; GPT-6 Luna accepts `none`.
 
 For a model served through an OpenAI-compatible endpoint that litellm does not recognize as reasoning-capable, add its ID to `config.additional_reasoning_effort_models`. For known models support is decided by litellm's bundled reasoning metadata plus the maintained Grok registry (Grok ids resolve through their `xai/` prefix) with Claude models left out of the metadata path (their reasoning comes from the dedicated extended/adaptive thinking settings; an explicit entry in the list above still applies to them). Config IDs match exactly or through any provider prefix (e.g. `"deepseek-v4-flash-0731"` matches `"openai/deepseek-v4-flash-0731"`). When LiteLLM does not recognize the model, PR-Agent sets `allowed_openai_params = ["reasoning_effort"]` so the parameter reaches the endpoint. Note the default `"medium"` may be rejected by providers that accept a different subset (e.g. `"none"/"low"/"high"/"max"`); adding a custom model ID surfaces that provider-side error instead of silently dropping the setting.
 
@@ -1006,9 +1169,9 @@ configured output limit.
 
 ## Routing small pull requests to a cheaper model
 
-Without routing, regular-model calls use `config.model`, however small the pull request. With model routing
-enabled, a pull request under a configured size goes to a cheaper model instead.
-Configured fallbacks follow the selected primary if it fails:
+Without routing, regular-model calls use `config.model`, however small the pull request. In this example,
+the first rule selects the cheaper Luna model; the second deliberately keeps the default Sol model.
+`config.fallback_models` still apply after the selected primary:
 
 ```toml
 [model_routing]
@@ -1016,12 +1179,12 @@ enable = true
 
 [[model_routing.rules]]
 max_hunks = 3
-model = "gpt-5.6-luna"
+model = "gpt-6-luna"
 
 [[model_routing.rules]]
 max_hunks = 15
 max_files = 6
-model = "gpt-5.6-terra"
+model = "gpt-6.1-sol"
 ```
 
 Rules are checked in order, and the first one whose limits the pull request fits selects the primary model for
@@ -1034,12 +1197,12 @@ A matched rule replaces the first pair. If the routed `(model, deployment)` pair
 configured fallbacks, the effective chain removes duplicate pairs while preserving their order and adds
 the displaced configured primary pair at the end, unless it is already present. This avoids retrying the
 same endpoint while retaining the configured primary in this collision case. With
-`config.model = "gpt-5.6"`, no deployment configured, and the second rule above:
+`config.model = "gpt-6.1-sol"`, no deployment configured, and the first rule above:
 
 | `config.fallback_models` | retry order if earlier attempts fail |
 | --- | --- |
-| `["gpt-5.6-terra"]` (shipped default) | `gpt-5.6-terra`, `gpt-5.6` |
-| `["gpt-5.6-terra", "other-model"]` | `gpt-5.6-terra`, `other-model`, `gpt-5.6` |
+| `["gpt-6-luna"]` (shipped default) | `gpt-6-luna`, `gpt-6.1-sol` |
+| `["gpt-6-luna", "other-model"]` | `gpt-6-luna`, `other-model`, `gpt-6.1-sol` |
 
 The first successful attempt returns immediately; later entries are attempted only after fallback-eligible
 failures. An empty fallback list adds no backup, and a noncolliding route still replaces the primary without

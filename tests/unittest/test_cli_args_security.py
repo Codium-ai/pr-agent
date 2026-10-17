@@ -6,6 +6,9 @@ import pr_agent.agent.pr_agent as pr_agent_module
 from pr_agent.algo.cli_args import _MAPPING_TOO_COMPLEX_ARG, CliArgs
 
 FORBIDDEN_ARGS = [
+    "--linear.api_token=secret",
+    "--LINEAR__API_TOKEN=secret",
+    '--linear={"api_token": "secret"}',
     # section-qualified key forms
     "--openai.key=secret",
     "--OPENAI.KEY=secret",

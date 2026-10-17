@@ -133,6 +133,7 @@ class GiteaProvider(GitProvider):
         self.diff_files = None
         self.incremental = IncrementalPR(False)
         self.comments_list = []
+        self._published_inline_comment_bodies: list[str] = []
         self.unreviewed_files_map = dict()
 
         if "pulls" in url:
@@ -452,8 +453,37 @@ class GiteaProvider(GitProvider):
             self.logger.error("Failed to publish inline comment")
             return False
 
+        self._remember_published_inline_comment_bodies(comments)
         self.logger.info("Inline comment published")
         return True
+
+    def get_persistent_comment_bodies(self) -> list[str]:
+        """Return existing PR comment bodies, review comments included, for inline deduplication."""
+        bodies = self.get_recent_inline_comment_bodies()
+        seen = set(bodies)
+        # The issue comments endpoint leaves out review comments, which is where inline findings live.
+        existing = [getattr(comment, "body", None) for comment in self.get_issue_comments()]
+        existing += self.repo_api.list_pull_review_comment_bodies(self.owner, self.repo, self.pr_number)
+        for body in existing:
+            if isinstance(body, str) and body and body not in seen:
+                bodies.append(body)
+                seen.add(body)
+        return bodies
+
+    def get_recent_inline_comment_bodies(self) -> list[str]:
+        """Return inline comment bodies published by this provider run."""
+        return list(getattr(self, "_published_inline_comment_bodies", []))
+
+    def _remember_published_inline_comment_bodies(self, comments: List[Dict[str, Any]]) -> None:
+        """Remember bodies after Gitea accepts an inline review."""
+        recent = getattr(self, "_published_inline_comment_bodies", None)
+        if recent is None:
+            recent = []
+            self._published_inline_comment_bodies = recent
+        for comment in comments:
+            body = comment.get("body") if isinstance(comment, dict) else None
+            if isinstance(body, str) and body and body not in recent:
+                recent.append(body)
 
     def publish_code_suggestions(self, suggestions: List[Dict[str, Any]]) -> bool:
         """Publish code suggestions"""
@@ -1064,6 +1094,30 @@ class RepoApi(giteapy.RepositoryApi):
             repo=repo,
             index=index
         )
+
+    def list_pull_review_comment_bodies(self, owner: str, repo: str, pr_number: int) -> List[str]:
+        """Get the body of every review comment on the pull request.
+
+        Reviews are paginated, but the comments of one review come back in a single response.
+        Errors propagate: a partial listing must not pass for the complete one.
+        """
+        bodies = []
+        for review in self._list_all_pages(f'/repos/{owner}/{repo}/pulls/{pr_number}/reviews'):
+            if not review.get("comments_count"):
+                continue
+            response = self.api_client.call_api(
+                f'/repos/{owner}/{repo}/pulls/{pr_number}/reviews/{review["id"]}/comments',
+                'GET',
+                path_params={},
+                response_type=None,
+                _return_http_data_only=False,
+                _preload_content=False,
+                auth_settings=['AuthorizationHeaderToken']
+            )
+            raw_response = response[0] if isinstance(response, tuple) else response.data
+            comments = json.loads(raw_response.read().decode('utf-8'))
+            bodies.extend(comment.get("body", "") for comment in comments)
+        return bodies
 
     def get_pull_request_diff(self, owner: str, repo: str, pr_number: int) -> str:
         """Get the diff content of a pull request using direct API call"""

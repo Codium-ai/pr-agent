@@ -56,6 +56,7 @@ def _make_instance(prediction_yaml: str = "") -> PRDescription:
 def _settings(
     *,
     add_original_user_description: bool = False,
+    publish_description_as_comment: bool = False,
     publish_labels: bool = False,
     enable_pr_type: bool = True,
     enable_pr_description: bool = True,
@@ -69,6 +70,7 @@ def _settings(
     settings = MagicMock()
     pd = settings.pr_description
     pd.add_original_user_description = add_original_user_description
+    pd.publish_description_as_comment = publish_description_as_comment
     pd.publish_labels = publish_labels
     pd.enable_pr_type = enable_pr_type
     pd.generate_ai_title = generate_ai_title
@@ -211,6 +213,18 @@ class TestPrepareData:
         obj._prepare_data()
 
         assert obj.data["User Description"] == "Original body from user"
+
+    @patch("pr_agent.tools.pr_description.get_settings")
+    def test_user_description_is_skipped_when_published_as_comment(self, mock_get_settings):
+        mock_get_settings.return_value = _settings(
+            add_original_user_description=True, publish_description_as_comment=True
+        )
+        obj = _make_instance(yaml.dump({"title": "t", "description": "d"}))
+        obj.user_description = "Original body from user"
+
+        obj._prepare_data()
+
+        assert "User Description" not in obj.data
 
 
 # ---------------------------------------------------------------------------

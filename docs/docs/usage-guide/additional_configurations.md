@@ -38,7 +38,7 @@ API-cost collection is a separate, default-off option controlled by `config.outp
 
 `config.output_run_details` remains the public-output gate: setting only `config.output_run_cost=true` collects run-level cost data but never adds it to a PR comment.
 
-On providers that support GitHub-Flavored Markdown this appends a collapsible section to the generated comment; elsewhere `/review` and `/describe` append the same information as plain text:
+On providers that support GitHub-Flavored Markdown this appends a collapsible section to the generated comment; elsewhere the same information is appended as plain text (except for `/improve`, see the notes below):
 
 ```
 ⚙️ Agent run details
@@ -59,6 +59,7 @@ The amount is an estimate based on LiteLLM's pricing data, not provider-invoice-
 
 Notes:
 
+- `/ask`, `/ask_line`, and `/help <question>` append the section to the published answer. `/update_changelog` appends it to its comment only; the content committed to `CHANGELOG.md` and the review comment that points at it never include it, so a push whose review succeeds shows no section. Messages that need no AI call, such as the static `/help` walkthrough or an `/ask_line` question that matches no diff lines, carry no section.
 - `/improve` appends the section only when it publishes a summary comment. If the provider lacks GFM support or `pr_code_suggestions.committable_code_suggestions` is enabled, `/improve` posts inline comments instead, so no run details section appears.
 - With `pr_description.use_description_markers=true`, repeated `/describe` runs accumulate one run details block per run because the existing PR description is preserved and only the markers are replaced.
 
