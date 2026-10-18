@@ -113,6 +113,31 @@ class TestGitLabProvider:
             mock_gitlab_client.http_get.side_effect = _current_mr_metadata
             return provider
 
+    def test_get_commit_messages_reads_all_commits_with_larger_pages(self, gitlab_provider):
+        client = Gitlab("https://gitlab.example.com", private_token="test-token")
+        gitlab_provider.mr = client.projects.get("test/repo", lazy=True).mergerequests.get(1, lazy=True)
+        next_url = (
+            "https://gitlab.example.com/api/v4/projects/test%2Frepo/"
+            "merge_requests/1/commits?page=2&per_page=100"
+        )
+        responses = []
+        for start, stop, next_link in [(0, 100, next_url), (100, 101, None)]:
+            response = MagicMock()
+            response.json.return_value = [{"message": f"message {index}"} for index in range(start, stop)]
+            response.links = {"next": {"url": next_link}} if next_link else {}
+            response.headers = {}
+            responses.append(response)
+        client.http_request = MagicMock(side_effect=responses)
+
+        with patch("pr_agent.git_providers.gitlab_provider.get_settings") as mock_settings:
+            mock_settings.return_value.get.return_value = None
+            result = gitlab_provider.get_commit_messages()
+
+        assert result.splitlines() == [f"{index + 1}. message {index}" for index in range(101)]
+        assert client.http_request.call_count == 2
+        assert client.http_request.call_args_list[0].kwargs["per_page"] == 100
+        assert client.http_request.call_args_list[1].args[1] == next_url
+
     def test_filtered_lockfile_name_is_available_without_ignored_paths(self, gitlab_provider):
         def change(name):
             return {
