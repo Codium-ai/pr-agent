@@ -631,6 +631,24 @@ def test_incomplete_files_notice_fails_open_when_comment_lookup_fails(monkeypatc
     provider.publish_comment.assert_called_once()
 
 
+def test_incomplete_files_notice_publishes_when_lazy_comment_page_fails(monkeypatch):
+    provider = _incomplete_files_provider()
+
+    def incomplete_comments():
+        yield {"body": "Unrelated comment"}
+        raise RuntimeError("comment page unavailable")
+
+    provider.get_issue_comments_newest_first.return_value = incomplete_comments()
+    monkeypatch.setattr(get_settings().config, "publish_output", True, raising=False)
+    monkeypatch.setattr(pr_agent_module, "get_git_provider_with_context", lambda _pr_url: provider)
+
+    pr_agent_module.publish_incomplete_files_comment(
+        "https://example/pr/1", pr_agent_module.IncompletePullRequestFilesError("incomplete")
+    )
+
+    provider.publish_comment.assert_called_once()
+
+
 def test_incomplete_files_notice_fails_open_when_comment_body_cannot_be_read(monkeypatch):
     provider = _incomplete_files_provider([object()])
     provider._get_comment_body.side_effect = RuntimeError("comment decoding failed")

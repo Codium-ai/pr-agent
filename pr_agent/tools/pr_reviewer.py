@@ -1589,7 +1589,7 @@ class PRReviewer:
 
     def _get_user_answers(self) -> tuple[str, str]:
         """
-        Retrieves the question and answer strings from the discussion messages related to a pull request.
+        Retrieves the newest question and any answer posted after it from pull-request comments.
 
         Returns:
             A tuple containing the question and answer strings.
@@ -1600,22 +1600,14 @@ class PRReviewer:
         if self.is_answer and self.git_provider.is_supported("get_issue_comments"):
             # __init__ already raises when is_answer is True and this is unsupported, so
             # this repeats that check locally rather than relying on the caller for it.
-            discussion_messages = self.git_provider.get_issue_comments()
-
-            # providers return the comments oldest-first. PyGithub's PaginatedList reverses lazily,
-            # so prefer it and only materialise the plain lists other providers return.
-            newest_first = getattr(discussion_messages, "reversed", None)
-            if newest_first is None:
-                newest_first = reversed(list(discussion_messages))
+            newest_first = self.git_provider.get_issue_comments_newest_first()
 
             for message in newest_first:
                 if "Questions to better understand the PR:" in message.body:
                     question_str = message.body
-                elif '/answer' in message.body:
-                    answer_str = message.body
-
-                if answer_str and question_str:
                     break
+                if not answer_str and '/answer' in message.body:
+                    answer_str = message.body
 
         return question_str, answer_str
 
