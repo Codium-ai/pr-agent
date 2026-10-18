@@ -237,7 +237,7 @@ class PRSimilarIssue:
                 get_logger().info('Indexing the entire repo...')
 
                 get_logger().info('Getting issues...')
-                issues = list(repo_obj.get_issues(state='all'))
+                issues = repo_obj.get_issues(state='all')
                 get_logger().info('Done')
                 self._update_index_with_issues(
                     issues,
@@ -300,7 +300,7 @@ class PRSimilarIssue:
                 get_logger().info('Indexing the entire repo...')
 
                 get_logger().info('Getting issues...')
-                issues = list(repo_obj.get_issues(state='all'))
+                issues = repo_obj.get_issues(state='all')
                 get_logger().info('Done')
 
                 self._update_table_with_issues(issues, repo_name_for_index, ingest=ingest, force_refresh=force_refresh)
@@ -381,7 +381,7 @@ class PRSimilarIssue:
             if run_from_scratch or ingest:
                 get_logger().info('Indexing the entire repo...')
                 get_logger().info('Getting issues...')
-                issues = list(repo_obj.get_issues(state='all'))
+                issues = repo_obj.get_issues(state='all')
                 get_logger().info('Done')
                 self._update_qdrant_with_issues(issues, repo_name_for_index, ingest=ingest)
             else:
@@ -558,13 +558,17 @@ class PRSimilarIssue:
         )
 
         counter = 0
-        for issue in issues_list:
-            if issue.pull_request:
-                continue
-
+        issues_iterator = iter(issues_list)
+        while True:
             if counter >= self.max_issues_to_scan:
                 get_logger().info(f"Scanned {self.max_issues_to_scan} issues, stopping")
                 break
+            try:
+                issue = next(issues_iterator)
+            except StopIteration:
+                break
+            if issue.pull_request:
+                continue
 
             issue_str, comments, number = self._process_issue(issue)
             issue_key = f"issue_{number}"
@@ -680,13 +684,17 @@ class PRSimilarIssue:
         sentinel_id = f"example_issue_{repo_name_for_index}"
 
         counter = 0
-        for issue in issues_list:
-            if issue.pull_request:
-                continue
-
+        issues_iterator = iter(issues_list)
+        while True:
             if counter >= self.max_issues_to_scan:
                 get_logger().info(f"Scanned {self.max_issues_to_scan} issues, stopping")
                 break
+            try:
+                issue = next(issues_iterator)
+            except StopIteration:
+                break
+            if issue.pull_request:
+                continue
 
             issue_str, comments, number = self._process_issue(issue)
             issue_key = f"issue_{number}"
@@ -790,13 +798,17 @@ class PRSimilarIssue:
         )
 
         counter = 0
-        for issue in issues_list:
-            if issue.pull_request:
-                continue
-
+        issues_iterator = iter(issues_list)
+        while True:
             if counter >= self.max_issues_to_scan:
                 get_logger().info(f"Scanned {self.max_issues_to_scan} issues, stopping")
                 break
+            try:
+                issue = next(issues_iterator)
+            except StopIteration:
+                break
+            if issue.pull_request:
+                continue
 
             issue_str, comments, number = self._process_issue(issue)
             issue_key = f"issue_{number}"
