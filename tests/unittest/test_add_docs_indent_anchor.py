@@ -109,3 +109,63 @@ def test_blank_lines_are_skipped_when_anchoring_on_a_comment_line():
 
     assert '    """Adds docs."""' in result
     compile(_apply(head, 2, result), "a.py", "exec")
+
+
+@pytest.mark.parametrize("prefix, model_prefix, placement", [
+    ("\t", "", "before"),
+    ("\t", "    ", "after"),
+    (" \t", "        ", "before"),
+    (" \t", "", "after"),
+    ("    ", "        ", "before"),
+    ("    ", "        ", "after"),
+])
+def test_documentation_uses_the_literal_anchor_prefix(prefix, model_prefix, placement):
+    head = f"def f():\n{prefix}return 1"
+    compile(head, "a.py", "exec")
+    line = 1 if placement == "after" else 2
+    target = head.splitlines()[line - 1]
+
+    result = _tool(head).dedent_code(
+        "a.py", line, model_prefix + SNIPPET, doc_placement=placement, add_original_line=True
+    )
+
+    aligned = prefix + SNIPPET
+    assert result == (target + "\n" + aligned if placement == "after" else aligned + "\n" + target)
+    compile(_apply(head, line, result), "a.py", "exec")
+
+
+@pytest.mark.parametrize("placement", ["before", "after"])
+def test_multiline_alignment_preserves_relative_indentation_and_blank_positions(placement):
+    head = "def f():\n\treturn 1"
+    snippet = '\n    """Summary.\n      Detail.\n   \n    End.\n    """\n\n'
+    aligned = '\n\t"""Summary.\n\t  Detail.\n\n\tEnd.\n\t"""\n\n'
+    line = 1 if placement == "after" else 2
+    target = head.splitlines()[line - 1]
+
+    tool = _tool(head)
+    assert tool.dedent_code("a.py", line, snippet, doc_placement=placement) == aligned
+    result = tool.dedent_code("a.py", line, snippet, doc_placement=placement, add_original_line=True)
+
+    assert result == (target + "\n" + aligned if placement == "after" else aligned.rstrip() + "\n" + target)
+    compile(_apply(head, line, result), "a.py", "exec")
+
+
+@pytest.mark.parametrize("snippet", [
+    '    """Summary.\n  Outdented.\n    """',
+    '\t"""Summary.\n    Incompatible.\n\t"""',
+    " \t\n\n ",
+])
+def test_unalignable_documentation_is_rejected(snippet):
+    assert _tool("def f():\n    return 1").dedent_code("a.py", 1, snippet, add_original_line=True) is None
+
+
+def test_post_anchor_alignment_error_does_not_return_raw_documentation():
+    class UnreadableDocumentation(str):
+        def split(self, *args, **kwargs):
+            raise ValueError("unreadable documentation")
+
+        def splitlines(self, *args, **kwargs):
+            raise ValueError("unreadable documentation")
+
+    snippet = UnreadableDocumentation(SNIPPET)
+    assert _tool("def f():\n    return 1").dedent_code("a.py", 1, snippet, add_original_line=True) is None
