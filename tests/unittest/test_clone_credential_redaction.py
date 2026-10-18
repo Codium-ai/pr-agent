@@ -66,6 +66,34 @@ def test_empty_input_is_safe():
     assert redact_credentials("") == ""
 
 
+_BARE_TOKEN_CASES = [
+    ("github_token", "ghp_" + "aB12" * 9),                    # classic PAT (40 chars)
+    ("github_token", "ghs_" + "aB12" * 9),                    # GitHub App / Actions GITHUB_TOKEN
+    ("github_fine_grained_pat", "github_pat_" + "xY9" * 7 + "_" + "zQ7" * 20),
+    ("anthropic_key", "sk-ant-api03-" + "aB12" * 10),
+    ("openai_key", "sk-proj-" + "aB12" * 10),
+    ("openai_key", "sk-" + "aB12" * 12),                      # legacy 48-char key
+    ("google_api_key", "AIzaSy" + "aB12" * 9),
+    ("slack_token", "xoxb-123456789012-1234567890123-" + "aB12" * 6),
+    ("slack_token", "xapp-" + "1" * 12 + "-" + "aB12" * 6),
+]
+
+
+@pytest.mark.parametrize("kind, token", _BARE_TOKEN_CASES)
+def test_bare_provider_tokens_are_masked(kind, token):
+    counts = {}
+    redacted = redact_credentials(f"curl: 401 for token {token} (retry 3/5)", redaction_counts=counts)
+    assert token not in redacted
+    assert redacted == "curl: 401 for token <redacted> (retry 3/5)"
+    assert counts == {kind: 1}
+
+
+def test_short_prefixed_identifiers_are_unchanged():
+    """Minimum lengths keep ordinary identifiers that merely start like a token prefix."""
+    text = "ids: ghp_abc123 sk-ant-api03-x sk-proj-12 xoxb-abc AIzaSyA github_pat_1 disk-sk-shop projsk-0000"
+    assert redact_credentials(text) == text
+
+
 def test_clone_uses_clean_url_and_http_auth_header(tmp_path):
     provider = BitbucketServerProvider.__new__(BitbucketServerProvider)
     destination = tmp_path / "checkout"

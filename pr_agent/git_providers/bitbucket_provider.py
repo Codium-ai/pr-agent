@@ -1,3 +1,4 @@
+import ast
 import difflib
 import json
 import math
@@ -51,6 +52,40 @@ def _gef_filename(diff):
 
 def _split_raw_diff(raw_diff: str) -> list[str]:
     return [part for part in re.split(r"(?m)(?=^diff --git )", raw_diff) if part.startswith("diff --git ")]
+
+
+_DIFF_HEADER_RE = re.compile(r'^diff --git ("(?:\\.|[^"\\])*"|\S+) ("(?:\\.|[^"\\])*"|\S+)$')
+
+
+def _diff_header_paths(patch: str) -> tuple[str, str] | None:
+    """Read the old and new paths from a Git diff header, including quoted paths."""
+    header = patch.split("\n", 1)[0].rstrip("\r")
+    match = _DIFF_HEADER_RE.fullmatch(header)
+    if not match:
+        # Git leaves paths with spaces unquoted; with an unchanged name the header splits at its midpoint.
+        rest = header[len("diff --git "):]
+        mid = len(rest) // 2
+        if rest.startswith("a/") and rest[mid:mid + 3] == " b/" and rest[2:mid] == rest[mid + 3:]:
+            return rest[2:mid], rest[mid + 3:]
+        return None
+    paths = []
+    for token in match.groups():
+        try:
+            path = ast.literal_eval(token) if token.startswith('"') else token
+            if token.startswith('"') and re.search(r"\\[0-7]{3}", token):
+                path = path.encode("latin-1").decode("utf-8")
+        except (SyntaxError, ValueError, UnicodeError):
+            return None
+        if not path.startswith(("a/", "b/")):
+            return None
+        paths.append(path[2:])
+    return paths[0], paths[1]
+
+
+def _diffstat_paths(diff) -> tuple[str, str]:
+    old_path = diff.old.path or diff.new.path
+    new_path = diff.new.path or diff.old.path
+    return old_path, new_path
 
 
 def _diffstat_line_count(diff, field: str) -> Optional[int]:
@@ -272,9 +307,33 @@ class BitbucketProvider(GitProvider):
     def is_supported(self, capability: str) -> bool:
         if capability in ['publish_inline_comments', 'get_labels', 'gfm_markdown']:
             return False
-        if capability == "push_code" and get_settings().config.restricted_mode:
-            return False
+        if capability == "push_code":
+            return not get_settings().config.restricted_mode and self._pr_head_in_base_repo()
         return True
+
+    def _pr_head_in_base_repo(self) -> bool:
+        """Check that the source branch belongs to the repository used by the write API."""
+        data = getattr(self.pr, "data", None)
+        if not isinstance(data, dict):
+            return False
+        source = data.get("source")
+        destination = data.get("destination")
+        if not isinstance(source, dict) or not isinstance(destination, dict):
+            return False
+        source_repo = source.get("repository")
+        destination_repo = destination.get("repository")
+        if not isinstance(source_repo, dict) or not isinstance(destination_repo, dict):
+            return False
+
+        source_uuid = source_repo.get("uuid")
+        destination_uuid = destination_repo.get("uuid")
+        if isinstance(source_uuid, str) and source_uuid and isinstance(destination_uuid, str) and destination_uuid:
+            return source_uuid.casefold() == destination_uuid.casefold()
+        source_name = source_repo.get("full_name")
+        destination_name = destination_repo.get("full_name")
+        return (isinstance(source_name, str) and bool(source_name)
+                and isinstance(destination_name, str) and bool(destination_name)
+                and source_name.casefold() == destination_name.casefold())
 
     def set_pr(self, pr_url: str):
         self.workspace_slug, self.repo_slug, self.pr_num = self._parse_pr_url(pr_url)
@@ -333,14 +392,25 @@ class BitbucketProvider(GitProvider):
                 raise ValueError(f"Failed to decode PR patch with encodings {encodings_to_try}") from e
 
         diff_split = _split_raw_diff(pr_patches)
-        # filter all elements of 'diff_split' that are of indices in 'diffs_original' that are not in 'diffs'
-        if len(diff_split) > len(diffs) and len(diffs_original) == len(diff_split):
-            diff_split = [diff_split[i] for i in range(len(diff_split)) if diffs_original[i] in diffs]
-        if len(diff_split) != len(diffs):
+        patches_by_path = {}
+        for patch in diff_split:
+            paths = _diff_header_paths(patch)
+            if paths is None or paths in patches_by_path:
+                raise IncompleteBitbucketPullRequestFilesError(
+                    "Bitbucket aggregate diff contains an invalid or duplicate file header"
+                )
+            patches_by_path[paths] = patch
+
+        original_paths = {_diffstat_paths(diff) for diff in diffs_original}
+        kept_paths = [_diffstat_paths(diff) for diff in diffs]
+        if (len(original_paths) != len(diffs_original) or len(set(kept_paths)) != len(kept_paths)
+                or not patches_by_path.keys() <= original_paths
+                or not set(kept_paths) <= patches_by_path.keys()):
             get_logger().error(f"Error - failed to split the diff into {len(diffs)} parts")
             raise IncompleteBitbucketPullRequestFilesError(
                 "Bitbucket aggregate diff does not match its changed-file inventory"
             )
+        diff_split = [patches_by_path[paths] for paths in kept_paths]
         # Bitbucket headers vary by change type and may include mode or rename
         # metadata. Keep only the unified-diff hunks consumed downstream.
         for i, patch in enumerate(diff_split):
@@ -734,7 +804,7 @@ class BitbucketProvider(GitProvider):
             elif branch == self.pr.destination_branch:
                 branch = self.pr.data["destination"]["commit"]["hash"]
             url = (f"https://api.bitbucket.org/2.0/repositories/{self.workspace_slug}/{self.repo_slug}/src/"
-                   f"{branch}/{file_path}")
+                   f"{branch}/{quote(file_path, safe='/')}")
             response = requests.request("GET", url, headers=self.headers, timeout=get_http_request_timeout())
             if response.status_code == 404:  # not found
                 return ""
@@ -749,13 +819,15 @@ class BitbucketProvider(GitProvider):
             return ""
 
     def get_pr_file_content_snapshot(self, file_path: str, branch: str) -> FileContentSnapshot:
+        if not self._pr_head_in_base_repo():
+            raise ValueError("Cannot snapshot a fork pull request for writing")
         if branch != self.pr.source_branch:
             raise ValueError("Bitbucket file snapshots require the PR source branch")
         revision = self.pr.data["source"]["commit"]["hash"]
         if not isinstance(revision, str) or not revision:
             raise ValueError("Bitbucket file snapshot is missing its source commit")
         url = (f"https://api.bitbucket.org/2.0/repositories/{self.workspace_slug}/{self.repo_slug}/src/"
-               f"{revision}/{file_path}")
+               f"{revision}/{quote(file_path, safe='/')}")
         response = requests.request(
             "GET", url, headers=self.headers, timeout=get_http_request_timeout())
         if response.status_code == 404:
@@ -766,6 +838,10 @@ class BitbucketProvider(GitProvider):
     def create_or_update_pr_file(
         self, file_path: str, branch: str, contents="", message="", *, expected_snapshot: FileContentSnapshot
     ) -> None:
+        if not self._pr_head_in_base_repo():
+            raise ValueError("Cannot write to a fork pull request")
+        if branch != self.pr.source_branch:
+            raise ValueError("Bitbucket file writes require the PR source branch")
         if not isinstance(expected_snapshot.revision, str) or not expected_snapshot.revision:
             raise ValueError("Bitbucket file write requires the captured source commit")
         url = (f"https://api.bitbucket.org/2.0/repositories/{self.workspace_slug}/{self.repo_slug}/src/")

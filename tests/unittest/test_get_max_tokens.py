@@ -617,6 +617,20 @@ class TestGetMaxTokens:
         monkeypatch.setattr(token_budget, "get_settings", lambda: fake_settings)
         assert get_max_tokens(model) == 1048576
 
+    @pytest.mark.parametrize("model", [
+        "gemini/gemini-4-argon",
+        "vertex_ai/gemini-4-argon",
+    ])
+    def test_gemini_4_x_models_max_tokens(self, monkeypatch, model):
+        fake_settings = type("", (), {
+            "config": type("", (), {
+                "custom_model_max_tokens": 0,
+                "max_model_tokens": 0,
+            })()
+        })()
+        monkeypatch.setattr(token_budget, "get_settings", lambda: fake_settings)
+        assert get_max_tokens(model) == 1048576
+
     def test_bedrock_mantle_grok_4_3_model_max_tokens(self, monkeypatch):
         fake_settings = type("", (), {
             "config": type("", (), {
@@ -1319,6 +1333,8 @@ class TestNoLiteLLMDuplicates:
     LITELLM_BUNDLED_MAP_UNKNOWN = {
         "gemini/gemini-3.8-flash",
         "vertex_ai/gemini-3.8-flash",
+        "gemini/gemini-4-argon",
+        "vertex_ai/gemini-4-argon",
         "openrouter/x-ai/grok-4.5",
         "openrouter/x-ai/grok-4.6",
         "xai/grok-build-latest",

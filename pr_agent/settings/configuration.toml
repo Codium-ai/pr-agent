@@ -5,10 +5,11 @@
 [config]
 max_webhook_request_body_bytes = 5242880 # maximum request body accepted by webhook servers (5 MiB)
 # models
-model="gpt-5.6"
-fallback_models=["gpt-5.6-terra"]
-#model_reasoning="gpt-5.6-terra" # dedicated reasoning model for self-reflection
-#model_weak="gpt-5.6-luna" # optional, a weaker model to use for some easier tasks
+model="gpt-6.1-sol"
+fallback_models=["gpt-6-luna"]
+#model_reasoning="gpt-6.1-sol" # dedicated reasoning model for self-reflection
+# Leave model_weak unset with the shipped fallbacks: Luna would retry Luna, not a distinct model.
+#model_weak="gpt-6-luna" # optional, a weaker model to use for some easier tasks
 # CLI
 git_provider="github"
 publish_output=true
@@ -131,7 +132,8 @@ additional_reasoning_effort_models = []
 # match `future-model` to `openrouter/vendor/future-model:nitro`). Keep other model
 # variants at their full ID. Preserve the former static registry entries below when
 # litellm's metadata still marks them temperature-capable; see the issue for the probe diff.
-no_temperature_models = ["deepseek/deepseek-reasoner", "o1-mini", "o1-mini-2024-09-12", "o1", "o1-2024-12-17", "o3-mini", "o3-mini-2025-01-31", "o3", "o3-2025-04-16", "o4-mini", "o4-mini-2025-04-16", "gpt-5.1-codex", "gpt-5.1-codex-mini", "gpt-5.2-codex", "gpt-5.3-codex", "gpt-5-mini"]
+# Bedrock rejects temperature for Kimi K3 ("This model doesn't support the temperature field").
+no_temperature_models = ["deepseek/deepseek-reasoner", "o1-mini", "o1-mini-2024-09-12", "o1", "o1-2024-12-17", "o3-mini", "o3-mini-2025-01-31", "o3", "o3-2025-04-16", "o4-mini", "o4-mini-2025-04-16", "gpt-5.1-codex", "gpt-5.1-codex-mini", "gpt-5.2-codex", "gpt-5.3-codex", "gpt-5-mini", "moonshotai.kimi-k3", "us.moonshotai.kimi-k3", "global.moonshotai.kimi-k3"]
 # extended thinking for Claude reasoning models
 enable_claude_extended_thinking = false # Set to true to enable extended thinking feature
 extended_thinking_budget_tokens = 2048
@@ -193,7 +195,7 @@ persistent_finding_state=true # Persist review finding state across complete rev
 # resolved (needs persistent_finding_state); 0 disables it.
 max_previous_findings_chars = 8000
 
-inline_key_issues=false # Publish each review finding as an inline comment where the provider can verify inline-comment publication (GitHub, Bitbucket Cloud, Azure DevOps, GitLab).
+inline_key_issues=false # Publish each review finding as an inline comment where the provider can verify inline-comment publication (GitHub, Bitbucket Cloud, Azure DevOps, GitLab, Gitea).
 extra_instructions = ""
 num_max_findings = 3
 final_update_message = true
@@ -463,9 +465,10 @@ jira_requirements_field = ""
 # text with another prefix ("SHA-256", "UTF-8", "ISO-8601") is dropped before any lookup,
 # so it no longer costs an authenticated 404 each. Entries must be plain upper-case keys;
 # a supplied list with no valid entry disables the lookup rather than widening it.
-# Empty (default) looks up every key found. Host-only, like jira_site and jira_api_email:
-# repository settings and comment arguments cannot change them.
-project_keys = []
+# Wildcard ["*"] (default) looks up every key found. An empty list ([]) disables Jira ticket
+# lookups. Host-only, like jira_site and jira_api_email: repository settings and comment
+# arguments cannot change them.
+project_keys = ["*"]
 
 [litellm]
 # use_client = false
@@ -540,7 +543,13 @@ max_tokens = 0 # hard cap on completion tokens for the request; 0 = unset
 # are routed (/review, /improve, /generate_labels, /add_docs); tools that use model_weak are left alone.
 # With Azure (openai.deployment_id set) a rule also needs its own deployment_id, or it is skipped.
 enable = false
-rules = [] # e.g. [{ max_hunks = 3, model = "gpt-5.6-luna" }, { max_hunks = 15, max_files = 6, model = "gpt-5.6-terra" }]
+# Example: [{ max_hunks = 3, model = "gpt-6-luna" },
+# { max_hunks = 15, max_files = 6, model = "gpt-6.1-sol" }]
+# A matched rule replaces the primary (model, deployment) pair. If it matches a configured fallback pair,
+# deduplicate the effective chain and append the displaced primary unless already present.
+# Otherwise the configured fallbacks follow unchanged. Later pairs are attempted only after fallback-eligible
+# failures; distinct deployments remain separate. /improve uses this effective chain for chunk recovery.
+rules = []
 
 [otel]
 # Keys map to settings.get("OTEL.*") via section-key dot notation.
@@ -616,6 +625,9 @@ context_history_max_tasks = 100 # maximum prior tasks considered for a context f
 
 [asana]
 request_timeout = 10 # seconds allowed for each Asana task API request
+
+[linear]
+request_timeout = 10 # seconds allowed for each Linear issue API request
 
 [azure_devops]
 default_comment_status = "closed"

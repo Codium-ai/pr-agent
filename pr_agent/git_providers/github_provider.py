@@ -64,7 +64,7 @@ from .git_provider import (
 
 
 def _next_page_url(headers: dict) -> str:
-    link = headers.get("Link", "")
+    link = next((value for key, value in headers.items() if key.lower() == "link"), "")
     if not link:
         return ""
     for part in link.split(","):
@@ -869,9 +869,10 @@ class GithubProvider(GitProvider):
         if not pr:
             return None
         url = f"{self.base_url}/repos/{self.repo}/commits/{head_sha}/check-runs"
+        parameters = {"check_name": check_run_name}
         while url:
             try:
-                headers, data = pr._requester.requestJsonAndCheck("GET", url)
+                headers, data = pr._requester.requestJsonAndCheck("GET", url, parameters=parameters)
             except (GithubException, RequestException) as e:
                 get_logger().warning(f"Failed to look up existing check runs, error: {e}")
                 return None
@@ -883,6 +884,7 @@ class GithubProvider(GitProvider):
                 get_logger().warning(f"Failed to read the check runs payload, error: {e}")
                 return None
             url = _next_page_url(headers)
+            parameters = None  # Use the filter embedded in the next-page URL.
         return None
 
     def publish_comment(self, pr_comment: str, is_temporary: bool = False):
@@ -1056,12 +1058,12 @@ class GithubProvider(GitProvider):
     def supports_thread_resolution(self) -> bool:
         return True
 
-    def _review_thread_nodes(self):
-        """List all review threads through the paginated GraphQL query used for resolution."""
+    def _review_thread_nodes(self, *, root_only: bool = False):
+        """List review threads, optionally fetching only their root comment IDs."""
         owner, repo_name = self.repo.split("/")
         cursor = None
         query = """
-        query($owner: String!, $repo: String!, $number: Int!, $cursor: String) {
+        query($owner: String!, $repo: String!, $number: Int!, $cursor: String, $comment_limit: Int!) {
             repository(owner: $owner, name: $repo) {
                 pullRequest(number: $number) {
                     reviewThreads(first: 100, after: $cursor) {
@@ -1070,7 +1072,7 @@ class GithubProvider(GitProvider):
                             id
                             isResolved
                             resolvedBy { login }
-                            comments(first: 100) {
+                            comments(first: $comment_limit) {
                                 nodes { id }
                             }
                         }
@@ -1081,7 +1083,10 @@ class GithubProvider(GitProvider):
         """
         while True:
             _, response = self.github_client._Github__requester.graphql_query(
-                query, {"owner": owner, "repo": repo_name, "number": self.pr_num, "cursor": cursor}
+                query, {
+                    "owner": owner, "repo": repo_name, "number": self.pr_num, "cursor": cursor,
+                    "comment_limit": 1 if root_only else 100,
+                }
             )
             review_threads = (response.get("data", {}).get("repository", {})
                               .get("pullRequest", {}).get("reviewThreads", {}))
@@ -1148,11 +1153,13 @@ class GithubProvider(GitProvider):
                 "GET", f"{self.base_url}/repos/{self.repo}/pulls/comments/{comment_id}"
             )
             # Fetch the root to find replies beyond the first comment page.
-            if data.get("in_reply_to_id"):
+            root_only = not data.get("in_reply_to_id")
+            if not root_only:
                 try:
                     headers, data = self.pr._requester.requestJsonAndCheck(
                         "GET", f"{self.base_url}/repos/{self.repo}/pulls/comments/{data['in_reply_to_id']}"
                     )
+                    root_only = True
                 except (GithubException, RequestException) as e:
                     get_logger().warning(
                         f"Could not fetch root of comment {comment_id}: status {getattr(e, 'status', 'network error')}"
@@ -1165,7 +1172,7 @@ class GithubProvider(GitProvider):
             # Find the review thread containing this comment (paginated)
             thread_id = None
             is_already_resolved = False
-            for thread in self._review_thread_nodes():
+            for thread in self._review_thread_nodes(root_only=root_only):
                 comment_ids = [c["id"] for c in thread.get("comments", {}).get("nodes", [])]
                 if comment_node_id in comment_ids:
                     if thread.get("isResolved"):
@@ -1793,11 +1800,12 @@ class GithubProvider(GitProvider):
     def _parse_pr_url(self, pr_url: str) -> Tuple[str, int]:
         parsed_url = urlparse(pr_url)
 
-        if parsed_url.path.startswith('/api/v3'):
-            parsed_url = urlparse(pr_url.replace("/api/v3", ""))
+        is_api_url = parsed_url.netloc == "api.github.com" or parsed_url.path.startswith("/api/v3/")
+        if parsed_url.path.startswith("/api/v3/"):
+            parsed_url = urlparse(parsed_url.path[len("/api/v3") :])
 
         path_parts = parsed_url.path.strip('/').split('/')
-        if 'api.github.com' in parsed_url.netloc or '/api/v3' in pr_url:
+        if is_api_url:
             if len(path_parts) < 5 or path_parts[3] != 'pulls':
                 raise ValueError("The provided URL does not appear to be a GitHub PR URL")
             repo_name = '/'.join(path_parts[1:3])
@@ -1821,11 +1829,12 @@ class GithubProvider(GitProvider):
     def _parse_issue_url(self, issue_url: str) -> Tuple[str, int]:
         parsed_url = urlparse(issue_url)
 
-        if parsed_url.path.startswith('/api/v3'): #Check if came from github app
-            parsed_url = urlparse(issue_url.replace("/api/v3", ""))
+        is_api_url = parsed_url.netloc == "api.github.com" or parsed_url.path.startswith("/api/v3/")
+        if parsed_url.path.startswith("/api/v3/"):
+            parsed_url = urlparse(parsed_url.path[len("/api/v3") :])
 
         path_parts = parsed_url.path.strip('/').split('/')
-        if 'api.github.com' in parsed_url.netloc or '/api/v3' in issue_url: #Check if came from github app
+        if is_api_url:
             if len(path_parts) < 5 or path_parts[3] != 'issues':
                 raise ValueError("The provided URL does not appear to be a GitHub ISSUE URL")
             repo_name = '/'.join(path_parts[1:3])
@@ -2017,18 +2026,41 @@ class GithubProvider(GitProvider):
                 get_logger().exception(f"Failed to read the labels payload, error: {e}")
                 return None
 
-        # obtain the latest labels. Maybe they changed while the AI was running
-        try:
-            headers, labels = self.pr._requester.requestJsonAndCheck(
-                "GET", f"{self.pr.issue_url}/labels")
-        except (GithubException, RequestException) as e:
-            get_logger().exception(f"Failed to get labels, error: {e}")
-            return None
-        try:
-            return [label['name'] for label in labels]
-        except (KeyError, TypeError) as e:
-            get_logger().exception(f"Failed to read the labels payload, error: {e}")
-            return None
+        # Refresh every page without allowing malformed or incomplete pages to replace labels.
+        url = f"{self.pr.issue_url}/labels"
+        label_names = []
+        visited_urls = set()
+        while url:
+            if url in visited_urls:
+                get_logger().warning("Failed to refresh labels: repeated pagination URL")
+                return None
+            visited_urls.add(url)
+            try:
+                headers, labels = self.pr._requester.requestJsonAndCheck("GET", url)
+            except (GithubException, RequestException) as e:
+                get_logger().exception(f"Failed to get labels, error: {e}")
+                return None
+            try:
+                if not isinstance(labels, list):
+                    raise TypeError("Expected a list of labels")
+                names = [label["name"] for label in labels]
+                if not all(isinstance(name, str) for name in names):
+                    raise TypeError("Expected string label names")
+                label_names.extend(names)
+                next_url = _next_page_url(headers)
+                if next_url:
+                    original = urlparse(f"{self.pr.issue_url}/labels")
+                    next_page = urlparse(next_url)
+                    if (next_page.scheme, next_page.netloc) != (original.scheme, original.netloc):
+                        raise ValueError("Invalid label pagination URL")
+                    # Only reuse query parameters; never fetch the link's untrusted path.
+                    url = original._replace(query=next_page.query).geturl()
+                else:
+                    url = ""
+            except (KeyError, TypeError, ValueError, AttributeError) as e:
+                get_logger().exception(f"Failed to read the labels payload, error: {e}")
+                return None
+        return label_names
 
     def get_commit_messages(self) -> str:
         """

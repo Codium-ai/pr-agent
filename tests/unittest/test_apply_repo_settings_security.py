@@ -73,6 +73,7 @@ SNAPSHOT_SECTIONS = (
     "GITLAB",
     "GITEA",
     "JIRA",
+    "LINEAR",
     "LANGUAGE_EXTENSION_MAP_ORG",
 )
 
@@ -407,6 +408,7 @@ def test_restore_settings_sections_removes_section_created_after_snapshot():
         ("moonshot", "api_base"),
         ("databricks", "api_base"),
         ("openrouter", "api_base"),
+        ("linear", "api_token"),
     ],
 )
 def test_repo_settings_cannot_override_provider_endpoint_keys(monkeypatch, settings_snapshot, section, key):
@@ -454,6 +456,7 @@ def test_repo_settings_filter_provider_credentials_but_apply_safe_keys(monkeypat
         ("aws", "aws_region_name"),
         ("anthropic", "key"),
         ("gitlab", "private_token"),
+        ("linear", "api_token"),
     ],
 )
 def test_provider_connection_keys_are_host_only_for_repo_and_cli(section, key):
@@ -510,7 +513,8 @@ def test_repo_settings_cannot_widen_jira_lookup_scope(
 
     apply_repo_settings("https://example.com/owner/repo/pull/1")
 
-    assert _section(settings, "jira").get(key) == host_value
+    jira_section = {k.lower(): v for k, v in _section(settings, "jira").items()}
+    assert jira_section.get(key.lower()) == host_value
     assert CliArgs.validate_user_args([f"--jira.{key}=untrusted"])[0] is False
 
 

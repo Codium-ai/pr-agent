@@ -10,6 +10,7 @@ import uvicorn
 from fastapi import APIRouter, Request, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
+from gitlab.exceptions import GitlabGetError
 from starlette.background import BackgroundTasks
 from starlette.middleware import Middleware
 from starlette_context import context
@@ -37,6 +38,9 @@ from pr_agent.telemetry.prometheus import attach_metrics_endpoint, prometheus_me
 
 setup_logger(fmt=LoggingFormat.JSON, level=get_settings().get("CONFIG.LOG_LEVEL", "DEBUG"))
 router = APIRouter()
+
+# A new MR can be unreadable for a moment after its webhook fires, so the first lookup answers 404.
+NEW_MR_LOOKUP_RETRY_DELAYS = (1, 2, 4)
 
 
 # Validated at import so a typo in CONFIG.SECRET_PROVIDER still fails at startup. The
@@ -103,6 +107,12 @@ async def _perform_commands_gitlab(commands_conf: str, agent: PRAgent, api_url: 
     get_settings().set("config.is_auto_command", True)
     for command in commands:
         try:
+            # Reset empty diff caches between auto commands that may use different ignore rules.
+            if context.exists():
+                provider = context.get("git_provider", {}).get(api_url)
+                reset_diff_cache = getattr(provider, "reset_diff_cache_for_command", None)
+                if callable(reset_diff_cache):
+                    reset_diff_cache()
             new_command = prepare_command(command)
             get_logger().info(f"Performing command: {new_command}")
             with get_logger().contextualize(**log_context):
@@ -263,6 +273,27 @@ def should_process_pr_logic(data) -> bool:
     return shared_should_process_pr_logic(data, provider="gitlab")
 
 
+def _is_merge_request_not_found(error: Exception) -> bool:
+    cause = error.__cause__
+    return isinstance(cause, GitlabGetError) and cause.response_code == 404
+
+
+async def apply_new_mr_repo_settings(url: str):
+    """Apply repo settings for a just-opened MR, retrying a 404 while the MR becomes visible to the API.
+
+    Any other failure, and a 404 that outlasts the retries, is raised as before.
+    """
+    for attempt, delay in enumerate((*NEW_MR_LOOKUP_RETRY_DELAYS, None), start=1):
+        try:
+            return apply_repo_settings(url)
+        except ValueError as e:
+            if delay is None or not _is_merge_request_not_found(e):
+                raise
+            get_logger().warning(
+                f"Merge request not found yet (attempt {attempt}), retrying in {delay}s: {url}")
+            await asyncio.sleep(delay)
+
+
 async def authenticate_gitlab_webhook(request: Request, log_context: dict):
     request_token = request.headers.get("X-Gitlab-Token", "")
     shared_secret = get_settings().get("GITLAB.SHARED_SECRET")
@@ -344,7 +375,7 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
             if object_attributes.get('action') in ['open', 'reopen']:
                 url = object_attributes.get('url')
                 get_logger().info(f"New merge request: {url}")
-                apply_repo_settings(url)
+                await apply_new_mr_repo_settings(url)
                 await _perform_commands_gitlab("pr_commands", PRAgent(), url, log_context, data)
 
             # for draft to ready triggered merge requests, before the push case: one update can be both
