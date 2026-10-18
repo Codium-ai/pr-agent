@@ -1,24 +1,24 @@
 import os
 import sys
 from collections import Counter
-from typing import List, Optional
 
 from unidiff.errors import UnidiffParseError
 
 from pr_agent.agent.request_policy import policy_metadata
 from pr_agent.algo.comment_identity import format_pr_code_suggestions_header
+from pr_agent.algo.file_filter import filter_ignored
 from pr_agent.algo.language_handler import build_language_file_matcher
 from pr_agent.algo.review_json_output import write_review_json_output
 from pr_agent.algo.run_output import show_run_details
 from pr_agent.algo.types import FilePatchInfo
 from pr_agent.config_loader import _find_repository_root, get_settings
-from pr_agent.git_providers.diff_parsing import parse_unified_diff, reconstruct_base_file, to_hunk_only_patch
+from pr_agent.git_providers.diff_parsing import parse_unified_diff, reconstruct_base_file_checked, to_hunk_only_patch
 from pr_agent.git_providers.git_provider import GitProvider
 from pr_agent.log import get_logger
 
 
 class PullRequestMimic:
-    def __init__(self, title: str, diff_files: List[FilePatchInfo]):
+    def __init__(self, title: str, diff_files: list[FilePatchInfo]):
         self.title = title
         self.diff_files = diff_files
 
@@ -52,13 +52,14 @@ class PlainDiffGitProvider(GitProvider):
         self.diff_files = None
         self.pr = PullRequestMimic(self.get_pr_title(), self.get_diff_files())
 
-    def get_diff_files(self) -> List[FilePatchInfo]:
+    def get_diff_files(self) -> list[FilePatchInfo]:
         if self.diff_files is not None:
             return self.diff_files
         try:
             files = parse_unified_diff(self.diff_text)
         except UnidiffParseError as e:
             raise ValueError(f"Failed to parse the provided diff: {e}") from e
+        files = filter_ignored(files, platform="plain_diff")
         # Resolve diff paths against the actual repository root (not the raw CWD)
         # so working-tree enrichment still works when run from a subdirectory.
         # If there is no detectable .git root, disable enrichment entirely and
@@ -86,19 +87,26 @@ class PlainDiffGitProvider(GitProvider):
                         )
                     elif os.path.isfile(candidate):
                         try:
-                            with open(candidate, "r", encoding="utf-8") as fh:
+                            with open(candidate, encoding="utf-8") as fh:
                                 head = fh.read()
                         except (OSError, UnicodeDecodeError) as e:
                             get_logger().info(f"Could not read working-tree file {f.filename}: {e}")
-            f.head_file = head
-            f.base_file = reconstruct_base_file(head, f.patch) if head else ""
+            base = reconstruct_base_file_checked(head, f.patch) if head else None
+            if base is None:
+                if head:
+                    get_logger().info(f"Working-tree file does not match diff; using patch-only context: {f.filename}")
+                f.head_file = ""
+                f.base_file = ""
+            else:
+                f.head_file = head
+                f.base_file = base
             # Reconstruction needs the full patch (with --- /+++ headers); the
             # rest of the pipeline expects hunk-only patches, so normalize after.
             f.patch = to_hunk_only_patch(f.patch)
         self.diff_files = files
         return files
 
-    def get_files(self) -> List[str]:
+    def get_files(self) -> list[str]:
         return [f.filename for f in self.get_diff_files()]
 
     def get_incremental_commits(self, incremental):
@@ -243,7 +251,7 @@ class PlainDiffGitProvider(GitProvider):
     def remove_comment(self, comment):
         pass
 
-    def add_eyes_reaction(self, issue_comment_id: int, disable_eyes: bool = False) -> Optional[int]:
+    def add_eyes_reaction(self, issue_comment_id: int, disable_eyes: bool = False) -> int | None:
         return None
 
     def remove_reaction(self, issue_comment_id: int, reaction_id: int) -> bool:

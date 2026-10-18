@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
 from functools import wraps
-from typing import Any, Optional, Tuple
+from typing import Any
 from urllib.parse import urlsplit
 
 from pr_agent.algo.comment_identity import (
@@ -67,12 +67,12 @@ class CodeSuggestionThread:
     """
     thread_id: Any
     status: Any
-    file: Optional[str]
-    start_line: Optional[int]
-    end_line: Optional[int]
+    file: str | None
+    start_line: int | None
+    end_line: int | None
     suggestion: str
     replies: list[tuple[str, str]] = field(default_factory=list)
-    authored_by_agent: Optional[bool] = None
+    authored_by_agent: bool | None = None
 
     def text_replies(self) -> list[tuple[str, str]]:
         """Return the replies that have a non-blank text message, stripped."""
@@ -151,6 +151,15 @@ _CREDENTIAL_ASSIGNMENT_RE = re.compile(
 )
 _GITLAB_TOKEN_RE = re.compile(r"\bglpat-[A-Za-z0-9_-]+")
 _AWS_ACCESS_KEY_RE = re.compile(r"\b(?:A3T[A-Z0-9]|AKIA|ASIA)[A-Z0-9]{16}\b")
+# Bare tokens carry no context (no URL, header, or keyword assignment), so they are matched by
+# their documented provider formats. Minimum lengths keep ordinary words and short identifiers
+# from matching; the shapes follow the providers' published token formats.
+_GITHUB_TOKEN_RE = re.compile(r"\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{36,255}\b")
+_GITHUB_FINE_GRAINED_PAT_RE = re.compile(r"\bgithub_pat_[A-Za-z0-9_]{36,255}\b")
+_ANTHROPIC_KEY_RE = re.compile(r"\bsk-ant-[A-Za-z0-9_-]{32,255}\b")
+_OPENAI_KEY_RE = re.compile(r"\bsk-(?:proj|svcacct|admin)-[A-Za-z0-9_-]{32,255}\b|\bsk-[A-Za-z0-9]{40,255}\b")
+_GOOGLE_API_KEY_RE = re.compile(r"\bAIza[A-Za-z0-9_-]{32,42}(?![A-Za-z0-9_-])")
+_SLACK_TOKEN_RE = re.compile(r"\bxox[a-z]-[0-9A-Za-z-]{10,255}\b|\bxapp-[0-9A-Za-z-]{10,255}\b")
 
 
 # The reaction PR-Agent has always added when it picks a comment command up. Used as the
@@ -189,6 +198,12 @@ def redact_credentials(text, *, redaction_counts: dict[str, int] | None = None) 
         ("credential_assignment", _CREDENTIAL_ASSIGNMENT_RE, _redact_credential_assignment),
         ("gitlab_token", _GITLAB_TOKEN_RE, "<redacted>"),
         ("aws_access_key", _AWS_ACCESS_KEY_RE, "<redacted>"),
+        ("github_token", _GITHUB_TOKEN_RE, "<redacted>"),
+        ("github_fine_grained_pat", _GITHUB_FINE_GRAINED_PAT_RE, "<redacted>"),
+        ("anthropic_key", _ANTHROPIC_KEY_RE, "<redacted>"),
+        ("openai_key", _OPENAI_KEY_RE, "<redacted>"),
+        ("google_api_key", _GOOGLE_API_KEY_RE, "<redacted>"),
+        ("slack_token", _SLACK_TOKEN_RE, "<redacted>"),
     ):
         count = 0
 
@@ -507,7 +522,7 @@ class GitProvider(ABC):
     # ('https://git_provider.com/projects/MY_PROJECT/repos/MY_REPO/.../<MY_BRANCH>', '?=<SOME HEADER>')
     # so that to properly view the file: docs/readme.md -> <PREFIX>/docs/readme.md<SUFFIX> ->
     # https://git_provider.com/projects/MY_PROJECT/repos/MY_REPO/<MY_BRANCH>/docs/readme.md?=<SOME HEADER>)
-    def get_canonical_url_parts(self, repo_git_url:str, desired_branch:str) -> Tuple[str, str]:
+    def get_canonical_url_parts(self, repo_git_url:str, desired_branch:str) -> tuple[str, str]:
         get_logger().warning("Not implemented! Returning empty prefix and suffix")
         return ("", "")
 
@@ -520,7 +535,7 @@ class GitProvider(ABC):
     #                self.repo_url, tmp_dir, remove_dest_folder=False)
     #            print(returned_obj.path) #Use returned_obj.path.
     #    #From this point, returned_obj.path may be deleted at any point and therefore must not be used.
-    class ScopedClonedRepo(object):
+    class ScopedClonedRepo:
         def __init__(self, dest_folder):
             self.path = dest_folder
 
@@ -836,7 +851,7 @@ class GitProvider(ABC):
         Defaults to no per-directory support."""
         return {}
 
-    def get_owning_namespace(self) -> Optional[str]:
+    def get_owning_namespace(self) -> str | None:
         """Return the org/group/workspace that owns this repository, or None when
         the provider has no organisation-level home for global settings.
 
@@ -926,7 +941,7 @@ class GitProvider(ABC):
         """
         self._command_actor = actor
 
-    def get_repo_context_ref(self, from_default_branch: bool = False) -> Optional[str]:
+    def get_repo_context_ref(self, from_default_branch: bool = False) -> str | None:
         """Return the ref (commit SHA or branch name) that repo-context files are read from.
 
         The repo-context cache key (pr_agent/algo/repo_context.py) includes this ref so a
@@ -1171,7 +1186,7 @@ class GitProvider(ABC):
     def get_pr_labels(self, update=False):
         pass
 
-    def add_reaction(self, issue_comment_id: int, reaction: str) -> Optional[int]:
+    def add_reaction(self, issue_comment_id: int, reaction: str) -> int | None:
         """Add a named reaction to a comment, returning its id.
 
         Returns None when the provider has no reaction API, when the name is empty, or when
@@ -1180,7 +1195,7 @@ class GitProvider(ABC):
         """
         return None
 
-    def add_eyes_reaction(self, issue_comment_id: int, disable_eyes: bool = False) -> Optional[int]:
+    def add_eyes_reaction(self, issue_comment_id: int, disable_eyes: bool = False) -> int | None:
         """Acknowledge a comment command with the configured start reaction."""
         if disable_eyes:
             return None
@@ -1194,7 +1209,7 @@ class GitProvider(ABC):
             self._start_reaction = (issue_comment_id, reaction_id)
         return reaction_id
 
-    def react_to_outcome(self, issue_comment_id: int, succeeded: bool) -> Optional[int]:
+    def react_to_outcome(self, issue_comment_id: int, succeeded: bool) -> int | None:
         """Replace the start reaction with the configured outcome reaction.
 
         Both outcome reactions are unset by default, so nothing changes unless an operator asks

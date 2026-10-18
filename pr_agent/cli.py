@@ -34,7 +34,10 @@ _PLAIN_DIFF_MARKDOWN_COMMANDS = frozenset({
 })
 _JSON_REVIEW_COMMANDS = frozenset({"review", "review_pr"})
 _OUTPUT_OPTIONS = ("--output", "--json-output")
-_CLI_CONTEXT_CACHES = ("git_provider", "repo_settings", "git_files", "diff_files", "authenticated_provider_settings")
+_CLI_CONTEXT_CACHES = (
+    "git_provider", "repo_settings", "git_files", "diff_files", "authenticated_provider_settings",
+    "extra_config_payloads",
+)
 
 
 @contextmanager
@@ -185,7 +188,7 @@ def run(inargs=None, args=None):
     if diff_mode:
         if args.diff_file:
             try:
-                with open(args.diff_file, "r", encoding="utf-8") as fh:
+                with open(args.diff_file, encoding="utf-8") as fh:
                     diff_content = fh.read()
             except OSError as e:
                 parser.error(f"Could not read --diff-file '{args.diff_file}': {e}")

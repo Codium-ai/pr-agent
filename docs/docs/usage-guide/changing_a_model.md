@@ -532,6 +532,57 @@ key = ...
 
 (you can obtain a deepseek-v4 key from [here](https://platform.deepseek.com/api_keys))
 
+### CompactifAI
+
+To use [CompactifAI](https://docs.compactif.ai/), select a model with LiteLLM's
+`compactifai/` prefix, for example:
+
+```toml
+[config] # in configuration.toml
+model = "compactifai/glm-5-3"
+fallback_models = ["compactifai/glm-5-2"]
+reasoning_effort = "high"
+additional_reasoning_effort_models = ["compactifai/glm-5-3", "compactifai/glm-5-2"]
+```
+
+Set `config.custom_model_max_tokens` to a positive limit for PR-Agent's
+context-window budgeting, within the verified limits of your CompactifAI
+deployment. This is required until the selected model's input limit is available
+in PR-Agent's registry or the installed LiteLLM metadata.
+CompactifAI's public model pages do not currently specify those limits.
+
+PR-Agent also caps the effective budget with `config.max_model_tokens`, which
+defaults to 32,000. To use a larger verified budget, raise both
+`config.custom_model_max_tokens` and `config.max_model_tokens`; the effective limit
+is the smaller of the two values.
+
+This budgeting limit is not the amount of space available for the changed-code diff.
+PR-Agent reserves output tokens and subtracts fixed prompt tokens before fitting
+the diff, so its usable capacity is lower. Account for these reservations when
+choosing your verified limits.
+
+Provide your API key in `.secrets.toml`:
+
+```toml
+[compactifai]
+key = "..."
+```
+
+Alternatively, set `COMPACTIFAI__KEY` or LiteLLM's native `COMPACTIFAI_API_KEY`
+environment variable. The configured key takes precedence over the native
+environment variable. LiteLLM uses `https://api.compactif.ai/v1` automatically;
+no OpenAI API key or endpoint override is required.
+
+Other [available models](https://docs.compactif.ai/models/) include
+`compactifai/quasar-438b`. When selecting it, include that model ID in
+`config.additional_reasoning_effort_models` as well. The explicit list enables
+reasoning when the installed LiteLLM metadata does not yet recognize these models.
+Use `"high"`, which is supported by GLM-5.2, GLM-5.3 and Quasar-438B; PR-Agent's
+default `"medium"` is not a supported effort for these models. See the
+[GLM-5.3](https://docs.compactif.ai/models/glm_5_3/),
+[GLM-5.2](https://docs.compactif.ai/models/glm_5_2/) and
+[Quasar-438B](https://docs.compactif.ai/models/quasar_438b/) documentation.
+
 ### GLM (Z.AI)
 
 To use GLM models with Z.AI (Zhipu), for example, set:
@@ -797,6 +848,68 @@ Authentication uses the [GitHub Copilot provider](https://docs.litellm.ai/docs/p
 
 Whether Copilot's terms permit this programmatic use is a question for GitHub rather than a guarantee this project can make, so confirm before relying on the route.
 
+### Cheaper Inference
+
+[Cheaper Inference](https://cheaperinference.com) is an OpenAI-compatible LLM gateway. It needs no provider-specific code in PR-Agent: the `openai/` prefix routes the request to Cheaper Inference's base URL through litellm's OpenAI-compatible path.
+
+To use a model through Cheaper Inference, set:
+
+```toml
+[config] # in configuration.toml
+model = "openai/gpt-5.4-mini"
+fallback_models = ["openai/claude-sonnet-5"]
+custom_model_max_tokens = 400000 # the smaller context window Cheaper Inference publishes for the two models
+
+[openai] # in .secrets.toml
+api_base = "https://api.cheaperinference.com/v1"
+key = "..." # your Cheaper Inference api key
+```
+
+or use the environment variables (make sure to use double underscores `__`):
+
+```bash
+OPENAI__API_BASE=https://api.cheaperinference.com/v1
+OPENAI__KEY=...
+```
+
+(you can obtain a Cheaper Inference API key from [here](https://cheaperinference.com/signup))
+
+Keep the `openai/` prefix on the model name, whichever Cheaper Inference model ID you use (`openai/gpt-5.4-mini`, `openai/claude-sonnet-5`, `openai/gemini-3.1-pro`, `openai/deepseek-v4-flash`, ...): the prefix routes the request through litellm's OpenAI-compatible path. A prefixed name is not in the `MAX_TOKENS` table [here](https://github.com/the-pr-agent/pr-agent/blob/main/pr_agent/algo/__init__.py), so you also have to set `custom_model_max_tokens`. Take the value from Cheaper Inference's [model catalog](https://cheaperinference.com/#models).
+
+### API Route
+
+[API Route](https://www.api-route.com) exposes an OpenAI-compatible endpoint. Use
+PR-Agent's existing `openai/` model prefix and `[openai]` settings to configure it:
+
+```toml
+[config] # in configuration.toml
+model = "openai/gpt-6.1-sol"
+fallback_models = ["openai/gpt-6.1-sol"]
+custom_model_max_tokens = 32000 # example input budget; keep within the selected model's context limit
+
+[openai] # in .secrets.toml
+api_base = "https://global.api-route.com/v1"
+key = "..." # your API Route API key
+```
+
+The endpoint and key can also be supplied through environment variables (with double
+underscores `__`):
+
+```bash
+OPENAI__API_BASE=https://global.api-route.com/v1
+OPENAI__KEY=...
+```
+
+Obtain an API key from [API Route](https://www.api-route.com) and choose an available
+model from its [model catalog](https://www.api-route.com/pricing) or the authenticated
+`GET https://global.api-route.com/v1/models` endpoint. Keep the `openai/` prefix in
+PR-Agent's configuration; the endpoint receives the model ID without that prefix.
+
+Set `custom_model_max_tokens` for model IDs absent from PR-Agent's token-limit table.
+The example uses a 32,000-token input budget, rather than claiming the model's maximum
+context window. If you change the model or add fallback models, use a budget supported
+by all of them and keep their requests on the configured API Route endpoint.
+
 ### RelaxAI
 
 [RelaxAI](https://relax.ai) offers an OpenAI-compatible API. It needs no provider-specific
@@ -946,7 +1059,7 @@ custom_model_max_tokens= ...
 reasoning_effort = "medium" # "none", "minimal", "low", "medium", "high", "xhigh", "max"
 ```
 
-With the OpenAI models that support reasoning effort (eg: gpt-5.6-terra), you can specify its reasoning effort via `config` section. The default value is `medium`. You can change it to any supported value based on your usage. Available values depend on the model and provider. Where litellm marks minimal unsupported for a GPT-5 model, PR-Agent sends low instead.
+With the OpenAI models that support reasoning effort (eg: gpt-6-luna), you can specify its reasoning effort via `config` section. The default value is `medium`. You can change it to any supported value based on your usage. Available values depend on the model and provider. Where litellm marks minimal unsupported for a GPT-5 model, PR-Agent sends low instead. For native OpenAI GPT-6 requests, PR-Agent maps `minimal` to `low` for all supported GPT-6 models. It also maps `none` to `low` for GPT-6.1 Sol; GPT-6 Luna accepts `none`.
 
 For a model served through an OpenAI-compatible endpoint that litellm does not recognize as reasoning-capable, add its ID to `config.additional_reasoning_effort_models`. For known models support is decided by litellm's bundled reasoning metadata plus the maintained Grok registry (Grok ids resolve through their `xai/` prefix) with Claude models left out of the metadata path (their reasoning comes from the dedicated extended/adaptive thinking settings; an explicit entry in the list above still applies to them). Config IDs match exactly or through any provider prefix (e.g. `"deepseek-v4-flash-0731"` matches `"openai/deepseek-v4-flash-0731"`). When LiteLLM does not recognize the model, PR-Agent sets `allowed_openai_params = ["reasoning_effort"]` so the parameter reaches the endpoint. Note the default `"medium"` may be rejected by providers that accept a different subset (e.g. `"none"/"low"/"high"/"max"`); adding a custom model ID surfaces that provider-side error instead of silently dropping the setting.
 
@@ -1090,8 +1203,9 @@ configured output limit.
 
 ## Routing small pull requests to a cheaper model
 
-`config.model` handles every pull request, however small. With model routing enabled, a pull request under a
-configured size goes to a cheaper model instead, and `config.fallback_models` still apply after it:
+Without routing, regular-model calls use `config.model`, however small the pull request. In this example,
+the first rule selects the cheaper Luna model; the second deliberately keeps the default Sol model.
+`config.fallback_models` still apply after the selected primary:
 
 ```toml
 [model_routing]
@@ -1099,18 +1213,37 @@ enable = true
 
 [[model_routing.rules]]
 max_hunks = 3
-model = "gpt-5.6-luna"
+model = "gpt-6-luna"
 
 [[model_routing.rules]]
 max_hunks = 15
 max_files = 6
-model = "gpt-5.6-terra"
+model = "gpt-6.1-sol"
 ```
 
 Rules are checked in order, and the first one whose limits the pull request fits selects the primary model for
 the call. A pull request that fits no rule uses `config.model`. Size is measured by the number of diff hunks
 (`max_hunks`) and changed files (`max_files`) left after the `[ignore]` rules. Every git provider reports both,
 and neither depends on a model's tokenizer, so a threshold means the same thing whichever model it selects.
+
+The retry chain starts as `[config.model] + config.fallback_models`, with a deployment paired to each model.
+A matched rule replaces the first pair. If the routed `(model, deployment)` pair also appears among the
+configured fallbacks, the effective chain removes duplicate pairs while preserving their order and adds
+the displaced configured primary pair at the end, unless it is already present. This avoids retrying the
+same endpoint while retaining the configured primary in this collision case. With
+`config.model = "gpt-6.1-sol"`, no deployment configured, and the first rule above:
+
+| `config.fallback_models` | retry order if earlier attempts fail |
+| --- | --- |
+| `["gpt-6-luna"]` (shipped default) | `gpt-6-luna`, `gpt-6.1-sol` |
+| `["gpt-6-luna", "other-model"]` | `gpt-6-luna`, `other-model`, `gpt-6.1-sol` |
+
+The first successful attempt returns immediately; later entries are attempted only after fallback-eligible
+failures. An empty fallback list adds no backup, and a noncolliding route still replaces the primary without
+adding it back. The same model with distinct deployment IDs is treated as distinct endpoints. `/improve`
+uses this effective chain to recover failed chunks without rerunning successful chunks. Its defensive
+uniqueness checks remain: repeated complete pairs in unchanged, noncolliding or unrouted chains can still
+disable chunk recovery; those chains are not deduplicated by this routing-specific repair.
 
 Routing applies only to calls that ask for the regular model: `/review`, `/improve`, `/generate_labels` and
 `/add_docs`. Tools that already use `config.model_weak` (`/describe`, `/ask`, `/update_changelog`) are left

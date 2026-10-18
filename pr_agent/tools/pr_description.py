@@ -4,7 +4,6 @@ import re
 import traceback
 from functools import partial
 from graphlib import TopologicalSorter
-from typing import List, Tuple
 
 import yaml
 from pydantic import ValidationError
@@ -280,14 +279,19 @@ class PRDescription:
                         get_settings().pr_description.final_update_message
                         and not get_settings().config.get('is_auto_command', False)
                     ):
-                        latest_commit_url = self.git_provider.get_latest_commit_url()
-                        if latest_commit_url:
-                            pr_url = self.git_provider.get_pr_url()
-                            update_comment = (
-                                f"**[PR Description]({pr_url})** "
-                                f"updated to latest commit ({latest_commit_url})"
+                        try:
+                            latest_commit_url = self.git_provider.get_latest_commit_url()
+                            if latest_commit_url:
+                                pr_url = self.git_provider.get_pr_url()
+                                update_comment = (
+                                    f"**[PR Description]({pr_url})** "
+                                    f"updated to latest commit ({latest_commit_url})"
+                                )
+                                self.git_provider.publish_comment(update_comment)
+                        except Exception as feedback_error:
+                            get_logger().exception(
+                                f"PR description updated, but final update message failed: {feedback_error}"
                             )
-                            self.git_provider.publish_comment(update_comment)
             else:
                 get_logger().info('PR description, but not published since publish_output is False.')
                 get_settings().data = {"artifact": pr_body}
@@ -758,7 +762,9 @@ class PRDescription:
         self.data = load_yaml(self.prediction.strip(), keys_fix_yaml=self.keys_fix)
         self._validate_description_schema(self.data)
 
-        if get_settings().pr_description.add_original_user_description and self.user_description:
+        # A separate comment leaves the PR body untouched, so repeating the user text would duplicate it.
+        if (get_settings().pr_description.add_original_user_description and self.user_description
+                and not get_settings().pr_description.publish_description_as_comment):
             self.data["User Description"] = self.user_description
 
         # re-order keys
@@ -811,7 +817,7 @@ class PRDescription:
             payload[field] = filter_generated_labels(values if isinstance(values, list) else [])
         return payload
 
-    def _prepare_labels(self) -> List[str]:
+    def _prepare_labels(self) -> list[str]:
         pr_labels = []
 
         # If the 'PR Type' key is present in the dictionary, split its value by comma and assign it to 'pr_types'
@@ -838,7 +844,7 @@ class PRDescription:
             get_logger().error(f"Error converting labels to original case {self.pr_id}: {e}")
         return filter_generated_labels(pr_labels)
 
-    def _prepare_pr_answer_with_markers(self) -> Tuple[str, str]:
+    def _prepare_pr_answer_with_markers(self) -> tuple[str, str]:
         get_logger().info(f"Using description marker replacements {self.pr_id}")
 
         # Remove the 'PR Title' key from the dictionary
@@ -894,7 +900,7 @@ class PRDescription:
 
         return title, body
 
-    def _prepare_pr_answer(self) -> Tuple[str, str, str]:
+    def _prepare_pr_answer(self) -> tuple[str, str, str]:
         """
         Prepare the PR description based on the AI prediction data.
 
@@ -984,26 +990,17 @@ class PRDescription:
         for file in self.data['pr_files']:
             try:
                 required_fields = ['changes_title', 'filename', 'label']
-                if not all(field in file for field in required_fields):
+                if self.vars.get('include_file_summary_changes', True):
+                    required_fields.append('changes_summary')
+                if not all(isinstance(file.get(field), str) and file[field].strip() for field in required_fields):
                     # can happen for example if a YAML generation was interrupted in the middle (no more tokens)
                     get_logger().warning(f"Missing required fields in file label dict {self.pr_id}, skipping file",
                                          artifact={"file": file})
                     continue
-                if not file.get('changes_title'):
-                    get_logger().warning(
-                        f"Empty changes title or summary in file label dict {self.pr_id}, skipping file",
-                        artifact={"file": file},
-                    )
-                    continue
-                filename = file['filename'].replace("'", "`").replace('"', '`')
-                changes_summary = file.get('changes_summary', "")
-                if not changes_summary and self.vars.get('include_file_summary_changes', True):
-                    get_logger().warning("Empty changes summary in file label dict, skipping file",
-                                         artifact={"file": file})
-                    continue
-                changes_summary = changes_summary.strip()
+                filename = file['filename'].replace("'", "`").replace('"', "`")
+                changes_summary = (file.get('changes_summary') or "").strip()
                 changes_title = file['changes_title'].strip()
-                label = file.get('label').strip().lower()
+                label = file['label'].strip().lower()
                 if label not in file_label_dict:
                     file_label_dict[label] = []
                 file_label_dict[label].append((filename, changes_title, changes_summary))
@@ -1142,7 +1139,7 @@ DIAGRAM_SQUARE_NODE_PATTERN = re.compile(
 )
 
 
-def _diagram_label_positions(line: str) -> List[bool]:
+def _diagram_label_positions(line: str) -> list[bool]:
     """For each position in the line, whether it sits inside an existing label."""
     square_depth = 0
     in_double_quotes = False
@@ -1226,7 +1223,7 @@ def _strip_diagram_labels(line: str) -> str:
     return line
 
 
-def _parse_diagram_edges(lines: List[str]) -> List[Tuple[str, str]]:
+def _parse_diagram_edges(lines: list[str]) -> list[tuple[str, str]]:
     """Extract the directed edges of a mermaid flowchart body, tolerating its syntax variants."""
     edges = []
     for raw_line in lines:
@@ -1260,7 +1257,7 @@ def _parse_diagram_edges(lines: List[str]) -> List[Tuple[str, str]]:
     return edges
 
 
-def _longest_diagram_chain(edges: List[Tuple[str, str]]) -> int:
+def _longest_diagram_chain(edges: list[tuple[str, str]]) -> int:
     """Length, in nodes, of the longest path through the graph. Raises ValueError on a cycle."""
     predecessors = {}
     for source, target in edges:

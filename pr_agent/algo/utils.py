@@ -5,8 +5,8 @@ import difflib
 import html
 import re
 import textwrap
-from enum import Enum
-from typing import Any, List, Tuple, TypedDict
+from enum import StrEnum
+from typing import Any, TypedDict
 from urllib.parse import quote, unquote
 
 import html2text
@@ -31,6 +31,7 @@ from pr_agent.algo.git_patch_processing import (
     NO_NEWLINE_AT_EOF_MARKER,
     extract_hunk_headers,
     extract_hunk_lines_from_patch,
+    split_diff_lines,
     to_hunk_only_patch,
 )
 from pr_agent.algo.language_handler import build_language_file_matcher
@@ -59,7 +60,7 @@ def encode_user_text_arg(value: str) -> str:
     return _ENCODED_USER_TEXT_PREFIX + quote(value, safe="")
 
 
-def decode_user_text_args(args: List[str] | None) -> str:
+def decode_user_text_args(args: list[str] | None) -> str:
     if not args:
         return ""
     return " ".join(
@@ -85,7 +86,7 @@ class Range(BaseModel):
     column_end: int = -1
 
 
-class ModelType(str, Enum):
+class ModelType(StrEnum):
     REGULAR = "regular"
     WEAK = "weak"
     REASONING = "reasoning"
@@ -93,11 +94,11 @@ class ModelType(str, Enum):
 
 class TodoItem(TypedDict):
     relevant_file: str
-    line_range: Tuple[int, int]
+    line_range: tuple[int, int]
     content: str
 
 
-class ReasoningEffort(str, Enum):
+class ReasoningEffort(StrEnum):
     MAX = "max"
     XHIGH = "xhigh"
     HIGH = "high"
@@ -541,7 +542,7 @@ def extract_relevant_lines_str(end_line, files, relevant_file, start_line, deden
                                 continue
                             relevant_lines_str += line[1:] + '\n'
                     else:
-                        relevant_file_lines = file.head_file.splitlines()
+                        relevant_file_lines = split_diff_lines(file.head_file)
                         relevant_lines_str = "\n".join(relevant_file_lines[start_line - 1:end_line])
 
                     if dedent and relevant_lines_str:
@@ -758,7 +759,7 @@ def load_large_diff(filename, new_file_content_str: str,
         return ""
 
 
-def update_settings_from_args(args: List[str]) -> List[str]:
+def update_settings_from_args(args: list[str]) -> list[str]:
     """
     Update the settings of the Dynaconf object based on the arguments passed to the function.
 
@@ -984,7 +985,7 @@ def _load_yaml_initial(response_text: str) -> Any:
         return yaml.safe_load(response_text)
 
 
-def load_yaml(response_text: str, keys_fix_yaml: List[str] | None = None, first_key="", last_key="") -> dict:
+def load_yaml(response_text: str, keys_fix_yaml: list[str] | None = None, first_key="", last_key="") -> dict:
     if keys_fix_yaml is None:
         keys_fix_yaml = []
     response_text_original = copy.deepcopy(response_text)
@@ -1028,7 +1029,7 @@ def load_yaml(response_text: str, keys_fix_yaml: List[str] | None = None, first_
 
 
 def try_fix_yaml(response_text: str,
-                 keys_fix_yaml: List[str] | None = None,
+                 keys_fix_yaml: list[str] | None = None,
                  first_key="",
                  last_key="",
                  response_text_original="") -> dict:
@@ -1323,7 +1324,7 @@ def set_custom_labels(variables, git_provider=None):
         counter += 1
     variables["labels_minimal_to_labels_dict"] = labels_minimal_to_labels_dict
 
-def filter_generated_labels(labels: List[str]) -> List[str]:
+def filter_generated_labels(labels: list[str]) -> list[str]:
     """Keep model-generated labels within the enabled vocabulary, not user labels."""
     names = [label.value for label in PRType]
     if get_settings().config.get("enable_custom_labels", False):
@@ -1346,7 +1347,7 @@ def filter_generated_labels(labels: List[str]) -> List[str]:
     return accepted
 
 
-def get_user_labels(current_labels: List[str] = None):
+def get_user_labels(current_labels: list[str] = None):
     """
     Only keep labels that has been added by the user
     """
@@ -1385,10 +1386,10 @@ def replace_code_tags(text):
     return ''.join(parts)
 
 
-def find_line_number_of_relevant_line_in_file(diff_files: List[FilePatchInfo],
+def find_line_number_of_relevant_line_in_file(diff_files: list[FilePatchInfo],
                                               relevant_file: str,
                                               relevant_line_in_file: str,
-                                              absolute_position: int = None) -> Tuple[int, int]:
+                                              absolute_position: int = None) -> tuple[int, int]:
     position = -1
     if absolute_position is None:
         absolute_position = -1
@@ -1401,7 +1402,7 @@ def find_line_number_of_relevant_line_in_file(diff_files: List[FilePatchInfo],
     for file in diff_files:
         if file.filename and (file.filename.strip() == relevant_file):
             patch = file.patch
-            patch_lines = patch.splitlines()
+            patch_lines = split_diff_lines(patch)
             delta = 0
             start1, size1, start2, size2 = 0, 0, 0, 0
             if absolute_position != -1: # matching absolute to relative
@@ -1522,7 +1523,7 @@ def is_value_no(value):
     return False
 
 
-def process_description(description_full: str) -> Tuple[str, List]:
+def process_description(description_full: str) -> tuple[str, list]:
     if not description_full:
         return "", []
 
@@ -1626,7 +1627,7 @@ def process_description(description_full: str) -> Tuple[str, List]:
     return base_description_str, files
 
 
-def set_file_languages(diff_files) -> List[FilePatchInfo]:
+def set_file_languages(diff_files) -> list[FilePatchInfo]:
     try:
         # if the language is already set, do not change it
         if hasattr(diff_files[0], 'language') and diff_files[0].language:

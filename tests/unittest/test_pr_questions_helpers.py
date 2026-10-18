@@ -196,20 +196,29 @@ class TestIdentifyImageInComment:
             question_str="explain this ![image](https://example.com/foo.png)"
         )
         result = pr.identify_image_in_comment()
-        # Current contract: parses out content between the parentheses after
-        # the literal "![image]" marker (strips surrounding parens).
         assert result == "https://example.com/foo.png"
         assert pr.vars["img_path"] == "https://example.com/foo.png"
+
+    def test_markdown_image_excludes_trailing_question_text(self):
+        pr = _make_pr_questions(
+            question_str='What changed? ![image](https://example.com/foo.png "preview") Please explain.'
+        )
+        assert pr.identify_image_in_comment() == "https://example.com/foo.png"
+        assert pr.vars["img_path"] == "https://example.com/foo.png"
+
+    def test_markdown_image_with_other_alt_text_and_extensionless_url(self):
+        pr = _make_pr_questions(
+            question_str="Review ![Screenshot](https://github.com/user-attachments/assets/1234) please"
+        )
+        assert pr.identify_image_in_comment() == "https://github.com/user-attachments/assets/1234"
+        assert pr.vars["img_path"] == "https://github.com/user-attachments/assets/1234"
 
     def test_direct_image_url_png(self):
         pr = _make_pr_questions(
             question_str="please look at https://example.com/diagram.png and answer"
         )
         result = pr.identify_image_in_comment()
-        # Current behavior captures everything from "https://" to end of string
-        # (including any trailing text). We assert the prefix / contains the URL,
-        # rather than the exact full match, to remain robust to that quirk.
-        assert result.startswith("https://example.com/diagram.png")
+        assert result == "https://example.com/diagram.png"
         assert pr.vars["img_path"] == result
 
     def test_direct_image_url_jpg(self):
@@ -1271,7 +1280,7 @@ class TestPRLineQuestionsRunSkipsEmptySelection:
 def line_output_settings():
     keys = (
         "config.publish_output", "pr_questions.use_conversation_history", "ask_diff_hunk",
-        "line_start", "line_end", "side", "file_name", "comment_id",
+        "line_start", "line_end", "side", "file_name", "file_name_encoded", "comment_id",
     )
     saved = snapshot_settings(keys)
     settings = get_settings()
@@ -1449,3 +1458,61 @@ def test_ask_user_prompt_includes_untrusted_conversation_history():
 
     assert "Keep this nullable" in prompt
     assert "untrusted data" in prompt
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("file_name", "encoded", "ask_diff", "expected_language", "bad_map"),
+    [
+        ("src/example.py", False, True, "python", False),
+        ("src%2Fexample.PY", True, True, "python", False),
+        ("README.unknownsuffix", False, True, "", False),
+        ("src/example.py", False, False, "python", False),
+        ("src/example.py", False, True, "", True),
+    ],
+)
+async def test_line_question_only_reads_diff_when_hunk_is_missing(
+    monkeypatch, line_output_settings, file_name, encoded, ask_diff, expected_language, bad_map
+):
+    """A line question must not load the whole PR merely for language logging."""
+    line_output_settings.set("file_name", file_name)
+    line_output_settings.set("file_name_encoded", encoded)
+    line_output_settings.set("config.publish_output", False)
+    if not ask_diff:
+        line_output_settings.set("ask_diff_hunk", "")
+
+    provider = MagicMock()
+    provider.pr.title = "Example"
+    provider.get_pr_branch.return_value = "main"
+    provider.supports_thread_resolution.return_value = False
+    provider.supports_line_question_history.return_value = False
+    provider.get_languages.side_effect = AssertionError("language API not needed")
+    provider.get_files.side_effect = AssertionError("PR file inventory not needed")
+    provider.get_diff_files.return_value = [
+        SimpleNamespace(filename="src/example.py", patch="@@ -1 +1 @@\n-old\n+new")
+    ]
+
+    if bad_map:
+        # An invalid extension-map entry raises during matcher construction.
+        monkeypatch.setattr(plq, "build_language_file_matcher",
+                            MagicMock(side_effect=TypeError("invalid extension map")))
+
+    monkeypatch.setattr(plq, "get_git_provider", lambda: lambda _url: provider)
+    monkeypatch.setattr(plq, "TokenHandler", lambda *_args, **_kwargs: MagicMock())
+    extract_hunk = MagicMock(return_value=("@@ -1 +1 @@\n-old\n+new", "new"))
+    monkeypatch.setattr(plq, "extract_hunk_lines_from_patch", extract_hunk)
+    prediction = AsyncMock(return_value="answer")
+    monkeypatch.setattr(plq, "retry_with_fallback_models", prediction)
+
+    handler = MagicMock()
+    tool = plq.PR_LineQuestions("https://github.com/org/repo/pull/1", ["why?"], ai_handler=lambda: handler)
+    assert tool.main_pr_language == expected_language
+    assert handler.main_pr_language == expected_language
+    await tool.run()
+
+    provider.get_languages.assert_not_called()
+    provider.get_files.assert_not_called()
+    if ask_diff:
+        provider.get_diff_files.assert_not_called()
+    else:
+        provider.get_diff_files.assert_called_once_with()
+    prediction.assert_awaited_once()

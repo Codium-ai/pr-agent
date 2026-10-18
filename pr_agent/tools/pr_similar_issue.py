@@ -1,7 +1,6 @@
 import hashlib
 import time
-from enum import Enum
-from typing import List
+from enum import StrEnum
 
 import openai
 from pydantic import BaseModel, Field
@@ -28,14 +27,14 @@ def _get_embedding_client(api_key: str):
     return _EMBEDDING_CLIENTS[api_key]
 
 
-def _embed(texts: List[str]) -> List[List[float]]:
+def _embed(texts: list[str]) -> list[list[float]]:
     """Embed texts with the openai>=1.0 client that requirements.txt pins."""
     client = _get_embedding_client(get_settings().openai.key)
     response = client.embeddings.create(input=texts, model=MODEL)
     return [record.embedding for record in response.data]
 
 
-def _embed_with_fallback(texts: List[str]) -> List[List[float]]:
+def _embed_with_fallback(texts: list[str]) -> list[list[float]]:
     """Embed a list, falling back to one by one, and refuse to return an all-zero set."""
     try:
         return _embed(texts)
@@ -70,17 +69,17 @@ def _qdrant_collection_name(base_name: str) -> str:
     return f"{base_name}-v2"
 
 
-def _lancedb_similar_search(table, query_vector, repo_name_for_index):
-    """Search a lancedb table with the same cosine metric and five-hit limit as the other backends.
+def _lancedb_similar_search(table, query_vector, repo_name_for_index, limit=5):
+    """Search a lancedb table with the same cosine metric and requested limit as the other backends.
 
-    Pinecone and qdrant both return cosine similarity and request five hits; lancedb's default
+    Pinecone and qdrant both return cosine similarity; lancedb's default
     squared-L2 metric would otherwise make ``1 - _distance`` meaningless. Cosine distance keeps the
     printed score (``1 - _distance``) equal to the cosine similarity reported elsewhere.
     """
     return (
         table.search(query_vector)
         .distance_type("cosine")
-        .limit(5)
+        .limit(limit)
         .where(f"metadata.repo='{repo_name_for_index}'", prefilter=True)
         .to_list()
     )
@@ -306,17 +305,22 @@ class PRSimilarIssue:
 
                 self._update_table_with_issues(issues, repo_name_for_index, ingest=ingest, force_refresh=force_refresh)
             else:  # update table if needed
-                issues_to_update = []
+                issues_to_scan = []
                 issues_paginated_list = repo_obj.get_issues(state='all')
                 for scanned, issue in enumerate(i for i in issues_paginated_list if not i.pull_request):
                     if scanned >= self.max_issues_to_scan:
                         break
-                    number = issue.number
-                    issue_key = f"issue_{number}"
-                    issue_id = issue_key + "." + "issue"
-                    res = self.table.search().limit(len(self.table)).where(f"id='{issue_id}'").to_list()
-                    if not any(r['metadata']['repo'] == repo_name_for_index for r in res):
-                        issues_to_update.append(issue)
+                    issues_to_scan.append(issue)
+
+                indexed_ids = set()
+                if issues_to_scan:
+                    rows = self.table.search().limit(len(self.table)).where(
+                        f"metadata.repo='{repo_name_for_index}'"
+                    ).select(["id", "metadata"]).to_list()
+                    indexed_ids = {row['id'] for row in rows}
+                issues_to_update = [
+                    issue for issue in issues_to_scan if f"issue_{issue.number}.issue" not in indexed_ids
+                ]
 
                 if issues_to_update:
                     get_logger().info(f'Updating index with {len(issues_to_update)} new issues...')
@@ -414,7 +418,37 @@ class PRSimilarIssue:
             return
         relevant_issues_number_list.append(issue_number)
         relevant_comment_number_list.append(comment_number)
-        score_list.append(str("{:.2f}".format(score)))
+        score_list.append(str(f"{score:.2f}"))
+
+    @classmethod
+    def _select_similar_hits(cls, hits, original_issue_number):
+        """Select up to five distinct non-self issues in the backend's ranked order."""
+        issues, comments, scores = [], [], []
+        for rid, score in hits:
+            try:
+                if "example_issue_" in rid:
+                    continue
+                parts = rid.split(".")
+                if not parts[0].startswith("issue_"):
+                    continue
+                issue_number = int(parts[0][len("issue_"):])
+                if issue_number == original_issue_number:
+                    continue
+                if len(parts) != 2:
+                    continue
+                if parts[1] == "issue":
+                    comment_number = -1
+                elif parts[1].startswith("comment_"):
+                    comment_number = int(parts[1][len("comment_"):])
+                else:
+                    continue
+            except (ValueError, TypeError, AttributeError, IndexError):
+                get_logger().debug(f"Failed to parse similar issue ID: {rid}")
+                continue
+            cls._record_similar_hit(issues, comments, scores, issue_number, comment_number, score)
+            if len(issues) == 5:
+                break
+        return issues, comments, scores
 
     async def run(self):
         if not self.supported:
@@ -445,80 +479,46 @@ class PRSimilarIssue:
         relevant_comment_number_list = []
         score_list = []
 
-        if get_settings().pr_similar_issue.vectordb == "pinecone":
+        vectordb = get_settings().pr_similar_issue.vectordb
+        if vectordb == "pinecone":
             pinecone_index = self.pc.Index(name=self.index_name)
-            res = pinecone_index.query(vector=embeds[0],
-                                    top_k=5,
-                                    filter={"repo": self.repo_name_for_index},
-                                    namespace=self.pinecone_namespace,
-                                    include_metadata=True).to_dict()
 
-            for r in res['matches']:
-                # skip example issue
-                if 'example_issue_' in r["id"]:
-                    continue
+        for limit in (5, 10):
+            if vectordb == "pinecone":
+                res = pinecone_index.query(
+                    vector=embeds[0],
+                    top_k=limit,
+                    filter={"repo": self.repo_name_for_index},
+                    namespace=self.pinecone_namespace,
+                    include_metadata=True,
+                ).to_dict()["matches"]
+                hits = ((r["id"], r["score"]) for r in res)
+            elif vectordb == "lancedb":
+                res = _lancedb_similar_search(self.table, embeds[0], self.repo_name_for_index, limit=limit)
+                hits = ((r["id"], 1 - r["_distance"]) for r in res)
+            elif vectordb == "qdrant":
+                from qdrant_client.models import FieldCondition, Filter, MatchValue
 
-                try:
-                    issue_number = int(r["id"].split('.')[0].split('_')[-1])
-                except (ValueError, KeyError, AttributeError):
-                    get_logger().debug(f"Failed to parse issue number from {r['id']}")
-                    continue
+                res = self.qdrant.search(
+                    collection_name=self.qdrant_collection_name,
+                    query_vector=embeds[0],
+                    limit=limit,
+                    query_filter=Filter(
+                        must=[FieldCondition(key="metadata.repo", match=MatchValue(value=self.repo_name_for_index))]
+                    ),
+                    with_payload=True,
+                )
+                hits = ((r.payload["id"], r.score) for r in res)
+            else:
+                break
 
-                if original_issue_number == issue_number:
-                    continue
-                comment_number = int(r["id"].split('.')[1].split('_')[-1]) if 'comment' in r["id"] else -1
-                self._record_similar_hit(relevant_issues_number_list, relevant_comment_number_list,
-                                         score_list, issue_number, comment_number, r['score'])
-            get_logger().info('Done')
-
-        elif get_settings().pr_similar_issue.vectordb == "lancedb":
-            res = _lancedb_similar_search(self.table, embeds[0], self.repo_name_for_index)
-
-            for r in res:
-                # skip example issue
-                if 'example_issue_' in r["id"]:
-                    continue
-
-                try:
-                    issue_number = int(r["id"].split('.')[0].split('_')[-1])
-                except (ValueError, KeyError, AttributeError):
-                    get_logger().debug(f"Failed to parse issue number from {r['id']}")
-                    continue
-
-                if original_issue_number == issue_number:
-                    continue
-                comment_number = int(r["id"].split('.')[1].split('_')[-1]) if 'comment' in r["id"] else -1
-                self._record_similar_hit(relevant_issues_number_list, relevant_comment_number_list,
-                                         score_list, issue_number, comment_number, 1 - r['_distance'])
-            get_logger().info('Done')
-
-        elif get_settings().pr_similar_issue.vectordb == "qdrant":
-            from qdrant_client.models import FieldCondition, Filter, MatchValue
-            res = self.qdrant.search(
-                collection_name=self.qdrant_collection_name,
-                query_vector=embeds[0],
-                limit=5,
-                query_filter=Filter(
-                    must=[FieldCondition(key="metadata.repo", match=MatchValue(value=self.repo_name_for_index))]
-                ),
-                with_payload=True,
+            # Approximate-search prefixes can change: use only the terminal response.
+            relevant_issues_number_list, relevant_comment_number_list, score_list = self._select_similar_hits(
+                hits, original_issue_number
             )
-
-            for r in res:
-                rid = r.payload.get("id", "")
-                if 'example_issue_' in rid:
-                    continue
-                try:
-                    issue_number = int(rid.split('.')[0].split('_')[-1])
-                except Exception:
-                    get_logger().debug(f"Failed to parse issue number from {rid}")
-                    continue
-                if original_issue_number == issue_number:
-                    continue
-                comment_number = int(rid.split('.')[1].split('_')[-1]) if 'comment' in rid else -1
-                self._record_similar_hit(relevant_issues_number_list, relevant_comment_number_list,
-                                         score_list, issue_number, comment_number, r.score)
-            get_logger().info('Done')
+            if len(relevant_issues_number_list) == 5 or len(res) < limit:
+                break
+        get_logger().info('Done')
 
         get_logger().info('Publishing response...')
         similar_issues_str = "### Similar Issues\n___\n\n"
@@ -898,7 +898,7 @@ class PRSimilarIssue:
         get_logger().info('Done')
 
 
-class IssueLevel(str, Enum):
+class IssueLevel(StrEnum):
     ISSUE = "issue"
     COMMENT = "comment"
 
@@ -920,7 +920,7 @@ class Record(BaseModel):
 
 
 class Corpus(BaseModel):
-    documents: List[Record] = Field(default=[])
+    documents: list[Record] = Field(default=[])
 
     def append(self, r: Record):
         self.documents.append(r)

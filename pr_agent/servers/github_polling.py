@@ -5,7 +5,7 @@ import multiprocessing
 import traceback
 from collections import deque
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import aiohttp
 from starlette_context import request_cycle_context
@@ -18,7 +18,7 @@ from pr_agent.algo.ai_handlers.litellm_helpers import (
     litellm_callbacks_registered,
 )
 from pr_agent.config_loader import get_settings, global_settings
-from pr_agent.git_providers import get_git_provider
+from pr_agent.git_providers import get_git_provider, get_git_provider_with_context
 from pr_agent.log import LoggingFormat, get_logger, setup_logger
 
 setup_logger(fmt=LoggingFormat.JSON, level=get_settings().get("CONFIG.LOG_LEVEL", "DEBUG"))
@@ -70,7 +70,7 @@ def _get_polling_request_timeout() -> float:
 def _remaining_polling_timeout(deadline: float) -> float:
     remaining = deadline - asyncio.get_running_loop().time()
     if remaining <= 0:
-        raise asyncio.TimeoutError("Comment history request timed out")
+        raise TimeoutError("Comment history request timed out")
     return remaining
 
 
@@ -142,7 +142,7 @@ async def _fetch_comment_history(session, url, headers) -> list:
     for attempt in range(2):
         try:
             comments = await _fetch_comment_history_scan(session, url, headers, deadline)
-        except asyncio.TimeoutError as error:
+        except TimeoutError as error:
             if attempt:
                 raise _CommentPaginationDrift("Comment history changed during polling") from error
             raise
@@ -167,20 +167,19 @@ def now() -> str:
     Returns:
         str: The current UTC time in ISO 8601 format.
     """
-    now_utc = datetime.now(timezone.utc).isoformat()
+    now_utc = datetime.now(UTC).isoformat()
     now_utc = now_utc.replace("+00:00", "Z")
     return now_utc
 
-async def async_handle_request(pr_url, rest_of_comment, comment_id, git_provider):
+async def async_handle_request(pr_url, rest_of_comment, comment_id):
     agent = PRAgent()
-    success = await agent.handle_request(
+    return await agent.handle_request(
         pr_url,
         rest_of_comment,
-        notify=lambda: git_provider.add_eyes_reaction(comment_id)
+        notify=lambda: get_git_provider_with_context(pr_url).add_eyes_reaction(comment_id)
     )
-    return success
 
-async def _handle_request_and_drain(pr_url, rest_of_comment, comment_id, git_provider):
+async def _handle_request_and_drain(pr_url, rest_of_comment, comment_id):
     """
     Run the request, then flush litellm's deferred callbacks before the loop closes.
 
@@ -189,7 +188,7 @@ async def _handle_request_and_drain(pr_url, rest_of_comment, comment_id, git_pro
     completion's callback is dropped.
     """
     try:
-        return await async_handle_request(pr_url, rest_of_comment, comment_id, git_provider)
+        return await async_handle_request(pr_url, rest_of_comment, comment_id)
     finally:
         if litellm_callbacks_registered():
             await drain_litellm_callbacks(
@@ -197,8 +196,8 @@ async def _handle_request_and_drain(pr_url, rest_of_comment, comment_id, git_pro
             )
 
 
-def run_handle_request(pr_url, rest_of_comment, comment_id, git_provider):
-    return asyncio.run(_handle_request_and_drain(pr_url, rest_of_comment, comment_id, git_provider))
+def run_handle_request(pr_url, rest_of_comment, comment_id):
+    return asyncio.run(_handle_request_and_drain(pr_url, rest_of_comment, comment_id))
 
 
 def _polling_request_settings():
@@ -233,9 +232,7 @@ def _polling_settings_scope():
 def process_comment_sync(pr_url, rest_of_comment, comment_id):
     try:
         with _polling_settings_scope():
-            # Run the async handle_request in a separate function
-            git_provider = get_git_provider()(pr_url=pr_url)
-            run_handle_request(pr_url, rest_of_comment, comment_id, git_provider)
+            run_handle_request(pr_url, rest_of_comment, comment_id)
     except Exception as e:
         get_logger().error(f"Error processing comment: {e}", artifact={"traceback": traceback.format_exc()})
 
@@ -243,14 +240,7 @@ def process_comment_sync(pr_url, rest_of_comment, comment_id):
 async def process_comment(pr_url, rest_of_comment, comment_id):
     try:
         with _polling_settings_scope():
-            git_provider = get_git_provider()(pr_url=pr_url)
-            git_provider.set_pr(pr_url)
-            agent = PRAgent()
-            result = await agent.handle_request(
-                pr_url,
-                rest_of_comment,
-                notify=lambda: git_provider.add_eyes_reaction(comment_id)
-            )
+            result = await async_handle_request(pr_url, rest_of_comment, comment_id)
             if result is RequestOutcome.SKIPPED:
                 return
         get_logger().info(f"Finished processing comment for PR: {pr_url}")

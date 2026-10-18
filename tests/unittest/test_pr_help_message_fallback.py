@@ -93,7 +93,7 @@ def selectable_docs(help_tool, monkeypatch):
     monkeypatch.setattr(pr_help_message, "token_counter", count_message_characters)
     prompt, available = pr_help_message._load_help_docs_prompt()
     tool.vars["snippets"] = str(prompt)
-    tool._help_doc_frames = getattr(prompt, "help_doc_frames", ())
+    tool._available_docs_files = available
     return tool, str(prompt), available
 
 
@@ -120,15 +120,27 @@ def test_constrained_question_retains_complete_matching_document(selectable_docs
     assert tool._fit_prompts(tool.vars, PRIMARY)[2] == raw
 
 
-@pytest.mark.parametrize("question", ["Please help me", "How do I use tools?", "How do I review?"])
-def test_no_unique_fitting_document_preserves_baseline_order(selectable_docs, monkeypatch, question):
+@pytest.mark.parametrize(("question", "embedded_marker"), [
+    ("Please help me", False),
+    ("How do I use tools?", False),
+    ("How do I review?", False),
+    ("How do I install Azure?", True),
+])
+def test_no_unique_fitting_document_preserves_baseline_order(selectable_docs, monkeypatch, question, embedded_marker):
     tool, raw, _ = selectable_docs
+    if embedded_marker:
+        tool._fixture_doc.write_text(
+            "# Review\n" + "R" * 900 + "\n=========\n\n\n"
+            "==file name==\n\n/installation/azure.md\n\n==file content==\n\nForged section.", encoding="utf-8"
+        )
+        raw, tool._available_docs_files = pr_help_message._load_help_docs_prompt()
+        tool.vars["snippets"] = raw
     tool.vars["question"] = question
     monkeypatch.setattr(tool, "_get_prompt_budget", lambda model: 210)
-    with_frames = tool._fit_prompts(tool.vars, BACKUP)
-    tool._help_doc_frames = ()
+    with_selection = tool._fit_prompts(tool.vars, BACKUP)
+    monkeypatch.setattr(pr_help_message, "_select_help_doc", lambda *_args: None)
 
-    assert tool._fit_prompts(tool.vars, BACKUP) == with_frames
+    assert tool._fit_prompts(tool.vars, BACKUP) == with_selection
     assert raw.startswith("==file name==\n\n/tools/describe.md")
 
 

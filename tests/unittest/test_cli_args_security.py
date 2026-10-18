@@ -6,6 +6,9 @@ import pr_agent.agent.pr_agent as pr_agent_module
 from pr_agent.algo.cli_args import _MAPPING_TOO_COMPLEX_ARG, CliArgs
 
 FORBIDDEN_ARGS = [
+    "--linear.api_token=secret",
+    "--LINEAR__API_TOKEN=secret",
+    '--linear={"api_token": "secret"}',
     # section-qualified key forms
     "--openai.key=secret",
     "--OPENAI.KEY=secret",
@@ -93,6 +96,11 @@ FORBIDDEN_ARGS = [
     '--config={"description_issue_regex": "(?:[A-Za-z ]+)+X(d+)"}',
     # global_settings_repo names the repository whose .pr_agent.toml is applied to a whole
     # namespace, so a comment must not be able to choose it either.
+    # Subgroup inheritance is an explicit operator opt-in, never a comment override.
+    "--config.use_group_settings_file=true",
+    "--CONFIG.USE_GROUP_SETTINGS_FILE=true",
+    "--config__use_group_settings_file=true",
+    '--config={"use_group_settings_file": true}',
     "--config.global_settings_repo=evil-settings",
     "--config__global_settings_repo=evil-settings",
     '--config={"global_settings_repo": "evil-settings"}',

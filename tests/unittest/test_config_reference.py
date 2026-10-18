@@ -27,11 +27,12 @@ def _documented_keys(text: str) -> Counter:
 
 def test_config_reference_covers_every_active_key():
     keys = _toml_keys(CONFIG_TOML.read_text(encoding="utf-8"))
-    assert sum(keys.values()) == 287
+    assert sum(keys.values()) == 289
 
     assert {
         "model",
         "http_request_timeout",
+        "use_group_settings_file",
         "enable_auto_approval",
         "reaction_on_start",
         "reaction_on_failure",
@@ -109,6 +110,11 @@ def test_generator_rejects_a_note_whose_key_is_gone():
         )),
         ("openrouter", "reasoning_effort", (
             "For models not covered by PR-Agent's clamps, do not assume",
+        )),
+        ("model_routing", "rules", (
+            "append the displaced primary unless already present",
+            'model = "gpt-6-luna"',
+            'model = "gpt-6.1-sol"',
         )),
     ],
 )

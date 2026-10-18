@@ -5,9 +5,10 @@ from __future__ import annotations
 import copy
 import json
 import re
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from typing import Any, Iterable, Mapping
+from datetime import UTC, datetime
+from typing import Any
 
 from pr_agent.algo.inline_comment_dedup import key_issue_fingerprint
 from pr_agent.algo.utils import _as_line
@@ -42,7 +43,7 @@ class ReconciliationResult:
 def _timestamp(value: str | None) -> str:
     if value:
         return value
-    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
 
 def normalize_finding(finding: Mapping[str, Any]) -> dict[str, Any] | None:
@@ -341,14 +342,15 @@ def render_previous_findings(
     active.sort(key=lambda finding: str(finding.get("last_seen") or ""), reverse=True)
     resolved = [finding for finding in findings if finding.get("state") == "RESOLVED"]
     resolved.sort(key=lambda finding: str(finding.get("resolved_at") or ""), reverse=True)
-    entries, context = [], ""
+    entries = []
+    context_chars = 2  # JSON array brackets.
     for finding in active + list(dismissed_by_id.values()) + resolved:
         entry = _previous_finding_entry(finding)
-        candidate = json.dumps(entries + [entry], ensure_ascii=False, indent=2)
-        if len(candidate) <= max_chars:
+        entry_chars = len(json.dumps([entry], ensure_ascii=False, indent=2)) - 2
+        if context_chars + entry_chars <= max_chars:
             entries.append(entry)
-            context = candidate
-    return context
+            context_chars += entry_chars
+    return json.dumps(entries, ensure_ascii=False, indent=2) if entries else ""
 
 
 def _render_resolved_section(state: Mapping[str, Any]) -> str:
