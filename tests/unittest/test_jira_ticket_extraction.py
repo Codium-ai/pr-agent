@@ -1,4 +1,3 @@
-from contextlib import suppress
 from string import ascii_uppercase
 from unittest.mock import MagicMock, patch
 from urllib.parse import urlparse
@@ -36,11 +35,7 @@ def restore_jira_settings():
     saved = {key: get_settings().get(key, None) for key in _JIRA_KEYS}
     yield
     for key, value in saved.items():
-        if value is None:
-            with suppress(KeyError):
-                get_settings().unset(key, force=True)
-        else:
-            get_settings().set(key, value)
+        get_settings().set(key, value)
 
 
 class TestFindJiraTickets:
