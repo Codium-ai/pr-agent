@@ -3,6 +3,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+import yaml
 
 import pr_agent.algo.pr_processing as pr_processing
 import pr_agent.algo.token_budget as token_budget_module
@@ -53,23 +54,28 @@ def _valid_suggestion(**overrides):
 
 
 @pytest.mark.asyncio
-async def test_get_prediction_rejects_a_clipped_suggestion_chunk():
+async def test_get_prediction_rejects_over_budget_chunk_without_truncating():
     tool = _make_tool()
     tool.ai_handler.chat_completion = AsyncMock()
-    tool._suggestion_attempt_budget = SimpleNamespace(
+    budget = SimpleNamespace(
         model="attempt-model",
-        fit_optional_text=MagicMock(
-            return_value=SimpleNamespace(
-                optional_text="clipped diff",
-                system_prompt="system",
-                user_prompt="user",
-            )
-        ),
+        render_prompt_templates=MagicMock(return_value=("system", "user")),
+        prepare_request=MagicMock(return_value=SimpleNamespace(input_tokens=101)),
+        input_token_limit=MagicMock(return_value=100),
     )
+    tool._suggestion_attempt_budget = budget
 
     with pytest.raises(ValueError, match="complete suggestion chunk"):
         await tool._get_prediction("attempt-model", "numbered diff", "complete diff")
 
+    budget.render_prompt_templates.assert_called_once_with({
+        "diff": "numbered diff",
+        "diff_no_line_numbers": "complete diff",
+    })
+    budget.prepare_request.assert_called_once_with(tool.ai_handler, "system", "user")
+    budget.input_token_limit.assert_called_once_with(
+        pr_processing.OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD, preserve_minimum=True
+    )
     tool.ai_handler.chat_completion.assert_not_awaited()
 
 
@@ -85,7 +91,13 @@ code_suggestions:
     improved_code: new()
   - one_sentence_summary: Avoid duplicated work
     label: maintainability
-    relevant_file: app.py
+    relevant_file: worker.py
+    suggestion_content: Use the shared helper in the other file.
+    existing_code: old_worker()
+    improved_code: new_worker()
+  - one_sentence_summary: Avoid duplicated work
+    label: maintainability
+    relevant_file: " app.py "
     suggestion_content: Duplicate summary.
     existing_code: old()
     improved_code: newer()
@@ -98,9 +110,48 @@ code_suggestions:
 
     data = tool._prepare_pr_code_suggestions(prediction)
 
-    assert len(data["code_suggestions"]) == 1
-    assert data["code_suggestions"][0]["one_sentence_summary"] == "Avoid duplicated work"
-    assert data["code_suggestions"][0]["improved_code"] == "new()"
+    assert [s["relevant_file"] for s in data["code_suggestions"]] == ["app.py", "worker.py"]
+    assert [s["one_sentence_summary"] for s in data["code_suggestions"]] == ["Avoid duplicated work"] * 2
+    assert [s["improved_code"] for s in data["code_suggestions"]] == ["new()", "new_worker()"]
+
+
+def test_prepare_pr_code_suggestions_incomplete_entry_does_not_reserve_summary():
+    tool = _make_tool()
+    incomplete = _valid_suggestion()
+    del incomplete["improved_code"]
+    complete = _valid_suggestion(improved_code="complete()")
+
+    data = tool._prepare_pr_code_suggestions(yaml.safe_dump({"code_suggestions": [incomplete, complete]}))
+
+    assert data["code_suggestions"] == [complete]
+
+
+def test_prepare_pr_code_suggestions_compares_list_summaries_without_hashing():
+    tool = _make_tool()
+    suggestions = [
+        _valid_suggestion(one_sentence_summary=["Reuse", "helper"]),
+        _valid_suggestion(one_sentence_summary=["Reuse", "helper"], improved_code="duplicate()"),
+        _valid_suggestion(one_sentence_summary=["Reuse", "helper"], relevant_file="worker.py"),
+    ]
+
+    data = tool._prepare_pr_code_suggestions(yaml.safe_dump({"code_suggestions": suggestions}))
+
+    assert data["code_suggestions"] == [suggestions[0], suggestions[2]]
+
+
+@pytest.mark.parametrize("files", [("app.py", ""), ("", "app.py"), ("app.py", 123), (123, "app.py")])
+def test_prepare_pr_code_suggestions_preserves_global_dedup_for_invalid_files(files):
+    tool = _make_tool()
+    suggestions = [
+        _valid_suggestion(relevant_file=files[0], improved_code="first()"),
+        _valid_suggestion(relevant_file=files[1], improved_code="second()"),
+    ]
+    prediction = yaml.safe_dump({"code_suggestions": suggestions})
+    assert [s["relevant_file"] for s in yaml.safe_load(prediction)["code_suggestions"]] == list(files)
+
+    data = tool._prepare_pr_code_suggestions(prediction)
+
+    assert data["code_suggestions"] == [suggestions[0]]
 
 
 @pytest.mark.asyncio

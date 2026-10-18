@@ -40,7 +40,7 @@ from pr_agent.algo.repo_context import build_repo_context
 from pr_agent.algo.run_details import init_run_details, record_command_failure, record_model_used
 from pr_agent.algo.run_output import push_outputs, show_relevant_configurations, show_run_details
 from pr_agent.algo.skills_loader import get_skills_context
-from pr_agent.algo.token_budget import AttemptTokenBudget
+from pr_agent.algo.token_budget import AttemptTokenBudget, FittedPrompt
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.algo.utils import (
     ModelType,
@@ -1024,6 +1024,23 @@ class PRCodeSuggestions:
         data = self.prediction
         return data
 
+    def _prepare_complete_suggestion_chunk(
+        self, budget: AttemptTokenBudget, numbered: str, unnumbered: str
+    ) -> FittedPrompt:
+        """Check a full chunk once; a truncated diff must never be treated as complete."""
+        variables = copy.deepcopy(self.vars)
+        variables["diff"] = numbered
+        variables["diff_no_line_numbers"] = unnumbered
+        system_prompt, user_prompt = budget.render_prompt_templates(variables)
+        prepared = budget.prepare_request(self.ai_handler, system_prompt, user_prompt)
+        if prepared.input_tokens > budget.input_token_limit(
+            OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD, preserve_minimum=True
+        ):
+            raise FallbackEligibleError(
+                f"The complete suggestion chunk does not fit the token limit for {budget.model}"
+            )
+        return prepared
+
     async def _get_prediction(self, model: str, patches_diff: str, patches_diff_no_line_number: str) -> dict:
         budget = getattr(self, "_suggestion_attempt_budget", None)
         if budget is None or budget.model != model:
@@ -1041,23 +1058,9 @@ class PRCodeSuggestions:
             )
             self._suggestion_attempt_budget = budget
 
-        def render(diff_no_line_numbers: str) -> tuple[str, str]:
-            variables = copy.deepcopy(self.vars)
-            variables["diff"] = patches_diff
-            variables["diff_no_line_numbers"] = diff_no_line_numbers
-            return budget.render_prompt_templates(variables)
-
-        fitted = budget.fit_optional_text(
-            patches_diff_no_line_number,
-            render,
-            ai_handler=self.ai_handler,
-            default_output_tokens=OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD,
-            preserve_minimum=True,
+        fitted = self._prepare_complete_suggestion_chunk(
+            budget, patches_diff, patches_diff_no_line_number
         )
-        if fitted.optional_text != patches_diff_no_line_number:
-            raise FallbackEligibleError(
-                f"The complete suggestion chunk does not fit the token limit for {model}"
-            )
         system_prompt, user_prompt = fitted.system_prompt, fitted.user_prompt
         response, finish_reason = await self.ai_handler.chat_completion(
             model=model, temperature=get_settings().config.temperature, system=system_prompt, user=user_prompt)
@@ -1292,7 +1295,7 @@ class PRCodeSuggestions:
 
         # remove or edit invalid suggestions
         suggestion_list = []
-        one_sentence_summary_list = []
+        accepted_suggestion_keys = []
         for i, suggestion in enumerate(data['code_suggestions']):
             try:
                 needed_keys = ['one_sentence_summary', 'label', 'relevant_file']
@@ -1312,7 +1315,13 @@ class PRCodeSuggestions:
                     if CRITICAL_LABEL in suggestion['label'].lower():
                         suggestion['label'] = 'possible issue'
 
-                if suggestion['one_sentence_summary'] in one_sentence_summary_list:
+                file_key = self._suggestion_file_key(suggestion)
+                summary = suggestion['one_sentence_summary']
+                if any(
+                    (seen_summary is summary or seen_summary == summary)
+                    and (seen_file == file_key or not seen_file or not file_key)
+                    for seen_file, seen_summary in accepted_suggestion_keys
+                ):
                     get_logger().debug(f"Skipping suggestion {i + 1}, because it is a duplicate: {suggestion}")
                     continue
 
@@ -1324,7 +1333,9 @@ class PRCodeSuggestions:
 
                 if ('existing_code' in suggestion) and ('improved_code' in suggestion):
                     suggestion = self._truncate_if_needed(suggestion)
-                    one_sentence_summary_list.append(suggestion['one_sentence_summary'])
+                    accepted_suggestion_keys.append(
+                        (self._suggestion_file_key(suggestion), suggestion['one_sentence_summary'])
+                    )
                     suggestion_list.append(suggestion)
                 else:
                     get_logger().info(
@@ -2020,38 +2031,15 @@ class PRCodeSuggestions:
                     )
                     for index in pending:
                         numbered, unnumbered = chunk_pairs[index]
-
-                        def render(
-                            candidate: str,
-                            numbered=numbered,
-                            attempt_budget=attempt_budget,
-                        ) -> tuple[str, str]:
-                            variables = copy.deepcopy(self.vars)
-                            variables["diff"] = numbered
-                            variables["diff_no_line_numbers"] = candidate
-                            return attempt_budget.render_prompt_templates(variables)
-
                         try:
-                            fitted = attempt_budget.fit_optional_text(
-                                unnumbered,
-                                render,
-                                ai_handler=self.ai_handler,
-                                default_output_tokens=OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD,
-                                preserve_minimum=True,
-                            )
+                            self._prepare_complete_suggestion_chunk(attempt_budget, numbered, unnumbered)
                         except ValueError:
                             get_logger().warning(
                                 f"Skipping recovery of chunk {index + 1} with {fallback_model}: "
-                                "the required prompt exceeds its token budget"
+                                "the complete diff exceeds its token budget"
                             )
-                        else:
-                            if fitted.optional_text != unnumbered:
-                                get_logger().warning(
-                                    f"Skipping recovery of chunk {index + 1} with {fallback_model}: "
-                                    "the complete diff does not fit its token budget"
-                                )
-                                continue
-                            eligible.append(index)
+                            continue
+                        eligible.append(index)
                 except Exception as error:
                     get_logger().warning(f"Cannot prepare chunk recovery with {fallback_model}: {error}")
                     continue
