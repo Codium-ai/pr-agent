@@ -1919,6 +1919,7 @@ class TestGitLabGlobalSettings:
     def _provider(self, gitlab_url="https://gitlab.com"):
         provider = GitLabProvider.__new__(GitLabProvider)
         provider.gl = MagicMock()
+        provider.gl.oauth_token = "fake_token"
         provider.id_project = "mygroup/myrepo"
         provider.gitlab_url = gitlab_url
         return provider
@@ -1929,7 +1930,8 @@ class TestGitLabGlobalSettings:
         proj.default_branch = "main"
         proj.files.get.return_value.decode.return_value = b"[pr_reviewer]\nnum_max_findings = 5\n"
         provider.gl.projects.get.return_value = proj
-        with patch("pr_agent.git_providers.git_provider.get_settings") as ms:
+        with patch("pr_agent.git_providers.git_provider.get_settings") as ms, \
+             patch("pr_agent.git_providers.gitlab_provider.get_settings", return_value=ms.return_value):
             ms.return_value.config.use_global_settings_file = True
             ms.return_value.config.global_settings_repo = "pr-agent-settings"
             result = provider._get_global_repo_settings()
@@ -1946,7 +1948,8 @@ class TestGitLabGlobalSettings:
         settings_project.files.get.return_value.decode.return_value = b"[pr_reviewer]\nnum_max_findings = 5\n"
         provider.gl.projects.get.side_effect = [project, settings_project]
 
-        with patch("pr_agent.git_providers.git_provider.get_settings") as ms:
+        with patch("pr_agent.git_providers.git_provider.get_settings") as ms, \
+             patch("pr_agent.git_providers.gitlab_provider.get_settings", return_value=ms.return_value):
             ms.return_value.config.use_global_settings_file = True
             ms.return_value.config.global_settings_repo = "pr-agent-settings"
             result = provider._get_global_repo_settings()
@@ -1963,7 +1966,8 @@ class TestGitLabGlobalSettings:
         proj.default_branch = "main"
         proj.files.get.return_value.decode.return_value = b"[pr_reviewer]\nnum_max_findings = 5\n"
         provider.gl.projects.get.return_value = proj
-        with patch("pr_agent.git_providers.git_provider.get_settings") as ms:
+        with patch("pr_agent.git_providers.git_provider.get_settings") as ms, \
+             patch("pr_agent.git_providers.gitlab_provider.get_settings", return_value=ms.return_value):
             ms.return_value.config.use_global_settings_file = True
             ms.return_value.config.global_settings_repo = "pr-agent-settings"
             result = provider._get_global_repo_settings()
@@ -1972,7 +1976,8 @@ class TestGitLabGlobalSettings:
 
     def test_disabled_returns_empty(self):
         provider = self._provider()
-        with patch("pr_agent.git_providers.git_provider.get_settings") as ms:
+        with patch("pr_agent.git_providers.git_provider.get_settings") as ms, \
+             patch("pr_agent.git_providers.gitlab_provider.get_settings", return_value=ms.return_value):
             ms.return_value.config.use_global_settings_file = False
             assert provider._get_global_repo_settings() == ""
         provider.gl.projects.get.assert_not_called()
@@ -1984,7 +1989,8 @@ class TestGitLabGlobalSettings:
         proj.default_branch = "main"
         proj.files.get.return_value.decode.return_value = contents
         provider.gl.projects.get.return_value = proj
-        with patch("pr_agent.git_providers.git_provider.get_settings") as ms:
+        with patch("pr_agent.git_providers.git_provider.get_settings") as ms, \
+             patch("pr_agent.git_providers.gitlab_provider.get_settings", return_value=ms.return_value):
             ms.return_value.config.use_global_settings_file = True
             ms.return_value.config.global_settings_repo = "pr-agent-settings"
             assert provider._get_global_repo_settings() == contents
@@ -2001,7 +2007,8 @@ class TestGitLabGlobalSettings:
         fetch = provider.gl.projects.get if failure_at == "project" else proj.files.get
         fetch.side_effect = GitlabGetError("Unavailable", response_code=response_code)
 
-        with patch("pr_agent.git_providers.git_provider.get_settings") as ms:
+        with patch("pr_agent.git_providers.git_provider.get_settings") as ms, \
+             patch("pr_agent.git_providers.gitlab_provider.get_settings", return_value=ms.return_value):
             ms.return_value.config.use_global_settings_file = True
             ms.return_value.config.global_settings_repo = "pr-agent-settings"
             assert provider._get_global_repo_settings() == ""
@@ -2037,7 +2044,8 @@ class TestGitLabGlobalSettings:
         else:
             proj.files.get.side_effect = [error, settings_file]
 
-        with patch("pr_agent.git_providers.git_provider.get_settings") as ms:
+        with patch("pr_agent.git_providers.git_provider.get_settings") as ms, \
+             patch("pr_agent.git_providers.gitlab_provider.get_settings", return_value=ms.return_value):
             ms.return_value.config.use_global_settings_file = True
             ms.return_value.config.global_settings_repo = "pr-agent-settings"
             assert provider._get_global_repo_settings() == ""
