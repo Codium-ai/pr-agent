@@ -145,7 +145,7 @@ class PRQuestions:
     def identify_image_in_comment(self):
         img_path = ''
         markdown_image = re.search(
-            r'!\[[^\]\n]*\]\(\s*(https://[^\s)]+)(?:\s+[^)\n]*)?\)', self.question_str, re.IGNORECASE
+            r'!\[[^\[\]\n]*\]\(\s*(https://[^\s)]+)', self.question_str, re.IGNORECASE
         )
         if markdown_image:
             img_path = markdown_image.group(1)
