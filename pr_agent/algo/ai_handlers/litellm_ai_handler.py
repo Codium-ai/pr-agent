@@ -293,7 +293,13 @@ def _should_retry_same_model(exc: BaseException) -> bool:
     An empty, length-truncated response is deterministic for the same request and cap, so it is
     not replayed unless config.retry_same_model_on_length enables it.
     """
-    if isinstance(exc, (openai.RateLimitError, openai.BadRequestError, openai.UnprocessableEntityError)):
+    if isinstance(exc, (
+        openai.RateLimitError,
+        openai.BadRequestError,
+        openai.UnprocessableEntityError,
+        openai.AuthenticationError,
+        openai.PermissionDeniedError,
+    )):
         return False
     if isinstance(exc, openai.APITimeoutError):
         return _as_bool(get_settings().config.get("retry_same_model_on_timeout", True), default=True)

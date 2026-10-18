@@ -711,6 +711,24 @@ def _empty_response(finish_reason):
             id="unprocessable-entity",
         ),
         pytest.param(
+            openai.AuthenticationError(
+                "invalid credentials",
+                response=httpx.Response(401, request=httpx.Request("POST", "http://model.invalid")),
+                body=None,
+            ),
+            1,
+            id="authentication-error",
+        ),
+        pytest.param(
+            openai.PermissionDeniedError(
+                "access denied",
+                response=httpx.Response(403, request=httpx.Request("POST", "http://model.invalid")),
+                body=None,
+            ),
+            1,
+            id="permission-denied",
+        ),
+        pytest.param(
             litellm.ContextWindowExceededError("context too long", model="gpt-4o", llm_provider="openai"),
             1,
             id="litellm-context-window",
