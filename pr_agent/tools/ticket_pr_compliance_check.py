@@ -87,6 +87,10 @@ JIRA_SITE_PATTERN = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$", re.IGN
 JIRA_PROJECT_KEY_PATTERN = re.compile(r"^[A-Z]{2,10}$")
 
 
+class LinkedWorkItemAcquisitionError(RuntimeError):
+    """Report linked-work-item acquisition failure without provider details."""
+
+
 def _jira_cloud_base_url():
     """
     Return the Jira Cloud base URL built from the configured site name, or None if the
@@ -1281,7 +1285,12 @@ async def extract_tickets(git_provider):
             return tickets_content
 
         elif _provider_supports(git_provider, "supports_linked_work_item_tickets"):
-            tickets_info = git_provider.get_linked_work_items()
+            try:
+                tickets_info = git_provider.get_linked_work_items()
+            except Exception:
+                raise LinkedWorkItemAcquisitionError(
+                    "Failed to acquire linked work items. Please retry the request."
+                ) from None
             tickets_content = []
             for ticket in tickets_info:
                 try:
@@ -1330,6 +1339,8 @@ async def extract_tickets(git_provider):
         if asana_ticket_urls or linear_ticket_urls or tickets_content:
             return tickets_content
 
+    except LinkedWorkItemAcquisitionError:
+        raise
     except Exception as e:
         get_logger().error(f"Error extracting tickets error= {e}",
                            artifact={"traceback": traceback.format_exc()})
