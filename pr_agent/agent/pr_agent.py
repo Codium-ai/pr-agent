@@ -281,7 +281,7 @@ def prepare_command(command: str) -> list[str]:
 
     Apply settings now so they can control repository loading. Return the same
     argv so ``PRAgent`` reapplies overrides after repository settings are loaded.
-    Quoted setting values retain their string type.
+    Quoted setting values retain their string type; quoted lists keep their list type.
     """
     command_args = parse_command(command)
     if not command_args:
