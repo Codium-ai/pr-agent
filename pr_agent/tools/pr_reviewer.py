@@ -1167,7 +1167,9 @@ class PRReviewer:
             max_findings = int(get_settings().pr_reviewer.num_max_findings)
         except (TypeError, ValueError):
             max_findings = None
-        self.prediction_data = merge_review_chunks(chunk_outputs, max_findings=max_findings)
+        raw_vars = getattr(self, "_raw_prompt_vars", None) or getattr(self, "vars", None) or {}
+        self.prediction_data = merge_review_chunks(
+            chunk_outputs, related_tickets=raw_vars.get("related_tickets"), max_findings=max_findings)
         self.review_chunk_count = len(self._chunked_patches_diff_list)
         self.review_failed_chunk_count = self.review_chunk_count - len(chunk_results)
         self.remaining_files_list = self._chunked_remaining_files_list
