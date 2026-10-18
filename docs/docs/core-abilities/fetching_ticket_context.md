@@ -20,6 +20,7 @@ This integration enriches the review process by automatically surfacing relevant
 - [GitHub/GitLab Issues](#githubgitlab-issues-integration)
 - [Jira](#jira-integration)
 - [Asana](#asana-integration)
+- [Linear](#linear-integration)
 
 **Ticket data fetched:**
 
@@ -122,6 +123,41 @@ cross-repository ticket reads, including public repositories. Approve only conte
 consuming PR's review or description. Ticket lookup limits are separate from the sibling-file limit.
 PyGithub may follow an issue transfer, but results from a different repository are discarded before prompt use.
 Reference a transferred issue by its current repository and number.
+
+## Linear Integration
+
+PR-Agent reads Linear issue links from the user-written PR description and includes their titles, descriptions,
+and labels in the existing ticket context. This works across git providers, including providers without native
+issue support. Enable `pr_reviewer.require_ticket_analysis_review` to use ticket analysis.
+
+Link an issue as `https://linear.app/your-workspace/issue/TEAM-123` or include its optional title slug.
+Query strings and fragments do not change issue identity. Repeated links to the same workspace and issue are
+deduplicated in description order. Bare identifiers, PR titles and branch names are not scanned for Linear issues.
+
+Create a [Linear personal API key](https://linear.app/developers/graphql) with read access to the intended issues.
+Set `LINEAR__API_TOKEN` in the deployment environment, or add it to your private `.secrets.toml`:
+
+```toml
+[linear]
+api_token = "your-personal-api-key"
+```
+
+Do not put the token in repository `.pr_agent.toml` files. Existing credential protections prevent repositories
+and review-command arguments from overriding it. Fetched ticket content enters the review model's context;
+choose credential access appropriate for the repositories using the integration.
+
+The key is sent directly in the `Authorization` header to `https://api.linear.app/graphql`, without a `Bearer`
+prefix. Requests do not follow redirects. No OAuth application or additional service is required.
+
+PR-Agent attempts the first three unique issue references, concurrently and in description order, with no
+replacement attempts for failed issues. Results are appended after existing native, Asana and Jira tickets,
+without reducing their limits. Descriptions are truncated to 10,000 characters and at most 20 labels are fetched.
+The shared prompt-token budget may further reduce ticket context.
+
+Missing credentials, inaccessible issues, HTTP errors and GraphQL errors cause the affected issues to be skipped
+with a warning; successful tickets and the code review continue. No placeholder ticket or separate failure verdict
+is published. An API response for a different workspace or issue is rejected. Configure `linear.request_timeout`
+to change the default 10-second per-request timeout (maximum 60 seconds). Existing review-local ticket caching applies.
 
 ## Asana Integration
 
@@ -233,7 +269,8 @@ Ticket detection matches any `PROJECT-123` shaped text, so strings like `SHA-256
 `UTF-8` or `ISO-8601` in a title or description each cost an authenticated lookup that
 returns 404. If your deployment works with a known set of Jira projects, list their keys
 in the host's `project_keys`; keys with any other prefix are then dropped before any lookup (they are
-named once at debug level in the log). Leave the list empty to look up every key found.
+named once at debug level in the log). By default, `project_keys = ["*"]` looks up every key found.
+Set `project_keys = []` to disable Jira ticket lookups.
 `project_keys`, `jira_site` and `jira_api_email` are host-only: a repository's `.pr_agent.toml`
 or a comment command cannot change them.
 
@@ -242,12 +279,10 @@ or a comment command cannot change them.
 project_keys = ["PROJ", "OPS"]
 ```
 
-Entries are plain upper-case project keys (letters only, as Jira writes them); anything
-else (a lower-case label, a full ticket key, a URL, a blank entry) is ignored with a
+Entries are plain upper-case project keys (letters only, as Jira writes them) or `"*"` to allow all keys.
+Anything else (a lower-case label, a full ticket key, a URL, a blank entry) is ignored with a
 warning. If the list is set but none of its entries is valid, no Jira lookup is made at all
-until it is fixed, so a typo cannot silently widen the lookup again. Only a missing option,
-the empty list, and an environment override set to the empty string mean "look up every
-key".
+until it is fixed, so a typo cannot silently widen the lookup again.
 
 ### How to link a PR to a Jira ticket
 
