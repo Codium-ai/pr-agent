@@ -129,16 +129,16 @@ class CodeCommitProvider(GitProvider):
 
     def get_files(self) -> list[CodeCommitFile]:
         # bring files from CodeCommit only once
-        if self.git_files:
+        if self.git_files is not None:
             return self.git_files
 
-        self.git_files = []
+        git_files = []
         for target in self._get_target_contexts():
             differences = self.codecommit_client.get_differences(
                 target["repository_name"], target["comparison_base_commit"], target["source_commit"]
             )
             for item in differences:
-                self.git_files.append(
+                git_files.append(
                     CodeCommitFile(
                         item.before_blob_path,
                         item.before_blob_id,
@@ -151,6 +151,7 @@ class CodeCommitProvider(GitProvider):
                         comparison_base_commit=target["comparison_base_commit"],
                     )
                 )
+        self.git_files = git_files
         return self.git_files
 
     def get_diff_files(self) -> list[FilePatchInfo]:
@@ -207,7 +208,16 @@ class CodeCommitProvider(GitProvider):
                 else:
                     new_file_content_str = ""
             except UnicodeDecodeError as e:
-                get_logger().warning(f"Skipping non-UTF-8 file in CodeCommit diff: {diff_item.filename!r} ({e})")
+                get_logger().warning(f"Could not decode CodeCommit file: {diff_item.filename!r} ({e})")
+                diff_files.append(FilePatchInfo(
+                    base_file="",
+                    head_file="",
+                    patch="",
+                    filename=diff_item.filename,
+                    edit_type=diff_item.edit_type,
+                    old_filename=None if diff_item.a_path == diff_item.b_path else diff_item.a_path,
+                    content_fetch_failed=True,
+                ))
                 continue
 
             patch = load_large_diff(patch_filename, new_file_content_str, original_file_content_str)

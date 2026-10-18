@@ -126,14 +126,18 @@ class GiteaProvider(GitProvider):
         self.pr = None
         self.git_files = None
         self.file_contents = {}
-        self.file_diffs = {}
+        self.file_diffs = None
         self.sha = None
         self.base_sha = ""
         self.base_ref = ""
         self.diff_files = None
         self.incremental = IncrementalPR(False)
         self.comments_list = []
+        self._published_inline_comment_bodies: list[str] = []
         self.unreviewed_files_map = dict()
+        self.pr_commits = None
+        self.last_commit = None
+        self.last_commit_id = None
 
         if "pulls" in url:
             self.pr_url = url
@@ -145,16 +149,14 @@ class GiteaProvider(GitProvider):
                 pr_number=self.pr_number
             )
             self.sha = self.pr.head.sha if self.pr.head.sha else ""
-            self.__add_file_diff()
-            self._set_pr_commits()
+            self.last_commit = _GiteaCommitAdapter({"sha": self.sha})
+            self.last_commit_id = self.last_commit
             self.base_sha = self.pr.base.sha if self.pr.base.sha else ""
             self.base_ref = self.pr.base.ref if self.pr.base.ref else ""
         elif "issues" in url:
             self.issue_url = url
             self.__set_repo_and_owner_from_issue()
             self.enabled_issue = True
-        else:
-            self.pr_commits = None
 
     @property
     def base_url_html(self) -> str:
@@ -339,6 +341,8 @@ class GiteaProvider(GitProvider):
         return self.pr_url
 
     def get_latest_commit_url(self) -> str:
+        if getattr(self, "enabled_pr", True) and self.pr_commits is None:
+            self._set_pr_commits()
         return self.last_commit.html_url if self.last_commit else ""
 
     def get_pr_head_sha(self) -> str:
@@ -418,16 +422,15 @@ class GiteaProvider(GitProvider):
                                                                                 relevant_line_in_file,
                                                                                 )
         if position == -1:
+            # Gitea has no file-level review comments. An empty one fails with a 500 and
+            # leaves behind the PENDING review Gitea opened for it, so skip the post.
             get_logger().info(f"Could not find position for {relevant_file} {relevant_line_in_file}")
-            subject_type = "FILE"
-        else:
-            subject_type = "LINE"
+            return
 
         path = relevant_file.strip()
         # absolute_position is a new-file line; Gitea only honours new_position while
         # old_position is 0, otherwise it anchors the comment to the old side.
-        payload = (dict(body=body, path=path, old_position=0, new_position=absolute_position)
-                   if subject_type == "LINE" else {})
+        payload = dict(body=body, path=path, old_position=0, new_position=absolute_position)
         self.publish_inline_comments([payload])
 
 
@@ -452,8 +455,37 @@ class GiteaProvider(GitProvider):
             self.logger.error("Failed to publish inline comment")
             return False
 
+        self._remember_published_inline_comment_bodies(comments)
         self.logger.info("Inline comment published")
         return True
+
+    def get_persistent_comment_bodies(self) -> list[str]:
+        """Return existing PR comment bodies, review comments included, for inline deduplication."""
+        bodies = self.get_recent_inline_comment_bodies()
+        seen = set(bodies)
+        # The issue comments endpoint leaves out review comments, which is where inline findings live.
+        existing = [getattr(comment, "body", None) for comment in self.get_issue_comments()]
+        existing += self.repo_api.list_pull_review_comment_bodies(self.owner, self.repo, self.pr_number)
+        for body in existing:
+            if isinstance(body, str) and body and body not in seen:
+                bodies.append(body)
+                seen.add(body)
+        return bodies
+
+    def get_recent_inline_comment_bodies(self) -> list[str]:
+        """Return inline comment bodies published by this provider run."""
+        return list(getattr(self, "_published_inline_comment_bodies", []))
+
+    def _remember_published_inline_comment_bodies(self, comments: list[dict[str, Any]]) -> None:
+        """Remember bodies after Gitea accepts an inline review."""
+        recent = getattr(self, "_published_inline_comment_bodies", None)
+        if recent is None:
+            recent = []
+            self._published_inline_comment_bodies = recent
+        for comment in comments:
+            body = comment.get("body") if isinstance(comment, dict) else None
+            if isinstance(body, str) and body and body not in recent:
+                recent.append(body)
 
     def publish_code_suggestions(self, suggestions: list[dict[str, Any]]) -> bool:
         """Publish code suggestions"""
@@ -543,6 +575,8 @@ class GiteaProvider(GitProvider):
     def get_commit_messages(self)-> str:
         """Get commit messages for the PR"""
         max_tokens = get_settings().get("CONFIG.MAX_COMMITS_TOKENS", None)
+        if getattr(self, "enabled_pr", True) and self.pr_commits is None:
+            self._set_pr_commits()
         if not self.pr_commits:
             self.logger.error("Failed to get commit messages")
             return ""
@@ -590,6 +624,11 @@ class GiteaProvider(GitProvider):
         # lazily inside their diff fetch. See #2620.
         diff_git_files = filter_ignored(list(self._get_changed_files()), platform="gitea")
 
+        # Metadata-only commands do not need the full raw diff. Fetch it once on
+        # the first diff read that contains an eligible file.
+        if diff_git_files and getattr(self, "file_diffs", None) is None:
+            self.__add_file_diff()
+
         invalid_files_names = []
         counter_valid = 0
         diff_files = []
@@ -604,9 +643,12 @@ class GiteaProvider(GitProvider):
 
             counter_valid += 1
             avoid_load = False
-            patch = self.file_diffs.get(filename,"")
+            patch = (self.file_diffs or {}).get(filename, "")
             head_file = ""
             base_file = ""
+            status = file.get("status", "")
+            previous_filename = file.get("previous_filename") if status == "renamed" else None
+            old_filename = previous_filename if isinstance(previous_filename, str) and previous_filename else None
 
             if counter_valid >= MAX_FILES_ALLOWED_FULL and patch and not self.incremental.is_incremental:
                 avoid_load = True
@@ -620,8 +662,6 @@ class GiteaProvider(GitProvider):
                 self.__add_file_content(filename)
                 head_file = self.file_contents.get(filename,"")
 
-            status = file.get("status","")
-
             if self.incremental.is_incremental and self.unreviewed_files_map:
                 base_file = self._get_file_content_from_latest_commit(filename)
                 self.unreviewed_files_map[filename] = patch
@@ -631,7 +671,7 @@ class GiteaProvider(GitProvider):
                 if avoid_load or status == 'added':
                     base_file = ""
                 else:
-                    base_file = self._get_file_content_from_base(filename)
+                    base_file = self._get_file_content_from_base(old_filename or filename)
 
             num_plus_lines = file.get("additions",0)
             num_minus_lines = file.get("deletions",0)
@@ -655,7 +695,8 @@ class GiteaProvider(GitProvider):
                 filename=filename,
                 num_minus_lines=num_minus_lines,
                 num_plus_lines=num_plus_lines,
-                edit_type=edit_type
+                edit_type=edit_type,
+                old_filename=old_filename,
             )
             diff_files.append(file_patch_info)
 
@@ -1065,6 +1106,30 @@ class RepoApi(giteapy.RepositoryApi):
             index=index
         )
 
+    def list_pull_review_comment_bodies(self, owner: str, repo: str, pr_number: int) -> list[str]:
+        """Get the body of every review comment on the pull request.
+
+        Reviews are paginated, but the comments of one review come back in a single response.
+        Errors propagate: a partial listing must not pass for the complete one.
+        """
+        bodies = []
+        for review in self._list_all_pages(f'/repos/{owner}/{repo}/pulls/{pr_number}/reviews'):
+            if not review.get("comments_count"):
+                continue
+            response = self.api_client.call_api(
+                f'/repos/{owner}/{repo}/pulls/{pr_number}/reviews/{review["id"]}/comments',
+                'GET',
+                path_params={},
+                response_type=None,
+                _return_http_data_only=False,
+                _preload_content=False,
+                auth_settings=['AuthorizationHeaderToken']
+            )
+            raw_response = response[0] if isinstance(response, tuple) else response.data
+            comments = json.loads(raw_response.read().decode('utf-8'))
+            bodies.extend(comment.get("body", "") for comment in comments)
+        return bodies
+
     def get_pull_request_diff(self, owner: str, repo: str, pr_number: int) -> str:
         """Get the diff content of a pull request using direct API call"""
         try:
@@ -1221,7 +1286,8 @@ class RepoApi(giteapy.RepositoryApi):
         """Get raw content, optionally preserving fetch errors for guidance cache owners."""
 
         try:
-            url = f'/repos/{owner}/{repo}/raw/{filepath}'
+            encoded_filepath = quote(filepath, safe="/")
+            url = f'/repos/{owner}/{repo}/raw/{encoded_filepath}'
             query_params = []
             if commit_sha:
                 query_params.append(('ref', commit_sha))

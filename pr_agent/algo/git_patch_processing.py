@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 import traceback
+from codecs import BOM_UTF16_BE, BOM_UTF16_LE
 
 from pr_agent.algo.types import EDIT_TYPE
 from pr_agent.config_loader import get_settings, get_verbosity_level
@@ -13,6 +14,14 @@ RE_HUNK_HEADER = re.compile(
     r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@[ ]?(.*)")
 NO_NEWLINE_AT_EOF_MARKER = r'\ No newline at end of file'
 _SPLITLINES_BREAK_CHARS = "\n\r\v\f\x1c\x1d\x1e\x85\u2028\u2029"
+
+
+def split_diff_lines(text: str) -> list[str]:
+    """Split on line feeds only, as git does; ``str.splitlines()`` also breaks on U+2028, form feeds, etc."""
+    lines = text.split("\n")
+    if lines and lines[-1] == "":
+        lines.pop()
+    return [line[:-1] if line.endswith("\r") else line for line in lines]
 
 
 def to_hunk_only_patch(patch_str: str) -> str:
@@ -55,16 +64,15 @@ def extend_patch(original_file_str, patch_str, patch_extra_lines_before=0,
 
 def decode_if_bytes(original_file_str):
     if isinstance(original_file_str, (bytes, bytearray)):
+        if original_file_str.startswith((BOM_UTF16_LE, BOM_UTF16_BE)):
+            try:
+                return original_file_str.decode('utf-16')
+            except UnicodeDecodeError:
+                pass
         try:
             return original_file_str.decode('utf-8')
         except UnicodeDecodeError:
-            encodings_to_try = ['iso-8859-1', 'latin-1', 'ascii', 'utf-16']
-            for encoding in encodings_to_try:
-                try:
-                    return original_file_str.decode(encoding)
-                except UnicodeDecodeError:
-                    continue
-            return ""
+            return original_file_str.decode('latin-1')
     return original_file_str
 
 
@@ -80,14 +88,21 @@ def process_patch_lines(patch_str, original_file_str, patch_extra_lines_before, 
     allow_dynamic_context = get_settings().config.allow_dynamic_context
     patch_extra_lines_before_dynamic = get_settings().config.max_extra_lines_before_dynamic_context
 
-    file_original_lines = original_file_str.splitlines()
-    file_new_lines = new_file_str.splitlines() if new_file_str else []
+    file_original_lines = split_diff_lines(original_file_str)
+    file_new_lines = split_diff_lines(new_file_str) if new_file_str else []
     len_original_lines = len(file_original_lines)
-    patch_lines = patch_str.splitlines()
+    patch_lines = split_diff_lines(patch_str)
     extended_patch_lines = []
+    hunk_starts = [(i, int(match.group(1))) for i, line in enumerate(patch_lines)
+                   if (match := RE_HUNK_HEADER.match(line))]
+    next_hunk_start = {
+        current[0]: following[1] for current, following in zip(hunk_starts, hunk_starts[1:], strict=False)
+    }
 
     is_valid_hunk = True
     start1, size1, start2, size2 = -1, -1, -1, -1
+    extra_lines_after = 0
+    last_extended_old_line = 0
     try:
         for i,line in enumerate(patch_lines):
             if line.startswith('@@'):
@@ -95,11 +110,11 @@ def process_patch_lines(patch_str, original_file_str, patch_extra_lines_before, 
                 # identify hunk header
                 if match:
                     # finish processing previous hunk
-                    if is_valid_hunk and (start1 != -1 and patch_extra_lines_after > 0):
+                    if is_valid_hunk and (start1 != -1 and extra_lines_after > 0):
                         delta_lines_original = [
                             f' {line}'
                             for line in file_original_lines[
-                                start1 + size1 - 1:start1 + size1 - 1 + patch_extra_lines_after
+                                start1 + size1 - 1:start1 + size1 - 1 + extra_lines_after
                             ]
                         ]
                         extended_patch_lines.extend(delta_lines_original)
@@ -113,6 +128,11 @@ def process_patch_lines(patch_str, original_file_str, patch_extra_lines_before, 
                     if size2 == 0:
                         start2 += 1
 
+                    extra_lines_after = min(
+                        patch_extra_lines_after,
+                        max(0, next_hunk_start.get(i, len_original_lines + 1) - start1 - size1),
+                    )
+
                     is_valid_hunk = check_if_hunk_lines_matches_to_file(i, file_original_lines, patch_lines, start1)
 
                     if is_valid_hunk and (patch_extra_lines_before > 0 or patch_extra_lines_after > 0):
@@ -122,11 +142,16 @@ def process_patch_lines(patch_str, original_file_str, patch_extra_lines_before, 
                             size1=size1,
                             start2=start2,
                             size2=size2,
+                            extra_lines_after=extra_lines_after,
+                            last_extended_old_line=last_extended_old_line,
                         ):
-                            extended_start1 = max(1, start1 - patch_lines_before)
-                            extended_size1 = size1 + (start1 - extended_start1) + patch_extra_lines_after
-                            extended_start2 = max(1, start2 - patch_lines_before)
-                            extended_size2 = size2 + (start2 - extended_start2) + patch_extra_lines_after
+                            lines_before = min(patch_lines_before, start1 - 1, start2 - 1,
+                                               start1 - last_extended_old_line - 1)
+                            lines_before = max(0, lines_before)
+                            extended_start1 = start1 - lines_before
+                            extended_size1 = size1 + lines_before + extra_lines_after
+                            extended_start2 = start2 - lines_before
+                            extended_size2 = size2 + lines_before + extra_lines_after
                             if extended_start1 - 1 + extended_size1 > len_original_lines:
                                 # we cannot extend beyond the original file
                                 delta_cap = extended_start1 - 1 + extended_size1 - len_original_lines
@@ -217,6 +242,7 @@ def process_patch_lines(patch_str, original_file_str, patch_extra_lines_before, 
                         f'@@ -{extended_start1},{extended_size1} '
                         f'+{extended_start2},{extended_size2} @@ {section_header}')
                     extended_patch_lines.extend(delta_lines_original)  # one to zero based
+                    last_extended_old_line = extended_start1 + extended_size1 - 1
                     continue
             extended_patch_lines.append(line)
     except Exception as e:
@@ -224,8 +250,8 @@ def process_patch_lines(patch_str, original_file_str, patch_extra_lines_before, 
         return patch_str
 
     # finish processing last hunk
-    if start1 != -1 and patch_extra_lines_after > 0 and is_valid_hunk:
-        delta_lines_original = file_original_lines[start1 + size1 - 1:start1 + size1 - 1 + patch_extra_lines_after]
+    if start1 != -1 and extra_lines_after > 0 and is_valid_hunk:
+        delta_lines_original = file_original_lines[start1 + size1 - 1:start1 + size1 - 1 + extra_lines_after]
         # add space at the beginning of each extra line
         delta_lines_original = [f' {line}' for line in delta_lines_original]
         extended_patch_lines.extend(delta_lines_original)
@@ -345,7 +371,7 @@ def handle_patch_deletions(patch: str, original_file_content_str: str,
             get_logger().info(f"Processing file: {file_name}, minimizing deletion file")
         patch = None # file was deleted
     else:
-        patch_lines = patch.splitlines()
+        patch_lines = split_diff_lines(patch)
         patch_new = omit_deletion_hunks(patch_lines)
         if patch_new and patch != patch_new:
             if get_verbosity_level() > 0:
@@ -398,7 +424,7 @@ __old hunk__
         patch_with_lines_str = ""
 
     rendered_hunks = []
-    patch_lines = patch.splitlines()
+    patch_lines = split_diff_lines(patch)
     new_content_lines = []
     old_content_lines = []
     match = None
@@ -502,7 +528,7 @@ def extract_hunk_lines_from_patch(patch: str, file_name, line_start, line_end, s
             line_end = -1
         patch_with_lines_str = f"\n\n## File: '{file_name.strip()}'\n\n"
         selected_lines = ""
-        patch_lines = patch.splitlines()
+        patch_lines = split_diff_lines(patch)
         match = None
         start1, size1, start2, size2 = -1, -1, -1, -1
         skip_hunk = False

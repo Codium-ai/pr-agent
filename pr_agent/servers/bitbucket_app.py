@@ -128,7 +128,8 @@ async def get_bearer_token(shared_secret: str, client_key: str):
 @router.get("/")
 async def handle_manifest(request: Request, response: Response):
     cur_dir = os.path.dirname(os.path.abspath(__file__))
-    manifest = open(os.path.join(cur_dir, "atlassian-connect.json")).read()
+    with open(os.path.join(cur_dir, "atlassian-connect.json")) as f:
+        manifest = f.read()
     try:
         manifest = manifest.replace("app_key", get_settings().bitbucket.app_key)
         manifest = manifest.replace("base_url", get_settings().bitbucket.base_url)

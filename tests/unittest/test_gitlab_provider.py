@@ -184,6 +184,71 @@ class TestGitLabProvider:
 
         assert content == ""
 
+    def test_get_pr_file_content_required_file_raises_on_404(self, gitlab_provider, mock_project):
+        mock_project.files.get.side_effect = GitlabGetError("404 Not Found", response_code=404)
+
+        with pytest.raises(GitlabGetError):
+            gitlab_provider.get_pr_file_content(
+                "CHANGELOG.md", "main", propagate_errors=True, missing_is_error=True
+            )
+
+    @pytest.mark.parametrize("failed_ref,status", [("base", 404), ("head", 500)])
+    def test_missing_patch_does_not_invent_changes_after_content_error(
+        self, gitlab_provider, mock_project, failed_ref, status
+    ):
+        gitlab_provider._get_merge_request_changes = MagicMock(return_value={
+            "changes": [{
+                "old_path": "src/app.py", "new_path": "src/app.py", "diff": "",
+                "new_file": False, "deleted_file": False, "renamed_file": False,
+            }],
+            "diff_refs": {"base_sha": "base", "head_sha": "head"},
+        })
+
+        def get_file(_path, ref):
+            if ref == failed_ref:
+                raise GitlabGetError("File unavailable", response_code=status)
+            file_obj = MagicMock()
+            file_obj.decode.return_value = b"real content\n"
+            return file_obj
+
+        mock_project.files.get.side_effect = get_file
+        with patch.object(gitlab_provider, "_expand_submodule_changes", side_effect=lambda changes, refs: changes):
+            files = gitlab_provider.get_diff_files()
+
+        assert len(files) == 1
+        assert files[0].filename == "src/app.py"
+        assert files[0].patch == ""
+        assert files[0].content_fetch_failed is True
+
+    @pytest.mark.parametrize("new_file,expected_ref", [(True, "head"), (False, "base")])
+    def test_incremental_missing_patch_allows_absent_file_side(
+        self, gitlab_provider, mock_project, new_file, expected_ref
+    ):
+        change = {
+            "old_path": "src/app.py", "new_path": "src/app.py", "diff": "",
+            "new_file": new_file, "deleted_file": not new_file, "renamed_file": False,
+        }
+        gitlab_provider.incremental = IncrementalPR(True)
+        gitlab_provider.incremental.last_seen_commit = MagicMock(sha="base")
+        gitlab_provider._incremental_head_sha = "head"
+        gitlab_provider.unreviewed_files_map = {"src/app.py": change}
+        file_obj = MagicMock()
+        file_obj.decode.return_value = b"real content\n"
+
+        def get_file(_path, ref):
+            if ref != expected_ref:
+                raise GitlabGetError("404 Not Found", response_code=404)
+            return file_obj
+
+        mock_project.files.get.side_effect = get_file
+
+        with patch.object(gitlab_provider, "_expand_submodule_changes", side_effect=lambda changes, refs: changes):
+            files = gitlab_provider.get_diff_files()
+
+        assert mock_project.files.get.call_count == 2
+        assert files[0].patch
+        assert files[0].content_fetch_failed is False
+
     @pytest.mark.parametrize(
         "error",
         [
@@ -2117,7 +2182,8 @@ class TestGitLabIncrementalReview:
         c.created_at = committed_date
         return c
 
-    def test_get_incremental_commits_no_previous_review_falls_back(self, gitlab_provider):
+    @pytest.mark.parametrize("kind", ["review", "suggestions"])
+    def test_get_incremental_commits_no_previous_review_falls_back(self, gitlab_provider, kind):
         gitlab_provider.mr.notes.list.return_value = [
             self._make_note(1, "Just a comment", "2024-05-01T10:00:00Z"),
         ]
@@ -2125,9 +2191,10 @@ class TestGitLabIncrementalReview:
             self._make_commit("c1", "2024-05-02T10:00:00Z"),
         ]
 
-        gitlab_provider.get_incremental_commits(IncrementalPR(True))
+        gitlab_provider.get_incremental_commits(IncrementalPR(True), kind=kind)
 
         assert gitlab_provider.incremental.is_incremental is False
+        gitlab_provider.mr.commits.assert_not_called()
 
     def test_get_incremental_commits_picks_commits_after_review(self, gitlab_provider, mock_project):
         # Previous review at T=10:00. Commit c0 at 09:00 (before), c1 and c2 at 11:00 (after).
@@ -2160,6 +2227,7 @@ class TestGitLabIncrementalReview:
         assert gitlab_provider.incremental.last_seen_commit_sha == "c0"
         assert set(gitlab_provider.unreviewed_files_map.keys()) == {"a.py", "b.py"}
         mock_project.repository_compare.assert_called_once_with("c0", "head")
+        gitlab_provider.mr.commits.assert_called_once_with()
 
     def test_get_incremental_commits_no_new_commits_yields_empty_set(self, gitlab_provider, mock_project):
         gitlab_provider.mr.notes.list.return_value = [

@@ -168,7 +168,7 @@ class TestCodeCommitProvider:
             ),
         ],
     )
-    def test_get_diff_files_skips_non_utf8_file_and_keeps_utf8_sibling(
+    def test_get_diff_files_marks_non_utf8_file_unreadable_and_keeps_utf8_sibling(
         self,
         non_utf8_file,
         invalid_path,
@@ -186,12 +186,16 @@ class TestCodeCommitProvider:
 
         diff_files = provider.get_diff_files()
 
-        assert [diff_file.filename for diff_file in diff_files] == ["good.py"]
-        assert diff_files[0].base_file == "before\n"
-        assert diff_files[0].head_file == "after\n"
-        assert "-before" in diff_files[0].patch
-        assert "+after" in diff_files[0].patch
-        assert diff_files[0].edit_type == EDIT_TYPE.MODIFIED
+        assert [diff_file.filename for diff_file in diff_files] == [non_utf8_file.filename, "good.py"]
+        assert diff_files[0].content_fetch_failed is True
+        assert diff_files[0].patch == ""
+        assert diff_files[0].base_file == diff_files[0].head_file == ""
+        assert diff_files[0].edit_type == non_utf8_file.edit_type
+        assert diff_files[1].base_file == "before\n"
+        assert diff_files[1].head_file == "after\n"
+        assert "-before" in diff_files[1].patch
+        assert "+after" in diff_files[1].patch
+        assert diff_files[1].edit_type == EDIT_TYPE.MODIFIED
         assert provider.diff_files is diff_files
 
     def test_get_diff_files_filters_invalid_extension_before_fetching_content(self):
@@ -345,7 +349,8 @@ class TestCodeCommitProvider:
             optional=True,
         )
 
-    def test_get_files_includes_differences_from_every_pull_request_target(self):
+    @pytest.mark.parametrize("fail_second_target", [False, True])
+    def test_get_files_includes_differences_from_every_pull_request_target(self, fail_second_target):
         provider = object.__new__(CodeCommitProvider)
         provider.repo_name = "source-repository"
         provider.pr_num = 321
@@ -413,7 +418,18 @@ class TestCodeCommitProvider:
         provider.codecommit_client.get_differences.side_effect = get_differences
 
         provider.pr = provider._get_pr()
+        if fail_second_target:
+            provider.codecommit_client.get_differences.side_effect = [
+                differences_by_repository["source-repository"],
+                ValueError("second target failed"),
+            ]
+            with pytest.raises(ValueError, match="second target failed"):
+                provider.get_files()
+            assert provider.git_files is None
+            provider.codecommit_client.get_differences.side_effect = get_differences
+
         files = provider.get_files()
+        assert provider.get_files() is files
 
         assert [target.repository_name for target in provider.pr.targets] == [
             "source-repository", "destination-repository"
@@ -429,7 +445,7 @@ class TestCodeCommitProvider:
         assert provider.codecommit_client.get_differences.call_args_list == [
             call("source-repository", "merge-base-1", "source-commit-1"),
             call("destination-repository", "merge-base-2", "source-commit-2"),
-        ]
+        ] * (2 if fail_second_target else 1)
 
         provider.codecommit_client.get_file.side_effect = (
             lambda repository, path, commit: {
@@ -446,7 +462,7 @@ class TestCodeCommitProvider:
             ("two.py", "before two\n", "after two\n"),
         ]
 
-    def test_get_files_falls_back_to_destination_when_merge_base_is_missing(self):
+    def test_get_files_caches_empty_result_with_destination_fallback(self):
         provider = object.__new__(CodeCommitProvider)
         provider.repo_name = "source-repository"
         provider.git_files = None
@@ -462,6 +478,8 @@ class TestCodeCommitProvider:
         provider.pr.source_commit = target.source_commit
         provider.pr.destination_commit = target.destination_commit
 
+        assert provider.get_languages() == {}
+        assert provider.get_files() == []
         assert provider.get_files() == []
         provider.codecommit_client.get_differences.assert_called_once_with(
             "source-repository", "destination-commit", "source-commit"

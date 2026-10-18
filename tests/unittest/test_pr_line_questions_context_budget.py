@@ -57,6 +57,7 @@ async def test_ask_line_keeps_final_prompt_within_budget_after_loading_history(
     settings = get_settings()
     keys = (
         "config.model",
+        "config.output_run_details",
         "config.model_weak",
         "config.fallback_models",
         "config.max_model_tokens",
@@ -115,6 +116,8 @@ async def test_ask_line_keeps_final_prompt_within_budget_after_loading_history(
 
     try:
         settings.set("config.model", "gpt-4o")
+        # The assertions compare the exact reply, so keep the optional run-details section out of it.
+        settings.set("config.output_run_details", False)
         settings.set("config.model_weak", "")
         settings.set("config.fallback_models", fallback_models)
         settings.set("config.max_model_tokens", 700)
@@ -154,6 +157,7 @@ async def test_ask_line_uses_attempted_model_for_non_gpt_prompt_budget(monkeypat
     settings = get_settings()
     keys = (
         "config.model",
+        "config.output_run_details",
         "config.model_weak",
         "config.fallback_models",
         "config.max_model_tokens",
@@ -211,6 +215,8 @@ async def test_ask_line_uses_attempted_model_for_non_gpt_prompt_budget(monkeypat
 
     try:
         settings.set("config.model", "gpt-4o")
+        # The assertions compare the exact reply, so keep the optional run-details section out of it.
+        settings.set("config.output_run_details", False)
         settings.set("config.model_weak", "")
         settings.set("config.fallback_models", ["claude-sonnet-4-6"])
         settings.set("config.max_model_tokens", 3000)

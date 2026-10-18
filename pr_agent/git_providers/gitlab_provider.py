@@ -1,6 +1,7 @@
 import difflib
 import posixpath
 import re
+import time
 import urllib.parse
 from collections.abc import Iterator
 from datetime import UTC, datetime
@@ -61,6 +62,18 @@ class DiffNotFoundError(Exception):
 
 class IncompleteGitLabDiffError(DiffNotFoundError):
     """Represent an incomplete GitLab merge-request diff response."""
+
+
+class GitLabDiffNotReadyError(IncompleteGitLabDiffError):
+    """GitLab is still generating the diff; a later attempt may succeed."""
+
+
+# A large merge request can still be generating its diff when PR-Agent first asks for it:
+# changes_count is empty, or diff refs lag behind the pages. Those transient states are
+# retried with this bounded backoff before giving up; a capped "1000+" count, inconsistent
+# counts and mid-collection metadata movement fail immediately.
+_DIFF_READY_RETRY_DELAYS = (2, 5, 10)
+_diff_ready_sleep = time.sleep
 
 
 def _is_stale_file_update_error(error: GitlabUpdateError) -> bool:
@@ -609,6 +622,29 @@ class GitLabProvider(GitProvider):
         """Collect all MR diff pages with stable metadata and their matching refs."""
         project_id = quote(str(self.id_project), safe="")
         path = f"/projects/{project_id}/merge_requests/{self.id_mr}"
+        attempts = len(_DIFF_READY_RETRY_DELAYS) + 1
+        for attempt, delay in enumerate((*_DIFF_READY_RETRY_DELAYS, None), start=1):
+            try:
+                return self._collect_merge_request_changes(path)
+            except GitLabDiffNotReadyError as e:
+                if delay is None:
+                    raise IncompleteGitLabDiffError(
+                        f"{e} after {attempt} attempts. GitLab may still be preparing this large "
+                        "merge request; re-run the command in a few minutes."
+                    ) from e
+                get_logger().warning(
+                    f"Merge request {self.id_mr} diff not ready yet "
+                    f"(attempt {attempt}/{attempts}), retrying in {delay}s: {e}"
+                )
+                _diff_ready_sleep(delay)
+        # Unreachable in practice: the final loop iteration always re-raises. Keeps the
+        # explicit return contract if the delays tuple ever changes shape.
+        raise IncompleteGitLabDiffError(
+            f"GitLab merge request {self.id_mr} diff collection ended without a verdict"
+        )
+
+    def _collect_merge_request_changes(self, path: str) -> dict:
+        """Collect the diff pages once, failing on unstable or not-yet-ready responses."""
         for attempt in range(2):
             before = self.gl.http_get(path)
             changes = self.gl.http_list(f"{path}/diffs", get_all=True)
@@ -622,9 +658,12 @@ class GitLabProvider(GitProvider):
 
             changes_count = after.get("changes_count")
             if isinstance(changes_count, str):
-                if not changes_count or changes_count.endswith("+"):
+                if not changes_count:
+                    raise GitLabDiffNotReadyError(f"GitLab merge request {self.id_mr} diff is not ready")
+                if changes_count.endswith("+"):
                     raise IncompleteGitLabDiffError(
-                        f"GitLab merge request {self.id_mr} diff collection is incomplete or not ready"
+                        f"GitLab merge request {self.id_mr} exceeds GitLab's diff limits ({changes_count} files); "
+                        "split it into smaller merge requests"
                     )
                 if changes_count.isdecimal() and len(changes) != int(changes_count):
                     raise IncompleteGitLabDiffError(
@@ -634,10 +673,11 @@ class GitLabProvider(GitProvider):
             if changes and (not isinstance(diff_refs, dict) or any(
                 not isinstance(diff_refs.get(key), str) or not diff_refs[key] for key in ("base_sha", "head_sha")
             )):
-                raise IncompleteGitLabDiffError(
+                raise GitLabDiffNotReadyError(
                     f"GitLab merge request {self.id_mr} diff refs are not ready"
                 )
-            return {"changes": changes, "diff_refs": diff_refs if isinstance(diff_refs, dict) else {}}
+            return {"changes": changes, "diff_refs": diff_refs if isinstance(diff_refs, dict) else {},
+                    "changes_count": changes_count}
 
     def is_supported(self, capability: str) -> bool:
         if capability in ['create_inline_comment', 'publish_inline_comments']: # gfm_markdown is supported in gitlab !
@@ -764,10 +804,6 @@ class GitLabProvider(GitProvider):
         self._get_incremental_commits()
 
     def _get_incremental_commits(self):
-        if not getattr(self, 'mr_commits', None):
-            # gitlab returns commits newest-first; reverse to match PyGithub's oldest-first ordering
-            self.mr_commits = list(self.mr.commits())[::-1]
-
         kind = getattr(self, '_incremental_kind', 'review')
         prefixes = self._INCREMENTAL_ANCHOR_PREFIXES.get(kind, ())
         self.previous_review = (
@@ -781,6 +817,10 @@ class GitLabProvider(GitProvider):
             )
             self.incremental.is_incremental = False
             return
+
+        if not getattr(self, 'mr_commits', None):
+            # gitlab returns commits newest-first; reverse to match PyGithub's oldest-first ordering
+            self.mr_commits = list(self.mr.commits())[::-1]
 
         self.incremental.commits_range = self.get_commit_range()
         if not self.incremental.commits_range:
@@ -1000,13 +1040,14 @@ class GitLabProvider(GitProvider):
                 self._own_user_id = None
         return self._own_user_id
 
-    def get_pr_file_content(self, file_path: str, branch: str, propagate_errors: bool = False) -> str:
+    def get_pr_file_content(self, file_path: str, branch: str, propagate_errors: bool = False,
+                            missing_is_error: bool = False) -> str:
         try:
             file_obj = self.gl.projects.get(self.id_project, lazy=True).files.get(file_path, branch)
             content = file_obj.decode()
             return decode_if_bytes(content)
         except GitlabGetError as e:
-            if propagate_errors and getattr(e, "response_code", None) != 404:
+            if propagate_errors and (missing_is_error or getattr(e, "response_code", None) != 404):
                 raise
             return ''
         except (GitlabError, RequestException, ValueError, AttributeError) as e:
@@ -1110,7 +1151,7 @@ class GitLabProvider(GitProvider):
             or renamed files in the merge request.
         """
 
-        if self.diff_files:
+        if self.diff_files is not None:
             return self.diff_files
 
         incremental_active = bool(
@@ -1159,17 +1200,37 @@ class GitLabProvider(GitProvider):
 
             # allow only a limited number of files to be fully loaded. We can manage the rest with diffs only
             counter_valid += 1
+            content_fetch_failed = False
             if counter_valid < MAX_FILES_ALLOWED_FULL or not diff['diff']:
-                original_file_content_str = (
-                    ''
-                    if not incremental_active and diff['new_file']
-                    else self.get_pr_file_content(diff['old_path'], base_sha_for_content)
+                # Missing GitLab patches require every applicable content read. Treat an
+                # unexpected 404 as a failed read, or an empty side would invent changes.
+                strict_options = {"propagate_errors": True, "missing_is_error": True} if not diff['diff'] else {}
+                old_options = (
+                    {"propagate_errors": True}
+                    if incremental_active and diff['new_file'] and not diff['diff'] else strict_options
                 )
-                new_file_content_str = (
-                    ''
-                    if not incremental_active and diff['deleted_file']
-                    else self.get_pr_file_content(diff['new_path'], head_sha_for_content)
+                new_options = (
+                    {"propagate_errors": True}
+                    if incremental_active and diff['deleted_file'] and not diff['diff'] else strict_options
                 )
+                try:
+                    original_file_content_str = (
+                        ''
+                        if not incremental_active and diff['new_file']
+                        else self.get_pr_file_content(diff['old_path'], base_sha_for_content, **old_options)
+                    )
+                    new_file_content_str = (
+                        ''
+                        if not incremental_active and diff['deleted_file']
+                        else self.get_pr_file_content(diff['new_path'], head_sha_for_content, **new_options)
+                    )
+                except Exception as e:
+                    if diff['diff']:
+                        raise
+                    get_logger().warning(f"Cannot reconstruct missing GitLab patch for {diff['new_path']}: {e}")
+                    original_file_content_str = ''
+                    new_file_content_str = ''
+                    content_fetch_failed = True
             else:
                 if counter_valid == MAX_FILES_ALLOWED_FULL:
                     get_logger().info("Too many files in PR, will avoid loading full content for rest of files")
@@ -1190,7 +1251,7 @@ class GitLabProvider(GitProvider):
 
             filename = diff['new_path']
             patch = diff['diff']
-            if not patch:
+            if not patch and not content_fetch_failed:
                 patch = load_large_diff(filename, new_file_content_str, original_file_content_str)
 
 
@@ -1205,11 +1266,17 @@ class GitLabProvider(GitProvider):
                               edit_type=edit_type,
                               old_filename=None if diff['old_path'] == diff['new_path'] else diff['old_path'],
                               num_plus_lines=num_plus_lines,
-                              num_minus_lines=num_minus_lines, ))
+                              num_minus_lines=num_minus_lines,
+                              content_fetch_failed=content_fetch_failed, ))
         if invalid_files_names:
             get_logger().info(f"Filtered out files with invalid extensions: {invalid_files_names}")
 
         self.filtered_diff_file_names = invalid_files_names
+        # Retry provisional empty diffs until GitLab reports a verified change count.
+        if not diff_files and not incremental_active:
+            change_count = mr_changes.get("changes_count")
+            if not isinstance(change_count, str) or not change_count.isdecimal():
+                return diff_files
         self.diff_files = diff_files
         return diff_files
 

@@ -26,6 +26,10 @@ from tests.unittest._settings_helpers import restore_settings, snapshot_settings
     ('"openai_api_key": "synthetic-openai-value"', "synthetic-openai-value", "credential_assignment"),
     ("Authorization: AWS4-HMAC-SHA256 Credential=synthetic-key, Signature=synthetic-signature",
      "synthetic-signature", "authorization_header"),
+    ("curl: 401 for token ghp_syntheticpat0123456789syntheticpat0123456789",
+     "ghp_syntheticpat0123456789syntheticpat0123456789", "github_token"),
+    ("openai error: invalid key sk-proj-synthetic-key-value-for-tests-0123456789abcdef",
+     "sk-proj-synthetic-key-value-for-tests-0123456789abcdef", "openai_key"),
 ])
 def test_load_artifact_context_redacts_credentials_and_reports_only_counts(
     tmp_path, monkeypatch, content, credential, kind,
