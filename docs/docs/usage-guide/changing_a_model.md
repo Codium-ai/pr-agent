@@ -1173,13 +1173,6 @@ Without routing, regular-model calls use `config.model`, however small the pull 
 the first rule selects the cheaper Luna model; the second deliberately keeps the default Sol model.
 `config.fallback_models` still apply after the selected primary:
 
-:::warning[Routing example requires the collision repair]
-Enable this example only on a version that includes the routed-fallback collision repair tracked in
-[public PR #4064](https://github.com/The-PR-Agent/pr-agent/pull/4064).
-Without it, selecting Luna with the shipped fallback list retries Luna instead of reaching Sol.
-Routing is disabled by default; regular calls without a routing rule use Sol followed by Luna.
-:::
-
 ```toml
 [model_routing]
 enable = true
@@ -1198,6 +1191,25 @@ Rules are checked in order, and the first one whose limits the pull request fits
 the call. A pull request that fits no rule uses `config.model`. Size is measured by the number of diff hunks
 (`max_hunks`) and changed files (`max_files`) left after the `[ignore]` rules. Every git provider reports both,
 and neither depends on a model's tokenizer, so a threshold means the same thing whichever model it selects.
+
+The retry chain starts as `[config.model] + config.fallback_models`, with a deployment paired to each model.
+A matched rule replaces the first pair. If the routed `(model, deployment)` pair also appears among the
+configured fallbacks, the effective chain removes duplicate pairs while preserving their order and adds
+the displaced configured primary pair at the end, unless it is already present. This avoids retrying the
+same endpoint while retaining the configured primary in this collision case. With
+`config.model = "gpt-6.1-sol"`, no deployment configured, and the first rule above:
+
+| `config.fallback_models` | retry order if earlier attempts fail |
+| --- | --- |
+| `["gpt-6-luna"]` (shipped default) | `gpt-6-luna`, `gpt-6.1-sol` |
+| `["gpt-6-luna", "other-model"]` | `gpt-6-luna`, `other-model`, `gpt-6.1-sol` |
+
+The first successful attempt returns immediately; later entries are attempted only after fallback-eligible
+failures. An empty fallback list adds no backup, and a noncolliding route still replaces the primary without
+adding it back. The same model with distinct deployment IDs is treated as distinct endpoints. `/improve`
+uses this effective chain to recover failed chunks without rerunning successful chunks. Its defensive
+uniqueness checks remain: repeated complete pairs in unchanged, noncolliding or unrouted chains can still
+disable chunk recovery; those chains are not deduplicated by this routing-specific repair.
 
 Routing applies only to calls that ask for the regular model: `/review`, `/improve`, `/generate_labels` and
 `/add_docs`. Tools that already use `config.model_weak` (`/describe`, `/ask`, `/update_changelog`) are left

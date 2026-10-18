@@ -111,8 +111,7 @@ def test_generator_rejects_a_note_whose_key_is_gone():
             "For models not covered by PR-Agent's clamps, do not assume",
         )),
         ("model_routing", "rules", (
-            "Enable the Luna example only on a version with the routed-fallback collision repair",
-            "#4064",
+            "append the displaced primary unless already present",
             'model = "gpt-6-luna"',
             'model = "gpt-6.1-sol"',
         )),
