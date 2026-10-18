@@ -1321,7 +1321,7 @@ class TestBitbucketServerProvider:
         ]
         provider.bitbucket_client.get_commits.return_value = []
         provider.bitbucket_client.get_pull_requests_changes.return_value = changes
-        provider.get_file = MagicMock(side_effect=lambda path, ref: f"{path}@{ref}\n")
+        provider.get_file = MagicMock(side_effect=lambda path, ref, **_: f"{path}@{ref}\n")
         return provider
 
     @pytest.mark.parametrize("version,changes,ignored,invalid", [
@@ -1346,7 +1346,7 @@ class TestBitbucketServerProvider:
         provider.bitbucket_client.get_commits.assert_not_called()
         provider.bitbucket_client.get.assert_not_called()
         if files:
-            provider.get_file.assert_called_once_with("new.py", "head")
+            provider.get_file.assert_called_once_with("new.py", "head", missing_is_error=True)
             assert files[0].base_file == ""
             assert files[0].head_file == "new.py@head\n"
             assert files[0].edit_type == EDIT_TYPE.ADDED
@@ -1374,7 +1374,7 @@ class TestBitbucketServerProvider:
         else:
             provider.bitbucket_client.get.assert_not_called()
             provider.bitbucket_client.get_pull_requests_commits.assert_called_once_with("AAA", "my-repo", 1)
-        provider.get_file.assert_has_calls(expected_reads)
+        provider.get_file.assert_has_calls([call(*read.args, missing_is_error=True) for read in expected_reads])
         assert provider.get_file.call_count == len(expected_reads)
         assert files[0].edit_type == edit_type
         assert files[0].old_filename == old_filename
@@ -1390,7 +1390,7 @@ class TestBitbucketServerProvider:
         provider.bitbucket_client.get_pull_requests_commits.side_effect = lambda *args: events.append("base") or [
             {"id": "head", "parents": [{"id": "parent-base"}]}
         ]
-        provider.get_file.side_effect = lambda path, ref: events.append(f"content:{path}") or f"{path}@{ref}\n"
+        provider.get_file.side_effect = lambda path, ref, **_: events.append(f"content:{path}") or f"{path}@{ref}\n"
 
         files = provider.get_diff_files()
 
@@ -1940,15 +1940,8 @@ class TestBitbucketServerProvider:
 
         assert provider.get_repo_file_content("AGENTS.md") == ""
 
-    @pytest.mark.parametrize(("change_type", "missing_path", "missing_ref"), [
-        ("MODIFY", "app.py", "base-sha"),
-        ("MODIFY", "app.py", "head-sha"),
-        ("ADD", "app.py", "head-sha"),
-        ("DELETE", "app.py", "base-sha"),
-        ("RENAME", "old.py", "base-sha"),
-        ("RENAME", "app.py", "head-sha"),
-    ])
-    def test_missing_diff_content_does_not_create_a_patch(self, change_type, missing_path, missing_ref):
+    @staticmethod
+    def _missing_content_provider(change_type, missing_path, missing_ref, status_code=404):
         provider = BitbucketServerProvider.__new__(BitbucketServerProvider)
         provider.workspace_slug = "AAA"
         provider.repo_slug = "my-repo"
@@ -1963,21 +1956,44 @@ class TestBitbucketServerProvider:
         change = {"type": change_type, "path": {"toString": "app.py"}}
         if change_type == "RENAME":
             change["srcPath"] = {"toString": "old.py"}
-        provider._get_pull_request_changes = MagicMock(return_value=[change])
-        response = MagicMock(status_code=404)
-        error = HTTPError("404 Not Found")
-        error.response = response
+        sibling = {"type": "MODIFY", "path": {"toString": "lib.py"}}
+        provider._get_pull_request_changes = MagicMock(return_value=[change, sibling])
+        error = HTTPError(f"{status_code} error")
+        error.response = MagicMock(status_code=status_code)
 
         def get_content(_workspace, _repo, path, ref):
             if (path, ref) == (missing_path, missing_ref):
                 raise error
-            return "file content\n"
+            return "old\n" if ref == "base-sha" else "new\n"
 
         provider.bitbucket_client.get_content_of_file.side_effect = get_content
-        with patch("pr_agent.git_providers.bitbucket_server_provider.load_large_diff") as load_diff:
-            with pytest.raises(HTTPError, match="404 Not Found"):
-                provider.get_diff_files()
-            load_diff.assert_not_called()
+        return provider
+
+    @pytest.mark.parametrize(("change_type", "missing_path", "missing_ref"), [
+        ("MODIFY", "app.py", "base-sha"),
+        ("MODIFY", "app.py", "head-sha"),
+        ("ADD", "app.py", "head-sha"),
+        ("DELETE", "app.py", "base-sha"),
+        ("RENAME", "old.py", "base-sha"),
+        ("RENAME", "app.py", "head-sha"),
+    ])
+    def test_missing_diff_content_marks_file_unreadable(self, change_type, missing_path, missing_ref):
+        provider = self._missing_content_provider(change_type, missing_path, missing_ref)
+
+        unreadable, sibling = provider.get_diff_files()
+
+        assert unreadable.filename == "app.py"
+        assert unreadable.content_fetch_failed is True
+        assert unreadable.patch == ""
+        assert (unreadable.num_plus_lines, unreadable.num_minus_lines) == (0, 0)
+        assert sibling.content_fetch_failed is False
+        assert sibling.patch == "@@ -1 +1 @@\n-old\n+new\n"
+
+    def test_non_404_diff_content_error_propagates(self):
+        provider = self._missing_content_provider("MODIFY", "app.py", "base-sha", status_code=500)
+
+        with pytest.raises(HTTPError, match="500 error"):
+            provider.get_diff_files()
 
     def test_get_repo_file_content_propagates_non_404_errors(self):
         provider = BitbucketServerProvider.__new__(BitbucketServerProvider)
