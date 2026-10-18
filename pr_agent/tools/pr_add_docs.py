@@ -262,7 +262,7 @@ class PRAddDocs:
             return new_code_snippet
 
         try:
-            snippet_lines = new_code_snippet.split('\n')
+            snippet_lines = new_code_snippet.replace('\r\n', '\n').replace('\r', '\n').split('\n')
             first_line = next((item for item in snippet_lines if item.strip()), None)
             if first_line is None:
                 return None
