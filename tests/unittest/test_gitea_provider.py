@@ -3,6 +3,7 @@ import json
 from io import BytesIO
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
+from urllib.parse import parse_qs, unquote, urlsplit
 
 import giteapy
 import pytest
@@ -10,7 +11,7 @@ from giteapy.rest import ApiException
 from starlette_context import context, request_cycle_context
 from urllib3.response import HTTPResponse
 
-from pr_agent.algo.types import EDIT_TYPE
+from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
 from pr_agent.config_loader import global_settings
 from pr_agent.git_providers.git_provider import GitProvider
 from pr_agent.git_providers.gitea_provider import GiteaProvider, IncompleteGiteaPullRequestFilesError, RepoApi
@@ -26,6 +27,38 @@ def guidance_raw_api(monkeypatch):
 
 def _guidance_response(body=b"", status=200, *, headers=None, reason=None):
     return HTTPResponse(body=BytesIO(body), status=status, headers=headers, reason=reason, preload_content=False)
+
+
+@pytest.mark.parametrize("ref", ["base-sha", "feature/nested#branch?", ""])
+@pytest.mark.parametrize("filepath", [
+    "src/plain.py",
+    "src/report#draft.py",
+    "src/question?.py",
+    "src/literal%2Fname.py",
+    "src/space name.py",
+    "src/你好.py",
+    "nested/deep/a+b&c.py",
+])
+def test_gitea_raw_file_paths_preserve_filename_and_ref(monkeypatch, filepath, ref):
+    configuration = giteapy.Configuration()
+    configuration.host = "https://gitea.example/api/v1"
+    client = giteapy.ApiClient(configuration)
+    api = RepoApi(client)
+    # Exercise SDK/urllib3 URL parsing; replace only the final HTTP transport.
+    transport = MagicMock(return_value=_guidance_response(b"file contents"))
+    monkeypatch.setattr("urllib3.HTTPSConnectionPool.urlopen", transport)
+
+    try:
+        assert api.get_file_content("owner", "repo", ref, filepath) == "file contents"
+        transport.assert_called_once()
+        method, target = transport.call_args.args[:2]
+        parsed = urlsplit(target)
+        assert method == "GET"
+        assert unquote(parsed.path) == f"/api/v1/repos/owner/repo/raw/{filepath}"
+        assert parse_qs(parsed.query) == ({"ref": [ref]} if ref else {})
+        assert not parsed.fragment
+    finally:
+        client.rest_client.pool_manager.clear()
 
 
 @pytest.mark.parametrize("propagate_errors", [False, True])
@@ -503,8 +536,7 @@ class TestGiteaProvider:
         repo_api = RepoApi(mock_api_client)
 
         content = repo_api.get_file_content('owner', 'repo', 'sha1', 'notes.txt')
-        assert content != '', "non-UTF-8 text must not be dropped to an empty string"
-        assert all(ch in content for ch in "hello world"), "the underlying text should survive the fallback decode"
+        assert content == "hello world"
         args, kwargs = mock_api_client.call_api.call_args
         assert args[0] == '/repos/owner/repo/raw/notes.txt'
         assert kwargs.get('query_params') == [('ref', 'sha1')]
@@ -1457,6 +1489,33 @@ class TestGiteaProviderInlineCommentStatus:
             {"body": "**Suggestion:** two", "path": "b.py", "old_position": 0, "new_position": 12},
         ]
 
+    @staticmethod
+    def _provider_with_diff():
+        provider = TestGiteaProviderInlineCommentStatus._provider(create_inline_comment_result=True)
+        provider.max_comment_chars = 65000
+        provider.diff_files = [FilePatchInfo(base_file="a = 1\nc = 3\n", head_file="a = 1\nb = 2\nc = 3\n",
+                                             patch="@@ -1,2 +1,3 @@\n a = 1\n+b = 2\n c = 3\n",
+                                             filename="a.py")]
+        return provider
+
+    def test_publish_inline_comment_anchors_the_found_line_to_the_new_file(self):
+        provider = self._provider_with_diff()
+
+        provider.publish_inline_comment("finding", "a.py", "b = 2")
+
+        sent = provider.repo_api.create_inline_comment.call_args.kwargs["comments"]
+        assert sent == [{"body": "finding", "path": "a.py", "old_position": 0, "new_position": 2}]
+
+    def test_publish_inline_comment_skips_a_line_missing_from_the_diff(self):
+        # Gitea has no file-level review comments, so the old fallback sent an empty
+        # comment. Forgejo answers that with a 500 and keeps the PENDING review it
+        # opened for it, so nothing must be sent at all.
+        provider = self._provider_with_diff()
+
+        provider.publish_inline_comment("finding", "a.py", "not in the diff")
+
+        provider.repo_api.create_inline_comment.assert_not_called()
+
     @patch("pr_agent.git_providers.gitea_provider.giteapy.ApiClient")
     def test_create_inline_comment_submits_as_comment_not_pending(self, mock_api_client_cls):
         from pr_agent.git_providers.gitea_provider import RepoApi
@@ -2102,6 +2161,34 @@ class TestGiteaAddedFileBaseFetch:
     @patch("pr_agent.git_providers.gitea_provider.giteapy.ApiClient")
     @patch("pr_agent.git_providers.gitea_provider.RepoApi")
     @patch("pr_agent.git_providers.gitea_provider.get_settings")
+    def test_raw_diff_is_fetched_only_when_diff_files_are_needed(
+        self, mock_get_settings, mock_repo_api_cls, mock_api_client_cls
+    ):
+        files = [{"filename": "src/app.py", "additions": 1, "deletions": 1, "status": "modified"}]
+        provider, repo_api = self._provider(files, mock_get_settings, mock_repo_api_cls)
+
+        repo_api.get_pull_request_diff.assert_not_called()
+        repo_api.get_pr_commits.assert_not_called()
+        assert provider.get_files() == ["src/app.py"]
+        repo_api.get_pull_request_diff.assert_not_called()
+        repo_api.get_pr_commits.assert_not_called()
+
+        assert [file.filename for file in provider.get_diff_files()] == ["src/app.py"]
+        provider.get_diff_files()
+        repo_api.get_pull_request_diff.assert_called_once_with(owner="owner", repo="repo", pr_number=1)
+        repo_api.get_pr_commits.assert_not_called()
+
+        repo_api.get_pr_commits.return_value = [{
+            "sha": "head-sha", "html_url": "https://gitea.example.com/commit/head-sha",
+            "commit": {"message": "Fix bug"},
+        }]
+        assert "Fix bug" in provider.get_commit_messages()
+        assert provider.get_latest_commit_url() == "https://gitea.example.com/commit/head-sha"
+        repo_api.get_pr_commits.assert_called_once_with(owner="owner", repo="repo", pr_number=1)
+
+    @patch("pr_agent.git_providers.gitea_provider.giteapy.ApiClient")
+    @patch("pr_agent.git_providers.gitea_provider.RepoApi")
+    @patch("pr_agent.git_providers.gitea_provider.get_settings")
     def test_added_file_does_not_fetch_base_content(
         self, mock_get_settings, mock_repo_api_cls, mock_api_client_cls
     ):
@@ -2143,19 +2230,17 @@ class TestGiteaAddedFileBaseFetch:
     def test_only_added_files_skip_the_base_fetch(
         self, mock_get_settings, mock_repo_api_cls, mock_api_client_cls
     ):
-        """The skip set is exactly {added}.
-
-        deleted and renamed files are left fetching, matching GithubProvider. A rename
-        still resolves to "" today because the new path is absent at base_sha, and
-        fetching the pre-rename path is a separate gap; this test deliberately does not
-        assert on that content so it cannot block that follow-up.
-        """
+        """Fetch base content for deleted and renamed files, but not added files."""
         files = [
             {"filename": "gone.py", "additions": 0, "deletions": 3, "status": "deleted"},
-            {"filename": "renamed.py", "additions": 1, "deletions": 1, "status": "renamed"},
+            {"filename": "renamed.py", "previous_filename": "original.py",
+             "additions": 1, "deletions": 1, "status": "renamed"},
             {"filename": "changed.py", "additions": 1, "deletions": 1, "status": "modified"},
         ]
         provider, repo_api = self._provider(files, mock_get_settings, mock_repo_api_cls)
+        repo_api.get_file_content.side_effect = lambda **kwargs: (
+            f"{kwargs['commit_sha']}:{kwargs['filepath']}"
+        )
 
         diff_files = provider.get_diff_files()
 
@@ -2164,10 +2249,14 @@ class TestGiteaAddedFileBaseFetch:
             for call in repo_api.get_file_content.call_args_list
             if call.kwargs.get("commit_sha") == "base-sha"
         )
-        assert base_reads == ["changed.py", "gone.py", "renamed.py"]
+        assert base_reads == ["changed.py", "gone.py", "original.py"]
         assert [f.edit_type for f in diff_files] == [
             EDIT_TYPE.DELETED, EDIT_TYPE.RENAMED, EDIT_TYPE.MODIFIED,
         ]
+        assert diff_files[1].filename == "renamed.py"
+        assert diff_files[1].old_filename == "original.py"
+        assert diff_files[1].base_file == "base-sha:original.py"
+        assert diff_files[1].head_file == "head-sha:renamed.py"
 
     @patch("pr_agent.git_providers.gitea_provider.giteapy.ApiClient")
     @patch("pr_agent.git_providers.gitea_provider.RepoApi")
