@@ -29,6 +29,7 @@ def settings(monkeypatch):
 def project(contents, branch="settings-default"):
     result = Mock(default_branch=branch)
     result.files.get.return_value.decode.return_value = contents
+    result.files.get.return_value.commit_id = "a" * 40
     return result
 
 
