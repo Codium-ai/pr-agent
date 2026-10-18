@@ -1804,7 +1804,8 @@ class GithubProvider(GitProvider):
             parsed_url = urlparse(pr_url.replace("/api/v3", ""))
 
         path_parts = parsed_url.path.strip('/').split('/')
-        if 'api.github.com' in parsed_url.netloc or '/api/v3' in pr_url:
+        hostname = (parsed_url.hostname or "").lower()
+        if hostname == 'api.github.com' or '/api/v3' in pr_url:
             if len(path_parts) < 5 or path_parts[3] != 'pulls':
                 raise ValueError("The provided URL does not appear to be a GitHub PR URL")
             repo_name = '/'.join(path_parts[1:3])
@@ -1832,7 +1833,8 @@ class GithubProvider(GitProvider):
             parsed_url = urlparse(issue_url.replace("/api/v3", ""))
 
         path_parts = parsed_url.path.strip('/').split('/')
-        if 'api.github.com' in parsed_url.netloc or '/api/v3' in issue_url: #Check if came from github app
+        hostname = (parsed_url.hostname or "").lower()
+        if hostname == 'api.github.com' or '/api/v3' in issue_url: #Check if came from github app
             if len(path_parts) < 5 or path_parts[3] != 'issues':
                 raise ValueError("The provided URL does not appear to be a GitHub ISSUE URL")
             repo_name = '/'.join(path_parts[1:3])
