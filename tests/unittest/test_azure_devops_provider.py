@@ -188,6 +188,7 @@ def test_get_linked_work_items_canonicalizes_ids_and_preserves_response_mapping_
         SimpleNamespace(id=""),
         SimpleNamespace(id="  "),
         SimpleNamespace(id="x"),
+        SimpleNamespace(id="\x1c1\x1c"),
     ],
 )
 def test_get_linked_work_items_rejects_invalid_relation_id_before_board_request(relation):

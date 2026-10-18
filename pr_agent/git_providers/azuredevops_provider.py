@@ -1931,8 +1931,7 @@ class AzureDevopsProvider(GitProvider):
             raw_id = work_item_ref.id
             if not isinstance(raw_id, str):
                 raise TypeError("Azure linked work item ID must be a string")
-            raw_id = raw_id.strip()
-            if not raw_id:
+            if not raw_id.strip():
                 raise ValueError("Azure linked work item ID must not be blank")
             work_item_id = int(raw_id, 10)
             if work_item_id not in seen_ids:
