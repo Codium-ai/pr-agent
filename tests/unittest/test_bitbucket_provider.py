@@ -656,6 +656,7 @@ index 1111111..2222222 100644
 
     @pytest.mark.parametrize("header,paths", [
         ('diff --git "a/has space.py" "b/has space.py"', ("has space.py", "has space.py")),
+        ('diff --git a/has space.py b/has space.py', ("has space.py", "has space.py")),
         (r'diff --git "a/caf\303\251.py" "b/caf\303\251.py"', ("café.py", "café.py")),
     ])
     def test_diff_header_paths_decode_quoted_git_paths(self, header, paths):

@@ -62,6 +62,11 @@ def _diff_header_paths(patch: str) -> tuple[str, str] | None:
     header = patch.split("\n", 1)[0].rstrip("\r")
     match = _DIFF_HEADER_RE.fullmatch(header)
     if not match:
+        # Git leaves paths with spaces unquoted; with an unchanged name the header splits at its midpoint.
+        rest = header[len("diff --git "):]
+        mid = len(rest) // 2
+        if rest.startswith("a/") and rest[mid:mid + 3] == " b/" and rest[2:mid] == rest[mid + 3:]:
+            return rest[2:mid], rest[mid + 3:]
         return None
     paths = []
     for token in match.groups():
