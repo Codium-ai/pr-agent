@@ -1643,7 +1643,6 @@ class TestFetchSubIssuesNullGraphQLFields:
             "not raise into the broad except"
         )
         assert "Issue ID not found" in logs
-        # The second (sub-issues) query must not be attempted.
         assert len(provider.github_client._Github__requester.queries) == 1
 
     def test_null_repository_is_handled_without_traceback(self):
@@ -1656,11 +1655,10 @@ class TestFetchSubIssuesNullGraphQLFields:
         assert "Failed to fetch sub-issues" not in logs
         assert "Issue ID not found" in logs
 
-    def test_null_node_in_sub_issues_response_is_handled_without_traceback(self):
-        """The second query resolves the issue id; ``node`` may still be null."""
+    def test_null_sub_issues_response_is_handled_without_traceback(self):
+        """The issue can resolve even when its sub-issues data is null."""
         responses = [
-            {"data": {"repository": {"issue": {"id": "I_kwDO_fake"}}}},
-            {"data": {"node": None}},
+            {"data": {"repository": {"issue": {"id": "I_kwDO_fake", "subIssues": None}}}},
         ]
         provider = _provider_with_graphql(responses)
 
@@ -1677,10 +1675,10 @@ class TestFetchSubIssuesNullGraphQLFields:
             for number in range(1, 12)
         }
         responses = [
-            {"data": {"repository": {"issue": {"id": "I_kwDO_fake"}}}},
-            {"data": {"node": {"subIssues": {"nodes": [
-                {"url": url} for url in sub_issue_urls
-            ]}}}},
+            {"data": {"repository": {"issue": {
+                "id": "I_kwDO_fake",
+                "subIssues": {"nodes": [{"url": url} for url in sub_issue_urls]},
+            }}}},
         ]
         provider = _provider_with_graphql(responses)
 
@@ -1689,5 +1687,6 @@ class TestFetchSubIssuesNullGraphQLFields:
         assert result == sub_issue_urls
         assert "Failed to fetch sub-issues" not in logs
         queries = provider.github_client._Github__requester.queries
-        assert len(queries) == 2
-        assert "subIssues(first: 100)" in queries[1]
+        assert len(queries) == 1
+        assert "issue(number: 89)" in queries[0]
+        assert "subIssues(first: 100)" in queries[0]
