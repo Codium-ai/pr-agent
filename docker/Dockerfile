@@ -88,6 +88,7 @@ COPY docker/mosaico docker/mosaico
 # README edit only rebuilds these final layers.
 COPY scripts/check_docs_urls.py scripts/check_docs_urls.py
 COPY scripts/generate_config_reference.py scripts/generate_config_reference.py
+COPY scripts/measure_skills_cache.py scripts/measure_skills_cache.py
 COPY README.md CONTRIBUTING.md SECURITY.md .dockerignore ./
 COPY MANIFEST.in setup.py ./
 
