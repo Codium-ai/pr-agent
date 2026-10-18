@@ -161,18 +161,21 @@ required-version = ">=0.12.10"
 
 [tool.ruff]
 line-length = 120
+target-version = "py312"
 
 lint.select = [
   "E",    # pycodestyle
   "F",    # Pyflakes
   "B",    # flake8-bugbear
   "I",    # isort
+  "UP",   # pyupgrade
 ]
 
 lint.fixable = [
   "I001", # import sorting
   "F401", # unused imports
   "F541", # f-string without placeholders
+  "UP"
 ]
 
 lint.exclude = ["api/code_completions"]

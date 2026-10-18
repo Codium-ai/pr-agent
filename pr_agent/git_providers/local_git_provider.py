@@ -1,6 +1,5 @@
 from collections import Counter
 from pathlib import Path
-from typing import List, Optional
 
 from git import Repo
 
@@ -20,7 +19,7 @@ class PullRequestMimic:
     This class mimics the PullRequest class from the PyGithub library for the LocalGitProvider.
     """
 
-    def __init__(self, title: str, diff_files: List[FilePatchInfo]):
+    def __init__(self, title: str, diff_files: list[FilePatchInfo]):
         self.title = title
         self.diff_files = diff_files
 
@@ -126,7 +125,7 @@ class LocalGitProvider(GitProvider):
         self.diff_files = filter_ignored(diff_files, platform="local")
         return self.diff_files
 
-    def get_files(self) -> List[str]:
+    def get_files(self) -> list[str]:
         """
         Returns a list of files with changes in the diff.
         """
@@ -201,7 +200,7 @@ class LocalGitProvider(GitProvider):
     def remove_comment(self, comment):
         pass  # Not applicable to the local git provider, but required by the interface
 
-    def add_eyes_reaction(self, issue_comment_id: int, disable_eyes: bool = False) -> Optional[int]:
+    def add_eyes_reaction(self, issue_comment_id: int, disable_eyes: bool = False) -> int | None:
         return None  # Not applicable to the local git provider, but required by the interface
 
     def get_commit_messages(self) -> str:
@@ -258,7 +257,7 @@ class LocalGitProvider(GitProvider):
             return ""
         return blob.data_stream.read().decode("utf-8", errors="replace")
 
-    def get_repo_context_ref(self, from_default_branch: bool = False) -> Optional[str]:
+    def get_repo_context_ref(self, from_default_branch: bool = False) -> str | None:
         return self.repo.commit(self.target_branch_name).hexsha
 
     def get_user_id(self):

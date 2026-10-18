@@ -210,7 +210,7 @@ async def test_concurrent_fetches_preserve_order_and_partial_success(monkeypatch
             all_started.set()
         await asyncio.wait_for(all_started.wait(), 1)
         if url.endswith("ENG-2"):
-            raise asyncio.TimeoutError()
+            raise TimeoutError()
         return {"ticket_url": url}
 
     monkeypatch.setattr(tpc, "_fetch_linear_ticket_content", fetch)

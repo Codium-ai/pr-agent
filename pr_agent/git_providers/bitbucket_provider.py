@@ -4,7 +4,6 @@ import json
 import math
 import re
 from types import SimpleNamespace
-from typing import Optional, Tuple
 from urllib.parse import quote, urlparse
 
 import requests
@@ -88,7 +87,7 @@ def _diffstat_paths(diff) -> tuple[str, str]:
     return old_path, new_path
 
 
-def _diffstat_line_count(diff, field: str) -> Optional[int]:
+def _diffstat_line_count(diff, field: str) -> int | None:
     """Return Bitbucket's own count for one diffstat ``field``, or None when it is unusable.
 
     ``None`` is returned per field rather than per file so the caller can fall back to
@@ -118,7 +117,7 @@ class BitbucketProvider(GitProvider):
                                target_branch=policy_value(pr, "destination", "branch", "name"))
 
     def __init__(
-        self, pr_url: Optional[str] = None, incremental: Optional[bool] = False
+        self, pr_url: str | None = None, incremental: bool | None = False
     ):
         s = requests.Session()
         s.headers["Content-Type"] = "application/json"
@@ -227,7 +226,7 @@ class BitbucketProvider(GitProvider):
         branch = self.get_repo_context_ref(from_default_branch)
         return self.get_pr_file_content(file_path, branch, propagate_errors=True)
 
-    def get_repo_context_ref(self, from_default_branch: bool = False) -> Optional[str]:
+    def get_repo_context_ref(self, from_default_branch: bool = False) -> str | None:
         return self.get_repo_default_branch() if from_default_branch else self.pr.destination_branch
 
     def get_git_repo_url(self, pr_url: str=None) -> str: #bitbucket does not support issue url, so ignore param
@@ -244,7 +243,7 @@ class BitbucketProvider(GitProvider):
     # "https://bitbucket.org/pragent/pr-agent/src/main", suffix: ""
     # In case git url is not provided, provider will use PR context (which includes branch) to
     # determine the prefix and suffix.
-    def get_canonical_url_parts(self, repo_git_url:str=None, desired_branch:str=None) -> Tuple[str, str]:
+    def get_canonical_url_parts(self, repo_git_url:str=None, desired_branch:str=None) -> tuple[str, str]:
         scheme_and_netloc = None
         if repo_git_url:
             parsed_git_url = urlparse(repo_git_url)
@@ -765,7 +764,7 @@ class BitbucketProvider(GitProvider):
         return True
 
     @staticmethod
-    def _parse_pr_url(pr_url: str) -> Tuple[str, int, int]:
+    def _parse_pr_url(pr_url: str) -> tuple[str, int, int]:
         parsed_url = urlparse(pr_url)
 
         if "bitbucket.org" not in parsed_url.netloc:
