@@ -353,7 +353,7 @@ def handle_patch_deletions(patch: str, original_file_content_str: str,
             get_logger().info(f"Processing file: {file_name}, minimizing deletion file")
         patch = None # file was deleted
     else:
-        patch_lines = patch.splitlines()
+        patch_lines = split_diff_lines(patch)
         patch_new = omit_deletion_hunks(patch_lines)
         if patch_new and patch != patch_new:
             if get_verbosity_level() > 0:
