@@ -5,15 +5,22 @@ sidebar_position: 5
 
 ## Merge request diff limits
 
-PR-Agent requires GitLab 15.7 or later and retrieves all pages from the merge request
-[`/diffs` endpoint](https://docs.gitlab.com/api/merge_requests/#list-merge-request-diffs).
-Pagination does not bypass GitLab's server-side diff limits. PR-Agent raises a provider
-error if the returned file count disagrees with an exact `changes_count`, or that count
-indicates overflow or is not ready. A file whose patch GitLab omits (`too_large`, or
-`collapsed` before GitLab 19.2) is diffed locally from its two revisions instead.
+PR-Agent retrieves all pages from the merge request
+[`/diffs` endpoint](https://docs.gitlab.com/api/merge_requests/#list-merge-request-diffs)
+(GitLab 15.7 or later). Pagination does not bypass GitLab's server-side diff limits.
+PR-Agent raises a provider error if the returned file count disagrees with an exact
+`changes_count`, or that count indicates overflow or is not ready. A file whose patch
+GitLab omits (`too_large`, or `collapsed` before GitLab 19.2) is diffed locally from
+its two revisions instead.
 
-The `/diffs` endpoint must be available. PR-Agent does not fall back to the deprecated
-`/changes` endpoint or its raw-diff retry.
+On older self-managed instances (GitLab < 15.7) where the `/diffs` endpoint is
+missing, PR-Agent automatically falls back to the deprecated `/changes` endpoint,
+including its raw-diff retry on overflow. You can also force the legacy path with:
+
+```toml
+[gitlab]
+use_legacy_changes_fallback = true
+```
 
 PR-Agent reads fresh merge request metadata before and after collecting the diff pages.
 If the revision or file count changes during collection, it retries once, then raises a

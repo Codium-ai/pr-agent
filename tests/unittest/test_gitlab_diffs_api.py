@@ -213,22 +213,64 @@ def test_later_page_failure_does_not_cache_a_prefix_and_can_retry(provider_facto
 
 
 @pytest.mark.parametrize("method", ["get_files", "get_diff_files", "get_pr_file_paths", "get_relevant_diff"])
-def test_missing_diffs_endpoint_propagates_without_fallback(provider_factory, method):
+def test_missing_diffs_endpoint_falls_back_to_legacy_changes(provider_factory, method):
     provider, transport = provider_factory([
-        (404, {"message": "original missing endpoint"}, {}),
+        (404, {"message": "404 Not Found"}, {}),
     ])
+    provider.mr = Mock()
+    provider.mr.changes.return_value = {
+        "changes": [_change("a.py")],
+        "diff_refs": {"base_sha": "base", "start_sha": "start", "head_sha": "head"},
+    }
+    provider.mr.diffs.list.return_value = [_change("a.py")]
     args = ["a.py", "new"] if method == "get_relevant_diff" else []
-    with pytest.raises(gitlab.GitlabHttpError, match="original missing endpoint") as error:
-        getattr(provider, method)(*args)
-    assert error.value.response_code == 404
-    assert provider.git_files is None
-    assert provider.diff_files is None
-    provider.get_pr_file_content.assert_not_called()
+    result = getattr(provider, method)(*args)
+    if method == "get_files":
+        assert result == ["a.py"]
+    elif method == "get_diff_files":
+        assert [file.filename for file in result] == ["a.py"]
+    elif method == "get_pr_file_paths":
+        assert [change["new_path"] for change in result] == ["a.py"]
+    else:
+        assert result["new_path"] == "a.py"
     assert [urlparse(request.url).path.rsplit("/", 1)[-1] for request in transport.requests] == ["7", "diffs"]
 
 
+def test_legacy_changes_overflow_retries_with_raw_diffs(provider_factory):
+    provider, _ = provider_factory([(404, {"message": "404 Not Found"}, {})])
+    provider.mr = Mock()
+    overflowed = {
+        "changes": [_change("truncated.py")],
+        "overflow": True,
+        "diff_refs": {"base_sha": "base", "start_sha": "start", "head_sha": "head"},
+    }
+    raw = {
+        "changes": [_change("a.py")],
+        "diff_refs": {"base_sha": "base", "start_sha": "start", "head_sha": "head"},
+    }
+    provider.mr.changes.side_effect = [overflowed, raw]
+
+    assert provider.get_files() == ["a.py"]
+    assert provider.mr.changes.call_count == 2
+    provider.mr.changes.assert_called_with(access_raw_diffs=True)
+
+
+def test_legacy_changes_fallback_config_skips_diffs_endpoint(provider_factory, monkeypatch):
+    monkeypatch.setattr(get_settings().gitlab, "use_legacy_changes_fallback", True, raising=False)
+    provider, transport = provider_factory([])
+    provider.mr = Mock()
+    provider.mr.changes.return_value = {
+        "changes": [_change("legacy.py")],
+        "diff_refs": {"base_sha": "base", "start_sha": "start", "head_sha": "head"},
+    }
+
+    assert provider.get_files() == ["legacy.py"]
+    assert transport.diff_requests == []
+    provider.mr.changes.assert_called_once_with()
+
+
 @pytest.mark.parametrize("status", [401, 403, 500])
-def test_other_errors_do_not_probe_version_or_use_legacy(provider_factory, status):
+def test_other_errors_do_not_use_legacy(provider_factory, status):
     provider, transport = provider_factory([(status, {"message": "denied"}, {})])
     with pytest.raises((gitlab.GitlabHttpError, gitlab.GitlabAuthenticationError)):
         provider.get_files()
@@ -299,8 +341,13 @@ def test_incremental_filter_propagates_known_incomplete_response(provider_factor
 
 
 @pytest.mark.parametrize("status", [404, 503])
-def test_incremental_filter_retains_best_effort_on_http_failure(provider_factory, status):
+def test_incremental_filter_retains_best_effort_on_http_failure(provider_factory, status, monkeypatch):
     provider, transport = provider_factory([(status, {"message": "unavailable"}, {})])
+    if status == 404:
+        monkeypatch.setattr(
+            type(provider.mr), "changes",
+            Mock(side_effect=gitlab.GitlabGetError("legacy changes unavailable")),
+        )
     _prepare_incremental(provider)
     provider._get_incremental_commits()
     assert set(provider.unreviewed_files_map) == {"a.py", "b.py", "target-only.py"}

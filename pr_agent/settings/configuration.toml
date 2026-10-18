@@ -373,6 +373,10 @@ push_commands = [
 url = "https://gitlab.com"
 # Submodule targets must also be listed in config.repo_context_sibling_repos.
 expand_submodule_diffs = false
+# Force the deprecated /changes endpoint for merge-request diffs (GitLab < 15.7).
+# When false, the paginated /diffs endpoint is used and a 404 (older GitLab) falls
+# back to /changes automatically.
+use_legacy_changes_fallback = false
 feedback_on_draft_pr = false
 # Post the /review summary as a resolvable thread (discussion) instead of a plain note.
 publish_review_as_thread = false

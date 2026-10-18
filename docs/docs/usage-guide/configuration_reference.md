@@ -382,6 +382,7 @@ _This section only documents commented-out examples; see the [TOML source](https
 | --- | --- | --- |
 | `url` | "https://gitlab.com" |  |
 | `expand_submodule_diffs` | false | Submodule targets must also be listed in config.repo_context_sibling_repos. |
+| `use_legacy_changes_fallback` | false | Force the deprecated /changes endpoint for merge-request diffs (GitLab < 15.7). When false, the paginated /diffs endpoint is used and a 404 (older GitLab) falls back to /changes automatically. |
 | `feedback_on_draft_pr` | false |  |
 | `publish_review_as_thread` | false | Post the /review summary as a resolvable thread (discussion) instead of a plain note. |
 | `publish_improve_as_thread` | false | Post the /improve suggestions comment as a resolvable thread (discussion) instead of a plain note. |

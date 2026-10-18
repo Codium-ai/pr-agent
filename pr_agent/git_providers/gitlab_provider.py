@@ -13,6 +13,7 @@ from gitlab import (
     GitlabCreateError,
     GitlabError,
     GitlabGetError,
+    GitlabHttpError,
     GitlabUpdateError,
 )
 from requests.exceptions import RequestException
@@ -605,13 +606,45 @@ class GitLabProvider(GitProvider):
                 })
         return out
 
+    def _get_merge_request_changes_legacy(self) -> dict:
+        """Retrieve MR diffs via the deprecated /changes endpoint (GitLab < 15.7 fallback)."""
+        changes = self.mr.changes()
+        if isinstance(changes, dict) and changes.get("overflow"):
+            get_logger().warning(
+                f"GitLab returned an overflowed diff for merge request {self.id_mr}; "
+                "retrying with access_raw_diffs=True"
+            )
+            changes = self.mr.changes(access_raw_diffs=True)
+        diff_refs = changes.get("diff_refs") if isinstance(changes, dict) else None
+        return {
+            "changes": changes.get("changes", []) if isinstance(changes, dict) else [],
+            "diff_refs": diff_refs if isinstance(diff_refs, dict) else {},
+        }
+
     def _get_merge_request_changes(self) -> dict:
         """Collect all MR diff pages with stable metadata and their matching refs."""
+        if get_settings().get("gitlab.use_legacy_changes_fallback", False):
+            get_logger().warning(
+                f"gitlab.use_legacy_changes_fallback is enabled; "
+                f"using the deprecated /changes endpoint for merge request {self.id_mr}"
+            )
+            return self._get_merge_request_changes_legacy()
         project_id = quote(str(self.id_project), safe="")
         path = f"/projects/{project_id}/merge_requests/{self.id_mr}"
         for attempt in range(2):
             before = self.gl.http_get(path)
-            changes = self.gl.http_list(f"{path}/diffs", get_all=True)
+            try:
+                changes = self.gl.http_list(f"{path}/diffs", get_all=True)
+            except GitlabHttpError as e:
+                # The paginated /diffs endpoint only exists on GitLab 15.7+; older
+                # self-managed instances return 404 and need the deprecated /changes API.
+                if getattr(e, "response_code", None) == 404:
+                    get_logger().warning(
+                        f"GitLab /diffs endpoint is unavailable for merge request {self.id_mr} "
+                        f"(GitLab < 15.7?); falling back to the deprecated /changes endpoint"
+                    )
+                    return self._get_merge_request_changes_legacy()
+                raise
             after = self.gl.http_get(path)
             if any(before.get(key) != after.get(key) for key in ("sha", "diff_refs", "changes_count")):
                 if attempt == 0:
