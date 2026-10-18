@@ -153,7 +153,7 @@ def test_pruned_patch_on_later_page_is_reconstructed_from_both_blobs(provider_fa
     assert len(transport.diff_requests) == 2
 
 
-@pytest.mark.parametrize("count", ["1000+", "1+", ""])
+@pytest.mark.parametrize("count", [""])
 def test_unready_collection_is_retried_then_raises_and_is_not_cached(provider_factory, count, diff_ready_sleep):
     attempts = len(gitlab_provider._DIFF_READY_RETRY_DELAYS) + 1
     provider, transport = provider_factory([(200, [_change("a.py"), _change("b.py")], {})] * attempts, count)
@@ -164,10 +164,10 @@ def test_unready_collection_is_retried_then_raises_and_is_not_cached(provider_fa
     assert diff_ready_sleep == list(gitlab_provider._DIFF_READY_RETRY_DELAYS)
 
 
-@pytest.mark.parametrize("count", ["3", "0"])
-def test_inconsistent_counts_fail_immediately_without_retries(provider_factory, count, diff_ready_sleep):
+@pytest.mark.parametrize("count,message", [("3", "but reported"), ("0", "but reported"), ("1000+", "diff limits")])
+def test_inconsistent_counts_fail_immediately_without_retries(provider_factory, count, message, diff_ready_sleep):
     provider, transport = provider_factory([(200, [_change("a.py"), _change("b.py")], {})], count)
-    with pytest.raises(IncompleteGitLabDiffError, match="but reported"):
+    with pytest.raises(IncompleteGitLabDiffError, match=message):
         provider.get_files()
     assert provider.git_files is None
     assert len(transport.diff_requests) == 1
@@ -175,7 +175,7 @@ def test_inconsistent_counts_fail_immediately_without_retries(provider_factory, 
 
 
 def test_unready_collection_recovers_within_the_retry_budget(provider_factory, diff_ready_sleep):
-    unready, ready = _metadata(count="5+"), _metadata(count="1")
+    unready, ready = _metadata(count=""), _metadata(count="1")
     provider, transport = provider_factory(
         [(200, [_change("a.py")], {})] * 2,
         metadata_responses=_metadata_reads(unready, unready, ready, ready),

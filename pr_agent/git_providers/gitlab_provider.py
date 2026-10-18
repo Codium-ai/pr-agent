@@ -69,9 +69,9 @@ class GitLabDiffNotReadyError(IncompleteGitLabDiffError):
 
 
 # A large merge request can still be generating its diff when PR-Agent first asks for it:
-# changes_count reports a trailing "+" (or is empty), or diff refs lag behind the pages. Those
-# transient states are retried with this bounded backoff before giving up; inconsistent counts
-# and mid-collection metadata movement keep failing immediately as before.
+# changes_count is empty, or diff refs lag behind the pages. Those transient states are
+# retried with this bounded backoff before giving up; a capped "1000+" count, inconsistent
+# counts and mid-collection metadata movement fail immediately.
 _DIFF_READY_RETRY_DELAYS = (2, 5, 10)
 _diff_ready_sleep = time.sleep
 
@@ -658,9 +658,12 @@ class GitLabProvider(GitProvider):
 
             changes_count = after.get("changes_count")
             if isinstance(changes_count, str):
-                if not changes_count or changes_count.endswith("+"):
-                    raise GitLabDiffNotReadyError(
-                        f"GitLab merge request {self.id_mr} diff collection is incomplete or not ready"
+                if not changes_count:
+                    raise GitLabDiffNotReadyError(f"GitLab merge request {self.id_mr} diff is not ready")
+                if changes_count.endswith("+"):
+                    raise IncompleteGitLabDiffError(
+                        f"GitLab merge request {self.id_mr} exceeds GitLab's diff limits ({changes_count} files); "
+                        "split it into smaller merge requests"
                     )
                 if changes_count.isdecimal() and len(changes) != int(changes_count):
                     raise IncompleteGitLabDiffError(
