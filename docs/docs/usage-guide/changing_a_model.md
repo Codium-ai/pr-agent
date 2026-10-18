@@ -876,6 +876,40 @@ OPENAI__KEY=...
 
 Keep the `openai/` prefix on the model name, whichever Cheaper Inference model ID you use (`openai/gpt-5.4-mini`, `openai/claude-sonnet-5`, `openai/gemini-3.1-pro`, `openai/deepseek-v4-flash`, ...): the prefix routes the request through litellm's OpenAI-compatible path. A prefixed name is not in the `MAX_TOKENS` table [here](https://github.com/the-pr-agent/pr-agent/blob/main/pr_agent/algo/__init__.py), so you also have to set `custom_model_max_tokens`. Take the value from Cheaper Inference's [model catalog](https://cheaperinference.com/#models).
 
+### API Route
+
+[API Route](https://www.api-route.com) exposes an OpenAI-compatible endpoint. Use
+PR-Agent's existing `openai/` model prefix and `[openai]` settings to configure it:
+
+```toml
+[config] # in configuration.toml
+model = "openai/gpt-6.1-sol"
+fallback_models = ["openai/gpt-6.1-sol"]
+custom_model_max_tokens = 32000 # example input budget; keep within the selected model's context limit
+
+[openai] # in .secrets.toml
+api_base = "https://global.api-route.com/v1"
+key = "..." # your API Route API key
+```
+
+The endpoint and key can also be supplied through environment variables (with double
+underscores `__`):
+
+```bash
+OPENAI__API_BASE=https://global.api-route.com/v1
+OPENAI__KEY=...
+```
+
+Obtain an API key from [API Route](https://www.api-route.com) and choose an available
+model from its [model catalog](https://www.api-route.com/pricing) or the authenticated
+`GET https://global.api-route.com/v1/models` endpoint. Keep the `openai/` prefix in
+PR-Agent's configuration; the endpoint receives the model ID without that prefix.
+
+Set `custom_model_max_tokens` for model IDs absent from PR-Agent's token-limit table.
+The example uses a 32,000-token input budget, rather than claiming the model's maximum
+context window. If you change the model or add fallback models, use a budget supported
+by all of them and keep their requests on the configured API Route endpoint.
+
 ### RelaxAI
 
 [RelaxAI](https://relax.ai) offers an OpenAI-compatible API. It needs no provider-specific
