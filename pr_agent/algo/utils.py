@@ -6,6 +6,7 @@ import html
 import re
 import textwrap
 from enum import StrEnum
+from io import StringIO
 from typing import Any, TypedDict
 from urllib.parse import quote, unquote
 
@@ -749,8 +750,9 @@ def load_large_diff(filename, new_file_content_str: str,
             new_file_content_str += "\n"
         if original_file_content_str == new_file_content_str:
             return ""
-        diff = difflib.unified_diff(original_file_content_str.splitlines(keepends=True),
-                                    new_file_content_str.splitlines(keepends=True))
+        original_lines = list(StringIO(original_file_content_str, newline="\n"))
+        new_lines = list(StringIO(new_file_content_str, newline="\n"))
+        diff = difflib.unified_diff(original_lines, new_lines)
         if get_verbosity_level() >= 2 and show_warning:
             get_logger().info(f"File was modified, but no patch was found. Manually creating patch: {filename}.")
         return to_hunk_only_patch(''.join(diff))
