@@ -270,7 +270,8 @@ class TestBitbucketProvider:
         provider = self._source_write_provider()
         provider.pr = MagicMock()
         provider.pr.source_branch = "feature"
-        provider.pr.data = {"source": {"commit": {"hash": "a1b2c3"}}}
+        provider.pr.data = {"source": {"commit": {"hash": "a1b2c3"}, "repository": {"uuid": "{repo}"}},
+                            "destination": {"repository": {"uuid": "{repo}"}}}
         response = self._source_write_response(200)
         response._content = b"file contents"
 
