@@ -92,8 +92,8 @@ def _tokenize_like_string_request(command):
             ['--pr_reviewer.extra_instructions=true', '--pr_reviewer.extra_instructions="true"'],
         ),
         (
-            "/review --pr_reviewer.extra_instructions='literal' --pr_reviewer.extra_instructions=\"true\"",
-            ["--pr_reviewer.extra_instructions='literal'", '--pr_reviewer.extra_instructions="true"'],
+            "/review --pr_reviewer.extra_instructions='be strict' --pr_reviewer.extra_instructions=\"true\"",
+            ["--pr_reviewer.extra_instructions='be", "strict'", '--pr_reviewer.extra_instructions="true"'],
         ),
     ],
 )
