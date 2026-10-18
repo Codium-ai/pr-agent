@@ -2007,7 +2007,17 @@ class GithubProvider(GitProvider):
         return head_name.casefold() == base_name.casefold()
 
     def _get_pr_file_content(self, file: FilePatchInfo, sha: str, path: str = None) -> str:
-        return self.get_pr_file_content(path or file.filename, sha)
+        file_path = path or file.filename
+        cache = getattr(self, "_revision_file_contents", None)
+        if cache is None:
+            cache = self._revision_file_contents = {}
+        key = (self.repo, sha, file_path)
+        if key in cache:
+            return cache[key]
+        content = self.get_pr_file_content(file_path, sha)
+        if content:
+            cache[key] = content
+        return content
 
     def publish_labels(self, pr_types):
         try:
