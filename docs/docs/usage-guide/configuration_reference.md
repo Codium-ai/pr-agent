@@ -428,6 +428,7 @@ _This section only documents commented-out examples; see the [TOML source](https
 
 | Key | Default | Description |
 | --- | --- | --- |
+| `command_timeout_seconds` | 120 | Host-only limit for each direct git or SSH child; use a positive finite number of seconds. Coordinate larger values with the deployment worker timeout. No whole-request or process-tree limit; timed-out SSH review writes are not retried because Gerrit may have accepted them. |
 | `webhook_username` | "" | both are required: the gerrit webhook endpoint rejects every call until they are set |
 | `webhook_password` | "" |  |
 

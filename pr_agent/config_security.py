@@ -43,7 +43,7 @@ REPO_HOST_ONLY_KEYS_BY_SECTION = {
     "azure_devops": frozenset({"pat"}),
     "bitbucket": frozenset({"auth_type"}),
     "databricks": frozenset({"api_base"}),
-    "gerrit": frozenset({"webhook_password", "webhook_username"}),
+    "gerrit": frozenset({"command_timeout_seconds", "webhook_password", "webhook_username"}),
     "gitea": frozenset({"skip_ssl_verification", "ssl_ca_cert"}),
     "github": frozenset({"deployment_type"}),
     "gitlab": frozenset({"auth_type", "ssl_verify"}),
