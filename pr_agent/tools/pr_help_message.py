@@ -46,6 +46,28 @@ HELP_DOCS_PRIORITY_PATHS = (
     "/faq/",
 )
 HELP_DOCS_INDEX_NAMES = tuple(f"/index{suffix}" for suffix in HELP_DOCS_SUFFIXES)
+_QUESTION_STOPWORDS = frozenset(
+    "a agent an and are as at be by can do does for from get help how i in is it me my of on or "
+    "please pr the to use using what when where with".split()
+)
+
+
+def _question_terms(text: str) -> set[str]:
+    return set(re.findall(r"[a-z0-9]+", text.lower())) - _QUESTION_STOPWORDS
+
+
+def _select_help_doc(question: str, frames: list[str], available_docs_files: set[str]) -> int | None:
+    matches = [re.fullmatch(r"==file name==\n\n/([^\n]+)\n\n==file content==\n\n[\s\S]+\n=========", frame)
+               for frame in frames]
+    paths = [match[1] if match else "" for match in matches]
+    if len(paths) != len(available_docs_files) or set(paths) != available_docs_files:
+        return None
+    terms = _question_terms(question)
+    scores = [len(terms & _question_terms(path)) for path in paths]
+    best = max(scores, default=0)
+    if best and scores.count(best) == 1:
+        return scores.index(best)
+    return None
 
 
 def _is_help_doc_included(relative_path: PurePosixPath) -> bool:
@@ -307,8 +329,24 @@ class PRHelpMessage:
                 f"The /help prompt exceeds the token limit for {model} with a truncation marker"
             )
 
-        keep_chars = max(len(raw_snippets) - 1, 0)
-        while keep_chars > 0:
+        minimum_keep = 0
+        minimum_snippets = TRUNCATION_MARKER
+        minimum_prompts = marker_prompts
+        frames = [frame.strip() for frame in re.split(r"(?m)^(?===file name==\n\n/)", raw_snippets) if frame.strip()]
+        winner = (
+            _select_help_doc(variables.get("question", ""), frames, getattr(self, "_available_docs_files", set()))
+            if "\n\n\n".join(frames) == raw_snippets else None
+        )
+        if winner is not None:
+            selected_snippets = frames[winner] + TRUNCATION_MARKER
+            selected_prompts = render(selected_snippets)
+            if self._count_prompt_tokens(model, *selected_prompts) <= prompt_budget:
+                raw_snippets = "\n\n\n".join([frames[winner], *frames[:winner], *frames[winner + 1:]])
+                minimum_keep = len(frames[winner])
+                minimum_snippets, minimum_prompts = selected_snippets, selected_prompts
+
+        keep_chars = max(len(raw_snippets) - 1, minimum_keep)
+        while keep_chars > minimum_keep:
             candidate = raw_snippets[:keep_chars].rstrip() + TRUNCATION_MARKER
             candidate_prompts = render(candidate)
             candidate_tokens = self._count_prompt_tokens(model, *candidate_prompts)
@@ -318,12 +356,12 @@ class PRHelpMessage:
                 )
                 return candidate_prompts[0], candidate_prompts[1], candidate
             next_keep_chars = max(1, int(keep_chars * prompt_budget / candidate_tokens))
-            keep_chars = min(keep_chars - 1, next_keep_chars)
+            keep_chars = max(minimum_keep, min(keep_chars - 1, next_keep_chars))
 
         get_logger().warning(
             f"Documentation was clipped for /help to fit the {prompt_budget}-token input limit for {model}"
         )
-        return marker_prompts[0], marker_prompts[1], TRUNCATION_MARKER
+        return minimum_prompts[0], minimum_prompts[1], minimum_snippets
 
     @staticmethod
     def _get_fitted_docs_files(
