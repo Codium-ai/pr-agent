@@ -7,12 +7,13 @@ from opentelemetry.trace import StatusCode
 
 import pr_agent.agent.pr_agent as pr_agent_module
 from pr_agent.algo.run_details import command_failed, get_run_details, init_run_details
+from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers.git_provider import (
     IncompleteBitbucketPullRequestFilesError,
     IncompletePullRequestFilesError,
 )
-from pr_agent.tools.pr_add_docs import PRAddDocs
+from pr_agent.tools.pr_add_docs import PRAddDocs, get_suggestion_fence
 
 DOCUMENTED = """Code Documentation:
 - relevant file: |
@@ -222,15 +223,45 @@ def test_aggregate_inline_publication_success_does_not_retry(publish_output, mon
     assert command_failed() is False
 
 
-def test_filtered_documentation_preserves_one_empty_aggregate_call(publish_output, monkeypatch):
+def test_filtered_documentation_does_not_publish_an_empty_batch(publish_output, monkeypatch):
     provider = FakeGitProvider(suggestion_results=[False])
     init_run_details()
 
     run(FILTERED_DOCUMENTATION, monkeypatch, provider)
 
-    assert provider.suggestions == [[]]
+    assert provider.suggestions == []
     assert results(provider) == []
     assert command_failed() is False
+
+
+@pytest.mark.parametrize("include_valid", [False, True])
+def test_rejected_documentation_is_filtered_before_fence_and_publication(monkeypatch, include_valid):
+    provider = FakeGitProvider()
+    provider.diff_files = [FilePatchInfo(
+        base_file="", head_file="def f():\n\treturn 1", patch="", filename="a.py", edit_type=EDIT_TYPE.MODIFIED
+    )]
+    tool = PRAddDocs.__new__(PRAddDocs)
+    tool.git_provider = provider
+    invalid = {"relevant file": "a.py", "relevant line": 1, "doc placement": "after",
+               "documentation": '    """Summary.\n  Incompatible.\n    """'}
+    valid = {**invalid, "documentation": '"""Example:\n```python\npass\n```\n"""'}
+    fence = Mock(wraps=get_suggestion_fence)
+    monkeypatch.setattr("pr_agent.tools.pr_add_docs.get_suggestion_fence", fence)
+
+    result = tool.push_inline_docs({"Code Documentation": [invalid, valid] if include_valid else [invalid]})
+
+    if not include_valid:
+        assert result is None
+        assert provider.suggestions == []
+        fence.assert_not_called()
+    else:
+        assert result is True
+        assert [len(batch) for batch in provider.suggestions] == [1]
+        aligned = 'def f():\n\t"""Example:\n\t```python\n\tpass\n\t```\n\t"""'
+        fence.assert_called_once_with(aligned)
+        assert provider.suggestions[0][0]["body"] == (
+            "**Suggestion:** Proposed documentation\n````suggestion\n" + aligned + "\n````"
+        )
 
 
 def test_terminal_failure_comment_error_is_recorded_not_reclassified(publish_output, monkeypatch):
