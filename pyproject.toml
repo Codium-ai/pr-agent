@@ -55,11 +55,11 @@ dependencies = [
   "tenacity==8.2.3",
   "langfuse==3.14.5",
   "gunicorn==26.2.0",
-  "pydantic==2.14.0",
+  "pydantic==2.14.1",
   # LiteLLM declares pydantic-settings as a base dependency and imports it unconditionally from
   # litellm/integrations/otel/model/config.py. Keep the exact pin to lock the resolved transitive version.
   # Recheck LiteLLM's declared constraint on upgrade; the observability guard covers callback imports.
-  "pydantic-settings==2.15.0",
+  "pydantic-settings==2.16.0",
   "html2text==2025.4.15",
   # pr_agent/telemetry imports these directly; already resolved transitively via
   # langfuse and litellm, pinned here to lock the version the code is tested against.
@@ -99,10 +99,10 @@ azure = [
   "azure-identity==1.26.0",
   "msrest==0.7.1",
 ]
-codecommit = ["boto3==1.43.111"]
+codecommit = ["boto3==1.43.114"]
 gitea = ["giteapy==1.0.8"]
 google = [
-  "google-cloud-aiplatform==2.4.0",
+  "google-cloud-aiplatform==2.5.0",
   # google-cloud-aiplatform==1.154.0 requires storage <4,>=1.32.0 on py<3.13 and <4,>=3.10.0 on py>=3.13.
   # Pin per-Python so existing installs are unchanged and py3.13 resolves. See #2480.
   "google-cloud-storage==2.10.0; python_version < '3.13'",
@@ -152,7 +152,7 @@ dev = [
   "pytest-cov==7.1.0",
   "httpx==0.28.1",
   "pre-commit>=4,<5",
-  "ruff==0.17.0",
+  "ruff==0.17.1",
 ]
 
 [tool.uv]
