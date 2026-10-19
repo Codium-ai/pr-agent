@@ -903,7 +903,7 @@ class TestPRUpdateChangelog:
 
     @pytest.mark.asyncio
     async def test_push_changelog_update_skips_review_when_not_supported(self, changelog_tool, mock_git_provider):
-        """A provider without the capability is never asked for a commit-scoped review."""
+        """A provider without a follow-up review finishes immediately after the write."""
         mock_git_provider.create_or_update_pr_file = MagicMock()
         mock_git_provider.get_pr_branch.return_value = "feature-branch"
         mock_git_provider.supports_changelog_update_review.return_value = False
@@ -925,8 +925,9 @@ class TestPRUpdateChangelog:
                 expected_snapshot=changelog_tool.changelog_snapshot,
             )
             mock_git_provider.pr.get_commits.assert_not_called()
+            mock_git_provider.pr.create_review.assert_not_called()
             mock_git_provider.publish_comment.assert_not_called()
-            sleep.assert_awaited_once_with(5)
+            sleep.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_push_changelog_update_falls_back_to_comment_when_written_commit_is_unavailable(
