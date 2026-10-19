@@ -1632,6 +1632,9 @@ def test_get_user_answers_collects_question_and_answer_from_issue_comments():
         SimpleNamespace(body="Questions to better understand the PR:\n- Why?"),
         SimpleNamespace(body="/answer Because it fixes production."),
     ]
+    git_provider.get_issue_comments_newest_first.return_value = list(
+        reversed(git_provider.get_issue_comments.return_value)
+    )
     reviewer = _make_reviewer(git_provider)
     reviewer.is_answer = True
 
@@ -1796,6 +1799,7 @@ def test_init_maps_user_question_and_answer_to_correct_prompt_vars(monkeypatch):
         SimpleNamespace(body="/answer Because it fixes production."),
     ]
     provider.get_pr_description.return_value = ("desc", [])
+    provider.get_issue_comments_newest_first.return_value = list(reversed(provider.get_issue_comments.return_value))
 
     monkeypatch.setattr(pr_reviewer_module, "get_git_provider_with_context", lambda pr_url: provider)
     monkeypatch.setattr(pr_reviewer_module, "get_main_pr_language", lambda languages, files: "Python")
@@ -1811,8 +1815,9 @@ def test_init_maps_user_question_and_answer_to_correct_prompt_vars(monkeypatch):
     assert reviewer.vars["answer_str"] == "/answer Because it fixes production."
 
 
-def _build_answer_mode_reviewer(monkeypatch, issue_comments):
+def _build_answer_mode_reviewer(monkeypatch, issue_comments, *, newest_first=None):
     """Drive the real ``PRReviewer.__init__`` in answer mode over ``issue_comments``."""
+    from pr_agent.git_providers.git_provider import GitProvider
     from pr_agent.tools import pr_reviewer as pr_reviewer_module
 
     provider = MagicMock()
@@ -1821,6 +1826,12 @@ def _build_answer_mode_reviewer(monkeypatch, issue_comments):
     provider.get_files.return_value = []
     provider.get_issue_comments.return_value = issue_comments
     provider.get_pr_description.return_value = ("desc", [])
+    if newest_first is None:
+        provider.get_issue_comments_newest_first.side_effect = (
+            lambda: GitProvider.get_issue_comments_newest_first(provider)
+        )
+    else:
+        provider.get_issue_comments_newest_first.return_value = newest_first
 
     monkeypatch.setattr(pr_reviewer_module, "get_git_provider_with_context", lambda pr_url: provider)
     monkeypatch.setattr(pr_reviewer_module, "get_main_pr_language", lambda languages, files: "Python")
@@ -1894,6 +1905,55 @@ def test_answer_mode_prefers_the_newest_question_and_answer(monkeypatch):
 
     assert reviewer.vars["question_str"] == "Questions to better understand the PR:\n- Current question?"
     assert reviewer.vars["answer_str"] == "/answer Current answer."
+
+
+def test_answer_mode_keeps_newest_question_when_no_answer_has_been_posted(monkeypatch):
+    reviewer = _build_answer_mode_reviewer(monkeypatch, [
+        SimpleNamespace(body="Questions to better understand the PR:\n- Earlier question?"),
+        SimpleNamespace(body="Questions to better understand the PR:\n- Latest question?"),
+    ])
+
+    assert reviewer.vars["question_str"] == "Questions to better understand the PR:\n- Latest question?"
+    assert reviewer.vars["answer_str"] == ""
+
+
+@pytest.mark.parametrize("earlier_comments", [
+    [SimpleNamespace(body="Questions to better understand the PR:\n- Please use /answer for this question")],
+    [
+        SimpleNamespace(body="Questions to better understand the PR:\n- Earlier question?"),
+        SimpleNamespace(body="/answer Earlier answer."),
+    ],
+])
+def test_answer_mode_ignores_answers_older_than_newest_question(monkeypatch, earlier_comments):
+    reviewer = _build_answer_mode_reviewer(monkeypatch, [
+        *earlier_comments,
+        SimpleNamespace(body="Questions to better understand the PR:\n- Latest question?"),
+    ])
+
+    assert reviewer.vars["question_str"] == "Questions to better understand the PR:\n- Latest question?"
+    assert reviewer.vars["answer_str"] == ""
+
+
+def test_answer_mode_keeps_the_latest_correction_to_an_answer(monkeypatch):
+    reviewer = _build_answer_mode_reviewer(monkeypatch, [
+        SimpleNamespace(body="Questions to better understand the PR:\n- Timeout?"),
+        SimpleNamespace(body="/answer Use 30 seconds."),
+        SimpleNamespace(body="/answer Correction: use 60 seconds."),
+    ])
+
+    assert reviewer.vars["question_str"] == "Questions to better understand the PR:\n- Timeout?"
+    assert reviewer.vars["answer_str"] == "/answer Correction: use 60 seconds."
+
+
+def test_answer_mode_respects_provider_supplied_newest_first_order(monkeypatch):
+    comments = [
+        SimpleNamespace(body="/answer Correction: use 60 seconds."),
+        SimpleNamespace(body="/answer Use 30 seconds."),
+        SimpleNamespace(body="Questions to better understand the PR:\n- Timeout?"),
+    ]
+    reviewer = _build_answer_mode_reviewer(monkeypatch, comments, newest_first=comments)
+
+    assert reviewer.vars["answer_str"] == "/answer Correction: use 60 seconds."
 
 
 def _render_review_capturing_push(reviewer, publish_output):
