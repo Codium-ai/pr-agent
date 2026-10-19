@@ -168,9 +168,17 @@ jobs:
           CONFIG__MAX_OUTPUT_TOKENS: '8192'
           CONFIG__LOG_LEVEL: INFO
           CONFIG__OUTPUT_RUN_DETAILS: 'true'
+          # The action would also merge this repo's own .pr_agent.toml, whose `synchronize`
+          # push command points at /agentic_review - not in OSS, so it would fail the job.
+          CONFIG__USE_REPO_SETTINGS_FILE: 'false'
           # Write the generated description into the PR body, keeping the author's text in it.
           PR_DESCRIPTION__PUBLISH_DESCRIPTION_AS_COMMENT: 'false'
           PR_DESCRIPTION__ADD_ORIGINAL_USER_DESCRIPTION: 'true'
+          # The default "only critical problems" filter returns an empty list on most PRs here,
+          # which made 90 of 99 /improve comments say "No code suggestions found" (#4161).
+          PR_CODE_SUGGESTIONS__FOCUS_ONLY_ON_PROBLEMS: 'false'
+          # With suggestions flowing again, drop the empty-list comments instead of posting them.
+          PR_CODE_SUGGESTIONS__PUBLISH_OUTPUT_NO_SUGGESTIONS: 'false'
           GITHUB_ACTION_CONFIG__AUTO_DESCRIBE: 'true'
           GITHUB_ACTION_CONFIG__AUTO_REVIEW: 'true'
           GITHUB_ACTION_CONFIG__AUTO_IMPROVE: 'true'
