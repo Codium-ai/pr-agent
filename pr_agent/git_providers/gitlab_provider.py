@@ -2526,7 +2526,7 @@ class GitLabProvider(GitProvider):
         return project_path, mr_id
 
     def _get_merge_request(self):
-        mr = self.gl.projects.get(self.id_project).mergerequests.get(self.id_mr)
+        mr = self.gl.projects.get(self.id_project, lazy=True).mergerequests.get(self.id_mr)
         return mr
 
     def get_user_id(self):
