@@ -15,6 +15,8 @@ from pr_agent.log import get_logger
 MODEL = "text-embedding-ada-002"
 PINECONE_UPSERT_READY_TIMEOUT_SECONDS = 30
 PINECONE_UPSERT_READY_POLL_SECONDS = 0.5
+# 32 inputs at 8,192 tokens each stay under the embedding API's 300,000-token request limit.
+EMBEDDING_BATCH_SIZE = 32
 
 
 _EMBEDDING_CLIENTS = {}
@@ -35,24 +37,41 @@ def _embed(texts: list[str]) -> list[list[float]]:
 
 
 def _embed_with_fallback(texts: list[str]) -> list[list[float]]:
-    """Embed a list, falling back to one by one, and refuse to return an all-zero set."""
+    """Keep successful bulk requests intact; batch retries before falling back to individual items."""
     try:
-        return _embed(texts)
+        embeddings = _embed(texts)
+        if len(embeddings) != len(texts):
+            raise ValueError("Embedding response count does not match input")
+        return embeddings
     except Exception as e:
-        get_logger().error("Failed to embed entire list, embedding one by one...",
+        original_error = e
+        get_logger().error("Failed to embed entire list, retrying in bounded batches...",
                            artifact={"error": str(e)})
-        embeds = []
-        failures = 0
-        for text in texts:
+
+    embeds = []
+    failures = 0
+    for start in range(0, len(texts), EMBEDDING_BATCH_SIZE):
+        batch = texts[start:start + EMBEDDING_BATCH_SIZE]
+        if len(texts) > EMBEDDING_BATCH_SIZE and len(batch) > 1:
+            try:
+                batch_embeds = _embed(batch)
+                if len(batch_embeds) != len(batch):
+                    raise ValueError("Embedding batch response count does not match input")
+                embeds.extend(batch_embeds)
+                continue
+            except Exception as e:
+                get_logger().warning("Embedding batch failed, retrying its items...",
+                                     artifact={"error": str(e)})
+        for text in batch:
             try:
                 embeds.append(_embed([text])[0])
             except Exception:
                 failures += 1
                 embeds.append([0] * 1536)
-        if failures == len(texts):
-            raise RuntimeError(
-                "Failed to embed any issue text; refusing to index all-zero vectors") from e
-        return embeds
+    if failures == len(texts):
+        raise RuntimeError(
+            "Failed to embed any issue text; refusing to index all-zero vectors") from original_error
+    return embeds
 
 
 def _qdrant_collection_name(base_name: str) -> str:
