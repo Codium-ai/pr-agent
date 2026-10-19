@@ -321,6 +321,9 @@ class PRUpdateChangelog:
             self._publish_changelog_write_error_fallback(answer)
             raise
 
+        if not self.git_provider.supports_changelog_update_review():
+            return
+
         try:
             await asyncio.sleep(5)  # wait for the file to be updated
         except asyncio.CancelledError:
