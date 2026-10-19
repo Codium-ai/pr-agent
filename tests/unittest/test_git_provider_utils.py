@@ -94,13 +94,15 @@ def test_apply_repo_settings_attributes_global_error_and_still_applies_local(mon
         assert settings.pr_reviewer.extra_instructions == "local-applied"
         # One error comment, attributed to global, with the global content redacted (not echoed).
         assert len(provider.comments) == 1
-        assert "global settings repository (`config.global_settings_repo`)" in provider.comments[0]
+        assert "global settings repository" in provider.comments[0]
+        assert "config.global_settings_repo" in provider.comments[0]
         assert "unclosed_section" not in provider.comments[0]
     finally:
         settings.pr_reviewer.extra_instructions = original_extra_instructions
 
 
 def test_handle_configurations_errors_uses_persistent_comment_when_supported():
+    """Local config errors must NOT leak configuration content (secrets) in PR comments."""
     provider = FakeMarkdownProvider()
 
     handle_configurations_errors([{
@@ -118,11 +120,19 @@ def test_handle_configurations_errors_uses_persistent_comment_when_supported():
     assert "Invalid value" in comment["body"]
     assert "https://docs.pr-agent.ai/usage-guide/configuration_options/" in comment["body"]
     assert "qodo-merge-docs.qodo.ai" not in comment["body"]
-    assert "```toml\n[config]\nmodel =\n```" in comment["body"]
-    assert "<details><summary>Configuration content:</summary>" in comment["body"]
+    # Local config errors must NOT leak configuration content (secrets)
+    assert "```toml" not in comment["body"]
+    assert "[config]" not in comment["body"]
+    assert "model =" not in comment["body"]
+    assert "Configuration content" not in comment["body"]
+    assert "<details>" not in comment["body"]
+    # Verify error source is still mentioned
+    assert "local settings repository" in comment["body"]
+    assert "repository's .pr_agent.toml" in comment["body"]
 
 
 def test_handle_configurations_errors_keeps_markdown_details_when_persistent_comment_is_missing():
+    """Local config errors must NOT leak configuration content even without persistent comment support."""
     provider = FakeMarkdownCommentProvider()
 
     handle_configurations_errors([{
@@ -134,11 +144,19 @@ def test_handle_configurations_errors_keeps_markdown_details_when_persistent_com
     assert len(provider.comments) == 1
     assert "PR-Agent failed to apply 'local' repo settings" in provider.comments[0]
     assert "Invalid value" in provider.comments[0]
-    assert "```toml\n[config]\nmodel =\n```" in provider.comments[0]
-    assert "<details><summary>Configuration content:</summary>" in provider.comments[0]
+    # Local config errors must NOT leak configuration content (secrets)
+    assert "```toml" not in provider.comments[0]
+    assert "[config]" not in provider.comments[0]
+    assert "model =" not in provider.comments[0]
+    assert "Configuration content" not in provider.comments[0]
+    assert "<details>" not in provider.comments[0]
+    # Verify error source is still mentioned
+    assert "local settings repository" in provider.comments[0]
+    assert "repository's .pr_agent.toml" in provider.comments[0]
 
 
 def test_handle_configurations_errors_uses_plain_comment_without_markdown_support():
+    """Local config errors must NOT leak configuration content in plain comments."""
     provider = FakePlainProvider()
 
     handle_configurations_errors([{
@@ -150,8 +168,15 @@ def test_handle_configurations_errors_uses_plain_comment_without_markdown_suppor
     assert len(provider.comments) == 1
     assert "❌ **PR-Agent failed to apply 'local' repo settings**" in provider.comments[0]
     assert "Invalid value" in provider.comments[0]
-    assert "```toml\n[config]\nmodel =\n```" in provider.comments[0]
+    # Local config errors must NOT leak configuration content (secrets)
+    assert "```toml" not in provider.comments[0]
+    assert "[config]" not in provider.comments[0]
+    assert "model =" not in provider.comments[0]
+    assert "Configuration content" not in provider.comments[0]
     assert "<details>" not in provider.comments[0]
+    # Verify error source is still mentioned
+    assert "local settings repository" in provider.comments[0]
+    assert "repository's .pr_agent.toml" in provider.comments[0]
 
 
 def test_handle_configurations_errors_returns_without_errors():
@@ -163,6 +188,7 @@ def test_handle_configurations_errors_returns_without_errors():
 
 
 def test_handle_configurations_errors_publishes_each_error():
+    """Local config errors redact config content; global config errors redact secrets but show error type."""
     provider = FakePlainProvider()
 
     handle_configurations_errors([
@@ -179,11 +205,17 @@ def test_handle_configurations_errors_publishes_each_error():
     ], provider)
 
     assert len(provider.comments) == 2
+    # First error: local - config content redacted
     assert "First error" in provider.comments[0]
-    assert "[config]\nmodel =" in provider.comments[0]
+    assert "[config]\nmodel =" not in provider.comments[0]
+    assert "```toml" not in provider.comments[0]
+    assert "local settings repository" in provider.comments[0]
+    assert "repository's .pr_agent.toml" in provider.comments[0]
+    # Second error: global - secrets redacted, error type shown
     assert "Second error" not in provider.comments[1]
     assert "Invalid shared configuration" in provider.comments[1]
-    assert "global settings repository (`config.global_settings_repo`)" in provider.comments[1]
+    assert "global settings repository" in provider.comments[1]
+    assert "config.global_settings_repo" in provider.comments[1]
     assert "dummy-value" not in provider.comments[1]
     assert "num_max_findings" not in provider.comments[1]
 
@@ -347,9 +379,77 @@ def test_shared_settings_error_redacts_content_and_diagnostics(provider_cls, cat
         body = comment["body"]
     else:
         body = provider.comments[0]
-    assert f"{category} settings repository (`config.global_settings_repo`)" in body
+    assert f"{category} settings repository" in body
+    assert "config.global_settings_repo" in body
     assert "Invalid shared configuration" in body
     assert "private-shared-value" not in body
     assert "private_table" not in body
     assert "Cannot declare" not in body
     assert "Configuration content" not in body
+
+
+def test_local_config_error_redacts_secrets():
+    """Local repository configuration parse errors must not leak secrets in PR comments.
+
+    This test verifies that when a local .pr_agent.toml contains secrets (openai.key,
+    github.token, gitlab.personal_access_token) and has a parse error, those secrets
+    are NOT exposed in the error comment posted to the PR.
+
+    This is a regression test for the bug where local config errors would include
+    the full raw TOML content (including secrets) in the PR comment.
+
+    The fix ensures local config errors are treated like global/group errors:
+    - No raw configuration content is included in the PR comment
+    - Only the error message and source info are included
+    - Secrets are never exposed
+    """
+    provider = FakeMarkdownProvider()
+
+    # Malformed local TOML with multiple secret types
+    malicious_toml = b"""
+[openai]
+key = "sk-proj-SECRET_OPENAI_KEY_12345"
+
+[github]
+token = "ghp_SECRET_GITHUB_TOKEN_67890"
+
+[gitlab]
+personal_access_token = "glpat_SECRET_GITLAB_TOKEN_ABCDEF"
+
+[config]
+invalid_syntax =  # Missing value - this will cause a parse error
+"""
+
+    handle_configurations_errors([{
+        "settings": malicious_toml,
+        "error": "Invalid TOML syntax",
+        "category": "local",
+    }], provider)
+
+    assert len(provider.persistent_comments) == 1
+    comment = provider.persistent_comments[0]
+    body = comment["body"]
+
+    # Verify the error message is included
+    assert "Invalid TOML syntax" in body
+    assert "PR-Agent failed to apply 'local' repo settings" in body
+
+    # CRITICAL: Verify NO raw secrets appear in the error message
+    assert "sk-proj-SECRET_OPENAI_KEY_12345" not in body, "OpenAI secret leaked in PR comment!"
+    assert "ghp_SECRET_GITHUB_TOKEN_67890" not in body, "GitHub token leaked in PR comment!"
+    assert "glpat_SECRET_GITLAB_TOKEN_ABCDEF" not in body, "GitLab token leaked in PR comment!"
+
+    # Verify that secret values are redacted (placeholder or omitted)
+    # The exact redaction strategy may vary, but the raw values must not appear
+    assert "SECRET_OPENAI_KEY_12345" not in body
+    assert "SECRET_GITHUB_TOKEN_67890" not in body
+    assert "SECRET_GITLAB_TOKEN_ABCDEF" not in body
+
+    # Verify the full TOML configuration content is NOT included in the PR comment
+    assert "Configuration content" not in body
+    assert "```toml" not in body
+
+    # Verify useful debug context is still present (the error message and source)
+    assert "Invalid TOML syntax" in body  # The parse error message
+    assert "local settings repository" in body  # Source identification
+    assert "repository's .pr_agent.toml" in body  # Specific file reference

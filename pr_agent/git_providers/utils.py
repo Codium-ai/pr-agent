@@ -821,24 +821,13 @@ def handle_configurations_errors(config_errors, git_provider):
                     "[TOML](https://docs.pr-agent.ai/usage-guide/configuration_options/), please fix it.\n\n"
                 )
                 body += f"___\n\n**Error message:**\n`{err_message}`\n\n"
-                if config_type in {"global", "group"}:
-                    # Shared settings may contain private values: never render their contents
-                    # into a reviewed repository, including GitLab subgroup configuration.
+                if config_type in {"global", "group", "local"}:
+                    # Shared and local settings may contain private values (secrets, tokens):
+                    # never render their contents into a reviewed repository.
+                    # Parser/security diagnostics can contain private table names or values.
                     body += (f"\n\nThe invalid configuration came from the {config_type} settings "
-                             "repository (`config.global_settings_repo`).")
-                else:
-                    settings_content = err['settings']
-                    configuration_file_content = (
-                        settings_content.decode("utf-8", errors="replace")
-                        if isinstance(settings_content, bytes) else settings_content
-                    )
-                    if git_provider.is_supported("gfm_markdown"):
-                        body += (
-                            "\n\n<details><summary>Configuration content:</summary>\n\n"
-                            f"```toml\n{configuration_file_content}\n```\n\n</details>"
-                        )
-                    else:
-                        body += f"\n\n**Configuration content:**\n\n```toml\n{configuration_file_content}\n```\n\n"
+                             "repository or file (`config.global_settings_repo` for global/group, "
+                             "repository's .pr_agent.toml for local).")
                 get_logger().warning("Sending a 'configuration error' comment to the PR", artifact={'body': body})
                 # git_provider.publish_comment(body)
                 if hasattr(git_provider, 'publish_persistent_comment'):
