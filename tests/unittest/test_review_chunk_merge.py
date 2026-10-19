@@ -396,3 +396,29 @@ def test_a_field_that_raises_while_merging_keeps_the_first_chunk_instead_of_fail
     merged = merge_review_chunks([_chunk(score="90"), _chunk(score="40")])
 
     assert merged["review"]["score"] == "90"
+
+
+def test_case_distinct_paths_remain_distinct_when_merging_chunks():
+    def findings(path):
+        return {
+            "key_issues_to_review": [_issue(file=path)],
+            "todo_sections": [{"relevant_file": path, "line_number": 3, "content": "fix this"}],
+            "can_be_split": [{"relevant_files": [path], "title": "extract module"}],
+            "review_priority_files": [path],
+        }
+
+    upper = findings("src/Foo.py")
+    lower = findings("src/foo.py")
+    merged = merge_review_chunks([
+        _chunk(**upper),
+        _chunk(**lower),
+        _chunk(**upper),
+    ], max_findings=3)["review"]
+
+    assert [item["relevant_file"] for item in merged["key_issues_to_review"]] == [
+        "src/Foo.py", "src/foo.py"]
+    assert [item["relevant_file"] for item in merged["todo_sections"]] == [
+        "src/Foo.py", "src/foo.py"]
+    assert [item["relevant_files"] for item in merged["can_be_split"]] == [
+        ["src/Foo.py"], ["src/foo.py"]]
+    assert merged["review_priority_files"] == ["src/Foo.py", "src/foo.py"]
