@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 
 from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAIHandler
+from pr_agent.algo.artifacts import get_artifact_context
 from pr_agent.algo.comment_identity import format_pr_questions_header
 from pr_agent.algo.pr_processing import (
     OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD,
@@ -63,6 +64,7 @@ class PRQuestions:
             "commit_messages_str": self.git_provider.get_commit_messages(),
             "extra_instructions": settings.pr_questions.extra_instructions,
             "skills_context": skills_context,
+            "artifact_context": get_artifact_context("pr_questions"),
         }
         self.token_handler = TokenHandler(self.git_provider.pr,
                                           self.vars,

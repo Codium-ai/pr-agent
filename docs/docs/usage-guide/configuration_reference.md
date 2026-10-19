@@ -545,7 +545,7 @@ _This section only documents commented-out examples; see the [TOML source](https
 | `artifact_path` | "" | File path to the artifact (relative to GITHUB_WORKSPACE, or absolute) |
 | `artifact_instructions` | "" | Analysis guidance rendered separately before the untrusted artifact label and content (leave empty for a sensible default) |
 | `artifact_label` | "" | Label shown to the AI — defaults to the filename when empty. |
-| `target_tools` | ["pr_reviewer", "pr_description", "pr_code_suggestions"] | Which supported tools receive artifact context; unsupported names are skipped with a warning. |
+| `target_tools` | ["pr_reviewer", "pr_description", "pr_code_suggestions", "pr_questions"] | Which supported tools receive artifact context; unsupported names are skipped with a warning. |
 | `max_artifact_size` | 50000 | Max artifact size in characters (content is truncated if exceeded) |
 | `truncate_from` | "start" | Which end of the file to keep when truncating: "start" (default, keeps the beginning) or "end" (keeps the tail, where build logs carry their verdict - failure, plan summary or test result). |
 
