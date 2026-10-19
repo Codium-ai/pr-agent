@@ -1,5 +1,7 @@
 import os
+import subprocess
 import sys
+import traceback
 from types import SimpleNamespace
 
 import git
@@ -13,6 +15,290 @@ from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import gerrit_provider
 from pr_agent.git_providers.gerrit_provider import GerritProvider
 from tests.unittest import _settings_helpers as settings_helpers
+
+
+@pytest.fixture
+def command_timeout_setting():
+    snapshot = settings_helpers.snapshot_settings(["gerrit.command_timeout_seconds"])
+    try:
+        yield
+    finally:
+        settings_helpers.restore_settings(snapshot)
+
+
+@pytest.mark.parametrize(
+    ("operation", "invoke"),
+    [
+        ("clone", lambda url, ref, cwd: gerrit_provider.clone(url, cwd)),
+        ("fetch", gerrit_provider.fetch),
+        ("checkout", lambda url, ref, cwd: gerrit_provider.checkout(cwd)),
+        ("show", lambda url, ref, cwd: gerrit_provider.show("HEAD", cwd=cwd)),
+        ("diff", lambda url, ref, cwd: gerrit_provider.diff("HEAD", cwd=cwd)),
+        ("reset", lambda url, ref, cwd: gerrit_provider.reset_local_changes(cwd)),
+        ("query", lambda url, ref, cwd: gerrit_provider.list_comments(url, ref)),
+        ("review", lambda url, ref, cwd: gerrit_provider.add_comment(url, ref, "private comment")),
+    ],
+)
+def test_direct_gerrit_children_use_safe_per_call_timeout(
+    monkeypatch, command_timeout_setting, operation, invoke, tmp_path
+):
+    url = urllib3.util.parse_url("ssh://secret-user:secret-pass@example.com:29418/project")
+    ref = "refs/changes/01/1/1"
+    calls = []
+
+    def fail_run(command, **kwargs):
+        calls.append((command, kwargs))
+        raise subprocess.TimeoutExpired(
+            cmd="private argv", timeout=120, output=b"private stdout", stderr=b"private stderr"
+        )
+
+    monkeypatch.setattr(gerrit_provider.subprocess, "run", fail_run)
+    with pytest.raises(gerrit_provider.GerritCommandTimeoutError) as caught:
+        invoke(url, ref, tmp_path)
+
+    error = caught.value
+    assert isinstance(error, TimeoutError)
+    assert str(error) == f"Gerrit {operation} timed out after 120 seconds"
+    assert error.__cause__ is None and error.__suppress_context__
+    assert all(not hasattr(error, field) for field in ("cmd", "stdout", "stderr", "output"))
+    rendered = "".join(traceback.format_exception_only(type(error), error))
+    assert all(secret not in rendered for secret in (
+        "secret-user", "secret-pass", "private argv", "private stdout", "private stderr", "private comment"
+    ))
+    assert len(calls) == 1
+    expected = {
+        "clone": ("git", "clone", "--depth", "1", url, tmp_path),
+        "fetch": ("git", "fetch", "--depth", "2", url, ref),
+        "checkout": ("git", "checkout", "FETCH_HEAD"),
+        "show": ("git", "show", "HEAD"),
+        "diff": ("git", "diff", "HEAD"),
+        "reset": ("git", "checkout", "--force"),
+        "query": ("ssh", "-p", "29418", "secret-user:secret-pass@example.com", "gerrit", "query",
+                  "--comments", "--current-patch-set", "1", "--format", "JSON"),
+        "review": ("ssh", "-p", "29418", "secret-user:secret-pass@example.com", "gerrit", "review",
+                   "--message", "'private comment'", "1,1"),
+    }
+    assert calls[0][0] == expected[operation]
+    assert calls[0][1].get("cwd") == (None if operation in {"clone", "query", "review"} else tmp_path)
+    assert calls[0][1]["timeout"] == 120
+    assert calls[0][1]["capture_output"] is True
+    assert calls[0][1]["check"] is True
+
+
+@pytest.mark.parametrize("value", [None, True, False, 0, -2, float("nan"), float("inf"), "private-invalid", {}])
+def test_invalid_gerrit_timeout_falls_back_without_logging_value(monkeypatch, command_timeout_setting, value):
+    from loguru import logger as loguru_logger
+
+    get_settings().set("gerrit.command_timeout_seconds", value)
+    captured, sink_id = _capture_logs()
+    calls = []
+    monkeypatch.setattr(
+        gerrit_provider.subprocess, "run",
+        lambda command, **kwargs: (calls.append(kwargs), SimpleNamespace(stdout=b"ok"))[1],
+    )
+    try:
+        assert gerrit_provider.show("HEAD") == "ok"
+    finally:
+        loguru_logger.remove(sink_id)
+
+    assert calls[0]["timeout"] == 120
+    combined = "\n".join(captured)
+    assert "Ignoring invalid gerrit.command_timeout_seconds" in combined
+    assert "private-invalid" not in combined
+
+
+def test_gerrit_timeout_reads_host_setting_for_each_direct_child(monkeypatch, command_timeout_setting):
+    calls = []
+    monkeypatch.setattr(
+        gerrit_provider.subprocess, "run",
+        lambda command, **kwargs: (calls.append(kwargs), SimpleNamespace(stdout=b"ok"))[1],
+    )
+    get_settings().set("gerrit.command_timeout_seconds", 15.5)
+    assert gerrit_provider.show("HEAD") == "ok"
+    get_settings().set("gerrit.command_timeout_seconds", 100000)
+    assert gerrit_provider.show("HEAD") == "ok"
+    assert [call["timeout"] for call in calls] == [15.5, 100000]
+
+
+def test_gerrit_call_preserves_success_decoding_and_process_failure(monkeypatch, command_timeout_setting):
+    error = subprocess.CalledProcessError(1, ["git", "show"], stderr=b"failure")
+    monkeypatch.setattr(
+        gerrit_provider.subprocess, "run", lambda *args, **kwargs: SimpleNamespace(stdout=b"caf\xc3\xa9")
+    )
+    assert gerrit_provider.show("HEAD") == "caf\u00e9"
+    monkeypatch.setattr(gerrit_provider.subprocess, "run", lambda *args, **kwargs: (_ for _ in ()).throw(error))
+    with pytest.raises(subprocess.CalledProcessError) as caught:
+        gerrit_provider.show("HEAD")
+    assert caught.value is error
+
+
+@pytest.mark.parametrize("failing_step", ["clone", "fetch", "checkout"])
+@pytest.mark.parametrize("cleanup_fails", [False, True])
+def test_prepare_repo_timeout_attempts_cleanup_once_without_leaking_child_data(
+    tmp_path, monkeypatch, command_timeout_setting, failing_step, cleanup_fails
+):
+    from loguru import logger as loguru_logger
+
+    repo_path = tmp_path / "clone"
+    repo_path.mkdir()
+    monkeypatch.setattr(gerrit_provider, "mkdtemp", lambda: str(repo_path))
+    child_calls = []
+
+    def run(command, **kwargs):
+        child_calls.append(command)
+        if command[1] == failing_step:
+            raise subprocess.TimeoutExpired(
+                "private argv", kwargs["timeout"], output=b"private stdout", stderr=b"private stderr"
+            )
+        return SimpleNamespace(stdout=b"")
+
+    monkeypatch.setattr(gerrit_provider.subprocess, "run", run)
+    real_rmtree = gerrit_provider.shutil.rmtree
+    removed = []
+
+    def remove(path):
+        removed.append(path)
+        if cleanup_fails:
+            raise OSError("cleanup busy")
+        real_rmtree(path)
+
+    monkeypatch.setattr(gerrit_provider.shutil, "rmtree", remove)
+    captured, sink_id = _capture_logs()
+    try:
+        with pytest.raises(gerrit_provider.GerritCommandTimeoutError, match=f"Gerrit {failing_step} timed out"):
+            gerrit_provider.prepare_repo(
+                urllib3.util.parse_url("ssh://secret-user:secret-pass@example.com:29418"),
+                "project", "refs/changes/01/1/1",
+            )
+    finally:
+        loguru_logger.remove(sink_id)
+
+    assert removed == [repo_path]
+    assert len(child_calls) == {"clone": 1, "fetch": 2, "checkout": 3}[failing_step]
+    assert repo_path.exists() is cleanup_fails
+    combined = "\n".join(captured)
+    assert all(secret not in combined for secret in (
+        "secret-user", "secret-pass", "private argv", "private stdout", "private stderr"
+    ))
+    assert any(
+        message.endswith(f"Cloning ssh://example.com:29418/project to {repo_path}\n")
+        for message in captured
+    )
+    assert ("cleanup busy" in combined) is cleanup_fails
+
+
+@pytest.mark.parametrize("error", [
+    gerrit_provider.GerritCommandTimeoutError("Gerrit clone timed out after 120 seconds"),
+    KeyboardInterrupt(),
+])
+def test_prepare_repo_reraises_primary_base_exception_after_cleanup(tmp_path, monkeypatch, error):
+    repo_path = tmp_path / "clone"
+    repo_path.mkdir()
+    monkeypatch.setattr(gerrit_provider, "mkdtemp", lambda: str(repo_path))
+    monkeypatch.setattr(gerrit_provider, "clone", lambda *args: (_ for _ in ()).throw(error))
+
+    with pytest.raises(type(error)) as caught:
+        gerrit_provider.prepare_repo(
+            urllib3.util.parse_url("ssh://reviewer@example.com:29418"),
+            "project", "refs/changes/01/1/1",
+        )
+
+    assert caught.value is error
+    assert not repo_path.exists()
+
+
+def test_factory_preserves_existing_resource_error_with_safe_timeout_cause(monkeypatch):
+    from pr_agent import git_providers as providers
+
+    snapshot = settings_helpers.snapshot_settings(["config.git_provider", "gerrit.url", "gerrit.user"])
+    get_settings().set("config.git_provider", "gerrit")
+    get_settings().set("gerrit.url", "ssh://example.com:29418")
+    get_settings().set("gerrit.user", "reviewer")
+    monkeypatch.setattr(gerrit_provider, "prepare_repo", lambda *args: (
+        (_ for _ in ()).throw(gerrit_provider.GerritCommandTimeoutError("Gerrit clone timed out after 120 seconds"))
+    ))
+    try:
+        with pytest.raises(ValueError, match="project:refs/changes/01/1/1") as caught:
+            providers.get_git_provider_with_context("project:refs/changes/01/1/1")
+    finally:
+        settings_helpers.restore_settings(snapshot)
+
+    assert type(caught.value.__cause__) is gerrit_provider.GerritCommandTimeoutError
+
+
+@pytest.mark.parametrize("consumer", ["cached_server", "fresh_cli", "fresh_questions"])
+def test_gerrit_consumers_keep_host_timeout_after_repo_overlay(
+    monkeypatch, tmp_path, consumer
+):
+    from starlette_context import request_cycle_context
+
+    from pr_agent import git_providers as providers
+    from pr_agent.algo.cli_args import CliArgs
+    from pr_agent.git_providers.utils import apply_repo_settings
+    from pr_agent.tools import pr_questions
+
+    key = "project:refs/changes/01/1/1"
+    snapshot = settings_helpers.snapshot_settings([
+        "config.git_provider", "config.use_repo_settings_file", "gerrit.url", "gerrit.user",
+        "gerrit.command_timeout_seconds",
+    ])
+    settings = get_settings()
+    settings.set("config.git_provider", "gerrit")
+    settings.set("config.use_repo_settings_file", True)
+    settings.set("gerrit.url", "ssh://example.com:29418")
+    settings.set("gerrit.user", "reviewer")
+    settings.set("gerrit.command_timeout_seconds", 120)
+
+    calls = []
+    made_dirs = []
+
+    def make_temp_directory():
+        path = tmp_path / f"repo-{len(made_dirs)}"
+        path.mkdir()
+        made_dirs.append(path)
+        return str(path)
+
+    def run(command, **kwargs):
+        calls.append((command, kwargs))
+        return SimpleNamespace(stdout=b'{"currentPatchSet":{"comments":[]}}\n')
+
+    monkeypatch.setattr(gerrit_provider, "mkdtemp", make_temp_directory)
+    monkeypatch.setattr(gerrit_provider, "Repo", lambda path: SimpleNamespace())
+    monkeypatch.setattr(gerrit_provider.subprocess, "run", run)
+    monkeypatch.setattr(GerritProvider, "get_pr_title", lambda self: "change")
+    monkeypatch.setattr(GerritProvider, "get_diff_files", lambda self: [])
+    monkeypatch.setattr(
+        GerritProvider, "get_repo_settings",
+        lambda self: b"[gerrit]\ncommand_timeout_seconds = 999\n",
+    )
+    try:
+        if consumer == "cached_server":
+            with request_cycle_context({"settings": settings}):
+                apply_repo_settings(key)
+                early = providers.get_git_provider_with_context(key)
+                assert providers.get_git_provider_with_context(key) is early
+                assert early.get_issue_comments() == []
+        else:
+            apply_repo_settings(key)
+            if consumer == "fresh_cli":
+                assert isinstance(providers.get_git_provider()(key), GerritProvider)
+            else:
+                monkeypatch.setattr(GerritProvider, "get_languages", lambda self: {})
+                monkeypatch.setattr(GerritProvider, "get_files", lambda self: [])
+                monkeypatch.setattr(GerritProvider, "get_pr_branch", lambda self: "change")
+                monkeypatch.setattr(GerritProvider, "get_pr_description", lambda self: "")
+                monkeypatch.setattr(GerritProvider, "get_commit_messages", lambda self: "")
+                monkeypatch.setattr(pr_questions, "get_main_pr_language", lambda *args: "")
+                monkeypatch.setattr(pr_questions, "TokenHandler", lambda *args: None)
+                monkeypatch.setattr(pr_questions.PRQuestions, "_load_conversation_history", lambda self: "")
+                question = pr_questions.PRQuestions(key, args=[], ai_handler=SimpleNamespace)
+                assert isinstance(question.git_provider, GerritProvider)
+        assert settings.get("gerrit.command_timeout_seconds") == 120
+        assert CliArgs.validate_user_args(["--gerrit.command_timeout_seconds=999"])[0] is False
+        assert len(calls) == (4 if consumer == "cached_server" else 6)
+        assert all(kwargs["timeout"] == 120 for _, kwargs in calls)
+    finally:
+        settings_helpers.restore_settings(snapshot)
 
 
 def _make_repo(tmp_path, filenames):

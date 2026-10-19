@@ -72,6 +72,7 @@ SNAPSHOT_SECTIONS = (
     "BITBUCKET",
     "GITLAB",
     "GITEA",
+    "GERRIT",
     "JIRA",
     "LINEAR",
     "LANGUAGE_EXTENSION_MAP_ORG",
@@ -462,6 +463,26 @@ def test_repo_settings_filter_provider_credentials_but_apply_safe_keys(monkeypat
 def test_provider_connection_keys_are_host_only_for_repo_and_cli(section, key):
     assert is_repo_host_only_key(section, key)
     assert CliArgs.validate_user_args([f"--{section}.{key}=untrusted"])[0] is False
+
+
+@pytest.mark.parametrize("repo_settings_bytes", [
+    b"[gerrit]\ncommand_timeout_seconds = 999\n",
+    b"[gerrit.command_timeout_seconds]\nx = 999\n",
+    b"[gerrit__command_timeout_seconds]\nx = 999\n",
+])
+def test_repo_settings_cannot_override_gerrit_command_timeout(
+    monkeypatch, settings_snapshot, repo_settings_bytes
+):
+    provider = FakeGitProvider(repo_settings_bytes=repo_settings_bytes)
+    _install_provider(monkeypatch, provider)
+    settings = get_settings()
+    settings.set("config.use_repo_settings_file", True)
+    settings.set("gerrit.command_timeout_seconds", 21)
+
+    apply_repo_settings("https://example.com/owner/repo/pull/1")
+
+    assert _section(settings, "gerrit")["command_timeout_seconds"] == 21
+    assert is_repo_host_only_key("gerrit", "command_timeout_seconds")
 
 
 @pytest.mark.parametrize(

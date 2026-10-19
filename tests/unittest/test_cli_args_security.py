@@ -108,6 +108,10 @@ FORBIDDEN_ARGS = [
     "--config.http_request_timeout=600",
     "--config__http_request_timeout=600",
     '--config={"http_request_timeout": 600}',
+    # Gerrit direct-child occupancy is controlled by the host, including mapping forms.
+    "--gerrit.command_timeout_seconds=600",
+    "--gerrit__command_timeout_seconds=600",
+    '--gerrit={"command_timeout_seconds": 600}',
     # fail_on_tool_errors decides whether a recorded tool failure fails the GitHub Action, so a
     # commenter must not be able to turn it off for their own command.
     "--github_action_config.fail_on_tool_errors=false",
