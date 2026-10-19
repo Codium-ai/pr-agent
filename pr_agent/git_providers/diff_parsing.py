@@ -1,11 +1,10 @@
-import codecs
-
 from unidiff import PatchSet
 from unidiff.errors import UnidiffParseError
 
 from pr_agent.algo.git_patch_processing import to_hunk_only_patch as _to_hunk_only_patch
 from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
 from pr_agent.log import get_logger
+from pr_agent.mosaico.diff_provider import _unquote_git_path
 
 
 def to_hunk_only_patch(patch_str: str) -> str:
@@ -16,8 +15,7 @@ def to_hunk_only_patch(patch_str: str) -> str:
 def _strip_prefix(path: str | None) -> str | None:
     if path is None:
         return None
-    if path.startswith('"') and path.endswith('"'):
-        path = codecs.escape_decode(path[1:-1].encode("utf-8"))[0].decode("utf-8", errors="replace")
+    path = _unquote_git_path(path)
     if path.startswith(("a/", "b/")):
         return path[2:]
     return path
