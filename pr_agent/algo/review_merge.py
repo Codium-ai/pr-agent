@@ -133,6 +133,10 @@ def _normalize_text(value: Any) -> str:
     return _WHITESPACE_RE.sub(" ", str(value if value is not None else "")).strip().lower()
 
 
+def _normalize_path(value: Any) -> str:
+    return str(value if value is not None else "").strip()
+
+
 def _as_int(value: Any) -> int | None:
     if isinstance(value, bool):
         return None
@@ -241,7 +245,7 @@ def _union_of_lists(identity: Callable[[Any], Hashable]) -> Callable[[list[Any]]
 def _key_issue_identity(issue: Any) -> Hashable:
     if not isinstance(issue, dict):
         return _normalize_text(issue)
-    return (_normalize_text(issue.get("relevant_file")),
+    return (_normalize_path(issue.get("relevant_file")),
             _normalize_text(issue.get("issue_header")),
             _normalize_text(issue.get("issue_content")))
 
@@ -249,7 +253,7 @@ def _key_issue_identity(issue: Any) -> Hashable:
 def _todo_identity(todo: Any) -> Hashable:
     if not isinstance(todo, dict):
         return _normalize_text(todo)
-    return (_normalize_text(todo.get("relevant_file")),
+    return (_normalize_path(todo.get("relevant_file")),
             _normalize_text(todo.get("line_number")),
             _normalize_text(todo.get("content")))
 
@@ -259,7 +263,7 @@ def _sub_pr_identity(sub_pr: Any) -> Hashable:
         return _normalize_text(sub_pr)
     relevant_files = sub_pr.get("relevant_files")
     if isinstance(relevant_files, list) and relevant_files:
-        return frozenset(_normalize_text(name) for name in relevant_files)
+        return frozenset(_normalize_path(name) for name in relevant_files)
     return _normalize_text(sub_pr.get("title"))
 
 
@@ -281,9 +285,9 @@ def _merge_priority_files(values: list[Any]) -> list:
     for value in values:
         for item in value if isinstance(value, list) else []:
             name = str(item).strip()
-            if not name or name.lower() in seen:
+            if not name or name in seen:
                 continue
-            seen.add(name.lower())
+            seen.add(name)
             merged.append(name)
     return merged
 
