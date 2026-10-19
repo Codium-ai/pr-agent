@@ -30,7 +30,7 @@ def command_timeout_setting():
     ("operation", "invoke"),
     [
         ("clone", lambda url, ref, cwd: gerrit_provider.clone(url, cwd)),
-        ("fetch", lambda url, ref, cwd: gerrit_provider.fetch(url, ref, cwd)),
+        ("fetch", gerrit_provider.fetch),
         ("checkout", lambda url, ref, cwd: gerrit_provider.checkout(cwd)),
         ("show", lambda url, ref, cwd: gerrit_provider.show("HEAD", cwd=cwd)),
         ("diff", lambda url, ref, cwd: gerrit_provider.diff("HEAD", cwd=cwd)),
@@ -180,7 +180,10 @@ def test_prepare_repo_timeout_attempts_cleanup_once_without_leaking_child_data(
     assert all(secret not in combined for secret in (
         "secret-user", "secret-pass", "private argv", "private stdout", "private stderr"
     ))
-    assert "example.com" in combined  # Preserve established redacted resource diagnostics.
+    assert any(
+        message.endswith(f"Cloning ssh://example.com:29418/project to {repo_path}\n")
+        for message in captured
+    )
     assert ("cleanup busy" in combined) is cleanup_fails
 
 
@@ -205,7 +208,7 @@ def test_prepare_repo_reraises_primary_base_exception_after_cleanup(tmp_path, mo
 
 
 def test_factory_preserves_existing_resource_error_with_safe_timeout_cause(monkeypatch):
-    import pr_agent.git_providers as providers
+    from pr_agent import git_providers as providers
 
     snapshot = settings_helpers.snapshot_settings(["config.git_provider", "gerrit.url", "gerrit.user"])
     get_settings().set("config.git_provider", "gerrit")
@@ -229,7 +232,7 @@ def test_gerrit_consumers_keep_host_timeout_after_repo_overlay(
 ):
     from starlette_context import request_cycle_context
 
-    import pr_agent.git_providers as providers
+    from pr_agent import git_providers as providers
     from pr_agent.algo.cli_args import CliArgs
     from pr_agent.git_providers.utils import apply_repo_settings
     from pr_agent.tools import pr_questions
@@ -288,7 +291,7 @@ def test_gerrit_consumers_keep_host_timeout_after_repo_overlay(
                 monkeypatch.setattr(pr_questions, "get_main_pr_language", lambda *args: "")
                 monkeypatch.setattr(pr_questions, "TokenHandler", lambda *args: None)
                 monkeypatch.setattr(pr_questions.PRQuestions, "_load_conversation_history", lambda self: "")
-                question = pr_questions.PRQuestions(key, args=[], ai_handler=lambda: SimpleNamespace())
+                question = pr_questions.PRQuestions(key, args=[], ai_handler=SimpleNamespace)
                 assert isinstance(question.git_provider, GerritProvider)
         assert settings.get("gerrit.command_timeout_seconds") == 120
         assert CliArgs.validate_user_args(["--gerrit.command_timeout_seconds=999"])[0] is False
