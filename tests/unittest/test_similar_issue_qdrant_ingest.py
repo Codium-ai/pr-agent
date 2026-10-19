@@ -184,7 +184,7 @@ class FakeProvider:
         return True
 
     def __init__(self, issues=None):
-        self._issues = list(issues) if issues is not None else [_make_issue(1)]
+        self._issues = issues if issues is not None else [_make_issue(1)]
         self.github_client = SimpleNamespace(
             get_repo=lambda repo_name: SimpleNamespace(
                 full_name="Example/Repo",
@@ -273,6 +273,31 @@ def test_qdrant_collection_without_sentinel_reingests_full(monkeypatch):
     assert client.upserts[0] == ["issue_5.issue", "issue_4.issue"]
     assert client.upserts[1] == ["example_issue_example-repo"]
     assert "example_issue_example-repo" in client.ids
+
+
+def test_qdrant_full_ingest_stops_fetching_after_the_scan_limit(monkeypatch):
+    """Do not consume every GitHub issues page just to index a bounded prefix."""
+    scanned = []
+
+    def issue_pages():
+        for number in range(1, 8):
+            scanned.append(number)
+            if number > 3:
+                pytest.fail("issue iterator was exhausted past the scan limit")
+            issue = _make_issue(number)
+            if number == 1:
+                issue.pull_request = True
+            yield issue
+
+    client = _StatefulQdrantClient()
+    _stub_constructor_dependencies(monkeypatch, client, issues=issue_pages())
+    monkeypatch.setattr(SettingsStub.pr_similar_issue, "max_issues_to_scan", 2)
+
+    psi.PRSimilarIssue("https://github.com/Example/Repo/issues/1", ai_handler=None)
+
+    assert scanned == [1, 2, 3]
+    assert client.upserts[0] == ["issue_2.issue", "issue_3.issue"]
+    assert client.upserts[1] == ["example_issue_example-repo"]
 
 
 def test_qdrant_incremental_backfills_an_older_index_gap(monkeypatch):
