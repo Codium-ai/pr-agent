@@ -1,0 +1,32 @@
+2026-10-19 17:32:10.920 | WARNING  | pr_agent.custom_merge_loader:load:67 - Settings file not found: /Users/hello/Desktop/Projects/ai-powered-code-review-assistant/pr-agent/pr_agent/settings/.secrets.toml. Skipping it.
+2026-10-19 17:32:10.920 | WARNING  | pr_agent.custom_merge_loader:load:67 - Settings file not found: /Users/hello/Desktop/Projects/ai-powered-code-review-assistant/pr-agent/pr_agent/settings_prod/.secrets.toml. Skipping it.
+INFO:     Started server process [7014]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:3000 (Press CTRL+C to quit)
+2026-10-19 17:32:31.134 | WARNING  | pr_agent.custom_merge_loader:load:67 - Settings file not found: /Users/hello/Desktop/Projects/ai-powered-code-review-assistant/pr-agent/pr_agent/settings/.secrets.toml. Skipping it.
+2026-10-19 17:32:31.134 | WARNING  | pr_agent.custom_merge_loader:load:67 - Settings file not found: /Users/hello/Desktop/Projects/ai-powered-code-review-assistant/pr-agent/pr_agent/settings_prod/.secrets.toml. Skipping it.
+INFO:     Started server process [7018]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+ERROR:    [Errno 48] error while attempting to bind on address ('0.0.0.0', 3000): address already in use
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+2026-10-19 17:32:41.819 | WARNING  | pr_agent.custom_merge_loader:load:67 - Settings file not found: /Users/hello/Desktop/Projects/ai-powered-code-review-assistant/pr-agent/pr_agent/settings/.secrets.toml. Skipping it.
+2026-10-19 17:32:41.819 | WARNING  | pr_agent.custom_merge_loader:load:67 - Settings file not found: /Users/hello/Desktop/Projects/ai-powered-code-review-assistant/pr-agent/pr_agent/settings_prod/.secrets.toml. Skipping it.
+INFO:     Started server process [7047]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:3000 (Press CTRL+C to quit)
+2026-10-19 17:33:01.941 | WARNING  | pr_agent.custom_merge_loader:load:67 - Settings file not found: /Users/hello/Desktop/Projects/ai-powered-code-review-assistant/pr-agent/pr_agent/settings/.secrets.toml. Skipping it.
+2026-10-19 17:33:01.941 | WARNING  | pr_agent.custom_merge_loader:load:67 - Settings file not found: /Users/hello/Desktop/Projects/ai-powered-code-review-assistant/pr-agent/pr_agent/settings_prod/.secrets.toml. Skipping it.
+INFO:     Started server process [7076]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:3000 (Press CTRL+C to quit)
+2026-10-19 17:33:28.250 | WARNING  | pr_agent.custom_merge_loader:load:67 - Settings file not found: /Users/hello/Desktop/Projects/ai-powered-code-review-assistant/pr-agent/pr_agent/settings/.secrets.toml. Skipping it.
+2026-10-19 17:33:28.250 | WARNING  | pr_agent.custom_merge_loader:load:67 - Settings file not found: /Users/hello/Desktop/Projects/ai-powered-code-review-assistant/pr-agent/pr_agent/settings_prod/.secrets.toml. Skipping it.
+INFO:     Started server process [7124]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:3000 (Press CTRL+C to quit)
