@@ -432,13 +432,14 @@ async def run_action():
                     else:
                         body = comment_body
                     comment_id = event_payload.get("comment", {}).get("id")
-                    provider = get_git_provider()(pr_url=url)
+                    if is_pr and not disable_eyes:
+                        provider = get_git_provider()(pr_url=url)
                     if is_pr:
                         _inject_artifact_context()
                         await _handle_request(
                             url,
                             body,
-                            notify=lambda: provider.add_eyes_reaction(
+                            notify=None if disable_eyes else lambda: provider.add_eyes_reaction(
                                 comment_id, disable_eyes=disable_eyes
                             ),
                         )
