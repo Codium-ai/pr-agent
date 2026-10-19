@@ -310,7 +310,9 @@ class GithubProvider(GitProvider):
                 if commit.commit.message.startswith(f"Merge branch '{self._get_repo().default_branch}'"):
                     get_logger().info(f"Skipping merge commit {commit.commit.message}")
                     continue
-                self.unreviewed_files_map.update({file.filename: file for file in commit.files})
+                self.unreviewed_files_map.update({
+                    file.filename: file for file in commit.get_files(commit_files_per_page=300)
+                })
         else:
             get_logger().info("No previous review found, will review the entire PR")
             self.incremental.is_incremental = False
@@ -1905,6 +1907,7 @@ class GithubProvider(GitProvider):
             return Github(
                 auth=self.auth,
                 base_url=self.base_url,
+                per_page=100,
                 seconds_between_requests=seconds_between_requests,
                 seconds_between_writes=seconds_between_writes,
                 retry=retry,

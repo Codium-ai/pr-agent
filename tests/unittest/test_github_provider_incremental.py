@@ -1,5 +1,9 @@
 from datetime import datetime
 from types import SimpleNamespace
+from unittest.mock import Mock
+from urllib.parse import parse_qsl, urlsplit
+
+from github.Commit import Commit
 
 from pr_agent.git_providers.git_provider import IncrementalPR
 from pr_agent.git_providers.github_provider import GithubProvider
@@ -71,3 +75,35 @@ def test_only_commits_after_the_review_are_returned():
 
     assert provider.get_commit_range() == [pushed]
     assert provider.incremental.last_seen_commit is reviewed
+
+
+def test_incremental_commit_files_keep_300_item_pages():
+    requester = Mock(per_page=100, is_not_lazy=False)
+    commit_url = "https://api.github.com/repos/example/project/commits/pushed"
+    all_files = [{"filename": f"file-{index}.py", "status": "modified"} for index in range(301)]
+
+    def fetch_page(method, url, parameters=None, headers=None):
+        assert method == "GET"
+        query = dict(parse_qsl(urlsplit(url).query))
+        query.update(parameters or {})
+        assert int(query["per_page"]) == 300
+        page = int(query.get("page", 1))
+        offset = (page - 1) * 300
+        links = {"link": f'<{commit_url}?per_page=300&page=2>; rel="next"'} if page == 1 else {}
+        return links, {"files": all_files[offset:offset + 300]}
+
+    requester.requestJsonAndCheck.side_effect = fetch_page
+    commit = Commit(requester, {}, {
+        "url": commit_url, "sha": "pushed", "commit": {"message": "Change files"},
+    }, completed=False)
+    provider = _make_provider([commit])
+    provider.incremental.last_seen_commit = SimpleNamespace(sha="reviewed")
+    provider.get_previous_review = lambda **kwargs: provider.previous_review
+    provider.get_commit_range = lambda: [commit]
+    provider._get_repo = lambda: SimpleNamespace(default_branch="main")
+    provider.unreviewed_files_map = {}
+
+    provider._get_incremental_commits()
+
+    assert list(provider.unreviewed_files_map) == [file["filename"] for file in all_files]
+    assert requester.requestJsonAndCheck.call_count == 2
