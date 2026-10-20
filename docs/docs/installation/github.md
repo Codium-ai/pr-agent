@@ -431,7 +431,7 @@ Point the action at the file with the `artifact_path` input. The path is resolve
           artifact_instructions: "These are the failing tests from this PR's CI run. Call out any suggestion that would not fix them."
 ```
 
-Setting `artifact_path` turns the feature on by itself; there is no separate enable switch to flip in the workflow. Supported target tools receive a dedicated artifact section in their prompt. The label and file contents are explicitly marked as untrusted data, while `artifact_instructions` appears separately as subordinate analysis guidance. The supported targets are `pr_reviewer`, `pr_description` and `pr_code_suggestions`; unsupported names are skipped with a warning.
+Setting `artifact_path` turns the feature on by itself; there is no separate enable switch to flip in the workflow. Supported target tools receive a dedicated artifact section in their prompt. The label and file contents are explicitly marked as untrusted data, while `artifact_instructions` appears separately as subordinate analysis guidance. The supported targets are `pr_reviewer`, `pr_description`, `pr_code_suggestions` and `pr_questions`; unsupported names are skipped with a warning.
 
 When overriding a supported tool's prompt, keep `artifact_context.instructions` in the system prompt and render
 `artifact_context.label`, `artifact_context.content`, `artifact_context.start_marker`, and `artifact_context.end_marker` in
@@ -446,7 +446,7 @@ enable = false                                              # auto-enabled when 
 artifact_path = ""                                          # relative to GITHUB_WORKSPACE, or absolute
 artifact_instructions = ""                                  # empty = a generic "treat this as CI context" instruction
 artifact_label = ""                                         # empty = the file's name
-target_tools = ["pr_reviewer", "pr_description", "pr_code_suggestions"]
+target_tools = ["pr_reviewer", "pr_description", "pr_code_suggestions", "pr_questions"]
 max_artifact_size = 50000                                   # characters; longer files are truncated with a marker
 ```
 
