@@ -568,15 +568,19 @@ class TestProcessPRFilesPrediction:
         body = obj.process_pr_files_prediction("PRE", value)
 
         assert body == "PRE"
+        obj.git_provider.get_diff_files.assert_not_called()
 
     @patch("pr_agent.tools.pr_description.get_settings")
-    def test_gfm_provider_emits_table_with_file_row(self, mock_get_settings):
+    def test_gfm_provider_reuses_diff_files_across_semantic_groups(self, mock_get_settings):
         mock_get_settings.return_value = _settings()
-        diff = FilePatchInfo("", "", "", "src/app.py")
-        diff.num_plus_lines = 5
-        diff.num_minus_lines = 2
-        obj = self._obj(gfm=True, diff_files=[diff])
-        value = {"backend": [("src/app.py", "Add cache", "Adds a bounded cache.")]}
+        obj = self._obj(gfm=True, diff_files=[
+            FilePatchInfo("", "", "", "README.md", num_plus_lines=1, num_minus_lines=0),
+            FilePatchInfo("", "", "", "src/app.py", num_plus_lines=5, num_minus_lines=2),
+        ])
+        value = {
+            "backend": [("src/app.py", "Add cache", "Adds a bounded cache.")],
+            "documentation": [("README.md", "Document cache", "Explains cache behavior.")],
+        }
 
         body = obj.process_pr_files_prediction("", value)
 
@@ -584,7 +588,42 @@ class TestProcessPRFilesPrediction:
         assert body.rstrip().endswith("</table>")
         assert "<strong>Backend</strong>" in body
         assert "<strong>app.py</strong>" in body
-        assert "+5/-2" in body
+        app_body, readme_body = body.split("<strong>README.md</strong>", 1)
+        assert "+5/-2" in app_body
+        assert "+1/-0" in readme_body
+        obj.git_provider.get_diff_files.assert_called_once_with()
+
+    @pytest.mark.parametrize("value", [{}, {"backend": []}])
+    @patch("pr_agent.tools.pr_description.get_settings")
+    def test_empty_file_groups_do_not_fetch_diffs(self, mock_get_settings, value):
+        mock_get_settings.return_value = _settings()
+        obj = self._obj(gfm=True)
+
+        body = obj.process_pr_files_prediction("", value)
+
+        assert body.startswith("<table>")
+        assert body.rstrip().endswith("</table>")
+        obj.git_provider.get_diff_files.assert_not_called()
+
+    @pytest.mark.parametrize(
+        ("plus", "minus", "expected_stats"), [(5, 2, "+5/-2"), (0, 0, "[link]"), (10**12, 0, "[link]")],
+    )
+    @patch("pr_agent.tools.pr_description.get_settings")
+    def test_normalized_first_match_and_missing_file_stats(self, mock_get_settings, plus, minus, expected_stats):
+        mock_get_settings.return_value = _settings()
+        obj = self._obj(gfm=True, diff_files=[
+            FilePatchInfo("", "", "", "/SRC/APP.py/", num_plus_lines=plus, num_minus_lines=minus),
+            FilePatchInfo("", "", "", "src/app.PY", num_plus_lines=99, num_minus_lines=88),
+        ])
+        value = {"backend": [("src/App.py", "", ""), ("missing.py", "", "")]}
+
+        body = obj.process_pr_files_prediction("", value)
+
+        app_body, missing_body = body.split("<strong>missing.py</strong>", 1)
+        assert expected_stats in app_body
+        assert "+99/-88" not in body
+        assert '<a href=""></a>' in missing_body
+        obj.git_provider.get_diff_files.assert_called_once_with()
 
     @patch("pr_agent.tools.pr_description.get_settings")
     def test_adaptive_collapsible_triggers_above_threshold(self, mock_get_settings):
@@ -601,6 +640,7 @@ class TestProcessPRFilesPrediction:
         body = obj.process_pr_files_prediction("", value)
 
         assert "<details><summary>2 files</summary>" in body
+        obj.git_provider.get_diff_files.assert_called_once_with()
 
     def test_rendered_href_preserves_reserved_filename_from_gitlab_provider(self):
         filename = "src/a#b?c&d space-☃.py"
