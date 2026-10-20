@@ -488,7 +488,7 @@ class PRSimilarIssue:
         get_logger().info('Getting issue...')
         repo_name, original_issue_number = self.git_provider._parse_issue_url(self.issue_url.split('=')[-1])
         issue_main = self.git_provider.repo_obj.get_issue(original_issue_number)
-        issue_str, comments, number = self._process_issue(issue_main)
+        issue_str, _, _ = self._process_issue(issue_main, include_comments=False)
         get_logger().info('Done')
 
         get_logger().info('Querying...')
@@ -554,11 +554,11 @@ class PRSimilarIssue:
         get_logger().info(similar_issues_str)
         get_logger().info("Done")
 
-    def _process_issue(self, issue):
+    def _process_issue(self, issue, *, include_comments=True):
         header = issue.title
         body = issue.body
         number = issue.number
-        if get_settings().pr_similar_issue.skip_comments:
+        if not include_comments or get_settings().pr_similar_issue.skip_comments:
             comments = []
         else:
             comments = list(issue.get_comments())

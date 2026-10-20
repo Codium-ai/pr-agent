@@ -3,6 +3,7 @@ import asyncio
 import inspect
 import sys
 from types import SimpleNamespace
+from unittest.mock import Mock
 
 import pytest
 
@@ -200,11 +201,27 @@ async def test_pinecone_query_branch_runs(monkeypatch):
     assert queried[0]["namespace"] == psi._pinecone_namespace("example/repo")
 
 
+@pytest.mark.parametrize("skip_comments", [False, True])
+def test_process_issue_preserves_configured_comment_indexing(monkeypatch, skip_comments):
+    monkeypatch.setattr(psi, "get_settings", lambda: SimpleNamespace(
+        pr_similar_issue=SimpleNamespace(skip_comments=skip_comments),
+    ))
+    comments = [SimpleNamespace(body="Existing comment")]
+    issue = SimpleNamespace(title="Issue", body="Body", number=1, get_comments=Mock(return_value=iter(comments)))
+    tool = psi.PRSimilarIssue.__new__(psi.PRSimilarIssue)
+
+    assert tool._process_issue(issue) == (
+        'Issue Header: "Issue"\n\nIssue Body:\nBody', [] if skip_comments else comments, 1,
+    )
+    assert issue.get_comments.call_count == (0 if skip_comments else 1)
+
+
 @pytest.fixture(params=["pinecone", "lancedb", "qdrant"])
 def query_tool(monkeypatch, request):
     """Exercise each query branch with ranked rows and an observable publication sink."""
     backend = request.param
-    state = SimpleNamespace(attempts=[], responses=[], published=[], embedded=[], fetched=[], publish=True)
+    state = SimpleNamespace(attempts=[], responses=[], published=[], embedded=[], fetched=[],
+                            comment_fetches=[], publish=True)
 
     def query(**kwargs):
         state.attempts.append(kwargs)
@@ -245,17 +262,22 @@ def query_tool(monkeypatch, request):
 
     def get_issue(number):
         state.fetched.append(number)
+
+        def get_comments():
+            state.comment_fetches.append(number)
+            return [SimpleNamespace(html_url=f"https://example.test/{number}#comment-0")]
+
         return SimpleNamespace(
             title=f"Issue {number}", body="Body", number=number,
             html_url=f"https://github.com/example/repo/issues/{number}",
-            get_comments=lambda: [SimpleNamespace(html_url=f"https://example.test/{number}#comment-0")],
+            get_comments=get_comments,
             create_comment=state.published.append,
         )
 
     monkeypatch.setattr(psi, "_embed", embed)
     monkeypatch.setattr(psi, "get_settings", lambda: SimpleNamespace(
         config=SimpleNamespace(publish_output=state.publish),
-        pr_similar_issue=SimpleNamespace(vectordb=backend, skip_comments=True),
+        pr_similar_issue=SimpleNamespace(vectordb=backend, skip_comments=False),
     ))
     monkeypatch.setitem(sys.modules, "qdrant_client.models", SimpleNamespace(
         FieldCondition=SimpleNamespace, Filter=SimpleNamespace, MatchValue=SimpleNamespace,
@@ -302,6 +324,8 @@ async def test_healthy_query_keeps_five_results_and_one_request(query_tool):
     await state.tool.run()
     assert _limits(state) == [5]
     assert state.fetched == [1, 2, 3, 4, 5, 6]
+    assert state.comment_fetches == []
+    assert state.embedded == [['Issue Header: "Issue 1"\n\nIssue Body:\nBody']]
     assert len(state.published) == 1
     assert "5. **[Issue 6]" in state.published[0]
 
