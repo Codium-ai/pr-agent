@@ -15,6 +15,10 @@ model = "..."
 fallback_models = ["..."]
 ```
 
+Keep `fallback_models` different from `model`, or set it to `[]` for no backup model. Listing the
+primary model again only runs a failed call on the same model, so each fallback-eligible failure
+repeats. For extra attempts on the primary model instead, set `config.num_retries`.
+
 To see which of these models actually handled a given PR, enable `config.output_run_details` (see [Additional configurations](./additional_configurations.md#showing-the-agent-run-details)).
 To send small pull requests to a cheaper model, see [Routing small pull requests to a cheaper model](#routing-small-pull-requests-to-a-cheaper-model).
 
@@ -132,7 +136,7 @@ E.g. to use a new model locally via Ollama, set in `.secrets.toml` or in a confi
 ```toml
 [config]
 model = "ollama/qwen2.5-coder:32b"
-fallback_models=["ollama/qwen2.5-coder:32b"]
+fallback_models=[]
 custom_model_max_tokens=128000 # set the maximal input tokens for the model
 duplicate_examples=true # will duplicate the examples in the prompt, to help the model to generate structured output
 
@@ -161,7 +165,7 @@ To use a new model with Hugging Face Inference Endpoints, for example, set:
 ```toml
 [config] # in configuration.toml
 model = "huggingface/meta-llama/Llama-2-7b-chat-hf"
-fallback_models=["huggingface/meta-llama/Llama-2-7b-chat-hf"]
+fallback_models=[]
 custom_model_max_tokens=... # set the maximal input tokens for the model
 
 [huggingface] # in .secrets.toml
@@ -178,7 +182,7 @@ To use Llama 3 with Replicate, for example, set:
 ```toml
 [config] # in configuration.toml
 model = "replicate/meta/meta-llama-3-8b-instruct"
-fallback_models=["replicate/meta/meta-llama-3-8b-instruct"]
+fallback_models=[]
 custom_model_max_tokens=8000 # Set an explicit limit because the locked LiteLLM version has no metadata for this model.
 [replicate] # in .secrets.toml
 key = ...
@@ -223,7 +227,7 @@ To use xAI's models with PR-Agent, set:
 ```toml
 [config] # in configuration.toml
 model = "xai/grok-4.6"
-fallback_models = ["xai/grok-4.6"] # or any other model as fallback
+fallback_models = [] # or any other model as fallback
 
 [xai] # in .secrets.toml
 key = "..." # your xAI API key
@@ -244,8 +248,8 @@ Vertex AI needs the `google` extra (`pip install "pr-agent[google]"`). To use Ge
 ```toml
 [config] # in configuration.toml
 model = "vertex_ai/gemini-3.8-flash"
-fallback_models=["vertex_ai/gemini-3.8-flash"]
-no_temperature_models=["gemini-3.8-flash"] # Omit temperature for this model, including the fallback.
+fallback_models=[]
+no_temperature_models=["gemini-3.8-flash"] # Omit temperature for this model, including any fallback.
 
 [vertexai] # in .secrets.toml
 vertex_project = "my-google-cloud-project"
@@ -269,7 +273,7 @@ To use [Google AI Studio](https://aistudio.google.com/) models, set the relevant
 ```toml
 [config] # in configuration.toml
 model="gemini/gemini-3.8-flash"
-fallback_models=["gemini/gemini-3.8-flash"]
+fallback_models=[]
 
 [google_ai_studio] # in .secrets.toml
 gemini_api_key = "..."
@@ -284,7 +288,7 @@ To use Anthropic models, set the relevant models in the configuration section of
 ```toml
 [config]
 model="anthropic/claude-opus-5"
-fallback_models=["anthropic/claude-opus-5"]
+fallback_models=[]
 ```
 
 And also set the api key in the .secrets.toml file:
@@ -303,7 +307,7 @@ To use Amazon Bedrock and its foundational models, add the below configuration:
 ```toml
 [config] # in configuration.toml
 model="bedrock/us.anthropic.claude-sonnet-4-6"
-fallback_models=["bedrock/us.anthropic.claude-sonnet-4-6"]
+fallback_models=[]
 
 [aws]
 AWS_ACCESS_KEY_ID="..."
@@ -339,7 +343,7 @@ Grok 4.3 is available through Amazon Bedrock Mantle rather than the classic Bedr
 ```toml
 [config] # in configuration.toml
 model="bedrock_mantle/xai.grok-4.3"
-fallback_models=["bedrock_mantle/xai.grok-4.3"]
+fallback_models=[]
 ```
 
 Bedrock Mantle uses the same AWS credential sources, but its IAM permissions differ from the classic runtime. See
@@ -436,7 +440,7 @@ To invoke an [application inference profile](https://docs.aws.amazon.com/bedrock
 ```toml
 [config] # in configuration.toml
 model="bedrock/us.anthropic.claude-sonnet-4-6"
-fallback_models=["bedrock/us.anthropic.claude-sonnet-4-6"]
+fallback_models=[]
 
 [aws]
 AWS_ACCESS_KEY_ID="..."
@@ -590,7 +594,7 @@ To use GLM models with Z.AI (Zhipu), for example, set:
 ```toml
 [config] # in configuration.toml
 model = "zai/glm-5.2"
-fallback_models=["zai/glm-5.2"]
+fallback_models=[]
 ```
 
 and fill up your key
@@ -609,7 +613,7 @@ To use Kimi models with Moonshot, for example, set:
 ```toml
 [config] # in configuration.toml
 model = "moonshot/kimi-k3"
-fallback_models=["moonshot/kimi-k3"]
+fallback_models=[]
 ```
 
 and fill up your key
@@ -630,7 +634,7 @@ To use Qwen models with Alibaba DashScope, for example, set:
 ```toml
 [config] # in configuration.toml
 model = "dashscope/qwen3.8-max"
-fallback_models=["dashscope/qwen3.8-max"]
+fallback_models=[]
 ```
 
 and fill up your key
@@ -649,7 +653,7 @@ To use Xiaomi MiMo models, for example, set:
 ```toml
 [config] # in configuration.toml
 model = "xiaomi_mimo/mimo-v2.5"
-fallback_models=["xiaomi_mimo/mimo-v2.5"]
+fallback_models=[]
 ```
 
 and fill up your key
@@ -710,7 +714,7 @@ To use a model hosted on Databricks (e.g. an Azure Databricks serving endpoint),
 ```toml
 [config] # in configuration.toml
 model = "databricks/databricks-claude-sonnet-4"
-fallback_models = ["databricks/databricks-claude-sonnet-4"]
+fallback_models = []
 [databricks] # in .secrets.toml
 api_key = "..." # your Databricks personal access token (PAT)
 api_base = "https://adb-xxxx.azuredatabricks.net/serving-endpoints" # your workspace serving-endpoints URL
@@ -805,7 +809,7 @@ To use a model served by a Neon branch, set:
 ```toml
 [config] # in configuration.toml
 model = "openai/gpt-5-mini"
-fallback_models = ["openai/gpt-5-mini"]
+fallback_models = []
 custom_model_max_tokens = 400000 # the context window Neon publishes for the model
 
 [openai] # in .secrets.toml
@@ -884,7 +888,7 @@ PR-Agent's existing `openai/` model prefix and `[openai]` settings to configure 
 ```toml
 [config] # in configuration.toml
 model = "openai/gpt-6.1-sol"
-fallback_models = ["openai/gpt-6.1-sol"]
+fallback_models = []
 custom_model_max_tokens = 32000 # example input budget; keep within the selected model's context limit
 
 [openai] # in .secrets.toml
@@ -947,7 +951,7 @@ To use a model served by Atlas Cloud, set:
 ```toml
 [config] # in configuration.toml
 model = "openai/deepseek-ai/deepseek-v4-pro"
-fallback_models = ["openai/deepseek-ai/deepseek-v4-pro"]
+fallback_models = []
 custom_model_max_tokens = 1048000 # the context window Atlas publishes for the model
 
 [openai] # in .secrets.toml
@@ -979,7 +983,7 @@ To use a model served by Heabsy, set:
 ```toml
 [config] # in configuration.toml
 model = "openai/qwen38"
-fallback_models = ["openai/qwen38"]
+fallback_models = []
 custom_model_max_tokens = 262144 # the context window Heabsy publishes for the model
 
 [openai] # in .secrets.toml
@@ -1007,7 +1011,7 @@ To use a model served by DemonRoute, set:
 ```toml
 [config] # in configuration.toml
 model = "openai/NousResearch/Hermes-3-Llama-3.1-8B"
-fallback_models = ["openai/NousResearch/Hermes-3-Llama-3.1-8B"]
+fallback_models = []
 custom_model_max_tokens = 131072 # the context window DemonRoute publishes for the model
 
 [openai] # in .secrets.toml
@@ -1035,7 +1039,7 @@ If the relevant model doesn't appear [here](https://github.com/the-pr-agent/pr-a
 ```toml
 [config]
 model="custom_model_name"
-fallback_models=["custom_model_name"]
+fallback_models=[]
 ```
 
 2. Set the maximal tokens for the model:
