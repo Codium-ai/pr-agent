@@ -111,7 +111,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.12", "3.13", "3.14"]
+        python-version: ["3.12", "3.13", "3.14", "3.15"]
 
     steps:
       - id: checkout
@@ -122,7 +122,7 @@ jobs:
       # itself, so setup-python is not needed either.
       - id: uv
         name: Install uv
-        run: pipx install uv==0.12.10
+        run: pipx install uv==0.13.3
 
       - id: test
         name: Test on Python ${{ matrix.python-version }}
