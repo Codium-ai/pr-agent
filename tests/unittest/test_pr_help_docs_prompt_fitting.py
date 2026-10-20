@@ -13,7 +13,13 @@ import pytest
 
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.config_loader import get_settings
-from pr_agent.tools.pr_help_docs import PredictionPreparator, PRHelpDocs
+from pr_agent.tools.pr_help_docs import (
+    PredictionPreparator,
+    PRHelpDocs,
+    aggregate_documentation_files_for_prompt_contents,
+    clean_markdown_content,
+    map_documentation_files_to_contents,
+)
 
 _FIT_MODEL = "gpt-fit-test"
 
@@ -120,3 +126,128 @@ def test_trim_docs_input_uses_verified_input_limit(bounded_model):
     assert trimmed != big_docs
     limit = tool._docs_input_token_limit()
     assert tool.token_handler.count_tokens(trimmed, force_accurate=True) <= limit
+
+
+def test_trim_docs_keeps_cleaned_text_when_it_fits(monkeypatch):
+    tool = PRHelpDocs.__new__(PRHelpDocs)
+    tool.token_handler = SimpleNamespace(count_tokens=lambda text, force_accurate=False: len(text))
+    tool._docs_input_token_limit = lambda: 16
+    monkeypatch.setattr(
+        "pr_agent.tools.pr_help_docs.clip_tokens",
+        lambda *args, **kwargs: pytest.fail("cleaned text already fits"),
+    )
+
+    docs = "<!--" + "irrelevant " * 100 + "-->\nUseful text."
+    assert tool._trim_docs_input(docs, math.inf) == "Useful text."
+
+
+def test_trim_docs_passes_cleaned_token_count_to_clipper(monkeypatch):
+    tool = PRHelpDocs.__new__(PRHelpDocs)
+    tool.token_handler = SimpleNamespace(count_tokens=lambda text, force_accurate=False: len(text))
+    tool._docs_input_token_limit = lambda: 10
+    calls = []
+
+    def clip(text, limit, *, num_input_tokens):
+        calls.append((text, limit, num_input_tokens))
+        return "clipped"
+
+    monkeypatch.setattr("pr_agent.tools.pr_help_docs.clip_tokens", clip)
+    docs = "<!--" + "irrelevant " * 100 + "-->\nUseful but longer documentation."
+    cleaned = "Useful but longer documentation."
+
+    assert tool._trim_docs_input(docs, math.inf) == "clipped"
+    assert calls == [(cleaned, 10, len(cleaned))]
+
+
+@pytest.mark.asyncio
+async def test_run_uses_cleaned_full_docs_without_unnecessary_ranking(monkeypatch):
+    tool = PRHelpDocs.__new__(PRHelpDocs)
+    tool.question = "Where is this documented?"
+    tool.return_as_string = True
+    tool.vars = {"docs_url": "https://example.test", "question": tool.question, "snippets": ""}
+    tool.ai_handler = SimpleNamespace()
+    tool.token_handler = SimpleNamespace(count_tokens=lambda text, force_accurate=False: len(text))
+    tool._docs_input_token_limit = lambda: 128
+    docs = "<!--" + "irrelevant " * 100 + "-->\nUseful text."
+    tool._gen_filenames_to_contents_map_from_repo = lambda: {"README.md": docs}
+    tool._format_model_answer = lambda response, relevant_sections: response
+
+    async def reject_ranking(*args):
+        raise AssertionError("Ranking should not run when cleaned documentation fits")
+
+    async def predict(*args, **kwargs):
+        return "unused"
+
+    tool._rank_docs_and_return_them_as_prompt = reject_ranking
+    monkeypatch.setattr("pr_agent.tools.pr_help_docs.retry_with_fallback_models", predict)
+    monkeypatch.setattr("pr_agent.tools.pr_help_docs.load_yaml", lambda response: {"response": "answer"})
+
+    assert await tool.run() == "answer"
+    assert "README.md" in tool.vars["snippets"]
+    assert "Useful text." in tool.vars["snippets"]
+    assert "irrelevant" not in tool.vars["snippets"]
+
+
+@pytest.mark.asyncio
+async def test_run_keeps_document_boundaries_with_truncated_comments(tmp_path, monkeypatch):
+    paths = []
+    for name, content in (
+        ("010-cut.md", "<!--" + "x" * 5000 + "-->"),
+        ("020-guide.md", "# Guide\nmax_jobs = 7\n"),
+        ("030-notes.md", "<!-- normal comment -->\n# Notes\n"),
+    ):
+        path = tmp_path / name
+        path.write_text(content, encoding="utf-8")
+        paths.append(str(path))
+
+    docs = map_documentation_files_to_contents(str(tmp_path), paths)
+    assert "-->" not in docs["/010-cut.md"]
+    assert "/020-guide.md" not in clean_markdown_content(
+        aggregate_documentation_files_for_prompt_contents(docs)
+    )
+
+    tool = PRHelpDocs.__new__(PRHelpDocs)
+    tool.question = "What is max_jobs?"
+    tool.return_as_string = True
+    tool.vars = {"docs_url": "https://example.test", "question": tool.question, "snippets": ""}
+    tool.ai_handler = SimpleNamespace()
+    tool.token_handler = SimpleNamespace(count_tokens=lambda text, force_accurate=False: len(text))
+    tool._docs_input_token_limit = lambda: 150
+    tool._gen_filenames_to_contents_map_from_repo = lambda: docs
+    tool._format_model_answer = lambda response, relevant_sections: response
+    rankings = []
+
+    async def rank_docs(*args):
+        rankings.append(True)
+        return aggregate_documentation_files_for_prompt_contents({"/020-guide.md": docs["/020-guide.md"]})
+
+    async def predict(*args, **kwargs):
+        return "unused"
+
+    tool._rank_docs_and_return_them_as_prompt = rank_docs
+    monkeypatch.setattr("pr_agent.tools.pr_help_docs.retry_with_fallback_models", predict)
+    monkeypatch.setattr("pr_agent.tools.pr_help_docs.load_yaml", lambda response: {"response": "answer"})
+
+    assert await tool.run() == "answer"
+    assert rankings == [True]
+    assert "/020-guide.md" in tool.vars["snippets"]
+    assert "max_jobs = 7" in tool.vars["snippets"]
+
+    # Ranked documents must also retain file boundaries when clipping is needed.
+    clipping_inputs = []
+
+    def capture_clip(text, limit, *, num_input_tokens):
+        clipping_inputs.append(text)
+        return text
+
+    monkeypatch.setattr("pr_agent.tools.pr_help_docs.clip_tokens", capture_clip)
+    monkeypatch.setattr(
+        "pr_agent.tools.pr_help_docs.load_yaml",
+        lambda response: {"relevant_files_ranking": [{"idx": 0}, {"idx": 1}, {"idx": 2}]},
+    )
+    ranked = await PRHelpDocs._rank_docs_and_return_them_as_prompt(tool, docs, math.inf)
+
+    assert clipping_inputs
+    assert all(path in ranked for path in docs)
+    assert "/020-guide.md" in clipping_inputs[-1]
+    assert "max_jobs = 7" in clipping_inputs[-1]

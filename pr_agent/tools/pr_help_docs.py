@@ -447,10 +447,18 @@ class PRHelpDocs:
             invoke_llm_just_with_headings = self._trim_docs_input(docs_prompt_to_send_to_model, max_allowed_txt_input,
                                                                   only_return_if_trim_needed=True)
             if invoke_llm_just_with_headings:
-                #Entire docs is too long. Rank and return according to relevance.
-                docs_prompt_to_send_to_model = await self._rank_docs_and_return_them_as_prompt(
-                    docs_filepath_to_contents, max_allowed_txt_input
-                )
+                # Avoid ranking a subset when cleaning alone makes all documentation fit.
+                cleaned_docs_prompt = aggregate_documentation_files_for_prompt_contents({
+                    path: clean_markdown_content(content)
+                    for path, content in docs_filepath_to_contents.items()
+                })
+                if cleaned_docs_prompt and not self._trim_docs_input(
+                        cleaned_docs_prompt, max_allowed_txt_input, only_return_if_trim_needed=True):
+                    docs_prompt_to_send_to_model = cleaned_docs_prompt
+                else:
+                    docs_prompt_to_send_to_model = await self._rank_docs_and_return_them_as_prompt(
+                        docs_filepath_to_contents, max_allowed_txt_input
+                    )
 
             if not docs_prompt_to_send_to_model:
                 get_logger().error("Failed to generate docs prompt for model. Returning with no result...")
@@ -619,7 +627,7 @@ class PRHelpDocs:
         )
 
     def _trim_docs_input(self, docs_input: str, max_allowed_txt_input: int,
-                     only_return_if_trim_needed=False) -> bool | str:
+                     only_return_if_trim_needed=False, already_cleaned=False) -> bool | str:
         try:
             if len(docs_input) >= max_allowed_txt_input:
                 get_logger().warning(
@@ -638,13 +646,17 @@ class PRHelpDocs:
             if token_count > input_limit:
                 if only_return_if_trim_needed:
                     return True
-                docs_input = clean_markdown_content(
-                    docs_input)  # Reduce unnecessary text/images/etc.
-                get_logger().info(
-                    f"Token count {token_count} exceeds the input limit {input_limit}."
-                    f" Attempting to clip text to fit within the limit...")
-                docs_input = clip_tokens(docs_input, input_limit,
-                                                   num_input_tokens=token_count)
+                if not already_cleaned:
+                    docs_input = clean_markdown_content(
+                        docs_input)  # Reduce unnecessary text/images/etc.
+                cleaned_token_count = (token_count if already_cleaned else
+                                       self.token_handler.count_tokens(docs_input, force_accurate=True))
+                if cleaned_token_count > input_limit:
+                    get_logger().info(
+                        f"Token count {cleaned_token_count} exceeds the input limit {input_limit}."
+                        f" Attempting to clip text to fit within the limit...")
+                    docs_input = clip_tokens(docs_input, input_limit,
+                                             num_input_tokens=cleaned_token_count)
             if only_return_if_trim_needed:
                 return False
             return docs_input
@@ -686,13 +698,17 @@ class PRHelpDocs:
                                                       len(docs_filepath_to_contents))
             doc_file_paths = list(docs_filepath_to_contents)
             valid_file_paths = [doc_file_paths[idx] for idx in valid_indices]
-            selected_docs_dict = {file_path: docs_filepath_to_contents[file_path] for file_path in valid_file_paths}
+            selected_docs_dict = {
+                path: clean_markdown_content(docs_filepath_to_contents[path])
+                for path in valid_file_paths
+            }
             docs_prompt = aggregate_documentation_files_for_prompt_contents(selected_docs_dict)
             docs_prompt_to_send_to_model = docs_prompt
 
             # Check if the updated list of documents does not exceed limits and trim if it does:
             docs_prompt_to_send_to_model = self._trim_docs_input(docs_prompt_to_send_to_model, max_allowed_txt_input,
-                                                                 only_return_if_trim_needed=False)
+                                                                 only_return_if_trim_needed=False,
+                                                                 already_cleaned=True)
             if not docs_prompt_to_send_to_model:
                 get_logger().error("_trim_docs_input returned an empty result.")
                 return ""
