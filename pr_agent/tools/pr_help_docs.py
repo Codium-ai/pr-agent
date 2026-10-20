@@ -90,7 +90,7 @@ def return_document_headings(text: str, ext: str) -> str:
         lines = text.split('\n')
         headings = set()
 
-        if not text or not re.search(r'[a-zA-Z]', text):
+        if not text or not any(char.isalpha() for char in text):
             get_logger().error(f"Empty or non text content found in text: {text}.")
             return ""
 
@@ -134,7 +134,7 @@ def map_documentation_files_to_contents(base_path: str, doc_files: list[str],
                 with open(file, encoding='utf-8') as f:
                     content = f.read()
                     # Skip files with no text content
-                    if not re.search(r'[a-zA-Z]', content):
+                    if not any(char.isalpha() for char in content):
                         continue
                     if len(content) > max_allowed_file_len:
                         get_logger().warning(
