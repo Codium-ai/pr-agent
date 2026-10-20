@@ -15,7 +15,6 @@ from pr_agent.config_loader import get_settings
 from pr_agent.git_providers.git_provider import GitProvider
 from pr_agent.log import get_logger
 
-
 _HTML_COMMENT_PATTERN = re.compile(r"<!--.*?-->", re.DOTALL)
 # A `#N` that is the whole text of a link (HTML anchor or Markdown), e.g. Dependabot's changelog links.
 _HASH_LINK_TEXT_PATTERN = re.compile(r"<a\b[^>]*>\s*(#\d+)\s*</a\s*>|\[\s*(#\d+)\s*\]\(", re.IGNORECASE)
