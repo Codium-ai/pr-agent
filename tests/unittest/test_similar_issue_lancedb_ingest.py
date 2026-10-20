@@ -131,15 +131,23 @@ class _FakeLanceQuery:
         self._id_filter = None
         self._repo_filter = None
         self._columns = None
+        self._limit = None
 
     def limit(self, limit):
+        self._limit = limit
         return self
 
     def where(self, expr, prefilter=False):
-        if expr.startswith("id="):
-            self._id_filter = expr[expr.index("=") + 1 :].strip("'\"")
-        elif expr.startswith("metadata.repo="):
-            self._repo_filter = expr[expr.index("=") + 1 :].strip("'\"")
+        for condition in expr.split(" AND "):
+            if condition.startswith("id="):
+                self._id_filter = {condition.split("=", 1)[1].strip("'\"")}
+            elif condition.startswith("id IN ("):
+                self._id_filter = {
+                    value.strip().strip("'\"")
+                    for value in condition.removeprefix("id IN (").removesuffix(")").split(",")
+                }
+            elif condition.startswith("metadata.repo="):
+                self._repo_filter = condition.split("=", 1)[1].strip("'\"")
         return self
 
     def select(self, columns):
@@ -149,11 +157,12 @@ class _FakeLanceQuery:
     def to_list(self):
         rows = [
             row for row in self._table.rows
-            if (self._id_filter is None or row["id"] == self._id_filter)
+            if (self._id_filter is None or row["id"] in self._id_filter)
             and (self._repo_filter is None or row["metadata"]["repo"] == self._repo_filter)
-        ]
+        ][:self._limit]
         if self._columns is not None:
-            return [{column: row[column] for column in self._columns} for row in rows]
+            rows = [{column: row[column] for column in self._columns} for row in rows]
+        self._table.query_results.append(rows)
         return rows
 
 
@@ -163,6 +172,7 @@ class _FakeSearchableTable:
         self.add_calls = []
         self.delete_calls = []
         self.search_calls = 0
+        self.query_results = []
 
     def __len__(self):
         return len(self.rows)
@@ -599,6 +609,32 @@ def test_constructor_checks_many_indexed_issues_with_one_query(monkeypatch):
 
     assert fake_db.table.search_calls == 2  # sentinel lookup and one index scan
     assert fake_db.table.add_calls == []
+
+
+def test_constructor_only_reads_candidate_ids_without_truncating_duplicates(monkeypatch):
+    rows = [_lancedb_row("issue_6.issue", "org-repo-b") for _ in range(4)]
+    rows.extend([
+        _lancedb_row("issue_5.issue", "org-repo-b"),
+        _lancedb_row("issue_7.issue", "org-repo-a"),
+        _lancedb_row("issue_7.comment_0", "org-repo-b"),
+        _lancedb_row("issue_1.issue", "org-repo-b"),
+        _lancedb_row("example_issue_org-repo-b", "org-repo-b"),
+    ])
+    fake_db = FakeDB(["codium-ai-pr-agent-issues"])
+    fake_db.table = _FakeSearchableTable(rows)
+    _stub_constructor_dependencies(monkeypatch, fake_db)
+    monkeypatch.setattr(_FakeRepo, "get_issues", lambda self, state="all": [
+        _fake_issue(number) for number in (5, 6, 7)
+    ])
+    missing_issues = []
+    monkeypatch.setattr(PRSimilarIssue, "_update_table_with_issues", lambda self, issues, *args, **kwargs:
+                        missing_issues.extend(issue.number for issue in issues))
+
+    PRSimilarIssue("https://github.com/org/repo-b/pull/5", None)
+
+    assert missing_issues == [7]
+    assert fake_db.table.search_calls == 2  # sentinel lookup and one candidate lookup
+    assert fake_db.table.query_results[1] == [{"id": "issue_6.issue"}] * 4 + [{"id": "issue_5.issue"}]
 
 
 def test_concurrent_first_runs_do_not_duplicate_rows(monkeypatch):

@@ -333,9 +333,11 @@ class PRSimilarIssue:
 
                 indexed_ids = set()
                 if issues_to_scan:
+                    issue_ids = ", ".join(f"'issue_{issue.number}.issue'" for issue in issues_to_scan)
+                    # Do not cap rows at the candidate count because duplicate IDs can exist.
                     rows = self.table.search().limit(len(self.table)).where(
-                        f"metadata.repo='{repo_name_for_index}'"
-                    ).select(["id", "metadata"]).to_list()
+                        f"metadata.repo='{repo_name_for_index}' AND id IN ({issue_ids})"
+                    ).select(["id"]).to_list()
                     indexed_ids = {row['id'] for row in rows}
                 issues_to_update = [
                     issue for issue in issues_to_scan if f"issue_{issue.number}.issue" not in indexed_ids
