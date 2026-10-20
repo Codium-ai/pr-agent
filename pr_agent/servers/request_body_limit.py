@@ -49,6 +49,8 @@ class RequestBodyLimitMiddleware:
                 break
 
         body = b"".join(body_chunks)
+        # Release the original chunks while the application processes the request.
+        del body_chunks, message, chunk
         replayed = False
 
         async def replay_body():
