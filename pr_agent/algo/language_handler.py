@@ -12,31 +12,38 @@ AUTO_GENERATED_FILES_EXACT = frozenset({
 
 def filter_bad_extensions(files):
     # Bad Extensions, source: https://github.com/EleutherAI/github-downloader/blob/345e7c4cbb9e0dc8a0615fd995a08bf9d73b3fe6/download_repo_text.py  # noqa: E501
-    bad_extensions = get_settings().bad_extensions.default
-    if get_settings().config.use_extra_bad_extensions:
-        bad_extensions += get_settings().bad_extensions.extra
-    return [f for f in files if f.filename is not None and is_valid_file(f.filename, bad_extensions)]
+    settings = get_settings()
+    bad_extensions = list(settings.bad_extensions.default)
+    if settings.config.use_extra_bad_extensions:
+        bad_extensions.extend(settings.bad_extensions.extra)
+    excluded_extensions = {str(extension).lower() for extension in bad_extensions}
+    return [f for f in files if f.filename is not None and _is_valid_file(f.filename, excluded_extensions)]
 
 
-def is_valid_file(filename:str, bad_extensions=None) -> bool:
+def is_valid_file(filename: str, bad_extensions=None) -> bool:
     if not filename:
         return False
     if not bad_extensions:
-        bad_extensions = get_settings().bad_extensions.default
-        if get_settings().config.use_extra_bad_extensions:
-            bad_extensions += get_settings().bad_extensions.extra
+        settings = get_settings()
+        bad_extensions = list(settings.bad_extensions.default)
+        if settings.config.use_extra_bad_extensions:
+            bad_extensions.extend(settings.bad_extensions.extra)
 
+    excluded_extensions = {str(extension).lower() for extension in bad_extensions}
+    return _is_valid_file(filename, excluded_extensions)
+
+
+def _is_valid_file(filename: str, excluded_extensions: set[str]) -> bool:
+    if not filename:
+        return False
     auto_generated_suffixes = ('.min.js', '.min.css', '.js.map', '.ts.map', '.css.map')
     if filename.replace('\\', '/').split('/')[-1] in AUTO_GENERATED_FILES_EXACT:
         return False
     if filename.endswith(auto_generated_suffixes):
         return False
 
-    # Compare case-insensitively: bad_extensions lists binary and asset types (png, zip, svg),
-    # and 'logo.SVG' is the same kind of file as 'logo.svg'. The list is spelled in lower case,
-    # so a file named with an uppercase extension would otherwise slip into the diff.
-    bad_extensions_lower = {str(extension).lower() for extension in bad_extensions}
-    return filename.split('.')[-1].lower() not in bad_extensions_lower
+    # Compare case-insensitively: excluded_extensions already contains lowercase extensions.
+    return filename.split('.')[-1].lower() not in excluded_extensions
 
 
 def build_language_file_matcher(language_extension_map: dict) -> Callable[[str], str | None]:
