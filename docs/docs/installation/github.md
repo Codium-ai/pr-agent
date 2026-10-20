@@ -553,6 +553,13 @@ If you encounter rate limiting:
 - **Solution**: Verify that your API key is correctly set as a repository secret and the environment variable name matches exactly
 - **Note**: For non-OpenAI models (Gemini, Claude, etc.), you only need the model-specific API key, not `OPENAI_KEY`
 
+**Error: "Incorrect API key provided: dummy_key"**
+- **Cause**: No OpenAI key reached the run, while the model is still an OpenAI one. The step log shows `OPENAI_KEY not set` just before the failure: the run continues without a key, and the request goes out with PR-Agent's placeholder key instead.
+- **Solution**: Check which of the three causes applies:
+    - **The run gets no secrets.** On the `pull_request` event, runs triggered from a fork receive no repository secrets, so `${{ secrets.OPENAI_KEY }}` is empty. Use the [`pull_request_target` setup](#using-with-pull_request_target-forkcontribution-support) instead. Dependabot pull requests are the same case: their secrets live under Dependabot secrets, not Actions secrets, and the `github.event.sender.type != 'Bot'` condition in the examples above keeps those runs from starting at all.
+    - **The secret is missing or misnamed.** A reference to a secret that does not exist expands to an empty string rather than failing the workflow, so compare the name in the repository secrets with the one used in `env`.
+    - **Another provider's key is set, but the model is not.** Keys alone do not switch provider: set `config.model` (and `config.fallback_models`) as well, otherwise the default OpenAI model is used and only an OpenAI key counts. See [Changing a model in PR-Agent](../usage-guide/changing_a_model.md).
+
 **Error: "Rate limit exceeded"**
 - **Solution**: Add fallback models or increase the `config.ai_timeout` value
 
