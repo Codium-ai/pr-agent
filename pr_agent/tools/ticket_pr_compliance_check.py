@@ -16,6 +16,35 @@ from pr_agent.git_providers.git_provider import GitProvider
 from pr_agent.log import get_logger
 
 
+_HTML_COMMENT_PATTERN = re.compile(r"<!--.*?-->", re.DOTALL)
+# A `#N` that is the whole text of a link (HTML anchor or Markdown), e.g. Dependabot's changelog links.
+_HASH_LINK_TEXT_PATTERN = re.compile(r"<a\b[^>]*>\s*(#\d+)\s*</a\s*>|\[\s*(#\d+)\s*\]\(", re.IGNORECASE)
+
+
+def _non_reference_hash_spans(text):
+    """Spans of closed HTML comments and of link texts that are only `#N`."""
+    spans = [m.span() for m in _HTML_COMMENT_PATTERN.finditer(text)]
+    for m in _HASH_LINK_TEXT_PATTERN.finditer(text):
+        spans.append(m.span(1) if m.group(1) else m.span(2))
+    return spans
+
+
+def _is_non_reference_hash(text, start, end, spans):
+    """True when a bare `#N` at [start, end) is markup, a colour, or glued to a word, not an issue reference."""
+    if any(s <= start and end <= e for s, e in spans):
+        return True
+    # Glued to a word on either side: `issue#12`, `#0a0a0a`. A `owner/repo#N` tail is still a reference.
+    if start > 0 and (text[start - 1].isalnum() or text[start - 1] == "_"):
+        if not re.search(r"/[A-Za-z0-9._-]+$", text[max(0, start - 200):start]):
+            return True
+    if end < len(text) and (text[end].isalnum() or text[end] == "_"):
+        return True
+    # Tailwind arbitrary value: `bg-[#121212]`, `dark:bg-[#0a0a0a]`.
+    if start >= 2 and text[start - 1] == "[" and (text[start - 2].isalnum() or text[start - 2] in "_-"):
+        return True
+    return False
+
+
 def _github_ticket_pattern(base_url_html):
     """Match full issue URLs only on the provider's configured HTTPS web origin."""
     full_url = r"(?!)"
@@ -901,6 +930,7 @@ def extract_ticket_links_from_pr_description(pr_description, repo_path, base_url
 
         candidates = []
         explicit_spans = []
+        non_reference_spans = _non_reference_hash_spans(pr_description)
         for match in _github_ticket_pattern(base_url_html).finditer(pr_description):
             if match[1]:  # Full URL match
                 candidates.append((match.start(), match[1]))
@@ -912,6 +942,8 @@ def extract_ticket_links_from_pr_description(pr_description, repo_path, base_url
                 explicit_spans.append(match.span())
             elif custom_pattern is None:  # Default #123 format
                 issue_number = match[6][1:]
+                if _is_non_reference_hash(pr_description, match.start(), match.end(), non_reference_spans):
+                    continue
                 if (issue_number.isdigit() and repo_path
                         and len(issue_number) <= MAX_SHORTHAND_ISSUE_DIGITS):
                     candidates.append((match.start(),
