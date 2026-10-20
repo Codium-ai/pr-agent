@@ -12,6 +12,7 @@ from pr_agent.algo.inline_comment_dedup import (
 )
 from pr_agent.algo.review_json_output import review_json_output_path
 from pr_agent.algo.run_details import command_failed
+from pr_agent.algo.token_budget import FallbackEligibleError
 from pr_agent.algo.types import FilePatchInfo
 from pr_agent.algo.utils import convert_to_markdown_v2
 from pr_agent.config_loader import get_settings
@@ -194,6 +195,31 @@ async def test_prepare_prediction_keeps_incremental_review_compatible_with_tuple
     assert reviewer.patches_diff == "diff"
     assert reviewer.remaining_files_list == ["skipped.py"]
     assert reviewer.prediction == _VALID_PREDICTION
+
+
+@pytest.mark.asyncio
+async def test_prepare_prediction_skips_when_all_changed_files_are_filtered():
+    reviewer = _make_prediction_reviewer()
+    reviewer._get_prediction = AsyncMock(return_value=_VALID_PREDICTION)
+
+    with patch("pr_agent.tools.pr_reviewer.get_pr_diff", return_value=("", [])):
+        await reviewer._prepare_prediction("model")
+
+    assert reviewer.patches_diff == ""
+    assert reviewer.prediction is None
+    reviewer._get_prediction.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_prepare_prediction_keeps_fallback_when_filtered_files_remain():
+    reviewer = _make_prediction_reviewer()
+    reviewer._get_prediction = AsyncMock(return_value=_VALID_PREDICTION)
+
+    with patch("pr_agent.tools.pr_reviewer.get_pr_diff", return_value=("", ["package-lock.json"])):
+        with pytest.raises(FallbackEligibleError, match="No PR diff fits the /review request"):
+            await reviewer._prepare_prediction("model")
+
+    reviewer._get_prediction.assert_not_awaited()
 
 
 @pytest.mark.asyncio
@@ -917,6 +943,52 @@ async def test_run_removes_its_progress_comment_when_quiet_output_suppresses_rev
     git_provider.publish_comment.assert_called_once_with("Preparing review...", is_temporary=True)
     git_provider.remove_comment.assert_called_once_with(progress_comment)
     git_provider.remove_initial_comment.assert_not_called()
+    git_provider.publish_persistent_comment.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_run_skips_without_recording_failure_when_all_changed_files_are_filtered(monkeypatch):
+    from pr_agent.tools import pr_reviewer as pr_reviewer_module
+
+    progress_comment = MagicMock()
+    git_provider = MagicMock()
+    # The no-files guard reads the unfiltered file list, so a lockfile-only PR still passes it.
+    git_provider.get_files.return_value = ["package-lock.json"]
+    git_provider.publish_comment.return_value = progress_comment
+    reviewer = _make_reviewer(git_provider)
+    reviewer.incremental = SimpleNamespace(is_incremental=False)
+    reviewer.vars = {}
+    reviewer.prediction = None
+
+    async def fake_retry(prepare_fn, model_type=None, git_provider=None):
+        await prepare_fn("primary-model")
+
+    monkeypatch.setattr(pr_reviewer_module, "extract_and_cache_pr_tickets", AsyncMock())
+    monkeypatch.setattr(
+        pr_reviewer_module,
+        "fit_related_tickets_to_prompt_budget",
+        lambda _pr, raw_vars, _system, _user, _model, **_kwargs: (raw_vars, MagicMock()),
+    )
+    monkeypatch.setattr(pr_reviewer_module, "get_pr_diff", MagicMock(return_value=("", [])))
+    monkeypatch.setattr(pr_reviewer_module, "retry_with_fallback_models", fake_retry)
+
+    settings = get_settings()
+    original = {
+        "publish_output": settings.config.publish_output,
+        "is_auto_command": settings.config.get("is_auto_command", False),
+    }
+    try:
+        settings.config.publish_output = True
+        settings.config.is_auto_command = False
+
+        await reviewer.run()
+    finally:
+        settings.config.publish_output = original["publish_output"]
+        settings.config.is_auto_command = original["is_auto_command"]
+
+    assert command_failed() is False
+    git_provider.publish_comment.assert_called_once_with("Preparing review...", is_temporary=True)
+    git_provider.remove_comment.assert_called_once_with(progress_comment)
     git_provider.publish_persistent_comment.assert_not_called()
 
 

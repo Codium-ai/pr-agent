@@ -389,3 +389,44 @@ async def test_run_always_includes_walkthrough_in_the_description_body(monkeypat
         assert "WALKTHROUGH" in body
     finally:
         restore_settings(settings_snapshot)
+
+
+@pytest.mark.asyncio
+async def test_run_skips_without_recording_failure_when_all_changed_files_are_filtered(monkeypatch):
+    settings_snapshot = snapshot_settings(_TRACKED_SETTINGS)
+    try:
+        provider = MagicMock()
+        progress_comment = MagicMock(name="progress_comment")
+        provider.publish_comment.return_value = progress_comment
+        provider.is_supported.return_value = False
+        description = _make_description(provider)
+
+        async def fake_retry(prepare_fn, model_type=None):
+            await prepare_fn("primary-model")
+
+        monkeypatch.setattr(pr_description_module, "extract_and_cache_pr_tickets", AsyncMock())
+        monkeypatch.setattr(pr_description_module, "retry_with_fallback_models", fake_retry)
+        # A lockfile-only or asset-only PR has no diff left after file-type filtering.
+        monkeypatch.setattr(pr_description_module, "get_pr_diff", MagicMock(return_value=("", [])))
+        monkeypatch.setattr(
+            pr_description_module,
+            "get_pr_diff_multiple_patchs",
+            MagicMock(return_value=([], [], [], [], {}, [])),
+        )
+        monkeypatch.setattr(
+            pr_description_module,
+            "fit_related_tickets_to_prompt_budget",
+            lambda _pr, raw_vars, _system, _user, _model, **_kwargs: (raw_vars, MagicMock()),
+        )
+        _configure_published_run()
+
+        await description.run()
+
+        assert not command_failed()
+        provider.publish_comment.assert_called_once_with(
+            "Preparing PR description...", is_temporary=True
+        )
+        provider.remove_comment.assert_called_once_with(progress_comment)
+        provider.publish_description.assert_not_called()
+    finally:
+        restore_settings(settings_snapshot)

@@ -945,6 +945,10 @@ class PRReviewer:
             prediction = await self._get_prediction(model)
             self._load_valid_review_yaml(prediction)
             self.prediction = prediction
+        elif not self.remaining_files_list and not self.partial_files_list:
+            # Every changed file was filtered out (lockfile, asset, ignore rule), so there is
+            # nothing left to review. Skip the model chain instead of failing the command.
+            get_logger().info(f"PR has no analyzable files: {self.pr_url}, skipping review")
         else:
             get_logger().warning(f"Empty diff for PR: {self.pr_url}")
             raise FallbackEligibleError(f"No PR diff fits the /review request for {model}")
