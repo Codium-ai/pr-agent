@@ -556,7 +556,7 @@ def _make_describe_tool(provider, chunk_predictions):
 
     async def fake_get_prediction(model, patches_diff, prompt=""):
         if prompt != "pr_description_only_files_prompts":
-            return "### PR Walker\n\nwalkthrough"
+            return "title: PR Walker\ndescription: walkthrough"
         value = remaining.pop(0) if len(remaining) > 1 else remaining[0]
         if isinstance(value, BaseException):
             raise value
