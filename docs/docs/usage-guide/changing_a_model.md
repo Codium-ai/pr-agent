@@ -249,7 +249,7 @@ Vertex AI needs the `google` extra (`pip install "pr-agent[google]"`). To use Ge
 [config] # in configuration.toml
 model = "vertex_ai/gemini-3.8-flash"
 fallback_models=[]
-no_temperature_models=["gemini-3.8-flash"] # Omit temperature for this model, including any fallback.
+no_temperature_models=["gemini-3.8-flash"] # Omit temperature for this model.
 
 [vertexai] # in .secrets.toml
 vertex_project = "my-google-cloud-project"
