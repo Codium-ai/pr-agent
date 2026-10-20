@@ -5,7 +5,7 @@ import pytest
 import yaml
 from jinja2 import Environment, StrictUndefined
 
-from pr_agent.algo.pr_processing import retry_with_fallback_models
+from pr_agent.algo.pr_processing import FallbackEligibleError, retry_with_fallback_models
 from pr_agent.algo.types import FilePatchInfo
 from pr_agent.algo.utils import ModelType, load_yaml
 from pr_agent.config_loader import get_settings
@@ -245,6 +245,78 @@ async def test_empty_primary_description_diff_uses_fallback_model(monkeypatch):
     )
     assert obj.patches_diff == "fallback diff"
     assert obj.prediction == _header_prediction()
+
+
+def _fit_tickets(token_handler):
+    return lambda _pr, raw_vars, _system, _user, _model, **_kwargs: (raw_vars, token_handler)
+
+
+@pytest.mark.asyncio
+async def test_large_pr_skips_when_all_changed_files_are_filtered(monkeypatch):
+    obj = _make_large_pr_instance()
+    obj.prediction = None
+    obj._get_prediction = AsyncMock(return_value=_header_prediction())
+
+    with (
+        patch("pr_agent.tools.pr_description.get_pr_diff", return_value=("", [])),
+        patch(
+            "pr_agent.tools.pr_description.get_pr_diff_multiple_patchs",
+            return_value=([], [], [], [], {}, []),
+        ),
+        patch(
+            "pr_agent.tools.pr_description.fit_related_tickets_to_prompt_budget",
+            side_effect=_fit_tickets(obj.token_handler),
+        ),
+    ):
+        await obj._prepare_prediction("gpt-4o")
+
+    obj._get_prediction.assert_not_awaited()
+    assert obj.prediction is None
+
+
+@pytest.mark.asyncio
+async def test_large_pr_keeps_fallback_when_unprocessed_files_remain(monkeypatch):
+    obj = _make_large_pr_instance()
+    obj.prediction = None
+    obj._get_prediction = AsyncMock(return_value=_header_prediction())
+
+    with (
+        patch("pr_agent.tools.pr_description.get_pr_diff", return_value=("", [])),
+        patch(
+            "pr_agent.tools.pr_description.get_pr_diff_multiple_patchs",
+            return_value=([[]], [0], [], ["package-lock.json"], {}, [[]]),
+        ),
+        patch(
+            "pr_agent.tools.pr_description.fit_related_tickets_to_prompt_budget",
+            side_effect=_fit_tickets(obj.token_handler),
+        ),
+        pytest.raises(FallbackEligibleError, match="Description chunk 1"),
+    ):
+        await obj._prepare_prediction("gpt-4o")
+
+    obj._get_prediction.assert_not_awaited()
+    assert obj.prediction is None
+
+
+@pytest.mark.asyncio
+async def test_describe_skips_when_large_pr_handling_is_off_and_diff_is_empty(monkeypatch):
+    obj = _make_large_pr_instance()
+    obj.prediction = None
+    obj._get_prediction = AsyncMock(return_value=_header_prediction())
+    monkeypatch.setattr(get_settings().pr_description, "enable_large_pr_handling", False)
+    monkeypatch.setattr(get_settings().pr_description, "enable_semantic_files_types", False)
+
+    with (
+        patch("pr_agent.tools.pr_description.get_pr_diff", return_value=("", [])),
+        patch(
+            "pr_agent.tools.pr_description.fit_related_tickets_to_prompt_budget",
+            side_effect=_fit_tickets(obj.token_handler),
+        ),
+    ):
+        await obj._prepare_prediction("gpt-4o")
+
+    obj._get_prediction.assert_not_awaited()
+    assert obj.prediction is None
 
 
 def _mock_settings(pr_diagram_direction: str = 'adaptive', pr_diagram_direction_threshold: int = 5):

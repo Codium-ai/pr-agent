@@ -1699,7 +1699,8 @@ async def test_previous_findings_are_dropped_when_they_do_not_fit_the_model(monk
         return raw_vars, MagicMock()
 
     monkeypatch.setattr("pr_agent.tools.pr_reviewer.fit_related_tickets_to_prompt_budget", fit)
-    monkeypatch.setattr("pr_agent.tools.pr_reviewer.get_pr_diff", lambda *_args, **_kwargs: "")
+    # Unprocessed files keep an empty diff a fallback case; a fully filtered PR skips instead.
+    monkeypatch.setattr("pr_agent.tools.pr_reviewer.get_pr_diff", lambda *_args, **_kwargs: ("", ["app.py"]))
 
     with pytest.raises(FallbackEligibleError, match="No PR diff"):
         await PRReviewer._prepare_prediction(reviewer, "small-model")

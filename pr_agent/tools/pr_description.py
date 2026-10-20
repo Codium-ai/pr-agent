@@ -395,6 +395,11 @@ class PRDescription:
                 if get_settings().pr_description.enable_semantic_files_types:
                     self.prediction = await self.extend_uncovered_files(self.prediction)
             else:
+                if not remaining_files_list:
+                    # No diff and nothing left unprocessed: every changed file was filtered out
+                    # (lockfile, asset, ignore rule), so skip instead of failing the command.
+                    get_logger().info(f"PR has no analyzable files: {self.pr_id}, skipping describe")
+                    return None
                 get_logger().error(f"Error getting PR diff {self.pr_id}",
                                    artifact={"traceback": traceback.format_exc()})
                 raise FallbackEligibleError(
@@ -422,6 +427,12 @@ class PRDescription:
                 model,
                 **output_token_reserve_kwargs,
             )
+
+            if not any(patches_compressed_list) and not remaining_files_list:
+                # No chunk holds diff content and nothing was left unprocessed, so there is
+                # nothing to describe. Skip the model chain instead of failing the command.
+                get_logger().info(f"PR has no analyzable files: {self.pr_id}, skipping describe")
+                return None
 
             # get the files prediction for each patch
             chunk_pairs = list(zip(patches_compressed_list, files_in_patches_list, strict=True))
