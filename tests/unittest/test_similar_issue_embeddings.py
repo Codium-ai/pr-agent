@@ -102,6 +102,66 @@ def test_the_client_is_reused_across_calls(monkeypatch):
     assert built == ["unit-test-key"]
 
 
+def test_successful_embedding_keeps_a_single_bulk_request(monkeypatch):
+    batches = []
+
+    def embed(texts):
+        batches.append(list(texts))
+        return [[int(text)] for text in texts]
+
+    monkeypatch.setattr(psi, "_embed", embed)
+    assert psi._embed_with_fallback([str(i) for i in range(65)]) == [[i] for i in range(65)]
+    assert [len(batch) for batch in batches] == [65]
+
+
+def test_failed_bulk_embedding_retries_in_ordered_batches(monkeypatch):
+    batches = []
+
+    def embed(texts):
+        batches.append(list(texts))
+        if len(texts) > 32:
+            raise RuntimeError("oversized request")
+        return [[int(text)] for text in texts]
+
+    monkeypatch.setattr(psi, "_embed", embed)
+    assert psi._embed_with_fallback([str(i) for i in range(65)]) == [[i] for i in range(65)]
+    assert [len(batch) for batch in batches] == [65, 32, 32, 1]
+
+
+def test_failed_embedding_batch_retries_only_its_items(monkeypatch):
+    batches = []
+
+    def embed(texts):
+        batches.append(list(texts))
+        if len(texts) > 32 or (len(texts) > 1 and texts[0] == "32"):
+            raise RuntimeError("batch rejected")
+        if texts == ["33"]:
+            raise RuntimeError("item rejected")
+        return [[int(text)] for text in texts]
+
+    monkeypatch.setattr(psi, "_embed", embed)
+    result = psi._embed_with_fallback([str(i) for i in range(65)])
+
+    assert result[:33] == [[i] for i in range(33)]
+    assert result[33] == [0] * 1536
+    assert result[34:] == [[i] for i in range(34, 65)]
+    assert [len(batch) for batch in batches] == [65, 32, 32] + [1] * 33
+
+
+def test_short_embedding_responses_retry_without_misaligning_vectors(monkeypatch):
+    requests = []
+
+    def embed(texts):
+        requests.append(list(texts))
+        if len(texts) == 65 or (len(texts) == 32 and texts[0] == "32"):
+            return [[int(text)] for text in texts[:-1]]
+        return [[int(text)] for text in texts]
+
+    monkeypatch.setattr(psi, "_embed", embed)
+    assert psi._embed_with_fallback([str(i) for i in range(65)]) == [[i] for i in range(65)]
+    assert [len(batch) for batch in requests] == [65, 32, 32] + [1] * 33
+
+
 @pytest.mark.asyncio
 async def test_pinecone_query_branch_runs(monkeypatch):
     queried = []
