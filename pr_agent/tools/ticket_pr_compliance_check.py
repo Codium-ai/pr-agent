@@ -15,22 +15,38 @@ from pr_agent.config_loader import get_settings
 from pr_agent.git_providers.git_provider import GitProvider
 from pr_agent.log import get_logger
 
-_HTML_COMMENT_PATTERN = re.compile(r"<!--.*?-->", re.DOTALL)
 # A `#N` that is the whole text of a link (HTML anchor or Markdown), e.g. Dependabot's changelog links.
-_HASH_LINK_TEXT_PATTERN = re.compile(r"<a\b[^>]*>\s*(#\d+)\s*</a\s*>|\[\s*(#\d+)\s*\]\(", re.IGNORECASE)
+_HASH_LINK_TEXT_PATTERN = re.compile(
+    r"""<a\b(?:[^"'<>]|"[^"]*"|'[^']*')*>\s*(#\d+)\s*</a\s*>"""
+    r"|\[\s*(#\d+)\s*\]\s*(?:\(|\[[^\]]*\])",
+    re.IGNORECASE,
+)
 
 
-def _non_reference_hash_spans(text):
-    """Spans of closed HTML comments and of link texts that are only `#N`."""
-    spans = [m.span() for m in _HTML_COMMENT_PATTERN.finditer(text)]
-    for m in _HASH_LINK_TEXT_PATTERN.finditer(text):
-        spans.append(m.span(1) if m.group(1) else m.span(2))
+def _html_comment_spans(text):
+    """Spans of closed HTML comments, found in one left-to-right pass."""
+    spans, pos = [], 0
+    while (start := text.find("<!--", pos)) != -1:
+        end = text.find("-->", start + 4)
+        if end == -1:
+            break
+        end += 3
+        spans.append((start, end))
+        pos = end
     return spans
 
 
-def _is_non_reference_hash(text, start, end, spans):
+def _non_reference_hash_starts(text, comment_spans):
+    """Offsets of hashes inside comments or forming the whole text of a link."""
+    starts = {i for start, end in comment_spans for i in range(start, end) if text[i] == "#"}
+    for m in _HASH_LINK_TEXT_PATTERN.finditer(text):
+        starts.add(m.start(1) if m.group(1) else m.start(2))
+    return starts
+
+
+def _is_non_reference_hash(text, start, end, non_reference_starts):
     """True when a bare `#N` at [start, end) is markup, a colour, or glued to a word, not an issue reference."""
-    if any(s <= start and end <= e for s, e in spans):
+    if start in non_reference_starts:
         return True
     # Glued to a word on either side: `issue#12`, `#0a0a0a`. A `owner/repo#N` tail is still a reference.
     if start > 0 and (text[start - 1].isalnum() or text[start - 1] == "_"):
@@ -928,8 +944,9 @@ def extract_ticket_links_from_pr_description(pr_description, repo_path, base_url
                 custom_pattern = None
 
         candidates = []
-        explicit_spans = []
-        non_reference_spans = _non_reference_hash_spans(pr_description)
+        comment_spans = _html_comment_spans(pr_description)
+        explicit_spans = list(comment_spans)
+        non_reference_starts = _non_reference_hash_starts(pr_description, comment_spans)
         for match in _github_ticket_pattern(base_url_html).finditer(pr_description):
             if match[1]:  # Full URL match
                 candidates.append((match.start(), match[1]))
@@ -941,7 +958,7 @@ def extract_ticket_links_from_pr_description(pr_description, repo_path, base_url
                 explicit_spans.append(match.span())
             elif custom_pattern is None:  # Default #123 format
                 issue_number = match[6][1:]
-                if _is_non_reference_hash(pr_description, match.start(), match.end(), non_reference_spans):
+                if _is_non_reference_hash(pr_description, match.start(), match.end(), non_reference_starts):
                     continue
                 if (issue_number.isdigit() and repo_path
                         and len(issue_number) <= MAX_SHORTHAND_ISSUE_DIGITS):
