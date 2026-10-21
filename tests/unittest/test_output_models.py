@@ -461,3 +461,19 @@ def test_ranking_example_is_a_valid_numeric_payload():
     parsed = load_yaml(text)
     assert isinstance(parsed["which_response_was_better"], int)
     PRRankResponses.model_validate(parsed)
+
+
+@pytest.mark.parametrize("confidence", [-1, 101])
+def test_key_issue_confidence_must_be_a_percentage(confidence):
+    issue = dict(_review_fixture()["review"]["key_issues_to_review"][0], confidence=confidence)
+
+    with pytest.raises(ValueError):
+        KeyIssuesComponentLink.model_validate(issue)
+
+
+def test_key_issue_accepts_confidence_and_suggested_fix():
+    issue = dict(_review_fixture()["review"]["key_issues_to_review"][0], confidence=85, suggested_fix="x = 1")
+
+    parsed = KeyIssuesComponentLink.model_validate(issue)
+
+    assert (parsed.confidence, parsed.suggested_fix) == (85, "x = 1")

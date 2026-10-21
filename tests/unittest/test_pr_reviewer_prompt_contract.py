@@ -126,6 +126,21 @@ def test_user_prompt_contributes_variables_of_its_own(monkeypatch):
     assert user_referenced - (set(reviewer.vars) - {dropped}) == {dropped}
 
 
+@pytest.mark.parametrize("enable_suggested_fixes", [True, False])
+@pytest.mark.parametrize("repo_context", ["", "<file path=\"docs/adr/0001.md\">Use UTC.</file>"])
+def test_pr_review_prompt_gates_fix_field_and_standards_rules(monkeypatch, enable_suggested_fixes, repo_context):
+    reviewer = _build_reviewer(monkeypatch)
+    variables = dict(reviewer.vars, enable_suggested_fixes=enable_suggested_fixes, repo_context=repo_context,
+                     skills_context="")
+    environment = Environment(autoescape=select_autoescape(default_for_string=False), undefined=StrictUndefined)
+
+    rendered = environment.from_string(get_settings().pr_review_prompt.system).render(variables)
+
+    assert ("suggested_fix" in rendered) is enable_suggested_fixes
+    assert "confidence: int" in rendered
+    assert ("Standards compliance" in rendered) is bool(repo_context)
+
+
 @pytest.mark.parametrize("enabled", [False, True])
 def test_failure_modes_prompt_follows_captured_setting(monkeypatch, enabled):
     settings = get_settings()

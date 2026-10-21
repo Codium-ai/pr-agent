@@ -21,6 +21,8 @@ class KeyIssuesComponentLink(BaseModel):
     issue_content: str
     start_line: int
     end_line: int
+    confidence: int | None = Field(default=None, ge=0, le=100)
+    suggested_fix: str | None = None
 
 
 class TodoSection(BaseModel):
