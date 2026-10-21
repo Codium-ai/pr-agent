@@ -48,6 +48,13 @@ class UnsupportedProvider:
     get_repo_file_content = GitProvider.get_repo_file_content
 
 
+class FailingRefProvider(FakeProvider):
+    """FakeProvider whose revision lookup fails."""
+
+    def get_repo_context_ref(self, from_default_branch: bool = False):
+        raise RuntimeError("502 Bad Gateway")
+
+
 class SiblingFakeProvider(FakeProvider):
     """FakeProvider that additionally resolves sibling-repository files."""
 
@@ -138,6 +145,49 @@ def test_build_repo_context_parses_string_default_branch_flag(repo_context_setti
     build_repo_context(provider)
 
     assert provider.from_default_branch_calls == [expected]
+
+
+def test_build_repo_context_survives_a_failed_revision_lookup(repo_context_settings):
+    """A provider that cannot resolve the revision still yields the context.
+
+    The revision only keys the cache. Losing it costs the revision pinning and
+    not the context, and repo context is an optional extra, so a failure here
+    must not abort the command that asked for it.
+    """
+    repo_context_settings.set("CONFIG.REPO_CONTEXT_FILES", ["AGENTS.md"])
+    repo_context_settings.set("CONFIG.REPO_CONTEXT_MAX_LINES", 500)
+    provider = FailingRefProvider({"AGENTS.md": "Repo purpose"})
+
+    context = build_repo_context(provider)
+
+    assert "Repo purpose" in context
+    assert provider.requested_paths == ["AGENTS.md"]
+
+
+def test_build_repo_context_reports_a_failed_revision_lookup(repo_context_settings):
+    repo_context_settings.set("CONFIG.REPO_CONTEXT_FILES", ["AGENTS.md"])
+    provider = FailingRefProvider({"AGENTS.md": "Repo purpose"})
+
+    with patch("pr_agent.algo.repo_context.get_logger") as mock_get_logger:
+        build_repo_context(provider)
+
+    mock_get_logger.return_value.warning.assert_called_once_with(
+        "Failed to resolve the repo context revision; continuing without it",
+        artifact={"error": "502 Bad Gateway"},
+    )
+
+
+def test_build_repo_context_caches_without_a_revision(repo_context_settings):
+    """Without a revision the provider cache still serves the same files."""
+    repo_context_settings.set("CONFIG.REPO_CONTEXT_FILES", ["AGENTS.md"])
+    repo_context_settings.set("CONFIG.REPO_CONTEXT_MAX_LINES", 500)
+    provider = FailingRefProvider({"AGENTS.md": "Repo purpose"})
+
+    first_context = build_repo_context(provider)
+    second_context = build_repo_context(provider)
+
+    assert second_context == first_context
+    assert provider.requested_paths == ["AGENTS.md"]
 
 
 def test_build_repo_context_fetches_and_formats_configured_files(repo_context_settings):

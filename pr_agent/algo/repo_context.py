@@ -472,7 +472,17 @@ def build_repo_context(git_provider) -> str:
         # or a push to the base branch must not serve file content from a commit that has moved.
         # A sibling-only build never needs this lookup, whose failure would otherwise abort the
         # whole context build before any cross-repository file is loaded.
-        context_ref = git_provider.get_repo_context_ref(from_default_branch)
+        try:
+            context_ref = git_provider.get_repo_context_ref(from_default_branch)
+        except Exception as e:
+            # The revision only keys the cache. Without it the content is read without the
+            # revision pinning, which is a weaker guarantee, not a missing one. Repo context
+            # is an optional extra, so a provider failure here must not abort the command.
+            get_logger().warning(
+                "Failed to resolve the repo context revision; continuing without it",
+                artifact={"error": str(e)},
+            )
+            context_ref = None
         cached_repo_context = _get_cached_repo_context(
             git_provider, context_files, max_lines, context_ref
         )
