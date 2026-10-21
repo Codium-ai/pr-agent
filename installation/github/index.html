@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">GitHub Integration | PR-Agent</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" property="og:image" content="https://docs.pr-agent.ai/img/social-card.png"><meta data-rh="true" name="twitter:image" content="https://docs.pr-agent.ai/img/social-card.png"><meta data-rh="true" property="og:url" content="https://docs.pr-agent.ai/installation/github/"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="GitHub Integration | PR-Agent"><meta data-rh="true" name="description" content="In this page we will cover how to install and run PR-Agent as a GitHub Action or GitHub App, and how to configure it for your needs."><meta data-rh="true" property="og:description" content="In this page we will cover how to install and run PR-Agent as a GitHub Action or GitHub App, and how to configure it for your needs."><link data-rh="true" rel="icon" href="/img/favicon.svg"><link data-rh="true" rel="canonical" href="https://docs.pr-agent.ai/installation/github/"><link data-rh="true" rel="alternate" href="https://docs.pr-agent.ai/installation/github/" hreflang="en"><link data-rh="true" rel="alternate" href="https://docs.pr-agent.ai/installation/github/" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Installation","item":"https://docs.pr-agent.ai/installation/"},{"@type":"ListItem","position":2,"name":"GitHub","item":"https://docs.pr-agent.ai/installation/github"}]}</script><script src="https://widget.kapa.ai/kapa-widget.bundle.js" data-website-id="5c89c0b1-b2ee-43c9-8c6f-43ed762b3c1e" data-project-name="PR-Agent" data-project-color="#2459db" data-project-logo="/img/favicon.svg" data-launcher-button-image="/img/favicon-white.svg" data-color-scheme-selector="[data-theme=&#39;dark&#39;]" async></script><link rel="stylesheet" href="/assets/css/styles.928a3cd8.css">
-<script src="/assets/js/runtime~main.367ac35a.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.d1ad65e7.js" defer="defer"></script>
 <script src="/assets/js/main.8693b73f.js" defer="defer"></script>
 </head>
 <body>
@@ -163,6 +163,17 @@ artifacts.</p>
 <ul>
 <li class=""><strong>Solution</strong>: Verify that your API key is correctly set as a repository secret and the environment variable name matches exactly</li>
 <li class=""><strong>Note</strong>: For non-OpenAI models (Gemini, Claude, etc.), you only need the model-specific API key, not <code>OPENAI_KEY</code></li>
+</ul>
+<p><strong>Error: &quot;Incorrect API key provided: dummy_key&quot;</strong></p>
+<ul>
+<li class=""><strong>Cause</strong>: No OpenAI key reached the run, while the model is still an OpenAI one. The step log shows <code>OPENAI_KEY not set</code> near the top: the run continues without a key, and the request goes out with PR-Agent&#x27;s placeholder key instead.</li>
+<li class=""><strong>Solution</strong>: Check which of the three causes applies:
+<ul>
+<li class=""><strong>The run gets no secrets.</strong> On the <code>pull_request</code> event, runs triggered from a fork receive no repository secrets, so <code>${{ secrets.OPENAI_KEY }}</code> is empty. Use the <a href="#using-with-pull_request_target-forkcontribution-support" class=""><code>pull_request_target</code> setup</a> instead. Dependabot pull requests are the same case: their secrets live under Dependabot secrets, not Actions secrets, and the <code>github.event.sender.type != &#x27;Bot&#x27;</code> condition in the examples above keeps those runs from starting at all.</li>
+<li class=""><strong>The secret is missing or misnamed.</strong> A reference to a secret that does not exist expands to an empty string rather than failing the workflow, so compare the name in the repository secrets with the one used in <code>env</code>.</li>
+<li class=""><strong>Another provider&#x27;s key is set, but the model is not.</strong> Keys alone do not switch provider: set <code>config.model</code> (and <code>config.fallback_models</code>) as well, otherwise the default OpenAI model is used and only an OpenAI key counts. See <a class="" href="/usage-guide/changing_a_model/">Changing a model in PR-Agent</a>.</li>
+</ul>
+</li>
 </ul>
 <p><strong>Error: &quot;Rate limit exceeded&quot;</strong></p>
 <ul>
