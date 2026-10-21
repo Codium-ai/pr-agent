@@ -568,6 +568,7 @@ class PRHelpDocs:
                             for file in files:
                                 if file.lower().startswith("readme."):
                                     doc_files.append(os.path.join(root, file))
+                        break
                 # Resolve docs_path against the clone root and refuse paths that escape it:
                 # an absolute or traversing docs_path (e.g. an attacker-controlled per-directory
                 # setting) must never read host files into the prompt.
