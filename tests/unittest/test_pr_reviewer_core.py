@@ -904,6 +904,64 @@ def test_should_publish_review_no_suggestions_respects_config():
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("has_new_files", "valid_anchor"),
+    [(False, True), (True, True), (False, False)],
+    ids=["empty-incremental", "active-incremental", "fallback-full-review"],
+)
+async def test_run_extracts_tickets_only_when_incremental_review_proceeds(monkeypatch, has_new_files, valid_anchor):
+    from pr_agent.tools import pr_reviewer as pr_reviewer_module
+
+    git_provider = MagicMock()
+    # GitHub can return the full PR file list when its incremental file map is empty.
+    git_provider.get_files.return_value = ["app.py"]
+    git_provider.unreviewed_files_map = {"app.py": "patch"} if has_new_files else {}
+    previous_review_url = "https://example/pr/1#previous-review"
+    git_provider.previous_review = SimpleNamespace(html_url=previous_review_url)
+    reviewer = _make_reviewer(git_provider)
+    reviewer.incremental = SimpleNamespace(
+        is_incremental=True, commits_range=[] if valid_anchor else None, last_seen_commit=None,
+    )
+    reviewer.is_auto = False
+    reviewer.vars = {}
+    reviewer.prediction = None
+    reviewer._load_previous_findings_context = MagicMock(return_value="Previous findings")
+
+    async def extract_tickets(provider, variables):
+        variables["related_tickets"] = [{"ticket_url": "https://example/issues/42"}]
+
+    async def predict(*args, **kwargs):
+        extract.assert_awaited_once_with(git_provider, reviewer.vars)
+        assert reviewer._raw_prompt_vars["related_tickets"] == reviewer.vars["related_tickets"]
+        if not valid_anchor:
+            assert reviewer._raw_prompt_vars["previous_findings"] == "Previous findings"
+
+    extract = AsyncMock(side_effect=extract_tickets)
+    retry = AsyncMock(side_effect=predict)
+    monkeypatch.setattr(pr_reviewer_module, "extract_and_cache_pr_tickets", extract)
+    monkeypatch.setattr(pr_reviewer_module, "retry_with_fallback_models", retry)
+    settings = get_settings()
+    monkeypatch.setattr(settings.config, "publish_output", True)
+    monkeypatch.setattr(settings.config, "is_auto_command", False, raising=False)
+    monkeypatch.setattr(settings.config, "propagate_tool_errors", True, raising=False)
+    monkeypatch.setattr(settings.pr_reviewer, "minimal_commits_for_incremental_review", 0)
+
+    await reviewer.run()
+
+    if has_new_files or not valid_anchor:
+        extract.assert_awaited_once_with(git_provider, reviewer.vars)
+        retry.assert_awaited_once()
+        assert reviewer.incremental.is_incremental is valid_anchor
+    else:
+        extract.assert_not_called()
+        retry.assert_not_called()
+        git_provider.publish_comment.assert_called_once_with(
+            "Incremental Review Skipped\n"
+            f"No files were changed since the [previous PR Review]({previous_review_url})"
+        )
+
+
+@pytest.mark.asyncio
 async def test_run_removes_its_progress_comment_when_quiet_output_suppresses_review(monkeypatch):
     from pr_agent.tools import pr_reviewer as pr_reviewer_module
 
