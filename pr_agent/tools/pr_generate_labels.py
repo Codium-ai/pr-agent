@@ -98,7 +98,7 @@ class PRGenerateLabels:
                 get_logger().info(f"Pushing labels {self.pr_id}")
 
                 if self.git_provider.is_supported("get_labels"):
-                    current_labels = self.git_provider.get_pr_labels()
+                    current_labels = self.git_provider.get_pr_labels(update=True)
                     if current_labels is None:
                         # The read failed and there is no earlier snapshot to preserve user
                         # labels from. publish_labels replaces the whole set, so publishing

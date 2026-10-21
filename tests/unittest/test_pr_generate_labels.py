@@ -55,20 +55,50 @@ async def test_labels_are_published_as_a_comment_when_the_provider_has_no_label_
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("initial_labels", "updated_labels"),
+    [
+        (["Review effort 3/5"], ["Review effort 3/5", "triaged"]),
+        (["Review effort 3/5", "triaged"], ["Review effort 3/5"]),
+    ],
+    ids=["user-added-label", "user-removed-label"],
+)
 @patch("pr_agent.tools.pr_generate_labels.retry_with_fallback_models", new_callable=AsyncMock)
 @patch("pr_agent.tools.pr_generate_labels.get_settings")
-async def test_user_labels_are_still_preserved_when_the_provider_supports_labels(
-        mock_get_settings, _mock_retry):
+async def test_user_label_changes_during_prediction_are_preserved(
+        mock_get_settings, mock_retry, initial_labels, updated_labels):
     mock_get_settings.return_value.config.publish_output = True
     provider = _provider(supports_labels=True)
-    provider.get_pr_labels.return_value = ["Review effort 3/5"]
+    current_labels = initial_labels
+
+    async def change_user_labels(*_args, **_kwargs):
+        nonlocal current_labels
+        current_labels = updated_labels
+
+    mock_retry.side_effect = change_user_labels
+    provider.get_pr_labels.side_effect = lambda update=False: current_labels if update else initial_labels
     tool = _tool(provider)
 
-    with patch("pr_agent.tools.pr_generate_labels.get_user_labels", return_value=["Review effort 3/5"]):
+    with patch("pr_agent.tools.pr_generate_labels.get_user_labels", side_effect=lambda labels: labels):
         await tool.run()
 
-    provider.get_pr_labels.assert_called_once()
-    provider.publish_labels.assert_called_once_with(["Bug fix", "Review effort 3/5"])
+    provider.publish_labels.assert_called_once_with(["Bug fix", *updated_labels])
+    provider.get_pr_labels.assert_called_once_with(update=True)
+
+
+@pytest.mark.asyncio
+@patch("pr_agent.tools.pr_generate_labels.retry_with_fallback_models", new_callable=AsyncMock)
+@patch("pr_agent.tools.pr_generate_labels.get_settings")
+async def test_labels_are_not_published_when_refresh_fails(mock_get_settings, _mock_retry):
+    mock_get_settings.return_value.config.publish_output = True
+    provider = _provider(supports_labels=True)
+    provider.get_pr_labels.return_value = None
+
+    await _tool(provider).run()
+
+    provider.get_pr_labels.assert_called_once_with(update=True)
+    provider.publish_labels.assert_not_called()
+    provider.remove_initial_comment.assert_called_once()
 
 
 @pytest.mark.asyncio
