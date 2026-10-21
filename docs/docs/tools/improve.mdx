@@ -68,6 +68,17 @@ If any individual retry succeeds, the existing partial-recovery behavior is pres
 
 <img src="/img/improve.png" alt="improve" width="512" />
 
+From the CLI, save the suggestions and token usage as JSON for a later CI step:
+
+```bash
+pr-agent --pr_url https://github.com/org/repo/pull/123 --json-output improve.json improve
+```
+
+The JSON file is written once the suggestions are ready, after any publishing, and also when
+`config.publish_output=false`, so a caller can post the suggestions itself. It holds a `code_suggestions`
+list, empty when there are none, and a `usage` object. Place `--json-output` before `improve` or
+`improve_code`; with `--stdin` or `--diff-file`, `--json-output` is supported for `review` only.
+
 ### Automatic triggering
 
 To run the `improve` automatically when a PR is opened, define in a [configuration file](../usage-guide/configuration_options.md#local-configuration-file):

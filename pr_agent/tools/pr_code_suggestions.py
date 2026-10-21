@@ -36,7 +36,13 @@ from pr_agent.algo.pr_processing import (
 )
 from pr_agent.algo.prompt_fragments import render_diff_hunk_format
 from pr_agent.algo.repo_context import build_repo_context
-from pr_agent.algo.run_details import init_run_details, record_command_failure, record_model_used
+from pr_agent.algo.review_json_output import review_json_output_path, write_review_json_output
+from pr_agent.algo.run_details import (
+    get_run_details,
+    init_run_details,
+    record_command_failure,
+    record_model_used,
+)
 from pr_agent.algo.run_output import push_outputs, show_relevant_configurations, show_run_details
 from pr_agent.algo.skills_loader import get_skills_context
 from pr_agent.algo.token_budget import AttemptTokenBudget, FittedPrompt
@@ -435,6 +441,7 @@ class PRCodeSuggestions:
             # Handle the case where the PR has no suggestions
             if (data is None or 'code_suggestions' not in data or not data['code_suggestions']):
                 await self.publish_no_suggestions()
+                self._write_json_output({"code_suggestions": []})
                 return
 
             # publish the suggestions
@@ -451,6 +458,7 @@ class PRCodeSuggestions:
                     ]
                     if not data['code_suggestions']:
                         await self.publish_no_suggestions()
+                        self._write_json_output(data)
                         return
 
                 # Emit to the optional external sinks before touching the provider, so a sink
@@ -540,11 +548,13 @@ class PRCodeSuggestions:
                     await self.push_inline_code_suggestions(data)
                     if self.progress_response:
                         self.git_provider.remove_comment(self.progress_response)
+                self._write_json_output(data)
             else:
                 get_logger().info('Code suggestions generated for PR, but not published since publish_output is False.')
                 pr_body = self.generate_summarized_suggestions(data)
                 pr_body += self._get_suggestions_coverage_footer()
                 get_settings().data = {"artifact": pr_body}
+                self._write_json_output(data)
                 return
         except asyncio.CancelledError:
             if self.progress_response is not None:
@@ -636,6 +646,21 @@ class PRCodeSuggestions:
             details.append(f"Partial input coverage: {len(partial_files)} file(s) had patches clipped before "
                            f"analysis to fit the token budget: {file_list}.")
         return "\n\n⚠️ **Suggestion coverage:** " + " ".join(details)
+
+    @staticmethod
+    def _write_json_output(data: dict) -> None:
+        """Write the suggestions and the run's token usage to the CLI's --json-output path, if one was given."""
+        if not review_json_output_path.get():
+            return
+        details = get_run_details()
+        usage = {}
+        if details is not None and details.has_token_usage:
+            usage = {
+                "prompt_tokens": details.prompt_tokens,
+                "completion_tokens": details.completion_tokens,
+                "total_tokens": details.total_tokens,
+            }
+        write_review_json_output({"code_suggestions": list(data.get("code_suggestions") or []), "usage": usage})
 
     async def publish_no_suggestions(self):
         coverage_footer = self._get_suggestions_coverage_footer(suggestions_present=False)
