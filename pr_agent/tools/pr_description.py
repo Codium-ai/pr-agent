@@ -1039,6 +1039,7 @@ class PRDescription:
             # header += "&nbsp; " * delta
             pr_body += f"""<thead><tr><th></th><th align="left">{header}</th></tr></thead>"""
             pr_body += """<tbody>"""
+            diff_files_by_name = None
             for semantic_label in value.keys():
                 s_label = semantic_label.strip("'").strip('"')
                 pr_body += f"""<tr><td><strong>{s_label.capitalize()}</strong></td>"""
@@ -1063,16 +1064,19 @@ class PRDescription:
                         filename_publish = f"<strong>{filename_publish}</strong>"
                     diff_plus_minus = ""
                     delta_nbsp = ""
-                    diff_files = self.git_provider.get_diff_files()
-                    for f in diff_files:
-                        if f.filename.lower().strip('/') == filename.lower().strip('/'):
-                            num_plus_lines = f.num_plus_lines
-                            num_minus_lines = f.num_minus_lines
-                            diff_plus_minus += f"+{num_plus_lines}/-{num_minus_lines}"
-                            if len(diff_plus_minus) > 12 or diff_plus_minus == "+0/-0":
-                                diff_plus_minus = "[link]"
-                            delta_nbsp = "&nbsp; " * max(0, (8 - len(diff_plus_minus)))
-                            break
+                    if diff_files_by_name is None:
+                        diff_files_by_name = {}
+                        for diff_file in self.git_provider.get_diff_files():
+                            # Preserve the first match when normalized paths collide.
+                            diff_files_by_name.setdefault(diff_file.filename.lower().strip('/'), diff_file)
+                    f = diff_files_by_name.get(filename.lower().strip('/'))
+                    if f is not None:
+                        num_plus_lines = f.num_plus_lines
+                        num_minus_lines = f.num_minus_lines
+                        diff_plus_minus += f"+{num_plus_lines}/-{num_minus_lines}"
+                        if len(diff_plus_minus) > 12 or diff_plus_minus == "+0/-0":
+                            diff_plus_minus = "[link]"
+                        delta_nbsp = "&nbsp; " * max(0, (8 - len(diff_plus_minus)))
 
                     # try to add line numbers link to code suggestions
                     link = ""
