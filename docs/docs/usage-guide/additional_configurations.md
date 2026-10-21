@@ -434,7 +434,14 @@ Notes:
 
 To give PR-Agent's tools additional project context, you can have it include repository instruction files — such as [AGENTS.md](https://agents.md/) or [CLAUDE.md](https://www.anthropic.com/engineering/claude-code-best-practices) — in the prompts for the `/review`, `/describe` and `/improve` tools.
 
-By default, PR-Agent looks for an `AGENTS.md` file at the repository root, falls back to `CLAUDE.md`, and then to the `.kiro/steering/*.md` files:
+By default, PR-Agent includes the `AGENTS.md` file at the repository root:
+
+```toml
+[config]
+repo_context_files = ["AGENTS.md"]
+```
+
+A nested list is a group of alternatives: only the first one that yields content is used. This is opt-in, for repositories that keep the same instructions under several conventions (or symlink them) and want them sent once:
 
 ```toml
 [config]
@@ -450,7 +457,7 @@ You can list any repository-relative paths. By default the files are read from t
 repo_context_files = ["AGENTS.md", "CLAUDE.md", "docs/conventions.md"]
 ```
 
-To include architecture decision records (ADRs) or other rule files without listing each one, an entry may use a glob in its file name. On GitHub and GitLab the directory is listed and up to `repo_context_max_glob_matches` matches (default 20, at most 100) are included in name order; other providers skip glob entries with a warning. Wildcards are only allowed in the last path segment, so `docs/**/*.md` is not supported. When ADRs or standards files are present, `/review` checks the PR against the rules they state and cites the rule it applies.
+To include architecture decision records (ADRs) or other rule files without listing each one, an entry may use a glob in its file name. On GitHub and GitLab the directory is listed and up to `repo_context_max_glob_matches` matches (default 20, at most 100) are included in name order; other providers skip glob entries with a warning. Wildcards are only allowed in the last path segment, so `docs/**/*.md` is not supported.
 
 ```toml
 [config]

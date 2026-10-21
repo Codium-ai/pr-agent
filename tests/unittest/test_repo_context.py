@@ -94,7 +94,7 @@ def test_default_config_ships_agents_md_as_repo_context():
     with open(config_path, "rb") as config_file:
         config = tomllib.load(config_file)
 
-    assert config["config"]["repo_context_files"] == [["AGENTS.md", "CLAUDE.md", ".kiro/steering/*.md"]]
+    assert config["config"]["repo_context_files"] == ["AGENTS.md"]
     # Reading from the default branch is the secure default.
     assert config["config"]["repo_context_from_default_branch"] is True
 
@@ -2230,7 +2230,8 @@ def test_gitlab_list_repo_directory_returns_blobs_only():
     provider.id_project = "group/repo"
 
     assert provider.list_repo_directory("docs/adr", from_default_branch=True) == ["docs/adr/0001.md"]
-    project.repository_tree.assert_called_once_with(path="docs/adr", ref="main", recursive=False, get_all=True)
+    project.repository_tree.assert_called_once_with(
+        path="docs/adr", ref="main", recursive=False, page=1, per_page=100)
 
 
 def test_gitlab_list_repo_directory_missing_directory_is_empty():
@@ -2255,6 +2256,34 @@ def test_build_repo_context_stops_loading_after_truncated_file(repo_context_sett
     assert TRUNCATION_MARKER in context
     assert "CONTRIBUTING.md" not in context
     assert provider.requested_paths == ["AGENTS.md"]
+
+
+def test_build_repo_context_stops_fetching_glob_alternative_after_budget(repo_context_settings):
+    repo_context_settings.set("CONFIG.REPO_CONTEXT_FILES", [["docs/adr/*.md"]])
+    repo_context_settings.set("CONFIG.REPO_CONTEXT_MAX_LINES", 10)
+    provider = ListingFakeProvider(
+        {
+            "docs/adr/0001.md": "\n".join(f"line {index}" for index in range(20)),
+            "docs/adr/0002.md": "This file should not be fetched.",
+        },
+        {"docs/adr": ["docs/adr/0001.md", "docs/adr/0002.md"]},
+    )
+
+    context = build_repo_context(provider)
+
+    assert TRUNCATION_MARKER in context
+    assert provider.requested_paths == ["docs/adr/0001.md"]
+
+
+def test_load_repo_context_files_reads_bracketed_path_literally():
+    provider = ListingFakeProvider({"src/app/[locale]/AGENTS.md": "rules"}, {})
+
+    files, _ = repo_context._load_repo_context_files(
+        provider, ["src/app/[locale]/AGENTS.md"], from_default_branch=True
+    )
+
+    assert files == [("src/app/[locale]/AGENTS.md", "rules")]
+    assert provider.listed_dirs == []
 
 
 def test_build_repo_context_does_not_fetch_after_exact_budget_fill(repo_context_settings):

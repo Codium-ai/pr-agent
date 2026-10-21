@@ -23,7 +23,7 @@ _DEFAULT_MAX_SIBLING_CONTEXT_FILES = 5
 # API calls. It is intentionally not user-configurable.
 _HARD_MAX_SIBLING_CONTEXT_FILES = 20
 _SIBLING_REPO_SEPARATOR = ":"
-_GLOB_CHARACTERS = ("*", "?", "[")
+_GLOB_CHARACTERS = ("*", "?")
 _DEFAULT_MAX_GLOB_MATCHES = 20
 # Ceiling for repo_context_max_glob_matches: each match is one file fetch, and a repository's
 # .pr_agent.toml may set the value.
@@ -320,31 +320,6 @@ def _expand_glob_entries(git_provider, context_files: list, from_default_branch:
     return expanded, had_fetch_error
 
 
-def _load_first_available_alternative(
-    git_provider, alternatives: list, from_default_branch: bool
-) -> tuple[list[tuple[str, str]], bool]:
-    """Load the first alternative of a nested-list entry that yields content.
-
-    Lets one entry name competing agent-instruction conventions (e.g. ["AGENTS.md", "CLAUDE.md",
-    ".kiro/steering/*.md"]), which repositories often keep as copies or symlinks of each other, so
-    only one is sent. A glob alternative counts as found when any of its matches has content.
-    """
-    had_fetch_error = False
-    for alternative in alternatives:
-        if not isinstance(alternative, str):
-            get_logger().warning(
-                "Ignoring repo context alternative: alternatives must be local file paths",
-                artifact={"entry": alternative},
-            )
-            continue
-        files, alternative_had_fetch_error = _load_repo_context_files(
-            git_provider, [alternative], from_default_branch)
-        had_fetch_error = had_fetch_error or alternative_had_fetch_error
-        if files:
-            return files, had_fetch_error
-    return [], had_fetch_error
-
-
 class _RepoContextLoadState:
     def __init__(self):
         self.had_fetch_error = False
@@ -368,14 +343,23 @@ def _iter_repo_context_files(
     seen_local_paths = set()
     for entry in context_files:
         if isinstance(entry, list):
-            group_files, group_had_fetch_error = _load_first_available_alternative(
-                git_provider, entry, from_default_branch)
-            state.had_fetch_error = state.had_fetch_error or group_had_fetch_error
-            for label, content in group_files:
-                if label not in seen_local_paths:
-                    seen_local_paths.add(label)
-                    state.had_content = True
-                    yield label, content
+            for alternative in entry:
+                if not isinstance(alternative, str):
+                    get_logger().warning(
+                        "Ignoring repo context alternative: alternatives must be local file paths",
+                        artifact={"entry": alternative},
+                    )
+                    continue
+                found_content = False
+                for label, content in _iter_repo_context_files(
+                    git_provider, [alternative], from_default_branch, state=state
+                ):
+                    found_content = True
+                    if label not in seen_local_paths:
+                        seen_local_paths.add(label)
+                        yield label, content
+                if found_content:
+                    break
             continue
         repo_id, file_path = _parse_repo_context_file_entry(entry)
         if not file_path:
