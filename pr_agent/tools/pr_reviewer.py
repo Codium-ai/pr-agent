@@ -1331,6 +1331,11 @@ class PRReviewer:
                     "total_tokens": details.total_tokens,
                 }
             structured_data["usage"] = usage
+            # The lists the review coverage footer shows, for a consumer that never sees the comment.
+            structured_data["coverage"] = {
+                "files_not_reviewed": list(self.remaining_files_list or []),
+                "files_partially_reviewed": list(self.partial_files_list or []),
+            }
             self._structured_review_data = structured_data
             if callable(structured_publisher):
                 structured_publisher(structured_data)
