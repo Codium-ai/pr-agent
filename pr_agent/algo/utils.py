@@ -454,8 +454,6 @@ def convert_to_markdown_v2(output_data: dict,
                         start_line = _as_line(issue.get('start_line')) or 0
                         end_line = _as_line(issue.get('end_line')) or start_line
                         valid_lines = start_line > 0 and end_line >= start_line
-                        relevant_lines_str = extract_relevant_lines_str(
-                            end_line, files, relevant_file, start_line, dedent=True) if valid_lines else ""
                         if git_provider and valid_lines:
                             reference_link = git_provider.get_line_link(relevant_file, start_line, end_line)
                         else:
@@ -463,6 +461,8 @@ def convert_to_markdown_v2(output_data: dict,
 
                         if gfm_supported:
                             if reference_link is not None and len(reference_link) > 0:
+                                relevant_lines_str = extract_relevant_lines_str(
+                                    end_line, files, relevant_file, start_line, dedent=True)
                                 if relevant_lines_str:
                                     issue_str = (
                                         f"<details><summary><a href='{reference_link}'>"
