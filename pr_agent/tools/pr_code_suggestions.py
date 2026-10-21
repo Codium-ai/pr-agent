@@ -874,34 +874,21 @@ class PRCodeSuggestions:
 
         if max_previous_comments > 0:
             try:
-                prev_comments = list(git_provider.get_issue_comments_newest_first())
-                if identity_marker:
-                    comment = next(
-                        (
-                            candidate
-                            for candidate in prev_comments
-                            if comment_matches_identity(_comment_body(candidate), identity_marker)
-                        ),
-                        None,
-                    )
-                    if comment is None:
-                        comment = next(
-                            (
-                                candidate
-                                for candidate in prev_comments
-                                if _is_legacy_suggestions_comment(_comment_body(candidate))
-                            ),
-                            None,
-                        )
-                else:
-                    comment = next(
-                        (
-                            candidate
-                            for candidate in prev_comments
-                            if comment_matches_identity(_comment_body(candidate), initial_header)
-                        ),
-                        None,
-                    )
+                comment = None
+                legacy_comment = None
+                for candidate in git_provider.get_issue_comments_newest_first():
+                    body = _comment_body(candidate)
+                    if identity_marker:
+                        if comment_matches_identity(body, identity_marker):
+                            comment = candidate
+                            break
+                        if legacy_comment is None and _is_legacy_suggestions_comment(body):
+                            legacy_comment = candidate
+                    elif comment_matches_identity(body, initial_header):
+                        comment = candidate
+                        break
+                if comment is None and identity_marker:
+                    comment = legacy_comment
                 if comment:
                     prev_suggestions = _comment_body(comment)
                     comment_url = git_provider.get_comment_url(comment)
