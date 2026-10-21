@@ -52,7 +52,7 @@ from pr_agent.algo.review_merge import merge_review_chunks
 from pr_agent.algo.run_details import get_run_details, init_run_details, record_command_failure, record_model_used
 from pr_agent.algo.run_output import (
     github_action_output,
-    push_outputs,
+    push_outputs_async,
     show_relevant_configurations,
     show_run_details,
 )
@@ -220,6 +220,7 @@ class PRReviewer:
         self._review_state_block_reason = None
         self._review_finding_previous_state = None
         self._review_state_preserved = False
+        self._pending_sink_output = None
         previous_findings = self._load_previous_findings_context()
         question_str, answer_str = self._get_user_answers()
         self.pr_description, self.pr_description_files = (
@@ -368,6 +369,10 @@ class PRReviewer:
 
             pr_review = self._prepare_pr_review()
             get_logger().debug("PR output", artifact=pr_review)
+
+            # Deliver the review to the external sinks before anything else, so a sink
+            # still receives it when the publishing below fails.
+            await self._deliver_sink_output()
 
             if not pr_review:
                 raise ValueError("Failed to prepare review output")
@@ -1438,8 +1443,9 @@ class PRReviewer:
         # Emit the review to optional external sinks (stdout/file/webhook/slack/telegram); no-op unless enabled.
         # publish_output gates it so a dry run makes no external calls. The "no major issues"
         # suppression deliberately does not: that only silences the PR comment.
+        # The delivery itself is left to run(), which awaits it off the event loop.
         if get_settings().config.publish_output:
-            push_outputs("review", payload=data.get('review', {}), markdown=markdown_text)
+            self._pending_sink_output = ("review", data.get('review', {}), markdown_text)
 
         # Add custom labels from the review prediction (effort, security)
         self.set_review_labels(data)
@@ -1448,6 +1454,20 @@ class PRReviewer:
             markdown_text = ""
 
         return markdown_text
+
+    async def _deliver_sink_output(self) -> None:
+        """Deliver the prepared review to the external sinks, if there is one.
+
+        The sinks do blocking HTTP and file I/O, so the delivery runs in a worker
+        thread. Awaiting it keeps the event loop responsive and still delivers the
+        output before the command returns.
+        """
+        pending = getattr(self, "_pending_sink_output", None)
+        if pending is None:
+            return
+        self._pending_sink_output = None
+        message_type, payload, markdown = pending
+        await push_outputs_async(message_type, payload=payload, markdown=markdown)
 
     def _build_key_issue_comment(self, issue, diff_files: dict) -> dict | None:
         if not isinstance(issue, dict):
