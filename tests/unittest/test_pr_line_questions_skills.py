@@ -59,13 +59,21 @@ def test_line_ask_does_not_load_skills_when_disabled(monkeypatch):
     calls = []
     try:
         settings.set("skills.enabled", False)
+        # Construct directly: _build_line_questions would overwrite the spy with its own stub.
+        provider = _FakeProvider()
+        monkeypatch.setattr(pr_line_questions, "get_git_provider", lambda: lambda _url: provider)
+        monkeypatch.setattr(pr_line_questions, "TokenHandler", lambda *_args: object())
         monkeypatch.setattr(
             pr_line_questions,
             "get_skills_context",
             lambda: calls.append("loaded") or "### Skill: should-not-load",
             raising=False,
         )
-        tool = _build_line_questions(monkeypatch)
+        tool = pr_line_questions.PR_LineQuestions(
+            "https://github.com/example/repo/pull/1",
+            args=["Does this line follow the security policy?"],
+            ai_handler=_FakeAIHandler,
+        )
     finally:
         restore_settings(saved)
 
