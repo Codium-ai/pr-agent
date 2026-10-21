@@ -466,33 +466,24 @@ class GitLabProvider(GitProvider):
 
     def _project_by_path(self, proj_path: str):
         """
-        Resolve a project by path with multiple strategies:
-        1) URL-encoded path_with_namespace
-        2) Raw path_with_namespace
-        3) Search fallback + exact match on path_with_namespace (case-insensitive)
+        Resolve a project by path, with an exact-path search fallback.
+        Let python-gitlab encode path_with_namespace for the request.
         Returns a project object or None.
         """
         if not proj_path:
             return None
 
         # Each attempt may legitimately fail, so they are collected and reported together:
-        # on the way out the caller needs to know why all three routes came up empty.
+        # on the way out the caller needs to know why both routes came up empty.
         failures = []
 
-        # 1) Encoded
-        try:
-            enc = urllib.parse.quote_plus(proj_path)
-            return self.gl.projects.get(enc)
-        except (GitlabError, RequestException) as e:
-            failures.append(f"encoded path: {e}")
-
-        # 2) Raw
+        # 1) Raw: python-gitlab handles URL encoding.
         try:
             return self.gl.projects.get(proj_path)
         except (GitlabError, RequestException) as e:
             failures.append(f"raw path: {e}")
 
-        # 3) Search fallback
+        # 2) Search fallback
         try:
             name = proj_path.split("/")[-1]
             # membership=True so we don't leak other people's repos
