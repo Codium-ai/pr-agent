@@ -60,7 +60,7 @@ class CodeCommitFile:
         self.b_path = b_path
         self.b_blob_id = b_blob_id
         self.edit_type: EDIT_TYPE = edit_type
-        self.filename = b_path if b_path else a_path
+        self.filename = b_path or a_path
         self.repository_name = repository_name
         self.source_commit = source_commit
         self.destination_commit = destination_commit

@@ -21,7 +21,7 @@ def split_diff_lines(text: str) -> list[str]:
     lines = text.split("\n")
     if lines and lines[-1] == "":
         lines.pop()
-    return [line[:-1] if line.endswith("\r") else line for line in lines]
+    return [line.removesuffix("\r") for line in lines]
 
 
 def to_hunk_only_patch(patch_str: str) -> str:

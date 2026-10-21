@@ -207,7 +207,7 @@ class PRHelpMessage:
             output_tokens = int(value)
         except (TypeError, ValueError, OverflowError):
             return 0
-        return output_tokens if output_tokens > 0 else 0
+        return max(0, output_tokens)
 
     def _get_prompt_budget(self, model: str) -> int:
         output_tokens = 0
@@ -455,8 +455,7 @@ class PRHelpMessage:
             if not isinstance(file_name, str):
                 continue
             normalized_file_name = file_name
-            if normalized_file_name.startswith("/"):
-                normalized_file_name = normalized_file_name[1:]
+            normalized_file_name = normalized_file_name.removeprefix("/")
             if normalized_file_name not in available_docs_files:
                 get_logger().warning(f"Skipping a /help citation to a document that was not loaded: {file_name}")
                 continue

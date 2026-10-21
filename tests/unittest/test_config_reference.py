@@ -12,7 +12,7 @@ GENERATOR = ROOT / "scripts" / "generate_config_reference.py"
 
 
 def _toml_keys(text: str) -> Counter:
-    return Counter(re.findall(r"^([a-zA-Z0-9_]+)\s*=", text, re.M))
+    return Counter(re.findall(r"^([a-zA-Z0-9_]+)\s*=", text, re.MULTILINE))
 
 
 def _documented_keys(text: str) -> Counter:

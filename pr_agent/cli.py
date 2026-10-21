@@ -237,7 +237,7 @@ def run(inargs=None, args=None):
             if args.issue_url:
                 result = await PRAgent().handle_request(args.issue_url, [command] + args.rest)
             else:
-                target = args.pr_url if args.pr_url else "local_diff"
+                target = args.pr_url or "local_diff"
                 result = await PRAgent().handle_request(target, [command] + args.rest)
             if result is RequestOutcome.SKIPPED:
                 # No tool ran, so there are no command callbacks or failures to drain.

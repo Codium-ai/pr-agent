@@ -251,7 +251,7 @@ class GithubProvider(GitProvider):
         # provider was initialized with, or an issue:
         if repo_git_url or self.issue_main:
             desired_branch = desired_branch if repo_git_url else self.issue_main.repository.default_branch
-            html_url = repo_git_url if repo_git_url else self.issue_main.html_url
+            html_url = repo_git_url or self.issue_main.html_url
             parsed_git_url = urlparse(html_url)
             scheme_and_netloc = parsed_git_url.scheme + "://" + parsed_git_url.netloc
             repo_path = self._get_owner_and_repo_path(html_url)
@@ -1526,7 +1526,7 @@ class GithubProvider(GitProvider):
             if config_branch == default_branch:
                 # The same root was already absent at this snapshot; do not resolve it again.
                 self._repo_settings_snapshot = config_snapshot
-                return settings_files if settings_files else ""
+                return settings_files or ""
             default_snapshot = self._resolve_settings_snapshot(default_branch)
             contents = self.repo_obj.get_contents(".pr_agent.toml", ref=default_snapshot[0]).decoded_content
             self._repo_settings_snapshot = default_snapshot
@@ -1545,7 +1545,7 @@ class GithubProvider(GitProvider):
         except (RequestException, AttributeError, binascii.Error, AssertionError) as e:
             get_logger().warning(f"Failed to load .pr_agent.toml file, error: {e}")
 
-        return settings_files if settings_files else ""
+        return settings_files or ""
 
     def get_repo_settings_tree(self, ref: str = "") -> tuple[list[str], str]:
         """List settings at the root acquisition's tree, returning its commit for content reads."""

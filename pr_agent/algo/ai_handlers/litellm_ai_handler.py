@@ -2343,7 +2343,7 @@ class LiteLLMAIHandler(BaseAiHandler):
                     if output_tokens > 0
                     else openrouter_output_tokens
                 )
-        return output_tokens if output_tokens > 0 else 0
+        return max(0, output_tokens)
 
     def get_output_token_limit(self, model: str) -> int:
         """Return the output cap that this handler will request for the supplied model."""
