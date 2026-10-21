@@ -83,6 +83,8 @@ FORBIDDEN_ARGS = [
     '--config.repo_context_files=[{"repo_id": "group/A/idea", "file_path": "AGENTS.md"}]',
     "--config__repo_context_files=[\"AGENTS.md\"]",
     '--config={"repo_context_files": ["AGENTS.md"]}',
+    # the glob match limit bounds how many files repo_context_files fetches
+    "--config.repo_context_max_glob_matches=100",
     # repo_context_sibling_repos is the host-only allowlist of sibling repositories whose
     # files may be selected; neither repo settings nor comment arguments can change it.
     "--config.repo_context_sibling_repos=[]",

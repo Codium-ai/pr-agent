@@ -2320,6 +2320,20 @@ class GitLabProvider(GitProvider):
                 return ""
             raise
 
+    def list_repo_directory(self, dir_path: str, from_default_branch: bool = False) -> list[str] | None:
+        try:
+            project = self.gl.projects.get(self.id_project)
+            if from_default_branch:
+                ref = project.default_branch
+            else:
+                ref = getattr(self.mr, "target_branch", None) or project.default_branch
+            entries = project.repository_tree(path=dir_path, ref=ref, recursive=False, get_all=True)
+            return [entry["path"] for entry in entries if entry.get("type") == "blob"]
+        except GitlabGetError as e:
+            if getattr(e, "response_code", None) == 404:
+                return []
+            raise
+
     def get_sibling_repo_file_content(self, repo_id: str, file_path: str, from_default_branch: bool = False):
         try:
             repo_id = (repo_id or "").strip().strip("/")

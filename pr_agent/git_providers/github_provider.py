@@ -1643,6 +1643,25 @@ class GithubProvider(GitProvider):
             # Transient/unexpected errors propagate so the caller does not cache the failure.
             raise
 
+    def list_repo_directory(self, dir_path: str, from_default_branch: bool = False) -> list[str] | None:
+        try:
+            if from_default_branch:
+                ref = None
+            else:
+                base = getattr(getattr(self, "pr", None), "base", None)
+                ref = getattr(base, "sha", None) or getattr(base, "ref", None)
+            if ref:
+                entries = self.repo_obj.get_contents(dir_path, ref=ref)
+            else:
+                entries = self.repo_obj.get_contents(dir_path)
+            if not isinstance(entries, list):
+                return []
+            return [entry.path for entry in entries if getattr(entry, "type", None) == "file"]
+        except GithubException as e:
+            if e.status == 404:
+                return []
+            raise
+
     def get_repo_file_content(self, file_path: str, from_default_branch: bool = False):
         try:
             # Prefer the PR target (base) ref so repo-context instruction files match the branch

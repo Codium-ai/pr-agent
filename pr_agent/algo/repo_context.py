@@ -1,3 +1,4 @@
+import fnmatch
 import re
 import time
 from collections import OrderedDict
@@ -22,6 +23,11 @@ _DEFAULT_MAX_SIBLING_CONTEXT_FILES = 5
 # API calls. It is intentionally not user-configurable.
 _HARD_MAX_SIBLING_CONTEXT_FILES = 20
 _SIBLING_REPO_SEPARATOR = ":"
+_GLOB_CHARACTERS = ("*", "?", "[")
+_DEFAULT_MAX_GLOB_MATCHES = 20
+# Ceiling for repo_context_max_glob_matches: each match is one file fetch, and a repository's
+# .pr_agent.toml may set the value.
+_HARD_MAX_GLOB_MATCHES = 100
 _REPO_CONTEXT_CACHE_MISS = object()
 _COMMIT_SHA_PATTERN = re.compile(r"[0-9a-f]{40}(?:[0-9a-f]{24})?")
 _unsupported_repo_context_provider_classes = set()
@@ -72,11 +78,14 @@ def _get_markdown_fence(content: str) -> str:
 
 def _get_repo_context_cache_key(
     context_files: list, max_lines: int, context_ref: str | None
-) -> tuple[tuple[tuple[str, str], ...], int, str | None]:
+) -> tuple[tuple[tuple[str, str], ...], int, str | None, int | None]:
     return (
         tuple((type(file_path).__name__, str(file_path)) for file_path in context_files),
         max_lines,
         context_ref,
+        _read_max_glob_matches() if any(
+            _is_glob_entry(path) for entry in context_files for path in (entry if isinstance(entry, list) else [entry])
+        ) else None,
     )
 
 
@@ -254,6 +263,88 @@ def _read_max_sibling_context_files() -> int:
     return min(max(0, max_siblings), _HARD_MAX_SIBLING_CONTEXT_FILES)
 
 
+def _read_max_glob_matches() -> int:
+    try:
+        max_matches = int(get_settings().config.get("repo_context_max_glob_matches", _DEFAULT_MAX_GLOB_MATCHES))
+    except (TypeError, ValueError):
+        max_matches = _DEFAULT_MAX_GLOB_MATCHES
+    return min(max(0, max_matches), _HARD_MAX_GLOB_MATCHES)
+
+
+def _is_glob_entry(entry) -> bool:
+    return isinstance(entry, str) and any(character in entry for character in _GLOB_CHARACTERS)
+
+
+def _expand_glob_entries(git_provider, context_files: list, from_default_branch: bool) -> tuple[list, bool]:
+    """Replace local ``dir/*.md``-style entries with the matching file paths, sorted by name.
+
+    Only the file-name part may hold wildcards, so each entry costs one directory listing.
+    Sibling entries are not expanded.
+    """
+    expanded = []
+    had_fetch_error = False
+    max_matches = _read_max_glob_matches()
+    for entry in context_files:
+        if not _is_glob_entry(entry):
+            if not (isinstance(entry, str) and entry.strip().lstrip("/") in expanded):
+                expanded.append(entry)
+            continue
+        dir_path, _, name_pattern = entry.strip().lstrip("/").rpartition("/")
+        if any(character in dir_path for character in _GLOB_CHARACTERS) or not name_pattern:
+            get_logger().warning(
+                "Skipping repo context glob: only the file-name part may contain wildcards",
+                artifact={"pattern": entry},
+            )
+            continue
+        try:
+            listed = git_provider.list_repo_directory(dir_path, from_default_branch=from_default_branch)
+        except Exception as e:
+            had_fetch_error = True
+            get_logger().warning(f"Failed to list repo context directory: {dir_path}", artifact={"error": str(e)})
+            continue
+        if listed is None:
+            get_logger().warning(
+                f"{type(git_provider).__name__} cannot list repository directories; skipping repo context glob",
+                artifact={"pattern": entry},
+            )
+            continue
+        matches = sorted(path for path in listed if fnmatch.fnmatchcase(path.rsplit("/", 1)[-1], name_pattern))
+        if len(matches) > max_matches:
+            get_logger().warning(
+                f"Repo context glob matched {len(matches)} files; keeping the first {max_matches} "
+                "(config.repo_context_max_glob_matches)",
+                artifact={"pattern": entry},
+            )
+            matches = matches[:max_matches]
+        expanded.extend(path for path in matches if path not in expanded)
+    return expanded, had_fetch_error
+
+
+def _load_first_available_alternative(
+    git_provider, alternatives: list, from_default_branch: bool
+) -> tuple[list[tuple[str, str]], bool]:
+    """Load the first alternative of a nested-list entry that yields content.
+
+    Lets one entry name competing agent-instruction conventions (e.g. ["AGENTS.md", "CLAUDE.md",
+    ".kiro/steering/*.md"]), which repositories often keep as copies or symlinks of each other, so
+    only one is sent. A glob alternative counts as found when any of its matches has content.
+    """
+    had_fetch_error = False
+    for alternative in alternatives:
+        if not isinstance(alternative, str):
+            get_logger().warning(
+                "Ignoring repo context alternative: alternatives must be local file paths",
+                artifact={"entry": alternative},
+            )
+            continue
+        files, alternative_had_fetch_error = _load_repo_context_files(
+            git_provider, [alternative], from_default_branch)
+        had_fetch_error = had_fetch_error or alternative_had_fetch_error
+        if files:
+            return files, had_fetch_error
+    return [], had_fetch_error
+
+
 class _RepoContextLoadState:
     def __init__(self):
         self.had_fetch_error = False
@@ -267,6 +358,8 @@ def _iter_repo_context_files(
         state = _RepoContextLoadState()
     if from_default_branch is None:
         from_default_branch = _read_bool_setting("repo_context_from_default_branch", default=True)
+    context_files, glob_had_fetch_error = _expand_glob_entries(git_provider, context_files, from_default_branch)
+    state.had_fetch_error = state.had_fetch_error or glob_had_fetch_error
     # Ordered (label, content) entries rather than a label-keyed dict: a local path can equal a
     # sibling's rendered label, and a label-keyed mapping would silently drop one of them.
     max_siblings = _read_max_sibling_context_files()
@@ -274,6 +367,16 @@ def _iter_repo_context_files(
     seen_sibling_pairs = set()
     seen_local_paths = set()
     for entry in context_files:
+        if isinstance(entry, list):
+            group_files, group_had_fetch_error = _load_first_available_alternative(
+                git_provider, entry, from_default_branch)
+            state.had_fetch_error = state.had_fetch_error or group_had_fetch_error
+            for label, content in group_files:
+                if label not in seen_local_paths:
+                    seen_local_paths.add(label)
+                    state.had_content = True
+                    yield label, content
+            continue
         repo_id, file_path = _parse_repo_context_file_entry(entry)
         if not file_path:
             if isinstance(entry, str) and not entry.strip():

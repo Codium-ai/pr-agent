@@ -94,7 +94,7 @@ def test_default_config_ships_agents_md_as_repo_context():
     with open(config_path, "rb") as config_file:
         config = tomllib.load(config_file)
 
-    assert config["config"]["repo_context_files"] == ["AGENTS.md"]
+    assert config["config"]["repo_context_files"] == [["AGENTS.md", "CLAUDE.md", ".kiro/steering/*.md"]]
     # Reading from the default branch is the secure default.
     assert config["config"]["repo_context_from_default_branch"] is True
 
@@ -1703,6 +1703,7 @@ def test_github_provider_reads_from_default_branch_when_requested():
                 "num_max_findings": 3,
                 "num_pr_files": 1,
                 "is_ai_metadata": False,
+                "enable_suggested_fixes": True,
             },
         ),
         (
@@ -2057,6 +2058,189 @@ def test_selected_sibling_build_requires_allowlist(repo_context_settings):
     assert "interface" in build_repo_context(provider)
     repo_context_settings.set("CONFIG.REPO_CONTEXT_SIBLING_REPOS", [])
     assert build_repo_context(provider) == ""
+
+
+class ListingFakeProvider(FakeProvider):
+    def __init__(self, files, directories, pr_url=None):
+        super().__init__(files, pr_url)
+        self.directories = directories
+        self.listed_dirs = []
+
+    def list_repo_directory(self, dir_path: str, from_default_branch: bool = False):
+        self.listed_dirs.append((dir_path, from_default_branch))
+        return self.directories.get(dir_path, [])
+
+
+def test_load_repo_context_files_expands_single_directory_glob():
+    provider = ListingFakeProvider(
+        {"AGENTS.md": "rules", "docs/adr/0002-b.md": "B", "docs/adr/0001-a.md": "A"},
+        {"docs/adr": ["docs/adr/0002-b.md", "docs/adr/README.txt", "docs/adr/0001-a.md"]},
+    )
+
+    files, had_fetch_error = repo_context._load_repo_context_files(
+        provider, ["AGENTS.md", "docs/adr/*.md", "docs/adr/0001-a.md"], from_default_branch=True
+    )
+
+    assert files == [("AGENTS.md", "rules"), ("docs/adr/0001-a.md", "A"), ("docs/adr/0002-b.md", "B")]
+    assert had_fetch_error is False
+    assert provider.listed_dirs == [("docs/adr", True)]
+
+
+@pytest.mark.parametrize("configured,expected", [(None, 20), (5, 5), (500, 100), ("bad", 20), (-3, 0)])
+def test_load_repo_context_files_caps_glob_matches(monkeypatch, configured, expected):
+    if configured is not None:
+        monkeypatch.setattr(get_settings().config, "repo_context_max_glob_matches", configured, raising=False)
+    else:
+        monkeypatch.delattr(get_settings().config, "repo_context_max_glob_matches", raising=False)
+    listed = [f"adr/{index:03}.md" for index in range(150)]
+    provider = ListingFakeProvider({path: path for path in listed}, {"adr": listed})
+
+    files, _ = repo_context._load_repo_context_files(provider, ["adr/*.md"], from_default_branch=True)
+
+    assert [label for label, _ in files] == listed[:expected]
+
+
+def test_repo_context_cache_key_tracks_glob_limit_only_for_glob_entries(monkeypatch):
+    config = get_settings().config
+    monkeypatch.setattr(config, "repo_context_max_glob_matches", 5, raising=False)
+    glob_key = repo_context._get_repo_context_cache_key(["docs/adr/*.md"], 500, "ref")
+    plain_key = repo_context._get_repo_context_cache_key(["AGENTS.md"], 500, "ref")
+    monkeypatch.setattr(config, "repo_context_max_glob_matches", 50, raising=False)
+
+    assert repo_context._get_repo_context_cache_key(["docs/adr/*.md"], 500, "ref") != glob_key
+    assert repo_context._get_repo_context_cache_key(["AGENTS.md"], 500, "ref") == plain_key
+
+
+AGENT_INSTRUCTION_ALTERNATIVES = ["AGENTS.md", "CLAUDE.md", ".kiro/steering/*.md"]
+
+
+@pytest.mark.parametrize(
+    "files,expected",
+    [
+        ({"AGENTS.md": "agents", "CLAUDE.md": "claude"}, [("AGENTS.md", "agents")]),
+        ({"CLAUDE.md": "claude"}, [("CLAUDE.md", "claude")]),
+        (
+            {".kiro/steering/b.md": "B", ".kiro/steering/a.md": "A"},
+            [(".kiro/steering/a.md", "A"), (".kiro/steering/b.md", "B")],
+        ),
+        ({}, []),
+    ],
+)
+def test_load_repo_context_files_uses_first_available_alternative(files, expected):
+    provider = ListingFakeProvider(files, {".kiro/steering": sorted(files, reverse=True)})
+
+    loaded, had_fetch_error = repo_context._load_repo_context_files(
+        provider, [AGENT_INSTRUCTION_ALTERNATIVES], from_default_branch=True
+    )
+
+    assert loaded == expected
+    assert had_fetch_error is False
+
+
+def test_load_repo_context_files_alternatives_skip_structured_entries_and_duplicates():
+    provider = FakeProvider({"AGENTS.md": "agents", "CLAUDE.md": "claude"})
+
+    loaded, _ = repo_context._load_repo_context_files(
+        provider,
+        ["AGENTS.md", [{"repo_id": "org/other", "file_path": "AGENTS.md"}, "AGENTS.md"], ["CLAUDE.md"]],
+        from_default_branch=True,
+    )
+
+    assert loaded == [("AGENTS.md", "agents"), ("CLAUDE.md", "claude")]
+
+
+def test_repo_context_cache_key_tracks_glob_limit_for_nested_glob_alternatives(monkeypatch):
+    config = get_settings().config
+    monkeypatch.setattr(config, "repo_context_max_glob_matches", 5, raising=False)
+    key = repo_context._get_repo_context_cache_key([AGENT_INSTRUCTION_ALTERNATIVES], 500, "ref")
+    monkeypatch.setattr(config, "repo_context_max_glob_matches", 50, raising=False)
+
+    assert repo_context._get_repo_context_cache_key([AGENT_INSTRUCTION_ALTERNATIVES], 500, "ref") != key
+
+
+def test_load_repo_context_files_rejects_wildcards_in_directory_part():
+    provider = ListingFakeProvider({}, {})
+
+    files, had_fetch_error = repo_context._load_repo_context_files(
+        provider, ["docs/*/rules.md", "docs/**/*.md"], from_default_branch=True
+    )
+
+    assert files == []
+    assert had_fetch_error is False
+    assert provider.listed_dirs == []
+
+
+def test_load_repo_context_files_skips_glob_when_provider_cannot_list():
+    provider = FakeProvider({"AGENTS.md": "rules"})
+    provider.list_repo_directory = lambda dir_path, from_default_branch=False: None
+
+    files, had_fetch_error = repo_context._load_repo_context_files(
+        provider, ["AGENTS.md", "docs/adr/*.md"], from_default_branch=True
+    )
+
+    assert files == [("AGENTS.md", "rules")]
+    assert had_fetch_error is False
+
+
+def test_load_repo_context_files_reports_listing_errors():
+    provider = FakeProvider({})
+    provider.list_repo_directory = Mock(side_effect=Exception("temporary outage"))
+
+    files, had_fetch_error = repo_context._load_repo_context_files(
+        provider, ["docs/adr/*.md"], from_default_branch=True
+    )
+
+    assert files == []
+    assert had_fetch_error is True
+
+
+def test_base_provider_does_not_list_directories():
+    assert GitProvider.list_repo_directory(Mock(), "docs") is None
+
+
+def test_github_list_repo_directory_returns_files_only():
+    provider = GithubProvider.__new__(GithubProvider)
+    provider.repo_obj = Mock()
+    provider.repo_obj.get_contents.return_value = [
+        SimpleNamespace(type="file", path="docs/adr/0001.md"),
+        SimpleNamespace(type="dir", path="docs/adr/old"),
+    ]
+
+    assert provider.list_repo_directory("docs/adr", from_default_branch=True) == ["docs/adr/0001.md"]
+    provider.repo_obj.get_contents.assert_called_once_with("docs/adr")
+
+
+def test_github_list_repo_directory_missing_directory_is_empty():
+    provider = GithubProvider.__new__(GithubProvider)
+    provider.repo_obj = Mock()
+    provider.repo_obj.get_contents.side_effect = GithubException(404, "Not Found", None)
+
+    assert provider.list_repo_directory("docs/adr", from_default_branch=True) == []
+
+
+def test_gitlab_list_repo_directory_returns_blobs_only():
+    provider = GitLabProvider.__new__(GitLabProvider)
+    project = Mock()
+    project.default_branch = "main"
+    project.repository_tree.return_value = [
+        {"type": "blob", "path": "docs/adr/0001.md"},
+        {"type": "tree", "path": "docs/adr/old"},
+    ]
+    provider.gl = Mock()
+    provider.gl.projects.get.return_value = project
+    provider.id_project = "group/repo"
+
+    assert provider.list_repo_directory("docs/adr", from_default_branch=True) == ["docs/adr/0001.md"]
+    project.repository_tree.assert_called_once_with(path="docs/adr", ref="main", recursive=False, get_all=True)
+
+
+def test_gitlab_list_repo_directory_missing_directory_is_empty():
+    provider = GitLabProvider.__new__(GitLabProvider)
+    provider.gl = Mock()
+    provider.gl.projects.get.return_value.repository_tree.side_effect = GitlabGetError("Not Found", 404)
+    provider.id_project = "group/repo"
+
+    assert provider.list_repo_directory("docs/adr", from_default_branch=True) == []
 
 
 def test_build_repo_context_stops_loading_after_truncated_file(repo_context_settings):

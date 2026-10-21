@@ -434,18 +434,27 @@ Notes:
 
 To give PR-Agent's tools additional project context, you can have it include repository instruction files — such as [AGENTS.md](https://agents.md/) or [CLAUDE.md](https://www.anthropic.com/engineering/claude-code-best-practices) — in the prompts for the `/review`, `/describe` and `/improve` tools.
 
-By default, PR-Agent looks for an `AGENTS.md` file at the repository root:
+By default, PR-Agent looks for an `AGENTS.md` file at the repository root, falls back to `CLAUDE.md`, and then to the `.kiro/steering/*.md` files:
 
 ```toml
 [config]
-repo_context_files = ["AGENTS.md"]
+repo_context_files = [["AGENTS.md", "CLAUDE.md", ".kiro/steering/*.md"]]
 ```
+
+A nested list is a group of alternatives: only the first one that yields content is used, so a repository that keeps the same instructions under several conventions (or symlinks one file to another) sends them once. Alternatives must be repository-relative paths.
 
 You can list any repository-relative paths. By default the files are read from the repository's **default branch**, so only trusted, already-merged content is used and a PR cannot influence the guidance used to review it. A file that is missing is silently skipped. Set the option to an empty list to disable the feature entirely:
 
 ```toml
 [config]
 repo_context_files = ["AGENTS.md", "CLAUDE.md", "docs/conventions.md"]
+```
+
+To include architecture decision records (ADRs) or other rule files without listing each one, an entry may use a glob in its file name. On GitHub and GitLab the directory is listed and up to `repo_context_max_glob_matches` matches (default 20, at most 100) are included in name order; other providers skip glob entries with a warning. Wildcards are only allowed in the last path segment, so `docs/**/*.md` is not supported. When ADRs or standards files are present, `/review` checks the PR against the rules they state and cites the rule it applies.
+
+```toml
+[config]
+repo_context_files = ["AGENTS.md", "docs/adr/*.md"]
 ```
 
 :::note[Which branch the files are read from]
