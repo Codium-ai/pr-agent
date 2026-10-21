@@ -99,6 +99,10 @@ Using `pull_request_target` gives the workflow access to repository secrets. Nei
 
 This section provides detailed, step-by-step examples for configuring PR-Agent with different models and advanced options in GitHub Actions.
 
+:::note[Fallback models]
+`config.fallback_models` should not repeat `config.model`: a fallback-eligible failure would just run the same model again. The examples below use `'[]'` for no backup model, or a different model when one is shown. To retry a failed call on the primary model instead, set `config.num_retries`.
+:::
+
 #### Quick Start Examples
 
 ##### Basic Setup (OpenAI Default)
@@ -151,7 +155,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           config.model: "gemini/gemini-3.8-flash"
-          config.fallback_models: '["gemini/gemini-3.8-flash"]'
+          config.fallback_models: '[]'
           GOOGLE_AI_STUDIO.GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           github_action_config.auto_review: "true"
           github_action_config.auto_describe: "true"
@@ -233,7 +237,7 @@ To use Gemini models instead of the default OpenAI models:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         # Set the model to Gemini
         config.model: "gemini/gemini-3.8-flash"
-        config.fallback_models: '["gemini/gemini-3.8-flash"]'
+        config.fallback_models: '[]'
         # Add your Gemini API key
         GOOGLE_AI_STUDIO.GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         # Tool configuration
@@ -287,7 +291,7 @@ To use Azure OpenAI services:
         OPENAI.DEPLOYMENT_ID: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
         # Set the model to match your Azure deployment
         config.model: "gpt-4o"
-        config.fallback_models: '["gpt-4o"]'
+        config.fallback_models: '[]'
         # Tool configuration
         github_action_config.auto_review: "true"
         github_action_config.auto_describe: "true"
@@ -310,7 +314,7 @@ To use local models via Ollama:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         # Set the model to a local Ollama model
         config.model: "ollama/qwen2.5-coder:32b"
-        config.fallback_models: '["ollama/qwen2.5-coder:32b"]'
+        config.fallback_models: '[]'
         config.custom_model_max_tokens: "128000"
         # Ollama configuration
         OLLAMA.API_BASE: "http://localhost:11434"
@@ -330,7 +334,7 @@ To use Amazon Bedrock models with static IAM credentials:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         config.model: "bedrock/us.anthropic.claude-sonnet-4-6"
-        config.fallback_models: '["bedrock/us.anthropic.claude-sonnet-4-6"]'
+        config.fallback_models: '[]'
         aws.AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws.AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws.AWS_REGION_NAME: "us-east-1"
@@ -344,7 +348,7 @@ When the GitHub Actions runner is on AWS infrastructure (EC2, ECS, EKS), use the
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         config.model: "bedrock/us.anthropic.claude-sonnet-4-6"
-        config.fallback_models: '["bedrock/us.anthropic.claude-sonnet-4-6"]'
+        config.fallback_models: '[]'
         AWS_USE_IMDS: "true"
         AWS_REGION_NAME: us-east-1  # source region for the US inference profile
 ```
