@@ -11,7 +11,7 @@ from requests.adapters import BaseAdapter
 
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import gitlab_provider
-from pr_agent.git_providers.git_provider import IncrementalPR
+from pr_agent.git_providers.git_provider import IncompleteProviderPullRequestFilesError, IncrementalPR
 from pr_agent.git_providers.gitlab_provider import GitLabProvider, IncompleteGitLabDiffError
 
 
@@ -162,8 +162,9 @@ def test_pruned_patch_on_later_page_is_reconstructed_from_both_blobs(provider_fa
 def test_unready_collection_is_retried_then_raises_and_is_not_cached(provider_factory, count, diff_ready_sleep):
     attempts = len(gitlab_provider._DIFF_READY_RETRY_DELAYS) + 1
     provider, transport = provider_factory([(200, [_change("a.py"), _change("b.py")], {})] * attempts, count)
-    with pytest.raises(IncompleteGitLabDiffError, match="not ready.*re-run the command"):
+    with pytest.raises(IncompleteGitLabDiffError, match="not ready.*re-run the command") as error:
         provider.get_files()
+    assert isinstance(error.value, IncompleteProviderPullRequestFilesError)
     assert provider.git_files is None
     assert len(transport.diff_requests) == attempts
     assert diff_ready_sleep == list(gitlab_provider._DIFF_READY_RETRY_DELAYS)
@@ -172,8 +173,9 @@ def test_unready_collection_is_retried_then_raises_and_is_not_cached(provider_fa
 @pytest.mark.parametrize("count,message", [("3", "but reported"), ("0", "but reported"), ("1000+", "diff limits")])
 def test_inconsistent_counts_fail_immediately_without_retries(provider_factory, count, message, diff_ready_sleep):
     provider, transport = provider_factory([(200, [_change("a.py"), _change("b.py")], {})], count)
-    with pytest.raises(IncompleteGitLabDiffError, match=message):
+    with pytest.raises(IncompleteGitLabDiffError, match=message) as error:
         provider.get_files()
+    assert isinstance(error.value, IncompleteProviderPullRequestFilesError)
     assert provider.git_files is None
     assert len(transport.diff_requests) == 1
     assert diff_ready_sleep == []
