@@ -329,10 +329,6 @@ class PRReviewer:
                                 'config': dict(get_settings().config)}
             get_logger().debug("Relevant configs", artifacts=relevant_configs)
 
-            # ticket extraction if exists
-            await extract_and_cache_pr_tickets(self.git_provider, self.vars)
-            self._raw_prompt_vars = copy.deepcopy(self.vars)
-
             if (
                 self.incremental.is_incremental
                 and hasattr(self.git_provider, "unreviewed_files_map")
@@ -346,6 +342,10 @@ class PRReviewer:
                     self.git_provider.publish_comment(f"Incremental Review Skipped\n"
                                     f"No files were changed since the [previous PR Review]({previous_review_url})")
                 return None
+
+            # ticket extraction if exists
+            await extract_and_cache_pr_tickets(self.git_provider, self.vars)
+            self._raw_prompt_vars = copy.deepcopy(self.vars)
 
             if get_settings().config.publish_output and not get_settings().config.get('is_auto_command', False):
                 progress_response = self.git_provider.publish_comment(
