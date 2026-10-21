@@ -221,11 +221,10 @@ class PRAddDocs:
             index += step
         return None
 
-    def dedent_code(self, relevant_file, relevant_lines_start, new_code_snippet, doc_placement='after',
+    def dedent_code(self, relevant_file, relevant_lines_start, new_code_snippet, doc_placement="after",
                     add_original_line=False):
         try:  # Find the source line that supplies the indentation.
-            self.diff_files = self.git_provider.diff_files if self.git_provider.diff_files \
-                else self.git_provider.get_diff_files()
+            self.diff_files = self.git_provider.diff_files or self.git_provider.get_diff_files()
             original_initial_line = None
             file_lines = []
             for file in self.diff_files:

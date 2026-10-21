@@ -1016,7 +1016,7 @@ def _normalize_github_host(url):
         host = urlparse(url or "").hostname or ""
     except (AttributeError, TypeError, ValueError):
         return ""
-    return host[len("api."):] if host.startswith("api.") else host
+    return host.removeprefix("api.")
 
 
 def _get_repo_obj_for_ticket(git_provider, ticket_url, repo_name, repo_obj_cache):

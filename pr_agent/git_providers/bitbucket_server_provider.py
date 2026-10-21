@@ -136,10 +136,10 @@ class BitbucketServerProvider(GitProvider):
                 get_logger().info(f"Failed to load .pr_agent.toml file, error: {e}")
         except Exception as e:
             get_logger().info(f"Failed to load .pr_agent.toml file, error: {e}")
-        return settings_files if settings_files else ""
+        return settings_files or ""
 
     def _get_global_settings_cache_key(self, workspace: str) -> str:
-        return f"bitbucket-server:{getattr(self, 'bitbucket_server_url', '')}:{workspace}"
+        return f"bitbucket-server:{getattr(self, "bitbucket_server_url", "")}:{workspace}"
 
     def _fetch_global_repo_settings(self, workspace, settings_repo):
         # A missing settings repo/file (404) is an expected fallback -> return "" (cached).

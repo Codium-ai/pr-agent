@@ -458,8 +458,7 @@ class GitLabProvider(GitProvider):
                 path = url.split(":", 1)[1]
             else:
                 path = urllib.parse.urlparse(url).path.lstrip("/")
-            if path.endswith(".git"):
-                path = path[:-4]
+            path = path.removesuffix(".git")
             return path or None
         except (AttributeError, ValueError, IndexError):
             return None
@@ -584,8 +583,8 @@ class GitLabProvider(GitProvider):
                 continue
 
             # Extract old/new SHAs from the hunk
-            old_m = re.search(r"^-Subproject commit ([0-9a-f]{7,40})", patch, re.M)
-            new_m = re.search(r"^\+Subproject commit ([0-9a-f]{7,40})", patch, re.M)
+            old_m = re.search(r"^-Subproject commit ([0-9a-f]{7,40})", patch, re.MULTILINE)
+            new_m = re.search(r"^\+Subproject commit ([0-9a-f]{7,40})", patch, re.MULTILINE)
             if not (old_m and new_m):
                 continue
             old_sha, new_sha = old_m.group(1), new_m.group(1)
@@ -1715,18 +1714,18 @@ class GitLabProvider(GitProvider):
             if diff is None:
                 get_logger().error(f"Could not get diff for merge request {self.id_mr}")
                 raise DiffNotFoundError(f"Could not get diff for merge request {self.id_mr}")
-            pos_obj = {'position_type': 'text',
-                       'new_path': target_file.filename,
-                       'old_path': target_file.old_filename if target_file.old_filename else target_file.filename,
-                       'base_sha': diff.base_commit_sha, 'start_sha': diff.start_commit_sha,
-                       'head_sha': diff.head_commit_sha}
-            if edit_type == 'deletion':
-                pos_obj['old_line'] = source_line_no - 1
-            elif edit_type == 'addition':
-                pos_obj['new_line'] = target_line_no - 1
+            pos_obj = {"position_type": "text",
+                       "new_path": target_file.filename,
+                       "old_path": target_file.old_filename or target_file.filename,
+                       "base_sha": diff.base_commit_sha, "start_sha": diff.start_commit_sha,
+                       "head_sha": diff.head_commit_sha}
+            if edit_type == "deletion":
+                pos_obj["old_line"] = source_line_no - 1
+            elif edit_type == "addition":
+                pos_obj["new_line"] = target_line_no - 1
             else:
-                pos_obj['new_line'] = target_line_no - 1
-                pos_obj['old_line'] = source_line_no - 1
+                pos_obj["new_line"] = target_line_no - 1
+                pos_obj["old_line"] = source_line_no - 1
             get_logger().debug(f"Creating comment in MR {self.id_mr} with body {body} and position {pos_obj}")
             created = self._create_suggestion_note(as_draft, body, pos_obj, diff, target_file, relevant_file,
                                                     original_suggestion, store, body_fp, code_fp)
@@ -2150,7 +2149,7 @@ class GitLabProvider(GitProvider):
                 get_logger().warning(f"Failed to load local .pr_agent.toml file, error: {e}")
         except (GitlabError, RequestException, AttributeError, ValueError) as e:
             get_logger().warning(f"Failed to load local .pr_agent.toml file, error: {e}")
-        return settings_files if settings_files else ""
+        return settings_files or ""
 
     @staticmethod
     def _settings_commit_id(value: str) -> str:
@@ -2519,8 +2518,7 @@ class GitLabProvider(GitProvider):
         else:
             # Handle the standard GitLab /-/ delimiter.
             project_path = "/".join(project_parts)
-            if project_path.endswith('/-'):
-                project_path = project_path[:-2]
+            project_path = project_path.removesuffix("/-")
 
         # Return the project identifier and the MR IID.
         return project_path, mr_id

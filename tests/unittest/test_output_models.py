@@ -346,10 +346,10 @@ def _model_type_signature(annotation):
     if annotation is StrictBool:
         return "bool"
     if str(origin) == "typing.Literal":
-        return ("literal", tuple(str(value) for value in get_args(annotation)))
-    if origin in (list,):
-        return ("list", _model_type_signature(get_args(annotation)[0]))
-    if origin in (UnionType,):
+        return "literal", tuple(str(value) for value in get_args(annotation))
+    if origin is list:
+        return "list", _model_type_signature(get_args(annotation)[0])
+    if origin is UnionType:
         args = get_args(annotation)
     elif str(origin) == "typing.Union":
         args = get_args(annotation)

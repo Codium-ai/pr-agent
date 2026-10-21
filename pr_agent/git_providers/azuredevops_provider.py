@@ -772,7 +772,7 @@ class AzureDevopsProvider(GitProvider):
                 get_logger().error(
                     f"Failed to get the repository's .pr_agent.toml; it will not be applied for this "
                     f"run, error: {e}")
-        return settings_files if settings_files else ""
+        return settings_files or ""
 
     def get_owning_namespace(self) -> str | None:
         # In Azure DevOps the owning namespace is the organization, not the project
@@ -784,7 +784,7 @@ class AzureDevopsProvider(GitProvider):
         parsed = urlparse(org)
         if parsed.scheme and parsed.netloc:
             path_first = parsed.path.strip("/").split("/")[0]
-            return path_first if path_first else parsed.netloc.split(".")[0]
+            return path_first or parsed.netloc.split(".")[0]
         return str(org)
 
     def _get_global_settings_cache_key(self, org: str) -> str:
