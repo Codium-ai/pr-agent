@@ -390,6 +390,7 @@ class PRDescription:
                     patches_diff,
                     prompt="pr_description_prompt",
                 )
+                self._require_usable_prediction(self.prediction)
 
                 # extend the prediction with additional files not shown
                 if get_settings().pr_description.enable_semantic_files_types:
@@ -569,7 +570,11 @@ class PRDescription:
             get_logger().debug("PR diff only description", artifact=files_walkthrough_prompt)
             prediction_headers = await self._get_prediction(model, patches_diff=files_walkthrough_prompt,
                                                             prompt="pr_description_only_description_prompts")
-            prediction_headers = prediction_headers.strip().removeprefix('```yaml').strip('`').strip()
+            if isinstance(prediction_headers, str):
+                prediction_headers = re.sub(
+                    r'^```[ \t]*(?:(?i:yaml|yml)[ \t]*)?(?=\r?\n)', '', prediction_headers.strip()
+                ).strip('`').strip()
+            self._require_usable_prediction(prediction_headers)
 
             # extend the tables with the files not shown
             files_walkthrough_extended = await self.extend_uncovered_files(files_walkthrough)
@@ -767,6 +772,11 @@ class PRDescription:
         )
 
         return response
+
+    def _require_usable_prediction(self, prediction: str) -> None:
+        parsed = load_yaml(prediction.strip(), keys_fix_yaml=self.keys_fix) if isinstance(prediction, str) else None
+        if not isinstance(parsed, dict) or not parsed:
+            raise FallbackEligibleError("The /describe model returned no usable YAML mapping")
 
     def _prepare_data(self):
         # Load the AI prediction data into a dictionary
