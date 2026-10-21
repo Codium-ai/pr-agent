@@ -852,7 +852,7 @@ class GitLabProvider(GitProvider):
             return
 
         try:
-            project = self.gl.projects.get(self.id_project)
+            project = self.gl.projects.get(self.id_project, lazy=True)
             compare_result = project.repository_compare(last_seen_sha, head_sha)
         except (GitlabError, RequestException) as e:
             get_logger().error(
@@ -1528,7 +1528,7 @@ class GitLabProvider(GitProvider):
         """Base-side line numbers removed per path between two commits, via repository_compare."""
         removed = {}
         try:
-            project = self.gl.projects.get(self.id_project)
+            project = self.gl.projects.get(self.id_project, lazy=True)
             # straight=True: direct base..head comparison. The default merge-base
             # comparison reports lines dropped by a rebase/merge as removed, which
             # would resolve threads whose flagged code still exists at head.

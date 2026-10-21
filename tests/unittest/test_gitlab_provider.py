@@ -2229,7 +2229,7 @@ class TestGitLabIncrementalReview:
         assert gitlab_provider.incremental.is_incremental is False
         gitlab_provider.mr.commits.assert_not_called()
 
-    def test_get_incremental_commits_picks_commits_after_review(self, gitlab_provider, mock_project):
+    def test_get_incremental_commits_picks_commits_after_review(self, gitlab_provider):
         # Previous review at T=10:00. Commit c0 at 09:00 (before), c1 and c2 at 11:00 (after).
         gitlab_provider.mr.notes.list.return_value = [
             self._make_note(7, "## PR Reviewer Guide 🔍\nbody", "2024-05-01T10:00:00Z"),
@@ -2241,7 +2241,7 @@ class TestGitLabIncrementalReview:
             self._make_commit("c1", "2024-05-01T11:00:00Z"),
             self._make_commit("c0", "2024-05-01T09:00:00Z"),
         ]
-        mock_project.repository_compare.return_value = {
+        comparison = {
             "diffs": [
                 {"new_path": "a.py", "old_path": "a.py", "diff": "@@ -1 +1 @@\n-old\n+new\n",
                  "new_file": False, "deleted_file": False, "renamed_file": False},
@@ -2251,7 +2251,15 @@ class TestGitLabIncrementalReview:
         }
         # Intersect MR diffs with repository_compare to exclude files merged from the target branch.
         # Include both fixture files in the MR's own changes.
-        gitlab_provider.gl.http_list.return_value = [{"new_path": "a.py"}, {"new_path": "b.py"}]
+        gitlab_provider._get_merge_request_changes = MagicMock(return_value={
+            "changes": [{"new_path": "a.py"}, {"new_path": "b.py"}],
+            "diff_refs": dict(gitlab_provider.mr.diff_refs),
+        })
+        client = Gitlab("https://gitlab.example.com", private_token="test-token")
+        client.http_get = MagicMock(side_effect=lambda path, **kwargs:
+                                   comparison if path.endswith("/repository/compare") else {"id": 1})
+        gitlab_provider.gl = client
+        gitlab_provider._own_user_id = None
 
         gitlab_provider.get_incremental_commits(IncrementalPR(True))
 
@@ -2259,7 +2267,9 @@ class TestGitLabIncrementalReview:
         assert gitlab_provider.incremental.first_new_commit_sha == "c1"
         assert gitlab_provider.incremental.last_seen_commit_sha == "c0"
         assert set(gitlab_provider.unreviewed_files_map.keys()) == {"a.py", "b.py"}
-        mock_project.repository_compare.assert_called_once_with("c0", "head")
+        client.http_get.assert_called_once_with(
+            "/projects/test%2Frepo/repository/compare", query_data={"from": "c0", "to": "head"}
+        )
         gitlab_provider.mr.commits.assert_called_once_with()
 
     def test_get_incremental_commits_no_new_commits_yields_empty_set(self, gitlab_provider, mock_project):
