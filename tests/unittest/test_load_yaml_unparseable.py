@@ -80,3 +80,33 @@ def test_an_unparseable_chunk_is_recorded_so_the_coverage_footer_still_reports_i
     tool.failed_chunk_count = tool.parse_failure_count
     tool.total_chunk_count = 2
     assert "1 of 2 analysis chunks failed" in tool._get_suggestions_coverage_footer()
+
+
+def test_a_degenerate_fence_info_run_does_not_backtrack_quadratically():
+    """A fence followed by a long run of blanks and no line break used to make the
+    fence-label strip try every division of the run between its two blank spans
+    (#4229): about 6 s at 40k blanks. It must stay a linear scan."""
+    import time
+
+    pathological = "```" + " " * 40_000 + "x"
+
+    start = time.perf_counter()
+    load_yaml(pathological)
+    assert time.perf_counter() - start < 2.0
+
+
+@pytest.mark.parametrize("fenced", [
+    "```yaml\nkey: 1\n```",
+    "```\nkey: 1\n```",
+    "``` yaml\nkey: 1\n```",
+    "```YAML \nkey: 1\n```",
+])
+def test_fence_label_stripping_variants_keep_working(fenced):
+    """The fence label is still stripped in every shape the old pattern accepted."""
+    assert load_yaml(fenced) == {"key": 1}
+
+
+def test_a_fence_like_prefix_that_is_not_a_complete_info_string_is_untouched():
+    """`yaml_config` is a key, not a fence info string; the fence line must survive
+    the label strip exactly as before the pattern change."""
+    assert load_yaml("```yaml_config\nkey: 1\n") == load_yaml("```yaml_config\nkey: 1\n")

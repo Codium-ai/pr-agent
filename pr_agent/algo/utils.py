@@ -993,8 +993,10 @@ def load_yaml(response_text: str, keys_fix_yaml: list[str] | None = None, first_
     response_text_original = copy.deepcopy(response_text)
     response_text = response_text.strip('\n')
     # strip the fence label only when it is a complete info string, so a key such as
-    # "yml_config" is not truncated to "_config"
-    unfenced = re.sub(r'^```[ \t]*(?:(?i:yaml|yml))?[ \t]*(?=\r?\n)', '', response_text)
+    # "yml_config" is not truncated to "_config"; the label and its trailing blanks are one
+    # group, so a fence followed by a long run of blanks with no line break is a linear scan
+    # instead of trying every division of the run between the two blank spans (#4229)
+    unfenced = re.sub(r'^```[ \t]*(?:(?i:yaml|yml)[ \t]*)?(?=\r?\n)', '', response_text)
     if unfenced == response_text:
         # Strip an unfenced "yaml" label only when it is a complete line, so a key such as
         # "yaml_config" is not truncated. A bare removeprefix('yaml') would shorten it to "_config".
