@@ -263,6 +263,7 @@ async def is_valid_notification(
                     user_tag = "@" + user_id
                     if comment_response.status == 200:
                         comment = await comment_response.json()
+                        latest_comment_id = comment.get('id')
                         if 'id' in comment:
                             if comment['id'] in handled_ids:
                                 get_logger().debug("comment['id'] in handled_ids")
@@ -317,6 +318,13 @@ async def is_valid_notification(
                                 if not comment_body:
                                     continue
                                 if user_tag in comment_body:
+                                    if 'id' in comment:
+                                        # Allow mentions added to the latest comment between the two API reads.
+                                        if comment['id'] in handled_ids and comment['id'] != latest_comment_id:
+                                            return False, handled_ids
+                                        handled_ids.add(comment['id'])
+                                        if added_handled_ids is not None:
+                                            added_handled_ids.add(comment['id'])
                                     get_logger().info("found user tag in previous comments")
                                     get_logger().info(f"Polling, pr_url: {pr_url}",
                                                       artifact={"comment": comment_body})
