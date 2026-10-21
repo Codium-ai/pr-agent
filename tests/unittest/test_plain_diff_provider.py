@@ -69,6 +69,19 @@ def test_get_diff_files(cfg):
     assert files[0].edit_type == EDIT_TYPE.MODIFIED
 
 
+def test_lf_framed_diff_preserves_crlf_payload(cfg, monkeypatch):
+    cfg("plain_diff.content", DIFF.replace("-line2\n", "-line2\r\n"))
+    cfg("plain_diff.output_path", None)
+    monkeypatch.setattr("pr_agent.git_providers.plain_diff_provider._find_repository_root", lambda: None)
+
+    provider = PlainDiffGitProvider(None)
+    files = provider.get_diff_files()
+
+    assert files[0].filename == "foo.py"
+    assert files[0].edit_type == EDIT_TYPE.MODIFIED
+    assert "-line2\r\n+line2-changed\n" in files[0].patch
+
+
 def test_crlf_diff_preserves_file_path_and_working_tree_context(cfg, tmp_path, monkeypatch):
     head = "line1\r\nline2-changed\r\nline3\r\n"
     Repo.init(tmp_path)
