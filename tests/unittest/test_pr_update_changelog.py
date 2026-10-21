@@ -1,14 +1,17 @@
 import asyncio
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
 from github import GithubException
 from requests.exceptions import HTTPError, Timeout
 
+from pr_agent.algo.pr_processing import FallbackEligibleError
 from pr_agent.git_providers.git_provider import ConcurrentFileUpdateError, FileContentSnapshot
 from pr_agent.git_providers.github_provider import GithubProvider
 from pr_agent.log import get_logger
 from pr_agent.tools.pr_update_changelog import PRUpdateChangelog
+from tests.unittest._run_details_command_helpers import BACKUP, PRIMARY, command_run_settings
 
 
 class _CustomProvider:
@@ -61,6 +64,61 @@ class TestPRUpdateChangelog:
             # Supply the snapshot captured by an enabled push for direct write-helper tests.
             tool.changelog_snapshot = FileContentSnapshot("old", True, "captured-revision")
             return tool
+
+    @pytest.fixture
+    def prediction_tool(self, changelog_tool, mock_git_provider):
+        """Exercise the real response and fallback flow with diff packing stubbed out."""
+        changelog_tool.commit_changelog = True
+        changelog_tool.changelog_file = changelog_tool.changelog_snapshot.contents
+        mock_git_provider.supports_changelog_update_review.return_value = False
+        with (
+            command_run_settings(),
+            patch("pr_agent.tools.pr_update_changelog.get_pr_diff", return_value="diff"),
+            patch("pr_agent.tools.pr_update_changelog.AttemptTokenBudget.for_prompt_attempt") as budget,
+            patch("pr_agent.tools.pr_update_changelog.asyncio.sleep", new_callable=AsyncMock),
+        ):
+            budget.return_value.fit_prompt_variable.return_value = SimpleNamespace(
+                optional_text="diff", system_prompt="System prompt", user_prompt="User prompt"
+            )
+            yield changelog_tool
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("response", [
+        "", " \t\n", "```markdown\n```", "```markdown\n \t\n```", "```",
+        "```markdown\n```\n```", "```markdown", "````", "````\n````", "````markdown\n````",
+        "~~~markdown\n~~~", "~~~~\n~~~~",
+    ])
+    async def test_empty_response_uses_fallback_before_writing(
+        self, prediction_tool, mock_ai_handler, mock_git_provider, response
+    ):
+        entry = "- Preserve `inline code`"
+        mock_ai_handler.chat_completion.side_effect = [(response, "stop"), (f"```markdown\n{entry}\n```", "stop")]
+
+        await prediction_tool.run()
+
+        assert [call.kwargs["model"] for call in mock_ai_handler.chat_completion.await_args_list] == [PRIMARY, BACKUP]
+        mock_git_provider.create_or_update_pr_file.assert_called_once()
+        assert mock_git_provider.create_or_update_pr_file.call_args.kwargs["contents"] == (
+            f"{entry}\n\n{prediction_tool.changelog_file}"
+        )
+        mock_git_provider.remove_initial_comment.assert_called_once_with()
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("commit", [False, True])
+    async def test_all_empty_responses_stop_without_publishing_an_update(
+        self, prediction_tool, mock_ai_handler, mock_git_provider, commit
+    ):
+        prediction_tool.commit_changelog = commit
+        mock_ai_handler.chat_completion.side_effect = [(" \n", "stop"), ("```markdown\n```", "stop")]
+
+        with pytest.raises(Exception, match="Failed to generate prediction with any model") as error:
+            await prediction_tool.run()
+
+        assert isinstance(error.value.__cause__, FallbackEligibleError)
+        assert [call.kwargs["model"] for call in mock_ai_handler.chat_completion.await_args_list] == [PRIMARY, BACKUP]
+        mock_git_provider.create_or_update_pr_file.assert_not_called()
+        mock_git_provider.publish_comment.assert_called_once_with("Preparing changelog updates...", is_temporary=True)
+        mock_git_provider.remove_initial_comment.assert_called_once_with()
 
     def test_get_changelog_file_with_existing_content(self, changelog_tool, mock_git_provider):
         """Test retrieving existing changelog content."""

@@ -273,9 +273,15 @@ class PRUpdateChangelog:
 
         # post-process the response
         response = response.strip()
-        if not response:
-            return ""
-        return strip_wrapping_code_fence(response)
+        # Check before stripping, which can turn four backticks into a stray single backtick.
+        fence_pattern = r"(?m)^[^\S\n]*(?:`{3,}[^`\n]*|~{3,}[^~\n]*)$"
+        content = re.sub(fence_pattern, "", response)
+        if content.strip():
+            response = strip_wrapping_code_fence(response)
+            content = re.sub(fence_pattern, "", response)
+        if not content.strip():
+            raise FallbackEligibleError(f"Empty changelog response from {model}")
+        return response
 
     def _prepare_changelog_update(self) -> tuple[str, str]:
         answer = strip_wrapping_code_fence(self.prediction.strip()).strip()
