@@ -69,6 +69,25 @@ def test_get_diff_files(cfg):
     assert files[0].edit_type == EDIT_TYPE.MODIFIED
 
 
+def test_crlf_diff_preserves_file_path_and_working_tree_context(cfg, tmp_path, monkeypatch):
+    head = "line1\r\nline2-changed\r\nline3\r\n"
+    Repo.init(tmp_path)
+    (tmp_path / "foo.py").write_text(head, newline="")
+    monkeypatch.chdir(tmp_path)
+    cfg("plain_diff.content", DIFF.replace("\n", "\r\n"))
+    cfg("plain_diff.output_path", None)
+
+    provider = PlainDiffGitProvider(None)
+    files = provider.get_diff_files()
+
+    assert len(files) == 1
+    assert files[0].filename == "foo.py"
+    assert files[0].edit_type == EDIT_TYPE.MODIFIED
+    assert files[0].base_file == "line1\nline2\nline3\n"
+    assert files[0].head_file == "line1\nline2-changed\nline3\n"
+    assert provider.get_languages() == {"Python": 100.0}
+
+
 @pytest.mark.parametrize("quote_path", ["true", "false"])
 @pytest.mark.parametrize("filename", ["测试.py", 'quote"name.py', "tab\tname.py", "back\\slash.py"])
 def test_git_quoted_paths_preserve_working_tree_context(cfg, tmp_path, monkeypatch, filename, quote_path):

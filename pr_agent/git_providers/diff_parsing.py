@@ -27,7 +27,10 @@ def parse_unified_diff(diff_text: str) -> list[FilePatchInfo]:
     base_file / head_file are left empty here; the provider fills them from the
     working tree and by reverse-applying the patch. Binary files are skipped.
     """
-    patch_set = PatchSet(diff_text)
+    # unidiff leaves a trailing CR on the target path when file headers use CRLF,
+    # which makes the same file look like a rename to "foo.py\r". Parse a normalized
+    # copy so Windows-generated diffs keep their real path and edit type.
+    patch_set = PatchSet(diff_text.replace("\r\n", "\n"))
     files: list[FilePatchInfo] = []
     for pf in patch_set:
         if pf.is_binary_file:
