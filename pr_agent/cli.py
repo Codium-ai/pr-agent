@@ -33,6 +33,7 @@ _PLAIN_DIFF_MARKDOWN_COMMANDS = frozenset({
     "config", "settings", "help",
 })
 _JSON_REVIEW_COMMANDS = frozenset({"review", "review_pr"})
+_JSON_IMPROVE_COMMANDS = frozenset({"improve", "improve_code"})
 _OUTPUT_OPTIONS = ("--output", "--json-output")
 _CLI_CONTEXT_CACHES = (
     "git_provider", "repo_settings", "git_files", "diff_files", "authenticated_provider_settings",
@@ -99,8 +100,12 @@ def _validate_output_options(parser, args, diff_mode):
             parser.error(f"--output is not supported for plain-diff command '{command}'")
 
     if json_output is not None:
-        if command not in _JSON_REVIEW_COMMANDS:
-            parser.error("--json-output is only supported for review commands (review or review_pr)")
+        if command not in _JSON_REVIEW_COMMANDS | _JSON_IMPROVE_COMMANDS:
+            parser.error("--json-output is only supported for review commands (review or review_pr), "
+                         "and for improve commands (improve or improve_code) with --pr_url")
+        if diff_mode and command in _JSON_IMPROVE_COMMANDS:
+            parser.error("--json-output is only supported for review commands in plain-diff mode; "
+                         "use --pr_url to write improve suggestions as JSON")
         if not diff_mode and (not args.pr_url or args.issue_url):
             parser.error("--json-output requires --pr_url, --stdin, or --diff-file")
 
