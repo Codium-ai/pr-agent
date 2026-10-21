@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
+from gitlab import Gitlab
 
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers.gitlab_provider import (
@@ -124,10 +125,18 @@ def test_compare_uses_straight_diff() -> None:
     # as removed; the sweep must compare the recorded head to the current head
     # directly.
     discussion = _discussion(line=2)
-    provider = _provider([discussion], [{"old_path": "app.py", "diff": PATCH}])
-    provider.reconcile_code_suggestion_threads()
-    provider.gl.projects.get.return_value.repository_compare.assert_called_once_with(
-        OLD_SHA, HEAD_SHA, straight=True)
+    diffs = [{"old_path": "app.py", "diff": PATCH}]
+    provider = _provider([discussion], diffs)
+    client = Gitlab("https://gitlab.example.com", private_token="test-token")
+    client.http_get = MagicMock(side_effect=lambda path, **kwargs:
+                               {"diffs": diffs} if path.endswith("/repository/compare") else {"id": 1})
+    provider.gl = client
+
+    assert provider.reconcile_code_suggestion_threads() == 1
+    assert discussion.resolved is True
+    client.http_get.assert_called_once_with(
+        "/projects/owner%2Frepo/repository/compare", query_data={"from": OLD_SHA, "to": HEAD_SHA}, straight=True
+    )
 
 
 def test_thread_on_untouched_line_stays_open() -> None:
