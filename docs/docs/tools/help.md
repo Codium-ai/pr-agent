@@ -14,6 +14,10 @@ It can be invoked manually by commenting on any PR:
 /help
 ```
 
+Calling `/help` without a question displays the tool list without initializing an AI handler,
+so errors during that initialization do not block the list.
+`/help <question>` still uses the configured AI model.
+
 ## Example usage
 
 Invoke the `help` tool by commenting on a PR with:
