@@ -1490,6 +1490,7 @@ def test_prepare_review_publishes_provider_neutral_structured_data(monkeypatch):
             "security_concerns": False,
         },
         "usage": {"prompt_tokens": 30, "completion_tokens": 12, "total_tokens": 42},
+        "coverage": {"files_not_reviewed": [], "files_partially_reviewed": []},
     })
     # Assert key order to prove the snapshot is isolated: _prepare_pr_review moves
     # key_issues_to_review to the end of its own dict after the hook fires, so an
@@ -1525,6 +1526,38 @@ def test_prepare_review_captures_json_without_provider_hook(monkeypatch, tmp_pat
     assert reviewer._structured_review_data == {
         "review": {"merge_recommendation": "needs_review", "key_issues_to_review": []},
         "usage": {},
+        "coverage": {"files_not_reviewed": [], "files_partially_reviewed": []},
+    }
+
+
+def test_prepare_review_json_lists_files_left_out_by_the_token_budget(monkeypatch, tmp_path):
+    provider = MagicMock()
+    provider.publish_structured_review = None
+    provider.is_supported.return_value = False
+    provider.get_diff_files.return_value = []
+    reviewer = _make_prediction_reviewer(provider)
+    reviewer.prediction = "review:\n  key_issues_to_review: []\n"
+    reviewer.vars = {}
+    reviewer.set_review_labels = MagicMock()
+    reviewer.remaining_files_list = ["src/large.py", "docs/guide.md"]
+    reviewer.partial_files_list = ("src/clipped.py",)
+    monkeypatch.setattr(
+        "pr_agent.tools.pr_reviewer.convert_to_markdown_v2",
+        lambda *args, **kwargs: "## Review",
+    )
+
+    from pr_agent.algo.run_details import init_run_details
+
+    init_run_details()
+    token = review_json_output_path.set(str(tmp_path / "review.json"))
+    try:
+        reviewer._prepare_pr_review()
+    finally:
+        review_json_output_path.reset(token)
+
+    assert reviewer._structured_review_data["coverage"] == {
+        "files_not_reviewed": ["src/large.py", "docs/guide.md"],
+        "files_partially_reviewed": ["src/clipped.py"],
     }
 
 
