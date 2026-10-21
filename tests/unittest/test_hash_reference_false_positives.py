@@ -49,6 +49,8 @@ def test_tailwind_arbitrary_values_are_ignored(description):
     ("Fixes #42", "42"),
     ("(#42)", "42"),
     ("see [#42]", "42"),
+    ("Fixes [#42] (crash on start)", "42"),
+    ("Related: [#42] [#43]", "42"),
     ("<!-- old text --> Fixes #42", "42"),
     ('<a href="https://example.com/x">#42</a> fixes #7', "7"),
 ])
