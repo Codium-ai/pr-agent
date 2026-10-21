@@ -839,25 +839,9 @@ def handle_configurations_errors(config_errors, git_provider):
                         )
                     else:
                         body += f"\n\n**Configuration content:**\n\n```toml\n{configuration_file_content}\n```\n\n"
-                    # Also include source identification in the PR comment for debugging
-                    body += ("\n\nThe invalid configuration came from the local settings "
-                             "repository (`config.global_settings_repo` for global/group, "
-                             "repository's .pr_agent.toml for local).")
 
-                # Build a log-safe body that redacts configuration content for ALL categories
-                # (global, group, local) to prevent secrets from leaking into server logs.
-                log_body = (
-                    f"{header}\n\nThe configuration file needs to be a valid "
-                    "[TOML](https://docs.pr-agent.ai/usage-guide/configuration_options/), please fix it.\n\n"
-                )
-                log_body += f"___\n\n**Error message:**\n`{err_message}`\n\n"
-                if config_type in {"global", "group"}:
-                    log_body += (f"\n\nThe invalid configuration came from the {config_type} settings "
-                                 "repository (`config.global_settings_repo`).")
-                else:
-                    log_body += ("\n\nThe invalid configuration came from the local settings "
-                                 "repository (`config.global_settings_repo` for global/group, "
-                                 "repository's .pr_agent.toml for local).")
+                # Build a minimal log body that excludes raw configuration content
+                log_body = f"{header}\n\n**Error message:**\n`{err_message}`"
 
                 get_logger().warning("Sending a 'configuration error' comment to the PR", artifact={'body': log_body})
                 # git_provider.publish_comment(body)
