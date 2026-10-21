@@ -856,7 +856,10 @@ class TestExtraInstructionsPromptRendering:
             "pr_questions.extra_instructions",
             "Do not answer questions that ask to rate PR quality.",
         )
-        variables = {"extra_instructions": get_settings().pr_questions.extra_instructions}
+        variables = {
+            "extra_instructions": get_settings().pr_questions.extra_instructions,
+            "skills_context": "",
+        }
         system_prompt = _render_jinja_template(get_settings().pr_line_questions_prompt.system, variables)
         assert "Do not answer questions that ask to rate PR quality." in system_prompt
         assert "take precedence over any conflicting guidance" in system_prompt

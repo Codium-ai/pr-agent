@@ -22,7 +22,7 @@ description: Use when reviewing Terraform code — checks state safety and risky
 - ...
 ```
 
-When enabled, PR-Agent discovers every `SKILL.md` under the configured paths, parses it, and injects the skill's `name`, `description`, and body into the `/review`, `/improve`, `/describe`, and top-level `/ask` prompts alongside `extra_instructions`. The model applies the guidance it judges relevant to the PR or question, using each skill's `description` as the signal for when the skill applies.
+When enabled, PR-Agent discovers every `SKILL.md` under the configured paths, parses it, and injects the skill's `name`, `description`, and body into the `/review`, `/improve`, `/describe`, and `/ask` prompts (including questions on a specific line) alongside `extra_instructions`. The model applies the guidance it judges relevant to the PR or question, using each skill's `description` as the signal for when the skill applies.
 
 The value proposition is **org-wide, host-level skill libraries**: install one curated set of skills on your PR-Agent deployment and reuse it across many repositories, without checking guidance into each repo.
 
@@ -55,7 +55,7 @@ The agent-skills standard supports bundled files alongside `SKILL.md`. PR-Agent 
 - `scripts/` and `assets/` subdirectories are **skipped**: PR-Agent runs single-shot model calls with no tool-use loop, so it cannot execute scripts or load binary assets on demand.
 - A nested directory that contains its own `SKILL.md` is treated as a separate skill and not inlined into its parent.
 
-In short, PR-Agent supports **text-only** agent skills. `/ask_line` remains outside the skills injection scope because its prompt is separately budgeted around a selected diff hunk and optional thread history.
+In short, PR-Agent supports **text-only** agent skills.
 
 ## Limitations
 

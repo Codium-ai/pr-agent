@@ -593,7 +593,7 @@ uri = "./lancedb"
 [skills]
 # Agent skills (SKILL.md) support: discovers SKILL.md files from the configured
 # filesystem paths and injects their content into review/improve/describe and
-# top-level /ask prompts.
+# /ask prompts, including questions on a specific line.
 # Sibling *.md files in the skill directory tree (e.g. references/guide.md) are
 # inlined alongside SKILL.md. PR-Agent supports text-only skills: scripts/ and
 # assets/ subdirectories are skipped because PR-Agent uses a single-shot model

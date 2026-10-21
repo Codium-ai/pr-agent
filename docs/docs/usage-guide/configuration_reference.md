@@ -533,7 +533,7 @@ _This section only documents commented-out examples; see the [TOML source](https
 
 | Key | Default | Description |
 | --- | --- | --- |
-| `enabled` | false | Agent skills (SKILL.md) support: discovers SKILL.md files from the configured filesystem paths and injects their content into review/improve/describe and top-level /ask prompts. Sibling *.md files in the skill directory tree (e.g. references/guide.md) are inlined alongside SKILL.md. PR-Agent supports text-only skills: scripts/ and assets/ subdirectories are skipped because PR-Agent uses a single-shot model call (no tool-use loop) and cannot execute scripts or load binary assets on demand. Skills that depend on script execution will not work here. See https://github.com/The-PR-Agent/pr-agent/issues/2384 |
+| `enabled` | false | Agent skills (SKILL.md) support: discovers SKILL.md files from the configured filesystem paths and injects their content into review/improve/describe and /ask prompts, including questions on a specific line. Sibling *.md files in the skill directory tree (e.g. references/guide.md) are inlined alongside SKILL.md. PR-Agent supports text-only skills: scripts/ and assets/ subdirectories are skipped because PR-Agent uses a single-shot model call (no tool-use loop) and cannot execute scripts or load binary assets on demand. Skills that depend on script execution will not work here. See https://github.com/The-PR-Agent/pr-agent/issues/2384 |
 | `paths` | [] | directories to scan recursively for "*/SKILL.md"; supports ~ and $VAR |
 | `max_skills_tokens` | 8000 | token budget for the combined skills_context block |
 
