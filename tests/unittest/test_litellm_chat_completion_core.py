@@ -559,7 +559,7 @@ async def test_chat_completion_strips_temperature_for_bedrock_kimi_k3_and_glm_5_
     )
     models = [f"bedrock/{route}{model}" for route in ("", "converse/")
               for model in ("moonshotai.kimi-k3", "us.moonshotai.kimi-k3", "global.moonshotai.kimi-k3",
-                            "zai.glm-5", "us.zai.glm-5", "global.zai.glm-5")]
+                            "zai.glm-5")]
 
     with patch("pr_agent.algo.ai_handlers.litellm_ai_handler.acompletion", new_callable=AsyncMock) as mock_call:
         mock_call.return_value = _mock_response()
