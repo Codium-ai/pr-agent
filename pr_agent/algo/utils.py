@@ -994,7 +994,10 @@ def load_yaml(response_text: str, keys_fix_yaml: list[str] | None = None, first_
     response_text = response_text.strip('\n')
     # strip the fence label only when it is a complete info string, so a key such as
     # "yml_config" is not truncated to "_config"
-    unfenced = re.sub(r'^```[ \t]*(?:(?i:yaml|yml))?[ \t]*(?=\r?\n)', '', response_text)
+    # the label and the blanks that follow it share a single optional group: two separate
+    # blank runs would let the engine try every way of splitting a long run of blanks
+    # when the fence is not followed by a line break, which backtracks quadratically
+    unfenced = re.sub(r'^```[ \t]*(?:(?i:yaml|yml)[ \t]*)?(?=\r?\n)', '', response_text)
     if unfenced == response_text:
         # Strip an unfenced "yaml" label only when it is a complete line, so a key such as
         # "yaml_config" is not truncated. A bare removeprefix('yaml') would shorten it to "_config".
