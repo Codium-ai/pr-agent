@@ -726,6 +726,60 @@ def test_finding_limit_prevents_resolution_of_missing_active_findings(monkeypatc
     assert reviewer._review_state_result.state["last_run"]["complete"] is False
 
 
+def _chunked_reviewer_with_active_finding(monkeypatch, chunk_sizes):
+    """A reviewer holding the merged result of chunks that reported `chunk_sizes` findings each."""
+    settings = _settings(monkeypatch)
+    monkeypatch.setattr(settings.pr_reviewer, "num_max_findings", 3)
+    previous = reconcile_review_findings(
+        None,
+        [{"body": "previous", "path": "old.py", "line_start": 2, "line_end": 2}],
+        allow_resolution=True,
+        head_sha="head-1",
+        timestamp="2026-01-01T00:00:00Z",
+    ).state
+    header = f"{PRReviewHeader.REGULAR.value} 🔍"
+    provider = MagicMock()
+    provider.last_commit_id = "head-2"
+    provider.get_issue_comments.return_value = [
+        SimpleNamespace(body=f"{header}\n\nold review\n\n{serialize_review_state(previous)}")
+    ]
+    provider.is_supported.side_effect = lambda capability: capability == "get_issue_comments"
+    reviewer = _reviewer(provider)
+    reviewer._review_finding_state_enabled = MagicMock(return_value=True)
+    reviewer._chunked_results = {
+        index: ("raw", {"review": {"key_issues_to_review": [
+            {"relevant_file": f"{index}_{n}.py", "issue_header": "bug", "issue_content": f"problem {index}_{n}"}
+            for n in range(size)]}}, "model")
+        for index, size in enumerate(chunk_sizes)
+    }
+    reviewer._chunked_patches_diff_list = list(reviewer._chunked_results)
+    reviewer._chunked_remaining_files_list = []
+    reviewer._chunked_partial_files_list = []
+    reviewer._chunked_primary_model = "model"
+    assert reviewer._merge_cached_review_chunks()
+    return reviewer
+
+
+def test_chunked_review_that_reaches_the_limit_without_a_cut_resolves_fixed_findings(monkeypatch):
+    reviewer = _chunked_reviewer_with_active_finding(monkeypatch, (2, 1))
+
+    reviewer._prepare_review_finding_state(reviewer.prediction_data)
+
+    assert len(reviewer.prediction_data["review"]["key_issues_to_review"]) == 3
+    assert reviewer._review_state_result.resolved_ids != ()
+    assert reviewer._review_state_result.state["last_run"]["complete"] is True
+
+
+@pytest.mark.parametrize("chunk_sizes", [(3, 0), (2, 2)], ids=["full-chunk", "merge-cut"])
+def test_chunked_review_that_may_have_left_a_finding_out_does_not_resolve(monkeypatch, chunk_sizes):
+    reviewer = _chunked_reviewer_with_active_finding(monkeypatch, chunk_sizes)
+
+    reviewer._prepare_review_finding_state(reviewer.prediction_data)
+
+    assert reviewer._review_state_result.resolved_ids == ()
+    assert reviewer._review_state_result.state["last_run"]["complete"] is False
+
+
 def test_review_comment_budget_reserves_persistent_update_header():
     provider = MagicMock()
     provider.max_comment_chars = 1000

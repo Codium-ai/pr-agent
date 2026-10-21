@@ -114,6 +114,22 @@ def _cap_key_issues(review: dict, max_findings: int | None) -> None:
         review["key_issues_to_review"] = issues[:limit]
 
 
+def findings_may_be_cut(chunk_outputs: list[dict], max_findings: int) -> bool:
+    """Say whether a chunked review may have left a real finding out of the merged list.
+
+    That is the case when the union of the chunks' findings is longer than `max_findings`
+    (the merge cut it), or when any chunk reported `max_findings` findings on its own (the
+    model may have stopped at its allowance). A merged list that reaches the limit without
+    either condition is complete, so a finding missing from it is really gone.
+    """
+    per_chunk = [chunk["review"].get("key_issues_to_review") for chunk in chunk_outputs
+                 if isinstance(chunk, dict) and isinstance(chunk.get("review"), dict)]
+    per_chunk = [issues if isinstance(issues, list) else [] for issues in per_chunk]
+    if any(len(issues) >= max_findings for issues in per_chunk):
+        return True
+    return len(_union_of_lists(_key_issue_identity)(per_chunk)) > max_findings
+
+
 def _rule_name(key: str) -> str:
     normalized = str(key).strip().lower()
     # the effort field carries its scale in its name: 'estimated_effort_to_review_[1-5]'
