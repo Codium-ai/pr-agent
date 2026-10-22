@@ -101,6 +101,16 @@ def test_crlf_diff_preserves_file_path_and_working_tree_context(cfg, tmp_path, m
     assert provider.get_languages() == {"Python": 100.0}
 
 
+def test_crlf_diff_with_several_files_keeps_every_path(cfg):
+    cfg("plain_diff.content", (DIFF + DIFF.replace("foo.py", "bar.py")).replace("\n", "\r\n"))
+    cfg("plain_diff.output_path", None)
+
+    files = PlainDiffGitProvider(None).get_diff_files()
+
+    assert [(f.filename, f.edit_type) for f in files] == [("foo.py", EDIT_TYPE.MODIFIED),
+                                                          ("bar.py", EDIT_TYPE.MODIFIED)]
+
+
 @pytest.mark.parametrize("quote_path", ["true", "false"])
 @pytest.mark.parametrize("filename", ["测试.py", 'quote"name.py', "tab\tname.py", "back\\slash.py"])
 def test_git_quoted_paths_preserve_working_tree_context(cfg, tmp_path, monkeypatch, filename, quote_path):

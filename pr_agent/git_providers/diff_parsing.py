@@ -45,7 +45,8 @@ def _normalize_metadata_line_endings(diff_text: str) -> str:
             target_length = int(hunk.group("target_length") or 1)
             hunk_lines_remaining = source_length + target_length
         elif hunk_lines_remaining and not line.startswith("\\"):
-            hunk_lines_remaining -= 1
+            # A context line counts toward both the source and the target length.
+            hunk_lines_remaining -= 1 if line.startswith(("+", "-")) else 2
 
     return "".join(normalized)
 
