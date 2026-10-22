@@ -79,12 +79,57 @@ async def test_fallback_reuses_session_and_preserves_selection():
         # Check that the consumed latest-comment response releases the only
         # connection before fallback.
         handled = set()
+        added = set()
         result = await github_polling.is_valid_notification(
-            _notification(url), {"Authorization": "Bearer test-token"}, handled, session, "bot"
+            _notification(url), {"Authorization": "Bearer test-token"}, handled, session, "bot", added
         )
     assert result == (True, handled, selected, "@bot /review", f"{url}/repos/owner/repo/pulls/1", "@bot")
-    assert handled == {99}
+    assert handled == {2, 99}
+    assert added == {2, 99}
     assert seen == ["Bearer test-token"]
+
+
+@pytest.mark.asyncio
+async def test_fallback_does_not_replay_or_backfill_handled_mentions():
+    selected = _comment(2)
+    latest = _comment(99, "Other discussion")
+
+    async def fallback(request):
+        return web.json_response([_comment(1, "@bot /ask old"), selected, latest])
+
+    handled = set()
+    async with _server(fallback, latest) as url, aiohttp.ClientSession() as session:
+        result = await github_polling.is_valid_notification(_notification(url), {}, handled, session, "bot")
+        assert result[0] is True
+        assert result[2] == selected
+
+        for latest_id in (100, 101):
+            latest["id"] = latest_id
+            assert await github_polling.is_valid_notification(_notification(url), {}, handled, session, "bot") == (
+                False, handled
+            )
+
+    assert handled == {2, 99, 100, 101}
+
+
+@pytest.mark.asyncio
+async def test_fallback_accepts_latest_mention_added_between_reads():
+    latest = _comment(99, "Other discussion")
+    edited = _comment(99)
+
+    async def fallback(request):
+        return web.json_response([edited])
+
+    handled = set()
+    added = set()
+    async with _server(fallback, latest) as url, aiohttp.ClientSession() as session:
+        result = await github_polling.is_valid_notification(
+            _notification(url), {}, handled, session, "bot", added
+        )
+
+    assert result == (True, handled, edited, "@bot /review", f"{url}/repos/owner/repo/pulls/1", "@bot")
+    assert handled == {99}
+    assert added == {99}
 
 
 def test_pr_comments_url_anchors_pulls_segment():
