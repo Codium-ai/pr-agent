@@ -8,6 +8,7 @@ from pr_agent.log import get_logger
 _MAX_ENUMERATED_GLOBSTARS = 6
 _MAX_IGNORE_GLOB_VARIANT_REGEXES = 256
 _MAX_EXPANDED_GLOB_LENGTH = 256
+_MAX_GLOB_LENGTH = 1024
 
 
 def filter_ignored(files, platform = 'github'):
@@ -132,7 +133,11 @@ def translate_globs_to_regexes(globs: list):
     regexes = {}
     expandable = []
     skipped = variants = 0
+    long_skipped = 0
     for pattern in dict.fromkeys(globs):
+        if len(pattern) > _MAX_GLOB_LENGTH:
+            long_skipped += 1
+            continue
         # Keep every configured glob and its existing root-level form before spending any quota.
         forms = [pattern, pattern[3:]] if pattern.startswith("**/") else [pattern]
         for form in forms:
@@ -162,4 +167,9 @@ def translate_globs_to_regexes(globs: list):
         get_logger().warning(
             "Skipped zero-directory '**/' variants of some ignore globs; files only those "
             "variants match are still analyzed", artifact={"globs": skipped})
+    if long_skipped:
+        get_logger().warning(
+            "Skipped ignore globs longer than the length cap; files matching only those "
+            "patterns will still be analyzed",
+            artifact={"globs": long_skipped, "max_length": _MAX_GLOB_LENGTH})
     return list(regexes)

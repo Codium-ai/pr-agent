@@ -894,3 +894,21 @@ class TestGlobstarLimits:
         warnings = [record for record in records if "Skipped zero-directory" in record["message"]]
         assert len(warnings) == 2
         assert warnings[1]["extra"]["artifact"]["globs"] == warnings[0]["extra"]["artifact"]["globs"] + 1
+
+
+def test_long_glob_is_skipped_and_normal_still_matches():
+    """A very long glob is skipped before fnmatch.translate, a normal one still matches."""
+    long_glob = "a" * 20000 + ".py"
+    normal = "*.py"
+    records = []
+    handler = get_logger().add(lambda message: records.append(message.record))
+    try:
+        regexes = translate_globs_to_regexes([long_glob, normal])
+    finally:
+        get_logger().remove(handler)
+
+    assert fnmatch.translate(long_glob) not in regexes
+    assert fnmatch.translate(normal) in regexes
+    warnings = [r for r in records if "longer than the length cap" in r["message"]]
+    assert len(warnings) == 1
+    assert warnings[0]["extra"]["artifact"]["globs"] == 1

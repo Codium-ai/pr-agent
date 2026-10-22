@@ -210,8 +210,9 @@ PER_DIRECTORY_HOST_ONLY_KEYS_BY_SECTION = {
 # review. A catastrophic-backtracking pattern committed in a nested file could
 # stall a worker, so nested files keep the bounded glob form only. The expansion
 # that glob form allows is bounded by the per-glob and per-list variant ceilings
-# in pr_agent/algo/file_filter.py; the number of globs a nested file may list is
-# not.
+# in pr_agent/algo/file_filter.py. Individual globs are additionally capped at
+# 1024 characters (_MAX_GLOB_LENGTH) before translation to avoid sharp slowdowns
+# on very long patterns; the number of globs a nested file may list is not.
 #
 # The `config` section lists model-routing and output knobs but deliberately
 # excludes the repo-context builders: `repo_context_files` fetches every listed
