@@ -138,6 +138,20 @@ class TestGitLabProvider:
         assert client.http_request.call_args_list[0].kwargs["per_page"] == 100
         assert client.http_request.call_args_list[1].args[1] == next_url
 
+    def test_merge_request_changes_are_cached_after_stable_collection(self, gitlab_provider):
+        refs = {"base_sha": "base", "head_sha": "head"}
+        changes = [{"new_path": "src/app.py", "old_path": "src/app.py"}]
+        gitlab_provider.mr.diff_refs = refs
+        gitlab_provider.gl.http_list.return_value = changes
+
+        first = gitlab_provider._get_merge_request_changes()
+        second = gitlab_provider._get_merge_request_changes()
+
+        assert first == second
+        assert first is not second
+        assert gitlab_provider.gl.http_get.call_count == 2
+        gitlab_provider.gl.http_list.assert_called_once()
+
     def test_filtered_lockfile_name_is_available_without_ignored_paths(self, gitlab_provider):
         def change(name):
             return {
