@@ -902,13 +902,24 @@ class TestGlobstarLimits:
 
 
 class TestGlobLengthCap:
-    TOO_LONG = "src/" + "a" * file_filter._MAX_GLOB_LENGTH + ".py"
+    TOO_LONG = "src/" + "a" * 20000 + ".py"
 
-    def test_over_long_glob_is_dropped_before_translation(self):
+    def test_over_long_glob_never_reaches_translation(self, monkeypatch):
+        translated = []
+        original_translate = fnmatch.translate
+
+        def checked_translate(pattern):
+            assert len(pattern) <= file_filter._MAX_GLOB_LENGTH
+            translated.append(pattern)
+            return original_translate(pattern)
+
+        monkeypatch.setattr(file_filter.fnmatch, "translate", checked_translate)
+
         regexes = translate_globs_to_regexes([self.TOO_LONG, "src/**/generated.py"])
 
-        assert fnmatch.translate(self.TOO_LONG) not in regexes
-        assert fnmatch.translate("src/**/generated.py") in regexes
+        assert self.TOO_LONG not in translated
+        assert "src/**/generated.py" in translated
+        assert original_translate("src/**/generated.py") in regexes
         assert all(len(regex) < 2 * file_filter._MAX_GLOB_LENGTH for regex in regexes)
 
     @pytest.mark.parametrize("over", [False, True])
