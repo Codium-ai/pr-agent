@@ -210,9 +210,11 @@ def test_process_issue_preserves_configured_comment_indexing(monkeypatch, skip_c
     issue = SimpleNamespace(title="Issue", body="Body", number=1, get_comments=Mock(return_value=iter(comments)))
     tool = psi.PRSimilarIssue.__new__(psi.PRSimilarIssue)
 
-    assert tool._process_issue(issue) == (
-        'Issue Header: "Issue"\n\nIssue Body:\nBody', [] if skip_comments else comments, 1,
-    )
+    issue_str, returned_comments, number = tool._process_issue(issue)
+
+    assert issue_str == "Issue Header: \"Issue\"\n\nIssue Body:\nBody"
+    assert list(returned_comments) == ([] if skip_comments else comments)
+    assert number == 1
     assert issue.get_comments.call_count == (0 if skip_comments else 1)
 
 
