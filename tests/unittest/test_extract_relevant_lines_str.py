@@ -69,6 +69,17 @@ def test_patch_fallback_preserves_nested_fences(inner_fence, outer_fence, dedent
     assert result == f"{outer_fence}markdown\n{content}\n{outer_fence}"
 
 
+@pytest.mark.parametrize("separator", ["\u2028", "\u2029", "\f"])
+def test_patch_fallback_preserves_embedded_line_separators(separator):
+    line = f'const text = "before{separator}after";'
+    patch = f"@@ -1,2 +1,2 @@\n const kept = true;\n-old\n+{line}\n"
+    file = _make_file("src/main.js", None, language="javascript", patch=patch)
+
+    result = extract_relevant_lines_str(2, [file], "src/main.js", 1, dedent=True)
+
+    assert result == f"```javascript\nconst kept = true;\n{line}\n\n```"
+
+
 class TestExtractRelevantLinesStr:
     def test_returns_empty_when_no_files(self):
         result = extract_relevant_lines_str(end_line=5, files=None, relevant_file="src/foo.py", start_line=1)
