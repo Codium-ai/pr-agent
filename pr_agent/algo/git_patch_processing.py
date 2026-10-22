@@ -24,6 +24,11 @@ def split_diff_lines(text: str) -> list[str]:
     return [line.removesuffix("\r") for line in lines]
 
 
+def count_patch_lines(patch: str) -> tuple[int, int]:
+    """Count added and removed lines using Git's LF-delimited patch lines."""
+    return patch.count("\n+") + patch.startswith("+"), patch.count("\n-") + patch.startswith("-")
+
+
 def to_hunk_only_patch(patch_str: str) -> str:
     """Drop unified-diff file metadata before the first hunk.
 

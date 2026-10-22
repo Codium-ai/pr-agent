@@ -134,6 +134,27 @@ def test_collects_all_pages_using_the_configured_client(provider_factory):
     assert len(transport.requests) == 4
 
 
+@pytest.mark.parametrize("line_ending,trailing_newline", [("\n", True), ("\r\n", True), ("\n", False)])
+def test_diff_line_counts_with_different_line_endings(provider_factory, line_ending, trailing_newline):
+    patch = line_ending.join(["@@ -1 +1 @@", "-old", "+new"])
+    if trailing_newline:
+        patch += line_ending
+    provider, _ = provider_factory([(200, [_change("a.py", diff=patch)], {})], count="1")
+
+    file = provider.get_diff_files()[0]
+
+    assert (file.num_plus_lines, file.num_minus_lines) == (1, 1)
+
+
+def test_diff_line_counts_keep_unicode_separators_in_source_lines(provider_factory):
+    patch = "@@ -1 +1 @@\n-value = 'old'\n+value = 'before\u2028+after\u2029-more'\n"
+    provider, _ = provider_factory([(200, [_change("a.py", diff=patch)], {})], count="1")
+
+    file = provider.get_diff_files()[0]
+
+    assert (file.num_plus_lines, file.num_minus_lines) == (1, 1)
+
+
 @pytest.mark.parametrize("project_id", [123, "123"])
 def test_numeric_project_identifier(provider_factory, project_id):
     provider, transport = provider_factory([(200, [_change("a.py")], {})], "1", project_id)
