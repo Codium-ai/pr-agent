@@ -50,6 +50,7 @@ from .git_provider import (
     ConcurrentFileUpdateError,
     FileContentSnapshot,
     GitProvider,
+    IncompleteProviderPullRequestFilesError,
     IncrementalPR,
     get_cached_global_settings,
     get_config_branch,
@@ -63,8 +64,17 @@ class DiffNotFoundError(Exception):
     pass
 
 
-class IncompleteGitLabDiffError(DiffNotFoundError):
+class IncompleteGitLabDiffError(DiffNotFoundError, IncompleteProviderPullRequestFilesError):
     """Represent an incomplete GitLab merge-request diff response."""
+
+    notice = (
+        "## PR-Agent command was not run\n\n"
+        "GitLab returned an incomplete or inconsistent merge-request diff, so PR-Agent stopped "
+        "instead of analyzing only part of it.\n\n"
+        "Retry the command in a few minutes. If the problem persists, check the merge request diff in GitLab or "
+        "split an unusually large merge request into smaller ones."
+    )
+    notice_marker = "<!-- pr-agent:gitlab-incomplete-diff -->"
 
 
 class GitLabDiffNotReadyError(IncompleteGitLabDiffError):
