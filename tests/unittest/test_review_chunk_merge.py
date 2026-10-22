@@ -8,7 +8,7 @@ than its worst chunk.
 import pytest
 
 from pr_agent.algo import review_merge
-from pr_agent.algo.review_merge import merge_review_chunks
+from pr_agent.algo.review_merge import all_key_issues, chunk_hit_findings_limit, merge_review_chunks
 
 
 def _chunk(**review):
@@ -422,3 +422,33 @@ def test_case_distinct_paths_remain_distinct_when_merging_chunks():
     assert [item["relevant_files"] for item in merged["can_be_split"]] == [
         ["src/Foo.py"], ["src/foo.py"]]
     assert merged["review_priority_files"] == ["src/Foo.py", "src/foo.py"]
+
+
+def _chunks_of(*sizes):
+    return [_chunk(key_issues_to_review=[_issue(file=f"{index}_{n}.py", content=f"problem {index}_{n}")
+                                         for n in range(size)])
+            for index, size in enumerate(sizes)]
+
+
+@pytest.mark.parametrize("sizes, limit, hit_limit", [
+    ((2, 1), 3, False),   # reaches the limit, but no chunk was full
+    ((1, 1), 3, False),
+    ((3, 0), 3, True),    # a chunk that reports the limit on its own may have stopped there
+    ((2, 2), 3, False),   # the merge drops one finding, but it is known and so not missing
+    ((), 3, False),
+])
+def test_chunk_hit_findings_limit(sizes, limit, hit_limit):
+    assert chunk_hit_findings_limit(_chunks_of(*sizes), limit) is hit_limit
+
+
+def test_all_key_issues_keeps_what_the_merge_cuts_and_drops_repeats():
+    issue = _issue()
+    chunks = [_chunk(key_issues_to_review=[issue, _issue(file="b.py", content="b")]),
+              _chunk(key_issues_to_review=[issue, _issue(file="c.py", content="c")])]
+
+    assert [i["relevant_file"] for i in all_key_issues(chunks)] == ["app.py", "b.py", "c.py"]
+    assert len(merge_review_chunks(chunks, max_findings=2)["review"]["key_issues_to_review"]) == 2
+
+
+def test_all_key_issues_ignores_chunks_without_a_list():
+    assert all_key_issues([{}, _chunk(key_issues_to_review="none"), _chunk()]) == []
