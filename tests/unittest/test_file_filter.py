@@ -31,6 +31,11 @@ def _capture_warnings(call):
     ]
 
 
+def pattern_at(size):
+    """Build a syntactically valid glob of exactly ``size`` characters."""
+    return "src/" + "a" * (size - len("src/") - len(".py")) + ".py"
+
+
 class _BitbucketSide:
     def __init__(self, path):
         self.path = path
@@ -894,3 +899,38 @@ class TestGlobstarLimits:
         warnings = [record for record in records if "Skipped zero-directory" in record["message"]]
         assert len(warnings) == 2
         assert warnings[1]["extra"]["artifact"]["globs"] == warnings[0]["extra"]["artifact"]["globs"] + 1
+
+
+class TestGlobLengthCap:
+    TOO_LONG = "src/" + "a" * file_filter._MAX_GLOB_LENGTH + ".py"
+
+    def test_over_long_glob_is_dropped_before_translation(self):
+        regexes = translate_globs_to_regexes([self.TOO_LONG, "src/**/generated.py"])
+
+        assert fnmatch.translate(self.TOO_LONG) not in regexes
+        assert fnmatch.translate("src/**/generated.py") in regexes
+        assert all(len(regex) < 2 * file_filter._MAX_GLOB_LENGTH for regex in regexes)
+
+    @pytest.mark.parametrize("over", [False, True])
+    def test_length_boundary_keeps_a_glob_the_cap_admits(self, over):
+        pattern = pattern_at(size=file_filter._MAX_GLOB_LENGTH + int(over))
+
+        regexes = translate_globs_to_regexes([pattern])
+
+        assert (fnmatch.translate(pattern) in regexes) is not over
+
+    def test_warning_reports_how_many_globs_were_dropped(self):
+        globs = [self.TOO_LONG, self.TOO_LONG + "b", "src/keep.py"]
+
+        logs = _capture_logs(lambda: translate_globs_to_regexes(globs))
+
+        assert f"Skipped 2 ignore glob(s) longer than {file_filter._MAX_GLOB_LENGTH} characters" in logs
+
+    def test_over_long_glob_does_not_break_filtering(self, monkeypatch):
+        monkeypatch.setattr(global_settings.ignore, "glob", [self.TOO_LONG, "**/generated/*"])
+        monkeypatch.setattr(global_settings.ignore, "regex", [])
+        monkeypatch.setattr(global_settings.config, "ignore_language_framework", [])
+        files = [type("", (object,), {"filename": name})()
+                 for name in ("src/app.py", "src/api/generated/client.py")]
+
+        assert filter_ignored(files) == [files[0]]

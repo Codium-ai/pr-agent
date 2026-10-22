@@ -8,6 +8,9 @@ from pr_agent.log import get_logger
 _MAX_ENUMERATED_GLOBSTARS = 6
 _MAX_IGNORE_GLOB_VARIANT_REGEXES = 256
 _MAX_EXPANDED_GLOB_LENGTH = 256
+# Bound the work fnmatch.translate() has to do per pattern. Anything longer than this
+# is not a glob a human wrote; it comes from a config file or a command line.
+_MAX_GLOB_LENGTH = 1024
 
 
 def filter_ignored(files, platform = 'github'):
@@ -131,8 +134,11 @@ def translate_globs_to_regexes(globs: list):
     """Expand standalone ``**/`` segments into separate zero-directory translations."""
     regexes = {}
     expandable = []
-    skipped = variants = 0
+    skipped = variants = too_long = 0
     for pattern in dict.fromkeys(globs):
+        if len(pattern) > _MAX_GLOB_LENGTH:
+            too_long += 1
+            continue
         # Keep every configured glob and its existing root-level form before spending any quota.
         forms = [pattern, pattern[3:]] if pattern.startswith("**/") else [pattern]
         for form in forms:
@@ -158,6 +164,10 @@ def translate_globs_to_regexes(globs: list):
                 break
             regexes[translation] = None
             variants += 1
+    if too_long:
+        get_logger().warning(
+            f"Skipped {too_long} ignore glob(s) longer than {_MAX_GLOB_LENGTH} characters; "
+            "files only those globs match are still analyzed")
     if skipped:
         get_logger().warning(
             "Skipped zero-directory '**/' variants of some ignore globs; files only those "
