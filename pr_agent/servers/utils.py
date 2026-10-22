@@ -39,6 +39,11 @@ _DEFAULT_PR_COMMANDS_BY_PROVIDER = {
 _MISSING = object()
 
 
+def _ignore_patterns(value):
+    """Keep a scalar ignore setting as one pattern rather than its characters."""
+    return [value] if isinstance(value, str) else value
+
+
 def payload_log_summary(data: object, identifying_fields: Sequence[str] = ()) -> dict:
     """Return a webhook payload's top-level keys and identifying string fields, never its values."""
     if not isinstance(data, dict):
@@ -399,7 +404,7 @@ def should_process_pr_logic(
         target_branch = target_branch or ""
 
         # Ignore PRs from specific repositories
-        ignore_repos = get_settings().get("CONFIG.IGNORE_REPOSITORIES", [])
+        ignore_repos = _ignore_patterns(get_settings().get("CONFIG.IGNORE_REPOSITORIES", []))
         if repo_full_name and ignore_repos:
             if any(re.search(regex, repo_full_name) for regex in ignore_repos):
                 get_logger().info(
@@ -408,7 +413,7 @@ def should_process_pr_logic(
                 return False
 
         # Ignore PRs from specific users
-        ignore_pr_users = get_settings().get("CONFIG.IGNORE_PR_AUTHORS", [])
+        ignore_pr_users = _ignore_patterns(get_settings().get("CONFIG.IGNORE_PR_AUTHORS", []))
         if sender and ignore_pr_users:
             if any(re.search(regex, sender) for regex in ignore_pr_users):
                 get_logger().info(f"Ignoring PR from user '{sender}' due to 'config.ignore_pr_authors' setting")
@@ -416,15 +421,13 @@ def should_process_pr_logic(
 
         # Ignore PRs with specific titles
         if title:
-            ignore_pr_title_re = get_settings().get("CONFIG.IGNORE_PR_TITLE", [])
-            if not isinstance(ignore_pr_title_re, list):
-                ignore_pr_title_re = [ignore_pr_title_re]
+            ignore_pr_title_re = _ignore_patterns(get_settings().get("CONFIG.IGNORE_PR_TITLE", []))
             if ignore_pr_title_re and any(re.search(regex, title) for regex in ignore_pr_title_re):
                 get_logger().info(f"Ignoring PR with title '{title}' due to config.ignore_pr_title setting")
                 return False
 
         # Ignore PRs with specific labels
-        ignore_pr_labels = get_settings().get("CONFIG.IGNORE_PR_LABELS", [])
+        ignore_pr_labels = _ignore_patterns(get_settings().get("CONFIG.IGNORE_PR_LABELS", []))
         if labels and ignore_pr_labels:
             if any(label in ignore_pr_labels for label in labels):
                 labels_str = ", ".join(labels)
@@ -432,8 +435,8 @@ def should_process_pr_logic(
                 return False
 
         # Ignore PRs with specific source or target branches
-        ignore_pr_source_branches = get_settings().get("CONFIG.IGNORE_PR_SOURCE_BRANCHES", [])
-        ignore_pr_target_branches = get_settings().get("CONFIG.IGNORE_PR_TARGET_BRANCHES", [])
+        ignore_pr_source_branches = _ignore_patterns(get_settings().get("CONFIG.IGNORE_PR_SOURCE_BRANCHES", []))
+        ignore_pr_target_branches = _ignore_patterns(get_settings().get("CONFIG.IGNORE_PR_TARGET_BRANCHES", []))
         if ignore_pr_source_branches or ignore_pr_target_branches:
             if source_branch and any(re.search(regex, source_branch) for regex in ignore_pr_source_branches):
                 get_logger().info(
