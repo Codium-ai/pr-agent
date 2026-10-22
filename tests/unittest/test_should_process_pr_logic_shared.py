@@ -207,6 +207,12 @@ def test_scalar_ignore_setting_is_one_pattern(providers, ignore_settings, settin
     _assert_all(providers, _fields(**non_matching), True, f"{setting} does not match", only_with_labels=labels_only)
 
 
+@pytest.mark.parametrize("setting", IGNORE_KEYS)
+def test_empty_scalar_ignore_setting_does_not_filter_any_pr(providers, ignore_settings, setting):
+    ignore_settings.set(setting, "")
+    _assert_all(providers, _fields(labels=("ready",)), True, f"{setting} is disabled when empty")
+
+
 def test_an_invalid_pattern_does_not_filter_out_every_pull_request(providers, ignore_settings):
     """Process the PR when a rule cannot be evaluated; the opposite silently disables the agent."""
     ignore_settings.set("CONFIG.IGNORE_PR_TITLE", ["("])

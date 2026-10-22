@@ -41,7 +41,9 @@ _MISSING = object()
 
 def _ignore_patterns(value):
     """Keep a scalar ignore setting as one pattern rather than its characters."""
-    return [value] if isinstance(value, str) else value
+    if isinstance(value, str):
+        return [value] if value else []
+    return value
 
 
 def payload_log_summary(data: object, identifying_fields: Sequence[str] = ()) -> dict:
