@@ -179,15 +179,36 @@ def test_label_rule_is_shared_by_the_servers_that_carry_labels(providers, ignore
     _assert_all(providers, _fields(labels=("ready",)), True, "a label that is not ignored", only_with_labels=True)
 
 
-def test_ignore_pr_title_given_as_a_plain_string_is_not_iterated_per_character(providers, ignore_settings):
+@pytest.mark.parametrize(
+    "setting, pattern, matching, non_matching",
+    [
+        ("CONFIG.IGNORE_REPOSITORIES", "^org/repo$", {"repo_full_name": "org/repo"},
+         {"repo_full_name": "acme/tools"}),
+        ("CONFIG.IGNORE_PR_AUTHORS", "dependabot", {"sender": "dependabot[bot]"}, {"sender": "alice"}),
+        ("CONFIG.IGNORE_PR_TITLE", "^WIP", {"title": "WIP: cache"}, {"title": "Add cache"}),
+        ("CONFIG.IGNORE_PR_SOURCE_BRANCHES", "^generated/", {"source_branch": "generated/api"},
+         {"source_branch": "feature/api"}),
+        ("CONFIG.IGNORE_PR_TARGET_BRANCHES", "^legacy$", {"target_branch": "legacy"}, {"target_branch": "main"}),
+    ],
+)
+def test_an_ignore_setting_given_as_a_plain_string_is_one_pattern(providers, ignore_settings, setting, pattern,
+                                                                  matching, non_matching):
     """Read a string setting as one pattern, never as a sequence of characters.
 
-    Iterating "^WIP" yields "^", which matches every title, so an unrelated PR would be
-    dropped. Dynaconf hands the value through unchanged when it is written as a string.
+    Iterating "^WIP" yields "^", which matches everything, and "dependabot" yields "a" and "e",
+    which match "alice", so an unrelated PR would be dropped. Dynaconf hands the value through
+    unchanged when it is written as a string, e.g. CONFIG__IGNORE_PR_AUTHORS=dependabot.
     """
-    ignore_settings.set("CONFIG.IGNORE_PR_TITLE", "^WIP")
-    _assert_all(providers, _fields(title="WIP: cache"), False, "a string ignore_pr_title that matches")
-    _assert_all(providers, _fields(title="Add cache"), True, "a string ignore_pr_title that does not match")
+    ignore_settings.set(setting, pattern)
+    _assert_all(providers, _fields(**matching), False, f"a string {setting} that matches")
+    _assert_all(providers, _fields(**non_matching), True, f"a string {setting} that does not match")
+
+
+def test_ignore_pr_labels_given_as_a_plain_string_is_one_label(providers, ignore_settings):
+    """A string ignore_pr_labels is one label to match exactly, not a string to search for substrings."""
+    ignore_settings.set("CONFIG.IGNORE_PR_LABELS", "skip-pr-agent")
+    _assert_all(providers, _fields(labels=("skip-pr-agent",)), False, "the string label", only_with_labels=True)
+    _assert_all(providers, _fields(labels=("skip",)), True, "a label inside the string", only_with_labels=True)
 
 
 def test_an_invalid_pattern_does_not_filter_out_every_pull_request(providers, ignore_settings):
