@@ -410,7 +410,7 @@ def test_review_schema_requires_failure_modes_only_when_enabled(enabled):
 
 
 @pytest.mark.parametrize("enabled", [False, True])
-def test_failure_modes_reach_output_consumers_only_when_enabled(enabled):
+async def test_failure_modes_reach_output_consumers_only_when_enabled(enabled):
     reviewer = _make_prediction_reviewer()
     reviewer.vars = {"require_failure_modes": enabled}
     mode = {"what": "Partial write", "where": "app.py:save", "trigger": "Write fails",
@@ -425,9 +425,10 @@ def test_failure_modes_reach_output_consumers_only_when_enabled(enabled):
         patch("pr_agent.tools.pr_reviewer.load_yaml", return_value=data),
         patch("pr_agent.tools.pr_reviewer.github_action_output") as action_output,
         patch("pr_agent.tools.pr_reviewer.convert_to_markdown_v2", return_value="review") as render,
-        patch("pr_agent.tools.pr_reviewer.push_outputs") as push,
+        patch("pr_agent.tools.pr_reviewer.push_outputs_async") as push,
     ):
         reviewer._prepare_pr_review()
+        await reviewer._deliver_sink_output()
     assert ("failure_modes" in action_output.call_args.args[0]["review"]) is enabled
     assert ("failure_modes" in reviewer.git_provider.publish_structured_review.call_args.args[0]["review"]) is enabled
     assert ("failure_modes" in render.call_args.args[0]["review"]) is enabled
@@ -1251,9 +1252,9 @@ async def test_run_does_not_publish_an_empty_review(
     monkeypatch.setattr(pr_reviewer_module, "extract_and_cache_pr_tickets", AsyncMock())
     monkeypatch.setattr(pr_reviewer_module, "retry_with_fallback_models", fake_retry)
     action_output = MagicMock()
-    push_output = MagicMock()
+    push_output = AsyncMock()
     monkeypatch.setattr(pr_reviewer_module, "github_action_output", action_output)
-    monkeypatch.setattr(pr_reviewer_module, "push_outputs", push_output)
+    monkeypatch.setattr(pr_reviewer_module, "push_outputs_async", push_output)
 
     settings = get_settings()
     original = {
@@ -2119,7 +2120,7 @@ def test_answer_mode_respects_provider_supplied_newest_first_order(monkeypatch):
     assert reviewer.vars["answer_str"] == "/answer Correction: use 60 seconds."
 
 
-def _render_review_capturing_push(reviewer, publish_output):
+async def _render_review_capturing_push(reviewer, publish_output):
     reviewer.prediction = "review: {}"
     reviewer.remaining_files_list = []
     reviewer.git_provider.get_diff_files.return_value = []
@@ -2134,23 +2135,24 @@ def _render_review_capturing_push(reviewer, publish_output):
             patch("pr_agent.tools.pr_reviewer.load_yaml", return_value={"review": {"score": "1"}}),
             patch("pr_agent.tools.pr_reviewer.github_action_output"),
             patch("pr_agent.tools.pr_reviewer.convert_to_markdown_v2", return_value="original review"),
-            patch("pr_agent.tools.pr_reviewer.push_outputs") as push,
+            patch("pr_agent.tools.pr_reviewer.push_outputs_async") as push,
         ):
             reviewer._prepare_pr_review()
+            await reviewer._deliver_sink_output()
         return push
     finally:
         settings.config.publish_output = original_publish_output
 
 
-def test_prepare_pr_review_does_not_push_outputs_on_a_dry_run():
+async def test_prepare_pr_review_does_not_push_outputs_on_a_dry_run():
     # publish_output=false is used by the CLI and by mosaico's dispatch to render a review
     # without touching the PR; it must not reach an external sink either.
-    push = _render_review_capturing_push(_make_prediction_reviewer(), publish_output=False)
+    push = await _render_review_capturing_push(_make_prediction_reviewer(), publish_output=False)
     push.assert_not_called()
 
 
-def test_prepare_pr_review_pushes_outputs_when_publishing():
-    push = _render_review_capturing_push(_make_prediction_reviewer(), publish_output=True)
+async def test_prepare_pr_review_pushes_outputs_when_publishing():
+    push = await _render_review_capturing_push(_make_prediction_reviewer(), publish_output=True)
     push.assert_called_once()
     assert push.call_args.args[0] == "review"
     assert push.call_args.kwargs["payload"] == {"score": "1"}

@@ -222,7 +222,7 @@ def test_prepare_review_same_head_absence_preserves_active_finding(monkeypatch):
     assert "resolved_head_sha" not in finding
 
 
-def test_prepare_review_pushes_final_markdown_with_lifecycle_state(monkeypatch):
+async def test_prepare_review_pushes_final_markdown_with_lifecycle_state(monkeypatch):
     _settings(monkeypatch)
     previous = reconcile_review_findings(
         None,
@@ -245,9 +245,10 @@ def test_prepare_review_pushes_final_markdown_with_lifecycle_state(monkeypatch):
         patch("pr_agent.tools.pr_reviewer.load_yaml", return_value={"review": {"key_issues_to_review": []}}),
         patch("pr_agent.tools.pr_reviewer.github_action_output"),
         patch("pr_agent.tools.pr_reviewer.convert_to_markdown_v2", return_value="No major issues detected"),
-        patch("pr_agent.tools.pr_reviewer.push_outputs") as push_outputs,
+        patch("pr_agent.tools.pr_reviewer.push_outputs_async") as push_outputs,
     ):
         review = reviewer._prepare_pr_review()
+        await reviewer._deliver_sink_output()
 
     assert "<summary>✅ Resolved findings</summary>" in review
     push_outputs.assert_called_once()
@@ -726,6 +727,105 @@ def test_finding_limit_prevents_resolution_of_missing_active_findings(monkeypatc
     assert reviewer._review_state_result.state["last_run"]["complete"] is False
 
 
+def _chunk_issue(chunk, n):
+    return {"relevant_file": f"{chunk}_{n}.py", "issue_header": "bug", "issue_content": f"problem {chunk}_{n}"}
+
+
+def _chunked_reviewer_with_state(monkeypatch, chunk_sizes, previous=()):
+    """A reviewer holding the merged result of chunks that reported `chunk_sizes` findings each.
+
+    `previous` lists `(chunk, n, state)` entries for the findings already in the persisted state;
+    `old.py` is always there as an ACTIVE finding that no chunk reports again.
+    """
+    settings = _settings(monkeypatch)
+    monkeypatch.setattr(settings.pr_reviewer, "num_max_findings", 3)
+    issues = [{"relevant_file": "old.py", "issue_header": "bug", "issue_content": "previous"}]
+    issues += [_chunk_issue(chunk, n) for chunk, n, _ in previous]
+    state = reconcile_review_findings(
+        None,
+        [PRReviewer._review_finding_from_issue(issue) for issue in issues],
+        allow_resolution=True,
+        head_sha="head-1",
+        timestamp="2026-01-01T00:00:00Z",
+    ).state
+    by_body = {finding["body"]: finding for finding in state["findings"]}
+    for chunk, n, finding_state in previous:
+        by_body[f"**bug**\n\nproblem {chunk}_{n}"]["state"] = finding_state
+    header = f"{PRReviewHeader.REGULAR.value} 🔍"
+    provider = MagicMock()
+    provider.last_commit_id = "head-2"
+    provider.get_issue_comments.return_value = [
+        SimpleNamespace(body=f"{header}\n\nold review\n\n{serialize_review_state(state)}")
+    ]
+    provider.is_supported.side_effect = lambda capability: capability == "get_issue_comments"
+    reviewer = _reviewer(provider)
+    reviewer._review_finding_state_enabled = MagicMock(return_value=True)
+    reviewer._chunked_results = {
+        index: ("raw", {"review": {"key_issues_to_review": [_chunk_issue(index, n) for n in range(size)]}}, "model")
+        for index, size in enumerate(chunk_sizes)
+    }
+    reviewer._chunked_patches_diff_list = list(reviewer._chunked_results)
+    reviewer._chunked_remaining_files_list = []
+    reviewer._chunked_partial_files_list = []
+    reviewer._chunked_primary_model = "model"
+    assert reviewer._merge_cached_review_chunks()
+    reviewer._prepare_review_finding_state(reviewer.prediction_data)
+    return reviewer
+
+
+def _state_of(reviewer):
+    """Map each finding in the new state, by its issue text, to its state."""
+    return {finding["body"].rsplit("\n\n", 1)[-1]: finding["state"]
+            for finding in reviewer._review_state_result.state["findings"]}
+
+
+def test_chunked_review_that_reaches_the_limit_without_a_cut_resolves_fixed_findings(monkeypatch):
+    reviewer = _chunked_reviewer_with_state(monkeypatch, (2, 1))
+
+    assert len(reviewer.prediction_data["review"]["key_issues_to_review"]) == 3
+    assert reviewer._review_state_result.resolved_ids != ()
+    assert reviewer._review_state_result.state["last_run"]["complete"] is True
+
+
+def test_chunked_review_with_a_full_chunk_does_not_resolve(monkeypatch):
+    reviewer = _chunked_reviewer_with_state(monkeypatch, (3, 0))
+
+    assert reviewer._review_state_result.resolved_ids == ()
+    assert reviewer._review_state_result.state["last_run"]["complete"] is False
+
+
+def test_findings_cut_by_the_merge_do_not_block_resolution(monkeypatch):
+    # chunks of 2 and 2 with a limit of 3: the fourth finding is known, only left out of the output
+    reviewer = _chunked_reviewer_with_state(monkeypatch, (2, 2))
+
+    assert len(reviewer.prediction_data["review"]["key_issues_to_review"]) == 3
+    assert _state_of(reviewer)["previous"] == "RESOLVED"
+
+
+def test_active_finding_cut_by_the_merge_stays_active(monkeypatch):
+    reviewer = _chunked_reviewer_with_state(monkeypatch, (2, 2), previous=[(1, 1, "ACTIVE")])
+
+    assert _state_of(reviewer)["problem 1_1"] == "ACTIVE"
+    assert _state_of(reviewer)["previous"] == "RESOLVED"
+
+
+@pytest.mark.parametrize("chunk_sizes, cut", [((2, 2), "1_1"), ((3, 1), "1_0")], ids=["merge-cut", "full-chunk"])
+def test_resolved_finding_cut_by_the_merge_reopens(monkeypatch, chunk_sizes, cut):
+    chunk, n = map(int, cut.split("_"))
+    reviewer = _chunked_reviewer_with_state(monkeypatch, chunk_sizes, previous=[(chunk, n, "RESOLVED")])
+
+    assert _state_of(reviewer)[f"problem {cut}"] == "ACTIVE"
+    assert len(reviewer._review_state_result.reopened_ids) == 1
+
+
+@pytest.mark.parametrize("chunk_sizes", [(2, 2), (3, 1)], ids=["merge-cut", "full-chunk"])
+def test_new_finding_cut_by_the_merge_stays_out_of_the_state(monkeypatch, chunk_sizes):
+    reviewer = _chunked_reviewer_with_state(monkeypatch, chunk_sizes)
+    published = {issue["issue_content"] for issue in reviewer.prediction_data["review"]["key_issues_to_review"]}
+
+    assert set(_state_of(reviewer)) - {"previous"} == published
+
+
 def test_review_comment_budget_reserves_persistent_update_header():
     provider = MagicMock()
     provider.max_comment_chars = 1000
@@ -1007,7 +1107,7 @@ def _large_review_issues(count=10):
     ]
 
 
-def test_oversized_new_state_keeps_review_publishable_without_marker(monkeypatch):
+async def test_oversized_new_state_keeps_review_publishable_without_marker(monkeypatch):
     settings = _settings(monkeypatch)
     monkeypatch.setattr(settings.pr_reviewer, "num_max_findings", 100)
     provider = MagicMock()
@@ -1025,9 +1125,10 @@ def test_oversized_new_state_keeps_review_publishable_without_marker(monkeypatch
             "pr_agent.tools.pr_reviewer.convert_to_markdown_v2",
             return_value=PRReviewHeader.REGULAR.value + " " + chr(0x1F50D) + "\n\nhuman review",
         ),
-        patch("pr_agent.tools.pr_reviewer.push_outputs") as push_outputs,
+        patch("pr_agent.tools.pr_reviewer.push_outputs_async") as push_outputs,
     ):
         review = reviewer._prepare_pr_review()
+        await reviewer._deliver_sink_output()
 
     assert "human review" in review
     assert parse_review_state(review).present is False
@@ -1066,7 +1167,7 @@ def test_oversized_new_state_preserves_previous_valid_marker(monkeypatch):
             "pr_agent.tools.pr_reviewer.convert_to_markdown_v2",
             return_value=header + "\n\n" + ("human review " * 100),
         ),
-        patch("pr_agent.tools.pr_reviewer.push_outputs"),
+        patch("pr_agent.tools.pr_reviewer.push_outputs_async"),
     ):
         review = reviewer._prepare_pr_review()
 
@@ -1160,7 +1261,7 @@ def test_providers_without_override_inherit_persistent_comment_implementation():
     assert LocalGitProvider.publish_persistent_comment is GitProvider.publish_persistent_comment
 
 
-def test_oversized_state_degradation_is_safe_on_the_next_run(monkeypatch):
+async def test_oversized_state_degradation_is_safe_on_the_next_run(monkeypatch):
     settings = _settings(monkeypatch)
     monkeypatch.setattr(settings.pr_reviewer, "num_max_findings", 100)
     previous = reconcile_review_findings(
@@ -1182,7 +1283,7 @@ def test_oversized_state_degradation_is_safe_on_the_next_run(monkeypatch):
 
     data = {"review": {"key_issues_to_review": _large_review_issues()}}
 
-    def run_review(reviewer):
+    async def run_review(reviewer):
         with (
             patch("pr_agent.tools.pr_reviewer.load_yaml", return_value=data),
             patch("pr_agent.tools.pr_reviewer.github_action_output"),
@@ -1190,14 +1291,15 @@ def test_oversized_state_degradation_is_safe_on_the_next_run(monkeypatch):
                 "pr_agent.tools.pr_reviewer.convert_to_markdown_v2",
                 return_value=header + "\n\n" + ("human review " * 100),
             ),
-            patch("pr_agent.tools.pr_reviewer.push_outputs") as push_outputs,
+            patch("pr_agent.tools.pr_reviewer.push_outputs_async") as push_outputs,
         ):
             review = reviewer._prepare_pr_review()
+            await reviewer._deliver_sink_output()
         push_outputs.assert_called_once()
         return review
 
     first_reviewer = _reviewer(provider)
-    first_review = run_review(first_reviewer)
+    first_review = await run_review(first_reviewer)
     first_state = parse_review_state(first_review)
     assert first_state.valid is True
     assert first_state.state["findings"][0]["state"] == "ACTIVE"
@@ -1207,7 +1309,7 @@ def test_oversized_state_degradation_is_safe_on_the_next_run(monkeypatch):
         SimpleNamespace(body=first_review, user=SimpleNamespace(login="agent"))
     ]
     second_reviewer = _reviewer(provider)
-    second_review = run_review(second_reviewer)
+    second_review = await run_review(second_reviewer)
     second_state = parse_review_state(second_review)
 
     assert second_state.valid is True

@@ -11,6 +11,9 @@ Pagination does not bypass GitLab's server-side diff limits. PR-Agent raises a p
 error if the returned file count disagrees with an exact `changes_count`, or that count
 indicates overflow or is not ready. A file whose patch GitLab omits (`too_large`, or
 `collapsed` before GitLab 19.2) is diffed locally from its two revisions instead.
+When `CONFIG.PUBLISH_OUTPUT` is enabled, PR-Agent attempts to post a fixed, deduplicated
+**PR-Agent command was not run** notice after this error reaches the command boundary.
+Publishing is best effort and never includes internal GitLab response details.
 
 The `/diffs` endpoint must be available. PR-Agent does not fall back to the deprecated
 `/changes` endpoint or its raw-diff retry.

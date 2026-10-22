@@ -699,9 +699,13 @@ class PRHelpDocs:
                                                       len(docs_filepath_to_contents))
             doc_file_paths = list(docs_filepath_to_contents)
             valid_file_paths = [doc_file_paths[idx] for idx in valid_indices]
+            selected_docs_dict = {path: docs_filepath_to_contents[path] for path in valid_file_paths}
+            docs_prompt = aggregate_documentation_files_for_prompt_contents(selected_docs_dict)
+            if not self._trim_docs_input(docs_prompt, max_allowed_txt_input, only_return_if_trim_needed=True):
+                return docs_prompt
+
             selected_docs_dict = {
-                path: clean_markdown_content(docs_filepath_to_contents[path])
-                for path in valid_file_paths
+                path: clean_markdown_content(content) for path, content in selected_docs_dict.items()
             }
             docs_prompt = aggregate_documentation_files_for_prompt_contents(selected_docs_dict)
             docs_prompt_to_send_to_model = docs_prompt

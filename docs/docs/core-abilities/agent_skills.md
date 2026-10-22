@@ -38,7 +38,7 @@ max_skills_tokens = 8000  # token budget for the combined skills block
 ```
 
 - `enabled` — turn the feature on.
-- `paths` — a list of directories (scanned recursively for `*/SKILL.md`) or direct paths to a `SKILL.md` file. `~` and `$VAR`/`${VAR}` are expanded.
+- `paths` — a list of directories (scanned recursively for `*/SKILL.md`) or direct paths to a `SKILL.md` file. `~` and `$VAR`/`${VAR}` are expanded. A plain string is read as a single path, with a warning that it should be a list.
 - `max_skills_tokens` — caps the combined size of the injected skills block. Skills past the cap are dropped from the end with a warning; if the first skill alone exceeds the budget it is clipped and marked `[truncated]`.
 
 :::warning[`skills.paths` is host-level only]

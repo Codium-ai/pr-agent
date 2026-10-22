@@ -538,7 +538,7 @@ def extract_relevant_lines_str(end_line, files, relevant_file, start_line, deden
                             return ""
                         # filter out '-' lines
                         relevant_lines_str = ""
-                        for line in selected_lines.splitlines():
+                        for line in split_diff_lines(selected_lines):
                             if line.startswith('-'):
                                 continue
                             relevant_lines_str += line[1:] + '\n'

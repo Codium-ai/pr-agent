@@ -63,9 +63,9 @@ dependencies = [
   "html2text==2025.4.15",
   # pr_agent/telemetry imports these directly; already resolved transitively via
   # langfuse and litellm, pinned here to lock the version the code is tested against.
-  "opentelemetry-api==1.43.0",
-  "opentelemetry-sdk==1.43.0",
-  "opentelemetry-exporter-otlp-proto-http==1.43.0",
+  "opentelemetry-api==1.45.1",
+  "opentelemetry-sdk==1.45.1",
+  "opentelemetry-exporter-otlp-proto-http==1.45.1",
   # Prometheus scrape endpoint for [otel] command telemetry (native /metrics on
   # the webhook apps). Multiprocess-capable; see pr_agent/telemetry/prometheus.py.
   "prometheus-client==0.26.0",
@@ -122,7 +122,7 @@ all = ["pr-agent[github,gitlab,bitbucket,azure,codecommit,gitea,google,mosaico]"
 lambda = ["mangum==0.22.0"]
 # OTLP/gRPC transport for pr-agent telemetry (OTEL.OTLP_PROTOCOL = "grpc").
 # The default OTLP/HTTP transport needs no extra: its exporter is a base dependency.
-otel-grpc = ["opentelemetry-exporter-otlp-proto-grpc==1.43.0"]
+otel-grpc = ["opentelemetry-exporter-otlp-proto-grpc==1.45.1"]
 # LangChainOpenAIHandler. Install with: uv sync --extra langchain
 langchain = [
   "langchain",
@@ -156,8 +156,8 @@ dev = [
 ]
 
 [tool.uv]
-# Floor, not "==": Dependabot's uv 0.12.18 failed the exact pin with tool_version_not_supported.
-required-version = ">=0.12.10"
+# Keep the floor aligned with the patched uv release used by Docker and CI.
+required-version = ">=0.13.5"
 
 [tool.ruff]
 line-length = 120

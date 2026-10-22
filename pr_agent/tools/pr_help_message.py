@@ -169,10 +169,10 @@ class PRHelpMessage:
     def __init__(self, pr_url: str, args=None,
              ai_handler: partial[BaseAiHandler,] = LiteLLMAIHandler, return_as_string=False):
         self.git_provider = get_git_provider_with_context(pr_url)
-        self.ai_handler = ai_handler()
         self.question_str = self.parse_args(args)
         self.return_as_string = return_as_string
         if self.question_str:
+            self.ai_handler = ai_handler()
             self.vars = {
                 "question": self.question_str,
                 "snippets": "",

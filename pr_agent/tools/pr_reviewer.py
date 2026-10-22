@@ -43,16 +43,17 @@ from pr_agent.algo.prompt_fragments import render_diff_hunk_format
 from pr_agent.algo.repo_context import build_repo_context
 from pr_agent.algo.review_finding_state import (
     append_review_state,
+    normalize_findings,
     parse_review_state,
     reconcile_review_findings,
     render_previous_findings,
 )
 from pr_agent.algo.review_json_output import review_json_output_path, write_review_json_output
-from pr_agent.algo.review_merge import merge_review_chunks
+from pr_agent.algo.review_merge import all_key_issues, chunk_hit_findings_limit, merge_review_chunks
 from pr_agent.algo.run_details import get_run_details, init_run_details, record_command_failure, record_model_used
 from pr_agent.algo.run_output import (
     github_action_output,
-    push_outputs,
+    push_outputs_async,
     show_relevant_configurations,
     show_run_details,
 )
@@ -180,6 +181,10 @@ class PRReviewer:
     prediction_data = None  # merged review dict; None means "parse self.prediction instead"
     review_chunk_count = 1
     review_failed_chunk_count = 0
+    # chunked reviews only: every finding the chunks reported (before the merge cut it to
+    # num_max_findings), and whether a chunk reached that limit on its own
+    review_all_issues = None
+    review_chunk_hit_limit = None
     partial_files_list = ()
 
     def __init__(self, pr_url: str, is_answer: bool = False, is_auto: bool = False, args: list = None,
@@ -220,6 +225,7 @@ class PRReviewer:
         self._review_state_block_reason = None
         self._review_finding_previous_state = None
         self._review_state_preserved = False
+        self._pending_sink_output = None
         previous_findings = self._load_previous_findings_context()
         question_str, answer_str = self._get_user_answers()
         self.pr_description, self.pr_description_files = (
@@ -368,6 +374,10 @@ class PRReviewer:
 
             pr_review = self._prepare_pr_review()
             get_logger().debug("PR output", artifact=pr_review)
+
+            # Deliver the review to the external sinks before anything else, so a sink
+            # still receives it when the publishing below fails.
+            await self._deliver_sink_output()
 
             if not pr_review:
                 raise ValueError("Failed to prepare review output")
@@ -845,6 +855,9 @@ class PRReviewer:
             isinstance(reported_issues, list)
             and len(current_findings) < len(reported_issues)
         )
+        if self.review_all_issues is not None:
+            current_findings, dropped_findings = self._chunked_findings_for_state(
+                current_findings, parsed.state)
         allow_resolution = (
             bool(self.prediction)
             and not bool(getattr(self.incremental, "is_incremental", False))
@@ -856,7 +869,12 @@ class PRReviewer:
             and current_findings is not None
             # a dropped finding is not an absent one, so this run cannot resolve anything
             and not dropped_findings
-            and len(current_findings) < max_findings
+            and (
+                len(current_findings) < max_findings
+                # a chunked review that reached the limit is complete unless a chunk stopped at it
+                if self.review_chunk_hit_limit is None
+                else not self.review_chunk_hit_limit
+            )
         )
         result = reconcile_review_findings(
             parsed.state,
@@ -868,6 +886,22 @@ class PRReviewer:
         )
         if parsed.state is not None or result.changed:
             self._review_state_result = result
+
+    def _chunked_findings_for_state(
+        self, published: list[dict], previous_state: dict | None
+    ) -> tuple[list[dict], bool]:
+        """Pick the findings of a chunked review that the state is reconciled against.
+
+        The merge cuts the findings to `num_max_findings`, but a cut finding is a known one, so
+        it is matched against the state: an active one stays active and a resolved one reopens.
+        A new cut finding stays out until a later review publishes it, because the state reaches
+        the next review as already reported. Also returns whether an issue could not be tracked.
+        """
+        all_findings = self._review_findings_from_data({"review": {"key_issues_to_review": self.review_all_issues}})
+        wanted = {finding["finding_id"] for finding in normalize_findings(published)}
+        wanted.update(finding["finding_id"] for finding in (previous_state or {}).get("findings", []))
+        findings = [finding for finding in normalize_findings(all_findings) if finding["finding_id"] in wanted]
+        return findings, len(all_findings) < len(self.review_all_issues)
 
     def _should_publish_review_no_suggestions(self, pr_review: str) -> bool:
         return (
@@ -882,6 +916,8 @@ class PRReviewer:
         self.prediction_data = None
         self.review_chunk_count = 1
         self.review_failed_chunk_count = 0
+        self.review_all_issues = None
+        self.review_chunk_hit_limit = None
         self.partial_files_list = []
         raw_prompt_vars = getattr(self, "_raw_prompt_vars", getattr(self, "vars", None))
         ai_handler = getattr(self, "ai_handler", None)
@@ -1173,6 +1209,9 @@ class PRReviewer:
         raw_vars = getattr(self, "_raw_prompt_vars", None) or getattr(self, "vars", None) or {}
         self.prediction_data = merge_review_chunks(
             chunk_outputs, related_tickets=raw_vars.get("related_tickets"), max_findings=max_findings)
+        self.review_all_issues = all_key_issues(chunk_outputs)
+        self.review_chunk_hit_limit = (
+            None if max_findings is None else chunk_hit_findings_limit(chunk_outputs, max_findings))
         self.review_chunk_count = len(self._chunked_patches_diff_list)
         self.review_failed_chunk_count = self.review_chunk_count - len(chunk_results)
         self.remaining_files_list = self._chunked_remaining_files_list
@@ -1438,8 +1477,9 @@ class PRReviewer:
         # Emit the review to optional external sinks (stdout/file/webhook/slack/telegram); no-op unless enabled.
         # publish_output gates it so a dry run makes no external calls. The "no major issues"
         # suppression deliberately does not: that only silences the PR comment.
+        # The delivery itself is left to run(), which awaits it off the event loop.
         if get_settings().config.publish_output:
-            push_outputs("review", payload=data.get('review', {}), markdown=markdown_text)
+            self._pending_sink_output = ("review", data.get('review', {}), markdown_text)
 
         # Add custom labels from the review prediction (effort, security)
         self.set_review_labels(data)
@@ -1448,6 +1488,20 @@ class PRReviewer:
             markdown_text = ""
 
         return markdown_text
+
+    async def _deliver_sink_output(self) -> None:
+        """Deliver the prepared review to the external sinks, if there is one.
+
+        The sinks do blocking HTTP and file I/O, so the delivery runs in a worker
+        thread. Awaiting it keeps the event loop responsive and still delivers the
+        output before the command returns.
+        """
+        pending = getattr(self, "_pending_sink_output", None)
+        if pending is None:
+            return
+        self._pending_sink_output = None
+        message_type, payload, markdown = pending
+        await push_outputs_async(message_type, payload=payload, markdown=markdown)
 
     def _build_key_issue_comment(self, issue, diff_files: dict) -> dict | None:
         if not isinstance(issue, dict):

@@ -43,7 +43,7 @@ from pr_agent.algo.run_details import (
     record_command_failure,
     record_model_used,
 )
-from pr_agent.algo.run_output import push_outputs, show_relevant_configurations, show_run_details
+from pr_agent.algo.run_output import push_outputs_async, show_relevant_configurations, show_run_details
 from pr_agent.algo.skills_loader import get_skills_context
 from pr_agent.algo.token_budget import AttemptTokenBudget, FittedPrompt
 from pr_agent.algo.token_handler import TokenHandler
@@ -464,7 +464,7 @@ class PRCodeSuggestions:
                 # Emit to the optional external sinks before touching the provider, so a sink
                 # still receives the suggestions if publishing them to the PR fails.
                 markdown = render_suggestions_markdown(data) + self._get_suggestions_coverage_footer()
-                push_outputs("improve", payload=data, markdown=markdown)
+                await push_outputs_async("improve", payload=data, markdown=markdown)
                 # If a temporary comment was published, remove it
                 self.git_provider.remove_initial_comment()
 
@@ -669,8 +669,8 @@ class PRCodeSuggestions:
         pr_body = f"{format_pr_code_suggestions_header()}\n\n{no_suggestions_message}{coverage_footer}"
         if get_settings().config.publish_output:
             markdown = f"## PR Code Suggestions\n\n{no_suggestions_message}{coverage_footer}"
-            push_outputs("improve", payload=getattr(self, "data", None) or {"code_suggestions": []},
-                         markdown=markdown)
+            await push_outputs_async("improve", payload=getattr(self, "data", None) or {"code_suggestions": []},
+                                     markdown=markdown)
         if (get_settings().config.publish_output and
                 get_settings().pr_code_suggestions.get('publish_output_no_suggestions', True)):
             get_logger().warning("No code suggestions found for the PR.")
@@ -874,34 +874,21 @@ class PRCodeSuggestions:
 
         if max_previous_comments > 0:
             try:
-                prev_comments = list(git_provider.get_issue_comments_newest_first())
-                if identity_marker:
-                    comment = next(
-                        (
-                            candidate
-                            for candidate in prev_comments
-                            if comment_matches_identity(_comment_body(candidate), identity_marker)
-                        ),
-                        None,
-                    )
-                    if comment is None:
-                        comment = next(
-                            (
-                                candidate
-                                for candidate in prev_comments
-                                if _is_legacy_suggestions_comment(_comment_body(candidate))
-                            ),
-                            None,
-                        )
-                else:
-                    comment = next(
-                        (
-                            candidate
-                            for candidate in prev_comments
-                            if comment_matches_identity(_comment_body(candidate), initial_header)
-                        ),
-                        None,
-                    )
+                comment = None
+                legacy_comment = None
+                for candidate in git_provider.get_issue_comments_newest_first():
+                    body = _comment_body(candidate)
+                    if identity_marker:
+                        if comment_matches_identity(body, identity_marker):
+                            comment = candidate
+                            break
+                        if legacy_comment is None and _is_legacy_suggestions_comment(body):
+                            legacy_comment = candidate
+                    elif comment_matches_identity(body, initial_header):
+                        comment = candidate
+                        break
+                if comment is None and identity_marker:
+                    comment = legacy_comment
                 if comment:
                     prev_suggestions = _comment_body(comment)
                     comment_url = git_provider.get_comment_url(comment)

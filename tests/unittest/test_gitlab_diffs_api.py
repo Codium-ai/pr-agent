@@ -11,7 +11,7 @@ from requests.adapters import BaseAdapter
 
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import gitlab_provider
-from pr_agent.git_providers.git_provider import IncrementalPR
+from pr_agent.git_providers.git_provider import IncompleteProviderPullRequestFilesError, IncrementalPR
 from pr_agent.git_providers.gitlab_provider import GitLabProvider, IncompleteGitLabDiffError
 
 
@@ -134,6 +134,27 @@ def test_collects_all_pages_using_the_configured_client(provider_factory):
     assert len(transport.requests) == 4
 
 
+@pytest.mark.parametrize("line_ending,trailing_newline", [("\n", True), ("\r\n", True), ("\n", False)])
+def test_diff_line_counts_with_different_line_endings(provider_factory, line_ending, trailing_newline):
+    patch = line_ending.join(["@@ -1 +1 @@", "-old", "+new"])
+    if trailing_newline:
+        patch += line_ending
+    provider, _ = provider_factory([(200, [_change("a.py", diff=patch)], {})], count="1")
+
+    file = provider.get_diff_files()[0]
+
+    assert (file.num_plus_lines, file.num_minus_lines) == (1, 1)
+
+
+def test_diff_line_counts_keep_unicode_separators_in_source_lines(provider_factory):
+    patch = "@@ -1 +1 @@\n-value = 'old'\n+value = 'before\u2028+after\u2029-more'\n"
+    provider, _ = provider_factory([(200, [_change("a.py", diff=patch)], {})], count="1")
+
+    file = provider.get_diff_files()[0]
+
+    assert (file.num_plus_lines, file.num_minus_lines) == (1, 1)
+
+
 @pytest.mark.parametrize("project_id", [123, "123"])
 def test_numeric_project_identifier(provider_factory, project_id):
     provider, transport = provider_factory([(200, [_change("a.py")], {})], "1", project_id)
@@ -162,8 +183,9 @@ def test_pruned_patch_on_later_page_is_reconstructed_from_both_blobs(provider_fa
 def test_unready_collection_is_retried_then_raises_and_is_not_cached(provider_factory, count, diff_ready_sleep):
     attempts = len(gitlab_provider._DIFF_READY_RETRY_DELAYS) + 1
     provider, transport = provider_factory([(200, [_change("a.py"), _change("b.py")], {})] * attempts, count)
-    with pytest.raises(IncompleteGitLabDiffError, match="not ready.*re-run the command"):
+    with pytest.raises(IncompleteGitLabDiffError, match="not ready.*re-run the command") as error:
         provider.get_files()
+    assert isinstance(error.value, IncompleteProviderPullRequestFilesError)
     assert provider.git_files is None
     assert len(transport.diff_requests) == attempts
     assert diff_ready_sleep == list(gitlab_provider._DIFF_READY_RETRY_DELAYS)
@@ -172,8 +194,9 @@ def test_unready_collection_is_retried_then_raises_and_is_not_cached(provider_fa
 @pytest.mark.parametrize("count,message", [("3", "but reported"), ("0", "but reported"), ("1000+", "diff limits")])
 def test_inconsistent_counts_fail_immediately_without_retries(provider_factory, count, message, diff_ready_sleep):
     provider, transport = provider_factory([(200, [_change("a.py"), _change("b.py")], {})], count)
-    with pytest.raises(IncompleteGitLabDiffError, match=message):
+    with pytest.raises(IncompleteGitLabDiffError, match=message) as error:
         provider.get_files()
+    assert isinstance(error.value, IncompleteProviderPullRequestFilesError)
     assert provider.git_files is None
     assert len(transport.diff_requests) == 1
     assert diff_ready_sleep == []
