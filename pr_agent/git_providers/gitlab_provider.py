@@ -30,7 +30,7 @@ from ..algo.comment_identity import (
     get_pr_review_comment_identifiers,
 )
 from ..algo.file_filter import filter_ignored
-from ..algo.git_patch_processing import decode_if_bytes
+from ..algo.git_patch_processing import count_patch_lines, decode_if_bytes
 from ..algo.inline_comment_dedup import (
     body_fingerprint,
     body_with_markers,
@@ -1258,10 +1258,7 @@ class GitLabProvider(GitProvider):
                 patch = load_large_diff(filename, new_file_content_str, original_file_content_str)
 
 
-            # count number of lines added and removed
-            patch_lines = patch.splitlines(keepends=True)
-            num_plus_lines = len([line for line in patch_lines if line.startswith('+')])
-            num_minus_lines = len([line for line in patch_lines if line.startswith('-')])
+            num_plus_lines, num_minus_lines = count_patch_lines(patch)
             diff_files.append(
                 FilePatchInfo(original_file_content_str, new_file_content_str,
                               patch=patch,
