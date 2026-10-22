@@ -1448,6 +1448,67 @@ class TestGitLabProvider:
         else:
             discussion.save.assert_not_called()
 
+    @pytest.mark.parametrize("reopen", [False, True], ids=["resolve", "reopen"])
+    @pytest.mark.parametrize("target_page", [1, 2, None], ids=["first-page", "second-page", "not-found"])
+    def test_thread_lookup_reads_only_needed_pages(self, gitlab_provider, reopen, target_page):
+        client = Gitlab("https://gitlab.example.com", private_token="test-token")
+        gitlab_provider.mr = client.projects.get("test/repo", lazy=True).mergerequests.get(1, lazy=True)
+        discussions_path = "/projects/test%2Frepo/merge_requests/1/discussions"
+        discussions_url = f"https://gitlab.example.com/api/v4{discussions_path}"
+        responses = []
+        for page in range(1, 4):
+            response = MagicMock()
+            response.json.return_value = [{
+                "id": f"thread-{page}",
+                "notes": [{"id": 42 if page == target_page else page,
+                           "resolvable": True, "resolved": reopen}],
+            }]
+            response.links = {"next": {"url": f"{discussions_url}?page={page + 1}"}} if page < 3 else {}
+            response.headers = {}
+            responses.append(response)
+        client.http_request = MagicMock(side_effect=responses)
+        client.http_put = MagicMock(return_value={})
+
+        if reopen:
+            result = gitlab_provider.unresolve_comment_thread(MagicMock(id=42, resolvable=True, resolved=True))
+        else:
+            result = gitlab_provider.resolve_comment_thread(42)
+
+        assert result is (None if reopen else target_page is not None)
+        assert client.http_request.call_count == (target_page or 3)
+        assert client.http_request.call_args_list[0].kwargs["per_page"] == 100
+        if target_page is None:
+            client.http_put.assert_not_called()
+        else:
+            client.http_put.assert_called_once()
+            assert client.http_put.call_args.args[0] == f"{discussions_path}/thread-{target_page}"
+            assert client.http_put.call_args.kwargs["post_data"] == {"resolved": not reopen}
+
+    @pytest.mark.parametrize("reopen", [False, True], ids=["resolve", "reopen"])
+    @pytest.mark.parametrize("error_type", [GitlabError, RuntimeError], ids=["api-error", "unexpected-error"])
+    def test_thread_lookup_handles_later_page_errors(self, gitlab_provider, reopen, error_type):
+        client = Gitlab("https://gitlab.example.com", private_token="test-token")
+        gitlab_provider.mr = client.projects.get("test/repo", lazy=True).mergerequests.get(1, lazy=True)
+        response = MagicMock()
+        response.json.return_value = [{"id": "other-thread", "notes": [{"id": 7}]}]
+        next_url = (
+            "https://gitlab.example.com/api/v4/projects/test%2Frepo/merge_requests/1/discussions?page=2"
+        )
+        response.links = {"next": {"url": next_url}}
+        response.headers = {}
+        client.http_request = MagicMock(side_effect=[response, error_type("later page failed")])
+        client.http_put = MagicMock()
+        lookup = gitlab_provider.unresolve_comment_thread if reopen else gitlab_provider.resolve_comment_thread
+        target = MagicMock(id=42, resolvable=True, resolved=True) if reopen else 42
+
+        if error_type is RuntimeError:
+            with pytest.raises(RuntimeError, match="later page failed"):
+                lookup(target)
+        else:
+            assert lookup(target) is (None if reopen else False)
+        assert client.http_request.call_count == 2
+        client.http_put.assert_not_called()
+
     def test_get_code_suggestion_thread_context_includes_bot_suggestion_threads(self, gitlab_provider):
         gitlab_provider._own_user_id = _BOT_USER_ID
         open_thread = _thread([

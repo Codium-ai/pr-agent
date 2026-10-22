@@ -1463,7 +1463,7 @@ class GitLabProvider(GitProvider):
             # note -> discussion lookup) unless the note reports it is actually resolved.
             if getattr(comment, 'resolvable', None) is False or getattr(comment, 'resolved', None) is False:
                 return
-            for discussion in self.mr.discussions.list(get_all=True):
+            for discussion in self.mr.discussions.list(iterator=True, per_page=100):
                 notes = discussion.attributes.get('notes', [])
                 if not any(note.get('id') == comment.id for note in notes):
                     continue
@@ -1478,7 +1478,7 @@ class GitLabProvider(GitProvider):
         # Resolves by note id. /ask_line addresses threads by discussion id instead, so
         # supports_thread_resolution() stays False and that path keeps skipping GitLab.
         try:
-            for discussion in self.mr.discussions.list(get_all=True):
+            for discussion in self.mr.discussions.list(iterator=True, per_page=100):
                 notes = discussion.attributes.get('notes', [])
                 if not any(note.get('id') == comment_id for note in notes):
                     continue
