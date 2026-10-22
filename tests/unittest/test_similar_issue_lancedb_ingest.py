@@ -390,12 +390,30 @@ def _fake_issue_with_comments(comments):
 
 def _tool_with_comments(monkeypatch, fake_db):
     tool = _make_tool(monkeypatch, fake_db)
-    tool._process_issue = lambda issue: (
-        f"title: {issue.title}\nbody: {issue.body}",
-        list(issue.get_comments()),
-        issue.number,
-    )
+    del tool._process_issue
+    monkeypatch.setattr("pr_agent.tools.pr_similar_issue.get_settings", lambda: SimpleNamespace(
+        pr_similar_issue=SimpleNamespace(skip_comments=False),
+    ))
     return tool
+
+
+def test_ingest_does_not_read_comments_for_oversized_issue(monkeypatch):
+    fake_db = FakeDB(["codium-ai-pr-agent-issues"])
+    fake_db.table = _capturing_table()
+    tool = _tool_with_comments(monkeypatch, fake_db)
+    tool.token_handler.count_tokens = lambda _: 8192
+    monkeypatch.setattr("pr_agent.tools.pr_similar_issue.get_max_tokens", lambda _: 8192)
+
+    class UnusedComments:
+        def __iter__(self):
+            pytest.fail("An oversized issue must not consume its comments")
+
+    issue = _fake_issue_with_comments(UnusedComments())
+    issue.body = "x" * 8000
+
+    tool._update_table_with_issues([issue], "org/repo", ingest=True)
+
+    assert fake_db.table.added_rows == []
 
 
 def test_ingest_skips_null_comment_body_without_crashing(monkeypatch):
@@ -424,10 +442,10 @@ def test_ingest_skips_short_comments_and_indexes_long_ones(monkeypatch):
     fake_db.table = fake_table
 
     tool = _tool_with_comments(monkeypatch, fake_db)
-    issue = _fake_issue_with_comments([
+    issue = _fake_issue_with_comments(iter([
         SimpleNamespace(body="short"),
         SimpleNamespace(body=_LONG_COMMENT),
-    ])
+    ]))
 
     tool._update_table_with_issues([issue], "org/repo", ingest=True)
 
@@ -435,6 +453,9 @@ def test_ingest_skips_short_comments_and_indexes_long_ones(monkeypatch):
     assert "short" not in texts
     assert _LONG_COMMENT in texts
     assert len(fake_table.added_rows) == 3  # sentinel + issue + one comment
+    assert [row["id"] for row in fake_table.added_rows] == [
+        "issue_5.issue", "issue_5.comment_1", "example_issue_org/repo",
+    ]
 
 
 def test_second_repository_missing_sentinel_joins_instead_of_crashing(monkeypatch):

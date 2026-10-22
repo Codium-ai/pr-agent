@@ -563,7 +563,7 @@ class PRSimilarIssue:
         if not include_comments or get_settings().pr_similar_issue.skip_comments:
             comments = []
         else:
-            comments = list(issue.get_comments())
+            comments = issue.get_comments()
         issue_str = f"Issue Header: \"{header}\"\n\nIssue Body:\n{body}"
         return issue_str, comments, number
 
