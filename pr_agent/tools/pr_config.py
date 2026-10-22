@@ -1,7 +1,7 @@
 from dynaconf import Dynaconf
 
 from pr_agent.config_loader import get_settings
-from pr_agent.git_providers import get_git_provider
+from pr_agent.git_providers import get_git_provider, get_git_provider_with_context
 from pr_agent.log import get_logger
 
 
@@ -18,7 +18,11 @@ class PRConfig:
             args (list, optional): Unused compatibility parameter for the common tool interface. Defaults to None.
             ai_handler: Unused compatibility parameter for the common tool interface. Defaults to None.
         """
-        self.git_provider = get_git_provider()(pr_url)
+        provider_class = get_git_provider()
+        self.git_provider = get_git_provider_with_context(pr_url)
+        # Repository settings can change the provider selected during request setup.
+        if type(self.git_provider) is not provider_class:
+            self.git_provider = provider_class(pr_url)
 
     async def run(self):
         get_logger().info('Getting configuration settings...')
