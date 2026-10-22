@@ -54,8 +54,8 @@ def merge_review_chunks(chunk_outputs: list[dict],
     `max_findings` is the per-review limit from `num_max_findings`. Each chunk may report up
     to that many findings about its own part of the diff, so the union can be several times
     larger; passing the limit cuts the merged list back to what a single-call review would
-    publish. A cut finding is treated as left out rather than absent, which the
-    `len(findings) < num_max_findings` resolution guard already reads correctly.
+    publish. `all_key_issues` returns the list before this cut, for callers that must tell a cut
+    finding from an absent one.
     """
     reviews = [chunk["review"] for chunk in chunk_outputs
                if isinstance(chunk, dict) and isinstance(chunk.get("review"), dict)]
@@ -114,20 +114,24 @@ def _cap_key_issues(review: dict, max_findings: int | None) -> None:
         review["key_issues_to_review"] = issues[:limit]
 
 
-def findings_may_be_cut(chunk_outputs: list[dict], max_findings: int) -> bool:
-    """Say whether a chunked review may have left a real finding out of the merged list.
-
-    That is the case when the union of the chunks' findings is longer than `max_findings`
-    (the merge cut it), or when any chunk reported `max_findings` findings on its own (the
-    model may have stopped at its allowance). A merged list that reaches the limit without
-    either condition is complete, so a finding missing from it is really gone.
-    """
+def _chunk_key_issues(chunk_outputs: list[dict]) -> list[list]:
     per_chunk = [chunk["review"].get("key_issues_to_review") for chunk in chunk_outputs
                  if isinstance(chunk, dict) and isinstance(chunk.get("review"), dict)]
-    per_chunk = [issues if isinstance(issues, list) else [] for issues in per_chunk]
-    if any(len(issues) >= max_findings for issues in per_chunk):
-        return True
-    return len(_union_of_lists(_key_issue_identity)(per_chunk)) > max_findings
+    return [issues if isinstance(issues, list) else [] for issues in per_chunk]
+
+
+def all_key_issues(chunk_outputs: list[dict]) -> list:
+    """Return every distinct finding the chunks reported, before `max_findings` cuts the list."""
+    return _union_of_lists(_key_issue_identity)(_chunk_key_issues(chunk_outputs))
+
+
+def chunk_hit_findings_limit(chunk_outputs: list[dict], max_findings: int) -> bool:
+    """Say whether a chunk reported `max_findings` findings on its own.
+
+    The model may have stopped at its allowance, so a finding it never listed is not known to be
+    gone. A merge that cuts the union is different: `all_key_issues` still holds what it cut.
+    """
+    return any(len(issues) >= max_findings for issues in _chunk_key_issues(chunk_outputs))
 
 
 def _rule_name(key: str) -> str:

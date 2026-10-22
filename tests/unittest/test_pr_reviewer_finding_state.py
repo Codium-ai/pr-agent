@@ -726,30 +726,41 @@ def test_finding_limit_prevents_resolution_of_missing_active_findings(monkeypatc
     assert reviewer._review_state_result.state["last_run"]["complete"] is False
 
 
-def _chunked_reviewer_with_active_finding(monkeypatch, chunk_sizes):
-    """A reviewer holding the merged result of chunks that reported `chunk_sizes` findings each."""
+def _chunk_issue(chunk, n):
+    return {"relevant_file": f"{chunk}_{n}.py", "issue_header": "bug", "issue_content": f"problem {chunk}_{n}"}
+
+
+def _chunked_reviewer_with_state(monkeypatch, chunk_sizes, previous=()):
+    """A reviewer holding the merged result of chunks that reported `chunk_sizes` findings each.
+
+    `previous` lists `(chunk, n, state)` entries for the findings already in the persisted state;
+    `old.py` is always there as an ACTIVE finding that no chunk reports again.
+    """
     settings = _settings(monkeypatch)
     monkeypatch.setattr(settings.pr_reviewer, "num_max_findings", 3)
-    previous = reconcile_review_findings(
+    issues = [{"relevant_file": "old.py", "issue_header": "bug", "issue_content": "previous"}]
+    issues += [_chunk_issue(chunk, n) for chunk, n, _ in previous]
+    state = reconcile_review_findings(
         None,
-        [{"body": "previous", "path": "old.py", "line_start": 2, "line_end": 2}],
+        [PRReviewer._review_finding_from_issue(issue) for issue in issues],
         allow_resolution=True,
         head_sha="head-1",
         timestamp="2026-01-01T00:00:00Z",
     ).state
+    by_body = {finding["body"]: finding for finding in state["findings"]}
+    for chunk, n, finding_state in previous:
+        by_body[f"**bug**\n\nproblem {chunk}_{n}"]["state"] = finding_state
     header = f"{PRReviewHeader.REGULAR.value} 🔍"
     provider = MagicMock()
     provider.last_commit_id = "head-2"
     provider.get_issue_comments.return_value = [
-        SimpleNamespace(body=f"{header}\n\nold review\n\n{serialize_review_state(previous)}")
+        SimpleNamespace(body=f"{header}\n\nold review\n\n{serialize_review_state(state)}")
     ]
     provider.is_supported.side_effect = lambda capability: capability == "get_issue_comments"
     reviewer = _reviewer(provider)
     reviewer._review_finding_state_enabled = MagicMock(return_value=True)
     reviewer._chunked_results = {
-        index: ("raw", {"review": {"key_issues_to_review": [
-            {"relevant_file": f"{index}_{n}.py", "issue_header": "bug", "issue_content": f"problem {index}_{n}"}
-            for n in range(size)]}}, "model")
+        index: ("raw", {"review": {"key_issues_to_review": [_chunk_issue(index, n) for n in range(size)]}}, "model")
         for index, size in enumerate(chunk_sizes)
     }
     reviewer._chunked_patches_diff_list = list(reviewer._chunked_results)
@@ -757,27 +768,61 @@ def _chunked_reviewer_with_active_finding(monkeypatch, chunk_sizes):
     reviewer._chunked_partial_files_list = []
     reviewer._chunked_primary_model = "model"
     assert reviewer._merge_cached_review_chunks()
+    reviewer._prepare_review_finding_state(reviewer.prediction_data)
     return reviewer
 
 
-def test_chunked_review_that_reaches_the_limit_without_a_cut_resolves_fixed_findings(monkeypatch):
-    reviewer = _chunked_reviewer_with_active_finding(monkeypatch, (2, 1))
+def _state_of(reviewer):
+    """Map each finding in the new state, by its issue text, to its state."""
+    return {finding["body"].rsplit("\n\n", 1)[-1]: finding["state"]
+            for finding in reviewer._review_state_result.state["findings"]}
 
-    reviewer._prepare_review_finding_state(reviewer.prediction_data)
+
+def test_chunked_review_that_reaches_the_limit_without_a_cut_resolves_fixed_findings(monkeypatch):
+    reviewer = _chunked_reviewer_with_state(monkeypatch, (2, 1))
 
     assert len(reviewer.prediction_data["review"]["key_issues_to_review"]) == 3
     assert reviewer._review_state_result.resolved_ids != ()
     assert reviewer._review_state_result.state["last_run"]["complete"] is True
 
 
-@pytest.mark.parametrize("chunk_sizes", [(3, 0), (2, 2)], ids=["full-chunk", "merge-cut"])
-def test_chunked_review_that_may_have_left_a_finding_out_does_not_resolve(monkeypatch, chunk_sizes):
-    reviewer = _chunked_reviewer_with_active_finding(monkeypatch, chunk_sizes)
-
-    reviewer._prepare_review_finding_state(reviewer.prediction_data)
+def test_chunked_review_with_a_full_chunk_does_not_resolve(monkeypatch):
+    reviewer = _chunked_reviewer_with_state(monkeypatch, (3, 0))
 
     assert reviewer._review_state_result.resolved_ids == ()
     assert reviewer._review_state_result.state["last_run"]["complete"] is False
+
+
+def test_findings_cut_by_the_merge_do_not_block_resolution(monkeypatch):
+    # chunks of 2 and 2 with a limit of 3: the fourth finding is known, only left out of the output
+    reviewer = _chunked_reviewer_with_state(monkeypatch, (2, 2))
+
+    assert len(reviewer.prediction_data["review"]["key_issues_to_review"]) == 3
+    assert _state_of(reviewer)["previous"] == "RESOLVED"
+
+
+def test_active_finding_cut_by_the_merge_stays_active(monkeypatch):
+    reviewer = _chunked_reviewer_with_state(monkeypatch, (2, 2), previous=[(1, 1, "ACTIVE")])
+
+    assert _state_of(reviewer)["problem 1_1"] == "ACTIVE"
+    assert _state_of(reviewer)["previous"] == "RESOLVED"
+
+
+@pytest.mark.parametrize("chunk_sizes, cut", [((2, 2), "1_1"), ((3, 1), "1_0")], ids=["merge-cut", "full-chunk"])
+def test_resolved_finding_cut_by_the_merge_reopens(monkeypatch, chunk_sizes, cut):
+    chunk, n = map(int, cut.split("_"))
+    reviewer = _chunked_reviewer_with_state(monkeypatch, chunk_sizes, previous=[(chunk, n, "RESOLVED")])
+
+    assert _state_of(reviewer)[f"problem {cut}"] == "ACTIVE"
+    assert len(reviewer._review_state_result.reopened_ids) == 1
+
+
+@pytest.mark.parametrize("chunk_sizes", [(2, 2), (3, 1)], ids=["merge-cut", "full-chunk"])
+def test_new_finding_cut_by_the_merge_stays_out_of_the_state(monkeypatch, chunk_sizes):
+    reviewer = _chunked_reviewer_with_state(monkeypatch, chunk_sizes)
+    published = {issue["issue_content"] for issue in reviewer.prediction_data["review"]["key_issues_to_review"]}
+
+    assert set(_state_of(reviewer)) - {"previous"} == published
 
 
 def test_review_comment_budget_reserves_persistent_update_header():

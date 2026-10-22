@@ -43,12 +43,13 @@ from pr_agent.algo.prompt_fragments import render_diff_hunk_format
 from pr_agent.algo.repo_context import build_repo_context
 from pr_agent.algo.review_finding_state import (
     append_review_state,
+    normalize_findings,
     parse_review_state,
     reconcile_review_findings,
     render_previous_findings,
 )
 from pr_agent.algo.review_json_output import review_json_output_path, write_review_json_output
-from pr_agent.algo.review_merge import findings_may_be_cut, merge_review_chunks
+from pr_agent.algo.review_merge import all_key_issues, chunk_hit_findings_limit, merge_review_chunks
 from pr_agent.algo.run_details import get_run_details, init_run_details, record_command_failure, record_model_used
 from pr_agent.algo.run_output import (
     github_action_output,
@@ -180,7 +181,10 @@ class PRReviewer:
     prediction_data = None  # merged review dict; None means "parse self.prediction instead"
     review_chunk_count = 1
     review_failed_chunk_count = 0
-    review_findings_cut = None  # chunked reviews only: True when a real finding may be missing from the merge
+    # chunked reviews only: every finding the chunks reported (before the merge cut it to
+    # num_max_findings), and whether a chunk reached that limit on its own
+    review_all_issues = None
+    review_chunk_hit_limit = None
     partial_files_list = ()
 
     def __init__(self, pr_url: str, is_answer: bool = False, is_auto: bool = False, args: list = None,
@@ -846,6 +850,9 @@ class PRReviewer:
             isinstance(reported_issues, list)
             and len(current_findings) < len(reported_issues)
         )
+        if self.review_all_issues is not None:
+            current_findings, dropped_findings = self._chunked_findings_for_state(
+                current_findings, parsed.state)
         allow_resolution = (
             bool(self.prediction)
             and not bool(getattr(self.incremental, "is_incremental", False))
@@ -859,9 +866,9 @@ class PRReviewer:
             and not dropped_findings
             and (
                 len(current_findings) < max_findings
-                # a chunked review that hit the limit is still complete when nothing was cut
-                if self.review_findings_cut is None
-                else not self.review_findings_cut
+                # a chunked review that reached the limit is complete unless a chunk stopped at it
+                if self.review_chunk_hit_limit is None
+                else not self.review_chunk_hit_limit
             )
         )
         result = reconcile_review_findings(
@@ -874,6 +881,22 @@ class PRReviewer:
         )
         if parsed.state is not None or result.changed:
             self._review_state_result = result
+
+    def _chunked_findings_for_state(
+        self, published: list[dict], previous_state: dict | None
+    ) -> tuple[list[dict], bool]:
+        """Pick the findings of a chunked review that the state is reconciled against.
+
+        The merge cuts the findings to `num_max_findings`, but a cut finding is a known one, so
+        it is matched against the state: an active one stays active and a resolved one reopens.
+        A new cut finding stays out until a later review publishes it, because the state reaches
+        the next review as already reported. Also returns whether an issue could not be tracked.
+        """
+        all_findings = self._review_findings_from_data({"review": {"key_issues_to_review": self.review_all_issues}})
+        wanted = {finding["finding_id"] for finding in normalize_findings(published)}
+        wanted.update(finding["finding_id"] for finding in (previous_state or {}).get("findings", []))
+        findings = [finding for finding in normalize_findings(all_findings) if finding["finding_id"] in wanted]
+        return findings, len(all_findings) < len(self.review_all_issues)
 
     def _should_publish_review_no_suggestions(self, pr_review: str) -> bool:
         return (
@@ -888,7 +911,8 @@ class PRReviewer:
         self.prediction_data = None
         self.review_chunk_count = 1
         self.review_failed_chunk_count = 0
-        self.review_findings_cut = None
+        self.review_all_issues = None
+        self.review_chunk_hit_limit = None
         self.partial_files_list = []
         raw_prompt_vars = getattr(self, "_raw_prompt_vars", getattr(self, "vars", None))
         ai_handler = getattr(self, "ai_handler", None)
@@ -1180,8 +1204,9 @@ class PRReviewer:
         raw_vars = getattr(self, "_raw_prompt_vars", None) or getattr(self, "vars", None) or {}
         self.prediction_data = merge_review_chunks(
             chunk_outputs, related_tickets=raw_vars.get("related_tickets"), max_findings=max_findings)
-        self.review_findings_cut = (
-            None if max_findings is None else findings_may_be_cut(chunk_outputs, max_findings))
+        self.review_all_issues = all_key_issues(chunk_outputs)
+        self.review_chunk_hit_limit = (
+            None if max_findings is None else chunk_hit_findings_limit(chunk_outputs, max_findings))
         self.review_chunk_count = len(self._chunked_patches_diff_list)
         self.review_failed_chunk_count = self.review_chunk_count - len(chunk_results)
         self.remaining_files_list = self._chunked_remaining_files_list

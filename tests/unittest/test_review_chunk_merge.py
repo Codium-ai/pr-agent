@@ -8,7 +8,7 @@ than its worst chunk.
 import pytest
 
 from pr_agent.algo import review_merge
-from pr_agent.algo.review_merge import findings_may_be_cut, merge_review_chunks
+from pr_agent.algo.review_merge import all_key_issues, chunk_hit_findings_limit, merge_review_chunks
 
 
 def _chunk(**review):
@@ -430,20 +430,25 @@ def _chunks_of(*sizes):
             for index, size in enumerate(sizes)]
 
 
-@pytest.mark.parametrize("sizes, limit, may_be_cut", [
-    ((2, 1), 3, False),   # reaches the limit, but no chunk was full and nothing was dropped
+@pytest.mark.parametrize("sizes, limit, hit_limit", [
+    ((2, 1), 3, False),   # reaches the limit, but no chunk was full
     ((1, 1), 3, False),
     ((3, 0), 3, True),    # a chunk that reports the limit on its own may have stopped there
-    ((2, 2), 3, True),    # the merge dropped one finding
+    ((2, 2), 3, False),   # the merge drops one finding, but it is known and so not missing
     ((), 3, False),
 ])
-def test_findings_may_be_cut(sizes, limit, may_be_cut):
-    assert findings_may_be_cut(_chunks_of(*sizes), limit) is may_be_cut
+def test_chunk_hit_findings_limit(sizes, limit, hit_limit):
+    assert chunk_hit_findings_limit(_chunks_of(*sizes), limit) is hit_limit
 
 
-def test_findings_reported_twice_do_not_count_as_a_cut():
+def test_all_key_issues_keeps_what_the_merge_cuts_and_drops_repeats():
     issue = _issue()
     chunks = [_chunk(key_issues_to_review=[issue, _issue(file="b.py", content="b")]),
               _chunk(key_issues_to_review=[issue, _issue(file="c.py", content="c")])]
 
-    assert findings_may_be_cut(chunks, 3) is False
+    assert [i["relevant_file"] for i in all_key_issues(chunks)] == ["app.py", "b.py", "c.py"]
+    assert len(merge_review_chunks(chunks, max_findings=2)["review"]["key_issues_to_review"]) == 2
+
+
+def test_all_key_issues_ignores_chunks_without_a_list():
+    assert all_key_issues([{}, _chunk(key_issues_to_review="none"), _chunk()]) == []
