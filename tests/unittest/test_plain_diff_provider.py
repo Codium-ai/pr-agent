@@ -69,6 +69,48 @@ def test_get_diff_files(cfg):
     assert files[0].edit_type == EDIT_TYPE.MODIFIED
 
 
+def test_lf_framed_diff_preserves_crlf_payload(cfg, monkeypatch):
+    cfg("plain_diff.content", DIFF.replace("-line2\n", "-line2\r\n"))
+    cfg("plain_diff.output_path", None)
+    monkeypatch.setattr("pr_agent.git_providers.plain_diff_provider._find_repository_root", lambda: None)
+
+    provider = PlainDiffGitProvider(None)
+    files = provider.get_diff_files()
+
+    assert files[0].filename == "foo.py"
+    assert files[0].edit_type == EDIT_TYPE.MODIFIED
+    assert "-line2\r\n+line2-changed\n" in files[0].patch
+
+
+def test_crlf_diff_preserves_file_path_and_working_tree_context(cfg, tmp_path, monkeypatch):
+    head = "line1\r\nline2-changed\r\nline3\r\n"
+    Repo.init(tmp_path)
+    (tmp_path / "foo.py").write_text(head, newline="")
+    monkeypatch.chdir(tmp_path)
+    cfg("plain_diff.content", DIFF.replace("\n", "\r\n"))
+    cfg("plain_diff.output_path", None)
+
+    provider = PlainDiffGitProvider(None)
+    files = provider.get_diff_files()
+
+    assert len(files) == 1
+    assert files[0].filename == "foo.py"
+    assert files[0].edit_type == EDIT_TYPE.MODIFIED
+    assert files[0].base_file == "line1\nline2\nline3\n"
+    assert files[0].head_file == "line1\nline2-changed\nline3\n"
+    assert provider.get_languages() == {"Python": 100.0}
+
+
+def test_crlf_diff_with_several_files_keeps_every_path(cfg):
+    cfg("plain_diff.content", (DIFF + DIFF.replace("foo.py", "bar.py")).replace("\n", "\r\n"))
+    cfg("plain_diff.output_path", None)
+
+    files = PlainDiffGitProvider(None).get_diff_files()
+
+    assert [(f.filename, f.edit_type) for f in files] == [("foo.py", EDIT_TYPE.MODIFIED),
+                                                          ("bar.py", EDIT_TYPE.MODIFIED)]
+
+
 @pytest.mark.parametrize("quote_path", ["true", "false"])
 @pytest.mark.parametrize("filename", ["测试.py", 'quote"name.py', "tab\tname.py", "back\\slash.py"])
 def test_git_quoted_paths_preserve_working_tree_context(cfg, tmp_path, monkeypatch, filename, quote_path):
