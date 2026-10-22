@@ -98,8 +98,8 @@ def _install_fake_image_probe(monkeypatch, status):
         async def __aexit__(self, *a):
             return False
 
-        def request(self, method, url, allow_redirects=True):
-            observed.update(method=method, url=url, allow_redirects=allow_redirects)
+        def request(self, method, url, allow_redirects=True, **kwargs):
+            observed.update(method=method, url=url, allow_redirects=allow_redirects, **kwargs)
             return response
 
     def _factory(*args, **kwargs):
@@ -162,8 +162,10 @@ async def test_chat_completion_probes_images_with_bounded_head(monkeypatch):
 
     # The probe is a bounded, non-redirecting HEAD with the configured timeout.
     assert observed["method"] == "HEAD"
-    assert observed["url"] == "https://example.test/image.png"
+    assert str(observed["url"]) == "https://140.82.121.4/image.png"
     assert observed["allow_redirects"] is False
+    assert observed["headers"] == {"Host": "example.test"}
+    assert observed["server_hostname"] == "example.test"
     assert observed["timeout"].total == 5
     assert mock_call.call_args.kwargs["messages"][1]["content"][1] == {
         "type": "image_url",
