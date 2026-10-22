@@ -2366,8 +2366,9 @@ class PRCodeSuggestions:
                     patch_orig = "\n".join(diff)
                     patch = "\n".join(patch_orig.splitlines()[5:]).strip('\n')
 
+                    fence = get_suggestion_fence(patch)
                     example_code = ""
-                    example_code += f"```diff\n{patch.rstrip()}\n```\n"
+                    example_code += f"{fence}diff\n{patch.rstrip()}\n{fence}\n"
                     if i == 0:
                         pr_body += """<td>\n\n"""
                     else:
