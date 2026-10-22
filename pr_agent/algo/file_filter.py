@@ -20,7 +20,7 @@ def filter_ignored(files, platform = 'github'):
         patterns = [raw_patterns] if isinstance(raw_patterns, str) else list(raw_patterns)
         glob_setting = get_settings().ignore.glob
         if isinstance(glob_setting, str):  # --ignore.glob=[.*utils.py], --ignore.glob=.*utils.py
-            glob_setting = glob_setting.strip('[]').split(",")
+            glob_setting = split_glob_patterns(glob_setting)
         patterns += translate_globs_to_regexes(glob_setting)
 
         code_generators = get_settings().config.get('ignore_language_framework', [])
@@ -101,6 +101,34 @@ def filter_ignored(files, platform = 'github'):
             f'contain files that the [ignore] rules should have excluded. {e}')
 
     return files
+
+
+def split_glob_patterns(value: str) -> list[str]:
+    """Split a string ``ignore.glob`` value into glob patterns.
+
+    A bracketed value is a list wrapper, so one leading and one trailing
+    bracket are removed. A comma inside a bracket expression belongs to the
+    pattern, so only top-level commas separate patterns.
+    """
+    text = value.strip()
+    if text.startswith("[") and text.endswith("]") and len(text) >= 2:
+        text = text[1:-1]
+
+    patterns = []
+    start = index = 0
+    last_close = text.rfind("]")
+    while index < len(text):
+        if text[index] == "[":
+            end = index + 2 + (text[index + 1:index + 2] == "!")
+            if end <= last_close:
+                index = text.index("]", end)
+        elif text[index] == ",":
+            patterns.append(text[start:index])
+            start = index + 1
+        index += 1
+    patterns.append(text[start:])
+
+    return [pattern.strip() for pattern in patterns if pattern.strip()]
 
 
 def _globstar_offsets(pattern: str) -> list[int]:
