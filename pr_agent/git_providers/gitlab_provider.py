@@ -515,7 +515,8 @@ class GitLabProvider(GitProvider):
     def _submodule_target_allowed(self, project) -> bool:
         """Apply the sibling-repository checks to the resolved submodule project."""
         path = getattr(project, "path_with_namespace", None) or ""
-        return (self.is_sibling_repo_allowed(path) and path.split("/")[0] == self.get_owning_namespace(resolved=True)
+        return (self.is_sibling_repo_allowed(path)
+                and self.is_sibling_namespace_allowed(path.split("/")[0], self.get_owning_namespace(resolved=True))
                 and self._requester_can_read_sibling_project(project))
 
     def _compare_submodule(self, proj_path: str, old_sha: str, new_sha: str) -> list[dict]:
@@ -2345,7 +2346,7 @@ class GitLabProvider(GitProvider):
             numeric_id = repo_id.isascii() and repo_id.isdigit()
             identity_matches = str(project.id) == repo_id if numeric_id else resolved_path == repo_id
             if (not isinstance(resolved_path, str) or "/" not in resolved_path or not identity_matches
-                    or not current_namespace or resolved_path.split("/")[0] != current_namespace):
+                    or not self.is_sibling_namespace_allowed(resolved_path.split("/")[0], current_namespace)):
                 get_logger().warning(f"Ignoring out-of-namespace sibling repo in repo context: {repo_id}")
                 return ""
             if not self._requester_can_read_sibling_project(project):
