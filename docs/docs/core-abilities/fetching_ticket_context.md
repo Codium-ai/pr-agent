@@ -241,6 +241,7 @@ You can create an API token from your Atlassian account:
 ```toml
 [jira]
 jira_site = "<JIRA_SITE>"   # the "<site>" in https://<site>.atlassian.net (e.g. "mycompany")
+cloud_id = "<CLOUD_ID>" # optional UUID for scoped or service-account tokens
 jira_api_email = "YOUR_EMAIL"
 jira_api_token = "YOUR_API_TOKEN"
 ```
@@ -251,6 +252,15 @@ as `https://<jira_site>.atlassian.net`; it does not accept a full URL, so config
 cannot redirect the authenticated request to another host. Store `jira_api_email` and
 `jira_api_token` as secrets (environment variables or the secrets file), not in
 repository-committed configuration.
+
+For scoped or service-account API tokens, set `cloud_id` to the UUID of the Jira Cloud site. Requests then use
+`https://api.atlassian.com/ex/jira/<cloud_id>` while ticket links continue to use `jira_site`. Leave `cloud_id`
+empty for classic API tokens and the site-specific URL. The value is host-only and invalid values disable Jira
+lookup without logging the value.
+
+To find the cloud ID, open `https://<site>.atlassian.net/_edge/tenant_info` and read the `cloudId` value from the
+JSON response. It is also the value after `/s/` in the `admin.atlassian.com` URL. Use the cloud ID, not the Jira
+organization ID, because Atlassian's API gateway expects the site cloud ID.
 
 #### Acceptance criteria / requirements (optional)
 
@@ -271,7 +281,7 @@ returns 404. If your deployment works with a known set of Jira projects, list th
 in the host's `project_keys`; keys with any other prefix are then dropped before any lookup (they are
 named once at debug level in the log). By default, `project_keys = ["*"]` looks up every key found.
 Set `project_keys = []` to disable Jira ticket lookups.
-`project_keys`, `jira_site` and `jira_api_email` are host-only: a repository's `.pr_agent.toml`
+`cloud_id`, `project_keys`, `jira_site` and `jira_api_email` are host-only: a repository's `.pr_agent.toml`
 or a comment command cannot change them.
 
 ```toml

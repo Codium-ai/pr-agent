@@ -516,6 +516,7 @@ def test_repo_settings_cannot_override_provider_authentication_or_tls(
     ("key", "host_value", "repo_toml_value"),
     [
         ("project_keys", ["PROJ"], '["PROJ", "HR"]'),
+        ("cloud_id", "35273b54-3f06-40d2-880f-dd28cf8daafa", '"00000000-0000-0000-0000-000000000000"'),
         ("jira_site", "host-org", '"other-org"'),
         ("jira_api_email", "bot@host.example", '"other@repo.example"'),
     ],

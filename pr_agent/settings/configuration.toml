@@ -461,6 +461,7 @@ url = "" # URL to the BitBucket Server instance
 # Credentials: fill and place in .secrets.toml, or set via environment variables
 # (e.g. jira__jira_api_token).
 # jira_site = "your-org"   # the "<site>" in https://<site>.atlassian.net
+cloud_id = ""                # optional UUID for scoped tokens; uses the Atlassian API gateway and is host-only
 # jira_api_email = "..."   # Atlassian account email
 # jira_api_token = "..."   # Atlassian API token
 # Custom field id holding acceptance criteria / requirements, mapped to the ticket
