@@ -2175,7 +2175,7 @@ class GitLabProvider(GitProvider):
         root_commit = getattr(self, "_resolved_config_branch", "")
         if root_commit:
             try:
-                return self._list_config_tree_paths(project, root_commit), root_commit
+                return self._get_config_tree_paths(project, root_commit), root_commit
             except GitlabGetError as e:
                 if getattr(e, "response_code", None) != 404:
                     raise
@@ -2198,7 +2198,7 @@ class GitLabProvider(GitProvider):
                 else:
                     get_logger().debug("Root settings appeared during acquisition; skipping nested settings")
                     return [], ""
-                paths = self._list_config_tree_paths(project, commit)
+                paths = self._get_config_tree_paths(project, commit)
             except GitlabGetError as e:
                 if getattr(e, "response_code", None) != 404:
                     raise
@@ -2208,6 +2208,21 @@ class GitLabProvider(GitProvider):
             return paths, commit
         get_logger().debug("No repository tree found for per-directory settings; skipping")
         return [], ""
+
+    def _get_config_tree_paths(self, project, ref: str) -> list[str]:
+        """Reuse complete settings-tree paths at a pinned revision within this provider."""
+        max_pages = get_settings().config.per_directory_settings_max_tree_pages
+        if isinstance(max_pages, bool) or not isinstance(max_pages, int) or max_pages < 1:
+            return self._list_config_tree_paths(project, ref)
+        key = (self.id_project, ref, max_pages)
+        cached = getattr(self, "_config_tree_paths_cache", None)
+        if cached is not None and cached[0] == key:
+            return list(cached[1])
+        paths = self._list_config_tree_paths(project, ref)
+        # Retain only nonempty, complete results; incomplete discovery also returns [].
+        if paths:
+            self._config_tree_paths_cache = (key, tuple(paths))
+        return paths
 
     @staticmethod
     def _list_config_tree_paths(project, ref: str) -> list[str]:
