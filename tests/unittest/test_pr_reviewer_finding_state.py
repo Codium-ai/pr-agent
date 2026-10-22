@@ -222,7 +222,7 @@ def test_prepare_review_same_head_absence_preserves_active_finding(monkeypatch):
     assert "resolved_head_sha" not in finding
 
 
-def test_prepare_review_pushes_final_markdown_with_lifecycle_state(monkeypatch):
+async def test_prepare_review_pushes_final_markdown_with_lifecycle_state(monkeypatch):
     _settings(monkeypatch)
     previous = reconcile_review_findings(
         None,
@@ -245,9 +245,10 @@ def test_prepare_review_pushes_final_markdown_with_lifecycle_state(monkeypatch):
         patch("pr_agent.tools.pr_reviewer.load_yaml", return_value={"review": {"key_issues_to_review": []}}),
         patch("pr_agent.tools.pr_reviewer.github_action_output"),
         patch("pr_agent.tools.pr_reviewer.convert_to_markdown_v2", return_value="No major issues detected"),
-        patch("pr_agent.tools.pr_reviewer.push_outputs") as push_outputs,
+        patch("pr_agent.tools.pr_reviewer.push_outputs_async") as push_outputs,
     ):
         review = reviewer._prepare_pr_review()
+        await reviewer._deliver_sink_output()
 
     assert "<summary>✅ Resolved findings</summary>" in review
     push_outputs.assert_called_once()
@@ -1007,7 +1008,7 @@ def _large_review_issues(count=10):
     ]
 
 
-def test_oversized_new_state_keeps_review_publishable_without_marker(monkeypatch):
+async def test_oversized_new_state_keeps_review_publishable_without_marker(monkeypatch):
     settings = _settings(monkeypatch)
     monkeypatch.setattr(settings.pr_reviewer, "num_max_findings", 100)
     provider = MagicMock()
@@ -1025,9 +1026,10 @@ def test_oversized_new_state_keeps_review_publishable_without_marker(monkeypatch
             "pr_agent.tools.pr_reviewer.convert_to_markdown_v2",
             return_value=PRReviewHeader.REGULAR.value + " " + chr(0x1F50D) + "\n\nhuman review",
         ),
-        patch("pr_agent.tools.pr_reviewer.push_outputs") as push_outputs,
+        patch("pr_agent.tools.pr_reviewer.push_outputs_async") as push_outputs,
     ):
         review = reviewer._prepare_pr_review()
+        await reviewer._deliver_sink_output()
 
     assert "human review" in review
     assert parse_review_state(review).present is False
@@ -1066,7 +1068,7 @@ def test_oversized_new_state_preserves_previous_valid_marker(monkeypatch):
             "pr_agent.tools.pr_reviewer.convert_to_markdown_v2",
             return_value=header + "\n\n" + ("human review " * 100),
         ),
-        patch("pr_agent.tools.pr_reviewer.push_outputs"),
+        patch("pr_agent.tools.pr_reviewer.push_outputs_async"),
     ):
         review = reviewer._prepare_pr_review()
 
@@ -1160,7 +1162,7 @@ def test_providers_without_override_inherit_persistent_comment_implementation():
     assert LocalGitProvider.publish_persistent_comment is GitProvider.publish_persistent_comment
 
 
-def test_oversized_state_degradation_is_safe_on_the_next_run(monkeypatch):
+async def test_oversized_state_degradation_is_safe_on_the_next_run(monkeypatch):
     settings = _settings(monkeypatch)
     monkeypatch.setattr(settings.pr_reviewer, "num_max_findings", 100)
     previous = reconcile_review_findings(
@@ -1182,7 +1184,7 @@ def test_oversized_state_degradation_is_safe_on_the_next_run(monkeypatch):
 
     data = {"review": {"key_issues_to_review": _large_review_issues()}}
 
-    def run_review(reviewer):
+    async def run_review(reviewer):
         with (
             patch("pr_agent.tools.pr_reviewer.load_yaml", return_value=data),
             patch("pr_agent.tools.pr_reviewer.github_action_output"),
@@ -1190,14 +1192,15 @@ def test_oversized_state_degradation_is_safe_on_the_next_run(monkeypatch):
                 "pr_agent.tools.pr_reviewer.convert_to_markdown_v2",
                 return_value=header + "\n\n" + ("human review " * 100),
             ),
-            patch("pr_agent.tools.pr_reviewer.push_outputs") as push_outputs,
+            patch("pr_agent.tools.pr_reviewer.push_outputs_async") as push_outputs,
         ):
             review = reviewer._prepare_pr_review()
+            await reviewer._deliver_sink_output()
         push_outputs.assert_called_once()
         return review
 
     first_reviewer = _reviewer(provider)
-    first_review = run_review(first_reviewer)
+    first_review = await run_review(first_reviewer)
     first_state = parse_review_state(first_review)
     assert first_state.valid is True
     assert first_state.state["findings"][0]["state"] == "ACTIVE"
@@ -1207,7 +1210,7 @@ def test_oversized_state_degradation_is_safe_on_the_next_run(monkeypatch):
         SimpleNamespace(body=first_review, user=SimpleNamespace(login="agent"))
     ]
     second_reviewer = _reviewer(provider)
-    second_review = run_review(second_reviewer)
+    second_review = await run_review(second_reviewer)
     second_state = parse_review_state(second_review)
 
     assert second_state.valid is True

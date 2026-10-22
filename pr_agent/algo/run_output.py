@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 from datetime import UTC, datetime
@@ -66,6 +67,16 @@ def push_outputs(message_type: str, payload: dict | None = None, markdown: str |
     except Exception as e:
         # Log only the exception type: requests errors embed the (secret-bearing) URL in their text.
         get_logger().warning(f"push_outputs failed: {type(e).__name__}")
+
+
+async def push_outputs_async(message_type: str, payload: dict | None = None, markdown: str | None = None) -> None:
+    """Emit a tool's output to external sinks without blocking the event loop.
+
+    The sinks do blocking HTTP and file I/O, so the delivery runs in a worker thread.
+    Awaiting it keeps the event loop free for other work and still delivers the output
+    before the command returns.
+    """
+    await asyncio.to_thread(push_outputs, message_type, payload=payload, markdown=markdown)
 
 
 def _render_setting_value(value) -> str:
