@@ -846,6 +846,14 @@ class TestGlobstarLimits:
         logs = _capture_logs(lambda: translate_globs_to_regexes([pattern]))
         assert ("Skipped" in logs) == over_limit
 
+    def test_overlong_glob_is_skipped_before_translation(self):
+        long_pattern = "x" * 20_000
+        regexes = translate_globs_to_regexes([long_pattern, "*.py"])
+
+        assert regexes == [fnmatch.translate("*.py")]
+        logs = _capture_logs(lambda: translate_globs_to_regexes([long_pattern]))
+        assert "Skipped 1 ignore glob(s) longer than" in logs
+
     def test_generated_code_list_has_its_own_allowance(self, monkeypatch):
         monkeypatch.setattr(global_settings.ignore, "glob", list(self.HEAVY))
         monkeypatch.setattr(global_settings.ignore, "regex", [])
