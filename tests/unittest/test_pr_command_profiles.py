@@ -121,6 +121,13 @@ def test_explicit_pr_command_overrides_are_preserved(monkeypatch, override):
     assert server_utils.get_pr_commands("github_app") is configured
 
 
+def test_scalar_pr_command_override_is_dispatchable(monkeypatch):
+    settings = _Settings({"github_app.pr_commands": "/review"})
+    monkeypatch.setattr(server_utils, "get_settings", lambda: settings)
+
+    assert server_utils.get_pr_commands("github_app") == ["/review"]
+
+
 def test_provider_sections_no_longer_duplicate_pr_command_defaults():
     configuration_path = Path(__file__).parents[2] / "pr_agent/settings/configuration.toml"
     configuration = tomllib.loads(configuration_path.read_text(encoding="utf-8"))
