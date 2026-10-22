@@ -251,3 +251,40 @@ async def test_run_keeps_document_boundaries_with_truncated_comments(tmp_path, m
     assert all(path in ranked for path in docs)
     assert "/020-guide.md" in clipping_inputs[-1]
     assert "max_jobs = 7" in clipping_inputs[-1]
+
+
+@pytest.mark.asyncio
+async def test_ranked_docs_preserve_fitting_xml_example(monkeypatch):
+    xml_example = '```xml\n<listener port="18443" mode="isolated-m7">localhost</listener>\n```'
+    docs = {
+        "/large.md": "Unrelated information. " * 100,
+        "/config.md": "# Listener configuration\n\n" + xml_example,
+    }
+    limit = 256
+    assert len(aggregate_documentation_files_for_prompt_contents(docs)) > limit
+    assert len(aggregate_documentation_files_for_prompt_contents({"/config.md": docs["/config.md"]})) < limit
+
+    tool = PRHelpDocs.__new__(PRHelpDocs)
+    tool.question = "How do I configure the listener?"
+    tool.return_as_string = True
+    tool.vars = {"docs_url": "https://example.test", "question": tool.question, "snippets": ""}
+    tool.ai_handler = SimpleNamespace()
+    tool.token_handler = SimpleNamespace(count_tokens=lambda text, force_accurate=False: len(text))
+    tool._docs_input_token_limit = lambda: limit
+    tool._gen_filenames_to_contents_map_from_repo = lambda: docs
+    tool._format_model_answer = lambda response, relevant_sections: response
+
+    responses = iter([{"relevant_files_ranking": [{"idx": 1}]}, {"response": "answer"}])
+    model_calls = []
+
+    async def predict(*args, **kwargs):
+        model_calls.append(True)
+        return "unused"
+
+    monkeypatch.setattr("pr_agent.tools.pr_help_docs.retry_with_fallback_models", predict)
+    monkeypatch.setattr("pr_agent.tools.pr_help_docs.load_yaml", lambda response: next(responses))
+
+    assert await tool.run() == "answer"
+    assert len(model_calls) == 2
+    assert "/config.md" in tool.vars["snippets"]
+    assert xml_example in tool.vars["snippets"]
