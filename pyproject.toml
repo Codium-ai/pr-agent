@@ -156,8 +156,8 @@ dev = [
 ]
 
 [tool.uv]
-# Floor, not "==": Dependabot's uv 0.12.18 failed the exact pin with tool_version_not_supported.
-required-version = ">=0.12.10"
+# Keep the floor aligned with the patched uv release used by Docker and CI.
+required-version = ">=0.13.5"
 
 [tool.ruff]
 line-length = 120
