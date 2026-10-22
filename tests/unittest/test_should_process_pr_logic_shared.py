@@ -190,6 +190,37 @@ def test_ignore_pr_title_given_as_a_plain_string_is_not_iterated_per_character(p
     _assert_all(providers, _fields(title="Add cache"), True, "a string ignore_pr_title that does not match")
 
 
+@pytest.mark.parametrize(
+    "setting, pattern, matching, non_matching, only_with_labels",
+    [
+        ("CONFIG.IGNORE_REPOSITORIES", "^org/repo$",
+         {"repo_full_name": "org/repo"}, {"repo_full_name": "org/other"}, False),
+        ("CONFIG.IGNORE_PR_AUTHORS", "^dependabot",
+         {"sender": "dependabot[bot]"}, {"sender": "alice"}, False),
+        ("CONFIG.IGNORE_PR_LABELS", "skip-pr-agent",
+         {"labels": ("skip-pr-agent",)}, {"labels": ("skip",)}, True),
+        ("CONFIG.IGNORE_PR_SOURCE_BRANCHES", "^generated/",
+         {"source_branch": "generated/api"}, {"source_branch": "feature/api"}, False),
+        ("CONFIG.IGNORE_PR_TARGET_BRANCHES", "^legacy$",
+         {"target_branch": "legacy"}, {"target_branch": "main"}, False),
+    ],
+)
+def test_ignore_rules_given_as_plain_strings_are_not_iterated_per_character(
+    providers, ignore_settings, setting, pattern, matching, non_matching, only_with_labels
+):
+    """Read a string setting as one rule, never as a sequence of characters.
+
+    Iterating "^org/repo$" yields "^", which matches every repository, and matching
+    a label against the string "skip-pr-agent" treats any substring such as "skip"
+    as an ignored label. A bare string must become a single pattern (or label).
+    """
+    ignore_settings.set(setting, pattern)
+    _assert_all(providers, _fields(**matching), False, f"a string {setting} that matches",
+                only_with_labels=only_with_labels)
+    _assert_all(providers, _fields(**non_matching), True, f"a string {setting} that does not match",
+                only_with_labels=only_with_labels)
+
+
 def test_an_invalid_pattern_does_not_filter_out_every_pull_request(providers, ignore_settings):
     """Process the PR when a rule cannot be evaluated; the opposite silently disables the agent."""
     ignore_settings.set("CONFIG.IGNORE_PR_TITLE", ["("])
