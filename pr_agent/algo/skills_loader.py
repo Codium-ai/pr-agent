@@ -83,6 +83,20 @@ def _expand_skill_path(raw_path: object) -> str | None:
     return os.path.expanduser(os.path.expandvars(raw_path.strip()))
 
 
+def _normalize_skill_paths(value: object) -> list[str]:
+    """Return the configured ``skills.paths`` value as a list of path strings.
+
+    A plain string is one path. Iterating it would yield single characters, and
+    every character that happens to name an existing directory would be walked,
+    so the root directory would end up in the scan.
+    """
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, (list, tuple)):
+        return list(value)
+    return []
+
+
 def _expanded_skill_paths(paths: list[str]) -> tuple[str, ...]:
     """Return the normalized path values used by discovery and cache keys."""
     expanded_paths = []
@@ -204,7 +218,7 @@ def discover_skills(paths: list[str]) -> list[Skill]:
     skills: list[Skill] = []
     seen: set = set()
 
-    for raw_path in paths or []:
+    for raw_path in _normalize_skill_paths(paths):
         expanded = _expand_skill_path(raw_path)
         if expanded is None:
             continue
@@ -334,7 +348,13 @@ def get_skills_context() -> str:
     """
     settings = get_settings()
     enabled = bool(settings.skills.enabled)
-    paths = list(settings.skills.paths or [])
+    configured_paths = settings.skills.paths
+    paths = _normalize_skill_paths(configured_paths)
+    if isinstance(configured_paths, str):
+        get_logger().warning(
+            "skills.paths should be a list; treating the configured string as a single path",
+            artifact={"paths": configured_paths},
+        )
     expanded_paths = _expanded_skill_paths(paths)
 
     if not enabled:
