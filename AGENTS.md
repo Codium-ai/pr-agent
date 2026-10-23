@@ -97,6 +97,13 @@ Ruff is the single linting tool: `pyproject.toml` configures it and the pre-comm
 - End-to-end suites require provider credentials and may take several minutes; `TOKEN_GITHUB`, `TOKEN_GITLAB`, `BITBUCKET_USERNAME`, and `BITBUCKET_PASSWORD` are CI secret names, not runtime environment variables (see the mappings in `.github/workflows/e2e_tests.yaml`). These tests create remote branches and pull/merge requests and expect deployed apps/webhooks to process them; run them only when credentials and sandboxes are configured.
 - `tests/health_test/main.py` is a manual script for `/describe`, `/review`, and `/improve`; it asserts artifact headers inline, not checked-in artifact files. Update those inline assertions if prompts change meaningfully. CI provider smoke runs `tests/health_test/test_github_smoke.py` instead (`/describe` only, model stubbed, `GITHUB.USER_TOKEN`).
 
+## Review Checklist
+
+- A setting can arrive as a TOML list, a plain string, or an environment value that Dynaconf parses as TOML (`SECTION__KEY=123` arrives as an int). Code that reads it handles each form.
+- A fix in one git provider, AI handler or server usually applies to its siblings. Check the same logic in the others and fix them or name them in the PR.
+- New or changed regexes run in linear time: no nested or adjacent unbounded quantifiers that can match the same characters, and no unbounded leading quantifier in an unanchored search. User-supplied patterns and globs get a length cap before they are compiled or translated.
+- Docs and config comments describe what the branch does. A PR that changes a default or a setting's behavior updates the `configuration.toml` comment and the docs page that state it, and none documents behavior from another PR.
+
 ## Commit and Pull Request Guidelines
 
 - Follow `CONTRIBUTING.md`: keep changes focused, add or update tests, and use Conventional Commit-style messages (e.g., `fix: handle missing repo settings gracefully`).
