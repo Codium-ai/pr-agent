@@ -723,8 +723,13 @@ class AzureDevopsProvider(GitProvider):
         matches = []
         for comment in self.get_issue_comments():
             body = getattr(comment, "body", None)
-            if body and comment_matches_any_identity(body, identifiers):
-                matches.append(comment)
+            if not body or not comment_matches_any_identity(body, identifiers):
+                continue
+            try:
+                if self.is_comment_authored_by_pr_agent(comment):
+                    matches.append(comment)
+            except RuntimeError:
+                get_logger().debug("Could not verify the author of an Azure DevOps review anchor")
         if not matches:
             return None
 
