@@ -477,7 +477,7 @@ class PRDescription:
                 task_results = await asyncio.gather(*tasks, return_exceptions=True)
                 for chunk_index, result in zip(task_indices, task_results, strict=True):
                     results[chunk_index] = result
-            file_description_str_list = []
+            file_description_chunks = []
             chunk_errors = []
             failed_files = []
             for i, (result, (_patches, files_in_patch)) in enumerate(zip(results, chunk_pairs, strict=True)):
@@ -499,8 +499,7 @@ class PRDescription:
                         artifact={"files": files_in_patch},
                     )
                     continue
-                prediction_files = result.strip().removeprefix('```yaml').strip('`').strip()
-                prediction_files_data = load_yaml(prediction_files, keys_fix_yaml=self.keys_fix)
+                prediction_files_data = load_yaml(result.strip(), keys_fix_yaml=self.keys_fix)
                 file_descriptions = (prediction_files_data.get('pr_files')
                                      if isinstance(prediction_files_data, dict) else None)
                 required_fields = ['filename', 'changes_title', 'label']
@@ -513,10 +512,8 @@ class PRDescription:
                             for field in required_fields)
                         for file_description in file_descriptions)
                 )
-                if (prediction_files.startswith('pr_files') and isinstance(prediction_files_data, dict) and
-                        valid_file_descriptions):
-                    prediction_files = prediction_files.removeprefix('pr_files:').strip()
-                    file_description_str_list.append(prediction_files)
+                if valid_file_descriptions:
+                    file_description_chunks.append(file_descriptions)
                 else:
                     chunk_errors.append(FallbackEligibleError(f"Description chunk {i + 1} returned invalid YAML"))
                     failed_files.extend(files_in_patch)
@@ -525,12 +522,12 @@ class PRDescription:
                         artifact={"files": files_in_patch},
                     )
 
-            self.description_failed_chunk_count = len(chunk_pairs) - len(file_description_str_list)
+            self.description_failed_chunk_count = len(chunk_pairs) - len(file_description_chunks)
             self.description_failed_files = list(dict.fromkeys(failed_files))
             progress = getattr(self, "_chunk_progress", None)
             if progress is not None and self.description_failed_chunk_count > 0:
                 await progress.set_failed(self.description_failed_chunk_count)
-            if not file_description_str_list:
+            if not file_description_chunks:
                 raise chunk_errors[0] if chunk_errors else FallbackEligibleError("No description chunks were generated")
 
             # generate files_walkthrough string, with proper token handling
@@ -546,7 +543,10 @@ class PRDescription:
             self._description_prompt_handlers["pr_description_only_description_prompts"] = (
                 token_handler_only_description_prompt
             )
-            files_walkthrough = "\n".join(file_description_str_list)
+            files_walkthrough = yaml.safe_dump(
+                [file_description for chunk in file_description_chunks for file_description in chunk],
+                sort_keys=False, allow_unicode=True,
+            ).strip()
             files_walkthrough_prompt = copy.deepcopy(files_walkthrough)
             MAX_EXTRA_FILES_TO_PROMPT = 50
             if remaining_files_list:
