@@ -1565,6 +1565,8 @@ class TestExtractAndCachePrTickets:
 class _FakeRequester:
     """Mimic PyGithub's private requester: ``requestJson`` -> (status, headers, body)."""
 
+    graphql_url = "https://api.github.com/graphql"
+
     def __init__(self, responses):
         self._responses = list(responses)
         self.queries = []
