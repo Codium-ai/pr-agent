@@ -120,6 +120,26 @@ def test_thread_on_removed_line_resolves() -> None:
     discussion.save.assert_called_once()
 
 
+@pytest.mark.parametrize("separator", ["\u2028", "\u2029", "\f"],
+                         ids=["line-separator", "paragraph-separator", "form-feed"])
+def test_fixed_thread_resolution_uses_lf_line_boundaries(separator) -> None:
+    patch = (
+        "@@ -1,3 +1,2 @@\n"
+        f' value = "before{separator}after"\n'
+        "-obsolete = True\n"
+        " kept = True\n"
+    )
+    removed_thread = _discussion(line=2)
+    untouched_thread = _discussion(line=3)
+    provider = _provider([removed_thread, untouched_thread], [{"old_path": "app.py", "diff": patch}])
+
+    assert provider.reconcile_code_suggestion_threads() == 1
+    assert removed_thread.resolved is True
+    removed_thread.save.assert_called_once()
+    assert untouched_thread.resolved is False
+    untouched_thread.save.assert_not_called()
+
+
 def test_compare_uses_straight_diff() -> None:
     # The default merge-base comparison would report lines dropped by a rebase
     # as removed; the sweep must compare the recorded head to the current head
