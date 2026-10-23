@@ -71,6 +71,8 @@ def get_max_request_body_size(max_body_size: int | None = None) -> int:
     """Resolve the shared positive body limit for FastAPI and Starlette servers."""
     if max_body_size is None:
         max_body_size = get_settings().config.max_webhook_request_body_bytes
+    if isinstance(max_body_size, bool):
+        raise ValueError("max_webhook_request_body_bytes must be a positive integer")
     try:
         max_body_size = int(max_body_size)
     except (TypeError, ValueError) as exc:
