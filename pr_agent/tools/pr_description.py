@@ -248,7 +248,7 @@ class PRDescription:
                 if get_settings().pr_description.publish_description_as_comment:
                     full_markdown_description = f"## Title\n\n{pr_title.strip()}\n\n___\n{pr_body}"
                     if get_settings().pr_description.publish_description_as_comment_persistent:
-                        self.git_provider.publish_persistent_comment_full(
+                        self.git_provider.publish_persistent_comment(
                             full_markdown_description,
                             initial_header="## Title",
                             update_header=True,

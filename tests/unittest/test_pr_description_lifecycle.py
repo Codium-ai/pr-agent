@@ -340,7 +340,7 @@ async def test_run_keeps_description_comment_delivery_failures_strict(published_
     settings.pr_description.publish_description_as_comment_persistent = persistent
     error = RuntimeError("description comment failed")
     if persistent:
-        provider.publish_persistent_comment_full.side_effect = error
+        provider.publish_persistent_comment.side_effect = error
     else:
         provider.publish_comment.side_effect = [progress_comment, error]
 
@@ -352,11 +352,11 @@ async def test_run_keeps_description_comment_delivery_failures_strict(published_
     provider.get_latest_commit_url.assert_not_called()
     provider.remove_comment.assert_called_once_with(progress_comment)
     if persistent:
-        kwargs = provider.publish_persistent_comment_full.call_args.kwargs
+        kwargs = provider.publish_persistent_comment.call_args.kwargs
         assert kwargs["final_update_message"] is False
         assert kwargs["identity_marker"] == PRDescriptionIdentity.PERSISTENT.value
         assert kwargs["require_agent_authorship"] is True
-        provider.publish_persistent_comment.assert_not_called()
+        provider.publish_persistent_comment_full.assert_not_called()
 
 
 @pytest.mark.asyncio
