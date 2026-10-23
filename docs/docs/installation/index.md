@@ -32,8 +32,9 @@ behavior, not Requests-specific environment settings.
 GitHub polling only processes mention notifications from repositories listed in
 `github.polling_repositories` (for example `["org/repo"]`). The list is
 host-only; repository settings and comment arguments cannot widen it. The empty
-default ignores every polling notification, so configure it in the host
-configuration or through `GITHUB__POLLING_REPOSITORIES` before enabling polling.
+default ignores every polling notification and still marks it as read, so
+configure it in the host configuration or through `GITHUB__POLLING_REPOSITORIES`
+before enabling polling or upgrading.
 
 ## Sizing a self-hosted webhook server
 

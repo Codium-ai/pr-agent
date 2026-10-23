@@ -54,11 +54,6 @@ def _notification(base_url, repository="owner/repo"):
     return notification
 
 
-class _NoRequests:
-    def get(self, *args, **kwargs):
-        raise AssertionError("A rejected notification must not fetch its comment")
-
-
 @asynccontextmanager
 async def _server(fallback, latest=None, api_prefix=""):
     async def latest_handler(request):
@@ -82,12 +77,14 @@ async def _server(fallback, latest=None, api_prefix=""):
 @pytest.mark.parametrize("repository", ["other/repo", None, "owner/repo/extra", 1])
 async def test_notification_repository_must_be_allowlisted(repository):
     handled = set()
+    session = MagicMock()
     result = await github_polling.is_valid_notification(
-        _notification("https://example.test", repository), {}, handled, _NoRequests(), "bot"
+        _notification("https://example.test", repository), {}, handled, session, "bot"
     )
 
     assert result == (False, handled)
     assert handled == set()
+    session.get.assert_not_called()
 
 
 @pytest.mark.asyncio
@@ -112,11 +109,13 @@ async def test_empty_polling_repositories_allowlist_rejects_notifications(monkey
         ),
     )
     handled = set()
+    session = MagicMock()
     result = await github_polling.is_valid_notification(
-        _notification("https://example.test"), {}, handled, _NoRequests(), "bot"
+        _notification("https://example.test"), {}, handled, session, "bot"
     )
 
     assert result == (False, handled)
+    session.get.assert_not_called()
 
 
 @pytest.mark.asyncio
