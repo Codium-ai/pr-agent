@@ -275,6 +275,7 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler,
             if first_name not in included_section.splitlines():
                 full_diff_is_usable = False
                 get_logger().info("Full diff left no room for filtered filenames; repacking")
+                del full_diff, full_diff_with_metadata
             else:
                 full_diff = full_diff_with_metadata
         if full_diff_is_usable:
@@ -283,6 +284,9 @@ def get_pr_diff(git_provider: GitProvider, token_handler: TokenHandler,
                                       add_line_numbers_to_hunks=add_line_numbers_to_hunks,
                                       token_handler=token_handler, attempt_budget=budget)
             return full_diff
+
+    # Release the discarded full diff before constructing compressed patches.
+    del patches_extended
 
     # if we are over the limit, start pruning (If we got here, we will not extend the patches with extra lines)
     get_logger().info(f"Tokens: {total_tokens}, total tokens over limit: {budget.context_window}, "
@@ -1029,6 +1033,9 @@ def get_pr_multi_diffs(git_provider: GitProvider,
         else:
             result = (full_diff_list, []) if return_remaining_files else full_diff_list
         return include_filtered_files(result)
+
+    # Release the discarded full diff before constructing chunked patches.
+    del patches_extended
 
     # Sort files within each language group by tokens in descending order
     sorted_files = []
