@@ -109,6 +109,16 @@ def is_repo_host_only_key(section: str, key: str) -> bool:
     )
 
 
+def should_skip_config_key(section: str, key: str, skip_keys=()) -> bool:
+    """Return whether a setting must be omitted from published configuration output."""
+    key_lower = str(key).lower()
+    if is_repo_host_only_key(str(section), key_lower):
+        return True
+    if key_lower in {str(skip_key).lower() for skip_key in skip_keys}:
+        return True
+    return any(part in key_lower for part in ("key", "secret", "token", "private"))
+
+
 # Keys that repositories may still configure from their own default-branch settings but that
 # comment/CLI *arguments* must never override. repo_context_files selects which repository and
 # sibling files are fetched and rendered as the model's instruction context, so an untrusted

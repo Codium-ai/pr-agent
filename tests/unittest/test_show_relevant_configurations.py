@@ -47,3 +47,19 @@ def test_tolerate_a_non_string_entry_in_config_skip_keys(restore_config):
     restore_config.set("config.skip_keys", ["model", 123, None])
 
     assert "model" not in _rendered_keys("pr_reviewer")
+
+
+def test_hide_host_only_and_credential_like_keys(restore_config):
+    restore_config.set("config.extra_config_url", "https://user:password@example.com/config.toml")
+    restore_config.set("config.global_settings_repo", "private/config")
+    restore_config.set("config.api_token", "secret")
+    restore_config.set("pr_reviewer.publish_error_details", True)
+    restore_config.set("pr_reviewer.secret_key", "secret")
+
+    keys = _rendered_keys("pr_reviewer")
+
+    assert "extra_config_url" not in keys
+    assert "global_settings_repo" not in keys
+    assert "api_token" not in keys
+    assert "publish_error_details" not in keys
+    assert "secret_key" not in keys
