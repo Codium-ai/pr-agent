@@ -12,6 +12,7 @@ import yaml
 from pr_agent.algo.output_sinks import OUTPUT_SINK_TYPES, create_output_sink
 from pr_agent.algo.run_details import get_run_details
 from pr_agent.config_loader import get_settings
+from pr_agent.config_security import should_skip_config_key
 from pr_agent.log import get_logger
 
 
@@ -107,8 +108,6 @@ def show_relevant_configurations(relevant_section: str) -> str:
     extra_skip_keys = get_settings().config.get("skip_keys", [])
     if extra_skip_keys:
         skip_keys.extend(extra_skip_keys)
-    skip_keys_lower = [str(key).lower() for key in skip_keys]
-
     markdown_text = ""
     markdown_text += "\n<hr>\n<details> <summary><strong>🛠️ Relevant configurations:</strong></summary> \n\n"
     markdown_text += (
@@ -118,13 +117,13 @@ def show_relevant_configurations(relevant_section: str) -> str:
     )
     markdown_text += "**[config**]\n```yaml\n\n"
     for key, value in get_settings().config.items():
-        if key.lower() in skip_keys_lower:
+        if should_skip_config_key("config", key, skip_keys):
             continue
         markdown_text += f"{key}: {_render_setting_value(value)}\n"
     markdown_text += "\n```\n"
     markdown_text += f"\n**[{relevant_section}]**\n```yaml\n\n"
     for key, value in get_settings().get(relevant_section, {}).items():
-        if key.lower() in skip_keys_lower:
+        if should_skip_config_key(relevant_section, key, skip_keys):
             continue
         markdown_text += f"{key}: {_render_setting_value(value)}\n"
     markdown_text += "\n```"
