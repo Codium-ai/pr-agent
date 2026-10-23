@@ -2345,7 +2345,50 @@ class TestGitLabIncrementalReview:
         client.http_get.assert_called_once_with(
             "/projects/test%2Frepo/repository/compare", query_data={"from": "c0", "to": "head"}
         )
-        gitlab_provider.mr.commits.assert_called_once_with()
+        gitlab_provider.mr.commits.assert_called_once_with(per_page=100)
+
+    def test_get_incremental_commits_reads_all_pages_before_selecting_anchor(self, gitlab_provider, mock_project):
+        client = Gitlab("https://gitlab.example.com", private_token="test-token")
+        mr = client.projects.get("test/repo", lazy=True).mergerequests.get(1, lazy=True)
+        gitlab_provider.mr.commits = mr.commits
+        gitlab_provider.mr.notes.list.return_value = [
+            self._make_note(7, "## PR Reviewer Guide 🔍\nbody", "2024-05-01T10:00:00Z"),
+        ]
+        next_url = (
+            "https://gitlab.example.com/api/v4/projects/test%2Frepo/"
+            "merge_requests/1/commits?page=2&per_page=100"
+        )
+        responses = []
+        # Place the only pre-review commit on page two to exercise cross-page anchor selection.
+        for indexes, next_link in [(range(100, 0, -1), next_url), (range(1), None)]:
+            response = MagicMock()
+            response.json.return_value = [
+                {"id": f"c{index}",
+                 "committed_date": "2024-05-01T11:00:00Z" if index else "2024-05-01T09:00:00Z"}
+                for index in indexes
+            ]
+            response.links = {"next": {"url": next_link}} if next_link else {}
+            response.headers = {}
+            responses.append(response)
+        client.http_request = MagicMock(side_effect=responses)
+        change = {"new_path": "a.py", "old_path": "a.py", "diff": "@@ -1 +1 @@\n-old\n+new\n"}
+        mock_project.repository_compare.return_value = {"diffs": [change]}
+        gitlab_provider.gl.http_list.return_value = [change]
+
+        gitlab_provider.get_incremental_commits(IncrementalPR(True))
+
+        assert client.http_request.call_count == 2
+        assert client.http_request.call_args_list[0].kwargs["per_page"] == 100
+        assert client.http_request.call_args_list[1].args[1] == next_url
+        assert [commit.id for commit in gitlab_provider.mr_commits] == [f"c{index}" for index in range(101)]
+        assert gitlab_provider.incremental.is_incremental is True
+        assert gitlab_provider.incremental.last_seen_commit_sha == "c0"
+        assert gitlab_provider.incremental.first_new_commit_sha == "c1"
+        assert [commit.id for commit in gitlab_provider.incremental.commits_range] == [
+            f"c{index}" for index in range(1, 101)
+        ]
+        assert gitlab_provider.unreviewed_files_map == {"a.py": change}
+        mock_project.repository_compare.assert_called_once_with("c0", "head")
 
     def test_get_incremental_commits_no_new_commits_yields_empty_set(self, gitlab_provider, mock_project):
         gitlab_provider.mr.notes.list.return_value = [
