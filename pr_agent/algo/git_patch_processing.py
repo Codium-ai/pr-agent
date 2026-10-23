@@ -4,6 +4,7 @@ import re
 import traceback
 from codecs import BOM_UTF16_BE, BOM_UTF16_LE
 
+from pr_agent.algo.setting_utils import normalize_setting_list
 from pr_agent.algo.types import EDIT_TYPE
 from pr_agent.config_loader import get_settings, get_verbosity_level
 from pr_agent.log import get_logger
@@ -82,7 +83,7 @@ def decode_if_bytes(original_file_str):
 
 
 def should_skip_patch(filename):
-    patch_extension_skip_types = get_settings().config.patch_extension_skip_types
+    patch_extension_skip_types = normalize_setting_list(get_settings().config.patch_extension_skip_types)
     if patch_extension_skip_types and filename:
         return any(filename.endswith(skip_type) for skip_type in patch_extension_skip_types)
     return False

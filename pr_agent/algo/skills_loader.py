@@ -44,6 +44,7 @@ import yaml
 from starlette_context import context
 from starlette_context.errors import ContextDoesNotExistError
 
+from pr_agent.algo.setting_utils import normalize_setting_list
 from pr_agent.algo.token_budget import clip_tokens
 from pr_agent.algo.token_handler import TokenEncoder
 from pr_agent.config_loader import get_settings
@@ -90,11 +91,7 @@ def _normalize_skill_paths(value: object) -> list[str]:
     every character that happens to name an existing directory would be walked,
     so the root directory would end up in the scan.
     """
-    if isinstance(value, str):
-        return [value]
-    if isinstance(value, (list, tuple)):
-        return list(value)
-    return []
+    return normalize_setting_list(value)
 
 
 def _expanded_skill_paths(paths: list[str]) -> tuple[str, ...]:

@@ -16,6 +16,7 @@ from starlette_context.middleware import RawContextMiddleware
 
 from pr_agent.agent.pr_agent import PRAgent, prepare_command
 from pr_agent.agent.request_policy import RequestOutcome
+from pr_agent.algo.setting_utils import normalize_setting_list
 from pr_agent.config_loader import get_settings, global_settings
 from pr_agent.git_providers.utils import apply_repo_settings
 from pr_agent.log import LoggingFormat, get_logger, setup_logger
@@ -59,7 +60,7 @@ def should_process_pr_logic(data) -> bool:
 
     try:
         # Filter by allowed folders if configured
-        allowed_folders = get_settings().config.get("allow_only_specific_folders", [])
+        allowed_folders = normalize_setting_list(get_settings().config.get("allow_only_specific_folders", []))
         if allowed_folders:
             pr_data = data.get("pullRequest", {})
             pr_id = pr_data.get("id", None)
@@ -249,7 +250,7 @@ def _to_list(command_string: str) -> list:
 
 def _get_commands_list_from_settings(setting_key: str) -> list:
     try:
-        return get_settings().get(setting_key, [])
+        return normalize_setting_list(get_settings().get(setting_key, []))
     except ValueError as e:
         get_logger().error(f"Failed to get commands list from settings {setting_key}: {e}")
         return []

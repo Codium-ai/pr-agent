@@ -15,6 +15,7 @@ from pr_agent.algo.ai_handlers.litellm_helpers import (
 )
 from pr_agent.algo.artifacts import inject_artifact_context as _inject_artifact_context
 from pr_agent.algo.run_details import command_failed, init_run_details
+from pr_agent.algo.setting_utils import normalize_setting_list
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.github_provider import IncompletePullRequestFilesError
@@ -68,10 +69,8 @@ def get_list_setting_or_env(key, fallback=None):
         try:
             value = json.loads(value)
         except json.JSONDecodeError:
-            return [value]
-    if isinstance(value, (list, tuple, set)):
-        return list(value)
-    return [value]
+            pass
+    return normalize_setting_list(value)
 
 
 async def _handle_request(url, body, notify=None):
@@ -290,8 +289,10 @@ async def run_action():
         action = event_payload.get("action")
 
         # Retrieve the list of actions from the configuration
-        pr_actions = get_settings().get(
-            "GITHUB_ACTION_CONFIG.PR_ACTIONS", ["opened", "reopened", "ready_for_review", "review_requested"])
+        pr_actions = normalize_setting_list(get_settings().get(
+            "GITHUB_ACTION_CONFIG.PR_ACTIONS", ["opened", "reopened", "ready_for_review", "review_requested"]),
+            split_commas=True,
+        )
 
         # Handle synchronize first so it is not captured by pr_actions
         if action == "synchronize":
@@ -328,8 +329,7 @@ async def run_action():
                     "github_action_config.push_commands",
                     get_settings().get("github_app.push_commands", []),
                 )
-                if isinstance(push_commands, str):
-                    push_commands = [push_commands]
+                push_commands = normalize_setting_list(push_commands)
                 if not push_commands:
                     get_logger().info("No push_commands configured, skipping synchronize")
                     return
