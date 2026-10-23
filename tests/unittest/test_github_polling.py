@@ -11,6 +11,17 @@ import pytest
 from pr_agent.servers import github_polling
 
 
+@pytest.fixture(autouse=True)
+def allow_polling_repository(monkeypatch):
+    monkeypatch.setattr(
+        github_polling,
+        "global_settings",
+        SimpleNamespace(
+            get=lambda key, default: ["owner/repo"] if key == "github.polling_repositories" else default
+        ),
+    )
+
+
 @pytest.fixture
 def workers(monkeypatch):
     created = []
@@ -371,6 +382,7 @@ async def test_polling_loop_keeps_notification_unread_when_drift_retry_times_out
     notification = {
         "id": 1,
         "reason": "mention",
+        "repository": {"full_name": "owner/repo"},
         "subject": {
             "type": "PullRequest",
             "url": "https://example.test/repos/owner/repo/pulls/1",
@@ -455,6 +467,7 @@ async def test_polling_loop_rolls_back_validation_ids_when_mark_read_fails(monke
     latest_url = "https://api.github.com/repos/owner/repo/issues/comments/100"
     notification = {
         "id": 1, "reason": "mention",
+        "repository": {"full_name": "owner/repo"},
         "subject": {"type": "PullRequest", "url": pr_url, "latest_comment_url": latest_url},
     }
     comment = {"id": 99, "body": "@bot /review" if valid_command else "No mention", "user": {"login": "human"}}

@@ -486,6 +486,11 @@ def test_repo_settings_cannot_override_gerrit_command_timeout(
     assert is_repo_host_only_key("gerrit", "command_timeout_seconds")
 
 
+def test_polling_repositories_is_host_only_for_repo_and_cli():
+    assert is_repo_host_only_key("github", "polling_repositories")
+    assert CliArgs.validate_user_args(["--github.polling_repositories=attacker/repo"])[0] is False
+
+
 @pytest.mark.parametrize(
     ("section", "key"),
     [
