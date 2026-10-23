@@ -848,20 +848,49 @@ class TestGitLabProvider:
                 "diff": "-Subproject commit aaa1111\n+Subproject commit bbb2222\n",
                 "new_file": False, "deleted_file": False, "renamed_file": False}
 
+    @pytest.mark.parametrize("diff", [
+        "@@ -1 +1 @@\n-old\n+new\n",
+        "+Subproject commit bbb2222\n",
+        "-Subproject commit aaa1111\n",
+    ], ids=["ordinary", "added_submodule", "deleted_submodule"])
+    def test_expand_submodule_changes_skips_mapping_without_sha_pair(self, gitlab_provider, diff):
+        settings = MagicMock()
+        settings.get.side_effect = lambda key, default=None: {"GITLAB.EXPAND_SUBMODULE_DIFFS": True}.get(key, default)
+        changes = [self._submodule_bump()]
+        changes[0]["diff"] = diff
+
+        with patch("pr_agent.git_providers.gitlab_provider.get_settings", return_value=settings), \
+             patch.object(gitlab_provider, "_get_gitmodules_map") as m_gitmodules:
+            out = gitlab_provider._expand_submodule_changes(changes)
+
+        assert out == changes
+        m_gitmodules.assert_not_called()
+
     def test_expand_submodule_changes_resolves_relative_url(self, gitlab_provider):
         gitlab_provider.id_project = "group/subgroup/nested/repo"
         settings = MagicMock()
         settings.get.side_effect = lambda key, default=None: {"GITLAB.EXPAND_SUBMODULE_DIFFS": True}.get(key, default)
         sub_diffs = [{"old_path": "src/a.c", "new_path": "src/a.c", "diff": "@@ -1 +1 @@\n-x\n+y\n"}]
+        changes = [self._submodule_bump(), self._submodule_bump("src/lib_b")]
+        diff_refs = {"base_sha": "base", "head_sha": "head"}
 
         with patch("pr_agent.git_providers.gitlab_provider.get_settings", return_value=settings), \
              patch.object(gitlab_provider, "_get_gitmodules_map",
-                          return_value={"src/lib_a": "../../../../libs/lib_a.git"}), \
+                          return_value={"src/lib_a": "../../../../libs/lib_a.git",
+                                        "src/lib_b": "../../../../libs/lib_b.git"}) as m_gitmodules, \
              patch.object(gitlab_provider, "_compare_submodule", return_value=sub_diffs) as m_cmp:
-            out = gitlab_provider._expand_submodule_changes([self._submodule_bump()])
+            out = gitlab_provider._expand_submodule_changes(changes, diff_refs)
 
-        m_cmp.assert_called_once_with("libs/lib_a", "aaa1111", "bbb2222")
-        assert [c["new_path"] for c in out] == ["src/lib_a", "src/lib_a/src/a.c"]
+        m_gitmodules.assert_called_once_with(diff_refs)
+        assert m_gitmodules.call_args.args[0] is diff_refs
+        assert [call.args for call in m_cmp.call_args_list] == [
+            ("libs/lib_a", "aaa1111", "bbb2222"),
+            ("libs/lib_b", "aaa1111", "bbb2222"),
+        ]
+        assert out[:2] == changes
+        assert [c["new_path"] for c in out] == [
+            "src/lib_a", "src/lib_b", "src/lib_a/src/a.c", "src/lib_b/src/a.c",
+        ]
 
     def test_expand_submodule_changes_skips_unresolvable_relative_url(self, gitlab_provider):
         gitlab_provider.id_project = "group/repo"
