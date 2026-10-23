@@ -44,6 +44,7 @@ from pr_agent.algo.run_details import (
     record_model_used,
 )
 from pr_agent.algo.run_output import push_outputs_async, show_relevant_configurations, show_run_details
+from pr_agent.algo.setting_utils import normalize_setting_list
 from pr_agent.algo.skills_loader import get_skills_context
 from pr_agent.algo.token_budget import AttemptTokenBudget, FittedPrompt
 from pr_agent.algo.token_handler import TokenHandler
@@ -2291,7 +2292,7 @@ class PRCodeSuggestions:
             language_extension_map_org = get_settings().language_extension_map_org
             extension_to_language = {}
             for language, extensions in language_extension_map_org.items():
-                for ext in extensions:
+                for ext in normalize_setting_list(extensions):
                     extension_to_language[ext] = language
 
             pr_body += "<table>"

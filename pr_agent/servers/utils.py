@@ -12,6 +12,7 @@ from typing import Any
 
 from fastapi import HTTPException
 
+from pr_agent.algo.setting_utils import normalize_setting_list
 from pr_agent.config_loader import get_settings
 from pr_agent.log import get_logger
 
@@ -92,9 +93,7 @@ def get_pr_commands(provider: str) -> Sequence[str]:
     """Return an explicit provider override or a fresh copy of its default profile."""
     configured = get_settings().get(f"{provider}.pr_commands", _MISSING)
     if configured is not _MISSING:
-        if isinstance(configured, str) and configured.strip():
-            return [configured]
-        return configured
+        return normalize_setting_list(configured)
     return list(_DEFAULT_PR_COMMANDS_BY_PROVIDER[provider])
 
 

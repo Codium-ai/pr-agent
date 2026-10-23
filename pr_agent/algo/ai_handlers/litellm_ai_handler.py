@@ -141,6 +141,7 @@ from pr_agent.algo.ai_handlers.litellm_helpers import (
 from pr_agent.algo.prompt_fragments import render_skills_prefix
 from pr_agent.algo.run_details import _as_decimal_cost, record_ai_call
 from pr_agent.algo.run_output import get_version
+from pr_agent.algo.setting_utils import normalize_setting_list
 from pr_agent.algo.skills_loader import get_skills_context
 from pr_agent.algo.url_safety import with_safe_redirects
 from pr_agent.algo.utils import ReasoningEffort
@@ -515,11 +516,11 @@ class LiteLLMAIHandler(BaseAiHandler):
         self._initialize_aws_request_credentials(settings)
         # LiteLLM callbacks are process globals, so only deployment settings may set them.
         if global_settings.get("LITELLM.SUCCESS_CALLBACK", None):
-            litellm.success_callback = global_settings.litellm.success_callback
+            litellm.success_callback = normalize_setting_list(global_settings.litellm.success_callback)
         if global_settings.get("LITELLM.FAILURE_CALLBACK", None):
-            litellm.failure_callback = global_settings.litellm.failure_callback
+            litellm.failure_callback = normalize_setting_list(global_settings.litellm.failure_callback)
         if global_settings.get("LITELLM.SERVICE_CALLBACK", None):
-            litellm.service_callback = global_settings.litellm.service_callback
+            litellm.service_callback = normalize_setting_list(global_settings.litellm.service_callback)
         # litellm callbacks attach full prompt and response content unless message logging is disabled.
         if settings.get("LITELLM.TURN_OFF_MESSAGE_LOGGING", False):
             litellm.turn_off_message_logging = True
