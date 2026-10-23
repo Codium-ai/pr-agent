@@ -120,6 +120,10 @@ JIRA_API_VERSION = "2"
 # arbitrary host. The name must be a single DNS label (letters, digits, hyphens) so it
 # cannot contain '.', '/', ':', '@' etc. that would let it escape *.atlassian.net.
 JIRA_SITE_PATTERN = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$", re.IGNORECASE)
+JIRA_CLOUD_ID_PATTERN = re.compile(
+    r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+    re.IGNORECASE,
+)
 
 # A Jira project key as configured in jira.project_keys: the "<PROJECT>" in PROJECT-123.
 # Bounded like the prefix in find_jira_tickets (2-10 letters) so an entry can only ever be
@@ -133,21 +137,32 @@ JIRA_PROJECT_KEY_PATTERN = re.compile(r"^[A-Z]{2,10}$")
 
 def _jira_cloud_base_url():
     """
-    Return the Jira Cloud base URL built from the configured site name, or None if the
-    site is missing or invalid. Building the URL from a validated site name (rather than
-    accepting a free-form base URL from settings) ensures the authenticated request can
-    only ever go to https://<site>.atlassian.net, even if settings were overridden by
-    untrusted repo configuration.
+    Return the Jira Cloud gateway URL for a valid cloud ID, or the site URL for classic
+    tokens. A validated site name is used rather than a free-form base URL, ensuring
+    authenticated requests stay on Atlassian-controlled hosts even if settings were
+    overridden by untrusted repository configuration.
     """
     site = get_settings().get("JIRA.JIRA_SITE", None)
+    cloud_id = get_settings().get("JIRA.CLOUD_ID", None)
+    if cloud_id:
+        if not isinstance(cloud_id, str) or not JIRA_CLOUD_ID_PATTERN.fullmatch(cloud_id.strip()):
+            get_logger().warning(
+                "Invalid jira.cloud_id; expected a UUID. Skipping Jira ticket lookup.")
+            return None
+    if cloud_id is not None and not isinstance(cloud_id, str):
+        get_logger().warning(
+            "Invalid jira.cloud_id; expected a UUID. Skipping Jira ticket lookup.")
+        return None
+    site = str(site or "").strip()
     if not site:
         return None
-    site = str(site).strip()
-    if not JIRA_SITE_PATTERN.match(site):
+    if not JIRA_SITE_PATTERN.fullmatch(site):
         get_logger().warning(
             f"Invalid jira_site '{site}'; expected a Jira Cloud site name like 'mycompany' "
             f"(the '<site>' in https://<site>.atlassian.net). Skipping Jira ticket lookup.")
         return None
+    if cloud_id:
+        return f"https://api.atlassian.com/ex/jira/{cloud_id.strip()}"
     return f"https://{site}.atlassian.net"
 
 
@@ -245,11 +260,11 @@ def find_jira_tickets(text):
 def _get_jira_client():
     """
     Build a Jira Cloud client from the [jira] settings. Returns None if Jira is not
-    configured. Only Jira Cloud is supported: the base URL is derived from a validated
-    site name (jira_site) so untrusted repo configuration cannot redirect the
-    authenticated request to an arbitrary host. Cloud authenticates with the account
-    email + API token. The REST API version is pinned via JIRA_API_VERSION (see its
-    definition for why).
+    configured. With a valid cloud ID, scoped or service-account tokens use the Atlassian
+    API gateway; otherwise the base URL is derived from the validated site name so
+    untrusted repository configuration cannot redirect the authenticated request to an
+    arbitrary host. Cloud authenticates with the account email and API token. The REST
+    API version is pinned via JIRA_API_VERSION (see its definition for why).
     """
     site = get_settings().get("JIRA.JIRA_SITE", None)
     api_email = get_settings().get("JIRA.JIRA_API_EMAIL", None)
@@ -335,7 +350,12 @@ def extract_jira_tickets(text, max_characters=MAX_TICKET_CHARACTERS, max_tickets
     if jira_client is None:
         return []
 
-    base_url = _jira_cloud_base_url() or ""
+    site = str(get_settings().get("JIRA.JIRA_SITE", "") or "").strip()
+    ticket_base_url = (
+        f"https://{site}.atlassian.net"
+        if JIRA_SITE_PATTERN.fullmatch(site)
+        else ""
+    )
     # Custom field that holds acceptance criteria / requirements. The field id is
     # instance-specific (e.g. "customfield_10127"), so it must be configured; empty
     # means no requirements are extracted.
@@ -378,7 +398,7 @@ def extract_jira_tickets(text, max_characters=MAX_TICKET_CHARACTERS, max_tickets
         labels = fields.get("labels", []) or []
         tickets_content.append({
             "ticket_id": key,
-            "ticket_url": f"{base_url}/browse/{key}" if base_url else "",
+            "ticket_url": f"{ticket_base_url}/browse/{key}" if ticket_base_url else "",
             "title": fields.get("summary", ""),
             "body": body,
             "requirements": requirements,
