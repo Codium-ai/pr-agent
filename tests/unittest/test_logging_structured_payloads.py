@@ -5,6 +5,10 @@ is passed, so `get_logger().error(f"... {e}", artifact=...)` re-formats text tha
 carries the exception. Every PyGithub error renders as `<status> <json body>` and LiteLLM
 wraps the provider's JSON, so the braces in that text turn the handler into the failure.
 """
+import os
+import subprocess
+import sys
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
@@ -77,6 +81,46 @@ def test_the_caller_module_is_still_recorded(captured_records):
     get_logger().warning("a message with a { brace", artifact={"k": "v"})
 
     assert captured_records[-1]["name"] == __name__
+
+
+def test_exception_logs_do_not_include_local_variable_values(tmp_path):
+    repo_root = Path(__file__).resolve().parents[2]
+    script = tmp_path / "log_exception.py"
+    script.write_text(
+        "import os\n"
+        "\n"
+        "from pr_agent.log import get_logger, setup_logger\n"
+        "\n"
+        "setup_logger()\n"
+        "\n"
+        "\n"
+        "def fail(provider_key):\n"
+        "    raise RuntimeError(f\"boom {len(provider_key)}\")\n"
+        "\n"
+        "\n"
+        "try:\n"
+        "    fail(os.environ[\"DUMMY_PROVIDER_KEY\"])\n"
+        "except RuntimeError:\n"
+        "    get_logger().exception(\"command failed\")\n"
+    )
+    env = os.environ.copy()
+    env["DUMMY_PROVIDER_KEY"] = "sk-test-secret"
+    env["PYTHONPATH"] = str(repo_root)
+
+    result = subprocess.run(
+        [sys.executable, str(script)],
+        capture_output=True,
+        text=True,
+        env=env,
+        cwd=repo_root,
+        timeout=60,
+    )
+
+    output = result.stdout + result.stderr
+    assert result.returncode == 0, output
+    assert "Traceback (most recent call last)" in output
+    assert "RuntimeError" in output
+    assert "sk-test-secret" not in output
 
 
 # --------------------------------------------------------------------------------------
