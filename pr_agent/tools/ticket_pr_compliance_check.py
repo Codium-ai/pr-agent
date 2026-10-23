@@ -1316,7 +1316,8 @@ async def extract_tickets(git_provider):
             own_project = str(getattr(git_provider, "id_project", "") or "")
             for project_path, issue_iid in references[:MAX_GITLAB_TICKET_LOOKUPS]:
                 try:
-                    if project_path.casefold() == own_project.casefold():
+                    is_own_project = project_path.casefold() == own_project.casefold()
+                    if is_own_project:
                         # Only the issue manager is needed; avoid fetching unused project metadata.
                         project = git_provider.gl.projects.get(project_path, lazy=True)
                     else:
@@ -1330,6 +1331,11 @@ async def extract_tickets(git_provider):
                         if project is None:
                             continue
                     issue = project.issues.get(issue_iid)
+                    if not is_own_project and getattr(issue, "confidential", False):
+                        get_logger().warning(
+                            f"Ignoring confidential cross-project GitLab issue: {project_path}#{issue_iid}"
+                        )
+                        continue
 
                     issue_body = issue.description or ""
                     if len(issue_body) > MAX_TICKET_CHARACTERS:

@@ -202,7 +202,7 @@ async def test_other_ticket_integrations_remain_outside_gitlab_success_limit(pro
     assert len(transport.requests) == 4
 
 
-def _sibling_project(path="group/sub/project", visibility="public"):
+def _sibling_project(path="group/sub/project", visibility="public", confidential=False):
     project = Mock()
     project.path_with_namespace = path
     project.visibility = visibility
@@ -212,6 +212,7 @@ def _sibling_project(path="group/sub/project", visibility="public"):
         title="Issue 3",
         description="sibling issue",
         labels=["bug"],
+        confidential=confidential,
     )
     return project
 
@@ -228,6 +229,24 @@ async def test_allowlisted_sibling_issue_is_fetched(provider_factory, monkeypatc
     assert [ticket["ticket_id"] for ticket in result] == [3]
     assert transport.requests == []
     project.issues.get.assert_called_once_with(3)
+
+
+async def test_confidential_sibling_issue_is_skipped(provider_factory, monkeypatch):
+    provider, transport = provider_factory("Fixes other/sub/project#3")
+    project = _sibling_project(confidential=True)
+    monkeypatch.setattr(provider, "_project_by_path", Mock(return_value=project))
+    monkeypatch.setattr(provider, "get_owning_namespace", Mock(return_value="group"))
+    monkeypatch.setattr(provider, "is_sibling_repo_allowed", Mock(return_value=True))
+
+    with patch("pr_agent.tools.ticket_pr_compliance_check.get_logger") as logger:
+        result = await tickets.extract_tickets(provider)
+
+    assert result == []
+    assert transport.requests == []
+    project.issues.get.assert_called_once_with(3)
+    logger.return_value.warning.assert_called_once_with(
+        "Ignoring confidential cross-project GitLab issue: other/sub/project#3"
+    )
 
 
 async def test_unapproved_sibling_issue_is_not_resolved(provider_factory, monkeypatch):
