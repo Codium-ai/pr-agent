@@ -392,7 +392,6 @@ def test_load_repo_context_files_reports_fetch_errors():
         ("  src/ x.py  ", None, "src/ x.py"),
         ("docs/guide:part.md", None, "docs/guide:part.md"),
         ({"repo_id": "group/sub/lib", "file_path": "src/api.py"}, "group/sub/lib", "src/api.py"),
-        ({"repo_id": "owner/lib", "file_path": "/deep/file.py"}, "owner/lib", "deep/file.py"),
         ({"repo_id": "owner/lib", "file_path": "  file.py  "}, "owner/lib", "file.py"),
         ({"repo_id": "  owner/lib  ", "file_path": "  file.py  "}, "owner/lib", "file.py"),
     ],
@@ -421,6 +420,21 @@ def test_parse_repo_context_file_entry_rejects_malformed(entry):
 def test_parse_repo_context_file_entry_treats_blank_as_plain_path():
     assert repo_context._parse_repo_context_file_entry("   ") == (None, "")
     assert repo_context._parse_repo_context_file_entry("") == (None, "")
+
+
+@pytest.mark.parametrize(
+    "entry",
+    [
+        "/etc/passwd",
+        "../secret.md",
+        "docs/../secret.md",
+        {"repo_id": "owner/lib", "file_path": "/etc/passwd"},
+        {"repo_id": "owner/lib", "file_path": "../secret.md"},
+        {"repo_id": "owner/lib", "file_path": "docs/../secret.md"},
+    ],
+)
+def test_parse_repo_context_file_entry_rejects_escaping_paths(entry):
+    assert repo_context._parse_repo_context_file_entry(entry) == (None, "")
 
 
 def test_load_repo_context_files_fetches_sibling_and_same_repo_files():
@@ -1468,7 +1482,7 @@ def test_build_repo_context_keeps_cache_for_malformed_sibling_entries(repo_conte
     [
         ("group/sub/lib:src/api.py", None, "group/sub/lib:src/api.py"),
         ({"repo_id": "group/sub/lib", "file_path": "src/api.py"}, "group/sub/lib", "src/api.py"),
-        ({"repo_id": "/group/sub/lib", "file_path": "/src/api.py"}, "group/sub/lib", "src/api.py"),
+        ({"repo_id": "/group/sub/lib", "file_path": "src/api.py"}, "group/sub/lib", "src/api.py"),
     ],
 )
 def test_sibling_entry_shapes_are_unambiguous(entry, expected_repo_id, expected_path):
@@ -2212,6 +2226,19 @@ def test_load_repo_context_files_rejects_wildcards_in_directory_part():
 
     files, had_fetch_error = repo_context._load_repo_context_files(
         provider, ["docs/*/rules.md", "docs/**/*.md"], from_default_branch=True
+    )
+
+    assert files == []
+    assert had_fetch_error is False
+    assert provider.listed_dirs == []
+
+
+@pytest.mark.parametrize("pattern", ["/docs/*.md", "../docs/*.md", "docs/../*.md"])
+def test_load_repo_context_files_rejects_escaping_glob_directories(pattern):
+    provider = ListingFakeProvider({}, {})
+
+    files, had_fetch_error = repo_context._load_repo_context_files(
+        provider, [pattern], from_default_branch=True
     )
 
     assert files == []

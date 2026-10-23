@@ -170,14 +170,21 @@ def _sibling_repo_context_entries(context_files: list) -> list[tuple[str, str]]:
     return sibling_entries
 
 
+def _is_repo_context_path_allowed(path: str) -> bool:
+    """Return whether a repo-context path stays inside the repository."""
+    if path.startswith("/"):
+        return False
+    return all(segment != ".." for segment in path.split("/"))
+
+
 def _parse_repo_context_file_entry(entry: str | dict) -> tuple[str | None, str]:
     """Parse a repo-context entry into (sibling repo id, file path).
 
     A string entry is always a file path in the current repository and yields (None, path).
     A sibling entry is a structured ``{"repo_id": ..., "file_path": ...}`` dict naming a
     repository in the same namespace/owner (GitLab: ``group/subgroup/project``, GitHub:
-    ``owner/repo``); its file is read from the sibling's default branch. A malformed entry
-    yields (None, "") and is skipped by the loader.
+    ``owner/repo``); its file is read from the sibling's default branch. A malformed or
+    escaping entry yields (None, "") and is skipped by the loader.
     """
     if isinstance(entry, dict):
         repo_id = entry.get("repo_id")
@@ -185,13 +192,16 @@ def _parse_repo_context_file_entry(entry: str | dict) -> tuple[str | None, str]:
         if not isinstance(repo_id, str) or not isinstance(file_path, str):
             return None, ""
         repo_id = repo_id.strip().strip("/")
-        file_path = file_path.strip().lstrip("/")
-        if not repo_id or not file_path:
+        file_path = file_path.strip()
+        if not repo_id or not file_path or not _is_repo_context_path_allowed(file_path):
             return None, ""
         return repo_id, file_path
     if not isinstance(entry, str):
         return None, ""
-    return None, entry.strip()
+    file_path = entry.strip()
+    if not _is_repo_context_path_allowed(file_path):
+        return None, ""
+    return None, file_path
 
 
 def _get_provider_repo_context_cache(git_provider) -> _RepoContextCache:
@@ -289,7 +299,14 @@ def _expand_glob_entries(git_provider, context_files: list, from_default_branch:
             if not (isinstance(entry, str) and entry.strip().lstrip("/") in expanded):
                 expanded.append(entry)
             continue
-        dir_path, _, name_pattern = entry.strip().lstrip("/").rpartition("/")
+        raw_entry = entry.strip()
+        if not _is_repo_context_path_allowed(raw_entry):
+            get_logger().warning(
+                "Skipping repo context glob with an absolute path or '..' segment",
+                artifact={"pattern": entry},
+            )
+            continue
+        dir_path, _, name_pattern = raw_entry.rpartition("/")
         if any(character in dir_path for character in _GLOB_CHARACTERS) or not name_pattern:
             get_logger().warning(
                 "Skipping repo context glob: only the file-name part may contain wildcards",
