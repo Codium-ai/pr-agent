@@ -178,6 +178,7 @@ def test_github_comment_path_forwards_review_identity():
         "as_thread": False,
         "identity_marker": PRReviewIdentity.REGULAR.value,
         "legacy_initial_header": legacy_header,
+        "require_agent_authorship": False,
     }
 
 
@@ -201,6 +202,7 @@ def test_github_comment_path_forwards_as_thread():
         "as_thread": True,
         "identity_marker": None,
         "legacy_initial_header": None,
+        "require_agent_authorship": False,
     }
 
 
@@ -221,6 +223,7 @@ def test_azure_comment_path_forwards_review_identity():
         "as_thread": False,
         "identity_marker": PRReviewIdentity.REGULAR.value,
         "legacy_initial_header": legacy_header,
+        "require_agent_authorship": False,
     }
 
 
@@ -265,4 +268,5 @@ def test_gitea_keeps_identity_inactive_but_preserves_wrapper_arguments():
         "as_thread": False,
         "identity_marker": PRReviewIdentity.REGULAR.value,
         "legacy_initial_header": legacy_header,
+        "require_agent_authorship": False,
     }
