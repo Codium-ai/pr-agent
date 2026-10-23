@@ -56,3 +56,16 @@ def test_config_uses_final_provider_class_when_selection_changes(provider_class,
     assert type(config.git_provider) is provider_class
     assert provider_class.instances == [request_provider, config.git_provider]
     assert config.git_provider.pr_url == PR_URL
+
+
+def test_config_output_hides_host_only_keys():
+    settings = config_loader.get_settings(use_context=False)
+    original = settings.get("CONFIG").to_dict()
+    settings.set("config.global_settings_repo", "private/config")
+    try:
+        output = PRConfig.__new__(PRConfig)._prepare_pr_configs()
+    finally:
+        settings.set("CONFIG", original)
+
+    assert "config.model = " in output
+    assert "global_settings_repo" not in output
