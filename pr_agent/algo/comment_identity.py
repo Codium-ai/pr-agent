@@ -37,6 +37,10 @@ class PRDescriptionHeader(StrEnum):
     FILE_WALKTHROUGH = "File Walkthrough"
 
 
+class PRDescriptionIdentity(StrEnum):
+    PERSISTENT = "<!-- pr-agent:describe:persistent -->"
+
+
 _ALL_COMMENT_IDENTITIES = (
     PRReviewIdentity.REGULAR.value,
     PRReviewIdentity.INCREMENTAL.value,
@@ -44,6 +48,7 @@ _ALL_COMMENT_IDENTITIES = (
     PRCodeSuggestionsIdentity.NO_SUGGESTIONS.value,
     PRCodeSuggestionsIdentity.UNANCHORED.value,
     PRCommandNoticeIdentity.INCOMPLETE_BITBUCKET_FILES.value,
+    PRDescriptionIdentity.PERSISTENT.value,
 )
 _REVIEW_IDENTITY_HEADER_LINES = 5
 _MARKDOWN_PUNCTUATION_ESCAPE_TABLE = str.maketrans(
