@@ -851,7 +851,7 @@ class GitLabProvider(GitProvider):
 
         if not getattr(self, 'mr_commits', None):
             # gitlab returns commits newest-first; reverse to match PyGithub's oldest-first ordering
-            self.mr_commits = list(self.mr.commits())[::-1]
+            self.mr_commits = list(self.mr.commits(per_page=100))[::-1]
 
         self.incremental.commits_range = self.get_commit_range()
         if not self.incremental.commits_range:
