@@ -30,7 +30,7 @@ from ..algo.comment_identity import (
     get_pr_review_comment_identifiers,
 )
 from ..algo.file_filter import filter_ignored
-from ..algo.git_patch_processing import count_patch_lines, decode_if_bytes
+from ..algo.git_patch_processing import count_patch_lines, decode_if_bytes, split_diff_lines
 from ..algo.inline_comment_dedup import (
     body_fingerprint,
     body_with_markers,
@@ -123,7 +123,7 @@ def _removed_lines_from_patch(patch: str) -> set:
     """Line numbers in the base file that a unified-diff patch removes."""
     removed = set()
     base_line = None
-    for raw in (patch or "").splitlines():
+    for raw in split_diff_lines(patch or ""):
         match = re.match(r"^@@ -(\d+)(?:,\d+)? \+\d+(?:,\d+)? @@", raw)
         if match:
             base_line = int(match.group(1))
