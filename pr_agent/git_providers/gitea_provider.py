@@ -1218,8 +1218,25 @@ class RepoApi(giteapy.RepositoryApi):
             items.extend(page_items)
             page += 1
 
+    @staticmethod
+    def _advertised_total(response) -> int | None:
+        """The X-Total-Count of a (data, status, headers) response, or None when absent or unusable."""
+        headers = response[2] if isinstance(response, tuple) else {}
+        for name, value in headers.items():
+            if name.lower() == "x-total-count":
+                try:
+                    total = int(value)
+                except (TypeError, ValueError):
+                    return None
+                return total if total >= 0 else None
+        return None
+
     def get_change_file_pull_request(self, owner: str, repo: str, pr_number: int):
-        """Get changed files in the pull request"""
+        """Get changed files in the pull request.
+
+        Forgejo answers a page past the end with `null`, so once X-Total-Count is advertised the
+        walk ends at that count instead of at an empty page, and a different count is an error.
+        """
         files = []
         page = 1
         while True:
@@ -1244,9 +1261,15 @@ class RepoApi(giteapy.RepositoryApi):
                 for item in page_items
             ):
                 raise ValueError("Invalid Gitea changed-file entry")
-            if not page_items:
-                return files
             files.extend(page_items)
+            total = self._advertised_total(response)
+            if total is None:
+                if not page_items:
+                    return files
+            elif len(files) >= total or not page_items:
+                if len(files) != total:
+                    raise ValueError("Gitea changed-files count does not match X-Total-Count")
+                return files
             page += 1
 
     def get_languages(self, owner: str, repo: str):
