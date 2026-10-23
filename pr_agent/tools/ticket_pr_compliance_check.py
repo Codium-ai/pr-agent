@@ -1313,10 +1313,22 @@ async def extract_tickets(git_provider):
                     seen.add(key)
                     references.append((project_path, issue_iid))
             tickets_content = []
+            own_project = str(getattr(git_provider, "id_project", "") or "")
             for project_path, issue_iid in references[:MAX_GITLAB_TICKET_LOOKUPS]:
                 try:
-                    # Only the issue manager is needed; avoid fetching unused project metadata.
-                    project = git_provider.gl.projects.get(project_path, lazy=True)
+                    if project_path.casefold() == own_project.casefold():
+                        # Only the issue manager is needed; avoid fetching unused project metadata.
+                        project = git_provider.gl.projects.get(project_path, lazy=True)
+                    else:
+                        get_sibling_repo = getattr(git_provider, "get_sibling_repo", None)
+                        if not callable(get_sibling_repo):
+                            get_logger().warning(
+                                f"Ignoring cross-project GitLab issue reference: {project_path}"
+                            )
+                            continue
+                        project = get_sibling_repo(project_path)
+                        if project is None:
+                            continue
                     issue = project.issues.get(issue_iid)
 
                     issue_body = issue.description or ""
