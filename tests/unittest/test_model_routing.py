@@ -281,6 +281,15 @@ class TestRouting:
         ])
         assert _models_tried(_pr(num_files=1, hunks_per_file=1)) == ["tiny-model"]
 
+    @pytest.mark.parametrize("limit", [True, False])
+    def test_boolean_rule_limits_are_ignored(self, settings, limit):
+        settings.set("model_routing.rules", [
+            {"max_files": limit, "model": "invalid-model"},
+            {"max_files": 4, "model": "small-model"},
+        ])
+
+        assert _models_tried(_pr(num_files=2, hunks_per_file=1)) == ["small-model"]
+
     def test_routed_primary_is_recorded_as_the_model_used(self, settings):
         init_run_details()
         _models_tried(_pr(num_files=1, hunks_per_file=1))
