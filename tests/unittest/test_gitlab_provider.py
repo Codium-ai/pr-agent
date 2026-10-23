@@ -1067,6 +1067,15 @@ class TestGitLabProvider:
         with patch("pr_agent.git_providers.gitlab_provider.get_settings", return_value=settings):
             assert gitlab_provider.should_publish_review_as_thread() is False
 
+    @pytest.mark.parametrize("configured, expected", [("true", True), ("false", False), ("FALSE", False)])
+    def test_should_publish_review_as_thread_parses_string_config(self, gitlab_provider, configured, expected):
+        settings = MagicMock()
+        settings.get.side_effect = lambda key, default=None: {
+            "GITLAB.PUBLISH_REVIEW_AS_THREAD": configured,
+        }.get(key, default)
+        with patch("pr_agent.git_providers.gitlab_provider.get_settings", return_value=settings):
+            assert gitlab_provider.should_publish_review_as_thread() is expected
+
     @pytest.mark.parametrize("configured", [True, False])
     def test_should_reply_to_trigger_comment_reflects_config(self, gitlab_provider, configured):
         settings = MagicMock()
@@ -1075,6 +1084,30 @@ class TestGitLabProvider:
         }.get(key, default)
         with patch("pr_agent.git_providers.gitlab_provider.get_settings", return_value=settings):
             assert gitlab_provider.should_reply_to_trigger_comment() is configured
+
+    @pytest.mark.parametrize(
+        ("method_name", "setting_name"),
+        [
+            ("should_publish_improve_as_thread", "GITLAB.PUBLISH_IMPROVE_AS_THREAD"),
+            ("should_reply_to_trigger_comment", "GITLAB.REPLY_TO_TRIGGER_COMMENT"),
+        ],
+    )
+    def test_string_false_disables_gitlab_flags(self, gitlab_provider, method_name, setting_name):
+        settings = MagicMock()
+        settings.get.side_effect = lambda key, default=None: {setting_name: "false"}.get(key, default)
+        with patch("pr_agent.git_providers.gitlab_provider.get_settings", return_value=settings):
+            assert getattr(gitlab_provider, method_name)() is False
+
+    def test_string_false_does_not_expand_submodule_changes(self, gitlab_provider):
+        settings = MagicMock()
+        settings.get.side_effect = lambda key, default=None: {
+            "GITLAB.EXPAND_SUBMODULE_DIFFS": "false",
+        }.get(key, default)
+        changes = [self._submodule_bump()]
+        with patch("pr_agent.git_providers.gitlab_provider.get_settings", return_value=settings), \
+             patch.object(gitlab_provider, "_get_gitmodules_map") as get_gitmodules:
+            assert gitlab_provider._expand_submodule_changes(changes) == changes
+        get_gitmodules.assert_not_called()
 
     def test_publish_comment_defaults_to_a_note(self, gitlab_provider):
         # Without a trigger discussion, publishing stays a plain note.
