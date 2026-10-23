@@ -272,11 +272,12 @@ class CodeCommitProvider(GitProvider):
                                    final_update_message=True,
                                    as_thread: bool = False,
                                    identity_marker: str | None = None,
-                                   legacy_initial_header: str | None = None):
+                                   legacy_initial_header: str | None = None,
+                                   require_agent_authorship: bool = False):
         if as_thread:
             get_logger().debug("CodeCommit does not support threaded persistent comments; publishing as a PR comment")
 
-        if not identity_marker:
+        if not identity_marker or require_agent_authorship:
             get_logger().debug(
                 "CodeCommit persistent comment updates require a stable identity marker; publishing a new comment"
             )

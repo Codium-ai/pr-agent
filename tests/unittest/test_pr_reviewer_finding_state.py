@@ -1253,7 +1253,7 @@ def test_persistent_publish_signatures_accept_shared_arguments(provider_class):
     assert "as_thread" in parameters
     assert "identity_marker" in parameters
     assert "legacy_initial_header" in parameters
-    assert "require_agent_authorship" not in parameters
+    assert "require_agent_authorship" in parameters
     assert "fallback_on_error" not in parameters
 
 

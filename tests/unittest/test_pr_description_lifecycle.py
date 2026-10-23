@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, MagicMock, call
 
 import pytest
 
+from pr_agent.algo.comment_identity import PRDescriptionIdentity
 from pr_agent.algo.run_details import command_failed
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers.git_provider import (
@@ -351,7 +352,11 @@ async def test_run_keeps_description_comment_delivery_failures_strict(published_
     provider.get_latest_commit_url.assert_not_called()
     provider.remove_comment.assert_called_once_with(progress_comment)
     if persistent:
-        assert provider.publish_persistent_comment.call_args.kwargs["final_update_message"] is False
+        kwargs = provider.publish_persistent_comment.call_args.kwargs
+        assert kwargs["final_update_message"] is False
+        assert kwargs["identity_marker"] == PRDescriptionIdentity.PERSISTENT.value
+        assert kwargs["require_agent_authorship"] is True
+        provider.publish_persistent_comment_full.assert_not_called()
 
 
 @pytest.mark.asyncio
