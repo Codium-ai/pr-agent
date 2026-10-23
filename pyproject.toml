@@ -151,7 +151,6 @@ dev = [
   "pytest-asyncio>=1.4.0",
   "pytest-cov==7.1.0",
   "httpx==0.28.1",
-  "pre-commit>=4,<5",
   "ruff==0.17.1",
 ]
 
