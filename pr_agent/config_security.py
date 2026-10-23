@@ -45,12 +45,15 @@ REPO_HOST_ONLY_KEYS_BY_SECTION = {
     "databricks": frozenset({"api_base"}),
     "gerrit": frozenset({"command_timeout_seconds", "webhook_password", "webhook_username"}),
     "gitea": frozenset({"skip_ssl_verification", "ssl_ca_cert"}),
-    "github": frozenset({"deployment_type"}),
+    "github": frozenset({"deployment_type", "polling_repositories"}),
     "gitlab": frozenset({"auth_type", "ssl_verify"}),
     "huggingface": frozenset({"api_base"}),
     # Jira lookups use the host's Atlassian credentials, so the reviewed repository must not
     # choose the site or account they authenticate as, or widen the project allowlist they may read.
     "jira": frozenset({"cloud_id", "jira_api_email", "jira_site", "project_keys"}),
+    # extra_headers is attached to every model request, so on a shared gateway that routes or
+    # authenticates by header the reviewed repository must not choose the headers the operator sends.
+    "litellm": frozenset({"extra_headers"}),
     "moonshot": frozenset({"api_base"}),
     "ollama": frozenset({"api_base"}),
     "openai": frozenset({"api_base", "api_type", "api_version"}),
@@ -107,6 +110,16 @@ def is_repo_host_only_key(section: str, key: str) -> bool:
         and key not in _REPO_OVERRIDABLE_SUFFIX_KEYS_BY_SECTION.get(section, frozenset())
         and key.endswith(_CONNECTION_KEY_SUFFIXES)
     )
+
+
+def should_skip_config_key(section: str, key: str, skip_keys=()) -> bool:
+    """Return whether a setting must be omitted from published configuration output."""
+    key_lower = str(key).lower()
+    if is_repo_host_only_key(str(section), key_lower):
+        return True
+    if key_lower in {str(skip_key).lower() for skip_key in skip_keys}:
+        return True
+    return any(part in key_lower for part in ("key", "secret", "token", "private"))
 
 
 # Keys that repositories may still configure from their own default-branch settings but that

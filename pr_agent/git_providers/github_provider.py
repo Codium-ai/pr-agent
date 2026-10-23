@@ -343,8 +343,14 @@ class GithubProvider(GitProvider):
             self.comments = list(self.pr.get_issue_comments())
         identifiers = get_pr_review_comment_identifiers(full=full, incremental=incremental)
         for index in range(len(self.comments) - 1, -1, -1):
-            if comment_matches_any_identity(self.comments[index].body, identifiers):
-                return self.comments[index]
+            comment = self.comments[index]
+            if not comment_matches_any_identity(comment.body, identifiers):
+                continue
+            try:
+                if self.is_comment_authored_by_pr_agent(comment):
+                    return comment
+            except RuntimeError:
+                get_logger().debug("Could not verify the author of a GitHub review anchor")
         return None
 
     @staticmethod
@@ -613,7 +619,8 @@ class GithubProvider(GitProvider):
                                    final_update_message=True,
                                    as_thread: bool = False,
                                    identity_marker: str | None = None,
-                                   legacy_initial_header: str | None = None):
+                                   legacy_initial_header: str | None = None,
+                                   require_agent_authorship: bool = False):
         if get_settings().github.publish_as_check_run:
             if self._publish_check_run(pr_comment, name):
                 return
@@ -626,6 +633,7 @@ class GithubProvider(GitProvider):
             as_thread=as_thread,
             identity_marker=identity_marker,
             legacy_initial_header=legacy_initial_header,
+            require_agent_authorship=require_agent_authorship,
         )
 
     def supports_review_comment_identity(self) -> bool:

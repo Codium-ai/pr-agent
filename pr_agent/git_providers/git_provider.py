@@ -1040,7 +1040,8 @@ class GitProvider(ABC):
                                    final_update_message=True,
                                    as_thread: bool = False,
                                    identity_marker: str | None = None,
-                                   legacy_initial_header: str | None = None):
+                                   legacy_initial_header: str | None = None,
+                                   require_agent_authorship: bool = False):
         if not self.supports_comment_editing():
             return self.publish_comment(pr_comment, **({'as_thread': True} if as_thread else {}))
         return self.publish_persistent_comment_full(
@@ -1052,6 +1053,7 @@ class GitProvider(ABC):
             as_thread=as_thread,
             identity_marker=identity_marker,
             legacy_initial_header=legacy_initial_header,
+            require_agent_authorship=require_agent_authorship,
         )
 
     @staticmethod

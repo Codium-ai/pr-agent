@@ -474,7 +474,7 @@ class GitLabProvider(GitProvider):
         except (AttributeError, ValueError, IndexError):
             return None
 
-    def _project_by_path(self, proj_path: str):
+    def _project_by_path(self, proj_path: str, *, context: str = "submodule"):
         """
         Resolve a project by path, with an exact-path search fallback.
         Let python-gitlab encode path_with_namespace for the request.
@@ -510,14 +510,30 @@ class GitLabProvider(GitProvider):
         except (GitlabError, RequestException) as e:
             failures.append(f"search: {e}")
 
-        get_logger().warning(f"[submodule] could not resolve project '{proj_path}': " + "; ".join(failures))
+        get_logger().warning(f"[{context}] could not resolve project '{proj_path}': " + "; ".join(failures))
         return None
 
     def _submodule_target_allowed(self, project) -> bool:
-        """Apply the sibling-repository checks to the resolved submodule project."""
+        """Apply the sibling-repository checks to a resolved cross-project target."""
         path = getattr(project, "path_with_namespace", None) or ""
         return (self.is_sibling_repo_allowed(path) and path.split("/")[0] == self.get_owning_namespace(resolved=True)
                 and self._requester_can_read_sibling_project(project))
+
+    def get_sibling_repo(self, repo_id: str):
+        """Resolve a host-approved same-namespace sibling project the requester can read."""
+        repo_id = (repo_id or "").strip().strip("/")
+        if not repo_id:
+            return None
+        if not self.is_sibling_repo_allowed(repo_id, case_sensitive=False):
+            get_logger().warning(f"Ignoring sibling repo absent from the host allowlist: {repo_id}")
+            return None
+        project = self._project_by_path(repo_id, context="sibling")
+        if project is None:
+            return None
+        if not self._submodule_target_allowed(project):
+            get_logger().warning(f"Ignoring referenced project that is not an authorized sibling: {repo_id}")
+            return None
+        return project
 
     def _compare_submodule(self, proj_path: str, old_sha: str, new_sha: str) -> list[dict]:
         """

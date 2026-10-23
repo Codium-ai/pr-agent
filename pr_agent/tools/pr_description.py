@@ -11,7 +11,7 @@ from pydantic import ValidationError
 from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAIHandler
 from pr_agent.algo.artifacts import get_artifact_context
-from pr_agent.algo.comment_identity import PRDescriptionHeader
+from pr_agent.algo.comment_identity import PRDescriptionHeader, PRDescriptionIdentity
 from pr_agent.algo.output_models import PRDescriptionAssembled
 from pr_agent.algo.pr_processing import (
     OUTPUT_BUFFER_TOKENS_HARD_THRESHOLD,
@@ -248,11 +248,16 @@ class PRDescription:
                 if get_settings().pr_description.publish_description_as_comment:
                     full_markdown_description = f"## Title\n\n{pr_title.strip()}\n\n___\n{pr_body}"
                     if get_settings().pr_description.publish_description_as_comment_persistent:
-                        self.git_provider.publish_persistent_comment(full_markdown_description,
-                                                                     initial_header="## Title",
-                                                                     update_header=True,
-                                                                     name="describe",
-                                                                     final_update_message=False, )
+                        self.git_provider.publish_persistent_comment(
+                            full_markdown_description,
+                            initial_header="## Title",
+                            update_header=True,
+                            name="describe",
+                            final_update_message=False,
+                            identity_marker=PRDescriptionIdentity.PERSISTENT.value,
+                            legacy_initial_header="## Title",
+                            require_agent_authorship=True,
+                        )
                     else:
                         self.git_provider.publish_comment(full_markdown_description)
                 else:
