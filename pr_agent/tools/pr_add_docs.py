@@ -66,6 +66,8 @@ class PRAddDocs:
 
             get_logger().info('Preparing PR documentation...')
             await retry_with_fallback_models(self._prepare_prediction, git_provider=self.git_provider)
+            if self.prediction is None:
+                return
             data = self._prepare_pr_code_docs()
             if (not data) or ("Code Documentation" not in data):
                 get_logger().info('No code documentation found for PR.')
@@ -114,14 +116,21 @@ class PRAddDocs:
             ai_handler=self.ai_handler,
             output_token_reserve=output_token_reserve,
         )
-        patches_diff = get_pr_diff(
+        output = get_pr_diff(
             self.git_provider,
             budget.token_handler,
             model,
             add_line_numbers_to_hunks=True,
             disable_extra_lines=False,
+            return_remaining_files=True,
             output_token_reserve=output_token_reserve,
         )
+        patches_diff, remaining_files_list = output if isinstance(output, tuple) else (output, [])
+        if not patches_diff and not remaining_files_list:
+            # Every changed file was filtered out (lockfile, asset, ignore rule), so there is
+            # nothing to document. Skip the model chain instead of failing the command.
+            get_logger().info("PR has no analyzable files, skipping add_docs")
+            return
         if not patches_diff:
             raise FallbackEligibleError("No PR diff fits the /add_docs request")
         fitted = budget.fit_prompt_variable(

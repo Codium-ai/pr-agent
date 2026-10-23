@@ -162,12 +162,19 @@ class PRGenerateLabels:
             ai_handler=self.ai_handler,
             output_token_reserve=output_token_reserve,
         )
-        patches_diff = get_pr_diff(
+        output = get_pr_diff(
             self.git_provider,
             budget.token_handler,
             model,
+            return_remaining_files=True,
             output_token_reserve=output_token_reserve,
         )
+        patches_diff, remaining_files_list = output if isinstance(output, tuple) else (output, [])
+        if not patches_diff and not remaining_files_list:
+            # Every changed file was filtered out (lockfile, asset, ignore rule), so there is
+            # nothing to label. Skip the model chain instead of failing the command.
+            get_logger().info(f"PR has no analyzable files: {self.pr_id}, skipping generate_labels")
+            return
         if not patches_diff:
             raise FallbackEligibleError(f"No PR diff fits the /generate_labels request for {model}")
         fitted = budget.fit_prompt_variable(
