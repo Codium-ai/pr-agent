@@ -115,6 +115,7 @@ def test_github_previous_review_accepts_markers_and_legacy_headers(body, full, i
     provider.pr = MagicMock()
     expected = SimpleNamespace(body=body)
     provider.pr.get_issue_comments.return_value = [expected]
+    provider.is_comment_authored_by_pr_agent = MagicMock(return_value=True)
 
     result = provider.get_previous_review(full=full, incremental=incremental)
 

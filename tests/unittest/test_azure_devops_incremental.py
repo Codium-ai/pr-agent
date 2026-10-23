@@ -78,6 +78,7 @@ class TestGetIncrementalCommits:
         provider.repo_slug = "repo"
         provider.pr_num = 1
         provider.pr_url = "https://dev.azure.com/o/ws/_git/repo/pullrequest/1"
+        provider.is_comment_authored_by_pr_agent = MagicMock(return_value=True)
         return provider
 
     def test_no_previous_review_disables_incremental(self):
