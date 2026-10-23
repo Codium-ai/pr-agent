@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from pr_agent.algo.run_details import command_failed, init_run_details
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers.git_provider import (
     IncompleteBitbucketPullRequestFilesError,
@@ -128,4 +129,43 @@ async def test_incomplete_provider_diff_is_re_raised_after_temporary_comment_cle
         settings.config.publish_output = previous["publish_output"]
         settings.set("config.propagate_tool_errors", previous["propagate_tool_errors"])
 
+    provider.remove_initial_comment.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_run_skips_without_recording_failure_when_all_changed_files_are_filtered(monkeypatch):
+    async def prepare_once(prepare_fn, **_kwargs):
+        await prepare_fn("primary-model")
+
+    provider = _provider(supports_labels=True)
+    tool = _tool(provider)
+    tool.ai_handler = MagicMock()
+    tool.vars = {"diff": ""}
+    tool._get_prediction = AsyncMock()
+    monkeypatch.setattr("pr_agent.tools.pr_generate_labels.retry_with_fallback_models", prepare_once)
+    monkeypatch.setattr("pr_agent.tools.pr_generate_labels.set_custom_labels", lambda *_args: None)
+    monkeypatch.setattr(
+        "pr_agent.tools.pr_generate_labels.AttemptTokenBudget.for_prompt_attempt",
+        lambda *_args, **_kwargs: MagicMock(),
+    )
+    # A lockfile-only or asset-only PR has no diff left after file-type filtering.
+    monkeypatch.setattr("pr_agent.tools.pr_generate_labels.get_pr_diff", lambda *_args, **_kwargs: "")
+    settings = get_settings()
+    previous = {
+        "publish_output": settings.config.publish_output,
+        "propagate_tool_errors": settings.config.get("propagate_tool_errors", False),
+    }
+    settings.config.publish_output = True
+    settings.set("config.propagate_tool_errors", False)
+    init_run_details()
+    try:
+        await tool.run()
+    finally:
+        settings.config.publish_output = previous["publish_output"]
+        settings.set("config.propagate_tool_errors", previous["propagate_tool_errors"])
+
+    assert command_failed() is False
+    tool._get_prediction.assert_not_awaited()
+    provider.publish_comment.assert_called_once_with("Preparing PR labels...", is_temporary=True)
+    provider.publish_labels.assert_not_called()
     provider.remove_initial_comment.assert_called_once()
