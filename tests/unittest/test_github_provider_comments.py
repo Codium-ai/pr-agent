@@ -771,6 +771,8 @@ def _make_graphql_response(data, errors=None):
 class _FakeRequester:
     """Records GraphQL calls and returns canned responses."""
 
+    graphql_url = "https://api.github.com/graphql"
+
     def __init__(self, responses):
         self.calls = []
         self._responses = list(responses)
@@ -787,7 +789,7 @@ class _FakeRequester:
         return self._responses.pop(0)
 
     def graphql_query(self, query, variables):
-        response = self.requestJson("POST", "/graphql", input={"query": query, "variables": variables})
+        response = self.requestJson("POST", self.graphql_url, input={"query": query, "variables": variables})
         if isinstance(response, Exception):
             raise response
         data = json.loads(response[2])
