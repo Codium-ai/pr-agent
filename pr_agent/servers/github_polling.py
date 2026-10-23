@@ -67,6 +67,41 @@ def _get_polling_request_timeout() -> float:
     return min(timeout, float(MAX_POLLING_REQUEST_TIMEOUT))
 
 
+def _normalize_repository_name(full_name) -> str | None:
+    """Return a canonical owner/repo name, or None when it is not usable."""
+    if not isinstance(full_name, str):
+        return None
+    parts = full_name.strip().strip("/").split("/")
+    if len(parts) != 2 or not all(parts):
+        return None
+    return "/".join(parts).casefold()
+
+
+def _get_polling_repositories() -> frozenset[str]:
+    """Return the host allowlist of repositories whose mentions polling may handle."""
+    value = global_settings.get("github.polling_repositories", [])
+    if isinstance(value, str):
+        value = [value]
+    if not isinstance(value, (list, tuple, set, frozenset)):
+        get_logger().warning(
+            "Invalid github.polling_repositories; expected a list of owner/repo entries"
+        )
+        return frozenset()
+    return frozenset(
+        repository
+        for entry in value
+        if (repository := _normalize_repository_name(entry))
+    )
+
+
+def _is_polling_repository_allowed(notification) -> bool:
+    """Fail closed unless the notification names an allowlisted repository."""
+    repository = notification.get("repository")
+    if not isinstance(repository, dict):
+        return False
+    return _normalize_repository_name(repository.get("full_name")) in _get_polling_repositories()
+
+
 def _remaining_polling_timeout(deadline: float) -> float:
     remaining = deadline - asyncio.get_running_loop().time()
     if remaining <= 0:
@@ -253,6 +288,14 @@ async def is_valid_notification(
     try:
         if 'reason' in notification and notification['reason'] == 'mention':
             if 'subject' in notification and notification['subject']['type'] == 'PullRequest':
+                if not _is_polling_repository_allowed(notification):
+                    repository = notification.get('repository')
+                    repository_name = repository.get('full_name') if isinstance(repository, dict) else None
+                    get_logger().debug(
+                        "Ignoring polling notification from a repository not in "
+                        f"github.polling_repositories: {repository_name}"
+                    )
+                    return False, handled_ids
                 pr_url = notification['subject']['url']
                 latest_comment = notification['subject']['latest_comment_url']
                 if not latest_comment or not isinstance(latest_comment, str):
@@ -415,6 +458,10 @@ async def polling_loop():
         raise ValueError("Deployment mode must be set to 'user' to get notifications")
     if not token:
         raise ValueError("User token must be set to get notifications")
+    if not _get_polling_repositories():
+        get_logger().warning(
+            "github.polling_repositories is empty or invalid; all polling notifications will be ignored"
+        )
 
     active_processes = []
     async with aiohttp.ClientSession() as session:

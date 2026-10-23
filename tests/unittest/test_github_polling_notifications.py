@@ -18,7 +18,15 @@ from pr_agent.servers import github_polling
 @pytest.fixture(autouse=True)
 def isolate_notification_io(monkeypatch):
     monkeypatch.setattr(
-        github_polling, "global_settings", SimpleNamespace(get=lambda key, default: default)
+        github_polling,
+        "global_settings",
+        SimpleNamespace(
+            get=lambda key, default: (
+                ["owner/repo", "pulls-helper/widgets-pulls"]
+                if key == "github.polling_repositories"
+                else default
+            )
+        ),
     )
     monkeypatch.setattr(github_polling, "get_logger", MagicMock())
 
@@ -32,8 +40,8 @@ def _comment(comment_id=2, body="@bot /review", user="human"):
     return {"id": comment_id, "body": body, "user": {"login": user}}
 
 
-def _notification(base_url):
-    return {
+def _notification(base_url, repository="owner/repo"):
+    notification = {
         "reason": "mention",
         "subject": {
             "type": "PullRequest",
@@ -41,6 +49,14 @@ def _notification(base_url):
             "latest_comment_url": f"{base_url}/latest",
         },
     }
+    if repository is not None:
+        notification["repository"] = {"full_name": repository}
+    return notification
+
+
+class _NoRequests:
+    def get(self, *args, **kwargs):
+        raise AssertionError("A rejected notification must not fetch its comment")
 
 
 @asynccontextmanager
@@ -60,6 +76,47 @@ async def _server(fallback, latest=None, api_prefix=""):
         yield f"http://{host}:{port}"
     finally:
         await runner.cleanup()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("repository", ["other/repo", None, "owner/repo/extra", 1])
+async def test_notification_repository_must_be_allowlisted(repository):
+    handled = set()
+    result = await github_polling.is_valid_notification(
+        _notification("https://example.test", repository), {}, handled, _NoRequests(), "bot"
+    )
+
+    assert result == (False, handled)
+    assert handled == set()
+
+
+@pytest.mark.asyncio
+async def test_notification_repository_allowlist_is_case_insensitive():
+    async with _server(
+        lambda request: web.json_response([]), latest=_comment(99)
+    ) as url, aiohttp.ClientSession() as session:
+        result = await github_polling.is_valid_notification(
+            _notification(url, "OWNER/REPO"), {}, set(), session, "bot"
+        )
+
+    assert result[0] is True
+
+
+@pytest.mark.asyncio
+async def test_empty_polling_repositories_allowlist_rejects_notifications(monkeypatch):
+    monkeypatch.setattr(
+        github_polling,
+        "global_settings",
+        SimpleNamespace(
+            get=lambda key, default: [] if key == "github.polling_repositories" else default
+        ),
+    )
+    handled = set()
+    result = await github_polling.is_valid_notification(
+        _notification("https://example.test"), {}, handled, _NoRequests(), "bot"
+    )
+
+    assert result == (False, handled)
 
 
 @pytest.mark.asyncio
@@ -177,7 +234,7 @@ async def test_fallback_keeps_pulls_in_owner_and_repo_names():
     async with server() as url, aiohttp.ClientSession() as session:
         handled = set()
         result = await github_polling.is_valid_notification(
-            {"reason": "mention", "subject": {
+            {"reason": "mention", "repository": {"full_name": "pulls-helper/widgets-pulls"}, "subject": {
                 "type": "PullRequest",
                 "url": f"{url}/repos/pulls-helper/widgets-pulls/pulls/17",
                 "latest_comment_url": f"{url}/latest",
