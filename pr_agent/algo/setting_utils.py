@@ -1,6 +1,6 @@
 def normalize_setting_list(value, *, split_commas: bool = False) -> list:
     """Return a setting value as a list without iterating plain strings by character."""
-    if value is None or value == "":
+    if not value:
         return []
     if isinstance(value, str):
         if split_commas:
