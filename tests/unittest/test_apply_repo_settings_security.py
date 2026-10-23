@@ -68,6 +68,7 @@ SNAPSHOT_SECTIONS = (
     "MOONSHOT",
     "DATABRICKS",
     "OPENROUTER",
+    "LITELLM",
     "GITHUB",
     "BITBUCKET",
     "GITLAB",
@@ -559,6 +560,51 @@ jira_requirements_field = "customfield_10127"
     assert jira.get("jira_requirements_field") == "customfield_10127"
     assert CliArgs.validate_user_args(["--jira.jira_requirements_field=customfield_1"])[0] is True
     assert CliArgs.validate_user_args(['--jira={project_keys: ["HR"]}'])[0] is False
+
+
+def test_litellm_extra_headers_is_host_only_key():
+    assert is_repo_host_only_key("litellm", "extra_headers")
+    assert is_repo_host_only_key("LITELLM", "EXTRA_HEADERS")
+
+
+def test_comment_args_cannot_set_litellm_extra_headers():
+    assert CliArgs.validate_user_args(['--litellm.extra_headers={"X-Tenant":"attacker"}'])[0] is False
+
+
+def test_repo_settings_cannot_override_litellm_extra_headers(monkeypatch, settings_snapshot):
+    # The headers ride on every model request, so on a shared gateway the reviewed repository
+    # must not choose them.
+    provider = FakeGitProvider(repo_settings_bytes=b"""
+[litellm]
+extra_headers = '{"X-Tenant":"attacker"}'
+""")
+    _install_provider(monkeypatch, provider)
+
+    settings = get_settings()
+    settings.set("config.use_repo_settings_file", True)
+    settings.set("litellm.extra_headers", '{"X-Tenant":"operator"}')
+
+    apply_repo_settings("https://example.com/owner/repo/pull/1")
+
+    litellm_section = {k.lower(): v for k, v in _section(settings, "litellm").items()}
+    assert litellm_section.get("extra_headers") == '{"X-Tenant":"operator"}'
+
+
+def test_repo_settings_still_apply_other_litellm_keys(monkeypatch, settings_snapshot):
+    provider = FakeGitProvider(repo_settings_bytes=b"[litellm]\ndrop_params = true\n")
+    captured = _install_provider(monkeypatch, provider)
+
+    settings = get_settings()
+    settings.set("config.use_repo_settings_file", True)
+    settings.set("litellm.drop_params", False)
+
+    apply_repo_settings("https://example.com/owner/repo/pull/1")
+
+    assert captured["errors"] is None
+    litellm_section = {k.lower(): v for k, v in _section(settings, "litellm").items()}
+    assert litellm_section.get("drop_params") is True
+    assert not is_repo_host_only_key("litellm", "drop_params")
+    assert CliArgs.validate_user_args(["--litellm.drop_params=true"])[0] is True
 
 
 @pytest.mark.parametrize(
