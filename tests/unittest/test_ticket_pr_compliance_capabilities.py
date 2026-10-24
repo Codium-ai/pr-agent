@@ -1,3 +1,4 @@
+import asyncio
 from unittest.mock import MagicMock
 
 import pytest
@@ -15,7 +16,11 @@ from pr_agent.git_providers import (
     LocalGitProvider,
     PlainDiffGitProvider,
 )
-from pr_agent.tools.ticket_pr_compliance_check import _provider_supports, extract_tickets
+from pr_agent.tools.ticket_pr_compliance_check import (
+    _provider_supports,
+    extract_and_cache_pr_tickets,
+    extract_tickets,
+)
 
 
 class _BaseStubProvider(GitProvider):
@@ -141,7 +146,8 @@ class _CustomGitLabSubstitute(_BaseStubProvider):
 
 
 class _CustomAzureSubstitute(_BaseStubProvider):
-    def __init__(self, work_items=None):
+    def __init__(self, work_items=None, error=None):
+        self._error = error
         self._work_items = (
             work_items
             if work_items is not None
@@ -161,6 +167,8 @@ class _CustomAzureSubstitute(_BaseStubProvider):
         return True
 
     def get_linked_work_items(self) -> list:
+        if self._error is not None:
+            raise self._error
         return self._work_items
 
 
@@ -349,6 +357,57 @@ async def test_extract_tickets_azure_substitute_handles_item_error():
     tickets = await extract_tickets(provider)
     assert len(tickets) == 1
     assert tickets[0]["ticket_id"] is None
+
+
+@pytest.mark.asyncio
+async def test_extract_tickets_linked_work_item_failure_is_fail_soft():
+    provider = _CustomAzureSubstitute(error=RuntimeError("provider detail"))
+
+    assert await extract_tickets(provider) == []
+
+
+@pytest.mark.asyncio
+async def test_extract_and_cache_linked_failure_leaves_ticket_context_empty(monkeypatch):
+    provider = _CustomAzureSubstitute(error=RuntimeError("provider detail"))
+    vars_ = {}
+    cached = []
+    settings = MagicMock()
+    settings.get.side_effect = lambda key, default=None: {
+        "pr_reviewer.require_ticket_analysis_review": True,
+        "related_tickets": cached,
+    }.get(key, default)
+    monkeypatch.setattr("pr_agent.tools.ticket_pr_compliance_check.get_settings", lambda: settings)
+
+    assert await extract_and_cache_pr_tickets(provider, vars_) is None
+
+    assert cached == []
+    assert vars_ == {}
+    settings.set.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_extract_tickets_linked_empty_is_normal_empty_success(monkeypatch):
+    provider = _CustomAzureSubstitute(work_items=[])
+    jira = MagicMock(side_effect=lambda _, tickets: tickets)
+    monkeypatch.setattr("pr_agent.tools.ticket_pr_compliance_check.add_jira_tickets", jira)
+
+    assert await extract_tickets(provider) == []
+    jira.assert_called_once_with(provider, [])
+
+
+@pytest.mark.asyncio
+async def test_extract_tickets_does_not_translate_cancellation():
+    provider = _CustomAzureSubstitute(error=asyncio.CancelledError())
+
+    with pytest.raises(asyncio.CancelledError):
+        await extract_tickets(provider)
+
+
+@pytest.mark.asyncio
+async def test_extract_tickets_keeps_later_linked_item_formatting_fail_soft():
+    provider = _CustomAzureSubstitute(work_items=[{"id": 1, "body": object()}])
+
+    assert await extract_tickets(provider) == []
 
 
 @pytest.mark.asyncio
