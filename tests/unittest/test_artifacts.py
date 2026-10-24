@@ -5,6 +5,7 @@ import pytest
 
 from pr_agent.algo.artifacts import (
     DEFAULT_ARTIFACT_INSTRUCTIONS,
+    SUPPORTED_ARTIFACT_TOOLS,
     _artifact_context,
     _read_and_truncate,
     get_artifact_context,
@@ -130,6 +131,33 @@ class TestLoadArtifactContext:
         assert context["label"] == "Test Results"
         assert context["content"] == "FAILED: test_login"
         assert context["instructions"] == "Flag any test failures."
+
+    def test_loads_multiple_artifacts_with_individual_metadata_and_shared_budget(self, tmp_path):
+        first = tmp_path / "ci.log"
+        second = tmp_path / "graph.txt"
+        missing = tmp_path / "missing.txt"
+        first.write_text("A" * 70)
+        second.write_text("B" * 70)
+        settings = {
+            "enable": True,
+            "artifact_path": [
+                str(missing),
+                str(first),
+                {"path": str(second), "artifact_label": "Code graph", "target_tools": ["pr_questions"]},
+            ],
+            "max_artifact_size": 100,
+            "artifact_label": "CI log",
+        }
+        with patch("pr_agent.algo.artifacts.get_settings") as mock_gs:
+            mock_gs.return_value.get.return_value = settings
+            with patch.dict(os.environ, {"GITHUB_WORKSPACE": str(tmp_path)}):
+                context = load_artifact_context()
+
+        assert context is not None
+        assert [artifact["label"] for artifact in context["artifacts"]] == ["CI log", "Code graph"]
+        assert sum(len(artifact["content"]) for artifact in context["artifacts"]) <= 100
+        assert context["artifacts"][0]["target_tools"] == frozenset(SUPPORTED_ARTIFACT_TOOLS)
+        assert context["artifacts"][1]["target_tools"] == frozenset({"pr_questions"})
 
 
 class TestResolveArtifactPath:
@@ -407,6 +435,21 @@ class TestInjectArtifactContext:
         assert get_artifact_context("pr_reviewer")["content"] == "FAILED: test_login"
         assert get_artifact_context("pr_description") is None
         assert settings.get("pr_description.extra_instructions") == ""
+
+    def test_each_artifact_can_target_different_tools(self, settings, report, tmp_path):
+        graph = tmp_path / "graph.txt"
+        graph.write_text("GRAPH_CONTEXT")
+        settings.set("artifacts.enable", True)
+        settings.set("artifacts.artifact_path", [
+            {"path": str(report), "target_tools": ["pr_reviewer"]},
+            {"path": str(graph), "target_tools": ["pr_questions"]},
+        ])
+        with patch.dict(os.environ, {"GITHUB_WORKSPACE": str(tmp_path)}):
+            inject_artifact_context()
+
+        assert get_artifact_context("pr_reviewer")["content"] == "FAILED: test_login"
+        assert get_artifact_context("pr_questions")["content"] == "GRAPH_CONTEXT"
+        assert get_artifact_context("pr_description") is None
 
     def test_running_twice_does_not_duplicate_the_artifact(self, settings, report):
         with patch.dict(os.environ, {"GITHUB_WORKSPACE": str(report.parent), "ARTIFACT_PATH": str(report)}):

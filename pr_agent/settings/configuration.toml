@@ -611,7 +611,7 @@ max_skills_tokens = 8000 # token budget for the combined skills_context block
 [artifacts]
 # Enable artifact injection into tool prompts (off by default; auto-enabled when artifact_path input is set)
 enable = false
-# File path to the artifact (relative to GITHUB_WORKSPACE, or absolute)
+# File path or list of paths to artifacts (relative to GITHUB_WORKSPACE, or absolute)
 artifact_path = ""
 # Analysis guidance rendered separately before the untrusted artifact label and content (leave empty for a sensible default)
 artifact_instructions = ""
