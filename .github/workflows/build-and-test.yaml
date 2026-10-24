@@ -23,6 +23,8 @@ jobs:
         uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884  # v10.3.0
         with:
           resolution-strategy: lowest
+          enable-cache: true
+          cache-suffix: lowest
 
       - name: Check uv.lock
         run: uv lock --check
@@ -117,12 +119,14 @@ jobs:
       - id: checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
-      # Same uv release the Dockerfile pulls from ghcr.io/astral-sh/uv, via pipx
-      # so there is no additional action to pin. uv provisions the interpreter
-      # itself, so setup-python is not needed either.
       - id: uv
-        name: Install uv
-        run: pipx install uv==0.13.5
+        name: Setup uv and cache Python ${{ matrix.python-version }}
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884  # v10.3.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+          cache-python: true
+          cache-suffix: native-${{ matrix.python-version }}
 
       - id: test
         name: Test on Python ${{ matrix.python-version }}
@@ -131,4 +135,4 @@ jobs:
           # See docker/Dockerfile's base stage: pin litellm's bundled cost map so
           # a remote change to it cannot redden the suite without a version bump.
           LITELLM_LOCAL_MODEL_COST_MAP: "True"
-        run: uv run --frozen --python ${{ matrix.python-version }} pytest -v tests/unittest
+        run: uv run --frozen pytest -v tests/unittest
