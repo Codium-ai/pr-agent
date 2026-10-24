@@ -27,6 +27,8 @@ def _limit(rule, key: str) -> int | None:
     value = rule.get(key)
     if value is None or value == "":
         return None
+    if isinstance(value, bool):
+        return None
     return int(value)
 
 

@@ -148,11 +148,11 @@ class GiteaProvider(GitProvider):
                 repo=self.repo,
                 pr_number=self.pr_number
             )
-            self.sha = self.pr.head.sha if self.pr.head.sha else ""
+            self.sha = self.pr.head.sha or ""
             self.last_commit = _GiteaCommitAdapter({"sha": self.sha})
             self.last_commit_id = self.last_commit
-            self.base_sha = self.pr.base.sha if self.pr.base.sha else ""
-            self.base_ref = self.pr.base.ref if self.pr.base.ref else ""
+            self.base_sha = self.pr.base.sha or ""
+            self.base_ref = self.pr.base.ref or ""
         elif "issues" in url:
             self.issue_url = url
             self.__set_repo_and_owner_from_issue()
@@ -269,9 +269,8 @@ class GiteaProvider(GitProvider):
             if base_path and path.startswith(base_path + "/"):
                 path = path[len(base_path):]
                 break
-        if path.startswith("/api/v1/repos"):
-            path = path[len("/api/v1/repos"):]
-        return path.strip('/').split('/')
+        path = path.removeprefix("/api/v1/repos")
+        return path.strip("/").split("/")
 
     def _parse_pr_url(self, pr_url: str) -> tuple[str, str, int]:
         path_parts = self._url_path_parts(pr_url)
@@ -786,7 +785,7 @@ class GiteaProvider(GitProvider):
             self.logger.error("PR head not found")
             return ""
 
-        return self.pr.head.ref if self.pr.head.ref else ""
+        return self.pr.head.ref or ""
 
     def get_pr_description_full(self) -> str:
         """Get full PR description with metadata"""
@@ -794,7 +793,7 @@ class GiteaProvider(GitProvider):
             self.logger.error("Failed to get PR description")
             return ""
 
-        return self.pr.body if self.pr.body else ""
+        return self.pr.body or ""
 
     def get_pr_labels(self,update=False) -> list[str]:
         """Get labels assigned to the PR"""
@@ -824,12 +823,12 @@ class GiteaProvider(GitProvider):
 
         if not self.repo_settings:
             self.logger.error("Repository settings not found")
-            return settings_files if settings_files else ""
+            return settings_files or ""
 
         target_ref = self.base_sha or self.base_ref
         if not target_ref:
             self.logger.warning("Cannot get repository settings: no target/base ref available")
-            return settings_files if settings_files else ""
+            return settings_files or ""
 
         response = self.repo_api.get_file_content(
             owner=self.owner,
@@ -844,9 +843,9 @@ class GiteaProvider(GitProvider):
             # calls .decode() on it, so it must be bytes to match the GitHub/
             # GitLab/Bitbucket contract. get_file_content() decodes the raw bytes
             # to str, so re-encode here (see issue #2347).
-            settings_files.append(("local", response.encode('utf-8')))
+            settings_files.append(("local", response.encode("utf-8")))
 
-        return settings_files if settings_files else ""
+        return settings_files or ""
 
     def get_owning_namespace(self) -> str | None:
         return getattr(self, "owner", None)
@@ -1219,8 +1218,25 @@ class RepoApi(giteapy.RepositoryApi):
             items.extend(page_items)
             page += 1
 
+    @staticmethod
+    def _advertised_total(response) -> int | None:
+        """The X-Total-Count of a (data, status, headers) response, or None when absent or unusable."""
+        headers = response[2] if isinstance(response, tuple) else {}
+        for name, value in headers.items():
+            if name.lower() == "x-total-count":
+                try:
+                    total = int(value)
+                except (TypeError, ValueError):
+                    return None
+                return total if total >= 0 else None
+        return None
+
     def get_change_file_pull_request(self, owner: str, repo: str, pr_number: int):
-        """Get changed files in the pull request"""
+        """Get changed files in the pull request.
+
+        Forgejo answers a page past the end with `null`, so once X-Total-Count is advertised the
+        walk ends at that count instead of at an empty page, and a different count is an error.
+        """
         files = []
         page = 1
         while True:
@@ -1245,9 +1261,15 @@ class RepoApi(giteapy.RepositoryApi):
                 for item in page_items
             ):
                 raise ValueError("Invalid Gitea changed-file entry")
-            if not page_items:
-                return files
             files.extend(page_items)
+            total = self._advertised_total(response)
+            if total is None:
+                if not page_items:
+                    return files
+            elif len(files) >= total or not page_items:
+                if len(files) != total:
+                    raise ValueError("Gitea changed-files count does not match X-Total-Count")
+                return files
             page += 1
 
     def get_languages(self, owner: str, repo: str):

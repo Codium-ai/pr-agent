@@ -83,6 +83,8 @@ FORBIDDEN_ARGS = [
     '--config.repo_context_files=[{"repo_id": "group/A/idea", "file_path": "AGENTS.md"}]',
     "--config__repo_context_files=[\"AGENTS.md\"]",
     '--config={"repo_context_files": ["AGENTS.md"]}',
+    # the glob match limit bounds how many files repo_context_files fetches
+    "--config.repo_context_max_glob_matches=100",
     # repo_context_sibling_repos is the host-only allowlist of sibling repositories whose
     # files may be selected; neither repo settings nor comment arguments can change it.
     "--config.repo_context_sibling_repos=[]",
@@ -108,6 +110,10 @@ FORBIDDEN_ARGS = [
     "--config.http_request_timeout=600",
     "--config__http_request_timeout=600",
     '--config={"http_request_timeout": 600}',
+    # Gerrit direct-child occupancy is controlled by the host, including mapping forms.
+    "--gerrit.command_timeout_seconds=600",
+    "--gerrit__command_timeout_seconds=600",
+    '--gerrit={"command_timeout_seconds": 600}',
     # fail_on_tool_errors decides whether a recorded tool failure fails the GitHub Action, so a
     # commenter must not be able to turn it off for their own command.
     "--github_action_config.fail_on_tool_errors=false",

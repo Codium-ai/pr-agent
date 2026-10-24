@@ -188,7 +188,7 @@ def test_missing_diff_file_fails_fast(tmp_path, monkeypatch, capsys):
     assert "Could not read --diff-file" in err
 
 
-@pytest.mark.parametrize("command", ["review", "review_pr"])
+@pytest.mark.parametrize("command", ["review", "review_pr", "improve", "improve_code", "describe", "describe_pr"])
 def test_json_output_accepts_pr_review(command, monkeypatch, tmp_path):
     from pr_agent.algo.review_json_output import review_json_output_path
 
@@ -207,6 +207,18 @@ def test_json_output_accepts_pr_review(command, monkeypatch, tmp_path):
     assert review_json_output_path.get() is None
 
 
+@pytest.mark.parametrize("command", ["improve", "improve_code", "describe", "describe_pr"])
+@pytest.mark.parametrize("input_mode", ["stdin", "file"])
+def test_json_output_rejects_improve_in_plain_diff_mode(command, input_mode, monkeypatch, capsys):
+    input_args = _rejecting_input_args(input_mode, monkeypatch)
+
+    with pytest.raises(SystemExit) as exc_info:
+        run(inargs=[*input_args, "--json-output", "out.json", command])
+
+    assert exc_info.value.code == 2
+    assert "use --pr_url to write improve suggestions or the description as JSON" in capsys.readouterr().err
+
+
 @pytest.mark.parametrize("target_args", [[], ["--issue_url", "https://example/issue/1"]])
 def test_json_output_requires_pr_or_diff(target_args, capsys):
     with pytest.raises(SystemExit, match="2"):
@@ -217,7 +229,7 @@ def test_json_output_requires_pr_or_diff(target_args, capsys):
 def test_json_output_rejects_non_review_pr_command(monkeypatch, capsys):
     _fail_if_agent_constructed(monkeypatch)
     with pytest.raises(SystemExit, match="2"):
-        run(inargs=["--pr_url", "https://example/pr/1", "--json-output", "out.json", "describe"])
+        run(inargs=["--pr_url", "https://example/pr/1", "--json-output", "out.json", "ask"])
     assert "--json-output is only supported for review commands" in capsys.readouterr().err
 
 

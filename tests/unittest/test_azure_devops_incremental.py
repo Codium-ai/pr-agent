@@ -78,6 +78,7 @@ class TestGetIncrementalCommits:
         provider.repo_slug = "repo"
         provider.pr_num = 1
         provider.pr_url = "https://dev.azure.com/o/ws/_git/repo/pullrequest/1"
+        provider.is_comment_authored_by_pr_agent = MagicMock(return_value=True)
         return provider
 
     def test_no_previous_review_disables_incremental(self):
@@ -106,6 +107,15 @@ class TestGetIncrementalCommits:
         result = provider.get_previous_review(full=True, incremental=False)
 
         assert result is marked
+
+    def test_previous_review_skips_matching_comment_from_another_user(self):
+        provider = self._make_provider()
+        agent = _comment("## PR Reviewer Guide", _dt.datetime(2024, 6, 1))
+        foreign = _comment("## PR Reviewer Guide", _dt.datetime(2024, 6, 2))
+        provider.get_issue_comments = MagicMock(return_value=[agent, foreign])
+        provider.is_comment_authored_by_pr_agent = MagicMock(side_effect=lambda comment: comment is agent)
+
+        assert provider.get_previous_review(full=True, incremental=False) is agent
 
     def test_supports_review_and_suggestions_kinds(self):
         provider = self._make_provider()

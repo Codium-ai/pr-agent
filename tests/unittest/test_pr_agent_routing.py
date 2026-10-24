@@ -8,6 +8,7 @@ from starlette_context import request_cycle_context
 
 import pr_agent.agent.pr_agent as pr_agent_module
 import pr_agent.git_providers.gitea_provider as gitea_module
+import pr_agent.git_providers.gitlab_provider as gitlab_module
 from pr_agent.algo import artifacts
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers import utils as provider_utils
@@ -28,6 +29,9 @@ def test_incomplete_file_errors_share_only_provider_neutral_base():
     assert not issubclass(IncompleteBitbucketPullRequestFilesError, IncompletePullRequestFilesError)
     assert issubclass(gitea_module.IncompleteGiteaPullRequestFilesError, IncompleteProviderPullRequestFilesError)
     assert not issubclass(gitea_module.IncompleteGiteaPullRequestFilesError, IncompletePullRequestFilesError)
+    assert issubclass(gitlab_module.IncompleteGitLabDiffError, IncompleteProviderPullRequestFilesError)
+    assert issubclass(gitlab_module.IncompleteGitLabDiffError, gitlab_module.DiffNotFoundError)
+    assert not issubclass(gitlab_module.IncompleteGitLabDiffError, IncompletePullRequestFilesError)
 
 
 @pytest.mark.asyncio
@@ -420,6 +424,48 @@ async def test_incomplete_github_files_constructor_error_publishes_sanitized_not
 
 
 @pytest.mark.asyncio
+async def test_incomplete_gitlab_diff_constructor_error_publishes_sanitized_notice(monkeypatch):
+    secret = "private/repository diff mismatch with request details"
+    provider = _incomplete_files_provider()
+
+    class IncompleteTool:
+        def __init__(self, pr_url, ai_handler, args):
+            raise gitlab_module.IncompleteGitLabDiffError(secret)
+
+    _patch_request_dependencies(monkeypatch)
+    monkeypatch.setattr(get_settings().config, "publish_output", True, raising=False)
+    monkeypatch.setattr(pr_agent_module, "get_git_provider_with_context", lambda _pr_url: provider)
+    monkeypatch.setitem(pr_agent_module.command2class, "custom", IncompleteTool)
+
+    handled = await pr_agent_module.PRAgent()._handle_request(
+        "https://example/pr/1", "/custom"
+    )
+
+    assert handled is False
+    provider.publish_comment.assert_called_once()
+    published = provider.publish_comment.call_args.args[0]
+    assert "GitLab returned an incomplete or inconsistent merge-request diff" in published
+    assert "command was not run" in published
+    assert gitlab_module.IncompleteGitLabDiffError.notice_marker in published.splitlines()[:5]
+    assert secret not in published
+
+
+def test_incomplete_gitlab_diff_notice_deduplicates_trusted_agent_comment(monkeypatch):
+    marker = gitlab_module.IncompleteGitLabDiffError.notice_marker
+    existing = {"body": f"## Existing notice\n\n{marker}\n\nDetails"}
+    provider = _incomplete_files_provider([existing])
+    provider.is_comment_authored_by_pr_agent.return_value = True
+    monkeypatch.setattr(get_settings().config, "publish_output", True, raising=False)
+    monkeypatch.setattr(pr_agent_module, "get_git_provider_with_context", lambda _pr_url: provider)
+
+    pr_agent_module.publish_incomplete_files_comment(
+        "https://example/pr/1", gitlab_module.IncompleteGitLabDiffError("incomplete")
+    )
+
+    provider.publish_comment.assert_not_called()
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize("outcome", ["published", "disabled", "provider_failure", "publication_failure"])
 async def test_incomplete_bitbucket_constructor_error_keeps_provider_specific_failure(monkeypatch, outcome):
     secret = "private/repository patch mismatch with secret request details"
@@ -621,6 +667,24 @@ def test_incomplete_files_notice_fails_open_when_author_cannot_be_verified(monke
 def test_incomplete_files_notice_fails_open_when_comment_lookup_fails(monkeypatch):
     provider = _incomplete_files_provider()
     provider.get_issue_comments_newest_first.side_effect = RuntimeError("lookup unavailable")
+    monkeypatch.setattr(get_settings().config, "publish_output", True, raising=False)
+    monkeypatch.setattr(pr_agent_module, "get_git_provider_with_context", lambda _pr_url: provider)
+
+    pr_agent_module.publish_incomplete_files_comment(
+        "https://example/pr/1", pr_agent_module.IncompletePullRequestFilesError("incomplete")
+    )
+
+    provider.publish_comment.assert_called_once()
+
+
+def test_incomplete_files_notice_publishes_when_lazy_comment_page_fails(monkeypatch):
+    provider = _incomplete_files_provider()
+
+    def incomplete_comments():
+        yield {"body": "Unrelated comment"}
+        raise RuntimeError("comment page unavailable")
+
+    provider.get_issue_comments_newest_first.return_value = incomplete_comments()
     monkeypatch.setattr(get_settings().config, "publish_output", True, raising=False)
     monkeypatch.setattr(pr_agent_module, "get_git_provider_with_context", lambda _pr_url: provider)
 

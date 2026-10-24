@@ -15,7 +15,7 @@ DEFAULT_ARTIFACT_INSTRUCTIONS = (
     "It was produced by a prior CI step."
 )
 
-SUPPORTED_ARTIFACT_TOOLS = frozenset({"pr_reviewer", "pr_description", "pr_code_suggestions"})
+SUPPORTED_ARTIFACT_TOOLS = frozenset({"pr_reviewer", "pr_description", "pr_code_suggestions", "pr_questions"})
 
 
 class ArtifactPromptContext(TypedDict):
@@ -234,7 +234,7 @@ def inject_artifact_context() -> None:
             return
         target_tools = get_settings().get(
             "ARTIFACTS.TARGET_TOOLS",
-            ["pr_reviewer", "pr_description", "pr_code_suggestions"]
+            ["pr_reviewer", "pr_description", "pr_code_suggestions", "pr_questions"]
         )
         if isinstance(target_tools, str):
             target_tools = [t.strip() for t in target_tools.split(",") if t.strip()]

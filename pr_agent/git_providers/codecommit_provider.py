@@ -60,7 +60,7 @@ class CodeCommitFile:
         self.b_path = b_path
         self.b_blob_id = b_blob_id
         self.edit_type: EDIT_TYPE = edit_type
-        self.filename = b_path if b_path else a_path
+        self.filename = b_path or a_path
         self.repository_name = repository_name
         self.source_commit = source_commit
         self.destination_commit = destination_commit
@@ -272,11 +272,12 @@ class CodeCommitProvider(GitProvider):
                                    final_update_message=True,
                                    as_thread: bool = False,
                                    identity_marker: str | None = None,
-                                   legacy_initial_header: str | None = None):
+                                   legacy_initial_header: str | None = None,
+                                   require_agent_authorship: bool = False):
         if as_thread:
             get_logger().debug("CodeCommit does not support threaded persistent comments; publishing as a PR comment")
 
-        if not identity_marker:
+        if not identity_marker or require_agent_authorship:
             get_logger().debug(
                 "CodeCommit persistent comment updates require a stable identity marker; publishing a new comment"
             )

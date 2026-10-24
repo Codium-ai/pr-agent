@@ -485,6 +485,37 @@ def test_generate_summarized_suggestions_renders_table_and_sorts_by_score():
         restore_settings(snapshot)
 
 
+@pytest.mark.parametrize("source_fence,outer_fence", [("", "```"), ("```", "````"), ("````", "`````")])
+def test_generate_summarized_suggestions_uses_safe_diff_fences(source_fence, outer_fence):
+    existing_code = "old()\ntail()"
+    expected_patch = "-old()\n+new()\n tail()"
+    if source_fence:
+        existing_code = f"{source_fence}python\nold()\n{source_fence}\ntail()"
+        expected_patch = f" {source_fence}python\n-old()\n+new()\n {source_fence}\n tail()"
+    improved_code = existing_code.replace("old()", "new()")
+    line_count = len(existing_code.splitlines())
+    git_provider = MagicMock()
+    git_provider.diff_files = [FilePatchInfo(
+        base_file=existing_code + "\n",
+        head_file=improved_code + "\n",
+        patch=f"@@ -1,{line_count} +1,{line_count} @@\n{expected_patch}\n",
+        filename="README.md",
+    )]
+    git_provider.get_line_link.return_value = ""
+    tool = _make_tool(git_provider)
+    suggestion = _suggestion(
+        relevant_file="README.md",
+        relevant_lines_start=1,
+        relevant_lines_end=line_count,
+        existing_code=existing_code,
+        improved_code=improved_code,
+    )
+
+    out = tool.generate_summarized_suggestions({"code_suggestions": [suggestion]})
+
+    assert f"{outer_fence}diff\n{expected_patch}\n{outer_fence}\n</details>" in out
+
+
 def test_generate_summarized_suggestions_uses_score_string_when_new_mechanism_enabled():
     git_provider = _provider_with_diff_files("app.py")
     tool = _make_tool(git_provider)

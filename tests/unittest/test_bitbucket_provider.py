@@ -735,6 +735,78 @@ index 1111111..2222222 100644
     def test_diff_header_paths_decode_quoted_git_paths(self, header, paths):
         assert _diff_header_paths(header + "\n") == paths
 
+    @pytest.mark.parametrize("patch,paths", [
+        (
+            "diff --git a/old name.py b/new name.py\n"
+            "similarity index 100%\n"
+            "rename from old name.py\n"
+            "rename to new name.py\n",
+            ("old name.py", "new name.py"),
+        ),
+        (
+            "diff --git a/old name.py b/new name.py\n"
+            "similarity index 85%\n"
+            "rename from old name.py\n"
+            "rename to new name.py\n"
+            "--- a/old name.py\n"
+            "+++ b/new name.py\n"
+            "@@ -1 +1 @@\n"
+            "-old\n"
+            "+new\n",
+            ("old name.py", "new name.py"),
+        ),
+        (
+            'diff --git "a/caf\\303\\251.py" "b/caf\\303\\251 renamed.py"\n'
+            "similarity index 100%\n"
+            'rename from "caf\\303\\251.py"\n'
+            'rename to "caf\\303\\251 renamed.py"\n',
+            ("café.py", "café renamed.py"),
+        ),
+        (
+            "diff --git a/old name.py b/new name.py\n"
+            "--- a/old name.py\n"
+            "+++ b/new name.py\n"
+            "@@ -1 +1 @@\n"
+            "-old\n"
+            "+new\n",
+            ("old name.py", "new name.py"),
+        ),
+        (
+            "diff --git a/new name.py b/new name.py\n"
+            "--- /dev/null\n"
+            "+++ b/new name.py\n"
+            "@@ -0,0 +1 @@\n"
+            "+new\n",
+            ("new name.py", "new name.py"),
+        ),
+        (
+            "diff --git a/old name.py b/old name.py\n"
+            "--- a/old name.py\n"
+            "+++ /dev/null\n"
+            "@@ -1 +0,0 @@\n"
+            "-old\n",
+            ("old name.py", "old name.py"),
+        ),
+    ])
+    def test_diff_header_paths_read_ambiguous_headers_from_patch_metadata(self, patch, paths):
+        assert _diff_header_paths(patch) == paths
+
+    def test_get_diff_files_keeps_renamed_file_with_space_in_path(self):
+        diff_file = self._get_single_diff_file(
+            "diff --git a/old name.py b/new name.py\n"
+            "similarity index 100%\n"
+            "rename from old name.py\n"
+            "rename to new name.py\n",
+            "renamed",
+            0,
+            0,
+            "new name.py",
+            "old name.py",
+        )
+
+        assert diff_file.filename == "new name.py"
+        assert diff_file.edit_type == EDIT_TYPE.RENAMED
+
     @pytest.mark.parametrize("patch_paths", [
         ["src/first.py", "src/other.py"],
         ["src/first.py", "src/first.py"],

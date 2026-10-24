@@ -723,8 +723,13 @@ class AzureDevopsProvider(GitProvider):
         matches = []
         for comment in self.get_issue_comments():
             body = getattr(comment, "body", None)
-            if body and comment_matches_any_identity(body, identifiers):
-                matches.append(comment)
+            if not body or not comment_matches_any_identity(body, identifiers):
+                continue
+            try:
+                if self.is_comment_authored_by_pr_agent(comment):
+                    matches.append(comment)
+            except RuntimeError:
+                get_logger().debug("Could not verify the author of an Azure DevOps review anchor")
         if not matches:
             return None
 
@@ -772,7 +777,7 @@ class AzureDevopsProvider(GitProvider):
                 get_logger().error(
                     f"Failed to get the repository's .pr_agent.toml; it will not be applied for this "
                     f"run, error: {e}")
-        return settings_files if settings_files else ""
+        return settings_files or ""
 
     def get_owning_namespace(self) -> str | None:
         # In Azure DevOps the owning namespace is the organization, not the project
@@ -784,7 +789,7 @@ class AzureDevopsProvider(GitProvider):
         parsed = urlparse(org)
         if parsed.scheme and parsed.netloc:
             path_first = parsed.path.strip("/").split("/")[0]
-            return path_first if path_first else parsed.netloc.split(".")[0]
+            return path_first or parsed.netloc.split(".")[0]
         return str(org)
 
     def _get_global_settings_cache_key(self, org: str) -> str:

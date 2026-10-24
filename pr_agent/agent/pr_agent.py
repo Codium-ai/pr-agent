@@ -99,28 +99,26 @@ def _publish_incomplete_files_comment(
 
     try:
         comments = provider.get_issue_comments_newest_first()
+        for comment in comments:
+            try:
+                body = provider._get_comment_body(comment)
+            except Exception:
+                # Ignore comments whose bodies cannot be read. Continue looking
+                # for a verifiable PR-Agent marker and publish if none can be
+                # confirmed.
+                get_logger().warning(
+                    "Failed to read an existing incomplete-files notice; continuing"
+                )
+                continue
+            if not comment_matches_identity(body, error.notice_marker):
+                continue
+            try:
+                if provider.is_comment_authored_by_pr_agent(comment):
+                    return
+            except Exception:
+                get_logger().exception("Failed to verify the author of an incomplete-files notice")
     except Exception:
         get_logger().exception("Failed to inspect existing incomplete-files notices")
-        comments = []
-
-    for comment in comments:
-        try:
-            body = provider._get_comment_body(comment)
-        except Exception:
-            # Ignore comments whose bodies cannot be read. Continue looking
-            # for a verifiable PR-Agent marker and publish if none can be
-            # confirmed.
-            get_logger().warning(
-                "Failed to read an existing incomplete-files notice; continuing"
-            )
-            continue
-        if not comment_matches_identity(body, error.notice_marker):
-            continue
-        try:
-            if provider.is_comment_authored_by_pr_agent(comment):
-                return
-        except Exception:
-            get_logger().exception("Failed to verify the author of an incomplete-files notice")
 
     body = add_comment_identity(
         error.notice,

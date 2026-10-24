@@ -367,7 +367,7 @@ class TestInjectArtifactContext:
         assert context["label"] == directive
 
     def test_unsupported_target_tools_are_skipped_with_a_warning(self, settings, report):
-        settings.set("artifacts.target_tools", ["pr_reviewer", "pr_questions"])
+        settings.set("artifacts.target_tools", ["pr_reviewer", "pr_custom_labels"])
         env = {"GITHUB_WORKSPACE": str(report.parent), "ARTIFACT_PATH": str(report)}
 
         with patch.dict(os.environ, env), patch("pr_agent.algo.artifacts.get_logger") as logger:
@@ -376,8 +376,16 @@ class TestInjectArtifactContext:
         assert get_artifact_context("pr_reviewer")["content"] == "FAILED: test_login"
         assert get_artifact_context("pr_questions") is None
         logger.return_value.warning.assert_called_once_with(
-            "Unsupported artifact target tools will be ignored: ['pr_questions']"
+            "Unsupported artifact target tools will be ignored: ['pr_custom_labels']"
         )
+
+    def test_pr_questions_is_a_supported_target(self, settings, report):
+        settings.set("artifacts.target_tools", ["pr_questions"])
+        with patch.dict(os.environ, {"GITHUB_WORKSPACE": str(report.parent), "ARTIFACT_PATH": str(report)}):
+            inject_artifact_context()
+
+        assert get_artifact_context("pr_questions")["content"] == "FAILED: test_login"
+        assert get_artifact_context("pr_reviewer") is None
 
     def test_settings_alone_are_enough_without_the_env_var(self, settings, report):
         settings.set("artifacts.enable", True)

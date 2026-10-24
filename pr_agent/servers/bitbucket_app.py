@@ -22,6 +22,7 @@ from starlette_context.middleware import RawContextMiddleware
 
 from pr_agent.agent.pr_agent import PRAgent, prepare_command
 from pr_agent.agent.request_policy import RequestOutcome
+from pr_agent.algo.setting_utils import normalize_setting_list
 from pr_agent.config_loader import get_settings, global_settings
 from pr_agent.git_providers.utils import apply_repo_settings
 from pr_agent.identity_providers import get_identity_provider
@@ -230,7 +231,7 @@ async def _perform_commands_bitbucket(commands_conf: str, agent: PRAgent, api_ur
     commands = (
         get_pr_commands("bitbucket_app")
         if commands_conf == "pr_commands"
-        else get_settings().get(f"bitbucket_app.{commands_conf}", {})
+        else normalize_setting_list(get_settings().get(f"bitbucket_app.{commands_conf}", {}))
     )
     if not commands:
         get_logger().info(f"No {commands_conf} configured, skipping auto commands")

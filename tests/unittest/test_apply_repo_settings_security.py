@@ -68,10 +68,12 @@ SNAPSHOT_SECTIONS = (
     "MOONSHOT",
     "DATABRICKS",
     "OPENROUTER",
+    "LITELLM",
     "GITHUB",
     "BITBUCKET",
     "GITLAB",
     "GITEA",
+    "GERRIT",
     "JIRA",
     "LINEAR",
     "LANGUAGE_EXTENSION_MAP_ORG",
@@ -464,6 +466,31 @@ def test_provider_connection_keys_are_host_only_for_repo_and_cli(section, key):
     assert CliArgs.validate_user_args([f"--{section}.{key}=untrusted"])[0] is False
 
 
+@pytest.mark.parametrize("repo_settings_bytes", [
+    b"[gerrit]\ncommand_timeout_seconds = 999\n",
+    b"[gerrit.command_timeout_seconds]\nx = 999\n",
+    b"[gerrit__command_timeout_seconds]\nx = 999\n",
+])
+def test_repo_settings_cannot_override_gerrit_command_timeout(
+    monkeypatch, settings_snapshot, repo_settings_bytes
+):
+    provider = FakeGitProvider(repo_settings_bytes=repo_settings_bytes)
+    _install_provider(monkeypatch, provider)
+    settings = get_settings()
+    settings.set("config.use_repo_settings_file", True)
+    settings.set("gerrit.command_timeout_seconds", 21)
+
+    apply_repo_settings("https://example.com/owner/repo/pull/1")
+
+    assert _section(settings, "gerrit")["command_timeout_seconds"] == 21
+    assert is_repo_host_only_key("gerrit", "command_timeout_seconds")
+
+
+def test_polling_repositories_is_host_only_for_repo_and_cli():
+    assert is_repo_host_only_key("github", "polling_repositories")
+    assert CliArgs.validate_user_args(["--github.polling_repositories=attacker/repo"])[0] is False
+
+
 @pytest.mark.parametrize(
     ("section", "key"),
     [
@@ -495,6 +522,7 @@ def test_repo_settings_cannot_override_provider_authentication_or_tls(
     ("key", "host_value", "repo_toml_value"),
     [
         ("project_keys", ["PROJ"], '["PROJ", "HR"]'),
+        ("cloud_id", "35273b54-3f06-40d2-880f-dd28cf8daafa", '"00000000-0000-0000-0000-000000000000"'),
         ("jira_site", "host-org", '"other-org"'),
         ("jira_api_email", "bot@host.example", '"other@repo.example"'),
     ],
@@ -537,6 +565,51 @@ jira_requirements_field = "customfield_10127"
     assert jira.get("jira_requirements_field") == "customfield_10127"
     assert CliArgs.validate_user_args(["--jira.jira_requirements_field=customfield_1"])[0] is True
     assert CliArgs.validate_user_args(['--jira={project_keys: ["HR"]}'])[0] is False
+
+
+def test_litellm_extra_headers_is_host_only_key():
+    assert is_repo_host_only_key("litellm", "extra_headers")
+    assert is_repo_host_only_key("LITELLM", "EXTRA_HEADERS")
+
+
+def test_comment_args_cannot_set_litellm_extra_headers():
+    assert CliArgs.validate_user_args(['--litellm.extra_headers={"X-Tenant":"attacker"}'])[0] is False
+
+
+def test_repo_settings_cannot_override_litellm_extra_headers(monkeypatch, settings_snapshot):
+    # The headers ride on every model request, so on a shared gateway the reviewed repository
+    # must not choose them.
+    provider = FakeGitProvider(repo_settings_bytes=b"""
+[litellm]
+extra_headers = '{"X-Tenant":"attacker"}'
+""")
+    _install_provider(monkeypatch, provider)
+
+    settings = get_settings()
+    settings.set("config.use_repo_settings_file", True)
+    settings.set("litellm.extra_headers", '{"X-Tenant":"operator"}')
+
+    apply_repo_settings("https://example.com/owner/repo/pull/1")
+
+    litellm_section = {k.lower(): v for k, v in _section(settings, "litellm").items()}
+    assert litellm_section.get("extra_headers") == '{"X-Tenant":"operator"}'
+
+
+def test_repo_settings_still_apply_other_litellm_keys(monkeypatch, settings_snapshot):
+    provider = FakeGitProvider(repo_settings_bytes=b"[litellm]\ndrop_params = true\n")
+    captured = _install_provider(monkeypatch, provider)
+
+    settings = get_settings()
+    settings.set("config.use_repo_settings_file", True)
+    settings.set("litellm.drop_params", False)
+
+    apply_repo_settings("https://example.com/owner/repo/pull/1")
+
+    assert captured["errors"] is None
+    litellm_section = {k.lower(): v for k, v in _section(settings, "litellm").items()}
+    assert litellm_section.get("drop_params") is True
+    assert not is_repo_host_only_key("litellm", "drop_params")
+    assert CliArgs.validate_user_args(["--litellm.drop_params=true"])[0] is True
 
 
 @pytest.mark.parametrize(

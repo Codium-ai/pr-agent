@@ -98,8 +98,8 @@ def _install_fake_image_probe(monkeypatch, status):
         async def __aexit__(self, *a):
             return False
 
-        def request(self, method, url, allow_redirects=True):
-            observed.update(method=method, url=url, allow_redirects=allow_redirects)
+        def request(self, method, url, allow_redirects=True, **kwargs):
+            observed.update(method=method, url=url, allow_redirects=allow_redirects, **kwargs)
             return response
 
     def _factory(*args, **kwargs):
@@ -162,8 +162,10 @@ async def test_chat_completion_probes_images_with_bounded_head(monkeypatch):
 
     # The probe is a bounded, non-redirecting HEAD with the configured timeout.
     assert observed["method"] == "HEAD"
-    assert observed["url"] == "https://example.test/image.png"
+    assert str(observed["url"]) == "https://140.82.121.4/image.png"
     assert observed["allow_redirects"] is False
+    assert observed["headers"] == {"Host": "example.test"}
+    assert observed["server_hostname"] == "example.test"
     assert observed["timeout"].total == 5
     assert mock_call.call_args.kwargs["messages"][1]["content"][1] == {
         "type": "image_url",
@@ -539,7 +541,7 @@ async def test_chat_completion_strips_temperature_for_config_no_temperature_mode
 
 
 @pytest.mark.asyncio
-async def test_chat_completion_strips_temperature_for_bedrock_kimi_k3_by_default(monkeypatch):
+async def test_chat_completion_strips_temperature_for_bedrock_kimi_k3_and_glm_5_by_default(monkeypatch):
     """Verify the shipped defaults drop temperature for every Bedrock Kimi K3 spelling
     (bare, us., global.) on both routes, since Bedrock rejects temperature for it."""
     import tomllib
@@ -558,7 +560,8 @@ async def test_chat_completion_strips_temperature_for_bedrock_kimi_k3_by_default
         staticmethod(lambda model, custom_llm_provider=None: True),
     )
     models = [f"bedrock/{route}{model}" for route in ("", "converse/")
-              for model in ("moonshotai.kimi-k3", "us.moonshotai.kimi-k3", "global.moonshotai.kimi-k3")]
+              for model in ("moonshotai.kimi-k3", "us.moonshotai.kimi-k3", "global.moonshotai.kimi-k3",
+                            "zai.glm-5")]
 
     with patch("pr_agent.algo.ai_handlers.litellm_ai_handler.acompletion", new_callable=AsyncMock) as mock_call:
         mock_call.return_value = _mock_response()
@@ -709,6 +712,24 @@ def _empty_response(finish_reason):
             ),
             1,
             id="unprocessable-entity",
+        ),
+        pytest.param(
+            openai.AuthenticationError(
+                "invalid credentials",
+                response=httpx.Response(401, request=httpx.Request("POST", "http://model.invalid")),
+                body=None,
+            ),
+            1,
+            id="authentication-error",
+        ),
+        pytest.param(
+            openai.PermissionDeniedError(
+                "access denied",
+                response=httpx.Response(403, request=httpx.Request("POST", "http://model.invalid")),
+                body=None,
+            ),
+            1,
+            id="permission-denied",
         ),
         pytest.param(
             litellm.ContextWindowExceededError("context too long", model="gpt-4o", llm_provider="openai"),
