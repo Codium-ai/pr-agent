@@ -17,6 +17,7 @@ from pr_agent.algo.artifacts import inject_artifact_context as _inject_artifact_
 from pr_agent.algo.run_details import command_failed, init_run_details
 from pr_agent.algo.setting_utils import normalize_setting_list
 from pr_agent.config_loader import get_settings
+from pr_agent.doctor import missing_provider_key_env_vars
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.github_provider import IncompletePullRequestFilesError
 from pr_agent.git_providers.utils import apply_repo_settings
@@ -224,9 +225,6 @@ async def run_action():
     # Set the environment variables in the settings
     if OPENAI_KEY:
         get_settings().set("OPENAI.KEY", OPENAI_KEY)
-    else:
-        # Might not be set if the user is using models not from OpenAI
-        print("OPENAI_KEY not set")
     if OPENAI_ORG:
         get_settings().set("OPENAI.ORG", OPENAI_ORG)
     get_settings().set("GITHUB.USER_TOKEN", GITHUB_TOKEN)
@@ -252,6 +250,22 @@ async def run_action():
             get_logger().info(f"enable_custom_labels: {get_settings().config.enable_custom_labels}")
     except Exception as e:
         get_logger().info(f"github action: failed to apply repo settings: {e}")
+
+    # Gate on the active provider's key after repo settings are applied (a repo-level
+    # .pr_agent.toml can select a different provider) but before any tool runs: carrying
+    # on with the placeholder only fails every call a full run later (#4195, #4324).
+    # Keyless providers defer to the run, as in `pr-agent doctor`.
+    missing_key = missing_provider_key_env_vars()
+    if missing_key is not None:
+        _provider, env_var_names = missing_key
+        # Raised, not printed, and rendered only from constant-table env var names and
+        # static text: CodeQL's clear-text-logging sinks (logging/print/stderr) never
+        # see anything derived near key handling, and the raise is not a sink itself.
+        raise SystemExit(
+            "Stopping before any tool runs: no usable API key for the active model's provider. "
+            f"Set {' or '.join(env_var_names)} in this workflow's env. "
+            "'pr-agent doctor' preflights the same check by hand."
+        )
 
     # Append the response language in the extra instructions
     try:
