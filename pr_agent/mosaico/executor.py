@@ -20,7 +20,7 @@ TaskArtifactUpdateEvent (not a TaskStatusUpdateEvent), otherwise the SDK raises
 health_check issues a single, NON-retry-wrapped litellm probe."""
 import asyncio
 import copy
-from collections import deque
+from collections import OrderedDict, deque
 from math import isfinite
 
 from a2a.helpers.proto_helpers import get_message_text
@@ -37,6 +37,7 @@ from pr_agent.mosaico.dispatch import _find_pr_url, _looks_like_diff, route_and_
 from pr_agent.mosaico.observability import langfuse_span, mosaico_log_context, parse_observability_metadata
 
 _MAX_CONTEXT_HISTORY_TASKS = 1000
+_MAX_CONTEXT_HISTORY_CONTEXTS = 1000
 
 
 class PRAgentExecutor(AgentExecutor):
@@ -44,7 +45,17 @@ class PRAgentExecutor(AgentExecutor):
 
     def __init__(self, task_store=None):
         self.task_store = task_store
-        self._recent_task_ids: dict[tuple[str, str], deque[str]] = {}
+        self._recent_task_ids: OrderedDict[tuple[str, str], deque[str]] = OrderedDict()
+
+    def _remember_task(self, key: tuple[str, str], task_id: str) -> None:
+        """Index recent tasks without retaining an unbounded number of contexts."""
+        task_ids = self._recent_task_ids.pop(key, None)
+        if task_ids is None:
+            task_ids = deque(maxlen=_MAX_CONTEXT_HISTORY_TASKS + 1)
+        task_ids.append(task_id)
+        self._recent_task_ids[key] = task_ids
+        if len(self._recent_task_ids) > _MAX_CONTEXT_HISTORY_CONTEXTS:
+            self._recent_task_ids.popitem(last=False)
 
     async def _history_for_context(self, context: RequestContext) -> list[str]:
         current = context.get_user_input() or ""
@@ -100,9 +111,7 @@ class PRAgentExecutor(AgentExecutor):
             if context.current_task is None:
                 if self.task_store is not None:
                     key = (resolve_user_scope(context.call_context), context.context_id)
-                    self._recent_task_ids.setdefault(
-                        key, deque(maxlen=_MAX_CONTEXT_HISTORY_TASKS + 1)
-                    ).append(context.task_id)
+                    self._remember_task(key, context.task_id)
                 await event_queue.enqueue_event(
                     Task(
                         id=context.task_id,

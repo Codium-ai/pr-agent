@@ -123,6 +123,16 @@ def spy_updater(monkeypatch):
 
 
 class TestExecute:
+    def test_context_index_evicts_oldest_contexts(self):
+        executor = PRAgentExecutor(task_store=object())
+
+        for index in range(executor_mod._MAX_CONTEXT_HISTORY_CONTEXTS + 1):
+            executor._remember_task(("user", f"context-{index}"), f"task-{index}")
+
+        assert len(executor._recent_task_ids) == executor_mod._MAX_CONTEXT_HISTORY_CONTEXTS
+        assert ("user", "context-0") not in executor._recent_task_ids
+        assert ("user", "context-1") in executor._recent_task_ids
+
     @pytest.mark.asyncio
     async def test_context_index_is_scoped_to_task_owner(self, monkeypatch, spy_updater):
         """Keep another owner's task IDs out of a reused context ID."""
