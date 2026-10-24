@@ -44,9 +44,10 @@ class MosaicoTaskStore(InMemoryTaskStore):
     async def delete(self, task_id: str, context) -> None:
         owner = resolve_user_scope(context)
         async with self._retention_lock:
-            await super().delete(task_id, context)
             owner_tasks = self._retained_tasks.get(owner)
-            if owner_tasks is not None:
-                owner_tasks.pop(task_id, None)
-                if not owner_tasks:
-                    self._retained_tasks.pop(owner, None)
+            context_id = owner_tasks.pop(task_id, None) if owner_tasks is not None else None
+            if owner_tasks is not None and not owner_tasks:
+                self._retained_tasks.pop(owner, None)
+            await super().delete(task_id, context)
+            if context_id is not None and self._on_task_evicted is not None:
+                self._on_task_evicted(owner, task_id, context_id)

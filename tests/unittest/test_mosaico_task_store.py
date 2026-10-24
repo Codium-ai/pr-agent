@@ -48,3 +48,15 @@ async def test_store_eviction_is_scoped_per_owner():
     assert await store.get("alice-1", alice) is None
     assert await store.get("alice-2", alice) is not None
     assert await store.get("bob-1", bob) is not None
+
+
+@pytest.mark.asyncio
+async def test_explicit_delete_reports_removed_task():
+    evicted = []
+    store = MosaicoTaskStore(max_tasks_per_owner=2, on_task_evicted=lambda *item: evicted.append(item))
+    context = _context("alice")
+    await store.save(_task("task-1", "context-1"), context)
+
+    await store.delete("task-1", context)
+
+    assert evicted == [("alice", "task-1", "context-1")]
