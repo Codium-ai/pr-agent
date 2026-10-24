@@ -235,8 +235,9 @@ async def _perform_commands_azure(commands_conf: str, agent: PRAgent, api_url: s
             get_logger().error(f"Failed to perform command {command}: {e}")
 
 
-def _created_event_pr_url(resource):
-    """Select the legacy web link or derive the created event's documented PR identity."""
+def _created_event_pr_url(data):
+    """Use the web link or build the created event's structured PR identity."""
+    resource = data["resource"]
     if not isinstance(resource, dict):
         return None
     links = resource.get("_links", {})
@@ -251,40 +252,30 @@ def _created_event_pr_url(resource):
     if href:
         return unquote(href.replace("_apis/git/repositories", "_git"))
 
-    repository = resource.get("repository")
-    pr_id = resource.get("pullRequestId")
-    if not isinstance(repository, dict) or type(pr_id) is not int or pr_id <= 0:
+    repository = resource["repository"]
+    project = repository["project"]["name"]
+    repo = repository["name"]
+    base_url = data["resourceContainers"]["collection"]["baseUrl"]
+    pr_id = resource["pullRequestId"]
+    if (not all(isinstance(value, str) and value.strip() for value in (project, repo, base_url))
+            or type(pr_id) is not int or pr_id <= 0):
         return None
-    remote = repository.get("remoteUrl")
-    if not isinstance(remote, str) or not remote:
+    collection = urlsplit(base_url)
+    _ = collection.port  # Validate self-hosted collection ports.
+    if (collection.scheme not in {"http", "https"} or not collection.hostname
+            or collection.username is not None or collection.password is not None
+            or collection.query or collection.fragment):
         return None
-    try:
-        parsed = urlsplit(remote)
-        if (parsed.scheme not in {"http", "https"} or not parsed.hostname
-                or parsed.username is not None or parsed.password is not None
-                or parsed.query or parsed.fragment):
-            return None
-        # Access validates numeric/range constraints, including self-hosted ports.
-        port = parsed.port
-        if port is None and parsed.netloc.endswith(":"):
-            return None
-        path = parsed.path.removesuffix("/")
-        parts = path.split("/")
-        if len(parts) < 4 or not parts[-3] or parts[-2] != "_git" or not parts[-1]:
-            return None
-        pr_url = parsed._replace(path=f"{path}/pullrequest/{pr_id}").geturl()
-        expected = (unquote(parts[-3]), unquote(parts[-1]), pr_id)
-        if AzureDevopsProvider._parse_pr_url(pr_url) != expected:
-            return None
-        return pr_url
-    except ValueError:
-        return None
+    return f"{base_url.rstrip('/')}/{quote(project, safe='')}/_git/{quote(repo, safe='')}/pullrequest/{pr_id}"
 
 
 async def handle_request_azure(data, log_context):
     if data["eventType"] == "git.pullrequest.created":
         # API V1 (latest)
-        pr_url = _created_event_pr_url(data.get("resource"))
+        try:
+            pr_url = _created_event_pr_url(data)
+        except (AttributeError, KeyError, TypeError, ValueError):
+            pr_url = None
         if pr_url is None:
             get_logger().warning("Ignoring Azure created event with invalid pull request identity")
             return

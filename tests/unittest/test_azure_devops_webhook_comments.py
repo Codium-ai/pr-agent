@@ -356,93 +356,98 @@ async def test_successful_command_still_resolves_the_thread(monkeypatch):
     provider.remove_initial_comment.assert_called_once()
 
 
-@pytest.mark.parametrize("links", [{}, {"_links": {}}, {"_links": {"web": {}}}, {"_links": {"web": {"href": ""}}}])
-async def test_created_event_without_web_link_dispatches_documented_identity(links):
-    resource = {
-        "repository": {"remoteUrl": "https://fabrikam-fiber-inc.visualstudio.com/DefaultCollection/Fabrikam-Fiber-Git/_git/Fabrikam-Fiber-Git"},
-        "pullRequestId": 1,
-        **links,
+@pytest.fixture
+def created_event():
+    # Azure's documented sample has no web link and a misleading remoteUrl project segment.
+    return {
+        "eventType": "git.pullrequest.created",
+        "resource": {
+            "repository": {
+                "name": "Fabrikam", "project": {"name": "Fabrikam"},
+                "remoteUrl": "https://dev.azure.com/fabrikam/DefaultCollection/_git/Fabrikam",
+            },
+            "pullRequestId": 1,
+        },
+        "resourceContainers": {"collection": {"baseUrl": "https://dev.azure.com/fabrikam/"}},
     }
+
+
+@pytest.mark.parametrize("links", [{}, {"_links": {}}, {"_links": {"web": {}}}, {"_links": {"web": {"href": ""}}}])
+async def test_created_event_without_web_link_dispatches_documented_identity(created_event, links):
+    created_event["resource"].update(links)
     context = {}
     with patch.object(webhook, "_perform_commands_azure", new_callable=AsyncMock) as perform, \
             patch.object(webhook, "PRAgent") as agent:
-        response = await webhook.handle_request_azure(
-            {"eventType": "git.pullrequest.created", "resource": resource}, context
-        )
-    expected = resource["repository"]["remoteUrl"] + "/pullrequest/1"
+        response = await webhook.handle_request_azure(created_event, context)
+    expected = "https://dev.azure.com/fabrikam/Fabrikam/_git/Fabrikam/pullrequest/1"
     perform.assert_awaited_once_with("pr_commands", agent.return_value, expected, context)
     agent.assert_called_once_with()
-    assert webhook.AzureDevopsProvider._parse_pr_url(expected) == ("Fabrikam-Fiber-Git", "Fabrikam-Fiber-Git", 1)
+    assert webhook.AzureDevopsProvider._parse_pr_url(expected) == ("Fabrikam", "Fabrikam", 1)
     assert context == {"event": "git.pullrequest.created", "api_url": expected}
     assert response.status_code == 202
 
 
-@pytest.mark.parametrize("remote", [
-    "https://dev.azure.com/org/Dev%20Project/_git/repo%2Fpart",
-    "https://org.visualstudio.com/DefaultCollection/Dev%20Project/_git/repo%2Fpart/",
-    "http://azure.example.test:8080/tfs/Collection/Dev%20Project/_git/repo%2Fpart",
-])
-async def test_created_event_fallback_preserves_encoded_identity_and_server_prefix(remote):
-    resource = {"repository": {"remoteUrl": remote}, "pullRequestId": 42}
+async def test_created_event_fallback_preserves_structured_names_and_collection_prefix(created_event):
+    repository = created_event["resource"]["repository"]
+    repository.update(name="repo/part%20", project={"name": "Dev Project"}, remoteUrl="not-an-identity")
+    created_event["resourceContainers"]["collection"]["baseUrl"] = "http://azure.example.test:8080/tfs/Collection/"
     with patch.object(webhook, "_perform_commands_azure", new_callable=AsyncMock) as perform, \
             patch.object(webhook, "PRAgent"):
-        await webhook.handle_request_azure({"eventType": "git.pullrequest.created", "resource": resource}, {})
+        await webhook.handle_request_azure(created_event, {})
     perform.assert_awaited_once()
     url = perform.await_args.args[2]
-    assert url == remote.removesuffix("/") + "/pullrequest/42"
-    assert webhook.AzureDevopsProvider._parse_pr_url(url) == ("Dev Project", "repo/part", 42)
+    assert url == "http://azure.example.test:8080/tfs/Collection/Dev%20Project/_git/repo%2Fpart%2520/pullrequest/1"
+    assert webhook.AzureDevopsProvider._parse_pr_url(url) == ("Dev Project", "repo/part%20", 1)
 
 
-@pytest.mark.parametrize("href", [
-    "https://dev.azure.com/org/Dev%20Project/_apis/git/repositories/repo/pullrequest/7",
-    "https://legacy-user@azure.example.test/project/_git/repo/pullrequest/7",
-    "legacy-nonempty-link",
-])
-async def test_created_event_nonempty_web_link_retains_legacy_precedence(href):
-    resource = {"_links": {"web": {"href": href}}, "repository": None, "pullRequestId": False}
+async def test_created_event_nonempty_web_link_retains_legacy_precedence():
+    href = "https://dev.azure.com/org/Dev%20Project/_apis/git/repositories/repo/pullrequest/7"
+    data = {"eventType": "git.pullrequest.created", "resource": {
+        "_links": {"web": {"href": href}}, "repository": None, "pullRequestId": False,
+    }}
     with patch.object(webhook, "_perform_commands_azure", new_callable=AsyncMock) as perform, \
             patch.object(webhook, "PRAgent"):
-        await webhook.handle_request_azure({"eventType": "git.pullrequest.created", "resource": resource}, {})
+        await webhook.handle_request_azure(data, {})
     perform.assert_awaited_once()
     assert perform.await_args.args[2] == unquote(href.replace("_apis/git/repositories", "_git"))
 
 
-@pytest.mark.parametrize("remote", [
-    None, 123, "", "/project/_git/repo", "ftp://host/project/_git/repo", "https:///project/_git/repo",
-    "https://user@host/project/_git/repo", "https://user:secret@host/project/_git/repo",
-    "https://host:abc/project/_git/repo", "https://host:70000/project/_git/repo",
-    "https://host:-1/project/_git/repo", "https://host:/project/_git/repo", "https://[broken/project/_git/repo",
-    "https://host/project/_git/repo?token=secret", "https://host/project/_git/repo#secret",
-    "https://host/_git/repo", "https://host/project/_git/", "https://host/project/_git/repo//",
-    "https://host/project/_git/repo/pullrequest/7", "https://host/project/repos/repo",
+@pytest.mark.parametrize(("path", "value"), [
+    ("resource", None),
+    ("resource._links", None),
+    ("resource._links", {"web": []}),
+    ("resource._links", {"web": {"href": 7}}),
+    ("resource.repository", {}),
+    ("resource.repository.project", None),
+    ("resource.repository.project.name", ""),
+    ("resource.repository.name", 7),
+    ("resource.repository.name", " "),
+    ("resource.pullRequestId", "1"),
+    ("resource.pullRequestId", True),
+    ("resource.pullRequestId", 0),
+    ("resource.pullRequestId", -1),
+    ("resourceContainers", {}),
+    ("resourceContainers.collection", None),
+    ("resourceContainers.collection.baseUrl", None),
+    ("resourceContainers.collection.baseUrl", ""),
+    ("resourceContainers.collection.baseUrl", "/collection/"),
+    ("resourceContainers.collection.baseUrl", "ftp://azure.example.test/collection/"),
+    ("resourceContainers.collection.baseUrl", "https://[broken/"),
+    ("resourceContainers.collection.baseUrl", "https://azure.example.test:70000/collection/"),
+    ("resourceContainers.collection.baseUrl", "https://user:secret@azure.example.test/collection/"),
+    ("resourceContainers.collection.baseUrl", "https://azure.example.test/collection/?token=secret"),
+    ("resourceContainers.collection.baseUrl", "https://azure.example.test/collection/#secret"),
 ])
-async def test_created_event_invalid_remote_url_does_not_dispatch_or_log_payload(remote):
-    resource = {"repository": {"remoteUrl": remote}, "pullRequestId": 7}
-    await _assert_invalid_created_event(resource)
-
-
-@pytest.mark.parametrize("pr_id", [None, "7", 0, -1, True, False, 1.5])
-async def test_created_event_invalid_pull_request_id_does_not_dispatch(pr_id):
-    await _assert_invalid_created_event({"repository": {"remoteUrl": "https://host/project/_git/repo"},
-                                         "pullRequestId": pr_id})
-
-
-@pytest.mark.parametrize("resource", [
-    None, [], {}, {"repository": None}, {"repository": []}, {"repository": {}},
-    {"_links": None}, {"_links": []}, {"_links": {"web": None}}, {"_links": {"web": []}},
-    {"_links": {"web": {"href": 7}}},
-])
-async def test_created_event_invalid_resource_does_not_dispatch(resource):
-    await _assert_invalid_created_event(resource)
-
-
-async def _assert_invalid_created_event(resource):
+async def test_created_event_invalid_identity_does_not_dispatch_or_log_payload(created_event, path, value):
+    target = created_event
+    parts = path.split(".")
+    for part in parts[:-1]:
+        target = target[part]
+    target[parts[-1]] = value
     context = {}
     with patch.object(webhook, "_perform_commands_azure", new_callable=AsyncMock) as perform, \
             patch.object(webhook, "PRAgent") as agent, patch.object(webhook, "get_logger") as logger:
-        result = await webhook.handle_request_azure(
-            {"eventType": "git.pullrequest.created", "resource": resource}, context
-        )
+        result = await webhook.handle_request_azure(created_event, context)
     perform.assert_not_awaited()
     agent.assert_not_called()
     logger.return_value.warning.assert_called_once_with(
