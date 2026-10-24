@@ -1067,7 +1067,10 @@ class TestGitLabProvider:
         with patch("pr_agent.git_providers.gitlab_provider.get_settings", return_value=settings):
             assert gitlab_provider.should_publish_review_as_thread() is False
 
-    @pytest.mark.parametrize("configured, expected", [("true", True), ("false", False), ("FALSE", False)])
+    @pytest.mark.parametrize(
+        "configured, expected",
+        [(1, True), (0, False), ("true", True), ("false", False), ("FALSE", False)],
+    )
     def test_should_publish_review_as_thread_parses_string_config(self, gitlab_provider, configured, expected):
         settings = MagicMock()
         settings.get.side_effect = lambda key, default=None: {

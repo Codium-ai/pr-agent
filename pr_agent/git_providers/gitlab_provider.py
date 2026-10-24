@@ -21,6 +21,7 @@ from gitlab import (
 from requests.exceptions import RequestException
 
 from pr_agent.agent.request_policy import policy_metadata, policy_value
+from pr_agent.algo.setting_utils import _as_bool_setting
 from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
 
 from ..algo.comment_identity import (
@@ -57,19 +58,6 @@ from .git_provider import (
     redact_credentials,
 )
 from .request_timeout import get_http_request_timeout, refresh_session_request_timeout
-
-
-def _as_bool_setting(value, default: bool = False) -> bool:
-    """Parse boolean settings from TOML values and string environment overrides."""
-    if isinstance(value, bool):
-        return value
-    if isinstance(value, str):
-        normalized = value.strip().lower()
-        if normalized in ("true", "1", "yes", "on"):
-            return True
-        if normalized in ("false", "0", "no", "off"):
-            return False
-    return default
 
 
 class DiffNotFoundError(Exception):

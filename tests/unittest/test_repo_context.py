@@ -129,6 +129,8 @@ def test_build_repo_context_reads_from_target_branch_when_disabled(repo_context_
 @pytest.mark.parametrize(
     "config_value,expected",
     [
+        (0, False),
+        (1, True),
         ("false", False),
         ("False", False),
         ("0", False),
