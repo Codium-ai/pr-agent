@@ -65,15 +65,15 @@ def test_missing_key_names_the_env_variable_and_fails(monkeypatch, cli_mode_sett
     assert "✗ no API key for 'openai'; set OPENAI_API_KEY" in out
 
 
-def test_missing_provider_key_reason_shared_with_the_runner(monkeypatch, cli_mode_settings):
+def test_missing_provider_key_env_vars_shared_with_the_runner(monkeypatch, cli_mode_settings):
     _install_handler(monkeypatch, key="synthetic-key")
-    assert doctor.missing_provider_key_reason() is None
+    assert doctor.missing_provider_key_env_vars() is None
 
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     _install_handler(monkeypatch, key=None)
-    reason = doctor.missing_provider_key_reason()
-    assert reason is not None and "OPENAI_API_KEY" in reason
-    assert DUMMY_LITELLM_API_KEY not in reason
+    result = doctor.missing_provider_key_env_vars()
+    assert result is not None
+    assert "OPENAI_API_KEY" in result[1]
 
 
 def test_placeholder_key_fails(monkeypatch, cli_mode_settings, capsys):

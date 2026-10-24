@@ -24,11 +24,13 @@ def action_env(monkeypatch, tmp_path):
     monkeypatch.delenv("OPENAI.KEY", raising=False)
 
 
-async def test_missing_key_stops_before_tools_with_the_reason(
+async def test_missing_key_stops_before_tools_naming_the_env_variable(
     monkeypatch, action_env
 ):
-    reason = "no API key for 'openai'; set OPENAI_API_KEY or the provider settings key"
-    monkeypatch.setattr(github_action_runner, "missing_provider_key_reason", lambda: reason)
+    monkeypatch.setattr(
+        github_action_runner, "missing_provider_key_env_vars",
+        lambda: ("openai", ("OPENAI_API_KEY",)),
+    )
 
     with pytest.raises(SystemExit, match="Stopping before any tool runs.*OPENAI_API_KEY"):
         await github_action_runner.run_action()
@@ -41,8 +43,8 @@ async def test_repository_settings_are_applied_before_key_gate(monkeypatch, acti
         lambda pr_url: order.append(("repo_settings", pr_url)),
     )
     monkeypatch.setattr(
-        github_action_runner, "missing_provider_key_reason",
-        lambda: order.append("gate") or "no API key for 'openai'",
+        github_action_runner, "missing_provider_key_env_vars",
+        lambda: order.append("gate") or ("openai", ("OPENAI_API_KEY",)),
     )
     monkeypatch.setattr(
         github_action_runner, "get_setting_or_env", lambda key, default=None: default,

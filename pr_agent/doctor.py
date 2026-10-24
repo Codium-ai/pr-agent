@@ -59,17 +59,21 @@ def _check_provider_key(handler: LiteLLMAIHandler, provider: str) -> tuple[bool,
     return True, f"no static key for '{provider}' (keyless auth or custom provider); ping decides"
 
 
-def missing_provider_key_reason() -> str | None:
-    """One-line reason the active model's provider has no usable key, or None when it does.
+def missing_provider_key_env_vars() -> tuple[str, tuple[str, ...]] | None:
+    """(provider, env var names) to name when the active provider's key is missing.
 
-    Shared by `doctor` and the GitHub Action runner, so a deployment is judged the
-    same way by hand and in CI. The reason names environment variables only, never
-    a key value.
+    Returns None when a usable key exists. Shared by `doctor` and the GitHub Action
+    runner, so a deployment is judged the same way by hand and in CI. Callers that
+    surface CI output render only the env var names — they come from the constant
+    PROVIDER_API_KEY_ENV_VARS table, so nothing settings- or key-derived can flow
+    into a message; the provider is for logging and lookup keys only.
     """
     model = str(get_settings().config.get("model", "") or "")
     provider = _active_provider(model)
-    ok, detail = _check_provider_key(LiteLLMAIHandler(), provider)
-    return None if ok else detail
+    ok, _detail = _check_provider_key(LiteLLMAIHandler(), provider)
+    if ok:
+        return None
+    return provider, PROVIDER_API_KEY_ENV_VARS.get(provider, ())
 
 
 async def _check_model_ping(handler: LiteLLMAIHandler, model: str) -> tuple[bool, str]:

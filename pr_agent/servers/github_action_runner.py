@@ -17,9 +17,8 @@ from pr_agent.algo.artifacts import inject_artifact_context as _inject_artifact_
 from pr_agent.algo.run_details import command_failed, init_run_details
 from pr_agent.algo.setting_utils import normalize_setting_list
 from pr_agent.config_loader import get_settings
-from pr_agent.doctor import missing_provider_key_reason
+from pr_agent.doctor import missing_provider_key_env_vars
 from pr_agent.git_providers import get_git_provider
-from pr_agent.git_providers.git_provider import redact_credentials
 from pr_agent.git_providers.github_provider import IncompletePullRequestFilesError
 from pr_agent.git_providers.utils import apply_repo_settings
 from pr_agent.log import get_logger, setup_logger
@@ -256,14 +255,16 @@ async def run_action():
     # .pr_agent.toml can select a different provider) but before any tool runs: carrying
     # on with the placeholder only fails every call a full run later (#4195, #4324).
     # Keyless providers defer to the run, as in `pr-agent doctor`.
-    missing_key_reason = missing_provider_key_reason()
-    if missing_key_reason:
-        # Raised rather than printed: the reason becomes the job's error line, and no
-        # string derived near key handling flows through a logging sink. It names
-        # environment variables only; redact as belt and braces.
+    missing_key = missing_provider_key_env_vars()
+    if missing_key is not None:
+        _provider, env_var_names = missing_key
+        # Raised, not printed, and rendered only from constant-table env var names and
+        # static text: CodeQL's clear-text-logging sinks (logging/print/stderr) never
+        # see anything derived near key handling, and the raise is not a sink itself.
         raise SystemExit(
-            f"Stopping before any tool runs: {redact_credentials(missing_key_reason)}. "
-            "Add it to this workflow's env; 'pr-agent doctor' preflights the same check by hand."
+            "Stopping before any tool runs: no usable API key for the active model's provider. "
+            f"Set {' or '.join(env_var_names)} in this workflow's env. "
+            "'pr-agent doctor' preflights the same check by hand."
         )
 
     # Append the response language in the extra instructions
