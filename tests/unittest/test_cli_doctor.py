@@ -82,6 +82,18 @@ def test_bad_ping_reports_the_reason(monkeypatch, cli_mode_settings, capsys):
     assert "2 of 3 checks passed" in out
 
 
+def test_ping_failure_redacts_credentials_quoted_by_the_provider(monkeypatch, cli_mode_settings, capsys):
+    secret = "sk-proj-synthetic-key-value-for-tests-0123456789abcdef"
+    _install_handler(monkeypatch, key="synthetic-key",
+                     ping_error=RuntimeError(f"401 invalid key {secret} at https://api.example"))
+
+    assert cli.run(inargs=["doctor"]) == 1
+    out = capsys.readouterr().out
+    assert secret not in out
+    assert "<redacted>" in out
+    assert "401 invalid key" in out
+
+
 def test_doctor_needs_no_pr_url_and_skips_provider_setup(monkeypatch, cli_mode_settings):
     constructed = []
 
@@ -107,3 +119,16 @@ def test_active_provider_respects_custom_base_url(cli_mode_settings):
     get_settings().set("openai.api_base", "https://gateway.example/v1")
     assert doctor._active_provider("gpt-4o") == "custom_openai"
     assert doctor._active_provider("gpt-4o") != "openai"
+
+
+def test_unprefixed_non_openai_model_resolves_via_litellm(cli_mode_settings, monkeypatch):
+    monkeypatch.setattr("litellm.get_llm_provider", lambda model: (model, "anthropic"))
+    assert doctor._active_provider("claude-3-5-sonnet-20241022") == "anthropic"
+
+
+def test_unresolvable_model_id_defers_to_the_ping(cli_mode_settings, monkeypatch):
+    def explode(model):
+        raise ValueError("no provider")
+
+    monkeypatch.setattr("litellm.get_llm_provider", explode)
+    assert doctor._active_provider("definitely-not-a-model") == "unknown"

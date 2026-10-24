@@ -11,6 +11,7 @@ import os
 from pr_agent.algo.ai_handlers.cloud_auth import DUMMY_LITELLM_API_KEY, PROVIDER_API_KEY_ENV_VARS
 from pr_agent.algo.ai_handlers.litellm_ai_handler import LiteLLMAIHandler
 from pr_agent.config_loader import get_settings
+from pr_agent.git_providers.git_provider import redact_credentials
 from pr_agent.log import get_logger
 
 DOCTOR_COMMANDS = ("doctor",)
@@ -20,11 +21,19 @@ _PING_USER = "ping"
 
 
 def _active_provider(model: str) -> str:
-    """Resolve the litellm provider prefix of a model id, as a real call would."""
+    """Resolve the litellm provider of a model id, as a real call would."""
     if "/" in model:
         return model.split("/", 1)[0].strip().lower()
-    # No prefix means litellm's OpenAI default; a custom base URL keeps that routing.
-    return "custom_openai" if get_settings().get("OPENAI.API_BASE", None) else "openai"
+    if get_settings().get("OPENAI.API_BASE", None):
+        return "custom_openai"
+    # Unprefixed models are not always OpenAI's: litellm resolves claude-*, gemini-*,
+    # etc. itself. Ask the same resolver the ping will use; unknown ids defer to it.
+    try:
+        from litellm import get_llm_provider
+
+        return get_llm_provider(model=model)[1]
+    except Exception:
+        return "unknown"
 
 
 def _check_config(model: str) -> tuple[bool, str]:
@@ -55,8 +64,10 @@ async def _check_model_ping(handler: LiteLLMAIHandler, model: str) -> tuple[bool
     try:
         await handler.chat_completion(model, _PING_SYSTEM, _PING_USER)
     except Exception as error:
-        reason = str(error).split("\n")[0][:200]
-        get_logger().debug(f"Doctor model ping failed: {error!r}")
+        # Provider errors can quote request URLs or response bodies; redact the way the
+        # rest of the codebase does before the text reaches stdout or a shareable log.
+        reason = redact_credentials(str(error).split("\n")[0])[:200]
+        get_logger().debug(f"Doctor model ping failed: {redact_credentials(repr(error))}")
         return False, f"model completion failed: {reason}"
     return True, "model completion succeeded"
 
