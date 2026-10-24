@@ -59,6 +59,19 @@ def _check_provider_key(handler: LiteLLMAIHandler, provider: str) -> tuple[bool,
     return True, f"no static key for '{provider}' (keyless auth or custom provider); ping decides"
 
 
+def missing_provider_key_reason() -> str | None:
+    """One-line reason the active model's provider has no usable key, or None when it does.
+
+    Shared by `doctor` and the GitHub Action runner, so a deployment is judged the
+    same way by hand and in CI. The reason names environment variables only, never
+    a key value.
+    """
+    model = str(get_settings().config.get("model", "") or "")
+    provider = _active_provider(model)
+    ok, detail = _check_provider_key(LiteLLMAIHandler(), provider)
+    return None if ok else detail
+
+
 async def _check_model_ping(handler: LiteLLMAIHandler, model: str) -> tuple[bool, str]:
     try:
         await handler.chat_completion(model, _PING_SYSTEM, _PING_USER)

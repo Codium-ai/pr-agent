@@ -17,6 +17,7 @@ from pr_agent.algo.artifacts import inject_artifact_context as _inject_artifact_
 from pr_agent.algo.run_details import command_failed, init_run_details
 from pr_agent.algo.setting_utils import normalize_setting_list
 from pr_agent.config_loader import get_settings
+from pr_agent.doctor import missing_provider_key_reason
 from pr_agent.git_providers import get_git_provider
 from pr_agent.git_providers.github_provider import IncompletePullRequestFilesError
 from pr_agent.git_providers.utils import apply_repo_settings
@@ -224,13 +225,19 @@ async def run_action():
     # Set the environment variables in the settings
     if OPENAI_KEY:
         get_settings().set("OPENAI.KEY", OPENAI_KEY)
-    else:
-        # Might not be set if the user is using models not from OpenAI
-        print("OPENAI_KEY not set")
     if OPENAI_ORG:
         get_settings().set("OPENAI.ORG", OPENAI_ORG)
     get_settings().set("GITHUB.USER_TOKEN", GITHUB_TOKEN)
     get_settings().set("GITHUB.DEPLOYMENT_TYPE", "user")
+    # Gate on the active provider's key before any tool runs: carrying on with the
+    # placeholder only fails every call a full run later (#4195, #4324). Keyless
+    # providers defer to the run, as in `pr-agent doctor`.
+    missing_key_reason = missing_provider_key_reason()
+    if missing_key_reason:
+        print(f"Stopping before any tool runs: {missing_key_reason}. "
+              "Add it to this workflow's env; 'pr-agent doctor' preflights the same check by hand.")
+        _mark_action_failed()
+        return
     enable_output = get_setting_or_env("GITHUB_ACTION_CONFIG.ENABLE_OUTPUT", True)
     if isinstance(enable_output, str):
         enable_output = enable_output.lower().strip() not in ("false", "0", "no", "")
