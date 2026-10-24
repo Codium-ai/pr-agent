@@ -258,12 +258,13 @@ async def run_action():
     # Keyless providers defer to the run, as in `pr-agent doctor`.
     missing_key_reason = missing_provider_key_reason()
     if missing_key_reason:
-        # The reason names environment variables only; redact anyway so nothing key-
-        # derived can ever reach the step log, matching the doctor output path.
-        print(f"Stopping before any tool runs: {redact_credentials(missing_key_reason)}. "
-              "Add it to this workflow's env; 'pr-agent doctor' preflights the same check by hand.")
-        _mark_action_failed()
-        return
+        # Raised rather than printed: the reason becomes the job's error line, and no
+        # string derived near key handling flows through a logging sink. It names
+        # environment variables only; redact as belt and braces.
+        raise SystemExit(
+            f"Stopping before any tool runs: {redact_credentials(missing_key_reason)}. "
+            "Add it to this workflow's env; 'pr-agent doctor' preflights the same check by hand."
+        )
 
     # Append the response language in the extra instructions
     try:

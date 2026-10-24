@@ -24,23 +24,14 @@ def action_env(monkeypatch, tmp_path):
     monkeypatch.delenv("OPENAI.KEY", raising=False)
 
 
-async def test_missing_key_stops_before_tools_and_fails_the_action(
-    monkeypatch, action_env, capsys
+async def test_missing_key_stops_before_tools_with_the_reason(
+    monkeypatch, action_env
 ):
     reason = "no API key for 'openai'; set OPENAI_API_KEY or the provider settings key"
     monkeypatch.setattr(github_action_runner, "missing_provider_key_reason", lambda: reason)
 
-    status = github_action_runner._ActionStatus()
-    token = github_action_runner._action_status.set(status)
-    try:
+    with pytest.raises(SystemExit, match="Stopping before any tool runs.*OPENAI_API_KEY"):
         await github_action_runner.run_action()
-    finally:
-        github_action_runner._action_status.reset(token)
-
-    out = capsys.readouterr().out
-    assert "Stopping before any tool runs" in out
-    assert "OPENAI_API_KEY" in out
-    assert status.failed is True
 
 
 async def test_repository_settings_are_applied_before_key_gate(monkeypatch, action_env):
@@ -57,14 +48,8 @@ async def test_repository_settings_are_applied_before_key_gate(monkeypatch, acti
         github_action_runner, "get_setting_or_env", lambda key, default=None: default,
     )
 
-    status = github_action_runner._ActionStatus()
-    token = github_action_runner._action_status.set(status)
-    try:
-        await github_action_runner.run_action()
-    finally:
-        github_action_runner._action_status.reset(token)
-
     # A repo-level .pr_agent.toml can select a different provider, so its settings must
     # be applied before the gate judges the active provider's key.
+    with pytest.raises(SystemExit):
+        await github_action_runner.run_action()
     assert order == [("repo_settings", "https://github.com/owner/repo/pull/1"), "gate"]
-    assert status.failed is True
