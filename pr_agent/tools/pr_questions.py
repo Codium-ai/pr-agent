@@ -288,14 +288,6 @@ class PRQuestions:
                 model=model, temperature=get_settings().config.temperature, system=system_prompt, user=user_prompt)
         return response
 
-    def _prepare_no_analyzable_files_answer(self) -> str:
-        answer_header = format_pr_questions_header(
-            escape_markdown=self.git_provider.is_supported("markdown_backslash_escapes")
-        )
-        answer_str = f"{answer_header}\n{_sanitize_slash_commands(self.question_str)}\n\n"
-        answer_str += f"### **Answer:**\n{NO_ANALYZABLE_FILES_NOTE}\n\n"
-        return answer_str
-
     def _prepare_pr_answer(self) -> str:
         model_answer = self.prediction.strip()
         model_answer_sanitized = _sanitize_slash_commands(model_answer)
