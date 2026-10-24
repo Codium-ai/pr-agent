@@ -807,6 +807,15 @@ class PRCodeSuggestions:
             if git_provider._publish_check_run(pr_comment, name):
                 return progress_response if _clean_up_progress_note() else None
 
+        try:
+            require_agent_authorship = (
+                git_provider.supports_review_finding_state() is True
+                and git_provider.is_supported("get_issue_comments") is True
+            )
+        except Exception as error:
+            get_logger().warning(f"Suggestions comment authorship is not available, error: {error}")
+            require_agent_authorship = False
+
         if _supports_code_suggestion_state(git_provider) and max_previous_comments <= 0:
             result = GitProvider.publish_persistent_comment_full(
                 git_provider,
@@ -818,6 +827,7 @@ class PRCodeSuggestions:
                 as_thread=as_thread,
                 identity_marker=identity_marker,
                 legacy_initial_header=legacy_initial_header,
+                require_agent_authorship=require_agent_authorship,
                 fallback_on_error=False,
             )
             if result is not None:
@@ -879,15 +889,20 @@ class PRCodeSuggestions:
                 legacy_comment = None
                 for candidate in git_provider.get_issue_comments_newest_first():
                     body = _comment_body(candidate)
-                    if identity_marker:
-                        if comment_matches_identity(body, identity_marker):
-                            comment = candidate
-                            break
-                        if legacy_comment is None and _is_legacy_suggestions_comment(body):
-                            legacy_comment = candidate
-                    elif comment_matches_identity(body, initial_header):
+                    matches_identity = comment_matches_identity(body, identity_marker or initial_header)
+                    matches_legacy = (
+                        identity_marker
+                        and legacy_comment is None
+                        and _is_legacy_suggestions_comment(body)
+                    )
+                    if not (matches_identity or matches_legacy):
+                        continue
+                    if require_agent_authorship and not git_provider.is_comment_authored_by_pr_agent(candidate):
+                        continue
+                    if matches_identity:
                         comment = candidate
                         break
+                    legacy_comment = candidate
                 if comment is None and identity_marker:
                     comment = legacy_comment
                 if comment:
