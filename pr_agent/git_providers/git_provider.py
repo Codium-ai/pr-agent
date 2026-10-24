@@ -160,6 +160,11 @@ _ANTHROPIC_KEY_RE = re.compile(r"\bsk-ant-[A-Za-z0-9_-]{32,255}\b")
 _OPENAI_KEY_RE = re.compile(r"\bsk-(?:proj|svcacct|admin)-[A-Za-z0-9_-]{32,255}\b|\bsk-[A-Za-z0-9]{40,255}\b")
 _GOOGLE_API_KEY_RE = re.compile(r"\bAIza[A-Za-z0-9_-]{32,42}(?![A-Za-z0-9_-])")
 _SLACK_TOKEN_RE = re.compile(r"\bxox[a-z]-[0-9A-Za-z-]{10,255}\b|\bxapp-[0-9A-Za-z-]{10,255}\b")
+# Consume the full Stripe payload without backtracking when key lengths vary.
+_STRIPE_KEY_RE = re.compile(r"\b[rs]k_(?:live|test)_[A-Za-z0-9]{24,}+(?![A-Za-z0-9_])")
+# Twilio SK values are API key SIDs, not their unprefixed secrets.
+_TWILIO_API_KEY_SID_RE = re.compile(r"\bSK[0-9a-fA-F]{32}(?![A-Za-z0-9_])")
+_SENDGRID_API_KEY_RE = re.compile(r"\bSG\.[A-Za-z0-9_-]{22}\.[A-Za-z0-9_-]{43}(?![A-Za-z0-9_-])")
 
 
 # The reaction PR-Agent has always added when it picks a comment command up. Used as the
@@ -196,6 +201,8 @@ def redact_credentials(text, *, redaction_counts: dict[str, int] | None = None) 
         ("url_userinfo", _URL_USERINFO_RE, lambda m: m.group("scheme")),
         ("authorization_header", _AUTH_HEADER_RE, lambda m: m.group(1) + "<redacted>"),
         ("credential_assignment", _CREDENTIAL_ASSIGNMENT_RE, _redact_credential_assignment),
+        # Match the whole SendGrid key before bare-token patterns can match inside it.
+        ("sendgrid_api_key", _SENDGRID_API_KEY_RE, "<redacted>"),
         ("gitlab_token", _GITLAB_TOKEN_RE, "<redacted>"),
         ("aws_access_key", _AWS_ACCESS_KEY_RE, "<redacted>"),
         ("github_token", _GITHUB_TOKEN_RE, "<redacted>"),
@@ -204,6 +211,8 @@ def redact_credentials(text, *, redaction_counts: dict[str, int] | None = None) 
         ("openai_key", _OPENAI_KEY_RE, "<redacted>"),
         ("google_api_key", _GOOGLE_API_KEY_RE, "<redacted>"),
         ("slack_token", _SLACK_TOKEN_RE, "<redacted>"),
+        ("stripe_key", _STRIPE_KEY_RE, "<redacted>"),
+        ("twilio_api_key_sid", _TWILIO_API_KEY_SID_RE, "<redacted>"),
     ):
         count = 0
 
