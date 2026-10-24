@@ -2327,16 +2327,20 @@ def test_gitlab_list_repo_directory_reads_all_pages():
     project = Mock()
     project.default_branch = "main"
     project.repository_tree.side_effect = [
-        [{"type": "blob", "path": f"docs/adr/{index:04}.md"} for index in range(100)],
-        [{"type": "blob", "path": f"docs/adr/{index:04}.md"} for index in range(100, 200)],
-        [{"type": "blob", "path": "docs/adr/0200.md"}],
-    ]
+        [
+            {"type": "blob", "path": f"docs/adr/{index:04}.md"}
+            for index in range(page * 100, (page + 1) * 100)
+        ]
+        for page in range(11)
+    ] + [[{"type": "blob", "path": "docs/adr/1100.md"}]]
     provider.gl = Mock()
     provider.gl.projects.get.return_value = project
     provider.id_project = "group/repo"
 
-    assert len(provider.list_repo_directory("docs/adr", from_default_branch=True)) == 201
-    assert [call.kwargs["page"] for call in project.repository_tree.call_args_list] == [1, 2, 3]
+    assert provider.list_repo_directory("docs/adr", from_default_branch=True) == [
+        f"docs/adr/{index:04}.md" for index in range(1101)
+    ]
+    assert [call.kwargs["page"] for call in project.repository_tree.call_args_list] == list(range(1, 13))
 
 
 def test_gitlab_list_repo_directory_missing_directory_is_empty():
