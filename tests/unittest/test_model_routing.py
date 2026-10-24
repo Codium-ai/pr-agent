@@ -288,7 +288,7 @@ class TestRouting:
             {"max_files": 4, "model": "small-model"},
         ])
 
-        assert _models_tried(_pr(num_files=2, hunks_per_file=1)) == ["small-model"]
+        assert _models_tried(_pr(num_files=1, hunks_per_file=1)) == ["small-model"]
 
     def test_routed_primary_is_recorded_as_the_model_used(self, settings):
         init_run_details()
