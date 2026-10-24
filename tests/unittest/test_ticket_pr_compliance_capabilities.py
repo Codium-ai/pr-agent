@@ -1,5 +1,4 @@
 import asyncio
-import traceback
 from unittest.mock import MagicMock
 
 import pytest
@@ -18,7 +17,6 @@ from pr_agent.git_providers import (
     PlainDiffGitProvider,
 )
 from pr_agent.tools.ticket_pr_compliance_check import (
-    LinkedWorkItemAcquisitionError,
     _provider_supports,
     extract_and_cache_pr_tickets,
     extract_tickets,
@@ -362,19 +360,14 @@ async def test_extract_tickets_azure_substitute_handles_item_error():
 
 
 @pytest.mark.asyncio
-async def test_extract_tickets_translates_linked_work_item_failure_without_secret_traceback():
-    sentinel = "azure-token-shaped-secret"
-    provider = _CustomAzureSubstitute(error=RuntimeError(sentinel))
+async def test_extract_tickets_linked_work_item_failure_is_fail_soft():
+    provider = _CustomAzureSubstitute(error=RuntimeError("provider detail"))
 
-    with pytest.raises(LinkedWorkItemAcquisitionError) as exc_info:
-        await extract_tickets(provider)
-
-    assert str(exc_info.value) == "Failed to acquire linked work items. Please retry the request."
-    assert sentinel not in "".join(traceback.format_exception(exc_info.value))
+    assert await extract_tickets(provider) == []
 
 
 @pytest.mark.asyncio
-async def test_extract_and_cache_propagates_linked_failure_without_mutation_or_ancillary_results(monkeypatch):
+async def test_extract_and_cache_linked_failure_leaves_ticket_context_empty(monkeypatch):
     provider = _CustomAzureSubstitute(error=RuntimeError("provider detail"))
     vars_ = {}
     cached = []
@@ -383,27 +376,13 @@ async def test_extract_and_cache_propagates_linked_failure_without_mutation_or_a
         "pr_reviewer.require_ticket_analysis_review": True,
         "related_tickets": cached,
     }.get(key, default)
-
-    async def prefetched_results(*args):
-        return [{"ticket_id": "prefetched"}]
-
-    jira = MagicMock()
     monkeypatch.setattr("pr_agent.tools.ticket_pr_compliance_check.get_settings", lambda: settings)
-    monkeypatch.setattr(
-        "pr_agent.tools.ticket_pr_compliance_check._fetch_asana_ticket_contents", prefetched_results
-    )
-    monkeypatch.setattr(
-        "pr_agent.tools.ticket_pr_compliance_check._fetch_linear_ticket_contents", prefetched_results
-    )
-    monkeypatch.setattr("pr_agent.tools.ticket_pr_compliance_check.add_jira_tickets", jira)
 
-    with pytest.raises(LinkedWorkItemAcquisitionError):
-        await extract_and_cache_pr_tickets(provider, vars_)
+    assert await extract_and_cache_pr_tickets(provider, vars_) is None
 
     assert cached == []
     assert vars_ == {}
     settings.set.assert_not_called()
-    jira.assert_not_called()
 
 
 @pytest.mark.asyncio
