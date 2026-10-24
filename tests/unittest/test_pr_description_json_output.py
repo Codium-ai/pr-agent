@@ -2,6 +2,7 @@ import json
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+import yaml
 
 from pr_agent.algo.review_json_output import review_json_output_path
 from pr_agent.algo.run_details import add_token_usage
@@ -36,8 +37,8 @@ def _make_tool():
     tool.user_description = ""
     tool.prediction = None
     tool.progress_response = None
-    tool._prepare_data = MagicMock()
     tool._prepare_labels = MagicMock(return_value=[])
+    tool.keys_fix = []
     tool._prepare_pr_answer = MagicMock(return_value=("T", "B", "W"))
     tool._get_description_coverage_footer = MagicMock(return_value="")
     return tool
@@ -75,7 +76,7 @@ def _stub_model(monkeypatch, tool, usage=None):
     async def fake_retry(func, *args, **kwargs):
         if usage:
             add_token_usage(usage)
-        tool.prediction = dict(_PREDICTION)
+        tool.prediction = yaml.safe_dump(_PREDICTION)
         return tool.prediction
 
     monkeypatch.setattr(pr_description_module, "retry_with_fallback_models", fake_retry)

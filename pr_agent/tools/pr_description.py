@@ -171,7 +171,7 @@ class PRDescription:
 
             if self.prediction:
                 self._prepare_data()
-                self._write_json_output(self.prediction)
+                self._write_json_output(self.data)
             else:
                 get_logger().warning(f"Empty prediction, PR: {self.pr_id}")
                 return None
