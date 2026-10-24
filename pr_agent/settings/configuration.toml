@@ -316,7 +316,7 @@ enable_help_text=false
 [github]
 # The type of deployment to create. Valid values are 'app' or 'user'.
 deployment_type = "user"
-agent_login = "" # Host-only login PR-Agent posts as when its token cannot call `GET /user`, e.g. "<app-slug>[bot]" for a GitHub App installation token in GitHub Actions. Empty falls back to "github-actions[bot]" under Actions. Repository settings and comment arguments cannot change it
+agent_login = "" # Host-only login PR-Agent posts as when its token cannot call `GET /user`, e.g. `<app-slug>[bot]` for a GitHub App installation token in GitHub Actions. Empty falls back to `github-actions[bot]` under Actions. Repository settings and comment arguments cannot change it
 ratelimit_retries = 5
 # PyGithub 2.x enables request pacing and transient retries by default (0.25s
 # between requests, 1s between writes, 10 retries); PyGithub 1.59 applied none.
