@@ -1082,7 +1082,7 @@ class GitProvider(ABC):
         require_agent_authorship: bool = False,
     ):
         """Yield matching comments in identity-priority and newest-first order."""
-        comments = self.get_issue_comments_newest_first()
+        comments = tuple(self.get_issue_comments_newest_first())
         for identifier in identifiers:
             if not identifier:
                 continue
