@@ -340,6 +340,7 @@ _This section only documents commented-out examples; see the [TOML source](https
 | Key | Default | Description |
 | --- | --- | --- |
 | `deployment_type` | "user" | The type of deployment to create. Valid values are 'app' or 'user'. |
+| `agent_login` | "" | Host-only login PR-Agent posts as when its token cannot call `GET /user`, e.g. `<app-slug>[bot]` for a GitHub App installation token in GitHub Actions. Empty falls back to `github-actions[bot]` under Actions. Repository settings and comment arguments cannot change it |
 | `ratelimit_retries` | 5 |  |
 | `seconds_between_requests` | 0 | seconds between API requests; 0 = no pacing (1.59 behaviour) |
 | `seconds_between_writes` | 0 | seconds between write calls; 0 = no pacing (1.59 behaviour) |
