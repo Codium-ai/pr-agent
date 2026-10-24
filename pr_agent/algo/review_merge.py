@@ -54,8 +54,8 @@ def merge_review_chunks(chunk_outputs: list[dict],
     `max_findings` is the per-review limit from `num_max_findings`. Each chunk may report up
     to that many findings about its own part of the diff, so the union can be several times
     larger; passing the limit cuts the merged list back to what a single-call review would
-    publish. A cut finding is treated as left out rather than absent, which the
-    `len(findings) < num_max_findings` resolution guard already reads correctly.
+    publish. `all_key_issues` returns the list before this cut, for callers that must tell a cut
+    finding from an absent one.
     """
     reviews = [chunk["review"] for chunk in chunk_outputs
                if isinstance(chunk, dict) and isinstance(chunk.get("review"), dict)]
@@ -114,6 +114,26 @@ def _cap_key_issues(review: dict, max_findings: int | None) -> None:
         review["key_issues_to_review"] = issues[:limit]
 
 
+def _chunk_key_issues(chunk_outputs: list[dict]) -> list[list]:
+    per_chunk = [chunk["review"].get("key_issues_to_review") for chunk in chunk_outputs
+                 if isinstance(chunk, dict) and isinstance(chunk.get("review"), dict)]
+    return [issues if isinstance(issues, list) else [] for issues in per_chunk]
+
+
+def all_key_issues(chunk_outputs: list[dict]) -> list:
+    """Return every distinct finding the chunks reported, before `max_findings` cuts the list."""
+    return _union_of_lists(_key_issue_identity)(_chunk_key_issues(chunk_outputs))
+
+
+def chunk_hit_findings_limit(chunk_outputs: list[dict], max_findings: int) -> bool:
+    """Say whether a chunk reported `max_findings` findings on its own.
+
+    The model may have stopped at its allowance, so a finding it never listed is not known to be
+    gone. A merge that cuts the union is different: `all_key_issues` still holds what it cut.
+    """
+    return any(len(issues) >= max_findings for issues in _chunk_key_issues(chunk_outputs))
+
+
 def _rule_name(key: str) -> str:
     normalized = str(key).strip().lower()
     # the effort field carries its scale in its name: 'estimated_effort_to_review_[1-5]'
@@ -131,6 +151,10 @@ def _first_non_empty(values: list[Any]) -> Any:
 
 def _normalize_text(value: Any) -> str:
     return _WHITESPACE_RE.sub(" ", str(value if value is not None else "")).strip().lower()
+
+
+def _normalize_path(value: Any) -> str:
+    return str(value if value is not None else "").strip()
 
 
 def _as_int(value: Any) -> int | None:
@@ -241,7 +265,7 @@ def _union_of_lists(identity: Callable[[Any], Hashable]) -> Callable[[list[Any]]
 def _key_issue_identity(issue: Any) -> Hashable:
     if not isinstance(issue, dict):
         return _normalize_text(issue)
-    return (_normalize_text(issue.get("relevant_file")),
+    return (_normalize_path(issue.get("relevant_file")),
             _normalize_text(issue.get("issue_header")),
             _normalize_text(issue.get("issue_content")))
 
@@ -249,7 +273,7 @@ def _key_issue_identity(issue: Any) -> Hashable:
 def _todo_identity(todo: Any) -> Hashable:
     if not isinstance(todo, dict):
         return _normalize_text(todo)
-    return (_normalize_text(todo.get("relevant_file")),
+    return (_normalize_path(todo.get("relevant_file")),
             _normalize_text(todo.get("line_number")),
             _normalize_text(todo.get("content")))
 
@@ -259,7 +283,7 @@ def _sub_pr_identity(sub_pr: Any) -> Hashable:
         return _normalize_text(sub_pr)
     relevant_files = sub_pr.get("relevant_files")
     if isinstance(relevant_files, list) and relevant_files:
-        return frozenset(_normalize_text(name) for name in relevant_files)
+        return frozenset(_normalize_path(name) for name in relevant_files)
     return _normalize_text(sub_pr.get("title"))
 
 
@@ -281,9 +305,9 @@ def _merge_priority_files(values: list[Any]) -> list:
     for value in values:
         for item in value if isinstance(value, list) else []:
             name = str(item).strip()
-            if not name or name.lower() in seen:
+            if not name or name in seen:
                 continue
-            seen.add(name.lower())
+            seen.add(name)
             merged.append(name)
     return merged
 

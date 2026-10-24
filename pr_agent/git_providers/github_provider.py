@@ -251,7 +251,7 @@ class GithubProvider(GitProvider):
         # provider was initialized with, or an issue:
         if repo_git_url or self.issue_main:
             desired_branch = desired_branch if repo_git_url else self.issue_main.repository.default_branch
-            html_url = repo_git_url if repo_git_url else self.issue_main.html_url
+            html_url = repo_git_url or self.issue_main.html_url
             parsed_git_url = urlparse(html_url)
             scheme_and_netloc = parsed_git_url.scheme + "://" + parsed_git_url.netloc
             repo_path = self._get_owner_and_repo_path(html_url)
@@ -310,7 +310,9 @@ class GithubProvider(GitProvider):
                 if commit.commit.message.startswith(f"Merge branch '{self._get_repo().default_branch}'"):
                     get_logger().info(f"Skipping merge commit {commit.commit.message}")
                     continue
-                self.unreviewed_files_map.update({file.filename: file for file in commit.files})
+                self.unreviewed_files_map.update({
+                    file.filename: file for file in commit.get_files(commit_files_per_page=300)
+                })
         else:
             get_logger().info("No previous review found, will review the entire PR")
             self.incremental.is_incremental = False
@@ -341,8 +343,14 @@ class GithubProvider(GitProvider):
             self.comments = list(self.pr.get_issue_comments())
         identifiers = get_pr_review_comment_identifiers(full=full, incremental=incremental)
         for index in range(len(self.comments) - 1, -1, -1):
-            if comment_matches_any_identity(self.comments[index].body, identifiers):
-                return self.comments[index]
+            comment = self.comments[index]
+            if not comment_matches_any_identity(comment.body, identifiers):
+                continue
+            try:
+                if self.is_comment_authored_by_pr_agent(comment):
+                    return comment
+            except RuntimeError:
+                get_logger().debug("Could not verify the author of a GitHub review anchor")
         return None
 
     @staticmethod
@@ -611,7 +619,8 @@ class GithubProvider(GitProvider):
                                    final_update_message=True,
                                    as_thread: bool = False,
                                    identity_marker: str | None = None,
-                                   legacy_initial_header: str | None = None):
+                                   legacy_initial_header: str | None = None,
+                                   require_agent_authorship: bool = False):
         if get_settings().github.publish_as_check_run:
             if self._publish_check_run(pr_comment, name):
                 return
@@ -624,6 +633,7 @@ class GithubProvider(GitProvider):
             as_thread=as_thread,
             identity_marker=identity_marker,
             legacy_initial_header=legacy_initial_header,
+            require_agent_authorship=require_agent_authorship,
         )
 
     def supports_review_comment_identity(self) -> bool:
@@ -693,6 +703,10 @@ class GithubProvider(GitProvider):
         that GitHub reserves the `[bot]` suffix, so no human account can hold this login. It
         applies only when `GITHUB_ACTIONS=true` and `GET /user` failed; a deployment that can
         resolve its real login never reaches it.
+
+        When `github.agent_login` is set (host-only), it is used instead of that fallback, so a
+        workflow that posts with a GitHub App installation token can name the app's
+        `<app-slug>[bot]` login.
         """
         try:
             login = self.get_user_id()
@@ -701,6 +715,12 @@ class GithubProvider(GitProvider):
             login = ""
         if isinstance(login, str) and login.strip():
             return login.strip()
+        # A GitHub App installation token cannot call `GET /user` either, but it posts as
+        # `<app-slug>[bot]`, not `github-actions[bot]`. The operator names that login here;
+        # the setting is host-only because it decides which comments PR-Agent may edit.
+        configured = get_settings().get("GITHUB.AGENT_LOGIN", "")
+        if isinstance(configured, str) and configured.strip():
+            return configured.strip()
         if os.getenv("GITHUB_ACTIONS", "").strip().lower() == "true":
             return "github-actions[bot]"
         return ""
@@ -1058,6 +1078,16 @@ class GithubProvider(GitProvider):
     def supports_thread_resolution(self) -> bool:
         return True
 
+    def _post_graphql(self, query: str) -> tuple[int, dict, str]:
+        """POST a GraphQL document and return PyGithub's raw ``(status, headers, body)``.
+
+        PyGithub resolves a relative path under the REST prefix, so "/graphql" becomes "/api/v3/graphql"
+        on GitHub Enterprise Server. ``graphql_url`` is the endpoint PyGithub derives from ``base_url``
+        instead: "/api/graphql" there and "/graphql" on github.com.
+        """
+        requester = self.github_client._Github__requester
+        return requester.requestJson("POST", requester.graphql_url, input={"query": query})
+
     def _review_thread_nodes(self, *, root_only: bool = False):
         """List review threads, optionally fetching only their root comment IDs."""
         owner, repo_name = self.repo.split("/")
@@ -1199,9 +1229,7 @@ class GithubProvider(GitProvider):
                 }}
             }}
             """
-            resolve_tuple = self.github_client._Github__requester.requestJson(
-                "POST", "/graphql", input={"query": mutation}
-            )
+            resolve_tuple = self._post_graphql(mutation)
             if not isinstance(resolve_tuple, tuple) or len(resolve_tuple) != 3:
                 get_logger().error(f"Unexpected mutation response format for thread {thread_id}: {type(resolve_tuple)}")
                 return False
@@ -1524,7 +1552,7 @@ class GithubProvider(GitProvider):
             if config_branch == default_branch:
                 # The same root was already absent at this snapshot; do not resolve it again.
                 self._repo_settings_snapshot = config_snapshot
-                return settings_files if settings_files else ""
+                return settings_files or ""
             default_snapshot = self._resolve_settings_snapshot(default_branch)
             contents = self.repo_obj.get_contents(".pr_agent.toml", ref=default_snapshot[0]).decoded_content
             self._repo_settings_snapshot = default_snapshot
@@ -1543,7 +1571,7 @@ class GithubProvider(GitProvider):
         except (RequestException, AttributeError, binascii.Error, AssertionError) as e:
             get_logger().warning(f"Failed to load .pr_agent.toml file, error: {e}")
 
-        return settings_files if settings_files else ""
+        return settings_files or ""
 
     def get_repo_settings_tree(self, ref: str = "") -> tuple[list[str], str]:
         """List settings at the root acquisition's tree, returning its commit for content reads."""
@@ -1576,13 +1604,16 @@ class GithubProvider(GitProvider):
             return self._list_config_tree_paths(repo, tree_sha), commit_sha
 
     def _list_config_tree_paths(self, repo, ref: str) -> list[str]:
-        """Fetch a recursive tree at *ref* and return its `.pr_agent.toml` blob paths.
+        """Reuse the latest immutable tree's `.pr_agent.toml` blob paths within this provider.
 
         A truncated tree (GitHub caps recursive trees at 100k entries / 7 MB and sets
         ``truncated``) cannot be trusted to name every config, so it degrades to no
         per-directory settings with a warning rather than applying an incomplete, silent
         subset. The root config is unaffected.
         """
+        cached = getattr(self, "_repo_settings_tree_cache", None)
+        if cached is not None and cached[0] is repo and cached[1] == ref:
+            return list(cached[2])
         tree = repo.get_git_tree(ref, recursive=True)
         if getattr(tree, "truncated", False):
             get_logger().warning(
@@ -1590,7 +1621,10 @@ class GithubProvider(GitProvider):
                 "limit; skipping per-directory settings for this repository"
             )
             return []
-        return self._extract_config_tree_paths(tree)
+        paths = self._extract_config_tree_paths(tree)
+        # Retain only filtered paths from one tree, not the full API response.
+        self._repo_settings_tree_cache = (repo, ref, tuple(paths))
+        return paths
 
     @staticmethod
     def _extract_config_tree_paths(tree) -> list[str]:
@@ -1639,6 +1673,25 @@ class GithubProvider(GitProvider):
                     artifact={"status": e.status})
                 return ""
             # Transient/unexpected errors propagate so the caller does not cache the failure.
+            raise
+
+    def list_repo_directory(self, dir_path: str, from_default_branch: bool = False) -> list[str] | None:
+        try:
+            if from_default_branch:
+                ref = None
+            else:
+                base = getattr(getattr(self, "pr", None), "base", None)
+                ref = getattr(base, "sha", None) or getattr(base, "ref", None)
+            if ref:
+                entries = self.repo_obj.get_contents(dir_path, ref=ref)
+            else:
+                entries = self.repo_obj.get_contents(dir_path)
+            if not isinstance(entries, list):
+                return []
+            return [entry.path for entry in entries if getattr(entry, "type", None) == "file"]
+        except GithubException as e:
+            if e.status == 404:
+                return []
             raise
 
     def get_repo_file_content(self, file_path: str, from_default_branch: bool = False):
@@ -1905,6 +1958,7 @@ class GithubProvider(GitProvider):
             return Github(
                 auth=self.auth,
                 base_url=self.base_url,
+                per_page=100,
                 seconds_between_requests=seconds_between_requests,
                 seconds_between_writes=seconds_between_writes,
                 retry=retry,
@@ -2007,7 +2061,17 @@ class GithubProvider(GitProvider):
         return head_name.casefold() == base_name.casefold()
 
     def _get_pr_file_content(self, file: FilePatchInfo, sha: str, path: str = None) -> str:
-        return self.get_pr_file_content(path or file.filename, sha)
+        file_path = path or file.filename
+        cache = getattr(self, "_revision_file_contents", None)
+        if cache is None:
+            cache = self._revision_file_contents = {}
+        key = (self.repo, sha, file_path)
+        if key in cache:
+            return cache[key]
+        content = self.get_pr_file_content(file_path, sha)
+        if content:
+            cache[key] = content
+        return content
 
     def publish_labels(self, pr_types):
         try:
@@ -2166,8 +2230,7 @@ class GithubProvider(GitProvider):
                 }}
             }}
             """
-            response_tuple = self.github_client._Github__requester.requestJson("POST", "/graphql",
-                                                                               input={"query": query})
+            response_tuple = self._post_graphql(query)
 
             if isinstance(response_tuple, tuple) and len(response_tuple) == 3:
                 response_json = json.loads(response_tuple[2])

@@ -121,10 +121,14 @@ type or status code, since request error messages can embed the (secret-bearing)
 ## Extending delivery
 
 `push_outputs()` in `pr_agent/algo/run_output.py` builds the record once and isolates failures
-for each selected destination. Delivery strategies live in `pr_agent/algo/output_sinks.py`:
-each implements `OutputSink.send(record, cfg)`, and `create_output_sink()` selects the strategy
-from `OUTPUT_SINK_TYPES`. Registry order determines delivery order, with local writes first;
-duplicate channel entries still result in a single delivery.
+for each selected destination. The tools deliver from an event loop, so they call
+`push_outputs_async()`, which runs the delivery in a worker thread and awaits it: a slow
+destination does not stall the other pull requests the server is handling, and the output
+still reaches the sink before the command returns. Delivery strategies live in
+`pr_agent/algo/output_sinks.py`: each implements `OutputSink.send(record, cfg)`, and
+`create_output_sink()` selects the strategy from `OUTPUT_SINK_TYPES`. Registry order
+determines delivery order, with local writes first; duplicate channel entries still result
+in a single delivery.
 
 To add a destination, implement its strategy and register it, then add any required host-only
 settings, documentation, and provider-specific tests. HTTP strategies must validate destinations

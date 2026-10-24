@@ -36,8 +36,15 @@ from pr_agent.algo.pr_processing import (
 )
 from pr_agent.algo.prompt_fragments import render_diff_hunk_format
 from pr_agent.algo.repo_context import build_repo_context
-from pr_agent.algo.run_details import init_run_details, record_command_failure, record_model_used
-from pr_agent.algo.run_output import push_outputs, show_relevant_configurations, show_run_details
+from pr_agent.algo.review_json_output import review_json_output_path, write_review_json_output
+from pr_agent.algo.run_details import (
+    get_run_details,
+    init_run_details,
+    record_command_failure,
+    record_model_used,
+)
+from pr_agent.algo.run_output import push_outputs_async, show_relevant_configurations, show_run_details
+from pr_agent.algo.setting_utils import normalize_setting_list
 from pr_agent.algo.skills_loader import get_skills_context
 from pr_agent.algo.token_budget import AttemptTokenBudget, FittedPrompt
 from pr_agent.algo.token_handler import TokenHandler
@@ -435,6 +442,7 @@ class PRCodeSuggestions:
             # Handle the case where the PR has no suggestions
             if (data is None or 'code_suggestions' not in data or not data['code_suggestions']):
                 await self.publish_no_suggestions()
+                self._write_json_output({"code_suggestions": []})
                 return
 
             # publish the suggestions
@@ -451,12 +459,13 @@ class PRCodeSuggestions:
                     ]
                     if not data['code_suggestions']:
                         await self.publish_no_suggestions()
+                        self._write_json_output(data)
                         return
 
                 # Emit to the optional external sinks before touching the provider, so a sink
                 # still receives the suggestions if publishing them to the PR fails.
                 markdown = render_suggestions_markdown(data) + self._get_suggestions_coverage_footer()
-                push_outputs("improve", payload=data, markdown=markdown)
+                await push_outputs_async("improve", payload=data, markdown=markdown)
                 # If a temporary comment was published, remove it
                 self.git_provider.remove_initial_comment()
 
@@ -540,11 +549,13 @@ class PRCodeSuggestions:
                     await self.push_inline_code_suggestions(data)
                     if self.progress_response:
                         self.git_provider.remove_comment(self.progress_response)
+                self._write_json_output(data)
             else:
                 get_logger().info('Code suggestions generated for PR, but not published since publish_output is False.')
                 pr_body = self.generate_summarized_suggestions(data)
                 pr_body += self._get_suggestions_coverage_footer()
                 get_settings().data = {"artifact": pr_body}
+                self._write_json_output(data)
                 return
         except asyncio.CancelledError:
             if self.progress_response is not None:
@@ -637,6 +648,21 @@ class PRCodeSuggestions:
                            f"analysis to fit the token budget: {file_list}.")
         return "\n\n⚠️ **Suggestion coverage:** " + " ".join(details)
 
+    @staticmethod
+    def _write_json_output(data: dict) -> None:
+        """Write the suggestions and the run's token usage to the CLI's --json-output path, if one was given."""
+        if not review_json_output_path.get():
+            return
+        details = get_run_details()
+        usage = {}
+        if details is not None and details.has_token_usage:
+            usage = {
+                "prompt_tokens": details.prompt_tokens,
+                "completion_tokens": details.completion_tokens,
+                "total_tokens": details.total_tokens,
+            }
+        write_review_json_output({"code_suggestions": list(data.get("code_suggestions") or []), "usage": usage})
+
     async def publish_no_suggestions(self):
         coverage_footer = self._get_suggestions_coverage_footer(suggestions_present=False)
         no_suggestions_message = ("No code suggestions found in the successfully analyzed chunks."
@@ -644,8 +670,8 @@ class PRCodeSuggestions:
         pr_body = f"{format_pr_code_suggestions_header()}\n\n{no_suggestions_message}{coverage_footer}"
         if get_settings().config.publish_output:
             markdown = f"## PR Code Suggestions\n\n{no_suggestions_message}{coverage_footer}"
-            push_outputs("improve", payload=getattr(self, "data", None) or {"code_suggestions": []},
-                         markdown=markdown)
+            await push_outputs_async("improve", payload=getattr(self, "data", None) or {"code_suggestions": []},
+                                     markdown=markdown)
         if (get_settings().config.publish_output and
                 get_settings().pr_code_suggestions.get('publish_output_no_suggestions', True)):
             get_logger().warning("No code suggestions found for the PR.")
@@ -849,34 +875,21 @@ class PRCodeSuggestions:
 
         if max_previous_comments > 0:
             try:
-                prev_comments = list(git_provider.get_issue_comments_newest_first())
-                if identity_marker:
-                    comment = next(
-                        (
-                            candidate
-                            for candidate in prev_comments
-                            if comment_matches_identity(_comment_body(candidate), identity_marker)
-                        ),
-                        None,
-                    )
-                    if comment is None:
-                        comment = next(
-                            (
-                                candidate
-                                for candidate in prev_comments
-                                if _is_legacy_suggestions_comment(_comment_body(candidate))
-                            ),
-                            None,
-                        )
-                else:
-                    comment = next(
-                        (
-                            candidate
-                            for candidate in prev_comments
-                            if comment_matches_identity(_comment_body(candidate), initial_header)
-                        ),
-                        None,
-                    )
+                comment = None
+                legacy_comment = None
+                for candidate in git_provider.get_issue_comments_newest_first():
+                    body = _comment_body(candidate)
+                    if identity_marker:
+                        if comment_matches_identity(body, identity_marker):
+                            comment = candidate
+                            break
+                        if legacy_comment is None and _is_legacy_suggestions_comment(body):
+                            legacy_comment = candidate
+                    elif comment_matches_identity(body, initial_header):
+                        comment = candidate
+                        break
+                if comment is None and identity_marker:
+                    comment = legacy_comment
                 if comment:
                     prev_suggestions = _comment_body(comment)
                     comment_url = git_provider.get_comment_url(comment)
@@ -2279,7 +2292,7 @@ class PRCodeSuggestions:
             language_extension_map_org = get_settings().language_extension_map_org
             extension_to_language = {}
             for language, extensions in language_extension_map_org.items():
-                for ext in extensions:
+                for ext in normalize_setting_list(extensions):
                     extension_to_language[ext] = language
 
             pr_body += "<table>"
@@ -2354,8 +2367,9 @@ class PRCodeSuggestions:
                     patch_orig = "\n".join(diff)
                     patch = "\n".join(patch_orig.splitlines()[5:]).strip('\n')
 
+                    fence = get_suggestion_fence(patch)
                     example_code = ""
-                    example_code += f"```diff\n{patch.rstrip()}\n```\n"
+                    example_code += f"{fence}diff\n{patch.rstrip()}\n{fence}\n"
                     if i == 0:
                         pr_body += """<td>\n\n"""
                     else:

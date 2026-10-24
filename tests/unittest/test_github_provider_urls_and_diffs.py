@@ -8,6 +8,7 @@ wiring fake PR/file/repo objects for get_diff_files.
 """
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
+from urllib.parse import parse_qsl, urlsplit
 
 import pytest
 from github import GithubException, RateLimitExceededException
@@ -1088,6 +1089,41 @@ def test_sdk_stable_pages_cache_after_one_fresh_metadata_read(monkeypatch):
     assert provider.pr is original_pr
     assert requester.metadata_reads == 1
     assert requester.page_reads == [1, 2]
+
+
+
+def test_sdk_collects_230_pr_files_in_three_large_pages(monkeypatch):
+    _set_request_context(monkeypatch)
+    requester = Mock(per_page=100, is_not_lazy=False)
+    pr_url = "https://api.github.com/repos/example/project/pulls/7"
+    files_url = f"{pr_url}/files"
+    all_files = [{"filename": f"file-{index}.py", "status": "modified"} for index in range(230)]
+
+    def fetch_page(method, url, parameters=None, headers=None):
+        assert method == "GET"
+        query = dict(parse_qsl(urlsplit(url).query))
+        query.update(parameters or {})
+        assert int(query["per_page"]) == 100
+        page = int(query.get("page", 1))
+        offset = (page - 1) * 100
+        links = {"link": f'<{files_url}?per_page=100&page={page + 1}>; rel="next"'} if page < 3 else {}
+        return links, all_files[offset:offset + 100]
+
+    requester.requestJsonAndCheck.side_effect = fetch_page
+    pr = PullRequest(requester, {}, {
+        "url": pr_url,
+        "head": {"sha": "head"},
+        "base": {"sha": "base", "ref": "main"},
+        "changed_files": len(all_files),
+    }, completed=True)
+    provider = _make_provider_for_file_collection(pr)
+
+    files = provider.get_files()
+
+    assert [file.filename for file in files] == [file["filename"] for file in all_files]
+    assert requester.requestJsonAndCheck.call_count == 3
+    assert provider.get_pr_file_paths() is files
+    assert requester.requestJsonAndCheck.call_count == 3
 
 
 @pytest.mark.parametrize("field,value", [

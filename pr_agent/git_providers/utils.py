@@ -839,7 +839,11 @@ def handle_configurations_errors(config_errors, git_provider):
                         )
                     else:
                         body += f"\n\n**Configuration content:**\n\n```toml\n{configuration_file_content}\n```\n\n"
-                get_logger().warning("Sending a 'configuration error' comment to the PR", artifact={'body': body})
+
+                # Build a minimal log body that excludes raw configuration content
+                log_body = f"{header}\n\n**Error message:**\n`{err_message}`"
+
+                get_logger().warning("Sending a 'configuration error' comment to the PR", artifact={'body': log_body})
                 # git_provider.publish_comment(body)
                 if hasattr(git_provider, 'publish_persistent_comment'):
                     # Use a per-scope name so multiple settings errors (e.g. global + local) don't

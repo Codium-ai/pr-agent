@@ -10,6 +10,7 @@ from starlette_context.middleware import RawContextMiddleware
 
 from pr_agent.agent.pr_agent import PRAgent, prepare_command
 from pr_agent.agent.request_policy import RequestOutcome
+from pr_agent.algo.setting_utils import normalize_setting_list
 from pr_agent.config_loader import get_settings, global_settings
 from pr_agent.git_providers.utils import apply_repo_settings
 from pr_agent.log import LoggingFormat, get_logger, setup_logger
@@ -115,7 +116,7 @@ async def handle_pr_event(body: dict[str, Any], event: str, action: str, agent: 
         #     await agent.handle_request(api_url, command)
     elif action == "synchronized":
         # Handle push to PR
-        commands_on_push = get_settings().get("gitea.push_commands", {})
+        commands_on_push = normalize_setting_list(get_settings().get("gitea.push_commands", {}))
         handle_push_trigger = get_settings().get("gitea.handle_push_trigger", False)
         if not commands_on_push or not handle_push_trigger:
             get_logger().info("Push event, but no push commands found or push trigger is disabled")
@@ -152,7 +153,7 @@ async def _perform_commands_gitea(commands_conf: str, agent: PRAgent, body: dict
     commands = (
         get_pr_commands("gitea")
         if commands_conf == "pr_commands"
-        else get_settings().get(f"gitea.{commands_conf}")
+        else normalize_setting_list(get_settings().get(f"gitea.{commands_conf}"))
     )
     if not commands:
         get_logger().info("New PR, but no auto commands configured")

@@ -56,12 +56,77 @@ def _split_raw_diff(raw_diff: str) -> list[str]:
 _DIFF_HEADER_RE = re.compile(r'^diff --git ("(?:\\.|[^"\\])*"|\S+) ("(?:\\.|[^"\\])*"|\S+)$')
 
 
+def _decode_git_path(token: str) -> str | None:
+    """Decode a path taken from a diff header, undoing Git's C-style quoting."""
+    try:
+        path = ast.literal_eval(token) if token.startswith('"') else token
+        if token.startswith('"') and re.search(r"\\[0-7]{3}", token):
+            path = path.encode("latin-1").decode("utf-8")
+    except (SyntaxError, ValueError, UnicodeError):
+        return None
+    return path
+
+
+def _strip_diff_prefix(path: str) -> str:
+    """Drop the ``a/`` or ``b/`` prefix Git puts in front of a path in a file header."""
+    if path.startswith(("a/", "b/")):
+        return path[2:]
+    return path
+
+
+def _paths_from_patch_headers(patch: str) -> tuple[str, str] | None:
+    """Read the old and new paths from the rename and file headers of a patch.
+
+    A ``diff --git`` header is ambiguous when a path contains a space, but the
+    ``rename from``/``rename to`` and ``---``/``+++`` headers are not. Only the
+    lines before the first hunk are inspected, so a removed line that looks like
+    a header is not mistaken for one.
+    """
+    rename_old = rename_new = None
+    file_old = file_new = None
+    for line in patch.split("\n"):
+        if line.startswith("@@"):
+            break
+        if line.startswith("rename from "):
+            rename_old = line[len("rename from "):].strip()
+        elif line.startswith("rename to "):
+            rename_new = line[len("rename to "):].strip()
+        elif line.startswith("--- "):
+            file_old = line[len("--- "):].split("\t", 1)[0]
+        elif line.startswith("+++ "):
+            file_new = line[len("+++ "):].split("\t", 1)[0]
+
+    if rename_old is not None and rename_new is not None:
+        old = _decode_git_path(rename_old)
+        new = _decode_git_path(rename_new)
+        if old is None or new is None:
+            return None
+        return old, new
+
+    if file_old is None or file_new is None:
+        return None
+    old = _decode_git_path(file_old)
+    new = _decode_git_path(file_new)
+    if old is None or new is None:
+        return None
+    if old == "/dev/null":
+        old = new
+    elif new == "/dev/null":
+        new = old
+    return _strip_diff_prefix(old), _strip_diff_prefix(new)
+
+
 def _diff_header_paths(patch: str) -> tuple[str, str] | None:
     """Read the old and new paths from a Git diff header, including quoted paths."""
     header = patch.split("\n", 1)[0].rstrip("\r")
     match = _DIFF_HEADER_RE.fullmatch(header)
     if not match:
-        # Git leaves paths with spaces unquoted; with an unchanged name the header splits at its midpoint.
+        # Git leaves paths with spaces unquoted, so the header cannot be split reliably.
+        # The rename and file headers of the same patch carry the paths unambiguously.
+        paths = _paths_from_patch_headers(patch)
+        if paths is not None:
+            return paths
+        # With an unchanged name the header splits at its midpoint.
         rest = header[len("diff --git "):]
         mid = len(rest) // 2
         if rest.startswith("a/") and rest[mid:mid + 3] == " b/" and rest[2:mid] == rest[mid + 3:]:
@@ -69,13 +134,8 @@ def _diff_header_paths(patch: str) -> tuple[str, str] | None:
         return None
     paths = []
     for token in match.groups():
-        try:
-            path = ast.literal_eval(token) if token.startswith('"') else token
-            if token.startswith('"') and re.search(r"\\[0-7]{3}", token):
-                path = path.encode("latin-1").decode("utf-8")
-        except (SyntaxError, ValueError, UnicodeError):
-            return None
-        if not path.startswith(("a/", "b/")):
+        path = _decode_git_path(token)
+        if path is None or not path.startswith(("a/", "b/")):
             return None
         paths.append(path[2:])
     return paths[0], paths[1]
@@ -187,7 +247,7 @@ class BitbucketProvider(GitProvider):
                 get_logger().warning(f"Failed to load local .pr_agent.toml file, status: {response.status_code}")
         except Exception as e:
             get_logger().warning(f"Failed to load local .pr_agent.toml file, error: {e}")
-        return settings_files if settings_files else ""
+        return settings_files or ""
 
     def _get_global_settings_cache_key(self, workspace: str) -> str:
         return f"bitbucket:{workspace}"

@@ -154,6 +154,12 @@ class PRUpdateChangelog:
                 self._publish_changelog_read_error_fallback()
                 raise changelog_read_error  # noqa: B904
 
+            if self.prediction is None:
+                if changelog_read_error is not None:
+                    self._publish_changelog_read_error_fallback()
+                    raise changelog_read_error
+                return
+
             new_file_content, answer = self._prepare_changelog_update()
 
             if changelog_read_error is not None:
@@ -238,12 +244,19 @@ class PRUpdateChangelog:
             OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD,
             preserve_minimum=True,
         )
-        patches_diff = get_pr_diff(
+        output = get_pr_diff(
             self.git_provider,
             budget.token_handler,
             model,
+            return_remaining_files=True,
             output_token_reserve=output_token_reserve,
         )
+        patches_diff, remaining_files_list = output if isinstance(output, tuple) else (output, [])
+        if not patches_diff and not remaining_files_list:
+            # Every changed file was filtered out (lockfile, asset, ignore rule), so there is
+            # nothing to add to the changelog. Skip the model chain instead of failing the command.
+            get_logger().info("PR has no analyzable files, skipping update_changelog")
+            return
         if not patches_diff:
             raise FallbackEligibleError(f"No PR diff fits the /update_changelog request for {model}")
 
@@ -273,9 +286,15 @@ class PRUpdateChangelog:
 
         # post-process the response
         response = response.strip()
-        if not response:
-            return ""
-        return strip_wrapping_code_fence(response)
+        # Check before stripping, which can turn four backticks into a stray single backtick.
+        fence_pattern = r"(?m)^[^\S\n]*(?:`{3,}[^`\n]*|~{3,}[^~\n]*)$"
+        content = re.sub(fence_pattern, "", response)
+        if content.strip():
+            response = strip_wrapping_code_fence(response)
+            content = re.sub(fence_pattern, "", response)
+        if not content.strip():
+            raise FallbackEligibleError(f"Empty changelog response from {model}")
+        return response
 
     def _prepare_changelog_update(self) -> tuple[str, str]:
         answer = strip_wrapping_code_fence(self.prediction.strip()).strip()
@@ -320,6 +339,9 @@ class PRUpdateChangelog:
         except Exception:
             self._publish_changelog_write_error_fallback(answer)
             raise
+
+        if not self.git_provider.supports_changelog_update_review():
+            return
 
         try:
             await asyncio.sleep(5)  # wait for the file to be updated

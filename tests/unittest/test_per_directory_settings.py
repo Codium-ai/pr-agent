@@ -1175,7 +1175,7 @@ class TestGithubProviderPerDirectory:
                 assert get_settings().pr_reviewer.num_max_findings == 9
                 assert get_settings().pr_reviewer.extra_instructions == "snapshot-a"
             repo.get_commit.assert_called_once_with("main")
-            assert repo.get_git_tree.call_args_list == [call("a-tree", recursive=True)] * 2
+            repo.get_git_tree.assert_called_once_with("a-tree", recursive=True)
             assert repo.get_contents.call_args_list[0] == call(".pr_agent.toml", ref="a")
         provider.get_repo_settings()
         assert repo.get_commit.call_count == 2

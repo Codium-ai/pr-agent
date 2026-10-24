@@ -19,6 +19,7 @@ from starlette_context.middleware import RawContextMiddleware
 from pr_agent.agent.pr_agent import PRAgent, prepare_command
 from pr_agent.agent.request_policy import RequestOutcome
 from pr_agent.algo.run_details import command_failed, init_run_details
+from pr_agent.algo.setting_utils import normalize_setting_list
 from pr_agent.config_loader import get_settings, global_settings
 from pr_agent.git_providers import get_git_provider_with_context
 from pr_agent.git_providers.request_timeout import get_http_request_timeout, refresh_session_request_timeout
@@ -102,7 +103,7 @@ async def _perform_commands_gitlab(commands_conf: str, agent: PRAgent, api_url: 
     commands = (
         get_pr_commands("gitlab")
         if commands_conf == "pr_commands"
-        else get_settings().get(f"gitlab.{commands_conf}", {})
+        else normalize_setting_list(get_settings().get(f"gitlab.{commands_conf}", {}))
     )
     get_settings().set("config.is_auto_command", True)
     for command in commands:
@@ -387,7 +388,7 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
                 if get_settings().get("gitlab.feedback_on_draft_pr", False):
                     # the draft was already getting feedback, so only the push half of this update is new
                     if (object_attributes.get('oldrev')
-                            and get_settings().get("gitlab.push_commands", {})
+                            and normalize_setting_list(get_settings().get("gitlab.push_commands", {}))
                             and get_settings().get("gitlab.handle_push_trigger", False)):
                         get_logger().debug(f'A push event has been received: {url}')
                         async with push_trigger_slot(url, allow_backlog=True, ttl=300) as proceed:
@@ -405,7 +406,7 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
                 # Apply repo settings before checking push commands or handle_push_trigger
                 apply_repo_settings(url)
 
-                commands_on_push = get_settings().get("gitlab.push_commands", {})
+                commands_on_push = normalize_setting_list(get_settings().get("gitlab.push_commands", {}))
                 handle_push_trigger = get_settings().get("gitlab.handle_push_trigger", False)
                 if not commands_on_push or not handle_push_trigger:
                     get_logger().info("Push event, but no push commands found or push trigger is disabled")
@@ -447,7 +448,7 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
                     return JSONResponse(status_code=status.HTTP_200_OK,
                                         content=jsonable_encoder({"message": "success"}))
                 if await is_bot_assigned_as_reviewer(data):
-                    reviewer_commands = get_settings().get("gitlab.reviewer_commands", [])
+                    reviewer_commands = normalize_setting_list(get_settings().get("gitlab.reviewer_commands", []))
                     if (not isinstance(reviewer_commands, list)
                             or not all(isinstance(c, str) for c in reviewer_commands)):
                         get_logger().warning("gitlab.reviewer_commands is not a list of strings, skipping")

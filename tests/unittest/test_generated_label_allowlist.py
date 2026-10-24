@@ -152,7 +152,7 @@ async def test_describe_external_payload_filters_each_label_field_without_mutati
         with (
             patch("pr_agent.tools.pr_description.extract_and_cache_pr_tickets", new=AsyncMock()),
             patch("pr_agent.tools.pr_description.retry_with_fallback_models", new=AsyncMock()),
-            patch("pr_agent.tools.pr_description.push_outputs") as push,
+            patch("pr_agent.tools.pr_description.push_outputs_async") as push,
         ):
             await tool.run()
         push.assert_called_once()

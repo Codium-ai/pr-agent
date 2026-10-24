@@ -33,6 +33,14 @@ If you want to edit [configurations](#configuration-options), add the relevant o
 /describe --pr_description.some_config1=... --pr_description.some_config2=...
 ```
 
+From the CLI, save the generated description and token usage as JSON for a later CI step:
+
+```bash
+pr-agent --pr_url https://github.com/org/repo/pull/123 --json-output describe.json describe
+```
+
+The JSON file is written after the description is assembled. Place `--json-output` before `describe` or `describe_pr`; it needs `--pr_url` and is not available in plain-diff mode.
+
 ### Automatic triggering
 
 To run the `describe` automatically when a PR is opened, define in a [configuration file](../usage-guide/configuration_options.md#local-configuration-file):

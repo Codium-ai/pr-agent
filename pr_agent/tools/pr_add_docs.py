@@ -1,5 +1,4 @@
 import copy
-import textwrap
 from functools import partial
 
 from pr_agent.algo.ai_handlers.base_ai_handler import BaseAiHandler
@@ -67,6 +66,8 @@ class PRAddDocs:
 
             get_logger().info('Preparing PR documentation...')
             await retry_with_fallback_models(self._prepare_prediction, git_provider=self.git_provider)
+            if self.prediction is None:
+                return
             data = self._prepare_pr_code_docs()
             if (not data) or ("Code Documentation" not in data):
                 get_logger().info('No code documentation found for PR.')
@@ -115,14 +116,21 @@ class PRAddDocs:
             ai_handler=self.ai_handler,
             output_token_reserve=output_token_reserve,
         )
-        patches_diff = get_pr_diff(
+        output = get_pr_diff(
             self.git_provider,
             budget.token_handler,
             model,
             add_line_numbers_to_hunks=True,
             disable_extra_lines=False,
+            return_remaining_files=True,
             output_token_reserve=output_token_reserve,
         )
+        patches_diff, remaining_files_list = output if isinstance(output, tuple) else (output, [])
+        if not patches_diff and not remaining_files_list:
+            # Every changed file was filtered out (lockfile, asset, ignore rule), so there is
+            # nothing to document. Skip the model chain instead of failing the command.
+            get_logger().info("PR has no analyzable files, skipping add_docs")
+            return
         if not patches_diff:
             raise FallbackEligibleError("No PR diff fits the /add_docs request")
         fitted = budget.fit_prompt_variable(
@@ -184,6 +192,8 @@ class PRAddDocs:
                 if documentation:
                     new_code_snippet = self.dedent_code(relevant_file, relevant_line, documentation, doc_placement,
                                                         add_original_line=True)
+                    if new_code_snippet is None:
+                        continue
 
                     fence = get_suggestion_fence(new_code_snippet)
                     body = (f"**Suggestion:** Proposed documentation\n{fence}suggestion\n"
@@ -195,9 +205,9 @@ class PRAddDocs:
                 if get_verbosity_level() >= 2:
                     get_logger().info(f"Could not parse code docs: {d}")
 
-        is_successful = self.git_provider.publish_code_suggestions(docs)
         if not docs:
             return None
+        is_successful = self.git_provider.publish_code_suggestions(docs)
         if is_successful is True:
             return True
         if not is_successful:
@@ -220,11 +230,10 @@ class PRAddDocs:
             index += step
         return None
 
-    def dedent_code(self, relevant_file, relevant_lines_start, new_code_snippet, doc_placement='after',
+    def dedent_code(self, relevant_file, relevant_lines_start, new_code_snippet, doc_placement="after",
                     add_original_line=False):
-        try:  # dedent code snippet
-            self.diff_files = self.git_provider.diff_files if self.git_provider.diff_files \
-                else self.git_provider.get_diff_files()
+        try:  # Find the source line that supplies the indentation.
+            self.diff_files = self.git_provider.diff_files or self.git_provider.get_diff_files()
             original_initial_line = None
             file_lines = []
             for file in self.diff_files:
@@ -253,23 +262,37 @@ class PRAddDocs:
                     line = self._indent_reference_line(file_lines, relevant_lines_start - 1, -1)
                 if line is None:
                     return new_code_snippet
-                suggested_initial_line = next(
-                    (snippet_line for snippet_line in new_code_snippet.splitlines() if snippet_line.strip()), "")
-                original_initial_spaces = len(line) - len(line.lstrip())
-                suggested_initial_spaces = len(suggested_initial_line) - len(suggested_initial_line.lstrip())
-                delta_spaces = original_initial_spaces - suggested_initial_spaces
-                if delta_spaces > 0:
-                    new_code_snippet = textwrap.indent(new_code_snippet, delta_spaces * " ").rstrip('\n')
-                if add_original_line:
-                    if doc_placement == 'after':
-                        new_code_snippet = original_initial_line + "\n" + new_code_snippet
-                    else:
-                        new_code_snippet = new_code_snippet.rstrip() + "\n" + original_initial_line
+            else:
+                return new_code_snippet
         except Exception as e:
             if get_verbosity_level() >= 2:
                 get_logger().info(f"Could not dedent code snippet for file {relevant_file}, error: {e}")
+            return new_code_snippet
 
-        return new_code_snippet
+        try:
+            snippet_lines = new_code_snippet.replace('\r\n', '\n').replace('\r', '\n').split('\n')
+            first_line = next((item for item in snippet_lines if item.strip()), None)
+            if first_line is None:
+                return None
+            target_prefix = line[:len(line) - len(line.lstrip())]
+            snippet_prefix = first_line[:len(first_line) - len(first_line.lstrip())]
+            aligned_lines = []
+            for item in snippet_lines:
+                if not item.strip():
+                    aligned_lines.append("")
+                elif item.startswith(snippet_prefix):
+                    aligned_lines.append(target_prefix + item[len(snippet_prefix):])
+                else:
+                    return None
+            aligned = "\n".join(aligned_lines)
+            if add_original_line:
+                if doc_placement == 'after':
+                    return original_initial_line + "\n" + aligned
+                return aligned.rstrip() + "\n" + original_initial_line
+            return aligned
+        except Exception:
+            # Once an anchor exists, never publish documentation that could not be aligned.
+            return None
 
 
 def get_docs_for_language(language, style):

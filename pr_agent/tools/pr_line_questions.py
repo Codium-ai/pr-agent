@@ -12,6 +12,7 @@ from pr_agent.algo.language_handler import build_language_file_matcher
 from pr_agent.algo.pr_processing import OUTPUT_BUFFER_TOKENS_SOFT_THRESHOLD, retry_with_fallback_models
 from pr_agent.algo.run_details import init_run_details
 from pr_agent.algo.run_output import append_run_details
+from pr_agent.algo.skills_loader import get_skills_context
 from pr_agent.algo.token_budget import AttemptTokenBudget
 from pr_agent.algo.token_handler import TokenHandler
 from pr_agent.algo.utils import ModelType, decode_user_text_args
@@ -54,6 +55,11 @@ class PR_LineQuestions:
             "resolve_threads": self.resolve_threads,
             "is_azure_devops": self.git_provider.supports_threaded_pr_questions(),
             "extra_instructions": get_settings().pr_questions.extra_instructions,
+            "skills_context": (
+                get_skills_context()
+                if get_settings().skills.get("enabled", False)
+                else ""
+            ),
         }
         self.token_handler = TokenHandler(self.git_provider.pr,
                                           self.vars,

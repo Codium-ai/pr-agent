@@ -14,6 +14,7 @@ from starlette_context.middleware import RawContextMiddleware
 from pr_agent.agent.pr_agent import PRAgent, prepare_command
 from pr_agent.agent.request_policy import RequestOutcome
 from pr_agent.algo.run_details import command_failed, init_run_details
+from pr_agent.algo.setting_utils import normalize_setting_list
 from pr_agent.config_loader import get_settings, global_settings
 from pr_agent.git_providers import get_git_provider, get_git_provider_with_context
 from pr_agent.git_providers.utils import apply_repo_settings
@@ -186,7 +187,7 @@ async def handle_new_pr_opened(body: dict[str, Any],
     if not (pull_request and api_url):
         get_logger().info(f"Invalid PR event: {action=} {api_url=}")
         return {}
-    if action in get_settings().github_app.handle_pr_actions:  # ['opened', 'reopened', 'ready_for_review']
+    if action in normalize_setting_list(get_settings().github_app.handle_pr_actions, split_commas=True):
         # logic to ignore PRs with specific titles (e.g. "[Auto] ...")
         apply_repo_settings(api_url)
         if get_identity_provider().verify_eligibility("github", sender_id, api_url) is not Eligibility.NOT_ELIGIBLE:
@@ -493,7 +494,7 @@ async def _perform_auto_commands_github(commands_conf: str, agent: PRAgent, body
     commands = (
         get_pr_commands("github_app")
         if commands_conf == "pr_commands"
-        else get_settings().get(f"github_app.{commands_conf}")
+        else normalize_setting_list(get_settings().get(f"github_app.{commands_conf}"))
     )
     if not commands:
         get_logger().info(f"No {commands_conf} configured, skipping auto commands")

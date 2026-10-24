@@ -66,10 +66,11 @@ to-do list.
 | `skip_keys` | [] |  |
 | `custom_reasoning_model` | false | when true, disables system messages and temperature controls for models that don't support chat-style inputs |
 | `response_language` | "en-US" | Language locales code for PR responses in ISO 3166 and ISO 639 format (e.g., "en-US", "it-IT", "zh-CN", ...) |
-| `repo_context_files` | ["AGENTS.md"] | Repository-relative files (e.g. AGENTS.md, CLAUDE.md) to include as AI prompt context; set to [] to disable local context. A structured entry {"repo_id" = ..., "file_path" = ...} selects a sibling default-branch file from the same namespace/owner; repo_id must be in the host-issued repo_context_sibling_repos allowlist below. Reads use the sibling default branch and share repo_context_max_lines; repository settings may select entries, comment arguments cannot override this key |
+| `repo_context_files` | ["AGENTS.md"] | Repository-relative files (e.g. AGENTS.md, CLAUDE.md) to include as AI prompt context; set to [] to disable local context. A nested list is a group of alternatives: only the first one that yields content is used, so a repository keeping the same instructions in several conventions (or symlinking them) sends them once; alternatives must be local paths. A local entry may use a single-directory glob in its file name (e.g. "docs/adr/*.md"), expanded to at most repo_context_max_glob_matches sorted matches on providers that can list directories (GitHub, GitLab). A structured entry {"repo_id" = ..., "file_path" = ...} selects a sibling default-branch file from the same namespace/owner; repo_id must be in the host-issued repo_context_sibling_repos allowlist below. Reads use the sibling default branch and share repo_context_max_lines; repository settings may select entries, comment arguments cannot override this key |
 | `repo_context_from_default_branch` | true | Read repo context files from the repository default branch (trusts only default-branch content). Set to false to read from the PR target branch instead. |
 | `repo_context_max_lines` | 500 | Maximum total rendered lines for repo context, including wrapper tags |
-| `repo_context_sibling_repos` | [] | Host-only list of approved sibling repository identifiers (GitHub owner/repo, GitLab group/project or numeric ID strings) that repo_context_files sibling entries may select. On GitHub, this also approves repositories for linked-issue and sub-issue ticket context. Empty disables sibling reads. Approve only repositories whose content may be disclosed in consuming PRs, because the actor check bounds who triggers a read, not who chose the target or where the output lands. Repository settings and comment arguments cannot change this list. Canonical identities and owning namespaces are checked after resolution |
+| `repo_context_max_glob_matches` | 20 | Maximum number of files one repo_context_files glob entry (e.g. "docs/adr/*.md") expands to, in name order; each match is one file fetch. A repository's .pr_agent.toml may set it, comment arguments cannot. Clamped to 100. Matches still share the repo_context_max_lines budget. |
+| `repo_context_sibling_repos` | [] | Host-only list of approved sibling repository identifiers (GitHub owner/repo, GitLab group/project or numeric ID strings) that repo_context_files sibling entries may select. On GitHub and GitLab, this also approves repositories for cross-repository issue and ticket context. Empty disables sibling reads. Approve only repositories whose content may be disclosed in consuming PRs, because the actor check bounds who triggers a read, not who chose the target or where the output lands. Repository settings and comment arguments cannot change this list. Canonical identities and owning namespaces are checked after resolution |
 | `repo_context_max_sibling_files` | 5 | Maximum number of sibling-repository files fetched per repo-context build. The fetch count is bounded separately from repo_context_max_lines so selected sibling files cannot trigger an unbounded number of cross-repository calls; sibling files still compete for the repo_context_max_lines budget. Host-only (cannot be raised by a repository's .pr_agent.toml or a comment command) and clamped to a hard ceiling of 20 fetches per build. |
 **token limits**
 
@@ -127,7 +128,7 @@ to-do list.
 | `add_user_to_requests` | false | send the current command and PR URL in the OpenAI-compatible "user" request field, for provider-side attribution of requests (e.g. OpenRouter "external_user") |
 | `reasoning_effort` | "medium" | "none", "minimal", "low", "medium", "high", "xhigh", "max" |
 | `additional_reasoning_effort_models` | [] | Optional: additional model IDs that accept config.reasoning_effort. Reasoning support is otherwise decided by litellm's bundled model metadata (and the maintained Grok registry), so add an ID here when litellm does not know the model (custom OpenAI-compatible endpoints), or when another provider hosts a Sol-tier GPT-6 model under the same ID. Model IDs match exactly or through any provider prefix (e.g. "deepseek-v4-flash-0731" matches "openai/deepseek-v4-flash-0731"). LiteLLM whitelists reasoning_effort through allowed_openai_params for OpenAI-compatible models it does not recognize, so the parameter reaches the endpoint. The default "medium" may be rejected by providers that accept a different subset (e.g. "none"/"low"/"high"/"max"); adding a custom model id now surfaces a provider-side error instead of the previous silent drop. |
-| `no_temperature_models` | ["deepseek/deepseek-reasoner", "o1-mini", "o1-mini-2024-09-12", "o1", "o1-2024-12-17", "o3-mini", "o3-mini-2025-01-31", "o3", "o3-2025-04-16", "o4-mini", "o4-mini-2025-04-16", "gpt-5.1-codex", "gpt-5.1-codex-mini", "gpt-5.2-codex", "gpt-5.3-codex", "gpt-5-mini", "moonshotai.kimi-k3", "us.moonshotai.kimi-k3", "global.moonshotai.kimi-k3"] | Optional: model IDs that must never receive the temperature parameter, on top of what litellm's parameter metadata reports. Temperature support is otherwise decided by litellm.get_supported_openai_params() (mirroring reasoning_effort), so add an ID here when litellm reports temperature as supported but the provider rejects it, or when an OpenAI-compatible endpoint accepts but you still want it dropped. Adaptive-thinking Claude models (Opus 4.7/4.8 and Opus/Sonnet/Fable 5) never receive temperature. Match model IDs exactly or through any provider prefix. For OpenRouter `:nitro` and `:floor` routing shortcuts, also match the suffix-free base ID (for example, match `future-model` to `openrouter/vendor/future-model:nitro`). Keep other model variants at their full ID. Preserve the former static registry entries below when litellm's metadata still marks them temperature-capable; see the issue for the probe diff. Bedrock rejects temperature for Kimi K3 ("This model doesn't support the temperature field"). |
+| `no_temperature_models` | ["deepseek/deepseek-reasoner", "o1-mini", "o1-mini-2024-09-12", "o1", "o1-2024-12-17", "o3-mini", "o3-mini-2025-01-31", "o3", "o3-2025-04-16", "o4-mini", "o4-mini-2025-04-16", "gpt-5.1-codex", "gpt-5.1-codex-mini", "gpt-5.2-codex", "gpt-5.3-codex", "gpt-5-mini", "moonshotai.kimi-k3", "us.moonshotai.kimi-k3", "global.moonshotai.kimi-k3", "zai.glm-5"] | Optional: model IDs that must never receive the temperature parameter, on top of what litellm's parameter metadata reports. Temperature support is otherwise decided by litellm.get_supported_openai_params() (mirroring reasoning_effort), so add an ID here when litellm reports temperature as supported but the provider rejects it, or when an OpenAI-compatible endpoint accepts but you still want it dropped. Adaptive-thinking Claude models (Opus 4.7/4.8 and Opus/Sonnet/Fable 5) never receive temperature. Match model IDs exactly or through any provider prefix. For OpenRouter `:nitro` and `:floor` routing shortcuts, also match the suffix-free base ID (for example, match `future-model` to `openrouter/vendor/future-model:nitro`). Keep other model variants at their full ID. Preserve the former static registry entries below when litellm's metadata still marks them temperature-capable; see the issue for the probe diff. Bedrock rejects temperature for Kimi K3 and GLM-5 ("This model doesn't support the temperature field"). |
 **extended thinking for Claude reasoning models**
 
 | Key | Default | Description |
@@ -339,11 +340,13 @@ _This section only documents commented-out examples; see the [TOML source](https
 | Key | Default | Description |
 | --- | --- | --- |
 | `deployment_type` | "user" | The type of deployment to create. Valid values are 'app' or 'user'. |
+| `agent_login` | "" | Host-only login PR-Agent posts as when its token cannot call `GET /user`, e.g. `<app-slug>[bot]` for a GitHub App installation token in GitHub Actions. Empty falls back to `github-actions[bot]` under Actions. Repository settings and comment arguments cannot change it |
 | `ratelimit_retries` | 5 |  |
 | `seconds_between_requests` | 0 | seconds between API requests; 0 = no pacing (1.59 behaviour) |
 | `seconds_between_writes` | 0 | seconds between write calls; 0 = no pacing (1.59 behaviour) |
 | `api_retries` | 0 | max retries per request with backoff; 0 = no retries (1.59 behaviour) |
 | `polling_request_timeout` | 10 | total seconds for comment-history fallback; positive values capped at 60 |
+| `polling_repositories` | [] | Host-only allowlist of GitHub repositories ("owner/repo") whose mention notifications polling may process. Empty disables all polling notifications. Repository settings and comment arguments cannot change this list |
 | `base_url` | "https://api.github.com" |  |
 | `try_fix_invalid_inline_comments` | true |  |
 | `ignore_bot_pr` | true |  |
@@ -428,6 +431,7 @@ _This section only documents commented-out examples; see the [TOML source](https
 
 | Key | Default | Description |
 | --- | --- | --- |
+| `command_timeout_seconds` | 120 | Host-only limit for each direct git or SSH child; use a positive finite number of seconds. Coordinate larger values with the deployment worker timeout. No whole-request or process-tree limit; timed-out SSH review writes are not retried because Gerrit may have accepted them. |
 | `webhook_username` | "" | both are required: the gerrit webhook endpoint rejects every call until they are set |
 | `webhook_password` | "" |  |
 
@@ -443,6 +447,7 @@ _This section only documents commented-out examples; see the [TOML source](https
 
 | Key | Default | Description |
 | --- | --- | --- |
+| `cloud_id` | "" | optional UUID for scoped tokens; uses the Atlassian API gateway and is host-only |
 | `jira_requirements_field` | "" | Custom field id holding acceptance criteria / requirements, mapped to the ticket "requirements" section. Instance-specific (e.g. "customfield_10127"); empty disables it. |
 | `project_keys` | ["*"] | Optional allowlist of Jira project keys, e.g. ["PROJ", "OPS"]. When non-empty, key-shaped text with another prefix ("SHA-256", "UTF-8", "ISO-8601") is dropped before any lookup, so it no longer costs an authenticated 404 each. Entries must be plain upper-case keys; a supplied list with no valid entry disables the lookup rather than widening it. Wildcard ["*"] (default) looks up every key found. An empty list ([]) disables Jira ticket lookups. Host-only, like jira_site and jira_api_email: repository settings and comment arguments cannot change them. |
 
@@ -532,7 +537,7 @@ _This section only documents commented-out examples; see the [TOML source](https
 
 | Key | Default | Description |
 | --- | --- | --- |
-| `enabled` | false | Agent skills (SKILL.md) support: discovers SKILL.md files from the configured filesystem paths and injects their content into review/improve/describe and top-level /ask prompts. Sibling *.md files in the skill directory tree (e.g. references/guide.md) are inlined alongside SKILL.md. PR-Agent supports text-only skills: scripts/ and assets/ subdirectories are skipped because PR-Agent uses a single-shot model call (no tool-use loop) and cannot execute scripts or load binary assets on demand. Skills that depend on script execution will not work here. See https://github.com/The-PR-Agent/pr-agent/issues/2384 |
+| `enabled` | false | Agent skills (SKILL.md) support: discovers SKILL.md files from the configured filesystem paths and injects their content into review/improve/describe and /ask prompts, including questions on a specific line. Sibling *.md files in the skill directory tree (e.g. references/guide.md) are inlined alongside SKILL.md. PR-Agent supports text-only skills: scripts/ and assets/ subdirectories are skipped because PR-Agent uses a single-shot model call (no tool-use loop) and cannot execute scripts or load binary assets on demand. Skills that depend on script execution will not work here. See https://github.com/The-PR-Agent/pr-agent/issues/2384 |
 | `paths` | [] | directories to scan recursively for "*/SKILL.md"; supports ~ and $VAR |
 | `max_skills_tokens` | 8000 | token budget for the combined skills_context block |
 
@@ -545,7 +550,7 @@ _This section only documents commented-out examples; see the [TOML source](https
 | `artifact_path` | "" | File path to the artifact (relative to GITHUB_WORKSPACE, or absolute) |
 | `artifact_instructions` | "" | Analysis guidance rendered separately before the untrusted artifact label and content (leave empty for a sensible default) |
 | `artifact_label` | "" | Label shown to the AI — defaults to the filename when empty. |
-| `target_tools` | ["pr_reviewer", "pr_description", "pr_code_suggestions"] | Which supported tools receive artifact context; unsupported names are skipped with a warning. |
+| `target_tools` | ["pr_reviewer", "pr_description", "pr_code_suggestions", "pr_questions"] | Which supported tools receive artifact context; unsupported names are skipped with a warning. |
 | `max_artifact_size` | 50000 | Max artifact size in characters (content is truncated if exceeded) |
 | `truncate_from` | "start" | Which end of the file to keep when truncating: "start" (default, keeps the beginning) or "end" (keeps the tail, where build logs carry their verdict - failure, plan summary or test result). |
 

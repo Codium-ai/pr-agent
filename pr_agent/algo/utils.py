@@ -6,6 +6,7 @@ import html
 import re
 import textwrap
 from enum import StrEnum
+from io import StringIO
 from typing import Any, TypedDict
 from urllib.parse import quote, unquote
 
@@ -453,8 +454,6 @@ def convert_to_markdown_v2(output_data: dict,
                         start_line = _as_line(issue.get('start_line')) or 0
                         end_line = _as_line(issue.get('end_line')) or start_line
                         valid_lines = start_line > 0 and end_line >= start_line
-                        relevant_lines_str = extract_relevant_lines_str(
-                            end_line, files, relevant_file, start_line, dedent=True) if valid_lines else ""
                         if git_provider and valid_lines:
                             reference_link = git_provider.get_line_link(relevant_file, start_line, end_line)
                         else:
@@ -462,6 +461,8 @@ def convert_to_markdown_v2(output_data: dict,
 
                         if gfm_supported:
                             if reference_link is not None and len(reference_link) > 0:
+                                relevant_lines_str = extract_relevant_lines_str(
+                                    end_line, files, relevant_file, start_line, dedent=True)
                                 if relevant_lines_str:
                                     issue_str = (
                                         f"<details><summary><a href='{reference_link}'>"
@@ -537,7 +538,7 @@ def extract_relevant_lines_str(end_line, files, relevant_file, start_line, deden
                             return ""
                         # filter out '-' lines
                         relevant_lines_str = ""
-                        for line in selected_lines.splitlines():
+                        for line in split_diff_lines(selected_lines):
                             if line.startswith('-'):
                                 continue
                             relevant_lines_str += line[1:] + '\n'
@@ -749,8 +750,9 @@ def load_large_diff(filename, new_file_content_str: str,
             new_file_content_str += "\n"
         if original_file_content_str == new_file_content_str:
             return ""
-        diff = difflib.unified_diff(original_file_content_str.splitlines(keepends=True),
-                                    new_file_content_str.splitlines(keepends=True))
+        original_lines = list(StringIO(original_file_content_str, newline="\n"))
+        new_lines = list(StringIO(new_file_content_str, newline="\n"))
+        diff = difflib.unified_diff(original_lines, new_lines)
         if get_verbosity_level() >= 2 and show_warning:
             get_logger().info(f"File was modified, but no patch was found. Manually creating patch: {filename}.")
         return to_hunk_only_patch(''.join(diff))
@@ -992,7 +994,10 @@ def load_yaml(response_text: str, keys_fix_yaml: list[str] | None = None, first_
     response_text = response_text.strip('\n')
     # strip the fence label only when it is a complete info string, so a key such as
     # "yml_config" is not truncated to "_config"
-    unfenced = re.sub(r'^```[ \t]*(?:(?i:yaml|yml))?[ \t]*(?=\r?\n)', '', response_text)
+    # the label and the blanks that follow it share a single optional group: two separate
+    # blank runs would let the engine try every way of splitting a long run of blanks
+    # when the fence is not followed by a line break, which backtracks quadratically
+    unfenced = re.sub(r'^```[ \t]*(?:(?i:yaml|yml)[ \t]*)?(?=\r?\n)', '', response_text)
     if unfenced == response_text:
         # Strip an unfenced "yaml" label only when it is a complete line, so a key such as
         # "yaml_config" is not truncated. A bare removeprefix('yaml') would shorten it to "_config".

@@ -53,7 +53,15 @@ Tool error propagation is disabled by default, preserving the existing status 0 
 
 ### CLI Health Check
 
-To verify that PR-Agent has been configured correctly, you can run this health check command from the repository root:
+For a quick preflight that needs no token and no PR, run:
+
+```bash
+pr-agent doctor
+```
+
+It checks that `config.model` is set, that the active provider has a real API key, and that a one-token completion against the configured model succeeds. The exit code is `0` only when every check passes, so CI setups can gate on it. It ships with the package, unlike the fuller health check below, which exercises real commands on a real PR.
+
+To verify that PR-Agent has been configured correctly end to end, you can also run this health check command from the repository root:
 
 ```bash
 python -m tests.health_test.main

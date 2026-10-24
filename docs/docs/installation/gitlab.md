@@ -11,6 +11,9 @@ Pagination does not bypass GitLab's server-side diff limits. PR-Agent raises a p
 error if the returned file count disagrees with an exact `changes_count`, or that count
 indicates overflow or is not ready. A file whose patch GitLab omits (`too_large`, or
 `collapsed` before GitLab 19.2) is diffed locally from its two revisions instead.
+When `CONFIG.PUBLISH_OUTPUT` is enabled, PR-Agent attempts to post a fixed, deduplicated
+**PR-Agent command was not run** notice after this error reaches the command boundary.
+Publishing is best effort and never includes internal GitLab response details.
 
 The `/diffs` endpoint must be available. PR-Agent does not fall back to the deprecated
 `/changes` endpoint or its raw-diff retry.
@@ -67,7 +70,7 @@ You can also modify the `script` section to run different PR-Agent commands, or 
 
 ### CI artifact context
 
-A file produced by an earlier job — a test report, a coverage summary, a linter or SAST output — can be handed to `/review`, `/describe` and `/improve` as extra context, so the model reviews the merge request with your pipeline's own findings in hand. Save the file as a job artifact, make the PR-Agent job depend on that job with `needs:`, and point PR-Agent at it with `ARTIFACT_PATH`. The job above runs from `/app`, so give the path in full:
+A file produced by an earlier job — a test report, a coverage summary, a linter or SAST output — can be handed to `/review`, `/describe`, `/improve` and `/ask` as extra context, so the model reviews the merge request with your pipeline's own findings in hand. Save the file as a job artifact, make the PR-Agent job depend on that job with `needs:`, and point PR-Agent at it with `ARTIFACT_PATH`. The job above runs from `/app`, so give the path in full:
 
 ```yaml
 pr_agent_job:

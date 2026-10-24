@@ -42,6 +42,8 @@ pr-agent --pr_url https://github.com/org/repo/pull/123 --json-output review.json
 ```
 
 The JSON file is written after the review completes. Place `--json-output` before `review` or `review_pr`.
+Its `coverage` object lists the files the token budget kept out of the review (`files_not_reviewed`) and those whose
+patches were clipped to fit it (`files_partially_reviewed`), the same files the review coverage footer names.
 
 ### Automatic triggering
 

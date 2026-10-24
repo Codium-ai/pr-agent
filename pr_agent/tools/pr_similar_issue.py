@@ -15,6 +15,8 @@ from pr_agent.log import get_logger
 MODEL = "text-embedding-ada-002"
 PINECONE_UPSERT_READY_TIMEOUT_SECONDS = 30
 PINECONE_UPSERT_READY_POLL_SECONDS = 0.5
+# 32 inputs at 8,192 tokens each stay under the embedding API's 300,000-token request limit.
+EMBEDDING_BATCH_SIZE = 32
 
 
 _EMBEDDING_CLIENTS = {}
@@ -35,24 +37,41 @@ def _embed(texts: list[str]) -> list[list[float]]:
 
 
 def _embed_with_fallback(texts: list[str]) -> list[list[float]]:
-    """Embed a list, falling back to one by one, and refuse to return an all-zero set."""
+    """Keep successful bulk requests intact; batch retries before falling back to individual items."""
     try:
-        return _embed(texts)
+        embeddings = _embed(texts)
+        if len(embeddings) != len(texts):
+            raise ValueError("Embedding response count does not match input")
+        return embeddings
     except Exception as e:
-        get_logger().error("Failed to embed entire list, embedding one by one...",
+        original_error = e
+        get_logger().error("Failed to embed entire list, retrying in bounded batches...",
                            artifact={"error": str(e)})
-        embeds = []
-        failures = 0
-        for text in texts:
+
+    embeds = []
+    failures = 0
+    for start in range(0, len(texts), EMBEDDING_BATCH_SIZE):
+        batch = texts[start:start + EMBEDDING_BATCH_SIZE]
+        if len(texts) > EMBEDDING_BATCH_SIZE and len(batch) > 1:
+            try:
+                batch_embeds = _embed(batch)
+                if len(batch_embeds) != len(batch):
+                    raise ValueError("Embedding batch response count does not match input")
+                embeds.extend(batch_embeds)
+                continue
+            except Exception as e:
+                get_logger().warning("Embedding batch failed, retrying its items...",
+                                     artifact={"error": str(e)})
+        for text in batch:
             try:
                 embeds.append(_embed([text])[0])
             except Exception:
                 failures += 1
                 embeds.append([0] * 1536)
-        if failures == len(texts):
-            raise RuntimeError(
-                "Failed to embed any issue text; refusing to index all-zero vectors") from e
-        return embeds
+    if failures == len(texts):
+        raise RuntimeError(
+            "Failed to embed any issue text; refusing to index all-zero vectors") from original_error
+    return embeds
 
 
 def _qdrant_collection_name(base_name: str) -> str:
@@ -237,7 +256,7 @@ class PRSimilarIssue:
                 get_logger().info('Indexing the entire repo...')
 
                 get_logger().info('Getting issues...')
-                issues = list(repo_obj.get_issues(state='all'))
+                issues = repo_obj.get_issues(state='all')
                 get_logger().info('Done')
                 self._update_index_with_issues(
                     issues,
@@ -300,7 +319,7 @@ class PRSimilarIssue:
                 get_logger().info('Indexing the entire repo...')
 
                 get_logger().info('Getting issues...')
-                issues = list(repo_obj.get_issues(state='all'))
+                issues = repo_obj.get_issues(state='all')
                 get_logger().info('Done')
 
                 self._update_table_with_issues(issues, repo_name_for_index, ingest=ingest, force_refresh=force_refresh)
@@ -314,9 +333,11 @@ class PRSimilarIssue:
 
                 indexed_ids = set()
                 if issues_to_scan:
+                    issue_ids = ", ".join(f"'issue_{issue.number}.issue'" for issue in issues_to_scan)
+                    # Do not cap rows at the candidate count because duplicate IDs can exist.
                     rows = self.table.search().limit(len(self.table)).where(
-                        f"metadata.repo='{repo_name_for_index}'"
-                    ).select(["id", "metadata"]).to_list()
+                        f"metadata.repo='{repo_name_for_index}' AND id IN ({issue_ids})"
+                    ).select(["id"]).to_list()
                     indexed_ids = {row['id'] for row in rows}
                 issues_to_update = [
                     issue for issue in issues_to_scan if f"issue_{issue.number}.issue" not in indexed_ids
@@ -381,7 +402,7 @@ class PRSimilarIssue:
             if run_from_scratch or ingest:
                 get_logger().info('Indexing the entire repo...')
                 get_logger().info('Getting issues...')
-                issues = list(repo_obj.get_issues(state='all'))
+                issues = repo_obj.get_issues(state='all')
                 get_logger().info('Done')
                 self._update_qdrant_with_issues(issues, repo_name_for_index, ingest=ingest)
             else:
@@ -469,7 +490,7 @@ class PRSimilarIssue:
         get_logger().info('Getting issue...')
         repo_name, original_issue_number = self.git_provider._parse_issue_url(self.issue_url.split('=')[-1])
         issue_main = self.git_provider.repo_obj.get_issue(original_issue_number)
-        issue_str, comments, number = self._process_issue(issue_main)
+        issue_str, _, _ = self._process_issue(issue_main, include_comments=False)
         get_logger().info('Done')
 
         get_logger().info('Querying...')
@@ -535,14 +556,14 @@ class PRSimilarIssue:
         get_logger().info(similar_issues_str)
         get_logger().info("Done")
 
-    def _process_issue(self, issue):
+    def _process_issue(self, issue, *, include_comments=True):
         header = issue.title
         body = issue.body
         number = issue.number
-        if get_settings().pr_similar_issue.skip_comments:
+        if not include_comments or get_settings().pr_similar_issue.skip_comments:
             comments = []
         else:
-            comments = list(issue.get_comments())
+            comments = issue.get_comments()
         issue_str = f"Issue Header: \"{header}\"\n\nIssue Body:\n{body}"
         return issue_str, comments, number
 
@@ -558,13 +579,17 @@ class PRSimilarIssue:
         )
 
         counter = 0
-        for issue in issues_list:
-            if issue.pull_request:
-                continue
-
+        issues_iterator = iter(issues_list)
+        while True:
             if counter >= self.max_issues_to_scan:
                 get_logger().info(f"Scanned {self.max_issues_to_scan} issues, stopping")
                 break
+            try:
+                issue = next(issues_iterator)
+            except StopIteration:
+                break
+            if issue.pull_request:
+                continue
 
             issue_str, comments, number = self._process_issue(issue)
             issue_key = f"issue_{number}"
@@ -680,13 +705,17 @@ class PRSimilarIssue:
         sentinel_id = f"example_issue_{repo_name_for_index}"
 
         counter = 0
-        for issue in issues_list:
-            if issue.pull_request:
-                continue
-
+        issues_iterator = iter(issues_list)
+        while True:
             if counter >= self.max_issues_to_scan:
                 get_logger().info(f"Scanned {self.max_issues_to_scan} issues, stopping")
                 break
+            try:
+                issue = next(issues_iterator)
+            except StopIteration:
+                break
+            if issue.pull_request:
+                continue
 
             issue_str, comments, number = self._process_issue(issue)
             issue_key = f"issue_{number}"
@@ -790,13 +819,17 @@ class PRSimilarIssue:
         )
 
         counter = 0
-        for issue in issues_list:
-            if issue.pull_request:
-                continue
-
+        issues_iterator = iter(issues_list)
+        while True:
             if counter >= self.max_issues_to_scan:
                 get_logger().info(f"Scanned {self.max_issues_to_scan} issues, stopping")
                 break
+            try:
+                issue = next(issues_iterator)
+            except StopIteration:
+                break
+            if issue.pull_request:
+                continue
 
             issue_str, comments, number = self._process_issue(issue)
             issue_key = f"issue_{number}"

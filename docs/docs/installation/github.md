@@ -99,6 +99,10 @@ Using `pull_request_target` gives the workflow access to repository secrets. Nei
 
 This section provides detailed, step-by-step examples for configuring PR-Agent with different models and advanced options in GitHub Actions.
 
+:::note[Fallback models]
+`config.fallback_models` should not repeat `config.model`: a fallback-eligible failure would just run the same model again. The examples below use `'[]'` for no backup model, or a different model when one is shown. To retry a failed call on the primary model instead, set `config.num_retries`.
+:::
+
 #### Quick Start Examples
 
 ##### Basic Setup (OpenAI Default)
@@ -151,7 +155,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           config.model: "gemini/gemini-3.8-flash"
-          config.fallback_models: '["gemini/gemini-3.8-flash"]'
+          config.fallback_models: '[]'
           GOOGLE_AI_STUDIO.GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           github_action_config.auto_review: "true"
           github_action_config.auto_describe: "true"
@@ -233,7 +237,7 @@ To use Gemini models instead of the default OpenAI models:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         # Set the model to Gemini
         config.model: "gemini/gemini-3.8-flash"
-        config.fallback_models: '["gemini/gemini-3.8-flash"]'
+        config.fallback_models: '[]'
         # Add your Gemini API key
         GOOGLE_AI_STUDIO.GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         # Tool configuration
@@ -287,7 +291,7 @@ To use Azure OpenAI services:
         OPENAI.DEPLOYMENT_ID: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
         # Set the model to match your Azure deployment
         config.model: "gpt-4o"
-        config.fallback_models: '["gpt-4o"]'
+        config.fallback_models: '[]'
         # Tool configuration
         github_action_config.auto_review: "true"
         github_action_config.auto_describe: "true"
@@ -310,7 +314,7 @@ To use local models via Ollama:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         # Set the model to a local Ollama model
         config.model: "ollama/qwen2.5-coder:32b"
-        config.fallback_models: '["ollama/qwen2.5-coder:32b"]'
+        config.fallback_models: '[]'
         config.custom_model_max_tokens: "128000"
         # Ollama configuration
         OLLAMA.API_BASE: "http://localhost:11434"
@@ -330,7 +334,7 @@ To use Amazon Bedrock models with static IAM credentials:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         config.model: "bedrock/us.anthropic.claude-sonnet-4-6"
-        config.fallback_models: '["bedrock/us.anthropic.claude-sonnet-4-6"]'
+        config.fallback_models: '[]'
         aws.AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws.AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws.AWS_REGION_NAME: "us-east-1"
@@ -344,7 +348,7 @@ When the GitHub Actions runner is on AWS infrastructure (EC2, ECS, EKS), use the
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         config.model: "bedrock/us.anthropic.claude-sonnet-4-6"
-        config.fallback_models: '["bedrock/us.anthropic.claude-sonnet-4-6"]'
+        config.fallback_models: '[]'
         AWS_USE_IMDS: "true"
         AWS_REGION_NAME: us-east-1  # source region for the US inference profile
 ```
@@ -431,7 +435,7 @@ Point the action at the file with the `artifact_path` input. The path is resolve
           artifact_instructions: "These are the failing tests from this PR's CI run. Call out any suggestion that would not fix them."
 ```
 
-Setting `artifact_path` turns the feature on by itself; there is no separate enable switch to flip in the workflow. Supported target tools receive a dedicated artifact section in their prompt. The label and file contents are explicitly marked as untrusted data, while `artifact_instructions` appears separately as subordinate analysis guidance. The supported targets are `pr_reviewer`, `pr_description` and `pr_code_suggestions`; unsupported names are skipped with a warning.
+Setting `artifact_path` turns the feature on by itself; there is no separate enable switch to flip in the workflow. Supported target tools receive a dedicated artifact section in their prompt. The label and file contents are explicitly marked as untrusted data, while `artifact_instructions` appears separately as subordinate analysis guidance. The supported targets are `pr_reviewer`, `pr_description`, `pr_code_suggestions` and `pr_questions`; unsupported names are skipped with a warning.
 
 When overriding a supported tool's prompt, keep `artifact_context.instructions` in the system prompt and render
 `artifact_context.label`, `artifact_context.content`, `artifact_context.start_marker`, and `artifact_context.end_marker` in
@@ -446,7 +450,7 @@ enable = false                                              # auto-enabled when 
 artifact_path = ""                                          # relative to GITHUB_WORKSPACE, or absolute
 artifact_instructions = ""                                  # empty = a generic "treat this as CI context" instruction
 artifact_label = ""                                         # empty = the file's name
-target_tools = ["pr_reviewer", "pr_description", "pr_code_suggestions"]
+target_tools = ["pr_reviewer", "pr_description", "pr_code_suggestions", "pr_questions"]
 max_artifact_size = 50000                                   # characters; longer files are truncated with a marker
 ```
 
@@ -552,6 +556,13 @@ If you encounter rate limiting:
 **Error: "API key not found"**
 - **Solution**: Verify that your API key is correctly set as a repository secret and the environment variable name matches exactly
 - **Note**: For non-OpenAI models (Gemini, Claude, etc.), you only need the model-specific API key, not `OPENAI_KEY`
+
+**Error: "Incorrect API key provided: dummy_key"**
+- **Cause**: No OpenAI key reached the run, while the model is still an OpenAI one. The step log shows `OPENAI_KEY not set` near the top: the run continues without a key, and the request goes out with PR-Agent's placeholder key instead.
+- **Solution**: Check which of the three causes applies:
+    - **The run gets no secrets.** On the `pull_request` event, runs triggered from a fork receive no repository secrets, so `${{ secrets.OPENAI_KEY }}` is empty. Use the [`pull_request_target` setup](#using-with-pull_request_target-forkcontribution-support) instead. Dependabot pull requests are the same case: their secrets live under Dependabot secrets, not Actions secrets, and the `github.event.sender.type != 'Bot'` condition in the examples above keeps those runs from starting at all.
+    - **The secret is missing or misnamed.** A reference to a secret that does not exist expands to an empty string rather than failing the workflow, so compare the name in the repository secrets with the one used in `env`.
+    - **Another provider's key is set, but the model is not.** Keys alone do not switch provider: set `config.model` (and `config.fallback_models`) as well, otherwise the default OpenAI model is used and only an OpenAI key counts. See [Changing a model in PR-Agent](../usage-guide/changing_a_model.md).
 
 **Error: "Rate limit exceeded"**
 - **Solution**: Add fallback models or increase the `config.ai_timeout` value

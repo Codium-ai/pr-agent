@@ -119,7 +119,7 @@ def run_comment(monkeypatch):
             return outcome
 
         monkeypatch.setattr(gitlab_webhook, "handle_request", handle_request)
-        response = client.post("/webhook", json=payload if payload else _note_event(body),
+        response = client.post("/webhook", json=payload or _note_event(body),
                                headers={"X-Gitlab-Token": "secret"})
         assert response.status_code == 200, response.text
         return provider

@@ -64,7 +64,8 @@ class LangChainOpenAIHandler(BaseAiHandler):
 
     @retry(
         retry=retry_if_exception_type(openai.APIError) & retry_if_not_exception_type(
-            (openai.RateLimitError, openai.BadRequestError, openai.UnprocessableEntityError)
+            (openai.RateLimitError, openai.BadRequestError, openai.UnprocessableEntityError,
+             openai.AuthenticationError, openai.PermissionDeniedError)
         ),
         stop=stop_after_attempt(OPENAI_RETRIES),
     )

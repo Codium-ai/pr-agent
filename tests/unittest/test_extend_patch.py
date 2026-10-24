@@ -313,6 +313,19 @@ class TestLoadLargeDiff:
             f"@@ -1,2 +1 @@\n value{ending}-{ending}"
         )
 
+    @pytest.mark.parametrize("separator", ["\u2028", "\u2029", "\x0c", "\x0b", "\x85", "\r"])
+    def test_non_lf_characters_are_not_line_breaks(self, separator):
+        original = f"first{separator}second\nkeep\nold\n"
+        new = f"first{separator}second\nkeep\nnew\n"
+        assert load_large_diff("test.py", new, original) == (
+            f"@@ -1,3 +1,3 @@\n first{separator}second\n keep\n-old\n+new\n"
+        )
+
+    def test_non_lf_character_does_not_shift_later_hunk_lines(self):
+        original = "first\u2028second\n" + "".join(f"line {n}\n" for n in range(2, 12)) + "old\n"
+        new = original.replace("old\n", "new\n")
+        assert load_large_diff("test.py", new, original).startswith("@@ -9,4 +9,4 @@\n")
+
     @pytest.mark.parametrize("content", ["value  \n", "value\t\r\n", "value\n\n", "  "])
     def test_unchanged_whitespace_has_no_diff(self, content):
         assert load_large_diff("test.py", content, content) == ""

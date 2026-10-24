@@ -3,6 +3,7 @@ import asyncio
 import inspect
 import sys
 from types import SimpleNamespace
+from unittest.mock import Mock
 
 import pytest
 
@@ -102,6 +103,66 @@ def test_the_client_is_reused_across_calls(monkeypatch):
     assert built == ["unit-test-key"]
 
 
+def test_successful_embedding_keeps_a_single_bulk_request(monkeypatch):
+    batches = []
+
+    def embed(texts):
+        batches.append(list(texts))
+        return [[int(text)] for text in texts]
+
+    monkeypatch.setattr(psi, "_embed", embed)
+    assert psi._embed_with_fallback([str(i) for i in range(65)]) == [[i] for i in range(65)]
+    assert [len(batch) for batch in batches] == [65]
+
+
+def test_failed_bulk_embedding_retries_in_ordered_batches(monkeypatch):
+    batches = []
+
+    def embed(texts):
+        batches.append(list(texts))
+        if len(texts) > 32:
+            raise RuntimeError("oversized request")
+        return [[int(text)] for text in texts]
+
+    monkeypatch.setattr(psi, "_embed", embed)
+    assert psi._embed_with_fallback([str(i) for i in range(65)]) == [[i] for i in range(65)]
+    assert [len(batch) for batch in batches] == [65, 32, 32, 1]
+
+
+def test_failed_embedding_batch_retries_only_its_items(monkeypatch):
+    batches = []
+
+    def embed(texts):
+        batches.append(list(texts))
+        if len(texts) > 32 or (len(texts) > 1 and texts[0] == "32"):
+            raise RuntimeError("batch rejected")
+        if texts == ["33"]:
+            raise RuntimeError("item rejected")
+        return [[int(text)] for text in texts]
+
+    monkeypatch.setattr(psi, "_embed", embed)
+    result = psi._embed_with_fallback([str(i) for i in range(65)])
+
+    assert result[:33] == [[i] for i in range(33)]
+    assert result[33] == [0] * 1536
+    assert result[34:] == [[i] for i in range(34, 65)]
+    assert [len(batch) for batch in batches] == [65, 32, 32] + [1] * 33
+
+
+def test_short_embedding_responses_retry_without_misaligning_vectors(monkeypatch):
+    requests = []
+
+    def embed(texts):
+        requests.append(list(texts))
+        if len(texts) == 65 or (len(texts) == 32 and texts[0] == "32"):
+            return [[int(text)] for text in texts[:-1]]
+        return [[int(text)] for text in texts]
+
+    monkeypatch.setattr(psi, "_embed", embed)
+    assert psi._embed_with_fallback([str(i) for i in range(65)]) == [[i] for i in range(65)]
+    assert [len(batch) for batch in requests] == [65, 32, 32] + [1] * 33
+
+
 @pytest.mark.asyncio
 async def test_pinecone_query_branch_runs(monkeypatch):
     queried = []
@@ -140,11 +201,29 @@ async def test_pinecone_query_branch_runs(monkeypatch):
     assert queried[0]["namespace"] == psi._pinecone_namespace("example/repo")
 
 
+@pytest.mark.parametrize("skip_comments", [False, True])
+def test_process_issue_preserves_configured_comment_indexing(monkeypatch, skip_comments):
+    monkeypatch.setattr(psi, "get_settings", lambda: SimpleNamespace(
+        pr_similar_issue=SimpleNamespace(skip_comments=skip_comments),
+    ))
+    comments = [SimpleNamespace(body="Existing comment")]
+    issue = SimpleNamespace(title="Issue", body="Body", number=1, get_comments=Mock(return_value=iter(comments)))
+    tool = psi.PRSimilarIssue.__new__(psi.PRSimilarIssue)
+
+    issue_str, returned_comments, number = tool._process_issue(issue)
+
+    assert issue_str == "Issue Header: \"Issue\"\n\nIssue Body:\nBody"
+    assert list(returned_comments) == ([] if skip_comments else comments)
+    assert number == 1
+    assert issue.get_comments.call_count == (0 if skip_comments else 1)
+
+
 @pytest.fixture(params=["pinecone", "lancedb", "qdrant"])
 def query_tool(monkeypatch, request):
     """Exercise each query branch with ranked rows and an observable publication sink."""
     backend = request.param
-    state = SimpleNamespace(attempts=[], responses=[], published=[], embedded=[], fetched=[], publish=True)
+    state = SimpleNamespace(attempts=[], responses=[], published=[], embedded=[], fetched=[],
+                            comment_fetches=[], publish=True)
 
     def query(**kwargs):
         state.attempts.append(kwargs)
@@ -185,17 +264,22 @@ def query_tool(monkeypatch, request):
 
     def get_issue(number):
         state.fetched.append(number)
+
+        def get_comments():
+            state.comment_fetches.append(number)
+            return [SimpleNamespace(html_url=f"https://example.test/{number}#comment-0")]
+
         return SimpleNamespace(
             title=f"Issue {number}", body="Body", number=number,
             html_url=f"https://github.com/example/repo/issues/{number}",
-            get_comments=lambda: [SimpleNamespace(html_url=f"https://example.test/{number}#comment-0")],
+            get_comments=get_comments,
             create_comment=state.published.append,
         )
 
     monkeypatch.setattr(psi, "_embed", embed)
     monkeypatch.setattr(psi, "get_settings", lambda: SimpleNamespace(
         config=SimpleNamespace(publish_output=state.publish),
-        pr_similar_issue=SimpleNamespace(vectordb=backend, skip_comments=True),
+        pr_similar_issue=SimpleNamespace(vectordb=backend, skip_comments=False),
     ))
     monkeypatch.setitem(sys.modules, "qdrant_client.models", SimpleNamespace(
         FieldCondition=SimpleNamespace, Filter=SimpleNamespace, MatchValue=SimpleNamespace,
@@ -242,6 +326,8 @@ async def test_healthy_query_keeps_five_results_and_one_request(query_tool):
     await state.tool.run()
     assert _limits(state) == [5]
     assert state.fetched == [1, 2, 3, 4, 5, 6]
+    assert state.comment_fetches == []
+    assert state.embedded == [['Issue Header: "Issue 1"\n\nIssue Body:\nBody']]
     assert len(state.published) == 1
     assert "5. **[Issue 6]" in state.published[0]
 

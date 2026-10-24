@@ -550,6 +550,8 @@ async def test_review_comment_with_review_command_mentioning_ask_stays_review(
 ):
     handled = []
     _patch_issue_comment_deps(monkeypatch, handled)
+    monkeypatch.setattr(github_action_runner, "get_git_provider",
+                        lambda: pytest.fail("line comment should not construct a provider"))
     monkeypatch.setenv("GITHUB_EVENT_NAME", "pull_request_review_comment")
     monkeypatch.setenv(
         "GITHUB_EVENT_PATH",
@@ -1189,6 +1191,8 @@ async def test_issue_comment_not_starting_with_slash_is_skipped(
 async def test_issue_comment_on_plain_issue_is_dispatched(monkeypatch, tmp_path, restore_github_settings):
     handled = []
     _patch_issue_comment_deps(monkeypatch, handled)
+    monkeypatch.setattr(github_action_runner, "get_git_provider",
+                        lambda: pytest.fail("plain issue should not construct a provider"))
     monkeypatch.setenv("GITHUB_EVENT_NAME", "issue_comment")
     monkeypatch.setenv("GITHUB_EVENT_PATH", str(_write_plain_issue_comment_event(tmp_path)))
     monkeypatch.setenv("GITHUB_TOKEN", "token")
