@@ -2327,20 +2327,22 @@ def test_gitlab_list_repo_directory_reads_all_pages():
     project = Mock()
     project.default_branch = "main"
     project.repository_tree.side_effect = [
-        [
-            {"type": "blob", "path": f"docs/adr/{index:04}.md"}
-            for index in range(page * 100, (page + 1) * 100)
-        ]
-        for page in range(11)
-    ] + [[{"type": "blob", "path": "docs/adr/1100.md"}]]
+        [{"type": "blob", "path": f"docs/adr/{index:04}.md"} for index in range(page * 100, (page + 1) * 100)]
+        for page in range(10)
+    ]
     provider.gl = Mock()
     provider.gl.projects.get.return_value = project
     provider.id_project = "group/repo"
 
-    assert provider.list_repo_directory("docs/adr", from_default_branch=True) == [
-        f"docs/adr/{index:04}.md" for index in range(1101)
-    ]
-    assert [call.kwargs["page"] for call in project.repository_tree.call_args_list] == list(range(1, 13))
+    with patch("pr_agent.git_providers.gitlab_provider.get_logger") as mock_get_logger:
+        assert provider.list_repo_directory("docs/adr", from_default_branch=True) == [
+            f"docs/adr/{index:04}.md" for index in range(1000)
+        ]
+
+    assert [call.kwargs["page"] for call in project.repository_tree.call_args_list] == list(range(1, 11))
+    mock_get_logger.return_value.warning.assert_called_once_with(
+        "GitLab directory listing stopped at 1,000 entries: docs/adr"
+    )
 
 
 def test_gitlab_list_repo_directory_missing_directory_is_empty():
