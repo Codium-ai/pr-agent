@@ -28,7 +28,7 @@ from tests.unittest._settings_helpers import restore_settings, snapshot_settings
             {"pr_id": "repo#1"},
             {"return_remaining_files": True},
         ),
-        (questions_module.PRQuestions, questions_module, {}, {}),
+        (questions_module.PRQuestions, questions_module, {}, {"return_remaining_files": True}),
         (update_changelog_module.PRUpdateChangelog, update_changelog_module, {}, {"return_remaining_files": True}),
     ],
     ids=["add-docs", "generate-labels", "questions", "update-changelog"],
