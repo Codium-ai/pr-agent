@@ -120,6 +120,42 @@ class TestPRUpdateChangelog:
         mock_git_provider.publish_comment.assert_called_once_with("Preparing changelog updates...", is_temporary=True)
         mock_git_provider.remove_initial_comment.assert_called_once_with()
 
+    @pytest.mark.asyncio
+    async def test_run_skips_when_all_changed_files_are_filtered(
+        self, prediction_tool, mock_ai_handler, mock_git_provider
+    ):
+        # A lockfile-only or asset-only PR has no diff left after file-type filtering.
+        with patch("pr_agent.tools.pr_update_changelog.get_pr_diff", return_value="") as get_pr_diff:
+            await prediction_tool.run()
+
+        get_pr_diff.assert_called_once()
+        mock_ai_handler.chat_completion.assert_not_awaited()
+        mock_git_provider.create_or_update_pr_file.assert_not_called()
+        mock_git_provider.publish_comment.assert_called_once_with("Preparing changelog updates...", is_temporary=True)
+        mock_git_provider.remove_initial_comment.assert_called_once_with()
+
+    @pytest.mark.asyncio
+    async def test_strict_read_error_is_reraised_when_all_changed_files_are_filtered(
+        self, prediction_tool, mock_ai_handler, mock_git_provider
+    ):
+        read_error = RuntimeError("read unavailable")
+        prediction_tool.changelog_read_error = read_error
+
+        with patch("pr_agent.tools.pr_update_changelog.get_pr_diff", return_value=""):
+            with pytest.raises(RuntimeError) as exc_info:
+                await prediction_tool.run()
+
+        assert exc_info.value is read_error
+        mock_ai_handler.chat_completion.assert_not_awaited()
+        mock_git_provider.create_or_update_pr_file.assert_not_called()
+        fallback_calls = [
+            call for call in mock_git_provider.publish_comment.call_args_list
+            if "not pushed" in call.args[0]
+        ]
+        assert len(fallback_calls) == 1
+        assert "could not be generated" in fallback_calls[0].args[0]
+        mock_git_provider.remove_initial_comment.assert_called_once_with()
+
     def test_get_changelog_file_with_existing_content(self, changelog_tool, mock_git_provider):
         """Test retrieving existing changelog content."""
         # Arrange

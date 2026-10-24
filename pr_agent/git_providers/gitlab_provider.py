@@ -31,7 +31,7 @@ from ..algo.comment_identity import (
     get_pr_review_comment_identifiers,
 )
 from ..algo.file_filter import filter_ignored
-from ..algo.git_patch_processing import count_patch_lines, decode_if_bytes
+from ..algo.git_patch_processing import count_patch_lines, decode_if_bytes, split_diff_lines
 from ..algo.inline_comment_dedup import (
     body_fingerprint,
     body_with_markers,
@@ -124,7 +124,7 @@ def _removed_lines_from_patch(patch: str) -> set:
     """Line numbers in the base file that a unified-diff patch removes."""
     removed = set()
     base_line = None
-    for raw in (patch or "").splitlines():
+    for raw in split_diff_lines(patch or ""):
         match = re.match(r"^@@ -(\d+)(?:,\d+)? \+\d+(?:,\d+)? @@", raw)
         if match:
             base_line = int(match.group(1))
@@ -590,9 +590,7 @@ class GitLabProvider(GitProvider):
         except (AttributeError, KeyError, TypeError):
             return changes
 
-        gitmodules = self._get_gitmodules_map(diff_refs)
-        if not gitmodules:
-            return changes
+        gitmodules = None
 
         out = list(changes)
         base_project_path = None
@@ -607,6 +605,11 @@ class GitLabProvider(GitProvider):
             if not (old_m and new_m):
                 continue
             old_sha, new_sha = old_m.group(1), new_m.group(1)
+
+            if gitmodules is None:
+                gitmodules = self._get_gitmodules_map(diff_refs)
+                if not gitmodules:
+                    return changes
 
             sub_path = ch.get("new_path") or ch.get("old_path") or ""
             repo_url = gitmodules.get(sub_path)
@@ -849,7 +852,7 @@ class GitLabProvider(GitProvider):
 
         if not getattr(self, 'mr_commits', None):
             # gitlab returns commits newest-first; reverse to match PyGithub's oldest-first ordering
-            self.mr_commits = list(self.mr.commits())[::-1]
+            self.mr_commits = list(self.mr.commits(per_page=100))[::-1]
 
         self.incremental.commits_range = self.get_commit_range()
         if not self.incremental.commits_range:

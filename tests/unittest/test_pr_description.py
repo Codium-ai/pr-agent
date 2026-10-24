@@ -905,6 +905,38 @@ description: |
         assert [f["filename"].strip() for f in obj.data["pr_files"]] == ["src/file1.py", "src/file2.py"]
 
     @pytest.mark.asyncio
+    @pytest.mark.parametrize(("prefix", "suffix"), [
+        ("```yml\n", "\n```"),
+        ("```YAML\n", "\n```"),
+        ("``` \tYML \t\n", "\n```"),
+        ("# File summaries\n", ""),
+        ("---\n", ""),
+    ])
+    async def test_large_pr_preserves_valid_yaml_chunk_wrappers(self, monkeypatch, prefix, suffix):
+        obj = _make_large_pr_instance()
+        monkeypatch.setattr(get_settings().pr_description, "async_ai_calls", True)
+
+        async def mock_get_prediction(model, patches_diff, prompt="pr_description_prompt"):
+            if prompt == "pr_description_only_description_prompts":
+                return _header_prediction()
+            filename = "src/file1.py" if "file1" in patches_diff else "src/file2.py"
+            return prefix + _file_prediction(filename) + suffix
+
+        obj._get_prediction = AsyncMock(side_effect=mock_get_prediction)
+        with patch("pr_agent.tools.pr_description.get_pr_diff", return_value=""), patch(
+            "pr_agent.tools.pr_description.get_pr_diff_multiple_patchs",
+            return_value=_large_pr_chunks(),
+        ):
+            await obj._prepare_prediction("gpt-4o")
+
+        parsed = load_yaml(obj.prediction, keys_fix_yaml=obj.keys_fix)
+        assert [file["changes_title"].strip() for file in parsed["pr_files"]] == [
+            "Describe src/file1.py", "Describe src/file2.py",
+        ]
+        assert obj.description_failed_chunk_count == 0
+        assert obj._get_prediction.await_count == 3
+
+    @pytest.mark.asyncio
     @pytest.mark.parametrize("async_calls", [True, False])
     async def test_large_pr_retains_valid_chunk_when_sibling_raises(self, monkeypatch, async_calls):
         obj = _make_large_pr_instance()

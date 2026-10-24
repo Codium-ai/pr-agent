@@ -5,7 +5,7 @@ Thank you for your interest in contributing to the PR-Agent project!
 ## Getting Started
 
 1. Fork the repository and clone your fork
-2. Install [uv](https://docs.astral.sh/uv/) and Python 3.12 or higher (the interpreter requirement declared in `pyproject.toml`)
+2. Install [uv](https://docs.astral.sh/uv/) and Python 3.12 or higher (the interpreter and uv requirements declared in `pyproject.toml`)
 3. Install dependencies with `uv sync` (creates `.venv` from `uv.lock`)
 4. Create a new branch for your contribution:
    - For new features: `git checkout -b feature/your-feature-name`

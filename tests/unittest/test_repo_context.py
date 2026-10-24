@@ -1630,6 +1630,15 @@ def test_render_instruction_files_with_line_budget_returns_empty_when_wrapper_ex
     assert context == ""
 
 
+def test_render_instruction_files_with_line_budget_preserves_empty_entry_at_wrapper_limit():
+    context = render_instruction_files_with_line_budget(
+        {"AGENTS.md": "first line\nsecond line", "EMPTY.md": ""}, max_lines=15
+    )
+
+    assert context.count("<file path=") == 2
+    assert len(context.splitlines()) <= 15
+
+
 @pytest.mark.parametrize("max_lines", range(0, 12))
 def test_render_instruction_files_with_line_budget_never_exceeds_configured_budget(max_lines):
     context = render_instruction_files_with_line_budget({
@@ -2380,3 +2389,74 @@ def test_build_repo_context_does_not_fetch_after_exact_budget_fill(repo_context_
     assert TRUNCATION_MARKER not in context
     assert "CONTRIBUTING.md" not in context
     assert provider.requested_paths == ["AGENTS.md"]
+
+
+@pytest.mark.parametrize(
+    "content,truncated",
+    [("\n".join(f"line {index}" for index in range(20)), True), ("first line\nsecond line", False)],
+    ids=["truncated", "exact-fill"],
+)
+def test_build_repo_context_skips_unused_globs_and_caches_result(repo_context_settings, content, truncated):
+    repo_context_settings.set("CONFIG.REPO_CONTEXT_FILES", ["AGENTS.md", "docs/adr/*.md", "docs/rules/*.md"])
+    repo_context_settings.set("CONFIG.REPO_CONTEXT_MAX_LINES", 10)
+    provider = FakeProvider({"AGENTS.md": content})
+    provider.list_repo_directory = Mock(side_effect=RuntimeError("unused directory is unavailable"))
+
+    first_context = build_repo_context(provider)
+    second_context = build_repo_context(provider)
+
+    assert first_context == second_context
+    assert 'path="AGENTS.md"' in first_context
+    assert (TRUNCATION_MARKER in first_context) is truncated
+    assert provider.requested_paths == ["AGENTS.md"]
+    provider.list_repo_directory.assert_not_called()
+
+
+def test_build_repo_context_stops_listing_after_first_glob_fills_budget(repo_context_settings):
+    repo_context_settings.set("CONFIG.REPO_CONTEXT_FILES", ["docs/adr/*.md", "docs/rules/*.md"])
+    repo_context_settings.set("CONFIG.REPO_CONTEXT_MAX_LINES", 10)
+    provider = ListingFakeProvider(
+        {
+            "docs/adr/0001.md": "\n".join(f"line {index}" for index in range(20)),
+            "docs/adr/0002.md": "This file should not be fetched.",
+        },
+        {"docs/adr": ["docs/adr/0002.md", "docs/adr/0001.md"], "docs/rules": []},
+    )
+
+    context = build_repo_context(provider)
+
+    assert TRUNCATION_MARKER in context
+    assert provider.requested_paths == ["docs/adr/0001.md"]
+    assert provider.listed_dirs == [("docs/adr", True)]
+
+
+def test_build_repo_context_skips_glob_when_only_wrapper_lines_fit(repo_context_settings):
+    repo_context_settings.set("CONFIG.REPO_CONTEXT_FILES", ["AGENTS.md", "docs/adr/*.md"])
+    repo_context_settings.set("CONFIG.REPO_CONTEXT_MAX_LINES", 15)
+    provider = ListingFakeProvider(
+        {"AGENTS.md": "first line\nsecond line", "docs/adr/0001.md": "unusable content"},
+        {"docs/adr": ["docs/adr/0001.md"]},
+    )
+
+    context = build_repo_context(provider)
+
+    assert "second line" in context
+    assert "docs/adr/0001.md" not in context
+    assert provider.requested_paths == ["AGENTS.md"]
+    assert provider.listed_dirs == []
+
+
+def test_build_repo_context_retries_reached_glob_listing_errors(repo_context_settings):
+    repo_context_settings.set("CONFIG.REPO_CONTEXT_FILES", ["AGENTS.md", "docs/adr/*.md"])
+    repo_context_settings.set("CONFIG.REPO_CONTEXT_MAX_LINES", 500)
+    provider = FakeProvider({"AGENTS.md": "rules", "docs/adr/0001.md": "ADR instructions"})
+    provider.list_repo_directory = Mock(side_effect=[RuntimeError("temporary outage"), ["docs/adr/0001.md"]])
+
+    first_context = build_repo_context(provider)
+    second_context = build_repo_context(provider)
+
+    assert "rules" in first_context
+    assert "ADR instructions" not in first_context
+    assert "ADR instructions" in second_context
+    assert provider.requested_paths == ["AGENTS.md", "AGENTS.md", "docs/adr/0001.md"]
+    assert provider.list_repo_directory.call_count == 2

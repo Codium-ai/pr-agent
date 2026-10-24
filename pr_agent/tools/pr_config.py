@@ -1,5 +1,6 @@
 from dynaconf import Dynaconf
 
+from pr_agent.algo.setting_utils import normalize_setting_list
 from pr_agent.config_loader import get_settings
 from pr_agent.config_security import should_skip_config_key
 from pr_agent.git_providers import get_git_provider, get_git_provider_with_context
@@ -72,9 +73,7 @@ class PRConfig:
             'private_key', 'private_key_id', 'client_id', 'client_secret', 'token',
             'bearer_token', 'jira_api_token', 'webhook_secret'
         ]
-        extra_skip_keys = get_settings().config.get("skip_keys", [])
-        if extra_skip_keys:
-            skip_keys.extend(extra_skip_keys)
+        skip_keys.extend(normalize_setting_list(get_settings().config.get("skip_keys", [])))
 
 
         markdown_text = "<details> <summary><strong>🛠️ PR-Agent Configurations:</strong></summary> \n\n"

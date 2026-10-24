@@ -9,6 +9,7 @@ import giteapy
 import pytest
 from giteapy.rest import ApiException
 from starlette_context import context, request_cycle_context
+from urllib3 import HTTPHeaderDict
 from urllib3.response import HTTPResponse
 
 from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
@@ -1692,6 +1693,65 @@ class TestGiteaRepoApiPagination:
         with pytest.raises((ValueError, AttributeError, TypeError)):
             repo_api.get_change_file_pull_request("owner", "repo", 7)
         assert self._requested_pages(repo_api) == ([1, 2] if after_prefix else [1])
+
+    @staticmethod
+    def _headed_page(payload, headers):
+        """The (data, status, headers) tuple giteapy returns for a non-preloaded call."""
+        return BytesIO(json.dumps(payload).encode("utf-8")), 200, headers
+
+    @pytest.mark.parametrize("headers", [
+        {"X-Total-Count": "15", "X-Pagecount": "1", "X-Hasmore": "false"},
+        {"x-total-count": "15"},
+        HTTPHeaderDict({"X-Total-Count": "15"}),
+    ])
+    def test_pr_files_stop_at_the_advertised_total(self, headers):
+        repo_api = self._repo_api([])
+        files = [{"filename": f"file-{i}.py"} for i in range(15)]
+        # Forgejo answers a page past the end with HTTP 200 and a literal `null`.
+        repo_api.api_client.call_api.side_effect = [
+            self._headed_page(files, headers), self._headed_page(None, headers),
+        ]
+
+        assert repo_api.get_change_file_pull_request("owner", "repo", 7) == files
+        assert self._requested_pages(repo_api) == [1]
+
+    @pytest.mark.parametrize("received, total, next_page, requested", [
+        pytest.param(10, "15", None, [1, 2], id="invalid-next-page"),
+        pytest.param(10, "15", [], [1, 2], id="empty-next-page"),
+        pytest.param(3, "2", [], [1], id="more-than-advertised"),
+    ])
+    def test_pr_files_count_must_match_the_advertised_total(self, received, total, next_page, requested):
+        repo_api = self._repo_api([])
+        files = [{"filename": f"file-{i}.py"} for i in range(received)]
+        headers = {"X-Total-Count": total}
+        repo_api.api_client.call_api.side_effect = [
+            self._headed_page(files, headers), self._headed_page(next_page, headers),
+        ]
+
+        with pytest.raises(ValueError):
+            repo_api.get_change_file_pull_request("owner", "repo", 7)
+        assert self._requested_pages(repo_api) == requested
+
+    @pytest.mark.parametrize("bad_entry", [{}, {"filename": 42}])
+    def test_malformed_entry_is_rejected_even_when_the_total_matches(self, bad_entry):
+        repo_api = self._repo_api([])
+        repo_api.api_client.call_api.side_effect = [
+            self._headed_page([{"filename": "a.py"}, bad_entry], {"X-Total-Count": "2"}),
+        ]
+
+        with pytest.raises(ValueError, match="changed-file entry"):
+            repo_api.get_change_file_pull_request("owner", "repo", 7)
+        assert self._requested_pages(repo_api) == [1]
+
+    @pytest.mark.parametrize("headers", [{}, {"X-Total-Count": "many"}, {"X-Total-Count": "-1"}])
+    def test_unusable_total_header_falls_back_to_the_empty_page(self, headers):
+        repo_api = self._repo_api([])
+        repo_api.api_client.call_api.side_effect = [
+            self._headed_page([{"filename": "a.py"}], headers), self._headed_page([], headers),
+        ]
+
+        assert repo_api.get_change_file_pull_request("owner", "repo", 7) == [{"filename": "a.py"}]
+        assert self._requested_pages(repo_api) == [1, 2]
 
 
 class TestGiteaChangedFileInventory:

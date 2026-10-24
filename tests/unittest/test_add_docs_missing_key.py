@@ -234,6 +234,32 @@ def test_filtered_documentation_does_not_publish_an_empty_batch(publish_output, 
     assert command_failed() is False
 
 
+def test_run_skips_without_recording_failure_when_all_changed_files_are_filtered(publish_output, monkeypatch):
+    async def prepare_once(fn, **_kwargs):
+        await fn("primary-model")
+
+    monkeypatch.setattr("pr_agent.tools.pr_add_docs.retry_with_fallback_models", prepare_once)
+    monkeypatch.setattr(
+        "pr_agent.tools.pr_add_docs.AttemptTokenBudget.for_prompt_attempt",
+        lambda *_args, **_kwargs: Mock(),
+    )
+    # A lockfile-only or asset-only PR has no diff left after file-type filtering.
+    monkeypatch.setattr("pr_agent.tools.pr_add_docs.get_pr_diff", lambda *_args, **_kwargs: "")
+    tool = PRAddDocs.__new__(PRAddDocs)
+    tool.git_provider = FakeGitProvider()
+    tool.ai_handler = Mock()
+    tool.vars = {"diff": ""}
+    tool.prediction = None
+    init_run_details()
+
+    asyncio.run(tool.run())
+
+    assert results(tool.git_provider) == []
+    assert tool.git_provider.suggestions == []
+    assert tool.git_provider.initial_comment_removed
+    assert command_failed() is False
+
+
 @pytest.mark.parametrize("include_valid", [False, True])
 def test_rejected_documentation_is_filtered_before_fence_and_publication(monkeypatch, include_valid):
     provider = FakeGitProvider()

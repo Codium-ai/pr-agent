@@ -848,20 +848,49 @@ class TestGitLabProvider:
                 "diff": "-Subproject commit aaa1111\n+Subproject commit bbb2222\n",
                 "new_file": False, "deleted_file": False, "renamed_file": False}
 
+    @pytest.mark.parametrize("diff", [
+        "@@ -1 +1 @@\n-old\n+new\n",
+        "+Subproject commit bbb2222\n",
+        "-Subproject commit aaa1111\n",
+    ], ids=["ordinary", "added_submodule", "deleted_submodule"])
+    def test_expand_submodule_changes_skips_mapping_without_sha_pair(self, gitlab_provider, diff):
+        settings = MagicMock()
+        settings.get.side_effect = lambda key, default=None: {"GITLAB.EXPAND_SUBMODULE_DIFFS": True}.get(key, default)
+        changes = [self._submodule_bump()]
+        changes[0]["diff"] = diff
+
+        with patch("pr_agent.git_providers.gitlab_provider.get_settings", return_value=settings), \
+             patch.object(gitlab_provider, "_get_gitmodules_map") as m_gitmodules:
+            out = gitlab_provider._expand_submodule_changes(changes)
+
+        assert out == changes
+        m_gitmodules.assert_not_called()
+
     def test_expand_submodule_changes_resolves_relative_url(self, gitlab_provider):
         gitlab_provider.id_project = "group/subgroup/nested/repo"
         settings = MagicMock()
         settings.get.side_effect = lambda key, default=None: {"GITLAB.EXPAND_SUBMODULE_DIFFS": True}.get(key, default)
         sub_diffs = [{"old_path": "src/a.c", "new_path": "src/a.c", "diff": "@@ -1 +1 @@\n-x\n+y\n"}]
+        changes = [self._submodule_bump(), self._submodule_bump("src/lib_b")]
+        diff_refs = {"base_sha": "base", "head_sha": "head"}
 
         with patch("pr_agent.git_providers.gitlab_provider.get_settings", return_value=settings), \
              patch.object(gitlab_provider, "_get_gitmodules_map",
-                          return_value={"src/lib_a": "../../../../libs/lib_a.git"}), \
+                          return_value={"src/lib_a": "../../../../libs/lib_a.git",
+                                        "src/lib_b": "../../../../libs/lib_b.git"}) as m_gitmodules, \
              patch.object(gitlab_provider, "_compare_submodule", return_value=sub_diffs) as m_cmp:
-            out = gitlab_provider._expand_submodule_changes([self._submodule_bump()])
+            out = gitlab_provider._expand_submodule_changes(changes, diff_refs)
 
-        m_cmp.assert_called_once_with("libs/lib_a", "aaa1111", "bbb2222")
-        assert [c["new_path"] for c in out] == ["src/lib_a", "src/lib_a/src/a.c"]
+        m_gitmodules.assert_called_once_with(diff_refs)
+        assert m_gitmodules.call_args.args[0] is diff_refs
+        assert [call.args for call in m_cmp.call_args_list] == [
+            ("libs/lib_a", "aaa1111", "bbb2222"),
+            ("libs/lib_b", "aaa1111", "bbb2222"),
+        ]
+        assert out[:2] == changes
+        assert [c["new_path"] for c in out] == [
+            "src/lib_a", "src/lib_b", "src/lib_a/src/a.c", "src/lib_b/src/a.c",
+        ]
 
     def test_expand_submodule_changes_skips_unresolvable_relative_url(self, gitlab_provider):
         gitlab_provider.id_project = "group/repo"
@@ -2381,7 +2410,50 @@ class TestGitLabIncrementalReview:
         client.http_get.assert_called_once_with(
             "/projects/test%2Frepo/repository/compare", query_data={"from": "c0", "to": "head"}
         )
-        gitlab_provider.mr.commits.assert_called_once_with()
+        gitlab_provider.mr.commits.assert_called_once_with(per_page=100)
+
+    def test_get_incremental_commits_reads_all_pages_before_selecting_anchor(self, gitlab_provider, mock_project):
+        client = Gitlab("https://gitlab.example.com", private_token="test-token")
+        mr = client.projects.get("test/repo", lazy=True).mergerequests.get(1, lazy=True)
+        gitlab_provider.mr.commits = mr.commits
+        gitlab_provider.mr.notes.list.return_value = [
+            self._make_note(7, "## PR Reviewer Guide 🔍\nbody", "2024-05-01T10:00:00Z"),
+        ]
+        next_url = (
+            "https://gitlab.example.com/api/v4/projects/test%2Frepo/"
+            "merge_requests/1/commits?page=2&per_page=100"
+        )
+        responses = []
+        # Place the only pre-review commit on page two to exercise cross-page anchor selection.
+        for indexes, next_link in [(range(100, 0, -1), next_url), (range(1), None)]:
+            response = MagicMock()
+            response.json.return_value = [
+                {"id": f"c{index}",
+                 "committed_date": "2024-05-01T11:00:00Z" if index else "2024-05-01T09:00:00Z"}
+                for index in indexes
+            ]
+            response.links = {"next": {"url": next_link}} if next_link else {}
+            response.headers = {}
+            responses.append(response)
+        client.http_request = MagicMock(side_effect=responses)
+        change = {"new_path": "a.py", "old_path": "a.py", "diff": "@@ -1 +1 @@\n-old\n+new\n"}
+        mock_project.repository_compare.return_value = {"diffs": [change]}
+        gitlab_provider.gl.http_list.return_value = [change]
+
+        gitlab_provider.get_incremental_commits(IncrementalPR(True))
+
+        assert client.http_request.call_count == 2
+        assert client.http_request.call_args_list[0].kwargs["per_page"] == 100
+        assert client.http_request.call_args_list[1].args[1] == next_url
+        assert [commit.id for commit in gitlab_provider.mr_commits] == [f"c{index}" for index in range(101)]
+        assert gitlab_provider.incremental.is_incremental is True
+        assert gitlab_provider.incremental.last_seen_commit_sha == "c0"
+        assert gitlab_provider.incremental.first_new_commit_sha == "c1"
+        assert [commit.id for commit in gitlab_provider.incremental.commits_range] == [
+            f"c{index}" for index in range(1, 101)
+        ]
+        assert gitlab_provider.unreviewed_files_map == {"a.py": change}
+        mock_project.repository_compare.assert_called_once_with("c0", "head")
 
     def test_get_incremental_commits_no_new_commits_yields_empty_set(self, gitlab_provider, mock_project):
         gitlab_provider.mr.notes.list.return_value = [
