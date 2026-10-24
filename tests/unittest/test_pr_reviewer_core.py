@@ -2058,6 +2058,18 @@ def test_answer_mode_uses_the_lazy_reversed_view_when_the_provider_offers_one(mo
     assert reviewer.vars["answer_str"] == "/answer Because it fixes production."
 
 
+def test_newest_first_reuses_reversible_comment_sequences():
+    from pr_agent.git_providers.git_provider import GitProvider
+
+    provider = MagicMock()
+    comments = [SimpleNamespace(body="old"), SimpleNamespace(body="new")]
+    provider.get_issue_comments.return_value = comments
+
+    newest_first = GitProvider.get_issue_comments_newest_first(provider)
+
+    assert list(newest_first) == [comments[1], comments[0]]
+
+
 def test_answer_mode_prefers_the_newest_question_and_answer(monkeypatch):
     """Comments arrive oldest-first, so the walk must run newest-first to pick the latest exchange."""
     reviewer = _build_answer_mode_reviewer(monkeypatch, [

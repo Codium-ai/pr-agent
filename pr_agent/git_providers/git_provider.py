@@ -1067,7 +1067,12 @@ class GitProvider(ABC):
         """Return issue comments newest first; providers override known API ordering."""
         comments = self.get_issue_comments()
         lazy_reversed = getattr(comments, "reversed", None)
-        return lazy_reversed if lazy_reversed is not None else list(reversed(list(comments)))
+        if lazy_reversed is not None:
+            return lazy_reversed
+        try:
+            return reversed(comments)
+        except TypeError:
+            return reversed(list(comments))
 
     def _iter_persistent_comments(
         self,
