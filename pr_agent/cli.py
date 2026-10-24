@@ -20,6 +20,7 @@ from pr_agent.algo.run_details import command_failed, init_run_details
 from pr_agent.algo.run_output import get_version
 from pr_agent.command_descriptions import COMMAND_DESCRIPTIONS
 from pr_agent.config_loader import get_settings
+from pr_agent.doctor import DOCTOR_COMMANDS, run_doctor_checks
 from pr_agent.log import get_logger, setup_logger
 
 log_level = os.environ.get("LOG_LEVEL", "INFO")
@@ -126,6 +127,8 @@ def set_parser():
     Supported commands:
     - review / review_pr - {COMMAND_DESCRIPTIONS["review"]}
 
+    - doctor - Check the deployment (model configured, provider key, model endpoint) without a PR.
+
     - ask / ask_question [question] - Ask a question about the PR.
 
     - describe / describe_pr - {COMMAND_DESCRIPTIONS["describe"]}
@@ -169,7 +172,7 @@ def set_parser():
     parser.add_argument("--json-output", dest="json_output", type=str, default=None,
                         help=("Write a parsed review and token usage to this JSON file "
                               "(place before the review command)"))
-    parser.add_argument('command', type=str, help='The', choices=commands, default='review')
+    parser.add_argument('command', type=str, help='The', choices=[*commands, *DOCTOR_COMMANDS], default='review')
     parser.add_argument('rest', nargs=argparse.REMAINDER, default=[])
     return parser
 
@@ -191,6 +194,12 @@ def run(inargs=None, args=None):
     if diff_mode and args.stdin and args.diff_file:
         parser.error("--stdin and --diff-file are mutually exclusive")
     _validate_output_options(parser, args, diff_mode)
+    if args.command.lower() in DOCTOR_COMMANDS:
+        # Preflight checks need neither a PR nor a diff; run them in the CLI settings
+        # scope so environment overrides and config files apply as in a real run.
+        with _cli_settings_scope():
+            get_settings().set("CONFIG.CLI_MODE", True)
+            return asyncio.run(run_doctor_checks())
     diff_content = None
     if diff_mode:
         if args.diff_file:
