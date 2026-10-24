@@ -21,6 +21,7 @@ from gitlab import (
 from requests.exceptions import RequestException
 
 from pr_agent.agent.request_policy import policy_metadata, policy_value
+from pr_agent.algo.setting_utils import _as_bool_setting
 from pr_agent.algo.types import EDIT_TYPE, FilePatchInfo
 
 from ..algo.comment_identity import (
@@ -584,7 +585,7 @@ class GitLabProvider(GitProvider):
         Soft-fail on any issue.
         """
         try:
-            if not bool(get_settings().get("GITLAB.EXPAND_SUBMODULE_DIFFS", False)):
+            if not _as_bool_setting(get_settings().get("GITLAB.EXPAND_SUBMODULE_DIFFS", False)):
                 return changes
         except (AttributeError, KeyError, TypeError):
             return changes
@@ -1365,13 +1366,13 @@ class GitLabProvider(GitProvider):
         return f"{self.mr.web_url}#note_{comment.id}"
 
     def should_publish_review_as_thread(self) -> bool:
-        return bool(get_settings().get("GITLAB.PUBLISH_REVIEW_AS_THREAD", False))
+        return _as_bool_setting(get_settings().get("GITLAB.PUBLISH_REVIEW_AS_THREAD", False))
 
     def should_publish_improve_as_thread(self) -> bool:
-        return bool(get_settings().get("GITLAB.PUBLISH_IMPROVE_AS_THREAD", False))
+        return _as_bool_setting(get_settings().get("GITLAB.PUBLISH_IMPROVE_AS_THREAD", False))
 
     def should_reply_to_trigger_comment(self) -> bool:
-        return bool(get_settings().get("GITLAB.REPLY_TO_TRIGGER_COMMENT", False))
+        return _as_bool_setting(get_settings().get("GITLAB.REPLY_TO_TRIGGER_COMMENT", False))
 
     def supports_review_comment_identity(self) -> bool:
         return True

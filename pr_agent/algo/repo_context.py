@@ -4,6 +4,7 @@ import time
 from collections import OrderedDict
 from html import escape
 
+from pr_agent.algo.setting_utils import _as_bool_setting
 from pr_agent.config_loader import get_settings
 from pr_agent.git_providers.git_provider import GitProvider
 from pr_agent.log import get_logger
@@ -247,19 +248,8 @@ def _store_repo_context(
 
 
 def _read_bool_setting(key: str, default: bool) -> bool:
-    # Robustly interpret a boolean config value that may arrive as a real bool (TOML) or a
-    # string (e.g. env-var overrides). Fall back to the secure default for missing/unparseable
-    # values rather than relying on bool("false") == True.
     value = get_settings().config.get(key, default)
-    if isinstance(value, bool):
-        return value
-    if isinstance(value, str):
-        normalized = value.strip().lower()
-        if normalized in ("true", "1", "yes", "on"):
-            return True
-        if normalized in ("false", "0", "no", "off"):
-            return False
-    return default
+    return _as_bool_setting(value, default)
 
 
 def _read_max_sibling_context_files() -> int:
