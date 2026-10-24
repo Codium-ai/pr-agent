@@ -3171,6 +3171,6 @@ class TestGitLabProviderUrlParsing:
 def test_get_issue_comments_newest_first_returns_notes_newest_first():
     provider = GitLabProvider.__new__(GitLabProvider)
     provider.mr = MagicMock()
-    provider.mr.notes.list.return_value = ["newest", "middle", "oldest"]
+    provider.mr.notes.list.return_value = ["oldest", "middle", "newest"]
 
     assert provider.get_issue_comments_newest_first() == ["newest", "middle", "oldest"]

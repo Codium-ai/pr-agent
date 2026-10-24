@@ -2131,7 +2131,7 @@ class GitLabProvider(GitProvider):
         return self.mr.notes.list(get_all=True)[::-1]
 
     def get_issue_comments_newest_first(self):
-        return list(reversed(self.get_issue_comments()))
+        return self.get_issue_comments()
 
     def get_repo_settings(self):
         # A real acquisition starts before global work, which can itself fail.
