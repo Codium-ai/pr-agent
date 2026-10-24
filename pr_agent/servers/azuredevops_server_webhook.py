@@ -261,10 +261,11 @@ def _created_event_pr_url(data):
             or type(pr_id) is not int or pr_id <= 0):
         return None
     collection = urlsplit(base_url)
-    _ = collection.port  # Validate self-hosted collection ports.
+    port = collection.port  # Validate self-hosted collection ports.
     if (collection.scheme not in {"http", "https"} or not collection.hostname
             or collection.username is not None or collection.password is not None
-            or collection.query or collection.fragment):
+            or (port is None and collection.netloc.endswith(":"))
+            or "?" in base_url or "#" in base_url):
         return None
     return f"{base_url.rstrip('/')}/{quote(project, safe='')}/_git/{quote(repo, safe='')}/pullrequest/{pr_id}"
 
