@@ -115,10 +115,10 @@ def test_key_never_appears_in_output(monkeypatch, cli_mode_settings, capsys):
     assert "synthetic-secret-value" not in capsys.readouterr().out
 
 
-def test_active_provider_respects_custom_base_url(cli_mode_settings):
+def test_custom_base_url_keeps_the_openai_provider(cli_mode_settings):
+    # The handler captures openai.key and openai.api_base under "openai", so the key check must look there.
     get_settings().set("openai.api_base", "https://gateway.example/v1")
-    assert doctor._active_provider("gpt-4o") == "custom_openai"
-    assert doctor._active_provider("gpt-4o") != "openai"
+    assert doctor._active_provider("gpt-4o") == "openai"
 
 
 def test_unprefixed_non_openai_model_resolves_via_litellm(cli_mode_settings, monkeypatch):

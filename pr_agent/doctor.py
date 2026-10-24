@@ -24,10 +24,9 @@ def _active_provider(model: str) -> str:
     """Resolve the litellm provider of a model id, as a real call would."""
     if "/" in model:
         return model.split("/", 1)[0].strip().lower()
-    if get_settings().get("OPENAI.API_BASE", None):
-        return "custom_openai"
-    # Unprefixed models are not always OpenAI's: litellm resolves claude-*, gemini-*,
-    # etc. itself. Ask the same resolver the ping will use; unknown ids defer to it.
+    # Unprefixed models are not always OpenAI's, and an OpenAI-compatible gateway keeps its
+    # key under "openai" anyway: litellm's own resolver is the source of truth. Unknown ids
+    # defer to the ping.
     try:
         from litellm import get_llm_provider
 
