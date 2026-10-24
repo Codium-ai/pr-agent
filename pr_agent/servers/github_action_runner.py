@@ -19,6 +19,7 @@ from pr_agent.algo.setting_utils import normalize_setting_list
 from pr_agent.config_loader import get_settings
 from pr_agent.doctor import missing_provider_key_reason
 from pr_agent.git_providers import get_git_provider
+from pr_agent.git_providers.git_provider import redact_credentials
 from pr_agent.git_providers.github_provider import IncompletePullRequestFilesError
 from pr_agent.git_providers.utils import apply_repo_settings
 from pr_agent.log import get_logger, setup_logger
@@ -257,7 +258,9 @@ async def run_action():
     # Keyless providers defer to the run, as in `pr-agent doctor`.
     missing_key_reason = missing_provider_key_reason()
     if missing_key_reason:
-        print(f"Stopping before any tool runs: {missing_key_reason}. "
+        # The reason names environment variables only; redact anyway so nothing key-
+        # derived can ever reach the step log, matching the doctor output path.
+        print(f"Stopping before any tool runs: {redact_credentials(missing_key_reason)}. "
               "Add it to this workflow's env; 'pr-agent doctor' preflights the same check by hand.")
         _mark_action_failed()
         return
