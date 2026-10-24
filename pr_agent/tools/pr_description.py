@@ -22,7 +22,8 @@ from pr_agent.algo.pr_processing import (
     retry_with_fallback_models,
 )
 from pr_agent.algo.repo_context import build_repo_context
-from pr_agent.algo.run_details import init_run_details, record_command_failure
+from pr_agent.algo.review_json_output import review_json_output_path, write_review_json_output
+from pr_agent.algo.run_details import get_run_details, init_run_details, record_command_failure
 from pr_agent.algo.run_output import push_outputs_async, show_relevant_configurations, show_run_details
 from pr_agent.algo.skills_loader import get_skills_context
 from pr_agent.algo.token_budget import AttemptTokenBudget
@@ -135,6 +136,21 @@ class PRDescription:
         self.prediction = None
         self.file_label_dict = None
 
+    @staticmethod
+    def _write_json_output(data: dict) -> None:
+        """Write the description and the run's token usage to the CLI's --json-output path, if one was given."""
+        if not review_json_output_path.get():
+            return
+        details = get_run_details()
+        usage = {}
+        if details is not None and details.has_token_usage:
+            usage = {
+                "prompt_tokens": details.prompt_tokens,
+                "completion_tokens": details.completion_tokens,
+                "total_tokens": details.total_tokens,
+            }
+        write_review_json_output({**data, "usage": usage})
+
     async def run(self):
         init_run_details()
         self.progress_response = None
@@ -155,6 +171,7 @@ class PRDescription:
 
             if self.prediction:
                 self._prepare_data()
+                self._write_json_output(self.data)
             else:
                 get_logger().warning(f"Empty prediction, PR: {self.pr_id}")
                 return None
